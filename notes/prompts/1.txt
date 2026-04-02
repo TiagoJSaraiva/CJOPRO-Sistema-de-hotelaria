@@ -1,0 +1,19 @@
+depois eu penso certinho nas policy. Pra começar meu projeto, tô pensando em montar primeiramente todo o fluxo de cadastro de hoteis de clientes.
+ Com a tabela de hotels, uma parte já foi passada. Agora, eu preciso pensar em: 
+- interface de cadastro de hoteis
+- onde fica (dentro do próprio pms em uma rota específica acessível apenas pelo login de ADMIN absoluto, ou site separado bloqueado por login de Admin?) 
+- Login de admin dono do site (eu) e onde fica (tabela de users? Não quero usar auth do supabase, então já precis criar tabela de users ou uma tabela a parte) 
+
+Tá certo isso? Não vamos falar em código, apenas decisões arquiteturais e SQL
+
+Decisões:
+Na tela de login do hotel, o login do admin absoluto (eu) redireciona para 
+hotelsite.com.br/admin/dashboard
+
+Enquanto outros login de user redirecionam para
+
+hotelsite.com.br/hotel_nome/dashboard
+
+Lembrando: 2 tipos de usuários 
+- Usuários do sistema (eu e equipe técnica imaginária)
+- Usuários do hotel (recepecionista, financeiro, gerente, etc)

@@ -1,0 +1,8 @@
+Antes disso, vamos revisar oque temos agora:
+
+- tabela dos hotéis
+- tabela dos usuários, user roles, roles e permissions
+
+Até agora, só isso?
+
+As user roles, roles e permissions vão ser registros, então vamos deixar pra depois, o momento agora é focar nas tabelas

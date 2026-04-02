@@ -1,0 +1,8 @@
+0 - Setup inicial 
+
+1 - Definir domínio + contratos
+2 - Modelar banco de dados
+3 - PMS API (core do sistema)
+4 - Booking simulator
+5 - PMS interface
+6 - Site institucional
