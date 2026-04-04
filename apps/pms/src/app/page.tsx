@@ -1,11 +1,5 @@
-import { createWorkspaceApp } from "@hotel/shared";
-
-const pmsApp = createWorkspaceApp("pms", "Aplicacao PMS em Next.js");
+import { redirect } from "next/navigation";
 
 export default function HomePage() {
-  return (
-    <main>
-      
-    </main>
-  );
+  redirect("/login");
 }

@@ -30,6 +30,13 @@ CREATE TABLE roles (
   name VARCHAR(50) UNIQUE NOT NULL
 );
 
+CREATE TABLE user_roles (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  user_id UUID NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+  role_id UUID NOT NULL REFERENCES roles(id) ON DELETE CASCADE,
+  UNIQUE (user_id, role_id)
+);
+
 -- Por exemplo, usuário cuja role é "admin" tem permissão "manage_users", "manage_hotels", etc. Já usuário com role "staff" tem permissão "view_bookings", etc.
 -- Um usuário pode ter múltiplas roles, e uma role pode ter múltiplas permissões. Por isso a tabela intermediária user_roles, e a tabela permissions.
 
@@ -45,9 +52,3 @@ CREATE TABLE role_permissions (
   UNIQUE (role_id, permission_id)
 );
 
-CREATE TABLE user_roles (
-  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-  user_id UUID NOT NULL REFERENCES users(id) ON DELETE CASCADE,
-  role_id UUID NOT NULL REFERENCES roles(id) ON DELETE CASCADE,
-  UNIQUE (user_id, role_id)
-);
