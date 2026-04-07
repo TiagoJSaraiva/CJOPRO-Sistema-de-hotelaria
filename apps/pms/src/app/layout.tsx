@@ -3,7 +3,7 @@ import type { ReactNode } from "react";
 import "./globals.css";
 
 export const metadata: Metadata = {
-  title: "PMS | Hotelaria",
+  title: "PMS Hotelaria",
   description: "Sistema PMS para gerenciamento de reservas"
 };
 

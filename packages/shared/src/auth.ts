@@ -3,6 +3,7 @@ export const AUTH_ERROR_CODE = {
   INVALID_CREDENTIALS: "AUTH_INVALID_CREDENTIALS",
   TOKEN_MISSING: "AUTH_TOKEN_MISSING",
   TOKEN_INVALID_OR_EXPIRED: "AUTH_TOKEN_INVALID_OR_EXPIRED",
+  FORBIDDEN: "AUTH_FORBIDDEN",
   UNKNOWN: "AUTH_UNKNOWN"
 } as const;
 
@@ -13,6 +14,7 @@ export const AUTH_ERROR_MESSAGE: Record<AuthErrorCode, string> = {
   [AUTH_ERROR_CODE.INVALID_CREDENTIALS]: "Credenciais invalidas.",
   [AUTH_ERROR_CODE.TOKEN_MISSING]: "Token ausente.",
   [AUTH_ERROR_CODE.TOKEN_INVALID_OR_EXPIRED]: "Token invalido ou expirado.",
+  [AUTH_ERROR_CODE.FORBIDDEN]: "Sem permissao para executar esta operacao.",
   [AUTH_ERROR_CODE.UNKNOWN]: "Falha ao autenticar."
 };
 
