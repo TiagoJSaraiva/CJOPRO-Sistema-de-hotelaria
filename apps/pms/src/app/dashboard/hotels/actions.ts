@@ -31,6 +31,12 @@ function toOptionalText(value: FormDataEntryValue | null): string | null {
   return parsed.length ? parsed : null;
 }
 
+function revalidateHotelPages(): void {
+  revalidatePath("/dashboard/hotels");
+  revalidatePath("/dashboard/hotels/create");
+  revalidatePath("/dashboard/hotels/view");
+}
+
 function parseCreateHotelPayload(formData: FormData): AdminHotelCreateInput {
   return {
     name: String(formData.get("name") || "").trim(),
@@ -62,15 +68,20 @@ function parseUpdateHotelPayload(formData: FormData): AdminHotelUpdateInput {
   };
 }
 
-function redirectWithStatus(status: string): never {
-  redirect(`/dashboard/hotels?status=${status}`);
+function redirectWithStatus(status: string, section: "create" | "view" | "root" = "root"): never {
+  if (section === "root") {
+    redirect(`/dashboard/hotels?status=${status}`);
+  }
+
+  redirect(`/dashboard/hotels/${section}?status=${status}`);
 }
 
 export async function createHotelAction(formData: FormData): Promise<void> {
   const user = await getUserFromSession();
 
   if (!user || !user.permissions.includes(PERMISSIONS.HOTEL_CREATE)) {
-    redirectWithStatus("forbidden");
+    const fallback = user?.permissions.includes(PERMISSIONS.HOTEL_READ) ? "view" : "root";
+    redirectWithStatus("forbidden", fallback);
   }
 
   const payload = parseCreateHotelPayload(formData);
@@ -90,62 +101,64 @@ export async function createHotelAction(formData: FormData): Promise<void> {
     !payload.zip_code ||
     !payload.slug
   ) {
-    redirectWithStatus("create_missing_fields");
+    redirectWithStatus("create_missing_fields", "create");
   }
 
   try {
     await createHotel(payload);
   } catch {
-    redirectWithStatus("create_error");
+    redirectWithStatus("create_error", "create");
   }
 
-  revalidatePath("/dashboard/hotels");
-  redirectWithStatus("created");
+  revalidateHotelPages();
+  redirectWithStatus("created", "create");
 }
 
 export async function updateHotelAction(formData: FormData): Promise<void> {
   const user = await getUserFromSession();
 
   if (!user || !user.permissions.includes(PERMISSIONS.HOTEL_UPDATE)) {
-    redirectWithStatus("forbidden");
+    const fallback = user?.permissions.includes(PERMISSIONS.HOTEL_READ) ? "view" : "root";
+    redirectWithStatus("forbidden", fallback);
   }
 
   const id = String(formData.get("id") || "").trim();
   const payload = parseUpdateHotelPayload(formData);
 
   if (!id || !payload.name || !payload.slug) {
-    redirectWithStatus("update_missing_fields");
+    redirectWithStatus("update_missing_fields", "view");
   }
 
   try {
     await updateHotel(id, payload);
   } catch {
-    redirectWithStatus("update_error");
+    redirectWithStatus("update_error", "view");
   }
 
-  revalidatePath("/dashboard/hotels");
-  redirectWithStatus("updated");
+  revalidateHotelPages();
+  redirectWithStatus("updated", "view");
 }
 
 export async function deleteHotelAction(formData: FormData): Promise<void> {
   const user = await getUserFromSession();
 
   if (!user || !user.permissions.includes(PERMISSIONS.HOTEL_DELETE)) {
-    redirectWithStatus("forbidden");
+    const fallback = user?.permissions.includes(PERMISSIONS.HOTEL_READ) ? "view" : "root";
+    redirectWithStatus("forbidden", fallback);
   }
 
   const id = String(formData.get("id") || "").trim();
 
   if (!id) {
-    redirectWithStatus("delete_missing_id");
+    redirectWithStatus("delete_missing_id", "view");
   }
 
   try {
     await deleteHotel(id);
   } catch {
-    redirectWithStatus("delete_error");
+    redirectWithStatus("delete_error", "view");
   }
 
-  revalidatePath("/dashboard/hotels");
-  redirectWithStatus("deleted");
+  revalidateHotelPages();
+  redirectWithStatus("deleted", "view");
 }

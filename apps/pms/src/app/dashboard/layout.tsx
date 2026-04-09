@@ -1,7 +1,7 @@
 import Link from "next/link";
 import Image from "next/image";
 import { redirect } from "next/navigation";
-import { ADMIN_NAV_ITEMS } from "@hotel/shared";
+import { ADMIN_NAV_ITEMS, PERMISSIONS } from "@hotel/shared";
 import type { ReactNode } from "react";
 import { getUserFromSession } from "../../lib/auth";
 import { logoutAction } from "./actions";
@@ -37,7 +37,14 @@ export default async function DashboardLayout({ children }: { children: ReactNod
     redirect("/login");
   }
 
-  const navItems = ADMIN_NAV_ITEMS.filter((item) => user.permissions.includes(item.permission));
+  const moduleEntryAccess: Record<string, boolean> = {
+    "/dashboard/hotels": user.permissions.includes(PERMISSIONS.HOTEL_READ) || user.permissions.includes(PERMISSIONS.HOTEL_CREATE),
+    "/dashboard/users": user.permissions.includes(PERMISSIONS.USER_READ) || user.permissions.includes(PERMISSIONS.USER_CREATE),
+    "/dashboard/roles": user.permissions.includes(PERMISSIONS.ROLE_READ) || user.permissions.includes(PERMISSIONS.ROLE_CREATE),
+    "/dashboard/permissions": user.permissions.includes(PERMISSIONS.PERMISSION_READ) || user.permissions.includes(PERMISSIONS.PERMISSION_CREATE)
+  };
+
+  const navItems = ADMIN_NAV_ITEMS.filter((item) => moduleEntryAccess[item.href]);
   const userDisplayName = formatUserDisplayName(user.name);
 
   return (

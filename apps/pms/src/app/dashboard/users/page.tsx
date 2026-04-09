@@ -1,25 +1,27 @@
-import { PERMISSIONS } from "@hotel/shared";
+import { redirect } from "next/navigation";
 import { getUserFromSession } from "../../../lib/auth";
-import { type AdminUser, listUsers } from "../../../lib/adminApi";
-import { AdminTable } from "../_components/AdminTable";
+import { getUsersAccess, getUsersDefaultRoute } from "./access";
 
-function toRows(items: AdminUser[]): string[][] {
-  return items.map((item) => [item.name, item.email, item.is_active ? "Ativo" : "Inativo"]);
-}
+type UsersPageProps = {
+  searchParams?: {
+    status?: string;
+  };
+};
 
-export default async function UsersPage() {
+export default async function UsersPage({ searchParams }: UsersPageProps) {
   const user = await getUserFromSession();
+  const access = getUsersAccess(user);
+  const targetRoute = getUsersDefaultRoute(access);
+  const statusQuery = searchParams?.status ? `?status=${encodeURIComponent(searchParams.status)}` : "";
 
-  if (!user || !user.permissions.includes(PERMISSIONS.USER_READ)) {
+  if (!targetRoute) {
     return (
       <section style={{ background: "#fff", border: "1px solid #e2e2e2", borderRadius: "12px", padding: "1rem" }}>
-        <h2 style={{ marginTop: 0 }}>Usuarios</h2>
+        <h1 style={{ marginTop: 0, marginBottom: "0.35rem", fontSize: "3rem", marginLeft: "1rem" }}>Usuarios</h1>
         <p>Sem permissao para visualizar este modulo.</p>
       </section>
     );
   }
 
-  const users = await listUsers();
-
-  return <AdminTable title="Usuarios" description="Etapa 1: listagem inicial para base do CRUD." columns={["Nome", "Email", "Status"]} rows={toRows(users)} />;
+  redirect(`${targetRoute}${statusQuery}`);
 }

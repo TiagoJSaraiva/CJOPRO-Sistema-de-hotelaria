@@ -1,7 +1,7 @@
 import "dotenv/config";
 import Fastify from "fastify";
 import cors from "@fastify/cors";
-import { createHmac, randomUUID, timingSafeEqual } from "node:crypto";
+import { createHash, createHmac, randomUUID, timingSafeEqual } from "node:crypto";
 import {
   isValidCountryCode,
   isValidCurrency,
@@ -25,6 +25,12 @@ import {
   createServerClient,
   type AdminHotelCreateInput,
   type AdminHotelUpdateInput,
+  type AdminPermissionCreateInput,
+  type AdminPermissionUpdateInput,
+  type AdminRoleCreateInput,
+  type AdminRoleUpdateInput,
+  type AdminUserCreateInput,
+  type AdminUserUpdateInput,
   type HotelIdParams,
   type PermissionName,
   type AuthErrorResponse,
@@ -45,6 +51,12 @@ type SessionPayload = SessionUser & {
 };
 
 type LoginBody = Partial<LoginRequest>;
+type UserCreateBody = Partial<AdminUserCreateInput>;
+type UserUpdateBody = Partial<AdminUserUpdateInput>;
+type RoleCreateBody = Partial<AdminRoleCreateInput>;
+type RoleUpdateBody = Partial<AdminRoleUpdateInput>;
+type PermissionCreateBody = Partial<AdminPermissionCreateInput>;
+type PermissionUpdateBody = Partial<AdminPermissionUpdateInput>;
 
 const SESSION_SECRET = process.env.AUTH_SESSION_SECRET || "dev-auth-session-secret-change-me";
 const SESSION_TTL_SECONDS = 60 * 60 * 8;
@@ -64,7 +76,7 @@ const DEV_USER = {
     create_user,read_user,update_user,delete_user,\
     create_permission,read_permission,update_permission,delete_permission,\
     create_role,read_role,update_role,delete_role") 
-    // ISSO TUDO AQUI EM CIMA VAI SER REMOVIDO DEPOIS E SUBSTITUIDO POR AQUISIÇÕES DE DADOS DO DB, MAS POR ENQUANTO FICA ASSIM PRA FACILITAR O DESENVOLVIMENTO
+    // ISSO TUDO AQUI EM CIMA VAI SER REMOVIDO DEPOIS E SUBSTITUIDO POR AQUISIÇÕES DE DADOS DO DB, MAS POR ENQUANTO FICA ASSIM PRA FACILITAR O DEV
 
     .split(",")
     .map((value) => value.trim())
@@ -164,6 +176,149 @@ function ensureAuthorized(
   }
 
   return session;
+}
+
+function ensureAuthorizedAny(
+  request: { headers: { authorization?: string } },
+  reply: { status: (statusCode: number) => { send: (payload: unknown) => unknown } },
+  permissions: PermissionName[]
+): SessionPayload | null {
+  const session = getSessionFromRequest(request);
+
+  if (!session) {
+    reply.status(401).send(getAuthError(AUTH_ERROR_CODE.TOKEN_INVALID_OR_EXPIRED));
+    return null;
+  }
+
+  const canAccess = permissions.some((permission) => hasPermission(session, permission));
+
+  if (!canAccess) {
+    reply.status(403).send(getAuthError(AUTH_ERROR_CODE.FORBIDDEN));
+    return null;
+  }
+
+  return session;
+}
+
+function hashTemporaryPassword(value: string): string {
+  return createHash("sha256").update(value).digest("hex");
+}
+
+function normalizeRoleAssignments(value: unknown): Array<{ role_id: string; hotel_id: string | null }> {
+  if (!Array.isArray(value)) {
+    return [];
+  }
+
+  const normalized: Array<{ role_id: string; hotel_id: string | null }> = [];
+  const seen = new Set<string>();
+
+  for (const item of value) {
+    const roleId = normalizeOptionalText((item as { role_id?: string })?.role_id);
+
+    if (!roleId || seen.has(roleId)) {
+      continue;
+    }
+
+    const hotelId = normalizeOptionalText((item as { hotel_id?: string | null })?.hotel_id || null);
+
+    normalized.push({ role_id: roleId, hotel_id: hotelId });
+    seen.add(roleId);
+  }
+
+  return normalized;
+}
+
+function normalizePermissionIds(value: unknown): string[] {
+  if (!Array.isArray(value)) {
+    return [];
+  }
+
+  const seen = new Set<string>();
+  const normalized: string[] = [];
+
+  for (const item of value) {
+    const id = normalizeOptionalText(String(item || ""));
+
+    if (!id || seen.has(id)) {
+      continue;
+    }
+
+    normalized.push(id);
+    seen.add(id);
+  }
+
+  return normalized;
+}
+
+function mapRoleOption(item: any): { id: string; name: string; hotel_id: string | null; hotel_name: string | null } {
+  return {
+    id: item.id,
+    name: item.name,
+    hotel_id: item.hotel_id || null,
+    hotel_name: item.hotels?.name || null
+  };
+}
+
+function mapAdminUser(item: any): {
+  id: string;
+  name: string;
+  email: string;
+  is_active: boolean;
+  last_login_at: string | null;
+  created_at: string | null;
+  role_assignments: Array<{ role_id: string; role_name: string; hotel_id: string | null; hotel_name: string | null }>;
+} {
+  const roleAssignments = Array.isArray(item.user_roles)
+    ? item.user_roles
+        .map((row: any) => {
+          const role = row.roles;
+
+          if (!role?.id) {
+            return null;
+          }
+
+          return {
+            role_id: role.id,
+            role_name: role.name,
+            hotel_id: role.hotel_id || null,
+            hotel_name: role.hotels?.name || null
+          };
+        })
+        .filter(Boolean)
+    : [];
+
+  return {
+    id: item.id,
+    name: item.name,
+    email: item.email,
+    is_active: !!item.is_active,
+    last_login_at: item.last_login_at || null,
+    created_at: item.created_at || null,
+    role_assignments: roleAssignments
+  };
+}
+
+function mapAdminRole(item: any): {
+  id: string;
+  name: string;
+  hotel_id: string | null;
+  hotel_name: string | null;
+  permissions: Array<{ id: string; name: string }>;
+} {
+  const permissions = Array.isArray(item.role_permissions)
+    ? item.role_permissions
+        .map((row: any) => row.permissions)
+        .filter((permission: any) => !!permission?.id)
+        .map((permission: any) => ({ id: permission.id, name: permission.name }))
+    : [];
+
+  return {
+    id: item.id,
+    name: item.name,
+    hotel_id: item.hotel_id || null,
+    hotel_name: item.hotels?.name || null,
+    permissions
+  };
 }
 
 async function bootstrap() {
@@ -639,21 +794,41 @@ async function bootstrap() {
     return reply.send({ ok: true });
   });
 
-  app.get("/admin/users", async (request, reply) => {
-    const session = getSessionFromRequest(request);
+  app.get("/admin/users/reference-data", async (request, reply) => {
+    const session = ensureAuthorizedAny(request, reply, [PERMISSIONS.USER_READ, PERMISSIONS.USER_CREATE, PERMISSIONS.USER_UPDATE]);
 
     if (!session) {
-      return reply.status(401).send(getAuthError(AUTH_ERROR_CODE.TOKEN_INVALID_OR_EXPIRED));
+      return;
     }
 
-    if (!hasPermission(session, PERMISSIONS.USER_READ)) {
-      return reply.status(403).send(getAuthError(AUTH_ERROR_CODE.FORBIDDEN));
+    const supabase = createServerClient();
+    const [{ data: hotels, error: hotelsError }, { data: roles, error: rolesError }] = await Promise.all([
+      supabase.from("hotels").select("id,name").order("name", { ascending: true }),
+      supabase.from("roles").select("id,name,hotel_id,hotels(name)").order("name", { ascending: true })
+    ]);
+
+    if (hotelsError || rolesError) {
+      request.log.error(hotelsError || rolesError);
+      return reply.status(500).send({ message: "Falha ao consultar dados auxiliares de usuarios." });
+    }
+
+    return reply.send({
+      hotels: (hotels || []).map((item: any) => ({ id: item.id, name: item.name })),
+      roles: (roles || []).map(mapRoleOption)
+    });
+  });
+
+  app.get("/admin/users", async (request, reply) => {
+    const session = ensureAuthorized(request, reply, PERMISSIONS.USER_READ);
+
+    if (!session) {
+      return;
     }
 
     const supabase = createServerClient();
     const { data, error } = await supabase
       .from("users")
-      .select("id,name,email,is_active,last_login_at,created_at")
+      .select("id,name,email,is_active,last_login_at,created_at,user_roles(role_id,roles(id,name,hotel_id,hotels(name)))")
       .order("created_at", { ascending: false });
 
     if (error) {
@@ -661,40 +836,561 @@ async function bootstrap() {
       return reply.status(500).send({ message: "Falha ao consultar usuarios." });
     }
 
-    return reply.send({ items: data ?? [] });
+    return reply.send({ items: (data || []).map(mapAdminUser) });
   });
 
-  app.get("/admin/roles", async (request, reply) => {
-    const session = getSessionFromRequest(request);
+  app.post<{ Body: UserCreateBody }>("/admin/users", async (request, reply) => {
+    const session = ensureAuthorized(request, reply, PERMISSIONS.USER_CREATE);
 
     if (!session) {
-      return reply.status(401).send(getAuthError(AUTH_ERROR_CODE.TOKEN_INVALID_OR_EXPIRED));
+      return;
     }
 
-    if (!hasPermission(session, PERMISSIONS.ROLE_READ)) {
-      return reply.status(403).send(getAuthError(AUTH_ERROR_CODE.FORBIDDEN));
+    const name = normalizeOptionalText(request.body?.name);
+    const email = normalizeOptionalText(normalizeEmail(request.body?.email || ""));
+    const tempPassword = normalizeOptionalText(request.body?.password_hash);
+    const roleAssignments = normalizeRoleAssignments(request.body?.role_assignments || []);
+
+    if (!name || !email || !tempPassword) {
+      return reply.status(400).send({ message: "Nome, email e senha temporaria sao obrigatorios." });
+    }
+
+    if (!isValidEmail(email)) {
+      return reply.status(400).send({ message: "Email invalido." });
     }
 
     const supabase = createServerClient();
-    const { data, error } = await supabase.from("roles").select("id,name,hotel_id").order("name", { ascending: true });
+
+    if (roleAssignments.length) {
+      const roleIds = roleAssignments.map((item) => item.role_id);
+      const { data: roleRows, error: roleError } = await supabase
+        .from("roles")
+        .select("id,name,hotel_id,hotels(name)")
+        .in("id", roleIds);
+
+      if (roleError) {
+        request.log.error(roleError);
+        return reply.status(500).send({ message: "Falha ao validar papeis para o usuario." });
+      }
+
+      const roleMap = new Map((roleRows || []).map((item: any) => [item.id, item]));
+
+      if (roleMap.size !== roleIds.length) {
+        return reply.status(400).send({ message: "Uma ou mais roles selecionadas nao existem." });
+      }
+
+      for (const assignment of roleAssignments) {
+        const role = roleMap.get(assignment.role_id);
+
+        if (!role) {
+          return reply.status(400).send({ message: "Role selecionada nao existe." });
+        }
+
+        if (role.hotel_id && assignment.hotel_id && role.hotel_id !== assignment.hotel_id) {
+          return reply.status(400).send({ message: "A role selecionada nao pertence ao hotel escolhido." });
+        }
+      }
+    }
+
+    const { data: createdUser, error: createError } = await supabase
+      .from("users")
+      .insert({
+        name,
+        email,
+        password_hash: hashTemporaryPassword(tempPassword),
+        is_active: true
+      })
+      .select("id")
+      .single();
+
+    if (createError) {
+      request.log.error(createError);
+
+      if (createError.code === "23505") {
+        return reply.status(409).send({ message: "Email ja utilizado por outro usuario." });
+      }
+
+      return reply.status(500).send({ message: "Falha ao criar usuario." });
+    }
+
+    if (roleAssignments.length) {
+      const { error: userRolesError } = await supabase
+        .from("user_roles")
+        .insert(roleAssignments.map((item) => ({ user_id: createdUser.id, role_id: item.role_id })));
+
+      if (userRolesError) {
+        request.log.error(userRolesError);
+        return reply.status(500).send({ message: "Usuario criado, mas falhou ao vincular papeis." });
+      }
+    }
+
+    const { data: userWithRelations, error: userWithRelationsError } = await supabase
+      .from("users")
+      .select("id,name,email,is_active,last_login_at,created_at,user_roles(role_id,roles(id,name,hotel_id,hotels(name)))")
+      .eq("id", createdUser.id)
+      .single();
+
+    if (userWithRelationsError) {
+      request.log.error(userWithRelationsError);
+      return reply.status(500).send({ message: "Falha ao consultar usuario criado." });
+    }
+
+    return reply.status(201).send({ item: mapAdminUser(userWithRelations) });
+  });
+
+  app.put<{ Params: HotelIdParams; Body: UserUpdateBody }>("/admin/users/:id", async (request, reply) => {
+    const session = ensureAuthorized(request, reply, PERMISSIONS.USER_UPDATE);
+
+    if (!session) {
+      return;
+    }
+
+    const id = request.params.id;
+
+    if (!id) {
+      return reply.status(400).send({ message: "Id do usuario e obrigatorio para atualizacao." });
+    }
+
+    const payload: Record<string, unknown> = {};
+
+    if (request.body?.name !== undefined) {
+      const parsedName = normalizeOptionalText(request.body.name);
+
+      if (!parsedName) {
+        return reply.status(400).send({ message: "Nome nao pode ficar vazio." });
+      }
+
+      payload.name = parsedName;
+    }
+
+    if (request.body?.email !== undefined) {
+      const parsedEmail = normalizeOptionalText(normalizeEmail(request.body.email || ""));
+
+      if (!parsedEmail) {
+        return reply.status(400).send({ message: "Email nao pode ficar vazio." });
+      }
+
+      if (!isValidEmail(parsedEmail)) {
+        return reply.status(400).send({ message: "Email invalido." });
+      }
+
+      payload.email = parsedEmail;
+    }
+
+    if (request.body?.password_hash !== undefined) {
+      const parsedPassword = normalizeOptionalText(request.body.password_hash);
+
+      if (!parsedPassword) {
+        return reply.status(400).send({ message: "Senha temporaria nao pode ficar vazia." });
+      }
+
+      payload.password_hash = hashTemporaryPassword(parsedPassword);
+    }
+
+    if (request.body?.is_active !== undefined) {
+      payload.is_active = !!request.body.is_active;
+    }
+
+    const hasRoleAssignments = request.body?.role_assignments !== undefined;
+    const roleAssignments = hasRoleAssignments ? normalizeRoleAssignments(request.body?.role_assignments) : [];
+
+    if (!Object.keys(payload).length && !hasRoleAssignments) {
+      return reply.status(400).send({ message: "Nenhum campo informado para atualizacao." });
+    }
+
+    const supabase = createServerClient();
+
+    if (hasRoleAssignments && roleAssignments.length) {
+      const roleIds = roleAssignments.map((item) => item.role_id);
+      const { data: roleRows, error: roleError } = await supabase
+        .from("roles")
+        .select("id,name,hotel_id,hotels(name)")
+        .in("id", roleIds);
+
+      if (roleError) {
+        request.log.error(roleError);
+        return reply.status(500).send({ message: "Falha ao validar papeis para o usuario." });
+      }
+
+      const roleMap = new Map((roleRows || []).map((item: any) => [item.id, item]));
+
+      if (roleMap.size !== roleIds.length) {
+        return reply.status(400).send({ message: "Uma ou mais roles selecionadas nao existem." });
+      }
+
+      for (const assignment of roleAssignments) {
+        const role = roleMap.get(assignment.role_id);
+
+        if (!role) {
+          return reply.status(400).send({ message: "Role selecionada nao existe." });
+        }
+
+        if (role.hotel_id && assignment.hotel_id && role.hotel_id !== assignment.hotel_id) {
+          return reply.status(400).send({ message: "A role selecionada nao pertence ao hotel escolhido." });
+        }
+      }
+    }
+
+    if (Object.keys(payload).length) {
+      const { error: updateError } = await supabase.from("users").update(payload).eq("id", id);
+
+      if (updateError) {
+        request.log.error(updateError);
+
+        if (updateError.code === "23505") {
+          return reply.status(409).send({ message: "Email ja utilizado por outro usuario." });
+        }
+
+        if (updateError.code === "PGRST116") {
+          return reply.status(404).send({ message: "Usuario nao encontrado." });
+        }
+
+        return reply.status(500).send({ message: "Falha ao atualizar usuario." });
+      }
+    } else {
+      const { data: userExists, error: userExistsError } = await supabase.from("users").select("id").eq("id", id).single();
+
+      if (userExistsError || !userExists) {
+        return reply.status(404).send({ message: "Usuario nao encontrado." });
+      }
+    }
+
+    if (hasRoleAssignments) {
+      const { error: deleteError } = await supabase.from("user_roles").delete().eq("user_id", id);
+
+      if (deleteError) {
+        request.log.error(deleteError);
+        return reply.status(500).send({ message: "Falha ao atualizar papeis do usuario." });
+      }
+
+      if (roleAssignments.length) {
+        const { error: insertError } = await supabase
+          .from("user_roles")
+          .insert(roleAssignments.map((item) => ({ user_id: id, role_id: item.role_id })));
+
+        if (insertError) {
+          request.log.error(insertError);
+          return reply.status(500).send({ message: "Falha ao atualizar papeis do usuario." });
+        }
+      }
+    }
+
+    const { data: updatedUser, error: updatedUserError } = await supabase
+      .from("users")
+      .select("id,name,email,is_active,last_login_at,created_at,user_roles(role_id,roles(id,name,hotel_id,hotels(name)))")
+      .eq("id", id)
+      .single();
+
+    if (updatedUserError || !updatedUser) {
+      request.log.error(updatedUserError);
+      return reply.status(500).send({ message: "Falha ao consultar usuario atualizado." });
+    }
+
+    return reply.send({ item: mapAdminUser(updatedUser) });
+  });
+
+  app.delete<{ Params: HotelIdParams }>("/admin/users/:id", async (request, reply) => {
+    const session = ensureAuthorized(request, reply, PERMISSIONS.USER_DELETE);
+
+    if (!session) {
+      return;
+    }
+
+    const id = request.params.id;
+
+    if (!id) {
+      return reply.status(400).send({ message: "Id do usuario e obrigatorio para exclusao." });
+    }
+
+    const supabase = createServerClient();
+    const { data, error } = await supabase.from("users").delete().eq("id", id).select("id");
+
+    if (error) {
+      request.log.error(error);
+      return reply.status(500).send({ message: "Falha ao excluir usuario." });
+    }
+
+    if (!data || !data.length) {
+      return reply.status(404).send({ message: "Usuario nao encontrado." });
+    }
+
+    return reply.send({ ok: true });
+  });
+
+  app.get("/admin/roles/reference-data", async (request, reply) => {
+    const session = ensureAuthorizedAny(request, reply, [PERMISSIONS.ROLE_READ, PERMISSIONS.ROLE_CREATE, PERMISSIONS.ROLE_UPDATE]);
+
+    if (!session) {
+      return;
+    }
+
+    const supabase = createServerClient();
+    const [{ data: hotels, error: hotelsError }, { data: permissions, error: permissionsError }] = await Promise.all([
+      supabase.from("hotels").select("id,name").order("name", { ascending: true }),
+      supabase.from("permissions").select("id,name").order("name", { ascending: true })
+    ]);
+
+    if (hotelsError || permissionsError) {
+      request.log.error(hotelsError || permissionsError);
+      return reply.status(500).send({ message: "Falha ao consultar dados auxiliares de roles." });
+    }
+
+    return reply.send({
+      hotels: (hotels || []).map((item: any) => ({ id: item.id, name: item.name })),
+      permissions: (permissions || []).map((item: any) => ({ id: item.id, name: item.name }))
+    });
+  });
+
+  app.get("/admin/roles", async (request, reply) => {
+    const session = ensureAuthorized(request, reply, PERMISSIONS.ROLE_READ);
+
+    if (!session) {
+      return;
+    }
+
+    const supabase = createServerClient();
+    const { data, error } = await supabase
+      .from("roles")
+      .select("id,name,hotel_id,hotels(name),role_permissions(permission_id,permissions(id,name))")
+      .order("name", { ascending: true });
 
     if (error) {
       request.log.error(error);
       return reply.status(500).send({ message: "Falha ao consultar roles." });
     }
 
-    return reply.send({ items: data ?? [] });
+    return reply.send({ items: (data || []).map(mapAdminRole) });
+  });
+
+  app.post<{ Body: RoleCreateBody }>("/admin/roles", async (request, reply) => {
+    const session = ensureAuthorized(request, reply, PERMISSIONS.ROLE_CREATE);
+
+    if (!session) {
+      return;
+    }
+
+    const name = normalizeOptionalText(request.body?.name);
+    const hotelId = normalizeOptionalText(request.body?.hotel_id || null);
+    const permissionIds = normalizePermissionIds(request.body?.permission_ids || []);
+
+    if (!name) {
+      return reply.status(400).send({ message: "Nome da role e obrigatorio." });
+    }
+
+    const supabase = createServerClient();
+
+    if (hotelId) {
+      const { data: hotelExists, error: hotelError } = await supabase.from("hotels").select("id").eq("id", hotelId).single();
+
+      if (hotelError || !hotelExists) {
+        return reply.status(400).send({ message: "Hotel selecionado nao existe." });
+      }
+    }
+
+    if (permissionIds.length) {
+      const { data: permissionRows, error: permissionError } = await supabase.from("permissions").select("id").in("id", permissionIds);
+
+      if (permissionError) {
+        request.log.error(permissionError);
+        return reply.status(500).send({ message: "Falha ao validar permissoes da role." });
+      }
+
+      if ((permissionRows || []).length !== permissionIds.length) {
+        return reply.status(400).send({ message: "Uma ou mais permissoes selecionadas nao existem." });
+      }
+    }
+
+    const { data: createdRole, error: createRoleError } = await supabase
+      .from("roles")
+      .insert({ name, hotel_id: hotelId })
+      .select("id")
+      .single();
+
+    if (createRoleError) {
+      request.log.error(createRoleError);
+
+      if (createRoleError.code === "23505") {
+        return reply.status(409).send({ message: "Nome de role ja existente." });
+      }
+
+      return reply.status(500).send({ message: "Falha ao criar role." });
+    }
+
+    if (permissionIds.length) {
+      const { error: rolePermissionError } = await supabase
+        .from("role_permissions")
+        .insert(permissionIds.map((permissionId) => ({ role_id: createdRole.id, permission_id: permissionId })));
+
+      if (rolePermissionError) {
+        request.log.error(rolePermissionError);
+        return reply.status(500).send({ message: "Role criada, mas falhou ao vincular permissoes." });
+      }
+    }
+
+    const { data: roleWithRelations, error: roleWithRelationsError } = await supabase
+      .from("roles")
+      .select("id,name,hotel_id,hotels(name),role_permissions(permission_id,permissions(id,name))")
+      .eq("id", createdRole.id)
+      .single();
+
+    if (roleWithRelationsError || !roleWithRelations) {
+      request.log.error(roleWithRelationsError);
+      return reply.status(500).send({ message: "Falha ao consultar role criada." });
+    }
+
+    return reply.status(201).send({ item: mapAdminRole(roleWithRelations) });
+  });
+
+  app.put<{ Params: HotelIdParams; Body: RoleUpdateBody }>("/admin/roles/:id", async (request, reply) => {
+    const session = ensureAuthorized(request, reply, PERMISSIONS.ROLE_UPDATE);
+
+    if (!session) {
+      return;
+    }
+
+    const id = request.params.id;
+
+    if (!id) {
+      return reply.status(400).send({ message: "Id da role e obrigatorio para atualizacao." });
+    }
+
+    const payload: Record<string, unknown> = {};
+
+    if (request.body?.name !== undefined) {
+      const parsedName = normalizeOptionalText(request.body.name);
+
+      if (!parsedName) {
+        return reply.status(400).send({ message: "Nome da role nao pode ficar vazio." });
+      }
+
+      payload.name = parsedName;
+    }
+
+    if (request.body?.hotel_id !== undefined) {
+      payload.hotel_id = normalizeOptionalText(request.body.hotel_id || null);
+    }
+
+    const hasPermissionsPayload = request.body?.permission_ids !== undefined;
+    const permissionIds = hasPermissionsPayload ? normalizePermissionIds(request.body?.permission_ids) : [];
+
+    if (!Object.keys(payload).length && !hasPermissionsPayload) {
+      return reply.status(400).send({ message: "Nenhum campo informado para atualizacao." });
+    }
+
+    const supabase = createServerClient();
+
+    if (payload.hotel_id) {
+      const { data: hotelExists, error: hotelError } = await supabase.from("hotels").select("id").eq("id", payload.hotel_id).single();
+
+      if (hotelError || !hotelExists) {
+        return reply.status(400).send({ message: "Hotel selecionado nao existe." });
+      }
+    }
+
+    if (hasPermissionsPayload && permissionIds.length) {
+      const { data: permissionRows, error: permissionError } = await supabase.from("permissions").select("id").in("id", permissionIds);
+
+      if (permissionError) {
+        request.log.error(permissionError);
+        return reply.status(500).send({ message: "Falha ao validar permissoes da role." });
+      }
+
+      if ((permissionRows || []).length !== permissionIds.length) {
+        return reply.status(400).send({ message: "Uma ou mais permissoes selecionadas nao existem." });
+      }
+    }
+
+    if (Object.keys(payload).length) {
+      const { error: updateRoleError } = await supabase.from("roles").update(payload).eq("id", id);
+
+      if (updateRoleError) {
+        request.log.error(updateRoleError);
+
+        if (updateRoleError.code === "23505") {
+          return reply.status(409).send({ message: "Nome de role ja existente." });
+        }
+
+        if (updateRoleError.code === "PGRST116") {
+          return reply.status(404).send({ message: "Role nao encontrada." });
+        }
+
+        return reply.status(500).send({ message: "Falha ao atualizar role." });
+      }
+    } else {
+      const { data: roleExists, error: roleExistsError } = await supabase.from("roles").select("id").eq("id", id).single();
+
+      if (roleExistsError || !roleExists) {
+        return reply.status(404).send({ message: "Role nao encontrada." });
+      }
+    }
+
+    if (hasPermissionsPayload) {
+      const { error: deletePermissionsError } = await supabase.from("role_permissions").delete().eq("role_id", id);
+
+      if (deletePermissionsError) {
+        request.log.error(deletePermissionsError);
+        return reply.status(500).send({ message: "Falha ao atualizar permissoes da role." });
+      }
+
+      if (permissionIds.length) {
+        const { error: insertPermissionsError } = await supabase
+          .from("role_permissions")
+          .insert(permissionIds.map((permissionId) => ({ role_id: id, permission_id: permissionId })));
+
+        if (insertPermissionsError) {
+          request.log.error(insertPermissionsError);
+          return reply.status(500).send({ message: "Falha ao atualizar permissoes da role." });
+        }
+      }
+    }
+
+    const { data: updatedRole, error: updatedRoleError } = await supabase
+      .from("roles")
+      .select("id,name,hotel_id,hotels(name),role_permissions(permission_id,permissions(id,name))")
+      .eq("id", id)
+      .single();
+
+    if (updatedRoleError || !updatedRole) {
+      request.log.error(updatedRoleError);
+      return reply.status(500).send({ message: "Falha ao consultar role atualizada." });
+    }
+
+    return reply.send({ item: mapAdminRole(updatedRole) });
+  });
+
+  app.delete<{ Params: HotelIdParams }>("/admin/roles/:id", async (request, reply) => {
+    const session = ensureAuthorized(request, reply, PERMISSIONS.ROLE_DELETE);
+
+    if (!session) {
+      return;
+    }
+
+    const id = request.params.id;
+
+    if (!id) {
+      return reply.status(400).send({ message: "Id da role e obrigatorio para exclusao." });
+    }
+
+    const supabase = createServerClient();
+    const { data, error } = await supabase.from("roles").delete().eq("id", id).select("id");
+
+    if (error) {
+      request.log.error(error);
+      return reply.status(500).send({ message: "Falha ao excluir role." });
+    }
+
+    if (!data || !data.length) {
+      return reply.status(404).send({ message: "Role nao encontrada." });
+    }
+
+    return reply.send({ ok: true });
   });
 
   app.get("/admin/permissions", async (request, reply) => {
-    const session = getSessionFromRequest(request);
+    const session = ensureAuthorized(request, reply, PERMISSIONS.PERMISSION_READ);
 
     if (!session) {
-      return reply.status(401).send(getAuthError(AUTH_ERROR_CODE.TOKEN_INVALID_OR_EXPIRED));
-    }
-
-    if (!hasPermission(session, PERMISSIONS.PERMISSION_READ)) {
-      return reply.status(403).send(getAuthError(AUTH_ERROR_CODE.FORBIDDEN));
+      return;
     }
 
     const supabase = createServerClient();
@@ -706,6 +1402,101 @@ async function bootstrap() {
     }
 
     return reply.send({ items: data ?? [] });
+  });
+
+  app.post<{ Body: PermissionCreateBody }>("/admin/permissions", async (request, reply) => {
+    const session = ensureAuthorized(request, reply, PERMISSIONS.PERMISSION_CREATE);
+
+    if (!session) {
+      return;
+    }
+
+    const name = normalizeOptionalText(request.body?.name);
+
+    if (!name) {
+      return reply.status(400).send({ message: "Nome da permissao e obrigatorio." });
+    }
+
+    const supabase = createServerClient();
+    const { data, error } = await supabase.from("permissions").insert({ name }).select("id,name").single();
+
+    if (error) {
+      request.log.error(error);
+
+      if (error.code === "23505") {
+        return reply.status(409).send({ message: "Nome de permissao ja existente." });
+      }
+
+      return reply.status(500).send({ message: "Falha ao criar permissao." });
+    }
+
+    return reply.status(201).send({ item: data });
+  });
+
+  app.put<{ Params: HotelIdParams; Body: PermissionUpdateBody }>("/admin/permissions/:id", async (request, reply) => {
+    const session = ensureAuthorized(request, reply, PERMISSIONS.PERMISSION_UPDATE);
+
+    if (!session) {
+      return;
+    }
+
+    const id = request.params.id;
+    const name = normalizeOptionalText(request.body?.name);
+
+    if (!id) {
+      return reply.status(400).send({ message: "Id da permissao e obrigatorio para atualizacao." });
+    }
+
+    if (!name) {
+      return reply.status(400).send({ message: "Nome da permissao e obrigatorio para atualizacao." });
+    }
+
+    const supabase = createServerClient();
+    const { data, error } = await supabase.from("permissions").update({ name }).eq("id", id).select("id,name").single();
+
+    if (error) {
+      request.log.error(error);
+
+      if (error.code === "PGRST116") {
+        return reply.status(404).send({ message: "Permissao nao encontrada." });
+      }
+
+      if (error.code === "23505") {
+        return reply.status(409).send({ message: "Nome de permissao ja existente." });
+      }
+
+      return reply.status(500).send({ message: "Falha ao atualizar permissao." });
+    }
+
+    return reply.send({ item: data });
+  });
+
+  app.delete<{ Params: HotelIdParams }>("/admin/permissions/:id", async (request, reply) => {
+    const session = ensureAuthorized(request, reply, PERMISSIONS.PERMISSION_DELETE);
+
+    if (!session) {
+      return;
+    }
+
+    const id = request.params.id;
+
+    if (!id) {
+      return reply.status(400).send({ message: "Id da permissao e obrigatorio para exclusao." });
+    }
+
+    const supabase = createServerClient();
+    const { data, error } = await supabase.from("permissions").delete().eq("id", id).select("id");
+
+    if (error) {
+      request.log.error(error);
+      return reply.status(500).send({ message: "Falha ao excluir permissao." });
+    }
+
+    if (!data || !data.length) {
+      return reply.status(404).send({ message: "Permissao nao encontrada." });
+    }
+
+    return reply.send({ ok: true });
   });
 
   await app.listen({ port, host: "0.0.0.0" });

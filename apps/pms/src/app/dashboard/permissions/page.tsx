@@ -1,25 +1,27 @@
-import { PERMISSIONS } from "@hotel/shared";
+import { redirect } from "next/navigation";
 import { getUserFromSession } from "../../../lib/auth";
-import { type AdminPermission, listPermissions } from "../../../lib/adminApi";
-import { AdminTable } from "../_components/AdminTable";
+import { getPermissionsAccess, getPermissionsDefaultRoute } from "./access";
 
-function toRows(items: AdminPermission[]): string[][] {
-  return items.map((item) => [item.name]);
-}
+type PermissionsPageProps = {
+  searchParams?: {
+    status?: string;
+  };
+};
 
-export default async function PermissionsPage() {
+export default async function PermissionsPage({ searchParams }: PermissionsPageProps) {
   const user = await getUserFromSession();
+  const access = getPermissionsAccess(user);
+  const targetRoute = getPermissionsDefaultRoute(access);
+  const statusQuery = searchParams?.status ? `?status=${encodeURIComponent(searchParams.status)}` : "";
 
-  if (!user || !user.permissions.includes(PERMISSIONS.PERMISSION_READ)) {
+  if (!targetRoute) {
     return (
       <section style={{ background: "#fff", border: "1px solid #e2e2e2", borderRadius: "12px", padding: "1rem" }}>
-        <h2 style={{ marginTop: 0 }}>Permissoes</h2>
+        <h1 style={{ marginTop: 0, marginBottom: "0.35rem", fontSize: "3rem", marginLeft: "1rem" }}>Permissoes</h1>
         <p>Sem permissao para visualizar este modulo.</p>
       </section>
     );
   }
 
-  const permissions = await listPermissions();
-
-  return <AdminTable title="Permissoes" description="Etapa 1: listagem inicial para base do CRUD." columns={["Nome"]} rows={toRows(permissions)} />;
+  redirect(`${targetRoute}${statusQuery}`);
 }

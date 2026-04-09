@@ -1,25 +1,27 @@
-import { PERMISSIONS } from "@hotel/shared";
+import { redirect } from "next/navigation";
 import { getUserFromSession } from "../../../lib/auth";
-import { type AdminRole, listRoles } from "../../../lib/adminApi";
-import { AdminTable } from "../_components/AdminTable";
+import { getRolesAccess, getRolesDefaultRoute } from "./access";
 
-function toRows(items: AdminRole[]): string[][] {
-  return items.map((item) => [item.name, item.hotel_id || "GLOBAL"]);
-}
+type RolesPageProps = {
+  searchParams?: {
+    status?: string;
+  };
+};
 
-export default async function RolesPage() {
+export default async function RolesPage({ searchParams }: RolesPageProps) {
   const user = await getUserFromSession();
+  const access = getRolesAccess(user);
+  const targetRoute = getRolesDefaultRoute(access);
+  const statusQuery = searchParams?.status ? `?status=${encodeURIComponent(searchParams.status)}` : "";
 
-  if (!user || !user.permissions.includes(PERMISSIONS.ROLE_READ)) {
+  if (!targetRoute) {
     return (
       <section style={{ background: "#fff", border: "1px solid #e2e2e2", borderRadius: "12px", padding: "1rem" }}>
-        <h2 style={{ marginTop: 0 }}>Roles</h2>
+        <h1 style={{ marginTop: 0, marginBottom: "0.35rem", fontSize: "3rem", marginLeft: "1rem" }}>Roles</h1>
         <p>Sem permissao para visualizar este modulo.</p>
       </section>
     );
   }
 
-  const roles = await listRoles();
-
-  return <AdminTable title="Roles" description="Etapa 1: listagem inicial para base do CRUD." columns={["Nome", "Hotel"]} rows={toRows(roles)} />;
+  redirect(`${targetRoute}${statusQuery}`);
 }
