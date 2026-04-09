@@ -1,6 +1,22 @@
+import "dotenv/config";
 import Fastify from "fastify";
 import cors from "@fastify/cors";
 import { createHmac, randomUUID, timingSafeEqual } from "node:crypto";
+import {
+  isValidCountryCode,
+  isValidCurrency,
+  isValidEmail,
+  isValidPhone,
+  isValidSlug,
+  isValidTimezone,
+  isValidZipCodeByCountry,
+  normalizeCountryCode,
+  normalizeCurrency,
+  normalizeEmail,
+  normalizeSlug,
+  normalizeZipCode,
+  sanitizePhone
+} from "./services/hotelFieldValidation";
 import { suggestLocaleByCountry, validateTaxIdByCountry } from "./services/taxIdValidator";
 import {
   AUTH_ERROR_CODE,
@@ -262,16 +278,16 @@ async function bootstrap() {
     const name = request.body?.name?.trim();
     const legalName = request.body?.legal_name?.trim();
     const taxId = request.body?.tax_id?.trim();
-    const slug = request.body?.slug?.trim().toLowerCase();
-    const email = request.body?.email?.trim();
-    const phone = request.body?.phone?.trim();
+    const slug = normalizeSlug(request.body?.slug || "");
+    const email = normalizeEmail(request.body?.email || "");
+    const phone = sanitizePhone(request.body?.phone || "");
     const addressLine = request.body?.address_line?.trim();
     const addressNumber = request.body?.address_number?.trim();
     const district = request.body?.district?.trim();
     const city = request.body?.city?.trim();
     const state = request.body?.state?.trim();
-    const country = request.body?.country?.trim();
-    const zipCode = request.body?.zip_code?.trim();
+    const country = normalizeCountryCode(request.body?.country || "");
+    const zipCode = normalizeZipCode(request.body?.zip_code || "");
 
     if (
       !name ||
@@ -291,14 +307,42 @@ async function bootstrap() {
       return reply.status(400).send({ message: "Campos obrigatorios ausentes no cadastro inicial do hotel." });
     }
 
+    if (!isValidCountryCode(country)) {
+      return reply.status(400).send({ message: "Country invalido. Use codigo ISO de 2 letras (ex.: BR, US, PT)." });
+    }
+
+    if (!isValidEmail(email)) {
+      return reply.status(400).send({ message: "Email invalido." });
+    }
+
+    if (!isValidPhone(phone)) {
+      return reply.status(400).send({ message: "Telefone invalido. Informe entre 8 e 15 digitos." });
+    }
+
+    if (!isValidSlug(slug)) {
+      return reply.status(400).send({ message: "Slug invalido. Use apenas letras minusculas, numeros e hifen." });
+    }
+
+    if (!isValidZipCodeByCountry(country, zipCode)) {
+      return reply.status(400).send({ message: "CEP/Zip code invalido para o pais informado." });
+    }
+
     const localeSuggestion = suggestLocaleByCountry(country);
     const timezone = request.body?.timezone?.trim() || localeSuggestion.timezone;
-    const currency = request.body?.currency?.trim().toUpperCase() || localeSuggestion.currency;
+    const currency = normalizeCurrency(request.body?.currency || localeSuggestion.currency || "");
 
     if (!timezone || !currency) {
       return reply
         .status(400)
         .send({ message: "Timezone e currency sao obrigatorios (podem ser inferidos automaticamente pelo country)." });
+    }
+
+    if (!isValidTimezone(timezone)) {
+      return reply.status(400).send({ message: "Timezone invalido." });
+    }
+
+    if (!isValidCurrency(currency)) {
+      return reply.status(400).send({ message: "Moeda invalida." });
     }
 
     const taxIdValidation = validateTaxIdByCountry(country, taxId);
@@ -385,30 +429,42 @@ async function bootstrap() {
     }
 
     if (request.body?.slug !== undefined) {
-      const parsedSlug = request.body.slug.trim().toLowerCase();
+      const parsedSlug = normalizeSlug(request.body.slug);
 
       if (!parsedSlug) {
         return reply.status(400).send({ message: "Slug nao pode ficar vazio." });
+      }
+
+      if (!isValidSlug(parsedSlug)) {
+        return reply.status(400).send({ message: "Slug invalido. Use apenas letras minusculas, numeros e hifen." });
       }
 
       payload.slug = parsedSlug;
     }
 
     if (request.body?.email !== undefined) {
-      const parsedEmail = normalizeOptionalText(request.body.email);
+      const parsedEmail = normalizeOptionalText(normalizeEmail(request.body.email || ""));
 
       if (!parsedEmail) {
         return reply.status(400).send({ message: "Email nao pode ficar vazio." });
+      }
+
+      if (!isValidEmail(parsedEmail)) {
+        return reply.status(400).send({ message: "Email invalido." });
       }
 
       payload.email = parsedEmail;
     }
 
     if (request.body?.phone !== undefined) {
-      const parsedPhone = normalizeOptionalText(request.body.phone);
+      const parsedPhone = normalizeOptionalText(sanitizePhone(request.body.phone || ""));
 
       if (!parsedPhone) {
         return reply.status(400).send({ message: "Telefone nao pode ficar vazio." });
+      }
+
+      if (!isValidPhone(parsedPhone)) {
+        return reply.status(400).send({ message: "Telefone invalido. Informe entre 8 e 15 digitos." });
       }
 
       payload.phone = parsedPhone;
@@ -439,20 +495,64 @@ async function bootstrap() {
     }
 
     if (request.body?.country !== undefined) {
-      payload.country = normalizeOptionalText(request.body.country);
+      const parsedCountry = normalizeOptionalText(request.body.country);
+
+      if (!parsedCountry) {
+        return reply.status(400).send({ message: "Country nao pode ficar vazio." });
+      }
+
+      const normalizedCountry = normalizeCountryCode(parsedCountry);
+
+      if (!isValidCountryCode(normalizedCountry)) {
+        return reply.status(400).send({ message: "Country invalido. Use codigo ISO de 2 letras." });
+      }
+
+      payload.country = normalizedCountry;
     }
 
     if (request.body?.zip_code !== undefined) {
-      payload.zip_code = normalizeOptionalText(request.body.zip_code);
+      const parsedZipCode = normalizeOptionalText(request.body.zip_code);
+      const parsedCountry = normalizeOptionalText((payload.country as string | null | undefined) || request.body?.country);
+
+      if (!parsedZipCode) {
+        return reply.status(400).send({ message: "CEP/Zip code nao pode ficar vazio." });
+      }
+
+      if (parsedCountry && !isValidZipCodeByCountry(parsedCountry, parsedZipCode)) {
+        return reply.status(400).send({ message: "CEP/Zip code invalido para o pais informado." });
+      }
+
+      payload.zip_code = parsedZipCode;
     }
 
     if (request.body?.timezone !== undefined) {
-      payload.timezone = normalizeOptionalText(request.body.timezone);
+      const parsedTimezone = normalizeOptionalText(request.body.timezone);
+
+      if (!parsedTimezone) {
+        return reply.status(400).send({ message: "Timezone nao pode ficar vazio." });
+      }
+
+      if (!isValidTimezone(parsedTimezone)) {
+        return reply.status(400).send({ message: "Timezone invalido." });
+      }
+
+      payload.timezone = parsedTimezone;
     }
 
     if (request.body?.currency !== undefined) {
       const parsedCurrency = normalizeOptionalText(request.body.currency);
-      payload.currency = parsedCurrency ? parsedCurrency.toUpperCase() : null;
+
+      if (!parsedCurrency) {
+        return reply.status(400).send({ message: "Moeda nao pode ficar vazia." });
+      }
+
+      const normalizedCurrency = normalizeCurrency(parsedCurrency);
+
+      if (!isValidCurrency(normalizedCurrency)) {
+        return reply.status(400).send({ message: "Moeda invalida." });
+      }
+
+      payload.currency = normalizedCurrency;
     }
 
     if (request.body?.is_active !== undefined) {

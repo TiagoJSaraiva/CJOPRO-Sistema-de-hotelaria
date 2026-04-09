@@ -32,6 +32,14 @@ const COUNTRY_OPTIONS: CountryOption[] = Object.entries(countries)
   })
   .sort((a, b) => a.name.localeCompare(b.name, "pt-BR"));
 
+const ALL_TIMEZONES = Array.from(new Set(COUNTRY_OPTIONS.map((option) => option.timezone).filter(Boolean))).sort((a, b) =>
+  a.localeCompare(b)
+);
+
+const ALL_CURRENCIES = Array.from(new Set(COUNTRY_OPTIONS.map((option) => option.currency).filter(Boolean))).sort((a, b) =>
+  a.localeCompare(b)
+);
+
 function findCountryOption(code: string): CountryOption | undefined {
   return COUNTRY_OPTIONS.find((option) => option.code === code);
 }
@@ -50,6 +58,30 @@ export function CountryLocaleFields({ defaultCountryCode = "BR" }: CountryLocale
     setCountryCode(nextCode);
     setTimezone(nextOption?.timezone || "");
     setCurrency(nextOption?.currency || "");
+  };
+
+  const handleTimezoneBlur = (event: React.FocusEvent<HTMLInputElement>) => {
+    const currentValue = event.target.value.trim();
+
+    if (!currentValue || ALL_TIMEZONES.includes(currentValue)) {
+      event.target.setCustomValidity("");
+      return;
+    }
+
+    event.target.setCustomValidity("Timezone invalido. Escolha um timezone existente.");
+    event.target.reportValidity();
+  };
+
+  const handleCurrencyBlur = (event: React.FocusEvent<HTMLInputElement>) => {
+    const currentValue = event.target.value.trim().toUpperCase();
+
+    if (!currentValue || ALL_CURRENCIES.includes(currentValue)) {
+      event.target.setCustomValidity("");
+      return;
+    }
+
+    event.target.setCustomValidity("Moeda invalida. Informe um codigo de moeda existente.");
+    event.target.reportValidity();
   };
 
   return (
@@ -77,10 +109,18 @@ export function CountryLocaleFields({ defaultCountryCode = "BR" }: CountryLocale
         <input
           id="create-timezone"
           name="timezone"
+          list="timezone-options"
+          required
           value={timezone}
           onChange={(event) => setTimezone(event.target.value)}
+          onBlur={handleTimezoneBlur}
           style={{ border: "1px solid #d2d2d2", borderRadius: "8px", padding: "0.55rem" }}
         />
+        <datalist id="timezone-options">
+          {ALL_TIMEZONES.map((timezoneOption) => (
+            <option key={timezoneOption} value={timezoneOption} />
+          ))}
+        </datalist>
       </div>
 
       <div style={{ display: "grid", gap: "0.35rem" }}>
@@ -88,10 +128,18 @@ export function CountryLocaleFields({ defaultCountryCode = "BR" }: CountryLocale
         <input
           id="create-currency"
           name="currency"
+          list="currency-options"
+          required
           value={currency}
           onChange={(event) => setCurrency(event.target.value.toUpperCase())}
+          onBlur={handleCurrencyBlur}
           style={{ border: "1px solid #d2d2d2", borderRadius: "8px", padding: "0.55rem" }}
         />
+        <datalist id="currency-options">
+          {ALL_CURRENCIES.map((currencyOption) => (
+            <option key={currencyOption} value={currencyOption} />
+          ))}
+        </datalist>
       </div>
     </>
   );

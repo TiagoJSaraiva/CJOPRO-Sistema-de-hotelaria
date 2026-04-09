@@ -21,14 +21,20 @@ function getBackendUrl(): string {
 export async function loginWithCredentials(email: string, password: string): Promise<LoginResult> {
   const loginBody: LoginRequest = { email, password };
 
-  const response = await fetch(`${getBackendUrl()}/auth/login`, {
-    method: "POST",
-    headers: {
-      "Content-Type": "application/json"
-    },
-    cache: "no-store",
-    body: JSON.stringify(loginBody)
-  });
+  let response: Response;
+
+  try {
+    response = await fetch(`${getBackendUrl()}/auth/login`, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json"
+      },
+      cache: "no-store",
+      body: JSON.stringify(loginBody)
+    });
+  } catch {
+    throw new Error("Servico de autenticacao indisponivel no momento.");
+  }
 
   const payload = (await response.json().catch(() => ({}))) as Partial<LoginResult> & Partial<AuthErrorResponse>;
 
@@ -51,13 +57,20 @@ export async function getUserFromSession(): Promise<AuthUser | null> {
     return null;
   }
 
-  const response = await fetch(`${getBackendUrl()}/auth/me`, {
-    method: "GET",
-    cache: "no-store",
-    headers: {
-      Authorization: `Bearer ${token}`
-    }
-  });
+  let response: Response;
+
+  try {
+    response = await fetch(`${getBackendUrl()}/auth/me`, {
+      method: "GET",
+      cache: "no-store",
+      headers: {
+        Authorization: `Bearer ${token}`
+      }
+    });
+  } catch {
+    // Backend offline or network issue: treat as unauthenticated to avoid crashing SSR.
+    return null;
+  }
 
   if (!response.ok) {
     return null;

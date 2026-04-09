@@ -153,22 +153,37 @@ export default async function HotelsPage({ searchParams }: HotelsPageProps) {
           <form action={createHotelAction} style={{ display: "grid", gap: "0.7rem" }}>
             <div style={{ display: "grid", gap: "0.35rem" }}>
               <label htmlFor="create-name">Nome</label>
-              <input id="create-name" name="name" required style={{ border: "1px solid #d2d2d2", borderRadius: "8px", padding: "0.55rem" }} />
+              <input id="create-name" name="name" minLength={2} required style={{ border: "1px solid #d2d2d2", borderRadius: "8px", padding: "0.55rem" }} />
             </div>
 
             <div style={{ display: "grid", gap: "0.35rem" }}>
               <label htmlFor="create-legal-name">Razão Social</label>
-              <input id="create-legal-name" name="legal_name" required style={{ border: "1px solid #d2d2d2", borderRadius: "8px", padding: "0.55rem" }} />
+              <input id="create-legal-name" name="legal_name" minLength={3} required style={{ border: "1px solid #d2d2d2", borderRadius: "8px", padding: "0.55rem" }} />
             </div>
 
             <div style={{ display: "grid", gap: "0.35rem" }}>
               <label htmlFor="create-tax-id">CNPJ / Tax ID</label>
-              <input id="create-tax-id" name="tax_id" required style={{ border: "1px solid #d2d2d2", borderRadius: "8px", padding: "0.55rem" }} />
+              <input
+                id="create-tax-id"
+                name="tax_id"
+                inputMode="numeric"
+                pattern="[0-9./-]{11,18}"
+                title="Informe um CNPJ/Tax ID valido."
+                required
+                style={{ border: "1px solid #d2d2d2", borderRadius: "8px", padding: "0.55rem" }}
+              />
             </div>
 
             <div style={{ display: "grid", gap: "0.35rem" }}>
               <label htmlFor="create-slug">Slug</label>
-              <input id="create-slug" name="slug" required style={{ border: "1px solid #d2d2d2", borderRadius: "8px", padding: "0.55rem" }} />
+              <input
+                id="create-slug"
+                name="slug"
+                pattern="[a-z0-9-]+"
+                title="Use apenas letras minusculas, numeros e hifen."
+                required
+                style={{ border: "1px solid #d2d2d2", borderRadius: "8px", padding: "0.55rem" }}
+              />
             </div>
 
             <div style={{ display: "grid", gap: "0.35rem" }}>
@@ -178,17 +193,25 @@ export default async function HotelsPage({ searchParams }: HotelsPageProps) {
 
             <div style={{ display: "grid", gap: "0.35rem" }}>
               <label htmlFor="create-phone">Telefone</label>
-              <input id="create-phone" name="phone" required style={{ border: "1px solid #d2d2d2", borderRadius: "8px", padding: "0.55rem" }} />
+              <input
+                id="create-phone"
+                name="phone"
+                inputMode="tel"
+                pattern="[0-9 ()+-]{8,25}"
+                title="Telefone deve conter apenas numeros e simbolos de telefone."
+                required
+                style={{ border: "1px solid #d2d2d2", borderRadius: "8px", padding: "0.55rem" }}
+              />
             </div>
 
             <div style={{ display: "grid", gap: "0.35rem" }}>
               <label htmlFor="create-address-line">Endereço (logradouro)</label>
-              <input id="create-address-line" name="address_line" required style={{ border: "1px solid #d2d2d2", borderRadius: "8px", padding: "0.55rem" }} />
+              <input id="create-address-line" name="address_line" minLength={3} required style={{ border: "1px solid #d2d2d2", borderRadius: "8px", padding: "0.55rem" }} />
             </div>
 
             <div style={{ display: "grid", gap: "0.35rem" }}>
               <label htmlFor="create-address-number">Número</label>
-              <input id="create-address-number" name="address_number" required style={{ border: "1px solid #d2d2d2", borderRadius: "8px", padding: "0.55rem" }} />
+              <input id="create-address-number" name="address_number" minLength={1} required style={{ border: "1px solid #d2d2d2", borderRadius: "8px", padding: "0.55rem" }} />
             </div>
 
             <div style={{ display: "grid", gap: "0.35rem" }}>
@@ -198,24 +221,31 @@ export default async function HotelsPage({ searchParams }: HotelsPageProps) {
 
             <div style={{ display: "grid", gap: "0.35rem" }}>
               <label htmlFor="create-district">Bairro</label>
-              <input id="create-district" name="district" required style={{ border: "1px solid #d2d2d2", borderRadius: "8px", padding: "0.55rem" }} />
+              <input id="create-district" name="district" minLength={2} required style={{ border: "1px solid #d2d2d2", borderRadius: "8px", padding: "0.55rem" }} />
             </div>
 
             <div style={{ display: "grid", gap: "0.35rem" }}>
               <label htmlFor="create-city">Cidade</label>
-              <input id="create-city" name="city" required style={{ border: "1px solid #d2d2d2", borderRadius: "8px", padding: "0.55rem" }} />
+              <input id="create-city" name="city" minLength={2} required style={{ border: "1px solid #d2d2d2", borderRadius: "8px", padding: "0.55rem" }} />
             </div>
 
             <div style={{ display: "grid", gap: "0.35rem" }}>
               <label htmlFor="create-state">Estado</label>
-              <input id="create-state" name="state" required style={{ border: "1px solid #d2d2d2", borderRadius: "8px", padding: "0.55rem" }} />
+              <input id="create-state" name="state" minLength={2} required style={{ border: "1px solid #d2d2d2", borderRadius: "8px", padding: "0.55rem" }} />
             </div>
 
             <CountryLocaleFields defaultCountryCode="BR" />
 
             <div style={{ display: "grid", gap: "0.35rem" }}>
               <label htmlFor="create-zip-code">CEP / Zip code</label>
-              <input id="create-zip-code" name="zip_code" required style={{ border: "1px solid #d2d2d2", borderRadius: "8px", padding: "0.55rem" }} />
+              <input
+                id="create-zip-code"
+                name="zip_code"
+                inputMode="numeric"
+                minLength={3}
+                required
+                style={{ border: "1px solid #d2d2d2", borderRadius: "8px", padding: "0.55rem" }}
+              />
             </div>
 
             <button
