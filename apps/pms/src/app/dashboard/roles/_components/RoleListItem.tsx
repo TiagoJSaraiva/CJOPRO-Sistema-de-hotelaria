@@ -83,6 +83,7 @@ export function RoleListItem({ roleItem, hotels, permissions, canRead, canUpdate
           {canRead ? (
             <Link
               href={viewHref}
+              scroll={false}
               style={{
                 textDecoration: "none",
                 border: "1px solid #2d6cdf",
@@ -99,6 +100,7 @@ export function RoleListItem({ roleItem, hotels, permissions, canRead, canUpdate
           {canUpdate ? (
             <Link
               href={editHref}
+              scroll={false}
               style={{
                 textDecoration: "none",
                 border: "1px solid #0f766e",

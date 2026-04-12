@@ -124,6 +124,7 @@ export function UserListItem({ userItem, hotels, roles, canRead, canUpdate, canD
           {canRead ? (
             <Link
               href={viewHref}
+              scroll={false}
               style={{
                 textDecoration: "none",
                 border: "1px solid #2d6cdf",
@@ -140,6 +141,7 @@ export function UserListItem({ userItem, hotels, roles, canRead, canUpdate, canD
           {canEditThisUser ? (
             <Link
               href={editHref}
+              scroll={false}
               style={{
                 textDecoration: "none",
                 border: "1px solid #0f766e",

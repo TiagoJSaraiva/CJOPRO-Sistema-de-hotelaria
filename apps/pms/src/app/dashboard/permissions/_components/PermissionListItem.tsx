@@ -53,6 +53,7 @@ export function PermissionListItem({ permissionItem, canRead, canUpdate, canDele
           {canRead ? (
             <Link
               href={viewHref}
+              scroll={false}
               style={{
                 textDecoration: "none",
                 border: "1px solid #2d6cdf",
@@ -69,6 +70,7 @@ export function PermissionListItem({ permissionItem, canRead, canUpdate, canDele
           {canUpdate ? (
             <Link
               href={editHref}
+              scroll={false}
               style={{
                 textDecoration: "none",
                 border: "1px solid #0f766e",

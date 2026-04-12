@@ -135,6 +135,7 @@ export function HotelListItem({ hotel, canRead, canUpdate, canDelete, isViewing,
           {canRead ? (
             <Link
               href={viewHref}
+              scroll={false}
               style={{
                 textDecoration: "none",
                 border: "1px solid #2d6cdf",
@@ -151,6 +152,7 @@ export function HotelListItem({ hotel, canRead, canUpdate, canDelete, isViewing,
           {canUpdate ? (
             <Link
               href={editHref}
+              scroll={false}
               style={{
                 textDecoration: "none",
                 border: "1px solid #0f766e",
