@@ -9,7 +9,12 @@
     "start": "node dist/index.js",
     "typecheck": "tsc -p tsconfig.json --noEmit",
     "lint": "echo \"No lint configured for @hotel/booking-engine-service\"",
-    "clean": "rimraf dist"
+    "clean": "rimraf dist",
+    "test": "vitest run --passWithNoTests",
+    "test:unit": "vitest run __tests__/unit --passWithNoTests",
+    "test:integration": "vitest run __tests__/integration --passWithNoTests",
+    "test:coverage": "vitest run --coverage --passWithNoTests",
+    "test:watch": "vitest --watch --passWithNoTests"
   },
   "dependencies": {
     "@hotel/shared": "workspace:*",

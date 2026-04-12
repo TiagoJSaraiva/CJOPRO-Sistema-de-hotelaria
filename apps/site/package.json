@@ -8,7 +8,12 @@
     "start": "next start --port 3000",
     "typecheck": "tsc -p tsconfig.json --noEmit",
     "lint": "next lint",
-    "clean": "rimraf .next"
+    "clean": "rimraf .next",
+    "test": "vitest run --passWithNoTests",
+    "test:unit": "vitest run __tests__/unit --passWithNoTests",
+    "test:integration": "vitest run __tests__/integration --passWithNoTests",
+    "test:coverage": "vitest run --coverage --passWithNoTests",
+    "test:watch": "vitest --watch --passWithNoTests"
   },
   "dependencies": {
     "@hotel/shared": "workspace:*",
