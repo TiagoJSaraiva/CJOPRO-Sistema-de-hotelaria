@@ -1,4 +1,5 @@
 import { createPermissionAction } from "../actions";
+import { PendingSubmitButton } from "../../../_components/PendingSubmitButton";
 
 type PermissionCreateFormProps = {
   formKey?: string;
@@ -21,12 +22,9 @@ export function PermissionCreateForm({ formKey }: PermissionCreateFormProps) {
           />
         </div>
 
-        <button
-          type="submit"
-          style={{ border: 0, background: "#0f6d5f", color: "#fff", borderRadius: "8px", padding: "0.6rem 0.8rem", cursor: "pointer", justifySelf: "start" }}
-        >
+        <PendingSubmitButton pendingLabel="Criando permissao..." style={{ justifySelf: "start" }}>
           Criar permissao
-        </button>
+        </PendingSubmitButton>
       </form>
     </article>
   );

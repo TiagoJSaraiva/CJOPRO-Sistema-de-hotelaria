@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { AUTH_ERROR_MESSAGE, LOGIN_PAGE_ERROR_PARAM } from "@hotel/shared";
 import { loginAction } from "./actions";
+import { PendingSubmitButton } from "../_components/PendingSubmitButton";
 
 const errorMessages: Record<string, string> = {
   [LOGIN_PAGE_ERROR_PARAM.MISSING_FIELDS]: AUTH_ERROR_MESSAGE.AUTH_MISSING_FIELDS,
@@ -59,21 +60,9 @@ export default function LoginPage({ searchParams }: LoginPageProps) {
             />
           </label>
 
-          <button
-            type="submit"
-            style={{
-              marginTop: "0.4rem",
-              border: 0,
-              borderRadius: "8px",
-              padding: "0.75rem 1rem",
-              background: "#0f6d5f",
-              color: "#fff",
-              fontWeight: 600,
-              cursor: "pointer"
-            }}
-          >
+          <PendingSubmitButton pendingLabel="Entrando..." delayMs={0} minVisibleMs={420} style={{ marginTop: "0.4rem", padding: "0.75rem 1rem" }}>
             Entrar
-          </button>
+          </PendingSubmitButton>
         </form>
 
         <p style={{ marginBottom: 0, marginTop: "1rem", color: "#666", fontSize: "0.9rem" }}>

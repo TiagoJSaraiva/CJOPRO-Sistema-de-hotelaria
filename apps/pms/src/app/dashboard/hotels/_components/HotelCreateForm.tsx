@@ -1,5 +1,6 @@
 import { createHotelAction } from "../actions";
 import { CountryLocaleFields } from "./CountryLocaleFields";
+import { PendingSubmitButton } from "../../../_components/PendingSubmitButton";
 
 type HotelCreateFormProps = {
   formKey?: string;
@@ -108,12 +109,9 @@ export function HotelCreateForm({ formKey }: HotelCreateFormProps) {
           />
         </div>
 
-        <button
-          type="submit"
-          style={{ border: 0, background: "#0f6d5f", color: "#fff", borderRadius: "8px", padding: "0.6rem 0.8rem", cursor: "pointer", justifySelf: "start" }}
-        >
+        <PendingSubmitButton pendingLabel="Criando hotel..." style={{ justifySelf: "start" }}>
           Criar hotel
-        </button>
+        </PendingSubmitButton>
       </form>
     </article>
   );

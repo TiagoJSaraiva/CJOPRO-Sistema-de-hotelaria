@@ -2,6 +2,7 @@ import type { AdminHotelOption, AdminPermissionOption } from "@hotel/shared";
 import { createRoleAction } from "../actions";
 import { RoleHotelPickerField } from "./RoleHotelPickerField";
 import { RolePermissionAssignmentsField } from "./RolePermissionAssignmentsField";
+import { PendingSubmitButton } from "../../../_components/PendingSubmitButton";
 
 type RoleCreateFormProps = {
   formKey?: string;
@@ -23,12 +24,9 @@ export function RoleCreateForm({ formKey, hotels, permissions }: RoleCreateFormP
         <RoleHotelPickerField hotels={hotels} />
         <RolePermissionAssignmentsField permissions={permissions} />
 
-        <button
-          type="submit"
-          style={{ border: 0, background: "#0f6d5f", color: "#fff", borderRadius: "8px", padding: "0.6rem 0.8rem", cursor: "pointer", justifySelf: "start" }}
-        >
-          Criar role
-        </button>
+        <PendingSubmitButton pendingLabel="Criando papel..." style={{ justifySelf: "start" }}>
+          Criar papel
+        </PendingSubmitButton>
       </form>
     </article>
   );

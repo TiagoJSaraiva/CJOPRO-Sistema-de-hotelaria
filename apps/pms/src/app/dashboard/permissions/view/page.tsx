@@ -1,10 +1,12 @@
 import { redirect } from "next/navigation";
+import { Suspense } from "react";
 import { PermissionTabs } from "../../_components/PermissionTabs";
 import { listPermissions } from "../../../../lib/adminApi";
 import { getUserFromSession } from "../../../../lib/auth";
 import { getPermissionsAccess, getPermissionsDefaultRoute } from "../access";
 import { PermissionListItem } from "../_components/PermissionListItem";
 import { PermissionStatusMessage } from "../_components/PermissionStatusMessage";
+import { AdaptiveLoadingFallback } from "../../../_components/AdaptiveLoadingFallback";
 
 type PermissionsViewPageProps = {
   searchParams?: {
@@ -33,7 +35,6 @@ export default async function PermissionsViewPage({ searchParams }: PermissionsV
     );
   }
 
-  const permissions = await listPermissions();
   const activePermissionId = String(searchParams?.permissionId || "").trim();
   const mode = searchParams?.mode === "edit" ? "edit" : "view";
 
@@ -51,25 +52,61 @@ export default async function PermissionsViewPage({ searchParams }: PermissionsV
         <PermissionStatusMessage status={searchParams?.status} />
       </section>
 
-      <section style={{ display: "grid", gap: "0.75rem" }}>
-        {permissions.length ? (
-          permissions.map((item) => (
-            <PermissionListItem
-              key={item.id}
-              permissionItem={item}
-              canRead={access.canRead}
-              canUpdate={access.canUpdate}
-              canDelete={access.canDelete}
-              isViewing={activePermissionId === item.id && mode === "view"}
-              isEditing={activePermissionId === item.id && mode === "edit"}
-            />
-          ))
-        ) : (
-          <article style={{ background: "#fff", border: "1px solid #e2e2e2", borderRadius: "12px", padding: "1rem", color: "#666" }}>
-            Nenhuma permissao cadastrada ate o momento.
-          </article>
-        )}
-      </section>
+      <Suspense
+        fallback={
+          <section style={{ display: "grid", gap: "0.75rem" }}>
+            <article style={{ background: "#fff", border: "1px solid #e2e2e2", borderRadius: "12px", padding: "1rem" }}>
+              <AdaptiveLoadingFallback minHeight="22vh" label="Carregando..." />
+            </article>
+          </section>
+        }
+      >
+        <PermissionsListSection
+          activePermissionId={activePermissionId}
+          mode={mode}
+          canRead={access.canRead}
+          canUpdate={access.canUpdate}
+          canDelete={access.canDelete}
+        />
+      </Suspense>
+    </section>
+  );
+}
+
+async function PermissionsListSection({
+  activePermissionId,
+  mode,
+  canRead,
+  canUpdate,
+  canDelete
+}: {
+  activePermissionId: string;
+  mode: "view" | "edit";
+  canRead: boolean;
+  canUpdate: boolean;
+  canDelete: boolean;
+}) {
+  const permissions = await listPermissions();
+
+  return (
+    <section style={{ display: "grid", gap: "0.75rem" }}>
+      {permissions.length ? (
+        permissions.map((item) => (
+          <PermissionListItem
+            key={item.id}
+            permissionItem={item}
+            canRead={canRead}
+            canUpdate={canUpdate}
+            canDelete={canDelete}
+            isViewing={activePermissionId === item.id && mode === "view"}
+            isEditing={activePermissionId === item.id && mode === "edit"}
+          />
+        ))
+      ) : (
+        <article style={{ background: "#fff", border: "1px solid #e2e2e2", borderRadius: "12px", padding: "1rem", color: "#666" }}>
+          Nenhuma permissao cadastrada ate o momento.
+        </article>
+      )}
     </section>
   );
 }
