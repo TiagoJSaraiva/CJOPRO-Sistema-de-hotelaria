@@ -48,12 +48,18 @@ function revalidateRolePages(): void {
   revalidatePath("/dashboard/roles/view");
 }
 
+function getRedirectNonce(): string {
+  return Date.now().toString(36);
+}
+
 function redirectWithStatus(status: string, section: "create" | "view" | "root" = "root"): never {
+  const nonce = getRedirectNonce();
+
   if (section === "root") {
-    redirect(`/dashboard/roles?status=${status}`);
+    redirect(`/dashboard/roles?status=${status}&r=${nonce}`);
   }
 
-  redirect(`/dashboard/roles/${section}?status=${status}`);
+  redirect(`/dashboard/roles/${section}?status=${status}&r=${nonce}`);
 }
 
 export async function createRoleAction(formData: FormData): Promise<void> {

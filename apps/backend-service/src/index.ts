@@ -1,7 +1,7 @@
 import "dotenv/config";
 import Fastify from "fastify";
 import cors from "@fastify/cors";
-import { createHash, createHmac, randomUUID, timingSafeEqual } from "node:crypto";
+import { createHash, createHmac, timingSafeEqual } from "node:crypto";
 import {
   isValidCountryCode,
   isValidCurrency,
@@ -60,28 +60,6 @@ type PermissionUpdateBody = Partial<AdminPermissionUpdateInput>;
 
 const SESSION_SECRET = process.env.AUTH_SESSION_SECRET || "dev-auth-session-secret-change-me";
 const SESSION_TTL_SECONDS = 60 * 60 * 8;
-
-const DEV_USER = {
-  id: process.env.AUTH_USER_ID || randomUUID(),
-  name: process.env.AUTH_USER_NAME || "Administrador",
-  email: process.env.AUTH_USER_EMAIL || "admin@hotel.local",
-  password: process.env.AUTH_USER_PASSWORD || "123456",
-  tenantId: process.env.AUTH_USER_TENANT_ID || null,
-  roles: (process.env.AUTH_USER_ROLES || "system_owner")
-    .split(",")
-    .map((value) => value.trim())
-    .filter(Boolean),
-  permissions: (process.env.AUTH_USER_PERMISSIONS || 
-    "create_hotel,read_hotel,update_hotel,delete_hotel,\
-    create_user,read_user,update_user,delete_user,\
-    create_permission,read_permission,update_permission,delete_permission,\
-    create_role,read_role,update_role,delete_role") 
-    // ISSO TUDO AQUI EM CIMA VAI SER REMOVIDO DEPOIS E SUBSTITUIDO POR AQUISIÇÕES DE DADOS DO DB, MAS POR ENQUANTO FICA ASSIM PRA FACILITAR O DEV
-
-    .split(",")
-    .map((value) => value.trim())
-    .filter(Boolean)
-};
 
 function base64UrlEncode(value: string): string {
   return Buffer.from(value).toString("base64url");
@@ -202,6 +180,78 @@ function ensureAuthorizedAny(
 
 function hashTemporaryPassword(value: string): string {
   return createHash("sha256").update(value).digest("hex");
+}
+
+function matchesPasswordHash(plainTextPassword: string, storedPasswordHash: string | null | undefined): boolean {
+  if (!storedPasswordHash) {
+    return false;
+  }
+
+  const providedHash = Buffer.from(hashTemporaryPassword(plainTextPassword));
+  const expectedHash = Buffer.from(storedPasswordHash);
+
+  if (providedHash.length !== expectedHash.length) {
+    return false;
+  }
+
+  return timingSafeEqual(providedHash, expectedHash);
+}
+
+function mapAuthUserFromDb(item: any): AuthUser {
+  const roleNames = new Set<string>();
+  const permissionNames = new Set<PermissionName>();
+  const validPermissions = new Set<PermissionName>(Object.values(PERMISSIONS));
+  const roleAssignments: AuthUser["roleAssignments"] = [];
+
+  if (Array.isArray(item.user_roles)) {
+    for (const row of item.user_roles) {
+      const roleId = normalizeOptionalText(row?.roles?.id);
+      const roleName = normalizeOptionalText(row?.roles?.name);
+      const roleHotelId = normalizeOptionalText(row?.roles?.hotel_id || row?.hotel_id || null);
+      const roleHotelName = normalizeOptionalText(row?.roles?.hotels?.name);
+
+      if (roleId && roleName) {
+        roleAssignments.push({
+          roleId,
+          roleName,
+          hotelId: roleHotelId,
+          hotelName: roleHotelName
+        });
+      }
+
+      if (roleName) {
+        roleNames.add(roleName);
+      }
+
+      const rolePermissions = row?.roles?.role_permissions;
+
+      if (!Array.isArray(rolePermissions)) {
+        continue;
+      }
+
+      for (const permissionRow of rolePermissions) {
+        const permissionName = normalizeOptionalText(permissionRow?.permissions?.name);
+
+        if (!permissionName) {
+          continue;
+        }
+
+        if (validPermissions.has(permissionName as PermissionName)) {
+          permissionNames.add(permissionName as PermissionName);
+        }
+      }
+    }
+  }
+
+  return {
+    id: item.id,
+    name: item.name,
+    email: item.email,
+    tenantId: null,
+    roles: Array.from(roleNames),
+    permissions: Array.from(permissionNames),
+    roleAssignments
+  };
 }
 
 function normalizeRoleAssignments(value: unknown): Array<{ role_id: string; hotel_id: string | null }> {
@@ -330,7 +380,7 @@ async function bootstrap() {
   }));
 
   app.post<{ Body: LoginBody }>("/auth/login", async (request, reply) => {
-    const email = request.body?.email?.trim().toLowerCase();
+    const email = normalizeOptionalText(normalizeEmail(request.body?.email || ""));
     const password = request.body?.password;
 
     if (!email || !password) {
@@ -341,7 +391,28 @@ async function bootstrap() {
       return reply.status(400).send(error);
     }
 
-    if (email !== DEV_USER.email || password !== DEV_USER.password) {
+    const supabase = createServerClient();
+    const { data: userRow, error: userError } = await supabase
+      .from("users")
+      .select("id,name,email,is_active,password_hash,user_roles(hotel_id,roles(id,name,hotel_id,hotels(name),role_permissions(permissions(name))))")
+      .eq("email", email)
+      .single();
+
+    if (userError) {
+      if (userError.code !== "PGRST116") {
+        request.log.error(userError);
+        return reply.status(500).send({ message: "Falha ao autenticar usuario." });
+      }
+
+      const error: AuthErrorResponse = {
+        code: AUTH_ERROR_CODE.INVALID_CREDENTIALS,
+        message: AUTH_ERROR_MESSAGE[AUTH_ERROR_CODE.INVALID_CREDENTIALS]
+      };
+
+      return reply.status(401).send(error);
+    }
+
+    if (!userRow?.is_active || !matchesPasswordHash(password, userRow.password_hash)) {
       const error: AuthErrorResponse = {
         code: AUTH_ERROR_CODE.INVALID_CREDENTIALS,
         message: AUTH_ERROR_MESSAGE[AUTH_ERROR_CODE.INVALID_CREDENTIALS]
@@ -349,14 +420,26 @@ async function bootstrap() {
       return reply.status(401).send(error);
     }
 
+    const authUser = mapAuthUserFromDb(userRow);
+
+    const { error: lastLoginError } = await supabase
+      .from("users")
+      .update({ last_login_at: new Date().toISOString(), failed_attempts: 0 })
+      .eq("id", authUser.id);
+
+    if (lastLoginError) {
+      request.log.error(lastLoginError);
+    }
+
     const nowInSeconds = Math.floor(Date.now() / 1000);
     const payload: SessionPayload = {
-      id: DEV_USER.id,
-      name: DEV_USER.name,
-      email: DEV_USER.email,
-      tenantId: DEV_USER.tenantId,
-      roles: DEV_USER.roles,
-      permissions: DEV_USER.permissions,
+      id: authUser.id,
+      name: authUser.name,
+      email: authUser.email,
+      tenantId: authUser.tenantId,
+      roles: authUser.roles,
+      permissions: authUser.permissions,
+      roleAssignments: authUser.roleAssignments,
       iat: nowInSeconds,
       exp: nowInSeconds + SESSION_TTL_SECONDS
     };
@@ -372,7 +455,8 @@ async function bootstrap() {
         email: payload.email,
         tenantId: payload.tenantId,
         roles: payload.roles,
-        permissions: payload.permissions
+        permissions: payload.permissions,
+        roleAssignments: payload.roleAssignments
       }
     };
 
@@ -393,7 +477,8 @@ async function bootstrap() {
         email: payload.email,
         tenantId: payload.tenantId,
         roles: payload.roles,
-        permissions: payload.permissions
+        permissions: payload.permissions,
+        roleAssignments: payload.roleAssignments
       }
     };
 

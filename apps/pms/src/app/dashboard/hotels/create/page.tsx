@@ -8,6 +8,7 @@ import { HotelStatusMessage } from "../_components/HotelStatusMessage";
 type HotelCreatePageProps = {
   searchParams?: {
     status?: string;
+    r?: string;
   };
 };
 
@@ -44,7 +45,7 @@ export default async function HotelCreatePage({ searchParams }: HotelCreatePageP
         <HotelStatusMessage status={searchParams?.status} />
       </section>
 
-      <HotelCreateForm />
+      <HotelCreateForm formKey={searchParams?.r} />
     </section>
   );
 }

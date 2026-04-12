@@ -12,12 +12,18 @@ function revalidatePermissionPages(): void {
   revalidatePath("/dashboard/permissions/view");
 }
 
+function getRedirectNonce(): string {
+  return Date.now().toString(36);
+}
+
 function redirectWithStatus(status: string, section: "create" | "view" | "root" = "root"): never {
+  const nonce = getRedirectNonce();
+
   if (section === "root") {
-    redirect(`/dashboard/permissions?status=${status}`);
+    redirect(`/dashboard/permissions?status=${status}&r=${nonce}`);
   }
 
-  redirect(`/dashboard/permissions/${section}?status=${status}`);
+  redirect(`/dashboard/permissions/${section}?status=${status}&r=${nonce}`);
 }
 
 export async function createPermissionAction(formData: FormData): Promise<void> {

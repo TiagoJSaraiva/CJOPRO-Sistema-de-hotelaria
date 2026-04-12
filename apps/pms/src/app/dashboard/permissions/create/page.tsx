@@ -8,6 +8,7 @@ import { PermissionStatusMessage } from "../_components/PermissionStatusMessage"
 type PermissionsCreatePageProps = {
   searchParams?: {
     status?: string;
+    r?: string;
   };
 };
 
@@ -44,7 +45,7 @@ export default async function PermissionsCreatePage({ searchParams }: Permission
         <PermissionStatusMessage status={searchParams?.status} />
       </section>
 
-      <PermissionCreateForm />
+      <PermissionCreateForm formKey={searchParams?.r} />
     </section>
   );
 }

@@ -66,6 +66,7 @@ export default async function UsersViewPage({ searchParams }: UsersViewPageProps
               canRead={access.canRead}
               canUpdate={access.canUpdate}
               canDelete={access.canDelete}
+              isCurrentUser={user?.id === item.id}
               isViewing={activeUserId === item.id && mode === "view"}
               isEditing={activeUserId === item.id && mode === "edit"}
             />

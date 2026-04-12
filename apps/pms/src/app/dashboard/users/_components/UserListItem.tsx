@@ -1,6 +1,7 @@
 import Link from "next/link";
 import type { AdminHotelOption, AdminRoleOption, AdminUser } from "@hotel/shared";
 import { deleteUserAction, updateUserAction } from "../actions";
+import { SelfManagementDisabledActions } from "./SelfManagementDisabledActions";
 import { UserRoleAssignmentsField } from "./UserRoleAssignmentsField";
 
 type UserListItemProps = {
@@ -10,6 +11,7 @@ type UserListItemProps = {
   canRead: boolean;
   canUpdate: boolean;
   canDelete: boolean;
+  isCurrentUser: boolean;
   isViewing: boolean;
   isEditing: boolean;
 };
@@ -104,9 +106,11 @@ function UserEditForm({ userItem, hotels, roles }: { userItem: AdminUser; hotels
   );
 }
 
-export function UserListItem({ userItem, hotels, roles, canRead, canUpdate, canDelete, isViewing, isEditing }: UserListItemProps) {
+export function UserListItem({ userItem, hotels, roles, canRead, canUpdate, canDelete, isCurrentUser, isViewing, isEditing }: UserListItemProps) {
   const viewHref = `/dashboard/users/view?userId=${userItem.id}&mode=view`;
   const editHref = `/dashboard/users/view?userId=${userItem.id}&mode=edit`;
+  const canEditThisUser = canUpdate && !isCurrentUser;
+  const canDeleteThisUser = canDelete && !isCurrentUser;
 
   return (
     <article style={{ background: "#fff", border: "1px solid #e2e2e2", borderRadius: "12px", padding: "0.95rem" }}>
@@ -133,7 +137,7 @@ export function UserListItem({ userItem, hotels, roles, canRead, canUpdate, canD
             </Link>
           ) : null}
 
-          {canUpdate ? (
+          {canEditThisUser ? (
             <Link
               href={editHref}
               style={{
@@ -149,7 +153,7 @@ export function UserListItem({ userItem, hotels, roles, canRead, canUpdate, canD
             </Link>
           ) : null}
 
-          {canDelete ? (
+          {canDeleteThisUser ? (
             <form action={deleteUserAction}>
               <input type="hidden" name="id" value={userItem.id} />
               <button
@@ -160,11 +164,13 @@ export function UserListItem({ userItem, hotels, roles, canRead, canUpdate, canD
               </button>
             </form>
           ) : null}
+
+          {isCurrentUser ? <SelfManagementDisabledActions showEdit={canUpdate} showDelete={canDelete} /> : null}
         </div>
       </div>
 
       {isViewing ? <UserDataPreview userItem={userItem} /> : null}
-      {isEditing ? <UserEditForm userItem={userItem} hotels={hotels} roles={roles} /> : null}
+      {isEditing && canEditThisUser ? <UserEditForm userItem={userItem} hotels={hotels} roles={roles} /> : null}
     </article>
   );
 }

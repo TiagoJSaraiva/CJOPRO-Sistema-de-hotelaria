@@ -78,8 +78,6 @@ export function RolePermissionAssignmentsField({ permissions, defaultPermissions
 
             return [...current, { id: selectedPermission.id, name: selectedPermission.name }];
           });
-
-          setIsModalOpen(false);
         }}
         onClose={() => setIsModalOpen(false)}
       />

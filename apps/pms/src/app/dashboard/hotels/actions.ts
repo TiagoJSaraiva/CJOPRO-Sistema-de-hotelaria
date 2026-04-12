@@ -37,6 +37,10 @@ function revalidateHotelPages(): void {
   revalidatePath("/dashboard/hotels/view");
 }
 
+function getRedirectNonce(): string {
+  return Date.now().toString(36);
+}
+
 function parseCreateHotelPayload(formData: FormData): AdminHotelCreateInput {
   return {
     name: String(formData.get("name") || "").trim(),
@@ -69,11 +73,13 @@ function parseUpdateHotelPayload(formData: FormData): AdminHotelUpdateInput {
 }
 
 function redirectWithStatus(status: string, section: "create" | "view" | "root" = "root"): never {
+  const nonce = getRedirectNonce();
+
   if (section === "root") {
-    redirect(`/dashboard/hotels?status=${status}`);
+    redirect(`/dashboard/hotels?status=${status}&r=${nonce}`);
   }
 
-  redirect(`/dashboard/hotels/${section}?status=${status}`);
+  redirect(`/dashboard/hotels/${section}?status=${status}&r=${nonce}`);
 }
 
 export async function createHotelAction(formData: FormData): Promise<void> {

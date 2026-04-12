@@ -1,12 +1,16 @@
 import { createHotelAction } from "../actions";
 import { CountryLocaleFields } from "./CountryLocaleFields";
 
-export function HotelCreateForm() {
+type HotelCreateFormProps = {
+  formKey?: string;
+};
+
+export function HotelCreateForm({ formKey }: HotelCreateFormProps) {
   return (
     <article style={{ background: "#fff", border: "1px solid #e2e2e2", borderRadius: "12px", padding: "1rem" }}>
       <h3 style={{ marginTop: 0 }}>Criar hotel</h3>
 
-      <form action={createHotelAction} style={{ display: "grid", gap: "0.7rem" }}>
+      <form key={formKey} action={createHotelAction} style={{ display: "grid", gap: "0.7rem" }}>
         <div style={{ display: "grid", gap: "0.35rem" }}>
           <label htmlFor="create-name">Nome</label>
           <input id="create-name" name="name" minLength={2} required style={{ border: "1px solid #d2d2d2", borderRadius: "8px", padding: "0.55rem" }} />

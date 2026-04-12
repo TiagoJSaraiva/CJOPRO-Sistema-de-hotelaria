@@ -19,6 +19,8 @@ type AssignmentItem = {
   hotel_name: string | null;
 };
 
+const GLOBAL_HOTEL_OPTION_ID = "__global_role_context__";
+
 function getInitialAssignments(defaultAssignments: AdminUserRoleAssignment[] | undefined): AssignmentItem[] {
   if (!defaultAssignments?.length) {
     return [];
@@ -52,12 +54,14 @@ export function UserRoleAssignmentsField({ roles, hotels, defaultAssignments, in
   const selectedHotel = useMemo(() => hotels.find((hotel) => hotel.id === selectedHotelId) || null, [hotels, selectedHotelId]);
 
   const availableRoles = useMemo(() => {
-    if (!selectedHotelId) {
-      return [];
-    }
-
     return roles
-      .filter((role) => role.hotel_id === selectedHotelId || role.hotel_id === null)
+      .filter((role) => {
+        if (selectedHotelId === null) {
+          return role.hotel_id === null;
+        }
+
+        return role.hotel_id === selectedHotelId;
+      })
       .filter((role) => !assignments.some((assignment) => assignment.role_id === role.id));
   }, [roles, selectedHotelId, assignments]);
 
@@ -75,7 +79,7 @@ export function UserRoleAssignmentsField({ roles, hotels, defaultAssignments, in
   };
 
   const handleHotelSelect = (hotelId: string) => {
-    setSelectedHotelId(hotelId);
+    setSelectedHotelId(hotelId === GLOBAL_HOTEL_OPTION_ID ? null : hotelId);
     setIsHotelModalOpen(false);
     setIsRoleModalOpen(true);
   };
@@ -91,7 +95,7 @@ export function UserRoleAssignmentsField({ roles, hotels, defaultAssignments, in
     const effectiveHotelName =
       (selectedRole.hotel_id ? hotels.find((hotel) => hotel.id === selectedRole.hotel_id)?.name : selectedHotel?.name) ||
       selectedRole.hotel_name ||
-      null;
+      (selectedRole.hotel_id ? null : "GLOBAL");
 
     setAssignments((current) => {
       if (current.some((item) => item.role_id === roleId)) {
@@ -108,9 +112,6 @@ export function UserRoleAssignmentsField({ roles, hotels, defaultAssignments, in
         }
       ];
     });
-
-    setIsRoleModalOpen(false);
-    setSelectedHotelId(null);
   };
 
   return (
@@ -129,7 +130,10 @@ export function UserRoleAssignmentsField({ roles, hotels, defaultAssignments, in
       <SelectionModal
         open={isHotelModalOpen}
         title="Selecione um hotel"
-        items={hotels.map((hotel) => ({ id: hotel.id, label: hotel.name }))}
+        items={[
+          { id: GLOBAL_HOTEL_OPTION_ID, label: "GLOBAL", description: "Selecionar papeis globais." },
+          ...hotels.map((hotel) => ({ id: hotel.id, label: hotel.name }))
+        ]}
         emptyMessage="Nenhum hotel disponivel para selecao."
         onSelect={handleHotelSelect}
         onClose={() => setIsHotelModalOpen(false)}
@@ -145,7 +149,10 @@ export function UserRoleAssignmentsField({ roles, hotels, defaultAssignments, in
         }))}
         emptyMessage="Nao existem papeis disponiveis para o hotel selecionado."
         onSelect={handleRoleSelect}
-        onClose={() => setIsRoleModalOpen(false)}
+        onClose={() => {
+          setIsRoleModalOpen(false);
+          setSelectedHotelId(null);
+        }}
       />
     </>
   );

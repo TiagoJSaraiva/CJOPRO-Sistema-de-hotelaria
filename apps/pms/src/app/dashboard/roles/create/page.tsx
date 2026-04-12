@@ -9,6 +9,7 @@ import { RoleStatusMessage } from "../_components/RoleStatusMessage";
 type RolesCreatePageProps = {
   searchParams?: {
     status?: string;
+    r?: string;
   };
 };
 
@@ -47,7 +48,7 @@ export default async function RolesCreatePage({ searchParams }: RolesCreatePageP
         <RoleStatusMessage status={searchParams?.status} />
       </section>
 
-      <RoleCreateForm hotels={referenceData.hotels} permissions={referenceData.permissions} />
+      <RoleCreateForm formKey={searchParams?.r} hotels={referenceData.hotels} permissions={referenceData.permissions} />
     </section>
   );
 }

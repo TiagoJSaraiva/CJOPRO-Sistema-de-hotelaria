@@ -41,12 +41,18 @@ function revalidateUserPages(): void {
   revalidatePath("/dashboard/users/view");
 }
 
+function getRedirectNonce(): string {
+  return Date.now().toString(36);
+}
+
 function redirectWithStatus(status: string, section: "create" | "view" | "root" = "root"): never {
+  const nonce = getRedirectNonce();
+
   if (section === "root") {
-    redirect(`/dashboard/users?status=${status}`);
+    redirect(`/dashboard/users?status=${status}&r=${nonce}`);
   }
 
-  redirect(`/dashboard/users/${section}?status=${status}`);
+  redirect(`/dashboard/users/${section}?status=${status}&r=${nonce}`);
 }
 
 export async function createUserAction(formData: FormData): Promise<void> {

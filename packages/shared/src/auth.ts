@@ -32,6 +32,14 @@ export type AuthUser = {
   tenantId: string | null;
   roles: string[];
   permissions: string[];
+  roleAssignments: AuthUserRoleAssignment[];
+};
+
+export type AuthUserRoleAssignment = {
+  roleId: string;
+  roleName: string;
+  hotelId: string | null;
+  hotelName: string | null;
 };
 
 export type LoginRequest = {

@@ -9,6 +9,7 @@ import { UserStatusMessage } from "../_components/UserStatusMessage";
 type UsersCreatePageProps = {
   searchParams?: {
     status?: string;
+    r?: string;
   };
 };
 
@@ -47,7 +48,7 @@ export default async function UsersCreatePage({ searchParams }: UsersCreatePageP
         <UserStatusMessage status={searchParams?.status} />
       </section>
 
-      <UserCreateForm hotels={referenceData.hotels} roles={referenceData.roles} />
+      <UserCreateForm formKey={searchParams?.r} hotels={referenceData.hotels} roles={referenceData.roles} />
     </section>
   );
 }

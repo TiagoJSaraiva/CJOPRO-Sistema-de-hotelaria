@@ -1,11 +1,15 @@
 import { createPermissionAction } from "../actions";
 
-export function PermissionCreateForm() {
+type PermissionCreateFormProps = {
+  formKey?: string;
+};
+
+export function PermissionCreateForm({ formKey }: PermissionCreateFormProps) {
   return (
     <article style={{ background: "#fff", border: "1px solid #e2e2e2", borderRadius: "12px", padding: "1rem" }}>
       <h3 style={{ marginTop: 0 }}>Criar permissao</h3>
 
-      <form action={createPermissionAction} style={{ display: "grid", gap: "0.7rem" }}>
+      <form key={formKey} action={createPermissionAction} style={{ display: "grid", gap: "0.7rem" }}>
         <div style={{ display: "grid", gap: "0.35rem" }}>
           <label htmlFor="create-permission-name">Nome</label>
           <input
