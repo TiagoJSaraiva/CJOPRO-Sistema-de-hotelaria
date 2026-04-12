@@ -35,6 +35,11 @@ export type AuthUser = {
   roleAssignments: AuthUserRoleAssignment[];
 };
 
+export type SessionPayload = AuthUser & {
+  iat: number;
+  exp: number;
+};
+
 export type AuthUserRoleAssignment = {
   roleId: string;
   roleName: string;

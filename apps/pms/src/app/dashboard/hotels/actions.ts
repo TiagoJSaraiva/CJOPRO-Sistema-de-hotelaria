@@ -2,28 +2,12 @@
 
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
-import { PERMISSIONS } from "@hotel/shared";
+import { normalizeEmail, normalizeSlug, PERMISSIONS, sanitizePhone } from "@hotel/shared";
 import { createHotel, deleteHotel, updateHotel, type AdminHotelCreateInput, type AdminHotelUpdateInput } from "../../../lib/adminApi";
 import { getUserFromSession } from "../../../lib/auth";
 
 function sanitizeDigits(value: string): string {
-  return value.replace(/\D/g, "");
-}
-
-function normalizeEmail(value: string): string {
-  return value.trim().toLowerCase();
-}
-
-function normalizeSlug(value: string): string {
-  return value
-    .trim()
-    .toLowerCase()
-    .normalize("NFD")
-    .replace(/[\u0300-\u036f]/g, "")
-    .replace(/[^a-z0-9\s-]/g, "")
-    .replace(/\s+/g, "-")
-    .replace(/-+/g, "-")
-    .replace(/^-|-$/g, "");
+  return sanitizePhone(value);
 }
 
 function toOptionalText(value: FormDataEntryValue | null): string | null {

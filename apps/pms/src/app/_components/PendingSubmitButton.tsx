@@ -8,6 +8,7 @@ type PendingSubmitButtonProps = {
   pendingLabel?: string;
   delayMs?: number;
   minVisibleMs?: number;
+  lockUntilUnmount?: boolean;
   style?: CSSProperties;
   className?: string;
 };
@@ -26,6 +27,7 @@ export function PendingSubmitButton({
   pendingLabel = "Carregando...",
   delayMs = 200,
   minVisibleMs = 320,
+  lockUntilUnmount = false,
   style,
   className
 }: PendingSubmitButtonProps) {
@@ -67,6 +69,12 @@ export function PendingSubmitButton({
       return () => clearTimers();
     }
 
+    if (lockUntilUnmount && startedAtRef.current !== null) {
+      setIsVisualPending(true);
+      setShowSpinner(true);
+      return () => clearTimers();
+    }
+
     const startedAt = startedAtRef.current ?? Date.now();
     const elapsed = Date.now() - startedAt;
     const remaining = Math.max(minVisibleMs - elapsed, 0);
@@ -78,7 +86,7 @@ export function PendingSubmitButton({
     }, remaining);
 
     return () => clearTimers();
-  }, [pending, delayMs, minVisibleMs]);
+  }, [pending, delayMs, minVisibleMs, lockUntilUnmount]);
 
   return (
     <button

@@ -60,7 +60,13 @@ export default function LoginPage({ searchParams }: LoginPageProps) {
             />
           </label>
 
-          <PendingSubmitButton pendingLabel="Entrando..." delayMs={0} minVisibleMs={420} style={{ marginTop: "0.4rem", padding: "0.75rem 1rem" }}>
+          <PendingSubmitButton
+            pendingLabel="Entrando..."
+            delayMs={0}
+            minVisibleMs={420}
+            lockUntilUnmount
+            style={{ marginTop: "0.4rem", padding: "0.75rem 1rem" }}
+          >
             Entrar
           </PendingSubmitButton>
         </form>

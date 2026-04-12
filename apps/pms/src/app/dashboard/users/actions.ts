@@ -2,13 +2,9 @@
 
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
-import { PERMISSIONS, type AdminUserRoleAssignmentInput } from "@hotel/shared";
+import { normalizeEmail, PERMISSIONS, type AdminUserRoleAssignmentInput } from "@hotel/shared";
 import { createUser, deleteUser, updateUser } from "../../../lib/adminApi";
 import { getUserFromSession } from "../../../lib/auth";
-
-function normalizeEmail(value: string): string {
-  return value.trim().toLowerCase();
-}
 
 function normalizeRoleAssignments(rawValue: FormDataEntryValue | null): AdminUserRoleAssignmentInput[] {
   const rawText = String(rawValue || "").trim();
