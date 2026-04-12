@@ -20,7 +20,12 @@
     "build": "tsup src/index.ts --format esm --dts --clean",
     "typecheck": "tsc -p tsconfig.json --noEmit",
     "lint": "echo \"No lint configured for @hotel/shared\"",
-    "clean": "rimraf dist"
+    "clean": "rimraf dist",
+    "test": "vitest run --passWithNoTests",
+    "test:unit": "vitest run __tests__/unit --passWithNoTests",
+    "test:integration": "vitest run __tests__/integration --passWithNoTests",
+    "test:coverage": "vitest run --coverage --passWithNoTests",
+    "test:watch": "vitest --watch --passWithNoTests"
   },
   "devDependencies": {
     "@types/node": "^22.8.1",

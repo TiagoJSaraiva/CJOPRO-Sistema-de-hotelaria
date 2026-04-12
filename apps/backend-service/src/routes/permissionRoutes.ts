@@ -1,32 +1,34 @@
 import type { FastifyInstance } from "fastify";
 import {
   PERMISSIONS,
-  createServerClient,
   type AdminPermissionCreateInput,
   type AdminPermissionUpdateInput,
   type HotelIdParams
 } from "@hotel/shared";
 import { ensureAuthorized } from "../auth/authorization";
 import { normalizeOptionalText } from "../common/text";
+import { createPermissionsRepository, type PermissionsRepository } from "../repositories/permissionsRepository";
 
 type PermissionCreateBody = Partial<AdminPermissionCreateInput>;
 type PermissionUpdateBody = Partial<AdminPermissionUpdateInput>;
 
-export function registerPermissionRoutes(app: FastifyInstance): void {
+export function registerPermissionRoutes(
+  app: FastifyInstance,
+  repository: PermissionsRepository = createPermissionsRepository()
+): void {
   app.get("/admin/permissions", async (request, reply) => {
     if (!ensureAuthorized(request, reply, PERMISSIONS.PERMISSION_READ)) {
       return;
     }
 
-    const supabase = createServerClient();
-    const { data, error } = await supabase.from("permissions").select("id,name").order("name", { ascending: true });
+    try {
+      const data = await repository.listPermissions();
 
-    if (error) {
+      return reply.send({ items: data ?? [] });
+    } catch (error) {
       request.log.error(error);
       return reply.status(500).send({ message: "Falha ao consultar permissoes." });
     }
-
-    return reply.send({ items: data ?? [] });
   });
 
   app.post<{ Body: PermissionCreateBody }>("/admin/permissions", async (request, reply) => {
@@ -40,20 +42,24 @@ export function registerPermissionRoutes(app: FastifyInstance): void {
       return reply.status(400).send({ message: "Nome da permissao e obrigatorio." });
     }
 
-    const supabase = createServerClient();
-    const { data, error } = await supabase.from("permissions").insert({ name }).select("id,name").single();
-
-    if (error) {
+    const createResult = await repository.createPermission({ name }).catch((error) => {
       request.log.error(error);
+      return null;
+    });
 
-      if (error.code === "23505") {
-        return reply.status(409).send({ message: "Nome de permissao ja existente." });
-      }
-
+    if (!createResult) {
       return reply.status(500).send({ message: "Falha ao criar permissao." });
     }
 
-    return reply.status(201).send({ item: data });
+    if (createResult.result === "conflict") {
+      return reply.status(409).send({ message: "Nome de permissao ja existente." });
+    }
+
+    if (!createResult.item) {
+      return reply.status(500).send({ message: "Falha ao criar permissao." });
+    }
+
+    return reply.status(201).send({ item: createResult.item });
   });
 
   app.put<{ Params: HotelIdParams; Body: PermissionUpdateBody }>("/admin/permissions/:id", async (request, reply) => {
@@ -72,24 +78,28 @@ export function registerPermissionRoutes(app: FastifyInstance): void {
       return reply.status(400).send({ message: "Nome da permissao e obrigatorio para atualizacao." });
     }
 
-    const supabase = createServerClient();
-    const { data, error } = await supabase.from("permissions").update({ name }).eq("id", id).select("id,name").single();
-
-    if (error) {
+    const updateResult = await repository.updatePermission(id, { name }).catch((error) => {
       request.log.error(error);
+      return null;
+    });
 
-      if (error.code === "PGRST116") {
-        return reply.status(404).send({ message: "Permissao nao encontrada." });
-      }
-
-      if (error.code === "23505") {
-        return reply.status(409).send({ message: "Nome de permissao ja existente." });
-      }
-
+    if (!updateResult) {
       return reply.status(500).send({ message: "Falha ao atualizar permissao." });
     }
 
-    return reply.send({ item: data });
+    if (updateResult.result === "not-found") {
+      return reply.status(404).send({ message: "Permissao nao encontrada." });
+    }
+
+    if (updateResult.result === "conflict") {
+      return reply.status(409).send({ message: "Nome de permissao ja existente." });
+    }
+
+    if (!updateResult.item) {
+      return reply.status(500).send({ message: "Falha ao atualizar permissao." });
+    }
+
+    return reply.send({ item: updateResult.item });
   });
 
   app.delete<{ Params: HotelIdParams }>("/admin/permissions/:id", async (request, reply) => {
@@ -103,15 +113,16 @@ export function registerPermissionRoutes(app: FastifyInstance): void {
       return reply.status(400).send({ message: "Id da permissao e obrigatorio para exclusao." });
     }
 
-    const supabase = createServerClient();
-    const { data, error } = await supabase.from("permissions").delete().eq("id", id).select("id");
-
-    if (error) {
+    const deleteResult = await repository.deletePermission(id).catch((error) => {
       request.log.error(error);
+      return null;
+    });
+
+    if (!deleteResult) {
       return reply.status(500).send({ message: "Falha ao excluir permissao." });
     }
 
-    if (!data || !data.length) {
+    if (deleteResult === "not-found") {
       return reply.status(404).send({ message: "Permissao nao encontrada." });
     }
 

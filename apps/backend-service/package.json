@@ -9,7 +9,12 @@
     "start": "node dist/index.js",
     "typecheck": "tsc -p tsconfig.json --noEmit",
     "lint": "echo \"No lint configured for @hotel/backend-service\"",
-    "clean": "rimraf dist"
+    "clean": "rimraf dist",
+    "test": "vitest run --passWithNoTests",
+    "test:unit": "vitest run __tests__/unit --passWithNoTests",
+    "test:integration": "vitest run __tests__/integration --passWithNoTests",
+    "test:coverage": "vitest run --coverage --passWithNoTests",
+    "test:watch": "vitest --watch --passWithNoTests"
   },
   "dependencies": {
     "@fastify/cors": "^10.0.1",
@@ -20,6 +25,7 @@
   "devDependencies": {
     "@types/node": "^22.8.1",
     "rimraf": "^6.0.1",
+    "supertest": "^7.2.2",
     "tsup": "^8.3.0",
     "tsx": "^4.19.2",
     "typescript": "^5.6.3"

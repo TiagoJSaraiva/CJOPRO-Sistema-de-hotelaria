@@ -1,7 +1,6 @@
 import type { FastifyInstance } from "fastify";
 import {
   PERMISSIONS,
-  createServerClient,
   isValidCountryCode,
   isValidCurrency,
   isValidEmail,
@@ -23,27 +22,24 @@ import {
 } from "@hotel/shared";
 import { ensureAuthorized } from "../auth/authorization";
 import { normalizeOptionalText } from "../common/text";
+import { createHotelsRepository, type HotelsRepository } from "../repositories/hotelsRepository";
 
-export function registerHotelRoutes(app: FastifyInstance): void {
+export function registerHotelRoutes(app: FastifyInstance, repository: HotelsRepository = createHotelsRepository()): void {
   app.get("/admin/hotels", async (request, reply) => {
     if (!ensureAuthorized(request, reply, PERMISSIONS.HOTEL_READ)) {
       return;
     }
 
-    const supabase = createServerClient();
-    const { data, error } = await supabase
-      .from("hotels")
-      .select(
-        "id,name,legal_name,tax_id,email,phone,address_line,address_number,address_complement,district,city,state,country,zip_code,timezone,currency,slug,is_active,created_at,updated_at"
-      )
-      .order("created_at", { ascending: false });
-
-    if (error) {
+    const data = await repository.listHotels().catch((error) => {
       request.log.error(error);
+      return null;
+    });
+
+    if (!data) {
       return reply.status(500).send({ message: "Falha ao consultar hoteis." });
     }
 
-    return reply.send({ items: data ?? [] });
+    return reply.send({ items: data });
   });
 
   app.post<{ Body: AdminHotelCreateInput }>("/admin/hotels", async (request, reply) => {
@@ -147,26 +143,24 @@ export function registerHotelRoutes(app: FastifyInstance): void {
       is_active: true
     };
 
-    const supabase = createServerClient();
-    const { data, error } = await supabase
-      .from("hotels")
-      .insert(payload)
-      .select(
-        "id,name,legal_name,tax_id,email,phone,address_line,address_number,address_complement,district,city,state,country,zip_code,timezone,currency,slug,is_active,created_at,updated_at"
-      )
-      .single();
-
-    if (error) {
+    const createResult = await repository.createHotel(payload).catch((error) => {
       request.log.error(error);
+      return null;
+    });
 
-      if (error.code === "23505") {
-        return reply.status(409).send({ message: "Slug ja utilizado por outro hotel." });
-      }
-
+    if (!createResult) {
       return reply.status(500).send({ message: "Falha ao criar hotel." });
     }
 
-    return reply.status(201).send({ item: data });
+    if (createResult.result === "conflict") {
+      return reply.status(409).send({ message: "Slug ja utilizado por outro hotel." });
+    }
+
+    if (!createResult.item) {
+      return reply.status(500).send({ message: "Falha ao criar hotel." });
+    }
+
+    return reply.status(201).send({ item: createResult.item });
   });
 
   app.put<{ Params: HotelIdParams; Body: AdminHotelUpdateInput }>("/admin/hotels/:id", async (request, reply) => {
@@ -358,31 +352,28 @@ export function registerHotelRoutes(app: FastifyInstance): void {
       return reply.status(400).send({ message: "Nenhum campo informado para atualizacao." });
     }
 
-    const supabase = createServerClient();
-    const { data, error } = await supabase
-      .from("hotels")
-      .update(payload)
-      .eq("id", id)
-      .select(
-        "id,name,legal_name,tax_id,email,phone,address_line,address_number,address_complement,district,city,state,country,zip_code,timezone,currency,slug,is_active,created_at,updated_at"
-      )
-      .single();
-
-    if (error) {
+    const updateResult = await repository.updateHotel(id, payload).catch((error) => {
       request.log.error(error);
+      return null;
+    });
 
-      if (error.code === "PGRST116") {
-        return reply.status(404).send({ message: "Hotel nao encontrado." });
-      }
-
-      if (error.code === "23505") {
-        return reply.status(409).send({ message: "Slug ja utilizado por outro hotel." });
-      }
-
+    if (!updateResult) {
       return reply.status(500).send({ message: "Falha ao atualizar hotel." });
     }
 
-    return reply.send({ item: data });
+    if (updateResult.result === "not-found") {
+      return reply.status(404).send({ message: "Hotel nao encontrado." });
+    }
+
+    if (updateResult.result === "conflict") {
+      return reply.status(409).send({ message: "Slug ja utilizado por outro hotel." });
+    }
+
+    if (!updateResult.item) {
+      return reply.status(500).send({ message: "Falha ao atualizar hotel." });
+    }
+
+    return reply.send({ item: updateResult.item });
   });
 
   app.delete<{ Params: HotelIdParams }>("/admin/hotels/:id", async (request, reply) => {
@@ -396,15 +387,16 @@ export function registerHotelRoutes(app: FastifyInstance): void {
       return reply.status(400).send({ message: "Id do hotel e obrigatorio para exclusao." });
     }
 
-    const supabase = createServerClient();
-    const { data, error } = await supabase.from("hotels").delete().eq("id", id).select("id");
-
-    if (error) {
+    const deleteResult = await repository.deleteHotel(id).catch((error) => {
       request.log.error(error);
+      return null;
+    });
+
+    if (!deleteResult) {
       return reply.status(500).send({ message: "Falha ao excluir hotel." });
     }
 
-    if (!data || !data.length) {
+    if (deleteResult === "not-found") {
       return reply.status(404).send({ message: "Hotel nao encontrado." });
     }
 

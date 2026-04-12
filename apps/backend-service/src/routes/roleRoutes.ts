@@ -1,7 +1,6 @@
 import type { FastifyInstance } from "fastify";
 import {
   PERMISSIONS,
-  createServerClient,
   type AdminRoleCreateInput,
   type AdminRoleUpdateInput,
   type HotelIdParams
@@ -9,31 +8,28 @@ import {
 import { mapAdminRole, normalizePermissionIds } from "../admin/mappers";
 import { ensureAuthorized, ensureAuthorizedAny } from "../auth/authorization";
 import { normalizeOptionalText } from "../common/text";
+import { createRolesRepository, type RolesRepository } from "../repositories/rolesRepository";
 
 type RoleCreateBody = Partial<AdminRoleCreateInput>;
 type RoleUpdateBody = Partial<AdminRoleUpdateInput>;
 
-export function registerRoleRoutes(app: FastifyInstance): void {
+export function registerRoleRoutes(app: FastifyInstance, repository: RolesRepository = createRolesRepository()): void {
   app.get("/admin/roles/reference-data", async (request, reply) => {
     if (!ensureAuthorizedAny(request, reply, [PERMISSIONS.ROLE_READ, PERMISSIONS.ROLE_CREATE, PERMISSIONS.ROLE_UPDATE])) {
       return;
     }
 
-    const supabase = createServerClient();
-    const [{ data: hotels, error: hotelsError }, { data: permissions, error: permissionsError }] = await Promise.all([
-      supabase.from("hotels").select("id,name").order("name", { ascending: true }),
-      supabase.from("permissions").select("id,name").order("name", { ascending: true })
-    ]);
+    try {
+      const [hotels, permissions] = await Promise.all([repository.listReferenceHotels(), repository.listReferencePermissions()]);
 
-    if (hotelsError || permissionsError) {
-      request.log.error(hotelsError || permissionsError);
+      return reply.send({
+        hotels: hotels.map((item: any) => ({ id: item.id, name: item.name })),
+        permissions: permissions.map((item: any) => ({ id: item.id, name: item.name }))
+      });
+    } catch (error) {
+      request.log.error(error);
       return reply.status(500).send({ message: "Falha ao consultar dados auxiliares de roles." });
     }
-
-    return reply.send({
-      hotels: (hotels || []).map((item: any) => ({ id: item.id, name: item.name })),
-      permissions: (permissions || []).map((item: any) => ({ id: item.id, name: item.name }))
-    });
   });
 
   app.get("/admin/roles", async (request, reply) => {
@@ -41,18 +37,14 @@ export function registerRoleRoutes(app: FastifyInstance): void {
       return;
     }
 
-    const supabase = createServerClient();
-    const { data, error } = await supabase
-      .from("roles")
-      .select("id,name,hotel_id,hotels(name),role_permissions(permission_id,permissions(id,name))")
-      .order("name", { ascending: true });
+    try {
+      const data = await repository.listRolesWithRelations();
 
-    if (error) {
+      return reply.send({ items: data.map(mapAdminRole) });
+    } catch (error) {
       request.log.error(error);
       return reply.status(500).send({ message: "Falha ao consultar roles." });
     }
-
-    return reply.send({ items: (data || []).map(mapAdminRole) });
   });
 
   app.post<{ Body: RoleCreateBody }>("/admin/roles", async (request, reply) => {
@@ -68,64 +60,68 @@ export function registerRoleRoutes(app: FastifyInstance): void {
       return reply.status(400).send({ message: "Nome da role e obrigatorio." });
     }
 
-    const supabase = createServerClient();
-
     if (hotelId) {
-      const { data: hotelExists, error: hotelError } = await supabase.from("hotels").select("id").eq("id", hotelId).single();
+      const exists = await repository.hotelExists(hotelId).catch((error) => {
+        request.log.error(error);
+        return null;
+      });
 
-      if (hotelError || !hotelExists) {
+      if (exists === null) {
+        return reply.status(500).send({ message: "Falha ao validar hotel da role." });
+      }
+
+      if (!exists) {
         return reply.status(400).send({ message: "Hotel selecionado nao existe." });
       }
     }
 
     if (permissionIds.length) {
-      const { data: permissionRows, error: permissionError } = await supabase.from("permissions").select("id").in("id", permissionIds);
+      const total = await repository.countPermissionsByIds(permissionIds).catch((error) => {
+        request.log.error(error);
+        return null;
+      });
 
-      if (permissionError) {
-        request.log.error(permissionError);
+      if (total === null) {
         return reply.status(500).send({ message: "Falha ao validar permissoes da role." });
       }
 
-      if ((permissionRows || []).length !== permissionIds.length) {
+      if (total !== permissionIds.length) {
         return reply.status(400).send({ message: "Uma ou mais permissoes selecionadas nao existem." });
       }
     }
 
-    const { data: createdRole, error: createRoleError } = await supabase
-      .from("roles")
-      .insert({ name, hotel_id: hotelId })
-      .select("id")
-      .single();
+    const createResult = await repository.createRole({ name, hotel_id: hotelId }).catch((error) => {
+      request.log.error(error);
+      return null;
+    });
 
-    if (createRoleError) {
-      request.log.error(createRoleError);
+    if (!createResult) {
+      return reply.status(500).send({ message: "Falha ao criar role." });
+    }
 
-      if (createRoleError.code === "23505") {
-        return reply.status(409).send({ message: "Nome de role ja existente." });
-      }
+    if (createResult.result === "conflict") {
+      return reply.status(409).send({ message: "Nome de role ja existente." });
+    }
 
+    if (!createResult.id) {
       return reply.status(500).send({ message: "Falha ao criar role." });
     }
 
     if (permissionIds.length) {
-      const { error: rolePermissionError } = await supabase
-        .from("role_permissions")
-        .insert(permissionIds.map((permissionId) => ({ role_id: createdRole.id, permission_id: permissionId })));
-
-      if (rolePermissionError) {
-        request.log.error(rolePermissionError);
+      try {
+        await repository.assignRolePermissions(permissionIds.map((permissionId) => ({ role_id: createResult.id!, permission_id: permissionId })));
+      } catch (error) {
+        request.log.error(error);
         return reply.status(500).send({ message: "Role criada, mas falhou ao vincular permissoes." });
       }
     }
 
-    const { data: roleWithRelations, error: roleWithRelationsError } = await supabase
-      .from("roles")
-      .select("id,name,hotel_id,hotels(name),role_permissions(permission_id,permissions(id,name))")
-      .eq("id", createdRole.id)
-      .single();
+    const roleWithRelations = await repository.getRoleWithRelationsById(createResult.id).catch((error) => {
+      request.log.error(error);
+      return null;
+    });
 
-    if (roleWithRelationsError || !roleWithRelations) {
-      request.log.error(roleWithRelationsError);
+    if (!roleWithRelations) {
       return reply.status(500).send({ message: "Falha ao consultar role criada." });
     }
 
@@ -166,81 +162,92 @@ export function registerRoleRoutes(app: FastifyInstance): void {
       return reply.status(400).send({ message: "Nenhum campo informado para atualizacao." });
     }
 
-    const supabase = createServerClient();
-
     if (payload.hotel_id) {
-      const { data: hotelExists, error: hotelError } = await supabase.from("hotels").select("id").eq("id", payload.hotel_id).single();
+      const exists = await repository.hotelExists(payload.hotel_id as string).catch((error) => {
+        request.log.error(error);
+        return null;
+      });
 
-      if (hotelError || !hotelExists) {
+      if (exists === null) {
+        return reply.status(500).send({ message: "Falha ao validar hotel da role." });
+      }
+
+      if (!exists) {
         return reply.status(400).send({ message: "Hotel selecionado nao existe." });
       }
     }
 
     if (hasPermissionsPayload && permissionIds.length) {
-      const { data: permissionRows, error: permissionError } = await supabase.from("permissions").select("id").in("id", permissionIds);
+      const total = await repository.countPermissionsByIds(permissionIds).catch((error) => {
+        request.log.error(error);
+        return null;
+      });
 
-      if (permissionError) {
-        request.log.error(permissionError);
+      if (total === null) {
         return reply.status(500).send({ message: "Falha ao validar permissoes da role." });
       }
 
-      if ((permissionRows || []).length !== permissionIds.length) {
+      if (total !== permissionIds.length) {
         return reply.status(400).send({ message: "Uma ou mais permissoes selecionadas nao existem." });
       }
     }
 
     if (Object.keys(payload).length) {
-      const { error: updateRoleError } = await supabase.from("roles").update(payload).eq("id", id);
+      const updateResult = await repository.updateRole(id, payload).catch((error) => {
+        request.log.error(error);
+        return null;
+      });
 
-      if (updateRoleError) {
-        request.log.error(updateRoleError);
-
-        if (updateRoleError.code === "23505") {
-          return reply.status(409).send({ message: "Nome de role ja existente." });
-        }
-
-        if (updateRoleError.code === "PGRST116") {
-          return reply.status(404).send({ message: "Role nao encontrada." });
-        }
-
+      if (!updateResult) {
         return reply.status(500).send({ message: "Falha ao atualizar role." });
       }
-    } else {
-      const { data: roleExists, error: roleExistsError } = await supabase.from("roles").select("id").eq("id", id).single();
 
-      if (roleExistsError || !roleExists) {
+      if (updateResult === "conflict") {
+        return reply.status(409).send({ message: "Nome de role ja existente." });
+      }
+
+      if (updateResult === "not-found") {
+        return reply.status(404).send({ message: "Role nao encontrada." });
+      }
+    } else {
+      const exists = await repository.roleExists(id).catch((error) => {
+        request.log.error(error);
+        return null;
+      });
+
+      if (exists === null) {
+        return reply.status(500).send({ message: "Falha ao atualizar role." });
+      }
+
+      if (!exists) {
         return reply.status(404).send({ message: "Role nao encontrada." });
       }
     }
 
     if (hasPermissionsPayload) {
-      const { error: deletePermissionsError } = await supabase.from("role_permissions").delete().eq("role_id", id);
-
-      if (deletePermissionsError) {
-        request.log.error(deletePermissionsError);
+      try {
+        await repository.clearRolePermissions(id);
+      } catch (error) {
+        request.log.error(error);
         return reply.status(500).send({ message: "Falha ao atualizar permissoes da role." });
       }
 
       if (permissionIds.length) {
-        const { error: insertPermissionsError } = await supabase
-          .from("role_permissions")
-          .insert(permissionIds.map((permissionId) => ({ role_id: id, permission_id: permissionId })));
-
-        if (insertPermissionsError) {
-          request.log.error(insertPermissionsError);
+        try {
+          await repository.assignRolePermissions(permissionIds.map((permissionId) => ({ role_id: id, permission_id: permissionId })));
+        } catch (error) {
+          request.log.error(error);
           return reply.status(500).send({ message: "Falha ao atualizar permissoes da role." });
         }
       }
     }
 
-    const { data: updatedRole, error: updatedRoleError } = await supabase
-      .from("roles")
-      .select("id,name,hotel_id,hotels(name),role_permissions(permission_id,permissions(id,name))")
-      .eq("id", id)
-      .single();
+    const updatedRole = await repository.getRoleWithRelationsById(id).catch((error) => {
+      request.log.error(error);
+      return null;
+    });
 
-    if (updatedRoleError || !updatedRole) {
-      request.log.error(updatedRoleError);
+    if (!updatedRole) {
       return reply.status(500).send({ message: "Falha ao consultar role atualizada." });
     }
 
@@ -258,15 +265,16 @@ export function registerRoleRoutes(app: FastifyInstance): void {
       return reply.status(400).send({ message: "Id da role e obrigatorio para exclusao." });
     }
 
-    const supabase = createServerClient();
-    const { data, error } = await supabase.from("roles").delete().eq("id", id).select("id");
-
-    if (error) {
+    const deleteResult = await repository.deleteRole(id).catch((error) => {
       request.log.error(error);
+      return null;
+    });
+
+    if (!deleteResult) {
       return reply.status(500).send({ message: "Falha ao excluir role." });
     }
 
-    if (!data || !data.length) {
+    if (deleteResult === "not-found") {
       return reply.status(404).send({ message: "Role nao encontrada." });
     }
 
