@@ -23,8 +23,8 @@ export function registerRoleRoutes(app: FastifyInstance, repository: RolesReposi
       const [hotels, permissions] = await Promise.all([repository.listReferenceHotels(), repository.listReferencePermissions()]);
 
       return reply.send({
-        hotels: hotels.map((item: any) => ({ id: item.id, name: item.name })),
-        permissions: permissions.map((item: any) => ({ id: item.id, name: item.name }))
+        hotels: hotels.map((item) => ({ id: item.id, name: item.name })),
+        permissions: permissions.map((item) => ({ id: item.id, name: item.name }))
       });
     } catch (error) {
       request.log.error(error);
@@ -90,33 +90,24 @@ export function registerRoleRoutes(app: FastifyInstance, repository: RolesReposi
       }
     }
 
-    const createResult = await repository.createRole({ name, hotel_id: hotelId }).catch((error) => {
+    const createRoleResult = await repository.createRoleWithPermissions({ name, hotel_id: hotelId }, permissionIds).catch((error) => {
       request.log.error(error);
       return null;
     });
 
-    if (!createResult) {
+    if (!createRoleResult) {
       return reply.status(500).send({ message: "Falha ao criar role." });
     }
 
-    if (createResult.result === "conflict") {
+    if (createRoleResult.result === "conflict") {
       return reply.status(409).send({ message: "Nome de role ja existente." });
     }
 
-    if (!createResult.id) {
+    if (!createRoleResult.id) {
       return reply.status(500).send({ message: "Falha ao criar role." });
     }
 
-    if (permissionIds.length) {
-      try {
-        await repository.assignRolePermissions(permissionIds.map((permissionId) => ({ role_id: createResult.id!, permission_id: permissionId })));
-      } catch (error) {
-        request.log.error(error);
-        return reply.status(500).send({ message: "Role criada, mas falhou ao vincular permissoes." });
-      }
-    }
-
-    const roleWithRelations = await repository.getRoleWithRelationsById(createResult.id).catch((error) => {
+    const roleWithRelations = await repository.getRoleWithRelationsById(createRoleResult.id).catch((error) => {
       request.log.error(error);
       return null;
     });
@@ -192,54 +183,23 @@ export function registerRoleRoutes(app: FastifyInstance, repository: RolesReposi
       }
     }
 
-    if (Object.keys(payload).length) {
-      const updateResult = await repository.updateRole(id, payload).catch((error) => {
+    const updateResult = await repository
+      .updateRoleWithPermissions(id, payload, hasPermissionsPayload ? permissionIds : undefined)
+      .catch((error) => {
         request.log.error(error);
         return null;
       });
 
-      if (!updateResult) {
-        return reply.status(500).send({ message: "Falha ao atualizar role." });
-      }
-
-      if (updateResult === "conflict") {
-        return reply.status(409).send({ message: "Nome de role ja existente." });
-      }
-
-      if (updateResult === "not-found") {
-        return reply.status(404).send({ message: "Role nao encontrada." });
-      }
-    } else {
-      const exists = await repository.roleExists(id).catch((error) => {
-        request.log.error(error);
-        return null;
-      });
-
-      if (exists === null) {
-        return reply.status(500).send({ message: "Falha ao atualizar role." });
-      }
-
-      if (!exists) {
-        return reply.status(404).send({ message: "Role nao encontrada." });
-      }
+    if (!updateResult) {
+      return reply.status(500).send({ message: "Falha ao atualizar role." });
     }
 
-    if (hasPermissionsPayload) {
-      try {
-        await repository.clearRolePermissions(id);
-      } catch (error) {
-        request.log.error(error);
-        return reply.status(500).send({ message: "Falha ao atualizar permissoes da role." });
-      }
+    if (updateResult === "conflict") {
+      return reply.status(409).send({ message: "Nome de role ja existente." });
+    }
 
-      if (permissionIds.length) {
-        try {
-          await repository.assignRolePermissions(permissionIds.map((permissionId) => ({ role_id: id, permission_id: permissionId })));
-        } catch (error) {
-          request.log.error(error);
-          return reply.status(500).send({ message: "Falha ao atualizar permissoes da role." });
-        }
-      }
+    if (updateResult === "not-found") {
+      return reply.status(404).send({ message: "Role nao encontrada." });
     }
 
     const updatedRole = await repository.getRoleWithRelationsById(id).catch((error) => {

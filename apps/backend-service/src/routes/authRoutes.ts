@@ -15,6 +15,23 @@ import { getAuthError, getSessionFromRequest, matchesPasswordHash, SESSION_TTL_S
 import { createAuthRepository, type AuthRepository } from "../repositories/authRepository";
 
 type LoginBody = Partial<LoginRequest>;
+const MAX_FAILED_ATTEMPTS = 10;
+const LOGIN_LOCK_DURATION_MS = 2 * 60 * 1000;
+
+function invalidCredentialsError(): AuthErrorResponse {
+  return {
+    code: AUTH_ERROR_CODE.INVALID_CREDENTIALS,
+    message: AUTH_ERROR_MESSAGE[AUTH_ERROR_CODE.INVALID_CREDENTIALS]
+  };
+}
+
+function accountLockedError(retryAfterSeconds: number): AuthErrorResponse {
+  return {
+    code: AUTH_ERROR_CODE.ACCOUNT_LOCKED,
+    message: AUTH_ERROR_MESSAGE[AUTH_ERROR_CODE.ACCOUNT_LOCKED],
+    retryAfterSeconds
+  };
+}
 
 export function registerAuthRoutes(app: FastifyInstance, repository: AuthRepository = createAuthRepository()): void {
   app.post<{ Body: LoginBody }>("/auth/login", async (request, reply) => {
@@ -39,20 +56,61 @@ export function registerAuthRoutes(app: FastifyInstance, repository: AuthReposit
     }
 
     if (!userRow) {
-      const error: AuthErrorResponse = {
-        code: AUTH_ERROR_CODE.INVALID_CREDENTIALS,
-        message: AUTH_ERROR_MESSAGE[AUTH_ERROR_CODE.INVALID_CREDENTIALS]
-      };
-
-      return reply.status(401).send(error);
+      return reply.status(401).send(invalidCredentialsError());
     }
 
-    if (!userRow?.is_active || !matchesPasswordHash(password, userRow.password_hash)) {
-      const error: AuthErrorResponse = {
-        code: AUTH_ERROR_CODE.INVALID_CREDENTIALS,
-        message: AUTH_ERROR_MESSAGE[AUTH_ERROR_CODE.INVALID_CREDENTIALS]
-      };
-      return reply.status(401).send(error);
+    if (!userRow.is_active) {
+      return reply.status(401).send(invalidCredentialsError());
+    }
+
+    const now = new Date();
+    const lockedUntil = userRow.locked_until ? new Date(userRow.locked_until) : null;
+
+    if (lockedUntil && !Number.isNaN(lockedUntil.getTime())) {
+      if (lockedUntil.getTime() > now.getTime()) {
+        const retryAfterSeconds = Math.max(1, Math.ceil((lockedUntil.getTime() - now.getTime()) / 1000));
+        reply.header("Retry-After", String(retryAfterSeconds));
+        return reply.status(429).send(accountLockedError(retryAfterSeconds));
+      }
+
+      const clearLockResult = await repository.clearExpiredLoginLock(userRow.id).catch((error) => {
+        request.log.error(error);
+        return false;
+      });
+
+      if (clearLockResult === false) {
+        return reply.status(500).send({ message: "Falha ao autenticar usuario." });
+      }
+
+      userRow.failed_attempts = 0;
+      userRow.locked_until = null;
+    }
+
+    const passwordMatches = await matchesPasswordHash(password, userRow.password_hash);
+
+    if (!passwordMatches) {
+      const nextFailedAttempts = (userRow.failed_attempts ?? 0) + 1;
+      const shouldLock = nextFailedAttempts >= MAX_FAILED_ATTEMPTS;
+      const lockUntil = shouldLock ? new Date(now.getTime() + LOGIN_LOCK_DURATION_MS) : null;
+
+      const markFailedResult = await repository
+        .markFailedLoginAttempt(userRow.id, nextFailedAttempts, lockUntil ? lockUntil.toISOString() : null)
+        .catch((error) => {
+          request.log.error(error);
+          return false;
+        });
+
+      if (markFailedResult === false) {
+        return reply.status(500).send({ message: "Falha ao autenticar usuario." });
+      }
+
+      if (shouldLock && lockUntil) {
+        const retryAfterSeconds = Math.max(1, Math.ceil((lockUntil.getTime() - now.getTime()) / 1000));
+        reply.header("Retry-After", String(retryAfterSeconds));
+        return reply.status(429).send(accountLockedError(retryAfterSeconds));
+      }
+
+      return reply.status(401).send(invalidCredentialsError());
     }
 
     const authUser = mapAuthUserFromDb(userRow);

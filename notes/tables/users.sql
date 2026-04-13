@@ -15,6 +15,7 @@ CREATE TABLE users (
   -- Segurança
   last_login_at     TIMESTAMP WITH TIME ZONE,
   failed_attempts   INT DEFAULT 0,
+  locked_until      TIMESTAMP WITH TIME ZONE,
 
   -- Auditoria
   created_at        TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
@@ -26,7 +27,7 @@ CREATE TABLE users (
 
 CREATE TABLE roles ( 
   id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-  tenant_id UUID REFERENCES hotels(id) ON DELETE CASCADE, -- NULL = role global
+  hotel_id UUID REFERENCES hotels(id) ON DELETE CASCADE, -- NULL = role global
   name VARCHAR(50) UNIQUE NOT NULL
 );
 

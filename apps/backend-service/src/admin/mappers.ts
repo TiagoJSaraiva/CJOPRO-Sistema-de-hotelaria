@@ -1,7 +1,69 @@
 import { PERMISSIONS, type AuthUser, type PermissionName } from "@hotel/shared";
 import { normalizeOptionalText } from "../common/text";
 
-export function mapAuthUserFromDb(item: any): AuthUser {
+type DbPermissionRow = {
+  id?: string | null;
+  name?: string | null;
+};
+
+type DbRolePermissionRow = {
+  permissions?: DbPermissionRow | DbPermissionRow[] | null;
+};
+
+type DbHotelRow = {
+  name?: string | null;
+};
+
+type DbRoleRow = {
+  id?: string | null;
+  name?: string | null;
+  hotel_id?: string | null;
+  hotels?: DbHotelRow | DbHotelRow[] | null;
+  role_permissions?: DbRolePermissionRow[] | null;
+};
+
+type DbUserRoleAssignmentRow = {
+  hotel_id?: string | null;
+  roles?: DbRoleRow | DbRoleRow[] | null;
+};
+
+type DbAuthUserRow = {
+  id: string;
+  name: string;
+  email: string;
+  user_roles?: DbUserRoleAssignmentRow[] | null;
+};
+
+type DbRoleOptionRow = {
+  id: string;
+  name: string;
+  hotel_id?: string | null;
+  hotels?: DbHotelRow | DbHotelRow[] | null;
+};
+
+type DbAdminUserRow = {
+  id: string;
+  name: string;
+  email: string;
+  is_active?: boolean | number | null;
+  last_login_at?: string | null;
+  created_at?: string | null;
+  user_roles?: DbUserRoleAssignmentRow[] | null;
+};
+
+type DbAdminRoleRow = {
+  id: string;
+  name: string;
+  hotel_id?: string | null;
+  hotels?: DbHotelRow | DbHotelRow[] | null;
+  role_permissions?: DbRolePermissionRow[] | null;
+};
+
+function isDefined<T>(value: T | null | undefined): value is T {
+  return value !== null && value !== undefined;
+}
+
+export function mapAuthUserFromDb(item: DbAuthUserRow): AuthUser {
   const roleNames = new Set<string>();
   const permissionNames = new Set<PermissionName>();
   const validPermissions = new Set<PermissionName>(Object.values(PERMISSIONS));
@@ -9,10 +71,12 @@ export function mapAuthUserFromDb(item: any): AuthUser {
 
   if (Array.isArray(item.user_roles)) {
     for (const row of item.user_roles) {
-      const roleId = normalizeOptionalText(row?.roles?.id);
-      const roleName = normalizeOptionalText(row?.roles?.name);
-      const roleHotelId = normalizeOptionalText(row?.roles?.hotel_id || row?.hotel_id || null);
-      const roleHotelName = normalizeOptionalText(row?.roles?.hotels?.name);
+      const role = Array.isArray(row?.roles) ? row.roles[0] : row?.roles;
+      const roleHotel = Array.isArray(role?.hotels) ? role.hotels[0] : role?.hotels;
+      const roleId = normalizeOptionalText(role?.id);
+      const roleName = normalizeOptionalText(role?.name);
+      const roleHotelId = normalizeOptionalText(role?.hotel_id || row?.hotel_id || null);
+      const roleHotelName = normalizeOptionalText(roleHotel?.name);
 
       if (roleId && roleName) {
         roleAssignments.push({
@@ -27,14 +91,15 @@ export function mapAuthUserFromDb(item: any): AuthUser {
         roleNames.add(roleName);
       }
 
-      const rolePermissions = row?.roles?.role_permissions;
+      const rolePermissions = role?.role_permissions;
 
       if (!Array.isArray(rolePermissions)) {
         continue;
       }
 
       for (const permissionRow of rolePermissions) {
-        const permissionName = normalizeOptionalText(permissionRow?.permissions?.name);
+        const permission = Array.isArray(permissionRow?.permissions) ? permissionRow.permissions[0] : permissionRow?.permissions;
+        const permissionName = normalizeOptionalText(permission?.name);
 
         if (!permissionName) {
           continue;
@@ -104,16 +169,18 @@ export function normalizePermissionIds(value: unknown): string[] {
   return normalized;
 }
 
-export function mapRoleOption(item: any): { id: string; name: string; hotel_id: string | null; hotel_name: string | null } {
+export function mapRoleOption(item: DbRoleOptionRow): { id: string; name: string; hotel_id: string | null; hotel_name: string | null } {
+  const hotel = Array.isArray(item.hotels) ? item.hotels[0] : item.hotels;
+
   return {
     id: item.id,
     name: item.name,
     hotel_id: item.hotel_id || null,
-    hotel_name: item.hotels?.name || null
+    hotel_name: hotel?.name || null
   };
 }
 
-export function mapAdminUser(item: any): {
+export function mapAdminUser(item: DbAdminUserRow): {
   id: string;
   name: string;
   email: string;
@@ -124,10 +191,11 @@ export function mapAdminUser(item: any): {
 } {
   const roleAssignments = Array.isArray(item.user_roles)
     ? item.user_roles
-        .map((row: any) => {
-          const role = row.roles;
+        .map((row) => {
+          const role = Array.isArray(row.roles) ? row.roles[0] : row.roles;
+          const roleHotel = Array.isArray(role?.hotels) ? role.hotels[0] : role?.hotels;
 
-          if (!role?.id) {
+          if (!role?.id || !role.name) {
             return null;
           }
 
@@ -135,10 +203,10 @@ export function mapAdminUser(item: any): {
             role_id: role.id,
             role_name: role.name,
             hotel_id: role.hotel_id || null,
-            hotel_name: role.hotels?.name || null
+            hotel_name: roleHotel?.name || null
           };
         })
-        .filter(Boolean)
+        .filter(isDefined)
     : [];
 
   return {
@@ -152,7 +220,7 @@ export function mapAdminUser(item: any): {
   };
 }
 
-export function mapAdminRole(item: any): {
+export function mapAdminRole(item: DbAdminRoleRow): {
   id: string;
   name: string;
   hotel_id: string | null;
@@ -161,16 +229,21 @@ export function mapAdminRole(item: any): {
 } {
   const permissions = Array.isArray(item.role_permissions)
     ? item.role_permissions
-        .map((row: any) => row.permissions)
-        .filter((permission: any) => !!permission?.id)
-        .map((permission: any) => ({ id: permission.id, name: permission.name }))
+        .map((row) => (Array.isArray(row.permissions) ? row.permissions[0] : row.permissions))
+        .filter(
+          (permission): permission is DbPermissionRow & { id: string } =>
+            typeof permission?.id === "string" && permission.id.length > 0
+        )
+        .map((permission) => ({ id: permission.id, name: permission.name || "" }))
     : [];
+
+  const roleHotel = Array.isArray(item.hotels) ? item.hotels[0] : item.hotels;
 
   return {
     id: item.id,
     name: item.name,
     hotel_id: item.hotel_id || null,
-    hotel_name: item.hotels?.name || null,
+    hotel_name: roleHotel?.name || null,
     permissions
   };
 }

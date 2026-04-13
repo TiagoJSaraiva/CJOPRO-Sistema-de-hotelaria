@@ -108,13 +108,17 @@ describe("routes/auth", () => {
   });
 
   it("retorna token e usuario quando credenciais sao validas", async () => {
+    const passwordHash = await hashTemporaryPassword("Secret#123");
+
     const supabase = createLoginSupabaseMock({
       userRow: {
         id: "user-1",
         name: "Admin",
         email: "admin@example.com",
         is_active: true,
-        password_hash: hashTemporaryPassword("Secret#123"),
+        password_hash: passwordHash,
+        failed_attempts: 0,
+        locked_until: null,
         user_roles: [
           {
             roles: {
@@ -165,6 +169,41 @@ describe("routes/auth", () => {
     expect(verifyToken(body.token)).not.toBeNull();
     expect(supabase.update).toHaveBeenCalled();
     expect(supabase.updateEq).toHaveBeenCalledWith("id", "user-1");
+  });
+
+  it("retorna 429 quando usuario esta temporariamente bloqueado", async () => {
+    const passwordHash = await hashTemporaryPassword("Secret#123");
+    const lockedUntil = new Date(Date.now() + 120_000).toISOString();
+    const supabase = createLoginSupabaseMock({
+      userRow: {
+        id: "user-1",
+        name: "Admin",
+        email: "admin@example.com",
+        is_active: true,
+        password_hash: passwordHash,
+        failed_attempts: 10,
+        locked_until: lockedUntil,
+        user_roles: []
+      },
+      userError: null
+    });
+
+    vi.mocked(createServerClient).mockReturnValue(supabase as any);
+
+    const response = await app.inject({
+      method: "POST",
+      url: "/auth/login",
+      payload: {
+        email: "admin@example.com",
+        password: "Secret#123"
+      }
+    });
+
+    expect(response.statusCode).toBe(429);
+    expect(response.json()).toMatchObject({
+      code: AUTH_ERROR_CODE.ACCOUNT_LOCKED,
+      message: "Conta temporariamente bloqueada por tentativas de login invalidas."
+    });
   });
 
   it("retorna 401 no /auth/me sem token", async () => {

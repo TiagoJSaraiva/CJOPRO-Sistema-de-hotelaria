@@ -1,4 +1,5 @@
 import { createServerClient } from "@hotel/shared";
+import type { AdminHotel } from "@hotel/shared";
 import { isSupabaseConflictError, isSupabaseNotFoundError } from "./supabaseError";
 
 const HOTEL_SELECT_FIELDS =
@@ -7,14 +8,14 @@ const HOTEL_SELECT_FIELDS =
 export type HotelWriteResult = "ok" | "conflict" | "not-found";
 
 export interface HotelsRepository {
-  listHotels(): Promise<any[]>;
-  createHotel(payload: Record<string, unknown>): Promise<{ result: HotelWriteResult; item?: any }>;
-  updateHotel(id: string, payload: Record<string, unknown>): Promise<{ result: HotelWriteResult; item?: any }>;
+  listHotels(): Promise<AdminHotel[]>;
+  createHotel(payload: Record<string, unknown>): Promise<{ result: HotelWriteResult; item?: AdminHotel }>;
+  updateHotel(id: string, payload: Record<string, unknown>): Promise<{ result: HotelWriteResult; item?: AdminHotel }>;
   deleteHotel(id: string): Promise<HotelWriteResult>;
 }
 
 class SupabaseHotelsRepository implements HotelsRepository {
-  async listHotels(): Promise<any[]> {
+  async listHotels(): Promise<AdminHotel[]> {
     const supabase = createServerClient();
     const { data, error } = await supabase.from("hotels").select(HOTEL_SELECT_FIELDS).order("created_at", { ascending: false });
 
@@ -22,10 +23,10 @@ class SupabaseHotelsRepository implements HotelsRepository {
       throw error;
     }
 
-    return data || [];
+    return (data || []) as AdminHotel[];
   }
 
-  async createHotel(payload: Record<string, unknown>): Promise<{ result: HotelWriteResult; item?: any }> {
+  async createHotel(payload: Record<string, unknown>): Promise<{ result: HotelWriteResult; item?: AdminHotel }> {
     const supabase = createServerClient();
     const { data, error } = await supabase.from("hotels").insert(payload).select(HOTEL_SELECT_FIELDS).single();
 
@@ -37,10 +38,10 @@ class SupabaseHotelsRepository implements HotelsRepository {
       throw error;
     }
 
-    return { result: "ok", item: data };
+    return { result: "ok", item: data as AdminHotel };
   }
 
-  async updateHotel(id: string, payload: Record<string, unknown>): Promise<{ result: HotelWriteResult; item?: any }> {
+  async updateHotel(id: string, payload: Record<string, unknown>): Promise<{ result: HotelWriteResult; item?: AdminHotel }> {
     const supabase = createServerClient();
     const { data, error } = await supabase.from("hotels").update(payload).eq("id", id).select(HOTEL_SELECT_FIELDS).single();
 
@@ -56,7 +57,7 @@ class SupabaseHotelsRepository implements HotelsRepository {
       throw error;
     }
 
-    return { result: "ok", item: data };
+    return { result: "ok", item: data as AdminHotel };
   }
 
   async deleteHotel(id: string): Promise<HotelWriteResult> {

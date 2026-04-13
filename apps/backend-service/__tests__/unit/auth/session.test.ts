@@ -65,12 +65,12 @@ describe("auth/session", () => {
     expect(session).toEqual(basePayload);
   });
 
-  it("compara hash de senha temporaria com timing-safe", () => {
-    const hash = hashTemporaryPassword("Secret#123");
+  it("compara hash de senha temporaria com argon2id", async () => {
+    const hash = await hashTemporaryPassword("Secret#123");
 
-    expect(matchesPasswordHash("Secret#123", hash)).toBe(true);
-    expect(matchesPasswordHash("Wrong#123", hash)).toBe(false);
-    expect(matchesPasswordHash("Secret#123", null)).toBe(false);
+    await expect(matchesPasswordHash("Secret#123", hash)).resolves.toBe(true);
+    await expect(matchesPasswordHash("Wrong#123", hash)).resolves.toBe(false);
+    await expect(matchesPasswordHash("Secret#123", null)).resolves.toBe(false);
   });
 
   it("retorna erro de autenticacao com mensagem padrao", () => {

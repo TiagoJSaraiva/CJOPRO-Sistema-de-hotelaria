@@ -1,6 +1,7 @@
 export const AUTH_ERROR_CODE = {
   MISSING_FIELDS: "AUTH_MISSING_FIELDS",
   INVALID_CREDENTIALS: "AUTH_INVALID_CREDENTIALS",
+  ACCOUNT_LOCKED: "AUTH_ACCOUNT_LOCKED",
   TOKEN_MISSING: "AUTH_TOKEN_MISSING",
   TOKEN_INVALID_OR_EXPIRED: "AUTH_TOKEN_INVALID_OR_EXPIRED",
   FORBIDDEN: "AUTH_FORBIDDEN",
@@ -12,6 +13,7 @@ export type AuthErrorCode = (typeof AUTH_ERROR_CODE)[keyof typeof AUTH_ERROR_COD
 export const AUTH_ERROR_MESSAGE: Record<AuthErrorCode, string> = {
   [AUTH_ERROR_CODE.MISSING_FIELDS]: "Email e senha sao obrigatorios.",
   [AUTH_ERROR_CODE.INVALID_CREDENTIALS]: "Credenciais invalidas.",
+  [AUTH_ERROR_CODE.ACCOUNT_LOCKED]: "Conta temporariamente bloqueada por tentativas de login invalidas.",
   [AUTH_ERROR_CODE.TOKEN_MISSING]: "Token ausente.",
   [AUTH_ERROR_CODE.TOKEN_INVALID_OR_EXPIRED]: "Token invalido ou expirado.",
   [AUTH_ERROR_CODE.FORBIDDEN]: "Sem permissao para executar esta operacao.",
@@ -65,4 +67,5 @@ export type MeSuccessResponse = {
 export type AuthErrorResponse = {
   code: AuthErrorCode;
   message: string;
+  retryAfterSeconds?: number;
 };

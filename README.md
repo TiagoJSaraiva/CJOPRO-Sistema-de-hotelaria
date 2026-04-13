@@ -26,6 +26,12 @@ Comandos principais (na raiz):
 - `pnpm test:watch`: modo watch para desenvolvimento.
 - `pnpm test:e2e`: executa E2E do PMS.
 
+Cobertura de testes:
+
+- Cobertura e o percentual do codigo executado pelos testes (statements, branches, funcoes e linhas).
+- Cobertura alta em fluxos criticos reduz regressao silenciosa durante refatoracao.
+- O comando `pnpm test:coverage` gera relatorios por pacote.
+
 Convencao por feature:
 
 - `__tests__/unit/...` para unitarios.
@@ -38,4 +44,24 @@ Pacotes com configuracao inicial ativa:
 - `apps/backend-service`
 - `apps/pms`
 - `packages/shared`
+
+## Backend service: ambiente e seguranca
+
+No desenvolvimento local, configure em `apps/backend-service/.env.local` (arquivo ignorado por git):
+
+- `AUTH_SESSION_SECRET`: obrigatoria, minimo 32 caracteres.
+- `ALLOWED_ORIGINS`: lista separada por virgula para CORS (por padrao localhost das aplicacoes).
+
+Exemplo:
+
+```env
+AUTH_SESSION_SECRET=dev-backend-auth-session-secret-please-change-before-production
+ALLOWED_ORIGINS=http://localhost:3000,http://localhost:3001,http://localhost:3333,http://localhost:3334
+```
+
+Observacoes:
+
+- O backend falha no boot se `AUTH_SESSION_SECRET` nao estiver configurada corretamente.
+- Login com 10 falhas consecutivas por usuario ativa bloqueio temporario de 2 minutos.
+
 

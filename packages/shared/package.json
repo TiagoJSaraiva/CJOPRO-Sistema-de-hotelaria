@@ -19,7 +19,7 @@
     "dev": "tsup src/index.ts --watch --format esm --dts --clean",
     "build": "tsup src/index.ts --format esm --dts --clean",
     "typecheck": "tsc -p tsconfig.json --noEmit",
-    "lint": "echo \"No lint configured for @hotel/shared\"",
+    "lint": "eslint src __tests__ --ext .ts --max-warnings=0",
     "clean": "rimraf dist",
     "test": "vitest run --passWithNoTests",
     "test:unit": "vitest run __tests__/unit --passWithNoTests",

@@ -26,7 +26,7 @@ export function registerUserRoutes(app: FastifyInstance, repository: UsersReposi
       const [hotels, roles] = await Promise.all([repository.listReferenceHotels(), repository.listReferenceRoles()]);
 
       return reply.send({
-        hotels: hotels.map((item: any) => ({ id: item.id, name: item.name })),
+        hotels: hotels.map((item) => ({ id: item.id, name: item.name })),
         roles: roles.map(mapRoleOption)
       });
     } catch (error) {
@@ -68,9 +68,9 @@ export function registerUserRoutes(app: FastifyInstance, repository: UsersReposi
       return reply.status(400).send({ message: "Email invalido." });
     }
 
-    if (roleAssignments.length) {
-      const roleIds = roleAssignments.map((item) => item.role_id);
+    const roleIds = roleAssignments.map((item) => item.role_id);
 
+    if (roleAssignments.length) {
       let roleRows: Awaited<ReturnType<UsersRepository["findRolesByIds"]>>;
 
       try {
@@ -80,7 +80,7 @@ export function registerUserRoutes(app: FastifyInstance, repository: UsersReposi
         return reply.status(500).send({ message: "Falha ao validar papeis para o usuario." });
       }
 
-      const roleMap = new Map(roleRows.map((item: any) => [item.id, item]));
+      const roleMap = new Map(roleRows.map((item) => [item.id, item]));
 
       if (roleMap.size !== roleIds.length) {
         return reply.status(400).send({ message: "Uma ou mais roles selecionadas nao existem." });
@@ -99,13 +99,25 @@ export function registerUserRoutes(app: FastifyInstance, repository: UsersReposi
       }
     }
 
+    const passwordHash = await hashTemporaryPassword(tempPassword).catch((error) => {
+      request.log.error(error);
+      return null;
+    });
+
+    if (!passwordHash) {
+      return reply.status(500).send({ message: "Falha ao criar usuario." });
+    }
+
     const createResult = await repository
-      .createUser({
-        name,
-        email,
-        password_hash: hashTemporaryPassword(tempPassword),
-        is_active: true
-      })
+      .createUserWithRoles(
+        {
+          name,
+          email,
+          password_hash: passwordHash,
+          is_active: true
+        },
+        roleIds
+      )
       .catch((error) => {
         request.log.error(error);
         return null;
@@ -121,15 +133,6 @@ export function registerUserRoutes(app: FastifyInstance, repository: UsersReposi
 
     if (!createResult.id) {
       return reply.status(500).send({ message: "Falha ao criar usuario." });
-    }
-
-    if (roleAssignments.length) {
-      try {
-        await repository.assignUserRoles(roleAssignments.map((item) => ({ user_id: createResult.id!, role_id: item.role_id })));
-      } catch (error) {
-        request.log.error(error);
-        return reply.status(500).send({ message: "Usuario criado, mas falhou ao vincular papeis." });
-      }
     }
 
     const userWithRelations = await repository.getUserWithRelationsById(createResult.id).catch((error) => {
@@ -188,7 +191,16 @@ export function registerUserRoutes(app: FastifyInstance, repository: UsersReposi
         return reply.status(400).send({ message: "Senha temporaria nao pode ficar vazia." });
       }
 
-      payload.password_hash = hashTemporaryPassword(parsedPassword);
+      const passwordHash = await hashTemporaryPassword(parsedPassword).catch((error) => {
+        request.log.error(error);
+        return null;
+      });
+
+      if (!passwordHash) {
+        return reply.status(500).send({ message: "Falha ao atualizar usuario." });
+      }
+
+      payload.password_hash = passwordHash;
     }
 
     if (request.body?.is_active !== undefined) {
@@ -214,7 +226,7 @@ export function registerUserRoutes(app: FastifyInstance, repository: UsersReposi
         return reply.status(500).send({ message: "Falha ao validar papeis para o usuario." });
       }
 
-      const roleMap = new Map(roleRows.map((item: any) => [item.id, item]));
+      const roleMap = new Map(roleRows.map((item) => [item.id, item]));
 
       if (roleMap.size !== roleIds.length) {
         return reply.status(400).send({ message: "Uma ou mais roles selecionadas nao existem." });
@@ -233,54 +245,27 @@ export function registerUserRoutes(app: FastifyInstance, repository: UsersReposi
       }
     }
 
-    if (Object.keys(payload).length) {
-      const updateResult = await repository.updateUser(id, payload).catch((error) => {
+    const updateResult = await repository
+      .updateUserWithRoles(
+        id,
+        payload,
+        hasRoleAssignments ? roleAssignments.map((item) => item.role_id) : undefined
+      )
+      .catch((error) => {
         request.log.error(error);
         return null;
       });
 
-      if (!updateResult) {
-        return reply.status(500).send({ message: "Falha ao atualizar usuario." });
-      }
-
-      if (updateResult === "conflict") {
-        return reply.status(409).send({ message: "Email ja utilizado por outro usuario." });
-      }
-
-      if (updateResult === "not-found") {
-        return reply.status(404).send({ message: "Usuario nao encontrado." });
-      }
-    } else {
-      const exists = await repository.userExists(id).catch((error) => {
-        request.log.error(error);
-        return null;
-      });
-
-      if (exists === null) {
-        return reply.status(500).send({ message: "Falha ao atualizar usuario." });
-      }
-
-      if (!exists) {
-        return reply.status(404).send({ message: "Usuario nao encontrado." });
-      }
+    if (!updateResult) {
+      return reply.status(500).send({ message: "Falha ao atualizar usuario." });
     }
 
-    if (hasRoleAssignments) {
-      try {
-        await repository.clearUserRoles(id);
-      } catch (error) {
-        request.log.error(error);
-        return reply.status(500).send({ message: "Falha ao atualizar papeis do usuario." });
-      }
+    if (updateResult === "conflict") {
+      return reply.status(409).send({ message: "Email ja utilizado por outro usuario." });
+    }
 
-      if (roleAssignments.length) {
-        try {
-          await repository.assignUserRoles(roleAssignments.map((item) => ({ user_id: id, role_id: item.role_id })));
-        } catch (error) {
-          request.log.error(error);
-          return reply.status(500).send({ message: "Falha ao atualizar papeis do usuario." });
-        }
-      }
+    if (updateResult === "not-found") {
+      return reply.status(404).send({ message: "Usuario nao encontrado." });
     }
 
     const updatedUser = await repository.getUserWithRelationsById(id).catch((error) => {

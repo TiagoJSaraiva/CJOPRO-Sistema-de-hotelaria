@@ -1,10 +1,25 @@
-import { createHash, createHmac, timingSafeEqual } from "node:crypto";
+import { createHmac, timingSafeEqual } from "node:crypto";
+import argon2 from "argon2";
 import { AUTH_ERROR_MESSAGE, type AuthErrorResponse, type SessionPayload } from "@hotel/shared";
 
 export type { SessionPayload };
 
-const SESSION_SECRET = process.env.AUTH_SESSION_SECRET || "dev-auth-session-secret-change-me";
+export const MIN_SESSION_SECRET_LENGTH = 32;
 export const SESSION_TTL_SECONDS = 60 * 60 * 8;
+
+export function getRequiredSessionSecret(): string {
+  const sessionSecret = process.env.AUTH_SESSION_SECRET;
+
+  if (!sessionSecret) {
+    throw new Error("Missing required environment variable: AUTH_SESSION_SECRET");
+  }
+
+  if (sessionSecret.length < MIN_SESSION_SECRET_LENGTH) {
+    throw new Error(`AUTH_SESSION_SECRET must be at least ${MIN_SESSION_SECRET_LENGTH} characters long.`);
+  }
+
+  return sessionSecret;
+}
 
 function base64UrlEncode(value: string): string {
   return Buffer.from(value).toString("base64url");
@@ -16,7 +31,7 @@ function base64UrlDecode(value: string): string {
 
 export function signToken(payload: SessionPayload): string {
   const encodedPayload = base64UrlEncode(JSON.stringify(payload));
-  const signature = createHmac("sha256", SESSION_SECRET).update(encodedPayload).digest("base64url");
+  const signature = createHmac("sha256", getRequiredSessionSecret()).update(encodedPayload).digest("base64url");
   return `${encodedPayload}.${signature}`;
 }
 
@@ -27,7 +42,7 @@ export function verifyToken(token: string): SessionPayload | null {
     return null;
   }
 
-  const expectedSignature = createHmac("sha256", SESSION_SECRET).update(encodedPayload).digest("base64url");
+  const expectedSignature = createHmac("sha256", getRequiredSessionSecret()).update(encodedPayload).digest("base64url");
 
   const receivedBuffer = Buffer.from(signature);
   const expectedBuffer = Buffer.from(expectedSignature);
@@ -72,21 +87,30 @@ export function getSessionFromRequest(request: { headers: { authorization?: stri
   return verifyToken(token);
 }
 
-export function hashTemporaryPassword(value: string): string {
-  return createHash("sha256").update(value).digest("hex");
+export async function hashTemporaryPassword(value: string): Promise<string> {
+  return argon2.hash(value, {
+    type: argon2.argon2id,
+    memoryCost: 19_456,
+    timeCost: 2,
+    parallelism: 1
+  });
 }
 
-export function matchesPasswordHash(plainTextPassword: string, storedPasswordHash: string | null | undefined): boolean {
+export async function matchesPasswordHash(
+  plainTextPassword: string,
+  storedPasswordHash: string | null | undefined
+): Promise<boolean> {
   if (!storedPasswordHash) {
     return false;
   }
 
-  const providedHash = Buffer.from(hashTemporaryPassword(plainTextPassword));
-  const expectedHash = Buffer.from(storedPasswordHash);
-
-  if (providedHash.length !== expectedHash.length) {
+  if (!storedPasswordHash.startsWith("$argon2id$")) {
     return false;
   }
 
-  return timingSafeEqual(providedHash, expectedHash);
+  try {
+    return await argon2.verify(storedPasswordHash, plainTextPassword);
+  } catch {
+    return false;
+  }
 }

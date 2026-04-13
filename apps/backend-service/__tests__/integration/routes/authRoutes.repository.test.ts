@@ -23,13 +23,16 @@ afterEach(async () => {
 
 describe("routes/auth with injected repository", () => {
   it("realiza login com sucesso usando repository injetado", async () => {
+    const passwordHash = await hashTemporaryPassword("Secret#123");
     const repository: AuthRepository = {
       findUserByEmail: vi.fn(async () => ({
         id: "user-1",
         name: "Admin",
         email: "admin@example.com",
         is_active: true,
-        password_hash: hashTemporaryPassword("Secret#123"),
+        password_hash: passwordHash,
+        failed_attempts: 0,
+        locked_until: null,
         user_roles: [
           {
             roles: {
@@ -42,7 +45,9 @@ describe("routes/auth with injected repository", () => {
           }
         ]
       })),
-      markSuccessfulLogin: vi.fn(async () => undefined)
+      markSuccessfulLogin: vi.fn(async () => undefined),
+      markFailedLoginAttempt: vi.fn(async () => undefined),
+      clearExpiredLoginLock: vi.fn(async () => undefined)
     };
 
     const app = await createAuthTestApp(repository);
@@ -72,18 +77,23 @@ describe("routes/auth with injected repository", () => {
   });
 
   it("nao falha login quando atualizacao de ultimo acesso retorna erro", async () => {
+    const passwordHash = await hashTemporaryPassword("Secret#123");
     const repository: AuthRepository = {
       findUserByEmail: vi.fn(async () => ({
         id: "user-1",
         name: "Admin",
         email: "admin@example.com",
         is_active: true,
-        password_hash: hashTemporaryPassword("Secret#123"),
+        password_hash: passwordHash,
+        failed_attempts: 0,
+        locked_until: null,
         user_roles: []
       })),
       markSuccessfulLogin: vi.fn(async () => {
         throw new Error("write failure");
-      })
+      }),
+      markFailedLoginAttempt: vi.fn(async () => undefined),
+      clearExpiredLoginLock: vi.fn(async () => undefined)
     };
 
     const app = await createAuthTestApp(repository);
@@ -99,5 +109,45 @@ describe("routes/auth with injected repository", () => {
 
     expect(response.statusCode).toBe(200);
     expect(repository.markSuccessfulLogin).toHaveBeenCalledWith("user-1");
+  });
+
+  it("bloqueia login com 429 quando usuario atinge limite de tentativas", async () => {
+    const passwordHash = await hashTemporaryPassword("Secret#123");
+    const repository: AuthRepository = {
+      findUserByEmail: vi.fn(async () => ({
+        id: "user-1",
+        name: "Admin",
+        email: "admin@example.com",
+        is_active: true,
+        password_hash: passwordHash,
+        failed_attempts: 9,
+        locked_until: null,
+        user_roles: []
+      })),
+      markSuccessfulLogin: vi.fn(async () => undefined),
+      markFailedLoginAttempt: vi.fn(async () => undefined),
+      clearExpiredLoginLock: vi.fn(async () => undefined)
+    };
+
+    const app = await createAuthTestApp(repository);
+
+    const response = await app.inject({
+      method: "POST",
+      url: "/auth/login",
+      payload: {
+        email: "admin@example.com",
+        password: "senha-incorreta"
+      }
+    });
+
+    expect(response.statusCode).toBe(429);
+    expect(response.json()).toMatchObject({
+      code: "AUTH_ACCOUNT_LOCKED"
+    });
+    expect(repository.markFailedLoginAttempt).toHaveBeenCalledWith(
+      "user-1",
+      10,
+      expect.any(String)
+    );
   });
 });
