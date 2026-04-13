@@ -3,8 +3,8 @@ import { PermissionTabs } from "../../_components/PermissionTabs";
 import { getUsersReferenceData, listUsers } from "../../../../lib/adminApi";
 import { getUserFromSession } from "../../../../lib/auth";
 import { getUsersAccess, getUsersDefaultRoute } from "../access";
-import { UserListItem } from "../_components/UserListItem";
 import { UserStatusMessage } from "../_components/UserStatusMessage";
+import { UsersViewFilterableSection } from "../_components/UsersViewFilterableSection";
 
 type UsersViewPageProps = {
   searchParams?: {
@@ -45,6 +45,20 @@ export default async function UsersViewPage({ searchParams }: UsersViewPageProps
     <section style={{ display: "grid", gap: "1rem" }}>
       <section>
         <h1 style={{ marginTop: 0, marginBottom: "0.35rem", fontSize: "3rem", marginLeft: "1rem" }}>Usuarios</h1>
+        <UserStatusMessage status={searchParams?.status} />
+      </section>
+
+      <UsersViewFilterableSection
+        users={users}
+        hotels={referenceData.hotels}
+        roles={referenceData.roles}
+        canRead={access.canRead}
+        canUpdate={access.canUpdate}
+        canDelete={access.canDelete}
+        currentUserId={user?.id}
+        activeUserId={activeUserId}
+        mode={mode}
+      >
         <PermissionTabs
           activeKey="view"
           items={[
@@ -52,31 +66,7 @@ export default async function UsersViewPage({ searchParams }: UsersViewPageProps
             { key: "view", label: "Ver usuarios", href: "/dashboard/users/view", isVisible: access.canRead }
           ]}
         />
-        <UserStatusMessage status={searchParams?.status} />
-      </section>
-
-      <section style={{ display: "grid", gap: "0.75rem" }}>
-        {users.length ? (
-          users.map((item) => (
-            <UserListItem
-              key={item.id}
-              userItem={item}
-              hotels={referenceData.hotels}
-              roles={referenceData.roles}
-              canRead={access.canRead}
-              canUpdate={access.canUpdate}
-              canDelete={access.canDelete}
-              isCurrentUser={user?.id === item.id}
-              isViewing={activeUserId === item.id && mode === "view"}
-              isEditing={activeUserId === item.id && mode === "edit"}
-            />
-          ))
-        ) : (
-          <article style={{ background: "#fff", border: "1px solid #e2e2e2", borderRadius: "12px", padding: "1rem", color: "#666" }}>
-            Nenhum usuario cadastrado ate o momento.
-          </article>
-        )}
-      </section>
+      </UsersViewFilterableSection>
     </section>
   );
 }

@@ -1,3 +1,5 @@
+"use client";
+
 import Link from "next/link";
 import type { AdminHotelOption, AdminPermissionOption, AdminRole } from "@hotel/shared";
 import { deleteRoleAction, updateRoleAction } from "../actions";

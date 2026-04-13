@@ -1,6 +1,9 @@
-import "dotenv/config";
+import dotenv from "dotenv";
 import { createApp } from "./app";
 import { getRequiredSessionSecret } from "./auth/session";
+
+dotenv.config();
+dotenv.config({ path: ".env.local", override: true });
 
 const port = Number(process.env.PORT || 3334);
 const app = createApp();

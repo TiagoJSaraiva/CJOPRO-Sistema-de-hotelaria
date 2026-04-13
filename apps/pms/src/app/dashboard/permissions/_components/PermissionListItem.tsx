@@ -1,3 +1,5 @@
+"use client";
+
 import Link from "next/link";
 import type { AdminPermission } from "@hotel/shared";
 import { deletePermissionAction, updatePermissionAction } from "../actions";

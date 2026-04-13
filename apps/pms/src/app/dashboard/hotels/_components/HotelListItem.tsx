@@ -1,3 +1,5 @@
+"use client";
+
 import Link from "next/link";
 import type { AdminHotel } from "../../../../lib/adminApi";
 import { deleteHotelAction, updateHotelAction } from "../actions";
