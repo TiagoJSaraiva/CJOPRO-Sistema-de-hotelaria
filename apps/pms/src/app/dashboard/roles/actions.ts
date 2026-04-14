@@ -2,7 +2,7 @@
 
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
-import { PERMISSIONS } from "@hotel/shared";
+import { ADMIN_ROLE_TYPES, PERMISSIONS, type AdminRoleType } from "@hotel/shared";
 import { createRole, deleteRole, updateRole } from "../../../lib/adminApi";
 import { getUserFromSession } from "../../../lib/auth";
 
@@ -42,6 +42,16 @@ function normalizeOptionalText(rawValue: FormDataEntryValue | null): string | nu
   return parsed.length ? parsed : null;
 }
 
+function normalizeRoleType(rawValue: FormDataEntryValue | null): AdminRoleType | null {
+  const parsed = String(rawValue || "").trim();
+
+  if (parsed === ADMIN_ROLE_TYPES.SYSTEM || parsed === ADMIN_ROLE_TYPES.HOTEL) {
+    return parsed;
+  }
+
+  return null;
+}
+
 function revalidateRolePages(): void {
   revalidatePath("/dashboard/roles");
   revalidatePath("/dashboard/roles/create");
@@ -71,15 +81,16 @@ export async function createRoleAction(formData: FormData): Promise<void> {
   }
 
   const name = String(formData.get("name") || "").trim();
+  const roleType = normalizeRoleType(formData.get("role_type"));
   const hotelId = normalizeOptionalText(formData.get("hotel_id"));
   const permissionIds = normalizePermissionIds(formData.get("permission_ids"));
 
-  if (!name) {
+  if (!name || !roleType) {
     redirectWithStatus("create_missing_fields", "create");
   }
 
   try {
-    await createRole({ name, hotel_id: hotelId, permission_ids: permissionIds });
+    await createRole({ name, role_type: roleType, hotel_id: hotelId, permission_ids: permissionIds });
   } catch {
     redirectWithStatus("create_error", "create");
   }
@@ -98,16 +109,18 @@ export async function updateRoleAction(formData: FormData): Promise<void> {
 
   const id = String(formData.get("id") || "").trim();
   const name = String(formData.get("name") || "").trim();
+  const roleType = normalizeRoleType(formData.get("role_type"));
   const hotelId = normalizeOptionalText(formData.get("hotel_id"));
   const permissionIds = normalizePermissionIds(formData.get("permission_ids"));
 
-  if (!id || !name) {
+  if (!id || !name || !roleType) {
     redirectWithStatus("update_missing_fields", "view");
   }
 
   try {
     await updateRole(id, {
       name,
+      role_type: roleType,
       hotel_id: hotelId,
       permission_ids: permissionIds
     });

@@ -1,7 +1,10 @@
 import type { FastifyInstance } from "fastify";
 import {
+  ADMIN_PERMISSION_TYPES,
+  ADMIN_ROLE_TYPES,
   PERMISSIONS,
   type AdminRoleCreateInput,
+  type AdminRoleType,
   type AdminRoleUpdateInput,
   type HotelIdParams
 } from "@hotel/shared";
@@ -12,6 +15,14 @@ import { createRolesRepository, type RolesRepository } from "../repositories/rol
 
 type RoleCreateBody = Partial<AdminRoleCreateInput>;
 type RoleUpdateBody = Partial<AdminRoleUpdateInput>;
+
+function parseRoleType(value: unknown): AdminRoleType | null {
+  if (value === ADMIN_ROLE_TYPES.SYSTEM || value === ADMIN_ROLE_TYPES.HOTEL) {
+    return value;
+  }
+
+  return null;
+}
 
 export function registerRoleRoutes(app: FastifyInstance, repository: RolesRepository = createRolesRepository()): void {
   app.get("/admin/roles/reference-data", async (request, reply) => {
@@ -24,7 +35,7 @@ export function registerRoleRoutes(app: FastifyInstance, repository: RolesReposi
 
       return reply.send({
         hotels: hotels.map((item) => ({ id: item.id, name: item.name })),
-        permissions: permissions.map((item) => ({ id: item.id, name: item.name }))
+        permissions: permissions.map((item) => ({ id: item.id, name: item.name, type: item.type }))
       });
     } catch (error) {
       request.log.error(error);
@@ -53,6 +64,7 @@ export function registerRoleRoutes(app: FastifyInstance, repository: RolesReposi
     }
 
     const name = normalizeOptionalText(request.body?.name);
+    const roleType = parseRoleType(request.body?.role_type);
     const hotelId = normalizeOptionalText(request.body?.hotel_id || null);
     const permissionIds = normalizePermissionIds(request.body?.permission_ids || []);
 
@@ -60,7 +72,15 @@ export function registerRoleRoutes(app: FastifyInstance, repository: RolesReposi
       return reply.status(400).send({ message: "Nome da role e obrigatorio." });
     }
 
-    if (hotelId) {
+    if (!roleType) {
+      return reply.status(400).send({ message: "Tipo da role e obrigatorio." });
+    }
+
+    if (roleType === ADMIN_ROLE_TYPES.SYSTEM && hotelId) {
+      return reply.status(400).send({ message: "Roles de sistema nao podem ter hotel associado." });
+    }
+
+    if (roleType === ADMIN_ROLE_TYPES.HOTEL && hotelId) {
       const exists = await repository.hotelExists(hotelId).catch((error) => {
         request.log.error(error);
         return null;
@@ -76,21 +96,35 @@ export function registerRoleRoutes(app: FastifyInstance, repository: RolesReposi
     }
 
     if (permissionIds.length) {
-      const total = await repository.countPermissionsByIds(permissionIds).catch((error) => {
+      const permissions = await repository.findPermissionsByIds(permissionIds).catch((error) => {
         request.log.error(error);
         return null;
       });
 
-      if (total === null) {
+      if (permissions === null) {
         return reply.status(500).send({ message: "Falha ao validar permissoes da role." });
       }
 
-      if (total !== permissionIds.length) {
+      if (permissions.length !== permissionIds.length) {
         return reply.status(400).send({ message: "Uma ou mais permissoes selecionadas nao existem." });
+      }
+
+      const expectedPermissionType =
+        roleType === ADMIN_ROLE_TYPES.SYSTEM ? ADMIN_PERMISSION_TYPES.SYSTEM : ADMIN_PERMISSION_TYPES.HOTEL;
+
+      const hasInvalidPermissionType = permissions.some((item) => item.type !== expectedPermissionType);
+
+      if (hasInvalidPermissionType) {
+        return reply.status(400).send({
+          message:
+            roleType === ADMIN_ROLE_TYPES.SYSTEM
+              ? "Role de sistema aceita apenas permissoes do tipo SYSTEM_PERMISSION."
+              : "Role de hotel aceita apenas permissoes do tipo HOTEL_PERMISSION."
+        });
       }
     }
 
-    const createRoleResult = await repository.createRoleWithPermissions({ name, hotel_id: hotelId }, permissionIds).catch((error) => {
+    const createRoleResult = await repository.createRoleWithPermissions({ name, role_type: roleType, hotel_id: hotelId }, permissionIds).catch((error) => {
       request.log.error(error);
       return null;
     });
@@ -142,6 +176,16 @@ export function registerRoleRoutes(app: FastifyInstance, repository: RolesReposi
       payload.name = parsedName;
     }
 
+    if (request.body?.role_type !== undefined) {
+      const parsedRoleType = parseRoleType(request.body.role_type);
+
+      if (!parsedRoleType) {
+        return reply.status(400).send({ message: "Tipo da role invalido para atualizacao." });
+      }
+
+      payload.role_type = parsedRoleType;
+    }
+
     if (request.body?.hotel_id !== undefined) {
       payload.hotel_id = normalizeOptionalText(request.body.hotel_id || null);
     }
@@ -153,8 +197,27 @@ export function registerRoleRoutes(app: FastifyInstance, repository: RolesReposi
       return reply.status(400).send({ message: "Nenhum campo informado para atualizacao." });
     }
 
-    if (payload.hotel_id) {
-      const exists = await repository.hotelExists(payload.hotel_id as string).catch((error) => {
+    const currentRole = await repository.getRoleWithRelationsById(id).catch((error) => {
+      request.log.error(error);
+      return null;
+    });
+
+    if (!currentRole) {
+      return reply.status(404).send({ message: "Role nao encontrada." });
+    }
+
+    const effectiveRoleType = (payload.role_type as AdminRoleType | undefined) || currentRole.role_type || ADMIN_ROLE_TYPES.SYSTEM;
+    const effectiveHotelId =
+      request.body?.hotel_id !== undefined
+        ? (payload.hotel_id as string | null | undefined) || null
+        : currentRole.hotel_id || null;
+
+    if (effectiveRoleType === ADMIN_ROLE_TYPES.SYSTEM && effectiveHotelId) {
+      return reply.status(400).send({ message: "Roles de sistema nao podem ter hotel associado." });
+    }
+
+    if (effectiveRoleType === ADMIN_ROLE_TYPES.HOTEL && effectiveHotelId) {
+      const exists = await repository.hotelExists(effectiveHotelId).catch((error) => {
         request.log.error(error);
         return null;
       });
@@ -169,17 +232,31 @@ export function registerRoleRoutes(app: FastifyInstance, repository: RolesReposi
     }
 
     if (hasPermissionsPayload && permissionIds.length) {
-      const total = await repository.countPermissionsByIds(permissionIds).catch((error) => {
+      const permissions = await repository.findPermissionsByIds(permissionIds).catch((error) => {
         request.log.error(error);
         return null;
       });
 
-      if (total === null) {
+      if (permissions === null) {
         return reply.status(500).send({ message: "Falha ao validar permissoes da role." });
       }
 
-      if (total !== permissionIds.length) {
+      if (permissions.length !== permissionIds.length) {
         return reply.status(400).send({ message: "Uma ou mais permissoes selecionadas nao existem." });
+      }
+
+      const expectedPermissionType =
+        effectiveRoleType === ADMIN_ROLE_TYPES.SYSTEM ? ADMIN_PERMISSION_TYPES.SYSTEM : ADMIN_PERMISSION_TYPES.HOTEL;
+
+      const hasInvalidPermissionType = permissions.some((item) => item.type !== expectedPermissionType);
+
+      if (hasInvalidPermissionType) {
+        return reply.status(400).send({
+          message:
+            effectiveRoleType === ADMIN_ROLE_TYPES.SYSTEM
+              ? "Role de sistema aceita apenas permissoes do tipo SYSTEM_PERMISSION."
+              : "Role de hotel aceita apenas permissoes do tipo HOTEL_PERMISSION."
+        });
       }
     }
 

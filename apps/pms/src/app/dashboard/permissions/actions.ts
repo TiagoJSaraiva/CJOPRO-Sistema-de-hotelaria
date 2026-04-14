@@ -2,7 +2,7 @@
 
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
-import { PERMISSIONS } from "@hotel/shared";
+import { ADMIN_PERMISSION_TYPES, PERMISSIONS, type AdminPermissionType } from "@hotel/shared";
 import { createPermission, deletePermission, updatePermission } from "../../../lib/adminApi";
 import { getUserFromSession } from "../../../lib/auth";
 
@@ -26,6 +26,16 @@ function redirectWithStatus(status: string, section: "create" | "view" | "root" 
   redirect(`/dashboard/permissions/${section}?status=${status}&r=${nonce}`);
 }
 
+function normalizePermissionType(rawValue: FormDataEntryValue | null): AdminPermissionType | null {
+  const parsed = String(rawValue || "").trim();
+
+  if (parsed === ADMIN_PERMISSION_TYPES.SYSTEM || parsed === ADMIN_PERMISSION_TYPES.HOTEL) {
+    return parsed;
+  }
+
+  return null;
+}
+
 export async function createPermissionAction(formData: FormData): Promise<void> {
   const user = await getUserFromSession();
 
@@ -35,13 +45,14 @@ export async function createPermissionAction(formData: FormData): Promise<void> 
   }
 
   const name = String(formData.get("name") || "").trim();
+  const type = normalizePermissionType(formData.get("type"));
 
-  if (!name) {
+  if (!name || !type) {
     redirectWithStatus("create_missing_fields", "create");
   }
 
   try {
-    await createPermission({ name });
+    await createPermission({ name, type });
   } catch {
     redirectWithStatus("create_error", "create");
   }
@@ -60,13 +71,14 @@ export async function updatePermissionAction(formData: FormData): Promise<void> 
 
   const id = String(formData.get("id") || "").trim();
   const name = String(formData.get("name") || "").trim();
+  const type = normalizePermissionType(formData.get("type"));
 
-  if (!id || !name) {
+  if (!id || !name || !type) {
     redirectWithStatus("update_missing_fields", "view");
   }
 
   try {
-    await updatePermission(id, { name });
+    await updatePermission(id, { name, type });
   } catch {
     redirectWithStatus("update_error", "view");
   }

@@ -4,6 +4,7 @@ import { normalizeOptionalText } from "../common/text";
 type DbPermissionRow = {
   id?: string | null;
   name?: string | null;
+  type?: "SYSTEM_PERMISSION" | "HOTEL_PERMISSION" | null;
 };
 
 type DbRolePermissionRow = {
@@ -17,6 +18,7 @@ type DbHotelRow = {
 type DbRoleRow = {
   id?: string | null;
   name?: string | null;
+  role_type?: "SYSTEM_ROLE" | "HOTEL_ROLE" | null;
   hotel_id?: string | null;
   hotels?: DbHotelRow | DbHotelRow[] | null;
   role_permissions?: DbRolePermissionRow[] | null;
@@ -37,6 +39,7 @@ type DbAuthUserRow = {
 type DbRoleOptionRow = {
   id: string;
   name: string;
+  role_type?: "SYSTEM_ROLE" | "HOTEL_ROLE" | null;
   hotel_id?: string | null;
   hotels?: DbHotelRow | DbHotelRow[] | null;
 };
@@ -54,6 +57,7 @@ type DbAdminUserRow = {
 type DbAdminRoleRow = {
   id: string;
   name: string;
+  role_type?: "SYSTEM_ROLE" | "HOTEL_ROLE" | null;
   hotel_id?: string | null;
   hotels?: DbHotelRow | DbHotelRow[] | null;
   role_permissions?: DbRolePermissionRow[] | null;
@@ -82,6 +86,7 @@ export function mapAuthUserFromDb(item: DbAuthUserRow): AuthUser {
         roleAssignments.push({
           roleId,
           roleName,
+          roleType: role?.role_type === "HOTEL_ROLE" ? "HOTEL_ROLE" : "SYSTEM_ROLE",
           hotelId: roleHotelId,
           hotelName: roleHotelName
         });
@@ -134,14 +139,15 @@ export function normalizeRoleAssignments(value: unknown): Array<{ role_id: strin
   for (const item of value) {
     const roleId = normalizeOptionalText((item as { role_id?: string })?.role_id);
 
-    if (!roleId || seen.has(roleId)) {
+    const hotelId = normalizeOptionalText((item as { hotel_id?: string | null })?.hotel_id || null);
+    const dedupeKey = `${roleId || ""}::${hotelId || "__null__"}`;
+
+    if (!roleId || seen.has(dedupeKey)) {
       continue;
     }
 
-    const hotelId = normalizeOptionalText((item as { hotel_id?: string | null })?.hotel_id || null);
-
     normalized.push({ role_id: roleId, hotel_id: hotelId });
-    seen.add(roleId);
+    seen.add(dedupeKey);
   }
 
   return normalized;
@@ -169,12 +175,19 @@ export function normalizePermissionIds(value: unknown): string[] {
   return normalized;
 }
 
-export function mapRoleOption(item: DbRoleOptionRow): { id: string; name: string; hotel_id: string | null; hotel_name: string | null } {
+export function mapRoleOption(item: DbRoleOptionRow): {
+  id: string;
+  name: string;
+  role_type: "SYSTEM_ROLE" | "HOTEL_ROLE";
+  hotel_id: string | null;
+  hotel_name: string | null;
+} {
   const hotel = Array.isArray(item.hotels) ? item.hotels[0] : item.hotels;
 
   return {
     id: item.id,
     name: item.name,
+    role_type: item.role_type === "HOTEL_ROLE" ? "HOTEL_ROLE" : "SYSTEM_ROLE",
     hotel_id: item.hotel_id || null,
     hotel_name: hotel?.name || null
   };
@@ -187,7 +200,13 @@ export function mapAdminUser(item: DbAdminUserRow): {
   is_active: boolean;
   last_login_at: string | null;
   created_at: string | null;
-  role_assignments: Array<{ role_id: string; role_name: string; hotel_id: string | null; hotel_name: string | null }>;
+  role_assignments: Array<{
+    role_id: string;
+    role_name: string;
+    role_type: "SYSTEM_ROLE" | "HOTEL_ROLE";
+    hotel_id: string | null;
+    hotel_name: string | null;
+  }>;
 } {
   const roleAssignments = Array.isArray(item.user_roles)
     ? item.user_roles
@@ -202,7 +221,8 @@ export function mapAdminUser(item: DbAdminUserRow): {
           return {
             role_id: role.id,
             role_name: role.name,
-            hotel_id: role.hotel_id || null,
+            role_type: (role.role_type === "HOTEL_ROLE" ? "HOTEL_ROLE" : "SYSTEM_ROLE") as "SYSTEM_ROLE" | "HOTEL_ROLE",
+            hotel_id: row.hotel_id || role.hotel_id || null,
             hotel_name: roleHotel?.name || null
           };
         })
@@ -223,9 +243,10 @@ export function mapAdminUser(item: DbAdminUserRow): {
 export function mapAdminRole(item: DbAdminRoleRow): {
   id: string;
   name: string;
+  role_type: "SYSTEM_ROLE" | "HOTEL_ROLE";
   hotel_id: string | null;
   hotel_name: string | null;
-  permissions: Array<{ id: string; name: string }>;
+  permissions: Array<{ id: string; name: string; type: "SYSTEM_PERMISSION" | "HOTEL_PERMISSION" }>;
 } {
   const permissions = Array.isArray(item.role_permissions)
     ? item.role_permissions
@@ -234,7 +255,13 @@ export function mapAdminRole(item: DbAdminRoleRow): {
           (permission): permission is DbPermissionRow & { id: string } =>
             typeof permission?.id === "string" && permission.id.length > 0
         )
-        .map((permission) => ({ id: permission.id, name: permission.name || "" }))
+        .map((permission) => ({
+          id: permission.id,
+          name: permission.name || "",
+          type: (permission.type === "HOTEL_PERMISSION" ? "HOTEL_PERMISSION" : "SYSTEM_PERMISSION") as
+            | "SYSTEM_PERMISSION"
+            | "HOTEL_PERMISSION"
+        }))
     : [];
 
   const roleHotel = Array.isArray(item.hotels) ? item.hotels[0] : item.hotels;
@@ -242,6 +269,7 @@ export function mapAdminRole(item: DbAdminRoleRow): {
   return {
     id: item.id,
     name: item.name,
+    role_type: item.role_type === "HOTEL_ROLE" ? "HOTEL_ROLE" : "SYSTEM_ROLE",
     hotel_id: item.hotel_id || null,
     hotel_name: roleHotel?.name || null,
     permissions

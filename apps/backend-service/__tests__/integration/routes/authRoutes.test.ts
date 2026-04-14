@@ -124,6 +124,7 @@ describe("routes/auth", () => {
             roles: {
               id: "role-1",
               name: "Administrador",
+              role_type: "SYSTEM_ROLE",
               hotel_id: null,
               hotels: { name: null },
               role_permissions: [{ permissions: { name: PERMISSIONS.USER_READ } }]
@@ -161,6 +162,7 @@ describe("routes/auth", () => {
         {
           roleId: "role-1",
           roleName: "Administrador",
+          roleType: "SYSTEM_ROLE",
           hotelId: null,
           hotelName: null
         }

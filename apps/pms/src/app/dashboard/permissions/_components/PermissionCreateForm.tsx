@@ -1,3 +1,4 @@
+import { ADMIN_PERMISSION_TYPES } from "@hotel/shared";
 import { createPermissionAction } from "../actions";
 import { PendingSubmitButton } from "../../../_components/PendingSubmitButton";
 
@@ -20,6 +21,19 @@ export function PermissionCreateForm({ formKey }: PermissionCreateFormProps) {
             required
             style={{ border: "1px solid #d2d2d2", borderRadius: "8px", padding: "0.55rem" }}
           />
+        </div>
+
+        <div style={{ display: "grid", gap: "0.35rem" }}>
+          <label htmlFor="create-permission-type">Tipo</label>
+          <select
+            id="create-permission-type"
+            name="type"
+            defaultValue={ADMIN_PERMISSION_TYPES.SYSTEM}
+            style={{ border: "1px solid #d2d2d2", borderRadius: "8px", padding: "0.55rem" }}
+          >
+            <option value={ADMIN_PERMISSION_TYPES.SYSTEM}>SYSTEM PERMISSION</option>
+            <option value={ADMIN_PERMISSION_TYPES.HOTEL}>HOTEL PERMISSION</option>
+          </select>
         </div>
 
         <PendingSubmitButton pendingLabel="Criando permissao..." style={{ justifySelf: "start" }}>

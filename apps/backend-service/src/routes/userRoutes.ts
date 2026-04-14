@@ -1,5 +1,6 @@
 import type { FastifyInstance } from "fastify";
 import {
+  ADMIN_ROLE_TYPES,
   PERMISSIONS,
   isValidEmail,
   normalizeEmail,
@@ -15,6 +16,86 @@ import { createUsersRepository, type UsersRepository } from "../repositories/use
 
 type UserCreateBody = Partial<AdminUserCreateInput>;
 type UserUpdateBody = Partial<AdminUserUpdateInput>;
+
+async function validateAndNormalizeRoleAssignments(
+  repository: UsersRepository,
+  roleAssignments: Array<{ role_id: string; hotel_id: string | null }>
+): Promise<
+  | { ok: true; normalizedAssignments: Array<{ role_id: string; hotel_id: string | null }> }
+  | { ok: false; status: number; message: string }
+> {
+  if (!roleAssignments.length) {
+    return { ok: true, normalizedAssignments: [] };
+  }
+
+  const uniqueRoleIds = Array.from(new Set(roleAssignments.map((item) => item.role_id)));
+
+  let roleRows: Awaited<ReturnType<UsersRepository["findRolesByIds"]>>;
+
+  try {
+    roleRows = await repository.findRolesByIds(uniqueRoleIds);
+  } catch {
+    return { ok: false, status: 500, message: "Falha ao validar papeis para o usuario." };
+  }
+
+  const roleMap = new Map(roleRows.map((item) => [item.id, item]));
+
+  if (roleMap.size !== uniqueRoleIds.length) {
+    return { ok: false, status: 400, message: "Uma ou mais roles selecionadas nao existem." };
+  }
+
+  const selectedHotelIds = Array.from(new Set(roleAssignments.map((item) => item.hotel_id).filter((item): item is string => !!item)));
+  let validHotelIds = new Set<string>();
+
+  if (selectedHotelIds.length) {
+    try {
+      const hotels = await repository.listReferenceHotels();
+      validHotelIds = new Set(hotels.map((hotel) => hotel.id));
+    } catch {
+      return { ok: false, status: 500, message: "Falha ao validar hoteis para o usuario." };
+    }
+  }
+
+  const normalizedAssignments: Array<{ role_id: string; hotel_id: string | null }> = [];
+
+  for (const assignment of roleAssignments) {
+    const role = roleMap.get(assignment.role_id);
+
+    if (!role) {
+      return { ok: false, status: 400, message: "Role selecionada nao existe." };
+    }
+
+    if (role.role_type === ADMIN_ROLE_TYPES.SYSTEM) {
+      if (assignment.hotel_id) {
+        return { ok: false, status: 400, message: "Roles de sistema devem ser vinculadas no contexto Sistema." };
+      }
+
+      normalizedAssignments.push({ role_id: assignment.role_id, hotel_id: null });
+      continue;
+    }
+
+    if (role.hotel_id) {
+      if (assignment.hotel_id && assignment.hotel_id !== role.hotel_id) {
+        return { ok: false, status: 400, message: "A role selecionada nao pertence ao hotel escolhido." };
+      }
+
+      normalizedAssignments.push({ role_id: assignment.role_id, hotel_id: role.hotel_id });
+      continue;
+    }
+
+    if (!assignment.hotel_id) {
+      return { ok: false, status: 400, message: "Roles genericas de hotel exigem um hotel de contexto." };
+    }
+
+    if (!validHotelIds.has(assignment.hotel_id)) {
+      return { ok: false, status: 400, message: "Hotel selecionado nao existe." };
+    }
+
+    normalizedAssignments.push({ role_id: assignment.role_id, hotel_id: assignment.hotel_id });
+  }
+
+  return { ok: true, normalizedAssignments };
+}
 
 export function registerUserRoutes(app: FastifyInstance, repository: UsersRepository = createUsersRepository()): void {
   app.get("/admin/users/reference-data", async (request, reply) => {
@@ -68,35 +149,10 @@ export function registerUserRoutes(app: FastifyInstance, repository: UsersReposi
       return reply.status(400).send({ message: "Email invalido." });
     }
 
-    const roleIds = roleAssignments.map((item) => item.role_id);
+    const roleAssignmentsValidation = await validateAndNormalizeRoleAssignments(repository, roleAssignments);
 
-    if (roleAssignments.length) {
-      let roleRows: Awaited<ReturnType<UsersRepository["findRolesByIds"]>>;
-
-      try {
-        roleRows = await repository.findRolesByIds(roleIds);
-      } catch (error) {
-        request.log.error(error);
-        return reply.status(500).send({ message: "Falha ao validar papeis para o usuario." });
-      }
-
-      const roleMap = new Map(roleRows.map((item) => [item.id, item]));
-
-      if (roleMap.size !== roleIds.length) {
-        return reply.status(400).send({ message: "Uma ou mais roles selecionadas nao existem." });
-      }
-
-      for (const assignment of roleAssignments) {
-        const role = roleMap.get(assignment.role_id);
-
-        if (!role) {
-          return reply.status(400).send({ message: "Role selecionada nao existe." });
-        }
-
-        if (role.hotel_id && assignment.hotel_id && role.hotel_id !== assignment.hotel_id) {
-          return reply.status(400).send({ message: "A role selecionada nao pertence ao hotel escolhido." });
-        }
-      }
+    if (!roleAssignmentsValidation.ok) {
+      return reply.status(roleAssignmentsValidation.status).send({ message: roleAssignmentsValidation.message });
     }
 
     const passwordHash = await hashTemporaryPassword(tempPassword).catch((error) => {
@@ -116,7 +172,7 @@ export function registerUserRoutes(app: FastifyInstance, repository: UsersReposi
           password_hash: passwordHash,
           is_active: true
         },
-        roleIds
+        roleAssignmentsValidation.normalizedAssignments
       )
       .catch((error) => {
         request.log.error(error);
@@ -214,43 +270,20 @@ export function registerUserRoutes(app: FastifyInstance, repository: UsersReposi
       return reply.status(400).send({ message: "Nenhum campo informado para atualizacao." });
     }
 
-    if (hasRoleAssignments && roleAssignments.length) {
-      const roleIds = roleAssignments.map((item) => item.role_id);
+    let normalizedAssignments: Array<{ role_id: string; hotel_id: string | null }> | undefined;
 
-      let roleRows: Awaited<ReturnType<UsersRepository["findRolesByIds"]>>;
+    if (hasRoleAssignments) {
+      const roleAssignmentsValidation = await validateAndNormalizeRoleAssignments(repository, roleAssignments);
 
-      try {
-        roleRows = await repository.findRolesByIds(roleIds);
-      } catch (error) {
-        request.log.error(error);
-        return reply.status(500).send({ message: "Falha ao validar papeis para o usuario." });
+      if (!roleAssignmentsValidation.ok) {
+        return reply.status(roleAssignmentsValidation.status).send({ message: roleAssignmentsValidation.message });
       }
 
-      const roleMap = new Map(roleRows.map((item) => [item.id, item]));
-
-      if (roleMap.size !== roleIds.length) {
-        return reply.status(400).send({ message: "Uma ou mais roles selecionadas nao existem." });
-      }
-
-      for (const assignment of roleAssignments) {
-        const role = roleMap.get(assignment.role_id);
-
-        if (!role) {
-          return reply.status(400).send({ message: "Role selecionada nao existe." });
-        }
-
-        if (role.hotel_id && assignment.hotel_id && role.hotel_id !== assignment.hotel_id) {
-          return reply.status(400).send({ message: "A role selecionada nao pertence ao hotel escolhido." });
-        }
-      }
+      normalizedAssignments = roleAssignmentsValidation.normalizedAssignments;
     }
 
     const updateResult = await repository
-      .updateUserWithRoles(
-        id,
-        payload,
-        hasRoleAssignments ? roleAssignments.map((item) => item.role_id) : undefined
-      )
+      .updateUserWithRoles(id, payload, hasRoleAssignments ? normalizedAssignments || [] : undefined)
       .catch((error) => {
         request.log.error(error);
         return null;

@@ -27,15 +27,24 @@ CREATE TABLE users (
 
 CREATE TABLE roles ( 
   id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-  hotel_id UUID REFERENCES hotels(id) ON DELETE CASCADE, -- NULL = role global
+  role_type VARCHAR(20) NOT NULL DEFAULT 'SYSTEM_ROLE' CHECK (role_type IN ('SYSTEM_ROLE', 'HOTEL_ROLE')),
+  hotel_id UUID REFERENCES hotels(id) ON DELETE CASCADE,
   name VARCHAR(50) UNIQUE NOT NULL
 );
+
+ALTER TABLE roles
+  ADD CONSTRAINT ck_roles_type_hotel
+  CHECK (
+    (role_type = 'SYSTEM_ROLE' AND hotel_id IS NULL)
+    OR role_type = 'HOTEL_ROLE'
+  );
 
 CREATE TABLE user_roles (
   id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
   user_id UUID NOT NULL REFERENCES users(id) ON DELETE CASCADE,
   role_id UUID NOT NULL REFERENCES roles(id) ON DELETE CASCADE,
-  UNIQUE (user_id, role_id)
+  hotel_id UUID NULL REFERENCES hotels(id) ON DELETE CASCADE,
+  UNIQUE (user_id, role_id, hotel_id)
 );
 
 -- Por exemplo, usuário cuja role é "admin" tem permissão "manage_users", "manage_hotels", etc. Já usuário com role "staff" tem permissão "view_bookings", etc.
@@ -43,7 +52,8 @@ CREATE TABLE user_roles (
 
 CREATE TABLE permissions (
   id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-  name VARCHAR(50) NOT NULL
+  name VARCHAR(50) NOT NULL,
+  type VARCHAR(20) NOT NULL DEFAULT 'SYSTEM_PERMISSION' CHECK (type IN ('SYSTEM_PERMISSION', 'HOTEL_PERMISSION'))
 );
 
 CREATE TABLE role_permissions (

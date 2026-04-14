@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import type { AdminHotelOption, AdminRoleOption, AdminUser } from "@hotel/shared";
+import { ADMIN_ROLE_TYPES, type AdminHotelOption, type AdminRoleOption, type AdminUser } from "@hotel/shared";
 import { deleteUserAction, updateUserAction } from "../actions";
 import { SelfManagementDisabledActions } from "./SelfManagementDisabledActions";
 import { UserRoleAssignmentsField } from "./UserRoleAssignmentsField";
@@ -40,7 +40,7 @@ function UserDataPreview({ userItem }: { userItem: AdminUser }) {
           <ul style={{ marginTop: "0.45rem", marginBottom: 0, paddingLeft: "1.1rem" }}>
             {userItem.role_assignments.map((assignment) => (
               <li key={`${assignment.role_id}-${assignment.hotel_id || "global"}`}>
-                {(assignment.hotel_name || "GLOBAL") + " - " + assignment.role_name}
+                {(assignment.role_type === ADMIN_ROLE_TYPES.SYSTEM ? "Sistema" : assignment.hotel_name || "Hotel") + " - " + assignment.role_name}
               </li>
             ))}
           </ul>

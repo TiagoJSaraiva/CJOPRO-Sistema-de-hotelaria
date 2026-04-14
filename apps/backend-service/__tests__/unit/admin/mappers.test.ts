@@ -21,6 +21,7 @@ describe("admin/mappers", () => {
           roles: {
             id: "role-1",
             name: "Administrador",
+            role_type: "SYSTEM_ROLE",
             hotel_id: null,
             hotels: { name: null },
             role_permissions: [
@@ -33,6 +34,7 @@ describe("admin/mappers", () => {
           roles: {
             id: "role-2",
             name: "Gestor",
+            role_type: "HOTEL_ROLE",
             hotel_id: "hotel-2",
             hotels: { name: "Hotel Azul" },
             role_permissions: [{ permissions: { name: PERMISSIONS.USER_UPDATE } }]
@@ -52,12 +54,14 @@ describe("admin/mappers", () => {
         {
           roleId: "role-1",
           roleName: "Administrador",
+          roleType: "SYSTEM_ROLE",
           hotelId: "hotel-fallback",
           hotelName: null
         },
         {
           roleId: "role-2",
           roleName: "Gestor",
+          roleType: "HOTEL_ROLE",
           hotelId: "hotel-2",
           hotelName: "Hotel Azul"
         }
@@ -69,12 +73,14 @@ describe("admin/mappers", () => {
     const result = normalizeRoleAssignments([
       { role_id: " role-1 ", hotel_id: " hotel-1 " },
       { role_id: "role-1", hotel_id: "hotel-1" },
+      { role_id: "role-1", hotel_id: "hotel-2" },
       { role_id: "", hotel_id: "hotel-2" },
       { role_id: "role-2", hotel_id: "" }
     ]);
 
     expect(result).toEqual([
       { role_id: "role-1", hotel_id: "hotel-1" },
+      { role_id: "role-1", hotel_id: "hotel-2" },
       { role_id: "role-2", hotel_id: null }
     ]);
   });
@@ -89,6 +95,7 @@ describe("admin/mappers", () => {
     const result = mapRoleOption({
       id: "role-1",
       name: "Operador",
+      role_type: "HOTEL_ROLE",
       hotel_id: "hotel-1",
       hotels: { name: "Hotel Verde" }
     });
@@ -96,6 +103,7 @@ describe("admin/mappers", () => {
     expect(result).toEqual({
       id: "role-1",
       name: "Operador",
+      role_type: "HOTEL_ROLE",
       hotel_id: "hotel-1",
       hotel_name: "Hotel Verde"
     });
@@ -110,7 +118,7 @@ describe("admin/mappers", () => {
       last_login_at: null,
       created_at: "2025-01-01T00:00:00.000Z",
       user_roles: [
-        { roles: { id: "role-1", name: "Gestor", hotel_id: null, hotels: { name: null } } },
+        { roles: { id: "role-1", name: "Gestor", role_type: "SYSTEM_ROLE", hotel_id: null, hotels: { name: null } } },
         { roles: null }
       ]
     });
@@ -126,6 +134,7 @@ describe("admin/mappers", () => {
         {
           role_id: "role-1",
           role_name: "Gestor",
+          role_type: "SYSTEM_ROLE",
           hotel_id: null,
           hotel_name: null
         }
@@ -137,10 +146,11 @@ describe("admin/mappers", () => {
     const result = mapAdminRole({
       id: "role-1",
       name: "Gestor",
+      role_type: "HOTEL_ROLE",
       hotel_id: "hotel-1",
       hotels: { name: "Hotel Central" },
       role_permissions: [
-        { permissions: { id: "perm-1", name: "user_read" } },
+        { permissions: { id: "perm-1", name: "user_read", type: "HOTEL_PERMISSION" } },
         { permissions: { id: null, name: "invalid" } }
       ]
     });
@@ -148,9 +158,10 @@ describe("admin/mappers", () => {
     expect(result).toEqual({
       id: "role-1",
       name: "Gestor",
+      role_type: "HOTEL_ROLE",
       hotel_id: "hotel-1",
       hotel_name: "Hotel Central",
-      permissions: [{ id: "perm-1", name: "user_read" }]
+      permissions: [{ id: "perm-1", name: "user_read", type: "HOTEL_PERMISSION" }]
     });
   });
 });

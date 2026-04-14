@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import type { AdminPermission } from "@hotel/shared";
+import { ADMIN_PERMISSION_TYPES, type AdminPermission } from "@hotel/shared";
 import { deletePermissionAction, updatePermissionAction } from "../actions";
 
 type PermissionListItemProps = {
@@ -29,6 +29,19 @@ function PermissionEditForm({ permissionItem }: { permissionItem: AdminPermissio
         />
       </div>
 
+      <div style={{ display: "grid", gap: "0.35rem" }}>
+        <label htmlFor={`permission-type-${permissionItem.id}`}>Tipo</label>
+        <select
+          id={`permission-type-${permissionItem.id}`}
+          name="type"
+          defaultValue={permissionItem.type}
+          style={{ border: "1px solid #d2d2d2", borderRadius: "8px", padding: "0.55rem" }}
+        >
+          <option value={ADMIN_PERMISSION_TYPES.SYSTEM}>SYSTEM PERMISSION</option>
+          <option value={ADMIN_PERMISSION_TYPES.HOTEL}>HOTEL PERMISSION</option>
+        </select>
+      </div>
+
       <button
         type="submit"
         style={{ border: 0, background: "#1c6d4e", color: "#fff", borderRadius: "8px", padding: "0.55rem 0.75rem", cursor: "pointer", justifySelf: "start" }}
@@ -48,6 +61,7 @@ export function PermissionListItem({ permissionItem, canRead, canUpdate, canDele
       <div style={{ display: "flex", justifyContent: "space-between", gap: "0.75rem", alignItems: "center", flexWrap: "wrap" }}>
         <div>
           <h3 style={{ marginTop: 0, marginBottom: "0.2rem" }}>{permissionItem.name}</h3>
+          <p style={{ margin: 0, color: "#555" }}>Tipo: {permissionItem.type === ADMIN_PERMISSION_TYPES.SYSTEM ? "SYSTEM" : "HOTEL"}</p>
           <p style={{ margin: 0, color: "#555" }}>ID: {permissionItem.id}</p>
         </div>
 
@@ -104,6 +118,9 @@ export function PermissionListItem({ permissionItem, canRead, canUpdate, canDele
         <div style={{ marginTop: "0.8rem" }}>
           <p style={{ margin: 0 }}>
             <strong>Nome:</strong> {permissionItem.name}
+          </p>
+          <p style={{ margin: "0.35rem 0 0" }}>
+            <strong>Tipo:</strong> {permissionItem.type === ADMIN_PERMISSION_TYPES.SYSTEM ? "SYSTEM PERMISSION" : "HOTEL PERMISSION"}
           </p>
         </div>
       ) : null}

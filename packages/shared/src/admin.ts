@@ -14,6 +14,20 @@ export type AdminErrorResponse = {
   message?: string;
 };
 
+export const ADMIN_PERMISSION_TYPES = {
+  SYSTEM: "SYSTEM_PERMISSION",
+  HOTEL: "HOTEL_PERMISSION"
+} as const;
+
+export type AdminPermissionType = (typeof ADMIN_PERMISSION_TYPES)[keyof typeof ADMIN_PERMISSION_TYPES];
+
+export const ADMIN_ROLE_TYPES = {
+  SYSTEM: "SYSTEM_ROLE",
+  HOTEL: "HOTEL_ROLE"
+} as const;
+
+export type AdminRoleType = (typeof ADMIN_ROLE_TYPES)[keyof typeof ADMIN_ROLE_TYPES];
+
 export type HotelIdParams = {
   id: string;
 };
@@ -98,6 +112,7 @@ export type AdminUser = {
 export type AdminUserRoleAssignment = {
   role_id: string;
   role_name: string;
+  role_type: AdminRoleType;
   hotel_id: string | null;
   hotel_name: string | null;
 };
@@ -125,11 +140,13 @@ export type AdminUserUpdateInput = {
 export type AdminRolePermission = {
   id: string;
   name: string;
+  type: AdminPermissionType;
 };
 
 export type AdminRole = {
   id: string;
   name: string;
+  role_type: AdminRoleType;
   hotel_id: string | null;
   hotel_name: string | null;
   permissions: AdminRolePermission[];
@@ -138,18 +155,21 @@ export type AdminRole = {
 export type AdminRoleOption = {
   id: string;
   name: string;
+  role_type: AdminRoleType;
   hotel_id: string | null;
   hotel_name: string | null;
 };
 
 export type AdminRoleCreateInput = {
   name: string;
+  role_type: AdminRoleType;
   hotel_id: string | null;
   permission_ids: string[];
 };
 
 export type AdminRoleUpdateInput = {
   name?: string;
+  role_type?: AdminRoleType;
   hotel_id?: string | null;
   permission_ids?: string[];
 };
@@ -157,19 +177,23 @@ export type AdminRoleUpdateInput = {
 export type AdminPermission = {
   id: string;
   name: string;
+  type: AdminPermissionType;
 };
 
 export type AdminPermissionOption = {
   id: string;
   name: string;
+  type: AdminPermissionType;
 };
 
 export type AdminPermissionCreateInput = {
   name: string;
+  type: AdminPermissionType;
 };
 
 export type AdminPermissionUpdateInput = {
   name?: string;
+  type?: AdminPermissionType;
 };
 
 export type AdminUsersReferenceData = {

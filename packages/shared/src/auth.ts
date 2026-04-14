@@ -1,3 +1,5 @@
+import type { AdminRoleType } from "./admin";
+
 export const AUTH_ERROR_CODE = {
   MISSING_FIELDS: "AUTH_MISSING_FIELDS",
   INVALID_CREDENTIALS: "AUTH_INVALID_CREDENTIALS",
@@ -45,6 +47,7 @@ export type SessionPayload = AuthUser & {
 export type AuthUserRoleAssignment = {
   roleId: string;
   roleName: string;
+  roleType: AdminRoleType;
   hotelId: string | null;
   hotelName: string | null;
 };

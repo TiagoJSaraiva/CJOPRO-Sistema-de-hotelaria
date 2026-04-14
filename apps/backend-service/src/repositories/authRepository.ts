@@ -8,6 +8,7 @@ export type AuthUserRolePermissionRow = {
 export type AuthUserRoleRow = {
   id?: string | null;
   name?: string | null;
+  role_type?: "SYSTEM_ROLE" | "HOTEL_ROLE" | null;
   hotel_id?: string | null;
   hotels?: { name?: string | null } | Array<{ name?: string | null }> | null;
   role_permissions?: AuthUserRolePermissionRow[] | null;
@@ -42,7 +43,7 @@ class SupabaseAuthRepository implements AuthRepository {
     const { data, error } = await supabase
       .from("users")
       .select(
-        "id,name,email,is_active,password_hash,failed_attempts,locked_until,user_roles(hotel_id,roles(id,name,hotel_id,hotels(name),role_permissions(permissions(name))))"
+        "id,name,email,is_active,password_hash,failed_attempts,locked_until,user_roles(hotel_id,roles(id,name,role_type,hotel_id,hotels(name),role_permissions(permissions(name))))"
       )
       .eq("email", email)
       .single();

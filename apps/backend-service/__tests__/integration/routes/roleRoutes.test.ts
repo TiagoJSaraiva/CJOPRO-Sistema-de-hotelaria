@@ -58,6 +58,7 @@ describe("routes/roles", () => {
       },
       payload: {
         name: "Supervisor",
+        role_type: "SYSTEM_ROLE",
         hotel_id: null,
         permission_ids: []
       }
@@ -80,7 +81,8 @@ describe("routes/roles", () => {
         authorization: `Bearer ${token}`
       },
       payload: {
-        name: ""
+        name: "",
+        role_type: "SYSTEM_ROLE"
       }
     });
 

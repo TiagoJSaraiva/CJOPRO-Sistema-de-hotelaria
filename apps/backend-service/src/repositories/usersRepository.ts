@@ -6,6 +6,7 @@ export type UserWriteResult = "ok" | "conflict" | "not-found";
 export type UserRoleLookupRow = {
   id: string;
   name: string;
+  role_type: "SYSTEM_ROLE" | "HOTEL_ROLE";
   hotel_id: string | null;
   hotels?: { name: string | null } | Array<{ name: string | null }> | null;
 };
@@ -16,12 +17,14 @@ export type UserRoleRelationRow = {
     | {
         id?: string | null;
         name?: string | null;
+        role_type?: "SYSTEM_ROLE" | "HOTEL_ROLE" | null;
         hotel_id?: string | null;
         hotels?: { name: string | null } | Array<{ name: string | null }> | null;
       }
     | Array<{
         id?: string | null;
         name?: string | null;
+        role_type?: "SYSTEM_ROLE" | "HOTEL_ROLE" | null;
         hotel_id?: string | null;
         hotels?: { name: string | null } | Array<{ name: string | null }> | null;
       }>
@@ -80,11 +83,18 @@ export interface UsersRepository {
   listReferenceRoles(): Promise<UserRoleLookupRow[]>;
   listUsersWithRelations(): Promise<UserWithRelationsRow[]>;
   findRolesByIds(roleIds: string[]): Promise<UserRoleLookupRow[]>;
-  createUserWithRoles(payload: { name: string; email: string; password_hash: string; is_active: boolean }, roleIds: string[]): Promise<{ result: UserWriteResult; id?: string }>;
+  createUserWithRoles(
+    payload: { name: string; email: string; password_hash: string; is_active: boolean },
+    roleAssignments: Array<{ role_id: string; hotel_id: string | null }>
+  ): Promise<{ result: UserWriteResult; id?: string }>;
   createUser(payload: { name: string; email: string; password_hash: string; is_active: boolean }): Promise<{ result: UserWriteResult; id?: string }>;
-  assignUserRoles(items: Array<{ user_id: string; role_id: string }>): Promise<void>;
+  assignUserRoles(items: Array<{ user_id: string; role_id: string; hotel_id: string | null }>): Promise<void>;
   getUserWithRelationsById(id: string): Promise<UserWithRelationsRow | null>;
-  updateUserWithRoles(id: string, payload: Record<string, unknown>, roleIds?: string[]): Promise<UserWriteResult>;
+  updateUserWithRoles(
+    id: string,
+    payload: Record<string, unknown>,
+    roleAssignments?: Array<{ role_id: string; hotel_id: string | null }>
+  ): Promise<UserWriteResult>;
   updateUser(id: string, payload: Record<string, unknown>): Promise<UserWriteResult>;
   userExists(id: string): Promise<boolean>;
   clearUserRoles(userId: string): Promise<void>;
@@ -92,21 +102,23 @@ export interface UsersRepository {
 }
 
 class SupabaseUsersRepository implements UsersRepository {
-  private async getUserRoleIds(userId: string): Promise<string[]> {
+  private async getUserRoleAssignments(userId: string): Promise<Array<{ role_id: string; hotel_id: string | null }>> {
     const supabase = createServerClient();
-    const { data, error } = await supabase.from("user_roles").select("role_id").eq("user_id", userId);
+    const { data, error } = await supabase.from("user_roles").select("role_id,hotel_id").eq("user_id", userId);
 
     if (error) {
       throw error;
     }
 
-    const rows = (data || []) as Array<{ role_id: string | null }>;
-    return rows.map((row) => row.role_id).filter((roleId): roleId is string => typeof roleId === "string" && roleId.length > 0);
+    const rows = (data || []) as Array<{ role_id: string | null; hotel_id: string | null }>;
+    return rows
+      .filter((row): row is { role_id: string; hotel_id: string | null } => typeof row.role_id === "string" && row.role_id.length > 0)
+      .map((row) => ({ role_id: row.role_id, hotel_id: row.hotel_id }));
   }
 
   private async createUserWithRolesFallback(
     payload: { name: string; email: string; password_hash: string; is_active: boolean },
-    roleIds: string[]
+    roleAssignments: Array<{ role_id: string; hotel_id: string | null }>
   ): Promise<{ result: UserWriteResult; id?: string }> {
     const createResult = await this.createUser(payload);
 
@@ -114,12 +126,12 @@ class SupabaseUsersRepository implements UsersRepository {
       return createResult;
     }
 
-    if (!roleIds.length) {
+    if (!roleAssignments.length) {
       return createResult;
     }
 
     try {
-      await this.assignUserRoles(roleIds.map((roleId) => ({ user_id: createResult.id!, role_id: roleId })));
+      await this.assignUserRoles(roleAssignments.map((item) => ({ user_id: createResult.id!, role_id: item.role_id, hotel_id: item.hotel_id })));
       return createResult;
     } catch (error) {
       await this.deleteUser(createResult.id).catch(() => undefined);
@@ -130,7 +142,7 @@ class SupabaseUsersRepository implements UsersRepository {
   private async updateUserWithRolesFallback(
     id: string,
     payload: Record<string, unknown>,
-    roleIds?: string[]
+    roleAssignments?: Array<{ role_id: string; hotel_id: string | null }>
   ): Promise<UserWriteResult> {
     if (Object.keys(payload).length) {
       const updateResult = await this.updateUser(id, payload);
@@ -138,7 +150,7 @@ class SupabaseUsersRepository implements UsersRepository {
       if (updateResult !== "ok") {
         return updateResult;
       }
-    } else if (roleIds !== undefined) {
+    } else if (roleAssignments !== undefined) {
       const exists = await this.userExists(id);
 
       if (!exists) {
@@ -146,22 +158,22 @@ class SupabaseUsersRepository implements UsersRepository {
       }
     }
 
-    if (roleIds === undefined) {
+    if (roleAssignments === undefined) {
       return "ok";
     }
 
-    const previousRoleIds = await this.getUserRoleIds(id);
+    const previousRoleAssignments = await this.getUserRoleAssignments(id);
     await this.clearUserRoles(id);
 
     try {
-      if (roleIds.length) {
-        await this.assignUserRoles(roleIds.map((roleId) => ({ user_id: id, role_id: roleId })));
+      if (roleAssignments.length) {
+        await this.assignUserRoles(roleAssignments.map((item) => ({ user_id: id, role_id: item.role_id, hotel_id: item.hotel_id })));
       }
     } catch (error) {
       await this.clearUserRoles(id).catch(() => undefined);
 
-      if (previousRoleIds.length) {
-        await this.assignUserRoles(previousRoleIds.map((roleId) => ({ user_id: id, role_id: roleId }))).catch(() => undefined);
+      if (previousRoleAssignments.length) {
+        await this.assignUserRoles(previousRoleAssignments.map((item) => ({ user_id: id, role_id: item.role_id, hotel_id: item.hotel_id }))).catch(() => undefined);
       }
 
       throw error;
@@ -183,7 +195,7 @@ class SupabaseUsersRepository implements UsersRepository {
 
   async listReferenceRoles(): Promise<UserRoleLookupRow[]> {
     const supabase = createServerClient();
-    const { data, error } = await supabase.from("roles").select("id,name,hotel_id,hotels(name)").order("name", { ascending: true });
+    const { data, error } = await supabase.from("roles").select("id,name,role_type,hotel_id,hotels(name)").order("name", { ascending: true });
 
     if (error) {
       throw error;
@@ -196,7 +208,7 @@ class SupabaseUsersRepository implements UsersRepository {
     const supabase = createServerClient();
     const { data, error } = await supabase
       .from("users")
-      .select("id,name,email,is_active,last_login_at,created_at,user_roles(role_id,roles(id,name,hotel_id,hotels(name)))")
+      .select("id,name,email,is_active,last_login_at,created_at,user_roles(role_id,hotel_id,roles(id,name,role_type,hotel_id,hotels(name)))")
       .order("created_at", { ascending: false });
 
     if (error) {
@@ -208,7 +220,7 @@ class SupabaseUsersRepository implements UsersRepository {
 
   async findRolesByIds(roleIds: string[]): Promise<UserRoleLookupRow[]> {
     const supabase = createServerClient();
-    const { data, error } = await supabase.from("roles").select("id,name,hotel_id,hotels(name)").in("id", roleIds);
+    const { data, error } = await supabase.from("roles").select("id,name,role_type,hotel_id,hotels(name)").in("id", roleIds);
 
     if (error) {
       throw error;
@@ -219,7 +231,7 @@ class SupabaseUsersRepository implements UsersRepository {
 
   async createUserWithRoles(
     payload: { name: string; email: string; password_hash: string; is_active: boolean },
-    roleIds: string[]
+    roleAssignments: Array<{ role_id: string; hotel_id: string | null }>
   ): Promise<{ result: UserWriteResult; id?: string }> {
     const supabase = createServerClient();
     const { data, error } = await supabase.rpc("create_user_with_roles", {
@@ -227,7 +239,7 @@ class SupabaseUsersRepository implements UsersRepository {
       p_email: payload.email,
       p_password_hash: payload.password_hash,
       p_is_active: payload.is_active,
-      p_role_ids: roleIds
+      p_role_assignments: roleAssignments
     });
 
     if (!error) {
@@ -248,7 +260,7 @@ class SupabaseUsersRepository implements UsersRepository {
       }
     }
 
-    return this.createUserWithRolesFallback(payload, roleIds);
+    return this.createUserWithRolesFallback(payload, roleAssignments);
   }
 
   async createUser(payload: { name: string; email: string; password_hash: string; is_active: boolean }): Promise<{ result: UserWriteResult; id?: string }> {
@@ -266,7 +278,7 @@ class SupabaseUsersRepository implements UsersRepository {
     return { result: "ok", id: data.id };
   }
 
-  async assignUserRoles(items: Array<{ user_id: string; role_id: string }>): Promise<void> {
+  async assignUserRoles(items: Array<{ user_id: string; role_id: string; hotel_id: string | null }>): Promise<void> {
     const supabase = createServerClient();
     const { error } = await supabase.from("user_roles").insert(items);
 
@@ -279,7 +291,7 @@ class SupabaseUsersRepository implements UsersRepository {
     const supabase = createServerClient();
     const { data, error } = await supabase
       .from("users")
-      .select("id,name,email,is_active,last_login_at,created_at,user_roles(role_id,roles(id,name,hotel_id,hotels(name)))")
+      .select("id,name,email,is_active,last_login_at,created_at,user_roles(role_id,hotel_id,roles(id,name,role_type,hotel_id,hotels(name)))")
       .eq("id", id)
       .single();
 
@@ -294,13 +306,17 @@ class SupabaseUsersRepository implements UsersRepository {
     return data as UserWithRelationsRow;
   }
 
-  async updateUserWithRoles(id: string, payload: Record<string, unknown>, roleIds?: string[]): Promise<UserWriteResult> {
+  async updateUserWithRoles(
+    id: string,
+    payload: Record<string, unknown>,
+    roleAssignments?: Array<{ role_id: string; hotel_id: string | null }>
+  ): Promise<UserWriteResult> {
     const supabase = createServerClient();
     const { data, error } = await supabase.rpc("update_user_with_roles", {
       p_id: id,
       p_payload: payload,
-      p_role_ids: roleIds ?? null,
-      p_should_replace_roles: roleIds !== undefined
+      p_role_assignments: roleAssignments ?? null,
+      p_should_replace_roles: roleAssignments !== undefined
     });
 
     if (!error) {
@@ -325,7 +341,7 @@ class SupabaseUsersRepository implements UsersRepository {
       }
     }
 
-    return this.updateUserWithRolesFallback(id, payload, roleIds);
+    return this.updateUserWithRolesFallback(id, payload, roleAssignments);
   }
 
   async updateUser(id: string, payload: Record<string, unknown>): Promise<UserWriteResult> {

@@ -1,7 +1,7 @@
 "use client";
 
 import { useMemo, useState, type ReactNode } from "react";
-import type { AdminPermission } from "@hotel/shared";
+import { ADMIN_PERMISSION_TYPES, type AdminPermission } from "@hotel/shared";
 import { PermissionListItem } from "./PermissionListItem";
 import {
   DEFAULT_PERMISSION_VIEW_FILTERS,
@@ -96,15 +96,35 @@ export function PermissionsViewFilterableSection({
         onApply={handleApply}
         onClear={handleClear}
       >
-        <label style={{ display: "grid", gap: "0.35rem" }}>
-          <span>Nome da permissao</span>
-          <input
-            value={draftFilters.search}
-            onChange={(event) => setDraftFilters({ search: event.target.value })}
-            placeholder="Ex.: USER_READ"
-            style={viewFiltersFieldStyle}
-          />
-        </label>
+        <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(220px, 1fr))", gap: "0.75rem" }}>
+          <label style={{ display: "grid", gap: "0.35rem" }}>
+            <span>Nome da permissao</span>
+            <input
+              value={draftFilters.search}
+              onChange={(event) => setDraftFilters((current) => ({ ...current, search: event.target.value }))}
+              placeholder="Ex.: USER_READ"
+              style={viewFiltersFieldStyle}
+            />
+          </label>
+
+          <label style={{ display: "grid", gap: "0.35rem" }}>
+            <span>Tipo</span>
+            <select
+              value={draftFilters.type}
+              onChange={(event) =>
+                setDraftFilters((current) => ({
+                  ...current,
+                  type: event.target.value as "" | "SYSTEM_PERMISSION" | "HOTEL_PERMISSION"
+                }))
+              }
+              style={viewFiltersFieldStyle}
+            >
+              <option value="">Todos</option>
+              <option value={ADMIN_PERMISSION_TYPES.SYSTEM}>SYSTEM PERMISSION</option>
+              <option value={ADMIN_PERMISSION_TYPES.HOTEL}>HOTEL PERMISSION</option>
+            </select>
+          </label>
+        </div>
       </ViewFiltersModal>
     </section>
   );

@@ -3,28 +3,37 @@ import { isSupabaseConflictError, isSupabaseNotFoundError } from "./supabaseErro
 
 export type PermissionWriteResult = "ok" | "conflict" | "not-found";
 
+type PermissionRow = {
+  id: string;
+  name: string;
+  type: "SYSTEM_PERMISSION" | "HOTEL_PERMISSION";
+};
+
 export interface PermissionsRepository {
-  listPermissions(): Promise<Array<{ id: string; name: string }>>;
-  createPermission(payload: { name: string }): Promise<{ result: PermissionWriteResult; item?: { id: string; name: string } }>;
-  updatePermission(id: string, payload: { name: string }): Promise<{ result: PermissionWriteResult; item?: { id: string; name: string } }>;
+  listPermissions(): Promise<PermissionRow[]>;
+  createPermission(payload: { name: string; type: "SYSTEM_PERMISSION" | "HOTEL_PERMISSION" }): Promise<{ result: PermissionWriteResult; item?: PermissionRow }>;
+  updatePermission(
+    id: string,
+    payload: { name?: string; type?: "SYSTEM_PERMISSION" | "HOTEL_PERMISSION" }
+  ): Promise<{ result: PermissionWriteResult; item?: PermissionRow }>;
   deletePermission(id: string): Promise<PermissionWriteResult>;
 }
 
 class SupabasePermissionsRepository implements PermissionsRepository {
-  async listPermissions(): Promise<Array<{ id: string; name: string }>> {
+  async listPermissions(): Promise<PermissionRow[]> {
     const supabase = createServerClient();
-    const { data, error } = await supabase.from("permissions").select("id,name").order("name", { ascending: true });
+    const { data, error } = await supabase.from("permissions").select("id,name,type").order("name", { ascending: true });
 
     if (error) {
       throw error;
     }
 
-    return (data || []) as Array<{ id: string; name: string }>;
+    return (data || []) as PermissionRow[];
   }
 
-  async createPermission(payload: { name: string }): Promise<{ result: PermissionWriteResult; item?: { id: string; name: string } }> {
+  async createPermission(payload: { name: string; type: "SYSTEM_PERMISSION" | "HOTEL_PERMISSION" }): Promise<{ result: PermissionWriteResult; item?: PermissionRow }> {
     const supabase = createServerClient();
-    const { data, error } = await supabase.from("permissions").insert(payload).select("id,name").single();
+    const { data, error } = await supabase.from("permissions").insert(payload).select("id,name,type").single();
 
     if (error) {
       if (isSupabaseConflictError(error)) {
@@ -34,12 +43,15 @@ class SupabasePermissionsRepository implements PermissionsRepository {
       throw error;
     }
 
-    return { result: "ok", item: data as { id: string; name: string } };
+    return { result: "ok", item: data as PermissionRow };
   }
 
-  async updatePermission(id: string, payload: { name: string }): Promise<{ result: PermissionWriteResult; item?: { id: string; name: string } }> {
+  async updatePermission(
+    id: string,
+    payload: { name?: string; type?: "SYSTEM_PERMISSION" | "HOTEL_PERMISSION" }
+  ): Promise<{ result: PermissionWriteResult; item?: PermissionRow }> {
     const supabase = createServerClient();
-    const { data, error } = await supabase.from("permissions").update(payload).eq("id", id).select("id,name").single();
+    const { data, error } = await supabase.from("permissions").update(payload).eq("id", id).select("id,name,type").single();
 
     if (error) {
       if (isSupabaseNotFoundError(error)) {
@@ -53,7 +65,7 @@ class SupabasePermissionsRepository implements PermissionsRepository {
       throw error;
     }
 
-    return { result: "ok", item: data as { id: string; name: string } };
+    return { result: "ok", item: data as PermissionRow };
   }
 
   async deletePermission(id: string): Promise<PermissionWriteResult> {

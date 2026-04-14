@@ -1,7 +1,8 @@
 "use client";
 
 import Link from "next/link";
-import type { AdminHotelOption, AdminPermissionOption, AdminRole } from "@hotel/shared";
+import { useState } from "react";
+import { ADMIN_ROLE_TYPES, type AdminHotelOption, type AdminPermissionOption, type AdminRole, type AdminRoleType } from "@hotel/shared";
 import { deleteRoleAction, updateRoleAction } from "../actions";
 import { RoleHotelPickerField } from "./RoleHotelPickerField";
 import { RolePermissionAssignmentsField } from "./RolePermissionAssignmentsField";
@@ -18,10 +19,20 @@ type RoleListItemProps = {
 };
 
 function RoleDataPreview({ roleItem }: { roleItem: AdminRole }) {
+  const scopeLabel =
+    roleItem.role_type === ADMIN_ROLE_TYPES.SYSTEM
+      ? "Sistema"
+      : roleItem.hotel_name
+        ? `Hotel especifico: ${roleItem.hotel_name}`
+        : "Generica (qualquer hotel)";
+
   return (
     <div style={{ display: "grid", gap: "0.7rem", marginTop: "0.85rem" }}>
       <p style={{ margin: 0 }}>
-        <strong>Hotel associado:</strong> {roleItem.hotel_name || "GLOBAL"}
+        <strong>Tipo da role:</strong> {roleItem.role_type === ADMIN_ROLE_TYPES.SYSTEM ? "SYSTEM ROLE" : "HOTEL ROLE"}
+      </p>
+      <p style={{ margin: 0 }}>
+        <strong>Escopo:</strong> {scopeLabel}
       </p>
 
       <div>
@@ -41,6 +52,8 @@ function RoleDataPreview({ roleItem }: { roleItem: AdminRole }) {
 }
 
 function RoleEditForm({ roleItem, hotels, permissions }: { roleItem: AdminRole; hotels: AdminHotelOption[]; permissions: AdminPermissionOption[] }) {
+  const [roleType, setRoleType] = useState<AdminRoleType>(roleItem.role_type);
+
   return (
     <form action={updateRoleAction} style={{ display: "grid", gap: "0.65rem", marginTop: "0.85rem" }}>
       <input type="hidden" name="id" value={roleItem.id} />
@@ -56,8 +69,22 @@ function RoleEditForm({ roleItem, hotels, permissions }: { roleItem: AdminRole; 
         />
       </div>
 
-      <RoleHotelPickerField hotels={hotels} defaultHotelId={roleItem.hotel_id} />
-      <RolePermissionAssignmentsField permissions={permissions} defaultPermissions={roleItem.permissions} />
+      <div style={{ display: "grid", gap: "0.35rem" }}>
+        <label htmlFor={`role-type-${roleItem.id}`}>Tipo da role</label>
+        <select
+          id={`role-type-${roleItem.id}`}
+          name="role_type"
+          value={roleType}
+          onChange={(event) => setRoleType(event.target.value as AdminRoleType)}
+          style={{ border: "1px solid #d2d2d2", borderRadius: "8px", padding: "0.55rem" }}
+        >
+          <option value={ADMIN_ROLE_TYPES.SYSTEM}>SYSTEM ROLE</option>
+          <option value={ADMIN_ROLE_TYPES.HOTEL}>HOTEL ROLE</option>
+        </select>
+      </div>
+
+      <RoleHotelPickerField hotels={hotels} roleType={roleType} defaultHotelId={roleItem.hotel_id} />
+      <RolePermissionAssignmentsField roleType={roleType} permissions={permissions} defaultPermissions={roleItem.permissions} />
 
       <button
         type="submit"
@@ -72,13 +99,21 @@ function RoleEditForm({ roleItem, hotels, permissions }: { roleItem: AdminRole; 
 export function RoleListItem({ roleItem, hotels, permissions, canRead, canUpdate, canDelete, isViewing, isEditing }: RoleListItemProps) {
   const viewHref = `/dashboard/roles/view?roleId=${roleItem.id}&mode=view`;
   const editHref = `/dashboard/roles/view?roleId=${roleItem.id}&mode=edit`;
+  const roleScopeLabel =
+    roleItem.role_type === ADMIN_ROLE_TYPES.SYSTEM
+      ? "Sistema"
+      : roleItem.hotel_name
+        ? roleItem.hotel_name
+        : "Generica";
 
   return (
     <article style={{ background: "#fff", border: "1px solid #e2e2e2", borderRadius: "12px", padding: "0.95rem" }}>
       <div style={{ display: "flex", justifyContent: "space-between", gap: "0.75rem", alignItems: "center", flexWrap: "wrap" }}>
         <div>
           <h3 style={{ marginTop: 0, marginBottom: "0.2rem" }}>{roleItem.name}</h3>
-          <p style={{ margin: 0, color: "#555" }}>Hotel: {roleItem.hotel_name || "GLOBAL"}</p>
+          <p style={{ margin: 0, color: "#555" }}>
+            {roleItem.role_type === ADMIN_ROLE_TYPES.SYSTEM ? "SYSTEM ROLE" : "HOTEL ROLE"} - {roleScopeLabel}
+          </p>
         </div>
 
         <div style={{ display: "flex", gap: "0.5rem", flexWrap: "wrap", alignItems: "center" }}>

@@ -35,6 +35,10 @@ vi.mock("../../../../src/lib/adminApi", () => ({
 import { createUserAction, deleteUserAction, updateUserAction } from "../../../../src/app/dashboard/users/actions";
 
 describe("dashboard/users/actions", () => {
+  function redirectPattern(pathWithoutNonce: string): RegExp {
+    return new RegExp(`^REDIRECT:${pathWithoutNonce}(?:&r=[a-z0-9]+)?$`);
+  }
+
   beforeEach(() => {
     vi.clearAllMocks();
   });
@@ -47,7 +51,7 @@ describe("dashboard/users/actions", () => {
     formData.set("email", "op@hotel.com");
     formData.set("password_hash", "tmp123");
 
-    await expect(createUserAction(formData)).rejects.toThrow("REDIRECT:/dashboard/users/view?status=forbidden");
+    await expect(createUserAction(formData)).rejects.toThrow(redirectPattern("/dashboard/users/view\\?status=forbidden"));
   });
 
   it("redireciona para create_missing_fields quando payload obrigatorio esta incompleto", async () => {
@@ -57,7 +61,7 @@ describe("dashboard/users/actions", () => {
     formData.set("name", "");
 
     await expect(createUserAction(formData)).rejects.toThrow(
-      "REDIRECT:/dashboard/users/create?status=create_missing_fields"
+      redirectPattern("/dashboard/users/create\\?status=create_missing_fields")
     );
 
     expect(createUserMock).not.toHaveBeenCalled();
@@ -73,7 +77,7 @@ describe("dashboard/users/actions", () => {
     formData.set("password_hash", "tmp123");
     formData.set("role_assignments", '[{"role_id":"role-1","hotel_id":"hotel-1"}]');
 
-    await expect(createUserAction(formData)).rejects.toThrow("REDIRECT:/dashboard/users/create?status=created");
+    await expect(createUserAction(formData)).rejects.toThrow(redirectPattern("/dashboard/users/create\\?status=created"));
 
     expect(createUserMock).toHaveBeenCalledWith({
       name: "Operador",
@@ -95,7 +99,7 @@ describe("dashboard/users/actions", () => {
     formData.set("role_assignments", "[]");
     formData.set("is_active", "on");
 
-    await expect(updateUserAction(formData)).rejects.toThrow("REDIRECT:/dashboard/users/view?status=updated");
+    await expect(updateUserAction(formData)).rejects.toThrow(redirectPattern("/dashboard/users/view\\?status=updated"));
 
     expect(updateUserMock).toHaveBeenCalledWith(
       "user-1",
@@ -115,7 +119,7 @@ describe("dashboard/users/actions", () => {
     const formData = new FormData();
     formData.set("id", "user-1");
 
-    await expect(deleteUserAction(formData)).rejects.toThrow("REDIRECT:/dashboard/users/view?status=deleted");
+    await expect(deleteUserAction(formData)).rejects.toThrow(redirectPattern("/dashboard/users/view\\?status=deleted"));
     expect(deleteUserMock).toHaveBeenCalledWith("user-1");
   });
 });

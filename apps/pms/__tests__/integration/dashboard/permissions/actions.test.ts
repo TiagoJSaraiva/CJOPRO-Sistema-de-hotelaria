@@ -38,6 +38,10 @@ import {
 } from "../../../../src/app/dashboard/permissions/actions";
 
 describe("dashboard/permissions/actions", () => {
+  function redirectPattern(pathWithoutNonce: string): RegExp {
+    return new RegExp(`^REDIRECT:${pathWithoutNonce}(?:&r=[a-z0-9]+)?$`);
+  }
+
   beforeEach(() => {
     vi.clearAllMocks();
   });
@@ -47,9 +51,10 @@ describe("dashboard/permissions/actions", () => {
 
     const formData = new FormData();
     formData.set("name", "hotel_manage");
+    formData.set("type", "SYSTEM_PERMISSION");
 
     await expect(createPermissionAction(formData)).rejects.toThrow(
-      "REDIRECT:/dashboard/permissions/view?status=forbidden"
+      redirectPattern("/dashboard/permissions/view\\?status=forbidden")
     );
   });
 
@@ -58,9 +63,10 @@ describe("dashboard/permissions/actions", () => {
 
     const formData = new FormData();
     formData.set("name", "");
+    formData.set("type", "SYSTEM_PERMISSION");
 
     await expect(createPermissionAction(formData)).rejects.toThrow(
-      "REDIRECT:/dashboard/permissions/create?status=create_missing_fields"
+      redirectPattern("/dashboard/permissions/create\\?status=create_missing_fields")
     );
 
     expect(createPermissionMock).not.toHaveBeenCalled();
@@ -72,12 +78,13 @@ describe("dashboard/permissions/actions", () => {
 
     const formData = new FormData();
     formData.set("name", "hotel_manage");
+    formData.set("type", "HOTEL_PERMISSION");
 
     await expect(createPermissionAction(formData)).rejects.toThrow(
-      "REDIRECT:/dashboard/permissions/create?status=created"
+      redirectPattern("/dashboard/permissions/create\\?status=created")
     );
 
-    expect(createPermissionMock).toHaveBeenCalledWith({ name: "hotel_manage" });
+    expect(createPermissionMock).toHaveBeenCalledWith({ name: "hotel_manage", type: "HOTEL_PERMISSION" });
     expect(revalidatePathMock).toHaveBeenCalledWith("/dashboard/permissions");
   });
 
@@ -88,12 +95,13 @@ describe("dashboard/permissions/actions", () => {
     const formData = new FormData();
     formData.set("id", "perm-1");
     formData.set("name", "hotel_manage_all");
+    formData.set("type", "HOTEL_PERMISSION");
 
     await expect(updatePermissionAction(formData)).rejects.toThrow(
-      "REDIRECT:/dashboard/permissions/view?status=updated"
+      redirectPattern("/dashboard/permissions/view\\?status=updated")
     );
 
-    expect(updatePermissionMock).toHaveBeenCalledWith("perm-1", { name: "hotel_manage_all" });
+    expect(updatePermissionMock).toHaveBeenCalledWith("perm-1", { name: "hotel_manage_all", type: "HOTEL_PERMISSION" });
   });
 
   it("remove permissao e redireciona com status deleted", async () => {
@@ -104,7 +112,7 @@ describe("dashboard/permissions/actions", () => {
     formData.set("id", "perm-1");
 
     await expect(deletePermissionAction(formData)).rejects.toThrow(
-      "REDIRECT:/dashboard/permissions/view?status=deleted"
+      redirectPattern("/dashboard/permissions/view\\?status=deleted")
     );
 
     expect(deletePermissionMock).toHaveBeenCalledWith("perm-1");

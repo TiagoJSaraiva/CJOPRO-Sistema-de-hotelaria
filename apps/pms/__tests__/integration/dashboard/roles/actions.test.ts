@@ -35,6 +35,10 @@ vi.mock("../../../../src/lib/adminApi", () => ({
 import { createRoleAction, deleteRoleAction, updateRoleAction } from "../../../../src/app/dashboard/roles/actions";
 
 describe("dashboard/roles/actions", () => {
+  function redirectPattern(pathWithoutNonce: string): RegExp {
+    return new RegExp(`^REDIRECT:${pathWithoutNonce}(?:&r=[a-z0-9]+)?$`);
+  }
+
   beforeEach(() => {
     vi.clearAllMocks();
   });
@@ -44,8 +48,9 @@ describe("dashboard/roles/actions", () => {
 
     const formData = new FormData();
     formData.set("name", "Supervisor");
+    formData.set("role_type", "SYSTEM_ROLE");
 
-    await expect(createRoleAction(formData)).rejects.toThrow("REDIRECT:/dashboard/roles/view?status=forbidden");
+    await expect(createRoleAction(formData)).rejects.toThrow(redirectPattern("/dashboard/roles/view\\?status=forbidden"));
   });
 
   it("redireciona para create_missing_fields quando nome nao e informado", async () => {
@@ -53,9 +58,10 @@ describe("dashboard/roles/actions", () => {
 
     const formData = new FormData();
     formData.set("name", "");
+    formData.set("role_type", "SYSTEM_ROLE");
 
     await expect(createRoleAction(formData)).rejects.toThrow(
-      "REDIRECT:/dashboard/roles/create?status=create_missing_fields"
+      redirectPattern("/dashboard/roles/create\\?status=create_missing_fields")
     );
 
     expect(createRoleMock).not.toHaveBeenCalled();
@@ -67,13 +73,15 @@ describe("dashboard/roles/actions", () => {
 
     const formData = new FormData();
     formData.set("name", "Supervisor");
+    formData.set("role_type", "HOTEL_ROLE");
     formData.set("hotel_id", "hotel-1");
     formData.set("permission_ids", '["perm-1", "perm-1", "perm-2"]');
 
-    await expect(createRoleAction(formData)).rejects.toThrow("REDIRECT:/dashboard/roles/create?status=created");
+    await expect(createRoleAction(formData)).rejects.toThrow(redirectPattern("/dashboard/roles/create\\?status=created"));
 
     expect(createRoleMock).toHaveBeenCalledWith({
       name: "Supervisor",
+      role_type: "HOTEL_ROLE",
       hotel_id: "hotel-1",
       permission_ids: ["perm-1", "perm-2"]
     });
@@ -87,13 +95,15 @@ describe("dashboard/roles/actions", () => {
     const formData = new FormData();
     formData.set("id", "role-1");
     formData.set("name", "Supervisor Senior");
+    formData.set("role_type", "SYSTEM_ROLE");
     formData.set("hotel_id", "");
     formData.set("permission_ids", '["perm-3"]');
 
-    await expect(updateRoleAction(formData)).rejects.toThrow("REDIRECT:/dashboard/roles/view?status=updated");
+    await expect(updateRoleAction(formData)).rejects.toThrow(redirectPattern("/dashboard/roles/view\\?status=updated"));
 
     expect(updateRoleMock).toHaveBeenCalledWith("role-1", {
       name: "Supervisor Senior",
+      role_type: "SYSTEM_ROLE",
       hotel_id: null,
       permission_ids: ["perm-3"]
     });
@@ -106,7 +116,7 @@ describe("dashboard/roles/actions", () => {
     const formData = new FormData();
     formData.set("id", "role-1");
 
-    await expect(deleteRoleAction(formData)).rejects.toThrow("REDIRECT:/dashboard/roles/view?status=deleted");
+    await expect(deleteRoleAction(formData)).rejects.toThrow(redirectPattern("/dashboard/roles/view\\?status=deleted"));
     expect(deleteRoleMock).toHaveBeenCalledWith("role-1");
   });
 });

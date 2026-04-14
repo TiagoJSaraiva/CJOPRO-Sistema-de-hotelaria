@@ -1,7 +1,9 @@
 import type { FastifyInstance } from "fastify";
 import {
+  ADMIN_PERMISSION_TYPES,
   PERMISSIONS,
   type AdminPermissionCreateInput,
+  type AdminPermissionType,
   type AdminPermissionUpdateInput,
   type HotelIdParams
 } from "@hotel/shared";
@@ -11,6 +13,14 @@ import { createPermissionsRepository, type PermissionsRepository } from "../repo
 
 type PermissionCreateBody = Partial<AdminPermissionCreateInput>;
 type PermissionUpdateBody = Partial<AdminPermissionUpdateInput>;
+
+function parsePermissionType(value: unknown): AdminPermissionType | null {
+  if (value === ADMIN_PERMISSION_TYPES.SYSTEM || value === ADMIN_PERMISSION_TYPES.HOTEL) {
+    return value;
+  }
+
+  return null;
+}
 
 export function registerPermissionRoutes(
   app: FastifyInstance,
@@ -37,12 +47,17 @@ export function registerPermissionRoutes(
     }
 
     const name = normalizeOptionalText(request.body?.name);
+    const type = parsePermissionType(request.body?.type);
 
     if (!name) {
       return reply.status(400).send({ message: "Nome da permissao e obrigatorio." });
     }
 
-    const createResult = await repository.createPermission({ name }).catch((error) => {
+    if (!type) {
+      return reply.status(400).send({ message: "Tipo da permissao e obrigatorio." });
+    }
+
+    const createResult = await repository.createPermission({ name, type }).catch((error) => {
       request.log.error(error);
       return null;
     });
@@ -68,17 +83,36 @@ export function registerPermissionRoutes(
     }
 
     const id = request.params.id;
-    const name = normalizeOptionalText(request.body?.name);
+    const name = request.body?.name !== undefined ? normalizeOptionalText(request.body?.name) : undefined;
+    const type = request.body?.type !== undefined ? parsePermissionType(request.body?.type) : undefined;
 
     if (!id) {
       return reply.status(400).send({ message: "Id da permissao e obrigatorio para atualizacao." });
     }
 
-    if (!name) {
+    if (request.body?.name !== undefined && !name) {
       return reply.status(400).send({ message: "Nome da permissao e obrigatorio para atualizacao." });
     }
 
-    const updateResult = await repository.updatePermission(id, { name }).catch((error) => {
+    if (request.body?.type !== undefined && !type) {
+      return reply.status(400).send({ message: "Tipo da permissao invalido para atualizacao." });
+    }
+
+    const payload: { name?: string; type?: AdminPermissionType } = {};
+
+    if (name !== undefined && name !== null) {
+      payload.name = name;
+    }
+
+    if (type !== undefined && type !== null) {
+      payload.type = type;
+    }
+
+    if (!Object.keys(payload).length) {
+      return reply.status(400).send({ message: "Nenhum campo informado para atualizacao." });
+    }
+
+    const updateResult = await repository.updatePermission(id, payload).catch((error) => {
       request.log.error(error);
       return null;
     });

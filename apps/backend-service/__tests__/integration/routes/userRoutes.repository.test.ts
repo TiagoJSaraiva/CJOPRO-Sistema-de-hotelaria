@@ -1,6 +1,6 @@
 import Fastify from "fastify";
 import { afterEach, describe, expect, it, vi } from "vitest";
-import { PERMISSIONS, type SessionPayload } from "@hotel/shared";
+import { ADMIN_ROLE_TYPES, PERMISSIONS, type SessionPayload } from "@hotel/shared";
 import { registerUserRoutes } from "../../../src/routes/userRoutes";
 import type { UsersRepository } from "../../../src/repositories/usersRepository";
 import { signToken } from "../../../src/auth/session";
@@ -43,9 +43,11 @@ function createUsersRepositoryMock(overrides: Partial<UsersRepository> = {}): Us
       created_at: null,
       user_roles: [
         {
+          hotel_id: null,
           roles: {
             id: "role-1",
             name: "Operador",
+            role_type: "SYSTEM_ROLE",
             hotel_id: null,
             hotels: { name: null }
           }
@@ -82,6 +84,7 @@ describe("routes/users with injected repository", () => {
         {
           id: "role-1",
           name: "Operador",
+          role_type: ADMIN_ROLE_TYPES.SYSTEM,
           hotel_id: null,
           hotels: { name: null }
         }
@@ -111,8 +114,43 @@ describe("routes/users with injected repository", () => {
         email: "op@hotel.com",
         is_active: true
       }),
-      ["role-1"]
+      [{ role_id: "role-1", hotel_id: null }]
     );
+  });
+
+  it("retorna 400 quando role generica de hotel e vinculada sem contexto de hotel", async () => {
+    const repository = createUsersRepositoryMock({
+      findRolesByIds: vi.fn(async () => [
+        {
+          id: "role-hotel-generica",
+          name: "Operador",
+          role_type: ADMIN_ROLE_TYPES.HOTEL,
+          hotel_id: null,
+          hotels: { name: null }
+        }
+      ])
+    });
+
+    const app = await createUsersTestApp(repository);
+
+    const response = await app.inject({
+      method: "POST",
+      url: "/admin/users",
+      headers: {
+        authorization: `Bearer ${createToken([PERMISSIONS.USER_CREATE])}`
+      },
+      payload: {
+        name: "Operador",
+        email: "op@hotel.com",
+        password_hash: "Secret#123",
+        role_assignments: [{ role_id: "role-hotel-generica", hotel_id: null }]
+      }
+    });
+
+    expect(response.statusCode).toBe(400);
+    expect(response.json()).toEqual({
+      message: "Roles genericas de hotel exigem um hotel de contexto."
+    });
   });
 
   it("retorna 409 quando operacao atomica de criacao sinaliza conflito", async () => {

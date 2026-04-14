@@ -1,6 +1,6 @@
 import Fastify from "fastify";
 import { afterEach, describe, expect, it, vi } from "vitest";
-import { PERMISSIONS, type SessionPayload } from "@hotel/shared";
+import { ADMIN_ROLE_TYPES, PERMISSIONS, type SessionPayload } from "@hotel/shared";
 import { registerRoleRoutes } from "../../../src/routes/roleRoutes";
 import type { RolesRepository } from "../../../src/repositories/rolesRepository";
 import { signToken } from "../../../src/auth/session";
@@ -31,13 +31,14 @@ function createRolesRepositoryMock(overrides: Partial<RolesRepository> = {}): Ro
     listReferencePermissions: vi.fn(async () => []),
     listRolesWithRelations: vi.fn(async () => []),
     hotelExists: vi.fn(async () => true),
-    countPermissionsByIds: vi.fn(async () => 0),
+    findPermissionsByIds: vi.fn(async () => []),
     createRoleWithPermissions: vi.fn(async () => ({ result: "ok", id: "role-2" })),
     createRole: vi.fn(async () => ({ result: "ok", id: "role-2" })),
     assignRolePermissions: vi.fn(async () => undefined),
     getRoleWithRelationsById: vi.fn(async () => ({
       id: "role-2",
       name: "Supervisor",
+      role_type: "SYSTEM_ROLE",
       hotel_id: null,
       hotels: { name: null },
       role_permissions: []
@@ -68,7 +69,10 @@ afterEach(async () => {
 describe("routes/roles with injected repository", () => {
   it("cria role com operacao atomica de permissoes", async () => {
     const repository = createRolesRepositoryMock({
-      countPermissionsByIds: vi.fn(async () => 2)
+      findPermissionsByIds: vi.fn(async () => [
+        { id: "perm-1", type: "SYSTEM_PERMISSION" },
+        { id: "perm-2", type: "SYSTEM_PERMISSION" }
+      ])
     });
 
     const app = await createRolesTestApp(repository);
@@ -81,6 +85,7 @@ describe("routes/roles with injected repository", () => {
       },
       payload: {
         name: "Supervisor",
+        role_type: ADMIN_ROLE_TYPES.SYSTEM,
         hotel_id: null,
         permission_ids: ["perm-1", "perm-2"]
       }
@@ -90,10 +95,38 @@ describe("routes/roles with injected repository", () => {
     expect(repository.createRoleWithPermissions).toHaveBeenCalledWith(
       {
         name: "Supervisor",
+        role_type: ADMIN_ROLE_TYPES.SYSTEM,
         hotel_id: null
       },
       ["perm-1", "perm-2"]
     );
+  });
+
+  it("retorna 400 quando role de sistema recebe permissao de hotel", async () => {
+    const repository = createRolesRepositoryMock({
+      findPermissionsByIds: vi.fn(async () => [{ id: "perm-1", type: "HOTEL_PERMISSION" }])
+    });
+
+    const app = await createRolesTestApp(repository);
+
+    const response = await app.inject({
+      method: "POST",
+      url: "/admin/roles",
+      headers: {
+        authorization: `Bearer ${createToken([PERMISSIONS.ROLE_CREATE])}`
+      },
+      payload: {
+        name: "Supervisor",
+        role_type: ADMIN_ROLE_TYPES.SYSTEM,
+        hotel_id: null,
+        permission_ids: ["perm-1"]
+      }
+    });
+
+    expect(response.statusCode).toBe(400);
+    expect(response.json()).toEqual({
+      message: "Role de sistema aceita apenas permissoes do tipo SYSTEM_PERMISSION."
+    });
   });
 
   it("retorna 409 quando operacao atomica de role sinaliza conflito", async () => {
@@ -111,6 +144,7 @@ describe("routes/roles with injected repository", () => {
       },
       payload: {
         name: "Supervisor",
+        role_type: ADMIN_ROLE_TYPES.SYSTEM,
         hotel_id: null,
         permission_ids: []
       }

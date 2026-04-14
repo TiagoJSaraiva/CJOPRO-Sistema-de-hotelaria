@@ -6,12 +6,16 @@ export type RoleWriteResult = "ok" | "conflict" | "not-found";
 export type RoleWithRelationsRow = {
   id: string;
   name: string;
+  role_type: "SYSTEM_ROLE" | "HOTEL_ROLE";
   hotel_id: string | null;
   hotels?: { name: string | null } | Array<{ name: string | null }> | null;
   role_permissions?:
     | Array<{
         permission_id?: string | null;
-        permissions?: { id?: string | null; name?: string | null } | Array<{ id?: string | null; name?: string | null }> | null;
+        permissions?:
+          | { id?: string | null; name?: string | null; type?: "SYSTEM_PERMISSION" | "HOTEL_PERMISSION" | null }
+          | Array<{ id?: string | null; name?: string | null; type?: "SYSTEM_PERMISSION" | "HOTEL_PERMISSION" | null }>
+          | null;
       }>
     | null;
 };
@@ -55,12 +59,15 @@ function isMissingRpcFunctionError(error: unknown): boolean {
 
 export interface RolesRepository {
   listReferenceHotels(): Promise<Array<{ id: string; name: string }>>;
-  listReferencePermissions(): Promise<Array<{ id: string; name: string }>>;
+  listReferencePermissions(): Promise<Array<{ id: string; name: string; type: "SYSTEM_PERMISSION" | "HOTEL_PERMISSION" }>>;
   listRolesWithRelations(): Promise<RoleWithRelationsRow[]>;
   hotelExists(hotelId: string): Promise<boolean>;
-  countPermissionsByIds(permissionIds: string[]): Promise<number>;
-  createRoleWithPermissions(payload: { name: string; hotel_id: string | null }, permissionIds: string[]): Promise<{ result: RoleWriteResult; id?: string }>;
-  createRole(payload: { name: string; hotel_id: string | null }): Promise<{ result: RoleWriteResult; id?: string }>;
+  findPermissionsByIds(permissionIds: string[]): Promise<Array<{ id: string; type: "SYSTEM_PERMISSION" | "HOTEL_PERMISSION" }>>;
+  createRoleWithPermissions(
+    payload: { name: string; role_type: "SYSTEM_ROLE" | "HOTEL_ROLE"; hotel_id: string | null },
+    permissionIds: string[]
+  ): Promise<{ result: RoleWriteResult; id?: string }>;
+  createRole(payload: { name: string; role_type: "SYSTEM_ROLE" | "HOTEL_ROLE"; hotel_id: string | null }): Promise<{ result: RoleWriteResult; id?: string }>;
   assignRolePermissions(items: Array<{ role_id: string; permission_id: string }>): Promise<void>;
   getRoleWithRelationsById(id: string): Promise<RoleWithRelationsRow | null>;
   updateRoleWithPermissions(id: string, payload: Record<string, unknown>, permissionIds?: string[]): Promise<RoleWriteResult>;
@@ -86,7 +93,7 @@ class SupabaseRolesRepository implements RolesRepository {
   }
 
   private async createRoleWithPermissionsFallback(
-    payload: { name: string; hotel_id: string | null },
+    payload: { name: string; role_type: "SYSTEM_ROLE" | "HOTEL_ROLE"; hotel_id: string | null },
     permissionIds: string[]
   ): Promise<{ result: RoleWriteResult; id?: string }> {
     const createResult = await this.createRole(payload);
@@ -168,22 +175,22 @@ class SupabaseRolesRepository implements RolesRepository {
     return (data || []) as Array<{ id: string; name: string }>;
   }
 
-  async listReferencePermissions(): Promise<Array<{ id: string; name: string }>> {
+  async listReferencePermissions(): Promise<Array<{ id: string; name: string; type: "SYSTEM_PERMISSION" | "HOTEL_PERMISSION" }>> {
     const supabase = createServerClient();
-    const { data, error } = await supabase.from("permissions").select("id,name").order("name", { ascending: true });
+    const { data, error } = await supabase.from("permissions").select("id,name,type").order("name", { ascending: true });
 
     if (error) {
       throw error;
     }
 
-    return (data || []) as Array<{ id: string; name: string }>;
+    return (data || []) as Array<{ id: string; name: string; type: "SYSTEM_PERMISSION" | "HOTEL_PERMISSION" }>;
   }
 
   async listRolesWithRelations(): Promise<RoleWithRelationsRow[]> {
     const supabase = createServerClient();
     const { data, error } = await supabase
       .from("roles")
-      .select("id,name,hotel_id,hotels(name),role_permissions(permission_id,permissions(id,name))")
+      .select("id,name,role_type,hotel_id,hotels(name),role_permissions(permission_id,permissions(id,name,type))")
       .order("name", { ascending: true });
 
     if (error) {
@@ -208,24 +215,25 @@ class SupabaseRolesRepository implements RolesRepository {
     return !!data;
   }
 
-  async countPermissionsByIds(permissionIds: string[]): Promise<number> {
+  async findPermissionsByIds(permissionIds: string[]): Promise<Array<{ id: string; type: "SYSTEM_PERMISSION" | "HOTEL_PERMISSION" }>> {
     const supabase = createServerClient();
-    const { data, error } = await supabase.from("permissions").select("id").in("id", permissionIds);
+    const { data, error } = await supabase.from("permissions").select("id,type").in("id", permissionIds);
 
     if (error) {
       throw error;
     }
 
-    return (data || []).length;
+    return (data || []) as Array<{ id: string; type: "SYSTEM_PERMISSION" | "HOTEL_PERMISSION" }>;
   }
 
   async createRoleWithPermissions(
-    payload: { name: string; hotel_id: string | null },
+    payload: { name: string; role_type: "SYSTEM_ROLE" | "HOTEL_ROLE"; hotel_id: string | null },
     permissionIds: string[]
   ): Promise<{ result: RoleWriteResult; id?: string }> {
     const supabase = createServerClient();
     const { data, error } = await supabase.rpc("create_role_with_permissions", {
       p_name: payload.name,
+      p_role_type: payload.role_type,
       p_hotel_id: payload.hotel_id,
       p_permission_ids: permissionIds
     });
@@ -251,7 +259,7 @@ class SupabaseRolesRepository implements RolesRepository {
     return this.createRoleWithPermissionsFallback(payload, permissionIds);
   }
 
-  async createRole(payload: { name: string; hotel_id: string | null }): Promise<{ result: RoleWriteResult; id?: string }> {
+  async createRole(payload: { name: string; role_type: "SYSTEM_ROLE" | "HOTEL_ROLE"; hotel_id: string | null }): Promise<{ result: RoleWriteResult; id?: string }> {
     const supabase = createServerClient();
     const { data, error } = await supabase.from("roles").insert(payload).select("id").single();
 
@@ -279,7 +287,7 @@ class SupabaseRolesRepository implements RolesRepository {
     const supabase = createServerClient();
     const { data, error } = await supabase
       .from("roles")
-      .select("id,name,hotel_id,hotels(name),role_permissions(permission_id,permissions(id,name))")
+      .select("id,name,role_type,hotel_id,hotels(name),role_permissions(permission_id,permissions(id,name,type))")
       .eq("id", id)
       .single();
 

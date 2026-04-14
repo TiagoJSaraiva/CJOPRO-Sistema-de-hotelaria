@@ -1,11 +1,12 @@
 "use client";
 
-import { useMemo, useState } from "react";
-import type { AdminPermissionOption, AdminRolePermission } from "@hotel/shared";
+import { useEffect, useMemo, useState } from "react";
+import { ADMIN_PERMISSION_TYPES, ADMIN_ROLE_TYPES, type AdminPermissionOption, type AdminRolePermission, type AdminRoleType } from "@hotel/shared";
 import { RelationListEditor } from "../../_components/RelationListEditor";
 import { SelectionModal } from "../../_components/SelectionModal";
 
 type RolePermissionAssignmentsFieldProps = {
+  roleType: AdminRoleType;
   permissions: AdminPermissionOption[];
   defaultPermissions?: AdminRolePermission[];
   inputName?: string;
@@ -35,13 +36,32 @@ function getInitialPermissions(defaultPermissions?: AdminRolePermission[]): Perm
     .map((item) => ({ id: item.id, name: item.name }));
 }
 
-export function RolePermissionAssignmentsField({ permissions, defaultPermissions, inputName = "permission_ids" }: RolePermissionAssignmentsFieldProps) {
+export function RolePermissionAssignmentsField({
+  roleType,
+  permissions,
+  defaultPermissions,
+  inputName = "permission_ids"
+}: RolePermissionAssignmentsFieldProps) {
   const [items, setItems] = useState<PermissionItem[]>(() => getInitialPermissions(defaultPermissions));
   const [isModalOpen, setIsModalOpen] = useState(false);
 
+  const expectedPermissionType = roleType === ADMIN_ROLE_TYPES.SYSTEM ? ADMIN_PERMISSION_TYPES.SYSTEM : ADMIN_PERMISSION_TYPES.HOTEL;
+
+  useEffect(() => {
+    setItems((current) =>
+      current.filter((item) => {
+        const permission = permissions.find((permissionOption) => permissionOption.id === item.id);
+        return permission?.type === expectedPermissionType;
+      })
+    );
+  }, [permissions, expectedPermissionType]);
+
   const availablePermissions = useMemo(
-    () => permissions.filter((permission) => !items.some((item) => item.id === permission.id)),
-    [permissions, items]
+    () =>
+      permissions
+        .filter((permission) => permission.type === expectedPermissionType)
+        .filter((permission) => !items.some((item) => item.id === permission.id)),
+    [permissions, expectedPermissionType, items]
   );
 
   const serializedValue = JSON.stringify(items.map((item) => item.id));
@@ -62,8 +82,12 @@ export function RolePermissionAssignmentsField({ permissions, defaultPermissions
       <SelectionModal
         open={isModalOpen}
         title="Selecione uma permissao"
-        items={availablePermissions.map((permission) => ({ id: permission.id, label: permission.name }))}
-        emptyMessage="Nao existem permissoes disponiveis para adicao."
+        items={availablePermissions.map((permission) => ({
+          id: permission.id,
+          label: permission.name,
+          description: permission.type === ADMIN_PERMISSION_TYPES.SYSTEM ? "SYSTEM PERMISSION" : "HOTEL PERMISSION"
+        }))}
+        emptyMessage="Nao existem permissoes disponiveis para o tipo de role selecionado."
         onSelect={(permissionId) => {
           const selectedPermission = permissions.find((permission) => permission.id === permissionId);
 

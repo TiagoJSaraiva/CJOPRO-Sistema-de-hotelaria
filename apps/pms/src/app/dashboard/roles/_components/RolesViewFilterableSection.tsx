@@ -1,7 +1,7 @@
 "use client";
 
 import { useMemo, useState, type ReactNode } from "react";
-import type { AdminHotelOption, AdminPermissionOption, AdminRole } from "@hotel/shared";
+import { ADMIN_ROLE_TYPES, type AdminHotelOption, type AdminPermissionOption, type AdminRole } from "@hotel/shared";
 import { RoleListItem } from "./RoleListItem";
 import { DEFAULT_ROLE_VIEW_FILTERS, applyRoleViewFilters, countAppliedRoleFilters, type RoleViewFilters } from "./roleViewFilters";
 import { ViewFiltersActionsBar, ViewFiltersModal, viewFiltersFieldStyle } from "../../_components/ViewFiltersBase";
@@ -111,6 +111,19 @@ export function RolesViewFilterableSection({
           </label>
 
           <label style={{ display: "grid", gap: "0.35rem" }}>
+            <span>Tipo da role</span>
+            <select
+              value={draftFilters.roleType}
+              onChange={(event) => updateDraft("roleType", event.target.value as RoleViewFilters["roleType"])}
+              style={viewFiltersFieldStyle}
+            >
+              <option value="">Todos</option>
+              <option value={ADMIN_ROLE_TYPES.SYSTEM}>SYSTEM ROLE</option>
+              <option value={ADMIN_ROLE_TYPES.HOTEL}>HOTEL ROLE</option>
+            </select>
+          </label>
+
+          <label style={{ display: "grid", gap: "0.35rem" }}>
             <span>Hotel</span>
             <select value={draftFilters.hotelId} onChange={(event) => updateDraft("hotelId", event.target.value)} style={viewFiltersFieldStyle}>
               <option value="">Todos</option>
@@ -128,7 +141,7 @@ export function RolesViewFilterableSection({
               <option value="">Todas</option>
               {permissions.map((permission) => (
                 <option key={permission.id} value={permission.id}>
-                  {permission.name}
+                  {permission.name} {permission.type === "SYSTEM_PERMISSION" ? "(SYSTEM)" : "(HOTEL)"}
                 </option>
               ))}
             </select>

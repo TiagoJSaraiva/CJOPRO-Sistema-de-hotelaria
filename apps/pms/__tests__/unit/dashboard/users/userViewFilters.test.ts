@@ -26,8 +26,8 @@ describe("userViewFilters", () => {
       is_active: true,
       created_at: "2026-01-10T10:30:00.000Z",
       role_assignments: [
-        { role_id: "role-admin", role_name: "Admin", hotel_id: "hotel-centro", hotel_name: "Hotel Centro" },
-        { role_id: "role-auditor", role_name: "Auditor", hotel_id: null, hotel_name: "GLOBAL" }
+        { role_id: "role-admin", role_name: "Admin", role_type: "HOTEL_ROLE", hotel_id: "hotel-centro", hotel_name: "Hotel Centro" },
+        { role_id: "role-auditor", role_name: "Auditor", role_type: "SYSTEM_ROLE", hotel_id: null, hotel_name: "Sistema" }
       ]
     }),
     makeUser({
@@ -36,7 +36,7 @@ describe("userViewFilters", () => {
       email: "joao@praia.com",
       is_active: false,
       created_at: "2026-02-20T16:45:00.000Z",
-      role_assignments: [{ role_id: "role-recepcao", role_name: "Recepcao", hotel_id: "hotel-praia", hotel_name: "Hotel Praia" }]
+      role_assignments: [{ role_id: "role-recepcao", role_name: "Recepcao", role_type: "HOTEL_ROLE", hotel_id: "hotel-praia", hotel_name: "Hotel Praia" }]
     }),
     makeUser({
       id: "u-3",
@@ -45,8 +45,8 @@ describe("userViewFilters", () => {
       is_active: true,
       created_at: null,
       role_assignments: [
-        { role_id: "role-admin", role_name: "Admin", hotel_id: "hotel-praia", hotel_name: "Hotel Praia" },
-        { role_id: "role-recepcao", role_name: "Recepcao", hotel_id: "hotel-centro", hotel_name: "Hotel Centro" }
+        { role_id: "role-admin", role_name: "Admin", role_type: "HOTEL_ROLE", hotel_id: "hotel-praia", hotel_name: "Hotel Praia" },
+        { role_id: "role-recepcao", role_name: "Recepcao", role_type: "HOTEL_ROLE", hotel_id: "hotel-centro", hotel_name: "Hotel Centro" }
       ]
     })
   ];
