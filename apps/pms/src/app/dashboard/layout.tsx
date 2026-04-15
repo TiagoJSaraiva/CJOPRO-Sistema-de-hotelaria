@@ -4,7 +4,9 @@ import { redirect } from "next/navigation";
 import { ADMIN_NAV_ITEMS, PERMISSIONS } from "@hotel/shared";
 import type { ReactNode } from "react";
 import { getUserFromSession } from "../../lib/auth";
-import { logoutAction } from "./actions";
+import { getActiveHotelCookieValue, listActiveHotelOptions, resolveActiveHotelForUser } from "../../lib/activeHotel";
+import { logoutAction, setActiveHotelAction } from "./actions";
+import { ActiveHotelSelector } from "./_components/ActiveHotelSelector";
 
 const NAME_CONNECTORS = new Set(["da", "de", "do", "das", "dos", "e"]);
 
@@ -46,6 +48,9 @@ export default async function DashboardLayout({ children }: { children: ReactNod
 
   const navItems = ADMIN_NAV_ITEMS.filter((item) => moduleEntryAccess[item.href]);
   const userDisplayName = formatUserDisplayName(user.name);
+  const activeHotelOptions = listActiveHotelOptions(user);
+  const preferredHotelId = getActiveHotelCookieValue();
+  const activeHotelId = resolveActiveHotelForUser(user, preferredHotelId);
 
   return (
     <main style={{ minHeight: "100vh", padding: "1.25rem", background: "#f5f6f8" }}>
@@ -101,7 +106,11 @@ export default async function DashboardLayout({ children }: { children: ReactNod
           </nav>
         </div>
 
-        <div style={{ display: "flex", alignItems: "center", gap: "0.75rem" }}>
+        <div style={{ display: "flex", alignItems: "center", gap: "0.75rem", flexWrap: "wrap", justifyContent: "flex-end" }}>
+          {activeHotelOptions.length ? (
+            <ActiveHotelSelector options={activeHotelOptions} initialHotelId={activeHotelId} onChangeAction={setActiveHotelAction} />
+          ) : null}
+
           <span style={{ color: "#3f3f3f", fontSize: "0.95rem", whiteSpace: "nowrap" }}>{userDisplayName}</span>
 
           <form action={logoutAction}>

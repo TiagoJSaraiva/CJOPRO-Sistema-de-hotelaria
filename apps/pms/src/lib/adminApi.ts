@@ -1,5 +1,7 @@
 import { cookies } from "next/headers";
-import type {
+import {
+  ACTIVE_HOTEL_GLOBAL_VALUE,
+  ACTIVE_HOTEL_HEADER_NAME,
   AdminErrorResponse,
   AdminHotel,
   AdminHotelCreateInput,
@@ -13,11 +15,14 @@ import type {
   AdminRole,
   AdminRoleCreateInput,
   AdminRoleUpdateInput,
-  AdminUser
-  ,AdminUserCreateInput
-  ,AdminUserUpdateInput
-  ,AdminUsersReferenceData
+  AdminUser,
+  AdminUserCreateInput,
+  AdminUserUpdateInput,
+  AdminUsersReferenceData
 } from "@hotel/shared";
+import {
+  getActiveHotelCookieValue
+} from "./activeHotel";
 
 const SESSION_COOKIE_NAME = "pms_session_token";
 const DEFAULT_BACKEND_URL = "http://localhost:3334";
@@ -30,6 +35,16 @@ function getSessionToken(): string | null {
   return cookies().get(SESSION_COOKIE_NAME)?.value ?? null;
 }
 
+function getActiveHotelHeaderValue(): string | null {
+  const preferredHotelId = getActiveHotelCookieValue();
+
+  if (preferredHotelId === undefined) {
+    return null;
+  }
+
+  return preferredHotelId || ACTIVE_HOTEL_GLOBAL_VALUE;
+}
+
 async function getAdminList<T>(path: string): Promise<T[]> {
   const token = getSessionToken();
 
@@ -37,12 +52,19 @@ async function getAdminList<T>(path: string): Promise<T[]> {
     return [];
   }
 
+  const activeHotelHeaderValue = getActiveHotelHeaderValue();
+  const headers: Record<string, string> = {
+    Authorization: `Bearer ${token}`
+  };
+
+  if (activeHotelHeaderValue !== null) {
+    headers[ACTIVE_HOTEL_HEADER_NAME] = activeHotelHeaderValue;
+  }
+
   const response = await fetch(`${getBackendUrl()}${path}`, {
     method: "GET",
     cache: "no-store",
-    headers: {
-      Authorization: `Bearer ${token}`
-    }
+    headers
   });
 
   if (!response.ok) {
@@ -65,9 +87,14 @@ async function requestAdmin<T>(
   }
 
   const hasBody = body !== undefined;
+  const activeHotelHeaderValue = getActiveHotelHeaderValue();
   const headers: Record<string, string> = {
     Authorization: `Bearer ${token}`
   };
+
+  if (activeHotelHeaderValue !== null) {
+    headers[ACTIVE_HOTEL_HEADER_NAME] = activeHotelHeaderValue;
+  }
 
   if (hasBody) {
     headers["Content-Type"] = "application/json";
@@ -102,12 +129,19 @@ async function getAdminData<T>(path: string): Promise<T> {
     throw new Error("Sessao invalida. Faca login novamente.");
   }
 
+  const activeHotelHeaderValue = getActiveHotelHeaderValue();
+  const headers: Record<string, string> = {
+    Authorization: `Bearer ${token}`
+  };
+
+  if (activeHotelHeaderValue !== null) {
+    headers[ACTIVE_HOTEL_HEADER_NAME] = activeHotelHeaderValue;
+  }
+
   const response = await fetch(`${getBackendUrl()}${path}`, {
     method: "GET",
     cache: "no-store",
-    headers: {
-      Authorization: `Bearer ${token}`
-    }
+    headers
   });
 
   if (!response.ok) {

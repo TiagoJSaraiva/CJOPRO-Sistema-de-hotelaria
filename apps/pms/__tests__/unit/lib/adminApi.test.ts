@@ -10,9 +10,19 @@ vi.mock("next/headers", () => ({
 
 import { createHotel, deleteHotel, getUsersReferenceData, listHotels } from "../../../src/lib/adminApi";
 
-function mockSessionToken(token: string | null) {
+function mockSessionToken(token: string | null, activeHotelId?: string | null) {
   cookiesMock.mockReturnValue({
-    get: vi.fn(() => (token ? { value: token } : undefined))
+    get: vi.fn((name: string) => {
+      if (name === "pms_session_token") {
+        return token ? { value: token } : undefined;
+      }
+
+      if (name === "pms_active_hotel") {
+        return activeHotelId ? { value: activeHotelId } : undefined;
+      }
+
+      return undefined;
+    })
   });
 }
 

@@ -72,3 +72,6 @@ export type AuthErrorResponse = {
   message: string;
   retryAfterSeconds?: number;
 };
+
+export const ACTIVE_HOTEL_HEADER_NAME = "x-active-hotel-id";
+export const ACTIVE_HOTEL_GLOBAL_VALUE = "__global__";

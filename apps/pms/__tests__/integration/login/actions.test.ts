@@ -1,12 +1,22 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import { LOGIN_PAGE_ERROR_PARAM } from "@hotel/shared";
 
-const { redirectMock, loginWithCredentialsMock, saveSessionCookieMock } = vi.hoisted(() => ({
+const {
+  redirectMock,
+  loginWithCredentialsMock,
+  saveSessionCookieMock,
+  getActiveHotelCookieValueMock,
+  resolveActiveHotelForUserMock,
+  saveActiveHotelCookieMock
+} = vi.hoisted(() => ({
   redirectMock: vi.fn((path: string) => {
     throw new Error(`REDIRECT:${path}`);
   }),
   loginWithCredentialsMock: vi.fn(),
-  saveSessionCookieMock: vi.fn()
+  saveSessionCookieMock: vi.fn(),
+  getActiveHotelCookieValueMock: vi.fn(),
+  resolveActiveHotelForUserMock: vi.fn(),
+  saveActiveHotelCookieMock: vi.fn()
 }));
 
 vi.mock("next/navigation", () => ({
@@ -16,6 +26,12 @@ vi.mock("next/navigation", () => ({
 vi.mock("../../../src/lib/auth", () => ({
   loginWithCredentials: loginWithCredentialsMock,
   saveSessionCookie: saveSessionCookieMock
+}));
+
+vi.mock("../../../src/lib/activeHotel", () => ({
+  getActiveHotelCookieValue: getActiveHotelCookieValueMock,
+  resolveActiveHotelForUser: resolveActiveHotelForUserMock,
+  saveActiveHotelCookie: saveActiveHotelCookieMock
 }));
 
 import { loginAction } from "../../../src/app/login/actions";
@@ -48,6 +64,7 @@ describe("login/actions", () => {
 
     expect(loginWithCredentialsMock).toHaveBeenCalledWith("admin@example.com", "wrong-pass");
     expect(saveSessionCookieMock).not.toHaveBeenCalled();
+    expect(saveActiveHotelCookieMock).not.toHaveBeenCalled();
   });
 
   it("salva cookie e redireciona para dashboard no login bem-sucedido", async () => {
@@ -64,6 +81,8 @@ describe("login/actions", () => {
         roleAssignments: []
       }
     });
+    getActiveHotelCookieValueMock.mockReturnValueOnce(undefined);
+    resolveActiveHotelForUserMock.mockReturnValueOnce(null);
 
     const formData = new FormData();
     formData.set("email", "admin@example.com");
@@ -72,6 +91,13 @@ describe("login/actions", () => {
     await expect(loginAction(formData)).rejects.toThrow("REDIRECT:/dashboard");
 
     expect(saveSessionCookieMock).toHaveBeenCalledWith("token-123", 3600);
+    expect(resolveActiveHotelForUserMock).toHaveBeenCalledWith(
+      expect.objectContaining({
+        id: "user-1"
+      }),
+      undefined
+    );
+    expect(saveActiveHotelCookieMock).toHaveBeenCalledWith(null);
     expect(redirectMock).toHaveBeenCalledWith("/dashboard");
   });
 });

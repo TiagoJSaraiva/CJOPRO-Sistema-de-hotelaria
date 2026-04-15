@@ -1,8 +1,14 @@
 import { AUTH_ERROR_CODE, type PermissionName } from "@hotel/shared";
 import { getAuthError, getSessionFromRequest, type SessionPayload } from "./session";
+import { resolveActiveHotelContext } from "./activeHotel";
 
-type AuthorizedRequest = { headers: { authorization?: string } };
+type AuthorizedRequest = { headers: Record<string, string | string[] | undefined> & { authorization?: string } };
 type AuthorizedReply = { status: (statusCode: number) => { send: (payload: unknown) => unknown } };
+
+export type AuthorizedWithScope = {
+  session: SessionPayload;
+  activeHotelId: string | null;
+};
 
 export function hasPermission(user: SessionPayload, permission: PermissionName): boolean {
   return user.permissions.includes(permission);
@@ -22,6 +28,13 @@ export function ensureAuthorized(
 
   if (!hasPermission(session, permission)) {
     reply.status(403).send(getAuthError(AUTH_ERROR_CODE.FORBIDDEN));
+    return null;
+  }
+
+  const context = resolveActiveHotelContext(session, request.headers);
+
+  if (!context.ok) {
+    reply.status(context.statusCode).send({ message: context.message });
     return null;
   }
 
@@ -47,5 +60,60 @@ export function ensureAuthorizedAny(
     return null;
   }
 
+  const context = resolveActiveHotelContext(session, request.headers);
+
+  if (!context.ok) {
+    reply.status(context.statusCode).send({ message: context.message });
+    return null;
+  }
+
   return session;
+}
+
+export function ensureAuthorizedWithScope(
+  request: AuthorizedRequest,
+  reply: AuthorizedReply,
+  permission: PermissionName
+): AuthorizedWithScope | null {
+  const session = ensureAuthorized(request, reply, permission);
+
+  if (!session) {
+    return null;
+  }
+
+  const context = resolveActiveHotelContext(session, request.headers);
+
+  if (!context.ok) {
+    reply.status(context.statusCode).send({ message: context.message });
+    return null;
+  }
+
+  return {
+    session,
+    activeHotelId: context.activeHotelId
+  };
+}
+
+export function ensureAuthorizedAnyWithScope(
+  request: AuthorizedRequest,
+  reply: AuthorizedReply,
+  permissions: PermissionName[]
+): AuthorizedWithScope | null {
+  const session = ensureAuthorizedAny(request, reply, permissions);
+
+  if (!session) {
+    return null;
+  }
+
+  const context = resolveActiveHotelContext(session, request.headers);
+
+  if (!context.ok) {
+    reply.status(context.statusCode).send({ message: context.message });
+    return null;
+  }
+
+  return {
+    session,
+    activeHotelId: context.activeHotelId
+  };
 }

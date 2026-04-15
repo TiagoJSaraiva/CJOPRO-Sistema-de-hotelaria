@@ -1,5 +1,5 @@
 import { describe, expect, it, vi } from "vitest";
-import { AUTH_ERROR_CODE, PERMISSIONS, type SessionPayload } from "@hotel/shared";
+import { ACTIVE_HOTEL_HEADER_NAME, AUTH_ERROR_CODE, PERMISSIONS, type SessionPayload } from "@hotel/shared";
 import { ensureAuthorized, ensureAuthorizedAny, hasPermission } from "../../../src/auth/authorization";
 import { signToken } from "../../../src/auth/session";
 
@@ -109,6 +109,41 @@ describe("auth/authorization", () => {
     expect(send).toHaveBeenCalledWith(
       expect.objectContaining({
         code: AUTH_ERROR_CODE.FORBIDDEN
+      })
+    );
+  });
+
+  it("ensureAuthorized retorna 403 quando hotel ativo informado nao pertence ao usuario", () => {
+    const { reply, status, send } = createReplyMock();
+    const token = signToken({
+      ...baseSession,
+      roleAssignments: [
+        {
+          roleId: "role-1",
+          roleName: "Recepcao",
+          roleType: "HOTEL_ROLE",
+          hotelId: "hotel-1",
+          hotelName: "Alpha"
+        }
+      ]
+    });
+
+    const result = ensureAuthorized(
+      {
+        headers: {
+          authorization: `Bearer ${token}`,
+          [ACTIVE_HOTEL_HEADER_NAME]: "hotel-999"
+        }
+      },
+      reply,
+      PERMISSIONS.HOTEL_READ
+    );
+
+    expect(result).toBeNull();
+    expect(status).toHaveBeenCalledWith(403);
+    expect(send).toHaveBeenCalledWith(
+      expect.objectContaining({
+        message: "Hotel ativo nao permitido para este usuario."
       })
     );
   });
