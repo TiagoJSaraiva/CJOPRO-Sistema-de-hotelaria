@@ -51,6 +51,23 @@ function redirectWithStatus(status: string, section: "create" | "view" | "root" 
   redirect(`/dashboard/users/${section}?status=${status}&r=${nonce}`);
 }
 
+function isDeleteConflictError(error: unknown): boolean {
+  if (typeof error === "object" && error !== null && "statusCode" in error) {
+    const statusCode = Number((error as { statusCode?: unknown }).statusCode);
+
+    if (statusCode === 409) {
+      return true;
+    }
+  }
+
+  if (!(error instanceof Error)) {
+    return false;
+  }
+
+  const message = error.message.toLowerCase();
+  return message.includes("dependencias ativas") || message.includes("nao pode ser exclu");
+}
+
 export async function createUserAction(formData: FormData): Promise<void> {
   const user = await getUserFromSession();
 
@@ -144,7 +161,11 @@ export async function deleteUserAction(formData: FormData): Promise<void> {
 
   try {
     await deleteUser(id);
-  } catch {
+  } catch (error) {
+    if (isDeleteConflictError(error)) {
+      redirectWithStatus("delete_conflict", "view");
+    }
+
     redirectWithStatus("delete_error", "view");
   }
 

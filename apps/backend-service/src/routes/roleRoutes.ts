@@ -297,8 +297,10 @@ export function registerRoleRoutes(app: FastifyInstance, repository: RolesReposi
     }
 
     const id = request.params.id;
+    request.log.info({ roleId: id }, "roles.delete.start");
 
     if (!id) {
+      request.log.warn("roles.delete.missing-id");
       return reply.status(400).send({ message: "Id da role e obrigatorio para exclusao." });
     }
 
@@ -308,12 +310,21 @@ export function registerRoleRoutes(app: FastifyInstance, repository: RolesReposi
     });
 
     if (!deleteResult) {
+      request.log.error({ roleId: id }, "roles.delete.failed-unexpected");
       return reply.status(500).send({ message: "Falha ao excluir role." });
     }
 
     if (deleteResult === "not-found") {
+      request.log.warn({ roleId: id }, "roles.delete.not-found");
       return reply.status(404).send({ message: "Role nao encontrada." });
     }
+
+    if (deleteResult === "conflict") {
+      request.log.warn({ roleId: id }, "roles.delete.conflict");
+      return reply.status(409).send({ message: "Role nao pode ser excluida: possui dependencias ativas." });
+    }
+
+    request.log.info({ roleId: id }, "roles.delete.success");
 
     return reply.send({ ok: true });
   });

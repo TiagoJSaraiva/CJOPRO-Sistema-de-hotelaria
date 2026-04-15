@@ -1,21 +1,12 @@
 import Link from "next/link";
-import { AUTH_ERROR_MESSAGE, LOGIN_PAGE_ERROR_PARAM } from "@hotel/shared";
 import { loginAction } from "./actions";
 import { PendingSubmitButton } from "../_components/PendingSubmitButton";
+import { LoginErrorMessage } from "./_components/LoginErrorMessage";
+import { LOGIN_SUBMIT_BUTTON_PROPS } from "./submitButtonConfig";
 
-const errorMessages: Record<string, string> = {
-  [LOGIN_PAGE_ERROR_PARAM.MISSING_FIELDS]: AUTH_ERROR_MESSAGE.AUTH_MISSING_FIELDS,
-  [LOGIN_PAGE_ERROR_PARAM.INVALID_CREDENTIALS]: AUTH_ERROR_MESSAGE.AUTH_INVALID_CREDENTIALS
-};
+export const dynamic = "force-static";
 
-type LoginPageProps = {
-  searchParams?: {
-    error?: string;
-  };
-};
-
-export default function LoginPage({ searchParams }: LoginPageProps) {
-  const error = searchParams?.error;
+export default function LoginPage() {
 
   return (
     <main style={{ minHeight: "100vh", display: "grid", placeItems: "center", padding: "2rem", background: "linear-gradient(160deg, #f8f0e8 0%, #f4f9ff 100%)" }}>
@@ -33,9 +24,7 @@ export default function LoginPage({ searchParams }: LoginPageProps) {
         <h1 style={{ marginTop: 0, marginBottom: "0.4rem" }}>Login do PMS</h1>
         <p style={{ marginTop: 0, color: "#555" }}>Use email e senha para acessar seu dashboard.</p>
 
-        {error && errorMessages[error] ? (
-          <p style={{ color: "#b00020", marginBottom: "1rem" }}>{errorMessages[error]}</p>
-        ) : null}
+        <LoginErrorMessage />
 
         <form action={loginAction} style={{ display: "grid", gap: "0.9rem" }}>
           <label style={{ display: "grid", gap: "0.4rem" }}>
@@ -60,13 +49,7 @@ export default function LoginPage({ searchParams }: LoginPageProps) {
             />
           </label>
 
-          <PendingSubmitButton
-            pendingLabel="Entrando..."
-            delayMs={0}
-            minVisibleMs={420}
-            lockUntilUnmount
-            style={{ marginTop: "0.4rem", padding: "0.75rem 1rem" }}
-          >
+          <PendingSubmitButton {...LOGIN_SUBMIT_BUTTON_PROPS}>
             Entrar
           </PendingSubmitButton>
         </form>

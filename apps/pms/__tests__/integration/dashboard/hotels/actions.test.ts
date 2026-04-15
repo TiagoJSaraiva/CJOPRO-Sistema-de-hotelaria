@@ -162,4 +162,16 @@ describe("dashboard/hotels/actions", () => {
 
     expect(deleteHotelMock).toHaveBeenCalledWith("hotel-1");
   });
+
+  it("redireciona para delete_conflict quando API sinaliza dependencias ativas", async () => {
+    getUserFromSessionMock.mockResolvedValueOnce({
+      permissions: [PERMISSIONS.HOTEL_DELETE]
+    });
+    deleteHotelMock.mockRejectedValueOnce(new Error("Hotel nao pode ser excluido: possui dependencias ativas."));
+
+    const formData = new FormData();
+    formData.set("id", "hotel-1");
+
+    await expect(deleteHotelAction(formData)).rejects.toThrow("REDIRECT:/dashboard/hotels/view?status=delete_conflict");
+  });
 });

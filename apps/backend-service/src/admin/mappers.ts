@@ -26,6 +26,7 @@ type DbRoleRow = {
 
 type DbUserRoleAssignmentRow = {
   hotel_id?: string | null;
+  hotels?: DbHotelRow | DbHotelRow[] | null;
   roles?: DbRoleRow | DbRoleRow[] | null;
 };
 
@@ -206,12 +207,15 @@ export function mapAdminUser(item: DbAdminUserRow): {
     role_type: "SYSTEM_ROLE" | "HOTEL_ROLE";
     hotel_id: string | null;
     hotel_name: string | null;
+    role_hotel_id: string | null;
+    role_hotel_name: string | null;
   }>;
 } {
   const roleAssignments = Array.isArray(item.user_roles)
     ? item.user_roles
         .map((row) => {
           const role = Array.isArray(row.roles) ? row.roles[0] : row.roles;
+          const assignmentHotel = Array.isArray(row.hotels) ? row.hotels[0] : row.hotels;
           const roleHotel = Array.isArray(role?.hotels) ? role.hotels[0] : role?.hotels;
 
           if (!role?.id || !role.name) {
@@ -222,8 +226,10 @@ export function mapAdminUser(item: DbAdminUserRow): {
             role_id: role.id,
             role_name: role.name,
             role_type: (role.role_type === "HOTEL_ROLE" ? "HOTEL_ROLE" : "SYSTEM_ROLE") as "SYSTEM_ROLE" | "HOTEL_ROLE",
-            hotel_id: row.hotel_id || role.hotel_id || null,
-            hotel_name: roleHotel?.name || null
+            hotel_id: row.hotel_id || null,
+            hotel_name: assignmentHotel?.name || null,
+            role_hotel_id: role.hotel_id || null,
+            role_hotel_name: roleHotel?.name || null
           };
         })
         .filter(isDefined)

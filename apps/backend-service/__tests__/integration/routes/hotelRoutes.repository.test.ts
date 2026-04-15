@@ -115,4 +115,26 @@ describe("routes/hotels with injected repository", () => {
     expect(response.json()).toEqual({ message: "Slug ja utilizado por outro hotel." });
     expect(repository.createHotel).toHaveBeenCalledTimes(1);
   });
+
+  it("retorna 409 quando delete de hotel sinaliza conflito", async () => {
+    const repository: HotelsRepository = {
+      listHotels: vi.fn(async () => []),
+      createHotel: vi.fn(async () => ({ result: "ok", item: { id: "hotel-1" } })),
+      updateHotel: vi.fn(async () => ({ result: "ok", item: { id: "hotel-1" } })),
+      deleteHotel: vi.fn(async () => "conflict")
+    };
+
+    const app = await createHotelsTestApp(repository);
+
+    const response = await app.inject({
+      method: "DELETE",
+      url: "/admin/hotels/hotel-1",
+      headers: {
+        authorization: `Bearer ${createToken([PERMISSIONS.HOTEL_DELETE])}`
+      }
+    });
+
+    expect(response.statusCode).toBe(409);
+    expect(response.json()).toEqual({ message: "Hotel nao pode ser excluido: possui dependencias ativas." });
+  });
 });

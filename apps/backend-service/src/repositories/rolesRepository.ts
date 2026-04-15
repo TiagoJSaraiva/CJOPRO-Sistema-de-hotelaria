@@ -1,5 +1,5 @@
 import { createServerClient } from "@hotel/shared";
-import { isSupabaseConflictError, isSupabaseNotFoundError } from "./supabaseError";
+import { isSupabaseConflictError, isSupabaseForeignKeyError, isSupabaseNotFoundError } from "./supabaseError";
 
 export type RoleWriteResult = "ok" | "conflict" | "not-found";
 
@@ -55,6 +55,18 @@ function isMissingRpcFunctionError(error: unknown): boolean {
   const message = "message" in error ? String((error as { message?: unknown }).message || "").toLowerCase() : "";
 
   return code === "PGRST202" || code === "42883" || message.includes("function") && message.includes("does not exist");
+}
+
+function isRolePermissionsDependencyError(error: unknown): boolean {
+  if (!error || typeof error !== "object") {
+    return false;
+  }
+
+  const message = "message" in error ? String((error as { message?: unknown }).message || "").toLowerCase() : "";
+  const details = "details" in error ? String((error as { details?: unknown }).details || "").toLowerCase() : "";
+  const hint = "hint" in error ? String((error as { hint?: unknown }).hint || "").toLowerCase() : "";
+
+  return message.includes("role_permissions") || details.includes("role_permissions") || hint.includes("role_permissions");
 }
 
 export interface RolesRepository {
@@ -387,11 +399,31 @@ class SupabaseRolesRepository implements RolesRepository {
     const supabase = createServerClient();
     const { data, error } = await supabase.from("roles").delete().eq("id", id).select("id");
 
-    if (error) {
+    if (!error) {
+      return data && data.length ? "ok" : "not-found";
+    }
+
+    if (!(isSupabaseForeignKeyError(error) || isSupabaseConflictError(error))) {
       throw error;
     }
 
-    return data && data.length ? "ok" : "not-found";
+    if (!isRolePermissionsDependencyError(error)) {
+      return "conflict";
+    }
+
+    await this.clearRolePermissions(id);
+
+    const retryResult = await supabase.from("roles").delete().eq("id", id).select("id");
+
+    if (retryResult.error) {
+      if (isSupabaseForeignKeyError(retryResult.error) || isSupabaseConflictError(retryResult.error)) {
+        return "conflict";
+      }
+
+      throw retryResult.error;
+    }
+
+    return retryResult.data && retryResult.data.length ? "ok" : "not-found";
   }
 }
 

@@ -160,6 +160,10 @@ export function registerPermissionRoutes(
       return reply.status(404).send({ message: "Permissao nao encontrada." });
     }
 
+    if (deleteResult === "conflict") {
+      return reply.status(409).send({ message: "Permissao nao pode ser excluida: possui dependencias ativas." });
+    }
+
     return reply.send({ ok: true });
   });
 }

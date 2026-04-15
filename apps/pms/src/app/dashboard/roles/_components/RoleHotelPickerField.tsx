@@ -42,9 +42,12 @@ export function RoleHotelPickerField({
 
   const canSelectHotel = roleType === ADMIN_ROLE_TYPES.HOTEL;
 
+  if (roleType === ADMIN_ROLE_TYPES.SYSTEM) {
+    return <input type="hidden" name={inputName} value="" readOnly />;
+  }
+
   return (
     <div style={{ display: "grid", gap: "0.45rem" }}>
-      <label>Escopo do hotel</label>
 
       <div style={{ display: "flex", gap: "0.55rem", flexWrap: "wrap", alignItems: "center" }}>
         <span style={{ border: "1px solid #d5dbe5", borderRadius: "8px", background: "#fbfdff", padding: "0.45rem 0.65rem" }}>{selectedHotelName}</span>

@@ -177,4 +177,23 @@ describe("routes/users with injected repository", () => {
     expect(response.statusCode).toBe(409);
     expect(response.json()).toEqual({ message: "Email ja utilizado por outro usuario." });
   });
+
+  it("retorna 409 quando delete de usuario sinaliza conflito", async () => {
+    const repository = createUsersRepositoryMock({
+      deleteUser: vi.fn(async () => "conflict")
+    });
+
+    const app = await createUsersTestApp(repository);
+
+    const response = await app.inject({
+      method: "DELETE",
+      url: "/admin/users/user-1",
+      headers: {
+        authorization: `Bearer ${createToken([PERMISSIONS.USER_DELETE])}`
+      }
+    });
+
+    expect(response.statusCode).toBe(409);
+    expect(response.json()).toEqual({ message: "Usuario nao pode ser excluido: possui dependencias ativas." });
+  });
 });

@@ -115,6 +115,8 @@ export type AdminUserRoleAssignment = {
   role_type: AdminRoleType;
   hotel_id: string | null;
   hotel_name: string | null;
+  role_hotel_id?: string | null;
+  role_hotel_name?: string | null;
 };
 
 export type AdminUserRoleAssignmentInput = {

@@ -64,19 +64,27 @@ async function requestAdmin<T>(
     throw new Error("Sessao invalida. Faca login novamente.");
   }
 
+  const hasBody = body !== undefined;
+  const headers: Record<string, string> = {
+    Authorization: `Bearer ${token}`
+  };
+
+  if (hasBody) {
+    headers["Content-Type"] = "application/json";
+  }
+
   const response = await fetch(`${getBackendUrl()}${path}`, {
     method,
     cache: "no-store",
-    headers: {
-      "Content-Type": "application/json",
-      Authorization: `Bearer ${token}`
-    },
-    body: body ? JSON.stringify(body) : undefined
+    headers,
+    body: hasBody ? JSON.stringify(body) : undefined
   });
 
   if (!response.ok) {
     const payload = (await response.json().catch(() => ({}))) as AdminErrorResponse;
-    throw new Error(payload.message || "Falha na operacao administrativa.");
+    const error = new Error(payload.message || "Falha na operacao administrativa.") as Error & { statusCode?: number };
+    error.statusCode = response.status;
+    throw error;
   }
 
   if (method === "DELETE") {
@@ -104,7 +112,9 @@ async function getAdminData<T>(path: string): Promise<T> {
 
   if (!response.ok) {
     const payload = (await response.json().catch(() => ({}))) as AdminErrorResponse;
-    throw new Error(payload.message || "Falha na consulta administrativa.");
+    const error = new Error(payload.message || "Falha na consulta administrativa.") as Error & { statusCode?: number };
+    error.statusCode = response.status;
+    throw error;
   }
 
   return (await response.json()) as T;

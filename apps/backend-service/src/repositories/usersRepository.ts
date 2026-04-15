@@ -1,5 +1,5 @@
 import { createServerClient } from "@hotel/shared";
-import { isSupabaseConflictError, isSupabaseNotFoundError } from "./supabaseError";
+import { isSupabaseConflictError, isSupabaseForeignKeyError, isSupabaseNotFoundError } from "./supabaseError";
 
 export type UserWriteResult = "ok" | "conflict" | "not-found";
 
@@ -13,6 +13,7 @@ export type UserRoleLookupRow = {
 
 export type UserRoleRelationRow = {
   role_id?: string | null;
+  hotels?: { name: string | null } | Array<{ name: string | null }> | null;
   roles?:
     | {
         id?: string | null;
@@ -208,7 +209,7 @@ class SupabaseUsersRepository implements UsersRepository {
     const supabase = createServerClient();
     const { data, error } = await supabase
       .from("users")
-      .select("id,name,email,is_active,last_login_at,created_at,user_roles(role_id,hotel_id,roles(id,name,role_type,hotel_id,hotels(name)))")
+      .select("id,name,email,is_active,last_login_at,created_at,user_roles(role_id,hotel_id,hotels(name),roles(id,name,role_type,hotel_id,hotels(name)))")
       .order("created_at", { ascending: false });
 
     if (error) {
@@ -291,7 +292,7 @@ class SupabaseUsersRepository implements UsersRepository {
     const supabase = createServerClient();
     const { data, error } = await supabase
       .from("users")
-      .select("id,name,email,is_active,last_login_at,created_at,user_roles(role_id,hotel_id,roles(id,name,role_type,hotel_id,hotels(name)))")
+      .select("id,name,email,is_active,last_login_at,created_at,user_roles(role_id,hotel_id,hotels(name),roles(id,name,role_type,hotel_id,hotels(name)))")
       .eq("id", id)
       .single();
 
@@ -392,6 +393,10 @@ class SupabaseUsersRepository implements UsersRepository {
     const { data, error } = await supabase.from("users").delete().eq("id", id).select("id");
 
     if (error) {
+      if (isSupabaseForeignKeyError(error) || isSupabaseConflictError(error)) {
+        return "conflict";
+      }
+
       throw error;
     }
 

@@ -337,6 +337,10 @@ export function registerUserRoutes(app: FastifyInstance, repository: UsersReposi
       return reply.status(404).send({ message: "Usuario nao encontrado." });
     }
 
+    if (deleteResult === "conflict") {
+      return reply.status(409).send({ message: "Usuario nao pode ser excluido: possui dependencias ativas." });
+    }
+
     return reply.send({ ok: true });
   });
 }

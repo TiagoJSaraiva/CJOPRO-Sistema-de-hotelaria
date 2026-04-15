@@ -117,6 +117,14 @@ describe("lib/adminApi", () => {
     const result = await deleteHotel("hotel-1");
 
     expect(result).toBeNull();
+    expect(fetchMock).toHaveBeenCalledWith("http://localhost:3334/admin/hotels/hotel-1", {
+      method: "DELETE",
+      cache: "no-store",
+      headers: {
+        Authorization: "Bearer token-123"
+      },
+      body: undefined
+    });
   });
 
   it("getUsersReferenceData falha com mensagem padrao quando backend responde erro sem payload", async () => {

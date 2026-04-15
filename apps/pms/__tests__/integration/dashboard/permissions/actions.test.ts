@@ -117,4 +117,16 @@ describe("dashboard/permissions/actions", () => {
 
     expect(deletePermissionMock).toHaveBeenCalledWith("perm-1");
   });
+
+  it("redireciona com delete_conflict quando API sinaliza dependencias ativas", async () => {
+    getUserFromSessionMock.mockResolvedValueOnce({ permissions: [PERMISSIONS.PERMISSION_DELETE] });
+    deletePermissionMock.mockRejectedValueOnce(new Error("Permissao nao pode ser excluida: possui dependencias ativas."));
+
+    const formData = new FormData();
+    formData.set("id", "perm-1");
+
+    await expect(deletePermissionAction(formData)).rejects.toThrow(
+      redirectPattern("/dashboard/permissions/view\\?status=delete_conflict")
+    );
+  });
 });

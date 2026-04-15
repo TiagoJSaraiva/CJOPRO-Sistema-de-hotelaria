@@ -1,5 +1,5 @@
 import { createServerClient } from "@hotel/shared";
-import { isSupabaseConflictError, isSupabaseNotFoundError } from "./supabaseError";
+import { isSupabaseConflictError, isSupabaseForeignKeyError, isSupabaseNotFoundError } from "./supabaseError";
 
 export type PermissionWriteResult = "ok" | "conflict" | "not-found";
 
@@ -73,6 +73,10 @@ class SupabasePermissionsRepository implements PermissionsRepository {
     const { data, error } = await supabase.from("permissions").delete().eq("id", id).select("id");
 
     if (error) {
+      if (isSupabaseForeignKeyError(error) || isSupabaseConflictError(error)) {
+        return "conflict";
+      }
+
       throw error;
     }
 

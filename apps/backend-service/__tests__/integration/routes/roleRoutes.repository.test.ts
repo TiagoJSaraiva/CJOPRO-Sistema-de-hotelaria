@@ -153,4 +153,61 @@ describe("routes/roles with injected repository", () => {
     expect(response.statusCode).toBe(409);
     expect(response.json()).toEqual({ message: "Nome de role ja existente." });
   });
+
+  it("retorna 409 quando delete de role sinaliza conflito", async () => {
+    const repository = createRolesRepositoryMock({
+      deleteRole: vi.fn(async () => "conflict")
+    });
+
+    const app = await createRolesTestApp(repository);
+
+    const response = await app.inject({
+      method: "DELETE",
+      url: "/admin/roles/role-1",
+      headers: {
+        authorization: `Bearer ${createToken([PERMISSIONS.ROLE_DELETE])}`
+      }
+    });
+
+    expect(response.statusCode).toBe(409);
+    expect(response.json()).toEqual({ message: "Role nao pode ser excluida: possui dependencias ativas." });
+  });
+
+  it("retorna 200 quando delete de role e concluido", async () => {
+    const repository = createRolesRepositoryMock({
+      deleteRole: vi.fn(async () => "ok")
+    });
+
+    const app = await createRolesTestApp(repository);
+
+    const response = await app.inject({
+      method: "DELETE",
+      url: "/admin/roles/role-1",
+      headers: {
+        authorization: `Bearer ${createToken([PERMISSIONS.ROLE_DELETE])}`
+      }
+    });
+
+    expect(response.statusCode).toBe(200);
+    expect(response.json()).toEqual({ ok: true });
+  });
+
+  it("retorna 404 quando role nao existe no delete", async () => {
+    const repository = createRolesRepositoryMock({
+      deleteRole: vi.fn(async () => "not-found")
+    });
+
+    const app = await createRolesTestApp(repository);
+
+    const response = await app.inject({
+      method: "DELETE",
+      url: "/admin/roles/role-inexistente",
+      headers: {
+        authorization: `Bearer ${createToken([PERMISSIONS.ROLE_DELETE])}`
+      }
+    });
+
+    expect(response.statusCode).toBe(404);
+    expect(response.json()).toEqual({ message: "Role nao encontrada." });
+  });
 });

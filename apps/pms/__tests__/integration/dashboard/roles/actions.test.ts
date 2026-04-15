@@ -36,7 +36,7 @@ import { createRoleAction, deleteRoleAction, updateRoleAction } from "../../../.
 
 describe("dashboard/roles/actions", () => {
   function redirectPattern(pathWithoutNonce: string): RegExp {
-    return new RegExp(`^REDIRECT:${pathWithoutNonce}(?:&r=[a-z0-9]+)?$`);
+    return new RegExp(`^REDIRECT:${pathWithoutNonce}(?:&detail=[^&]+)?(?:&r=[a-z0-9]+)?$`);
   }
 
   beforeEach(() => {
@@ -118,5 +118,39 @@ describe("dashboard/roles/actions", () => {
 
     await expect(deleteRoleAction(formData)).rejects.toThrow(redirectPattern("/dashboard/roles/view\\?status=deleted"));
     expect(deleteRoleMock).toHaveBeenCalledWith("role-1");
+  });
+
+  it("redireciona com delete_conflict quando API sinaliza dependencias ativas", async () => {
+    getUserFromSessionMock.mockResolvedValueOnce({ permissions: [PERMISSIONS.ROLE_DELETE] });
+    deleteRoleMock.mockRejectedValueOnce(new Error("Role nao pode ser excluida: possui dependencias ativas."));
+
+    const formData = new FormData();
+    formData.set("id", "role-1");
+
+    await expect(deleteRoleAction(formData)).rejects.toThrow(redirectPattern("/dashboard/roles/view\\?status=delete_conflict"));
+  });
+
+  it("redireciona com delete_not_found quando API retorna 404", async () => {
+    getUserFromSessionMock.mockResolvedValueOnce({ permissions: [PERMISSIONS.ROLE_DELETE] });
+    const error = new Error("Role nao encontrada.") as Error & { statusCode?: number };
+    error.statusCode = 404;
+    deleteRoleMock.mockRejectedValueOnce(error);
+
+    const formData = new FormData();
+    formData.set("id", "role-inexistente");
+
+    await expect(deleteRoleAction(formData)).rejects.toThrow(redirectPattern("/dashboard/roles/view\\?status=delete_not_found"));
+  });
+
+  it("redireciona com delete_error e detalhe quando erro e inesperado", async () => {
+    getUserFromSessionMock.mockResolvedValueOnce({ permissions: [PERMISSIONS.ROLE_DELETE] });
+    deleteRoleMock.mockRejectedValueOnce(new Error("timeout ao chamar backend"));
+
+    const formData = new FormData();
+    formData.set("id", "role-1");
+
+    await expect(deleteRoleAction(formData)).rejects.toThrow(
+      /^REDIRECT:\/dashboard\/roles\/view\?status=delete_error&detail=timeout%20ao%20chamar%20backend(?:&r=[a-z0-9]+)?$/
+    );
   });
 });

@@ -1,10 +1,11 @@
 "use client";
 
 import { useMemo, useState, type ReactNode } from "react";
-import { ADMIN_ROLE_TYPES, type AdminHotelOption, type AdminRoleOption, type AdminUser } from "@hotel/shared";
+import { type AdminHotelOption, type AdminRoleOption, type AdminUser } from "@hotel/shared";
 import { UserListItem } from "./UserListItem";
 import { DEFAULT_USER_VIEW_FILTERS, applyUserViewFilters, countAppliedUserFilters, type UserViewFilters } from "./userViewFilters";
 import { ViewFiltersActionsBar, ViewFiltersModal, viewFiltersFieldStyle } from "../../_components/ViewFiltersBase";
+import { formatRoleOptionLabel } from "./userRoleLabels";
 
 type UsersViewFilterableSectionProps = {
   users: AdminUser[];
@@ -20,11 +21,7 @@ type UsersViewFilterableSectionProps = {
 };
 
 function getRoleLabel(role: AdminRoleOption): string {
-  if (role.role_type === ADMIN_ROLE_TYPES.SYSTEM) {
-    return `${role.name} (SYSTEM ROLE)`;
-  }
-
-  return `${role.name} (${role.hotel_name || "GENERICA"})`;
+  return formatRoleOptionLabel(role);
 }
 
 export function UsersViewFilterableSection({

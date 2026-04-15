@@ -1,6 +1,6 @@
 import { createServerClient } from "@hotel/shared";
 import type { AdminHotel } from "@hotel/shared";
-import { isSupabaseConflictError, isSupabaseNotFoundError } from "./supabaseError";
+import { isSupabaseConflictError, isSupabaseForeignKeyError, isSupabaseNotFoundError } from "./supabaseError";
 
 const HOTEL_SELECT_FIELDS =
   "id,name,legal_name,tax_id,email,phone,address_line,address_number,address_complement,district,city,state,country,zip_code,timezone,currency,slug,is_active,created_at,updated_at";
@@ -65,6 +65,10 @@ class SupabaseHotelsRepository implements HotelsRepository {
     const { data, error } = await supabase.from("hotels").delete().eq("id", id).select("id");
 
     if (error) {
+      if (isSupabaseForeignKeyError(error) || isSupabaseConflictError(error)) {
+        return "conflict";
+      }
+
       throw error;
     }
 

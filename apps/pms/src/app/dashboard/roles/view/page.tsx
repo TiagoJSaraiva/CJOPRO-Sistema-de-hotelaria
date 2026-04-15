@@ -9,6 +9,7 @@ import { RolesViewFilterableSection } from "../_components/RolesViewFilterableSe
 type RolesViewPageProps = {
   searchParams?: {
     status?: string;
+    detail?: string;
     roleId?: string;
     mode?: string;
   };
@@ -45,7 +46,7 @@ export default async function RolesViewPage({ searchParams }: RolesViewPageProps
     <section style={{ display: "grid", gap: "1rem" }}>
       <section>
         <h1 style={{ marginTop: 0, marginBottom: "0.35rem", fontSize: "3rem", marginLeft: "1rem" }}>Roles</h1>
-        <RoleStatusMessage status={searchParams?.status} />
+        <RoleStatusMessage status={searchParams?.status} detail={searchParams?.detail} />
       </section>
 
       <RolesViewFilterableSection

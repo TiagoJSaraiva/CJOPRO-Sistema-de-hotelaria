@@ -26,6 +26,23 @@ function redirectWithStatus(status: string, section: "create" | "view" | "root" 
   redirect(`/dashboard/permissions/${section}?status=${status}&r=${nonce}`);
 }
 
+function isDeleteConflictError(error: unknown): boolean {
+  if (typeof error === "object" && error !== null && "statusCode" in error) {
+    const statusCode = Number((error as { statusCode?: unknown }).statusCode);
+
+    if (statusCode === 409) {
+      return true;
+    }
+  }
+
+  if (!(error instanceof Error)) {
+    return false;
+  }
+
+  const message = error.message.toLowerCase();
+  return message.includes("dependencias ativas") || message.includes("nao pode ser exclu");
+}
+
 function normalizePermissionType(rawValue: FormDataEntryValue | null): AdminPermissionType | null {
   const parsed = String(rawValue || "").trim();
 
@@ -103,7 +120,11 @@ export async function deletePermissionAction(formData: FormData): Promise<void> 
 
   try {
     await deletePermission(id);
-  } catch {
+  } catch (error) {
+    if (isDeleteConflictError(error)) {
+      redirectWithStatus("delete_conflict", "view");
+    }
+
     redirectWithStatus("delete_error", "view");
   }
 

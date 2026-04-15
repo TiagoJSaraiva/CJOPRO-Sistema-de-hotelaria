@@ -122,4 +122,14 @@ describe("dashboard/users/actions", () => {
     await expect(deleteUserAction(formData)).rejects.toThrow(redirectPattern("/dashboard/users/view\\?status=deleted"));
     expect(deleteUserMock).toHaveBeenCalledWith("user-1");
   });
+
+  it("redireciona com delete_conflict quando API sinaliza dependencias ativas", async () => {
+    getUserFromSessionMock.mockResolvedValueOnce({ permissions: [PERMISSIONS.USER_DELETE] });
+    deleteUserMock.mockRejectedValueOnce(new Error("Usuario nao pode ser excluido: possui dependencias ativas."));
+
+    const formData = new FormData();
+    formData.set("id", "user-1");
+
+    await expect(deleteUserAction(formData)).rejects.toThrow(redirectPattern("/dashboard/users/view\\?status=delete_conflict"));
+  });
 });

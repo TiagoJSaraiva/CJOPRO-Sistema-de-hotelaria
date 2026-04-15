@@ -400,6 +400,10 @@ export function registerHotelRoutes(app: FastifyInstance, repository: HotelsRepo
       return reply.status(404).send({ message: "Hotel nao encontrado." });
     }
 
+    if (deleteResult === "conflict") {
+      return reply.status(409).send({ message: "Hotel nao pode ser excluido: possui dependencias ativas." });
+    }
+
     return reply.send({ ok: true });
   });
 }

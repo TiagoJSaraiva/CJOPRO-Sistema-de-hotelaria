@@ -62,14 +62,54 @@ function getRedirectNonce(): string {
   return Date.now().toString(36);
 }
 
-function redirectWithStatus(status: string, section: "create" | "view" | "root" = "root"): never {
+function redirectWithStatus(status: string, section: "create" | "view" | "root" = "root", detail?: string): never {
   const nonce = getRedirectNonce();
+  const detailParam = detail ? `&detail=${encodeURIComponent(detail.slice(0, 220))}` : "";
 
   if (section === "root") {
-    redirect(`/dashboard/roles?status=${status}&r=${nonce}`);
+    redirect(`/dashboard/roles?status=${status}${detailParam}&r=${nonce}`);
   }
 
-  redirect(`/dashboard/roles/${section}?status=${status}&r=${nonce}`);
+  redirect(`/dashboard/roles/${section}?status=${status}${detailParam}&r=${nonce}`);
+}
+
+function isDeleteConflictError(error: unknown): boolean {
+  if (typeof error === "object" && error !== null && "statusCode" in error) {
+    const statusCode = Number((error as { statusCode?: unknown }).statusCode);
+
+    if (statusCode === 409) {
+      return true;
+    }
+  }
+
+  if (!(error instanceof Error)) {
+    return false;
+  }
+
+  const message = error.message.toLowerCase();
+  return message.includes("dependencias ativas") || message.includes("nao pode ser exclu");
+}
+
+function getErrorStatusCode(error: unknown): number | null {
+  if (typeof error !== "object" || error === null || !("statusCode" in error)) {
+    return null;
+  }
+
+  const parsed = Number((error as { statusCode?: unknown }).statusCode);
+  return Number.isFinite(parsed) ? parsed : null;
+}
+
+function getErrorMessage(error: unknown): string {
+  if (error instanceof Error && error.message.trim()) {
+    return error.message.trim();
+  }
+
+  return "Falha inesperada ao comunicar com o backend.";
+}
+
+function isNetworkError(error: unknown): boolean {
+  const message = getErrorMessage(error).toLowerCase();
+  return message.includes("fetch failed") || message.includes("failed to fetch") || message.includes("network");
 }
 
 export async function createRoleAction(formData: FormData): Promise<void> {
@@ -143,15 +183,44 @@ export async function deleteRoleAction(formData: FormData): Promise<void> {
   const id = String(formData.get("id") || "").trim();
 
   if (!id) {
+    console.warn("[roles/deleteRoleAction] id ausente no formData");
     redirectWithStatus("delete_missing_id", "view");
   }
 
+  console.info("[roles/deleteRoleAction] iniciando exclusao", { id });
+
   try {
     await deleteRole(id);
-  } catch {
-    redirectWithStatus("delete_error", "view");
+  } catch (error) {
+    const statusCode = getErrorStatusCode(error);
+    const message = getErrorMessage(error);
+
+    console.error("[roles/deleteRoleAction] falha ao excluir", {
+      id,
+      statusCode,
+      message
+    });
+
+    if (statusCode === 404) {
+      redirectWithStatus("delete_not_found", "view", message);
+    }
+
+    if (statusCode === 401 || statusCode === 403) {
+      redirectWithStatus("forbidden", "view", message);
+    }
+
+    if (isDeleteConflictError(error)) {
+      redirectWithStatus("delete_conflict", "view", message);
+    }
+
+    if (isNetworkError(error)) {
+      redirectWithStatus("delete_error_network", "view", message);
+    }
+
+    redirectWithStatus("delete_error", "view", message);
   }
 
   revalidateRolePages();
+  console.info("[roles/deleteRoleAction] exclusao concluida", { id });
   redirectWithStatus("deleted", "view");
 }

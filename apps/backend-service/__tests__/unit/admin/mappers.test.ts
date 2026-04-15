@@ -18,6 +18,7 @@ describe("admin/mappers", () => {
       user_roles: [
         {
           hotel_id: "hotel-fallback",
+          hotels: { name: "Hotel Reserva" },
           roles: {
             id: "role-1",
             name: "Administrador",
@@ -31,6 +32,7 @@ describe("admin/mappers", () => {
           }
         },
         {
+          hotels: { name: "Hotel Azul" },
           roles: {
             id: "role-2",
             name: "Gestor",
@@ -118,7 +120,10 @@ describe("admin/mappers", () => {
       last_login_at: null,
       created_at: "2025-01-01T00:00:00.000Z",
       user_roles: [
-        { roles: { id: "role-1", name: "Gestor", role_type: "SYSTEM_ROLE", hotel_id: null, hotels: { name: null } } },
+        {
+          hotels: { name: "Hotel Central" },
+          roles: { id: "role-1", name: "Gestor", role_type: "SYSTEM_ROLE", hotel_id: null, hotels: { name: null } }
+        },
         { roles: null }
       ]
     });
@@ -136,7 +141,9 @@ describe("admin/mappers", () => {
           role_name: "Gestor",
           role_type: "SYSTEM_ROLE",
           hotel_id: null,
-          hotel_name: null
+          hotel_name: "Hotel Central",
+          role_hotel_id: null,
+          role_hotel_name: null
         }
       ]
     });
