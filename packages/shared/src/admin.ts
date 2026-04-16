@@ -196,11 +196,7 @@ export type AdminPermission = {
   type: AdminPermissionType;
 };
 
-export type AdminPermissionOption = {
-  id: string;
-  name: string;
-  type: AdminPermissionType;
-};
+export type AdminPermissionOption = AdminPermission;
 
 export type AdminPermissionCreateInput = {
   name: string;

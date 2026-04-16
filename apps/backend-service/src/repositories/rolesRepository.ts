@@ -1,4 +1,4 @@
-import { createServerClient } from "@hotel/shared";
+import { createServerClient } from "../common/supabaseServer";
 import { isSupabaseConflictError, isSupabaseForeignKeyError, isSupabaseNotFoundError } from "./supabaseError";
 
 export type RoleWriteResult = "ok" | "conflict" | "not-found";

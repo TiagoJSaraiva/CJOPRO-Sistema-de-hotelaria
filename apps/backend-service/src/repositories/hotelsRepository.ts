@@ -1,5 +1,5 @@
-import { createServerClient } from "@hotel/shared";
 import type { AdminHotel } from "@hotel/shared";
+import { createServerClient } from "../common/supabaseServer";
 import { isSupabaseConflictError, isSupabaseForeignKeyError, isSupabaseNotFoundError } from "./supabaseError";
 
 const HOTEL_SELECT_FIELDS =

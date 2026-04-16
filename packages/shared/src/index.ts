@@ -4,4 +4,3 @@ export * from "./auth";
 export * from "./permissions";
 export * from "./admin";
 export * from "./validation";
-export * from "./lib/supabaseServer";

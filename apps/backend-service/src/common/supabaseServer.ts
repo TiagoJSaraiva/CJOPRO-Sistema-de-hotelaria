@@ -24,8 +24,5 @@ function getRequiredSupabaseAdminKey(): string {
 
 // Uso apenas no backend-service, com chave administrativa.
 export const createServerClient = () => {
-  return createClient(
-    getRequiredEnvVar("SUPABASE_URL"),
-    getRequiredSupabaseAdminKey()
-  );
+  return createClient(getRequiredEnvVar("SUPABASE_URL"), getRequiredSupabaseAdminKey());
 };

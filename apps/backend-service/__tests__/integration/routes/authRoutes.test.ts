@@ -1,16 +1,12 @@
 import { afterAll, beforeAll, beforeEach, describe, expect, it, vi } from "vitest";
 import type { FastifyInstance } from "fastify";
 
-vi.mock("@hotel/shared", async () => {
-  const actual = await vi.importActual<typeof import("@hotel/shared")>("@hotel/shared");
+vi.mock("../../../src/common/supabaseServer", () => ({
+  createServerClient: vi.fn()
+}));
 
-  return {
-    ...actual,
-    createServerClient: vi.fn()
-  };
-});
-
-import { ACTIVE_HOTEL_HEADER_NAME, AUTH_ERROR_CODE, PERMISSIONS, createServerClient, type SessionPayload } from "@hotel/shared";
+import { ACTIVE_HOTEL_HEADER_NAME, AUTH_ERROR_CODE, PERMISSIONS, type SessionPayload } from "@hotel/shared";
+import { createServerClient } from "../../../src/common/supabaseServer";
 import { createApp } from "../../../src/app";
 import { hashTemporaryPassword, signToken, verifyToken } from "../../../src/auth/session";
 

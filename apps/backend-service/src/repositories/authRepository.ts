@@ -1,4 +1,4 @@
-import { createServerClient } from "@hotel/shared";
+import { createServerClient } from "../common/supabaseServer";
 import { isSupabaseNotFoundError } from "./supabaseError";
 
 export type AuthUserRolePermissionRow = {
