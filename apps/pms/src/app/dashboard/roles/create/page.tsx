@@ -25,8 +25,8 @@ export default async function RolesCreatePage({ searchParams }: RolesCreatePageP
     }
 
     return (
-      <section style={{ background: "#fff", border: "1px solid #e2e2e2", borderRadius: "12px", padding: "1rem" }}>
-        <h2 style={{ marginTop: 0 }}>Roles</h2>
+      <section className="pms-surface-card">
+        <h2 className="mt-0">Roles</h2>
         <p>Sem permissao para criar role.</p>
       </section>
     );
@@ -35,9 +35,9 @@ export default async function RolesCreatePage({ searchParams }: RolesCreatePageP
   const referenceData = await getRolesReferenceData().catch(() => ({ hotels: [], permissions: [] }));
 
   return (
-    <section style={{ display: "grid", gap: "1rem" }}>
+    <section className="pms-page-stack">
       <section>
-        <h1 style={{ marginTop: 0, marginBottom: "0.35rem", fontSize: "3rem", marginLeft: "1rem" }}>Roles</h1>
+        <h1 className="pms-page-title">Roles</h1>
         <PermissionTabs
           activeKey="create"
           items={[

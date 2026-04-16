@@ -28,5 +28,5 @@ export function RoleStatusMessage({ status, detail }: RoleStatusMessageProps) {
   const showDetail = isError && !!detail;
   const renderedText = showDetail ? `${statusMessages[status]} Detalhe tecnico: ${detail}` : statusMessages[status];
 
-  return <p style={{ marginBottom: 0, color: isError ? "#b00020" : "#1f6f51" }}>{renderedText}</p>;
+  return <p className={`mb-0 ${isError ? "text-[#b00020]" : "text-[#1f6f51]"}`}>{renderedText}</p>;
 }

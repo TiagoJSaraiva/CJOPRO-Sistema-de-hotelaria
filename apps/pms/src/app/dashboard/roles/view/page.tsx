@@ -27,8 +27,8 @@ export default async function RolesViewPage({ searchParams }: RolesViewPageProps
     }
 
     return (
-      <section style={{ background: "#fff", border: "1px solid #e2e2e2", borderRadius: "12px", padding: "1rem" }}>
-        <h2 style={{ marginTop: 0 }}>Roles</h2>
+      <section className="pms-surface-card">
+        <h2 className="mt-0">Roles</h2>
         <p>Sem permissao para visualizar roles.</p>
       </section>
     );
@@ -44,9 +44,9 @@ export default async function RolesViewPage({ searchParams }: RolesViewPageProps
   const currentUserRoleIds = Array.from(new Set((user?.roleAssignments || []).map((assignment) => assignment.roleId).filter(Boolean)));
 
   return (
-    <section style={{ display: "grid", gap: "1rem" }}>
+    <section className="pms-page-stack">
       <section>
-        <h1 style={{ marginTop: 0, marginBottom: "0.35rem", fontSize: "3rem", marginLeft: "1rem" }}>Roles</h1>
+        <h1 className="pms-page-title">Roles</h1>
         <RoleStatusMessage status={searchParams?.status} detail={searchParams?.detail} />
       </section>
 

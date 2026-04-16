@@ -4,7 +4,7 @@ import { useMemo, useState, type ReactNode } from "react";
 import { ADMIN_ROLE_TYPES, type AdminHotelOption, type AdminPermissionOption, type AdminRole } from "@hotel/shared";
 import { RoleListItem } from "./RoleListItem";
 import { DEFAULT_ROLE_VIEW_FILTERS, applyRoleViewFilters, countAppliedRoleFilters, type RoleViewFilters } from "./roleViewFilters";
-import { ViewFiltersActionsBar, ViewFiltersModal, viewFiltersFieldStyle } from "../../_components/ViewFiltersBase";
+import { ViewFiltersActionsBar, ViewFiltersModal, viewFiltersFieldClassName } from "../../_components/ViewFiltersBase";
 
 type RolesViewFilterableSectionProps = {
   roles: AdminRole[];
@@ -63,16 +63,16 @@ export function RolesViewFilterableSection({
   };
 
   return (
-    <section style={{ display: "grid", gap: "0.85rem" }}>
+    <section className="grid gap-[0.85rem]">
       <ViewFiltersActionsBar appliedFilterCount={appliedFilterCount} onOpen={openModal} onClear={handleClear}>
         {children}
       </ViewFiltersActionsBar>
 
-      <p style={{ margin: 0, color: "#475467" }}>
+      <p className="pms-status-muted">
         Exibindo {filteredRoles.length} de {roles.length} roles.
       </p>
 
-      <section style={{ display: "grid", gap: "0.75rem" }}>
+      <section className="grid gap-[0.75rem]">
         {filteredRoles.length ? (
           filteredRoles.map((item) => (
             <RoleListItem
@@ -89,7 +89,7 @@ export function RolesViewFilterableSection({
             />
           ))
         ) : (
-          <article style={{ background: "#fff", border: "1px solid #e2e2e2", borderRadius: "12px", padding: "1rem", color: "#666" }}>
+          <article className="pms-empty-state">
             {appliedFilterCount ? "Nenhuma role corresponde aos filtros aplicados." : "Nenhuma role cadastrada ate o momento."}
           </article>
         )}
@@ -102,23 +102,23 @@ export function RolesViewFilterableSection({
         onApply={handleApply}
         onClear={handleClear}
       >
-        <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(220px, 1fr))", gap: "0.75rem" }}>
-          <label style={{ display: "grid", gap: "0.35rem" }}>
+        <div className="grid grid-cols-[repeat(auto-fit,minmax(220px,1fr))] gap-[0.75rem]">
+          <label className="pms-field">
             <span>Nome da role</span>
             <input
               value={draftFilters.search}
               onChange={(event) => updateDraft("search", event.target.value)}
               placeholder="Ex.: admin"
-              style={viewFiltersFieldStyle}
+              className={viewFiltersFieldClassName}
             />
           </label>
 
-          <label style={{ display: "grid", gap: "0.35rem" }}>
+          <label className="pms-field">
             <span>Tipo da role</span>
             <select
               value={draftFilters.roleType}
               onChange={(event) => updateDraft("roleType", event.target.value as RoleViewFilters["roleType"])}
-              style={viewFiltersFieldStyle}
+              className={viewFiltersFieldClassName}
             >
               <option value="">Todos</option>
               <option value={ADMIN_ROLE_TYPES.SYSTEM}>SYSTEM ROLE</option>
@@ -126,9 +126,9 @@ export function RolesViewFilterableSection({
             </select>
           </label>
 
-          <label style={{ display: "grid", gap: "0.35rem" }}>
+          <label className="pms-field">
             <span>Hotel</span>
-            <select value={draftFilters.hotelId} onChange={(event) => updateDraft("hotelId", event.target.value)} style={viewFiltersFieldStyle}>
+            <select value={draftFilters.hotelId} onChange={(event) => updateDraft("hotelId", event.target.value)} className={viewFiltersFieldClassName}>
               <option value="">Todos</option>
               {hotels.map((hotel) => (
                 <option key={hotel.id} value={hotel.id}>
@@ -138,9 +138,9 @@ export function RolesViewFilterableSection({
             </select>
           </label>
 
-          <label style={{ display: "grid", gap: "0.35rem" }}>
+          <label className="pms-field">
             <span>Permissao vinculada</span>
-            <select value={draftFilters.permissionId} onChange={(event) => updateDraft("permissionId", event.target.value)} style={viewFiltersFieldStyle}>
+            <select value={draftFilters.permissionId} onChange={(event) => updateDraft("permissionId", event.target.value)} className={viewFiltersFieldClassName}>
               <option value="">Todas</option>
               {permissions.map((permission) => (
                 <option key={permission.id} value={permission.id}>

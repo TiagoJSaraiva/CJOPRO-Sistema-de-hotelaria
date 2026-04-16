@@ -16,5 +16,5 @@ export function LoginErrorMessage() {
     return null;
   }
 
-  return <p style={{ color: "#b00020", marginBottom: "1rem" }}>{errorMessages[error]}</p>;
+  return <p className="mb-4 text-[#b00020]">{errorMessages[error]}</p>;
 }

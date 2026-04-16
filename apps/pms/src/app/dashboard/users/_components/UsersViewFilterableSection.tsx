@@ -4,7 +4,7 @@ import { useMemo, useState, type ReactNode } from "react";
 import { type AdminHotelOption, type AdminRoleOption, type AdminUser } from "@hotel/shared";
 import { UserListItem } from "./UserListItem";
 import { DEFAULT_USER_VIEW_FILTERS, applyUserViewFilters, countAppliedUserFilters, type UserViewFilters } from "./userViewFilters";
-import { ViewFiltersActionsBar, ViewFiltersModal, viewFiltersFieldStyle } from "../../_components/ViewFiltersBase";
+import { ViewFiltersActionsBar, ViewFiltersModal, viewFiltersFieldClassName } from "../../_components/ViewFiltersBase";
 import { formatRoleOptionLabel } from "./userRoleLabels";
 
 type UsersViewFilterableSectionProps = {
@@ -72,16 +72,16 @@ export function UsersViewFilterableSection({
   };
 
   return (
-    <section style={{ display: "grid", gap: "0.85rem" }}>
+    <section className="grid gap-[0.85rem]">
       <ViewFiltersActionsBar appliedFilterCount={appliedFilterCount} onOpen={openModal} onClear={handleClearFilters}>
         {children}
       </ViewFiltersActionsBar>
 
-      <p style={{ margin: 0, color: "#475467" }}>
+      <p className="pms-status-muted">
         Exibindo {filteredUsers.length} de {users.length} usuarios.
       </p>
 
-      <section style={{ display: "grid", gap: "0.75rem" }}>
+      <section className="grid gap-[0.75rem]">
         {filteredUsers.length ? (
           filteredUsers.map((item) => (
             <UserListItem
@@ -98,7 +98,7 @@ export function UsersViewFilterableSection({
             />
           ))
         ) : (
-          <article style={{ background: "#fff", border: "1px solid #e2e2e2", borderRadius: "12px", padding: "1rem", color: "#666" }}>
+          <article className="pms-empty-state">
             {appliedFilterCount ? "Nenhum usuario corresponde aos filtros aplicados." : "Nenhum usuario cadastrado ate o momento."}
           </article>
         )}
@@ -111,29 +111,33 @@ export function UsersViewFilterableSection({
         onApply={handleApplyFilters}
         onClear={handleClearFilters}
       >
-        <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(220px, 1fr))", gap: "0.75rem" }}>
-          <label style={{ display: "grid", gap: "0.35rem" }}>
+        <div className="grid grid-cols-[repeat(auto-fit,minmax(220px,1fr))] gap-[0.75rem]">
+          <label className="pms-field">
             <span>Nome ou email</span>
             <input
               value={draftFilters.search}
               onChange={(event) => updateDraft("search", event.target.value)}
               placeholder="Ex.: maria ou hotel.com"
-              style={viewFiltersFieldStyle}
+              className={viewFiltersFieldClassName}
             />
           </label>
 
-          <label style={{ display: "grid", gap: "0.35rem" }}>
+          <label className="pms-field">
             <span>Status</span>
-            <select value={draftFilters.status} onChange={(event) => updateDraft("status", event.target.value as UserViewFilters["status"])} style={viewFiltersFieldStyle}>
+            <select
+              value={draftFilters.status}
+              onChange={(event) => updateDraft("status", event.target.value as UserViewFilters["status"])}
+              className={viewFiltersFieldClassName}
+            >
               <option value="all">Todos</option>
               <option value="active">Ativo</option>
               <option value="inactive">Inativo</option>
             </select>
           </label>
 
-          <label style={{ display: "grid", gap: "0.35rem" }}>
+          <label className="pms-field">
             <span>Hotel</span>
-            <select value={draftFilters.hotelId} onChange={(event) => updateDraft("hotelId", event.target.value)} style={viewFiltersFieldStyle}>
+            <select value={draftFilters.hotelId} onChange={(event) => updateDraft("hotelId", event.target.value)} className={viewFiltersFieldClassName}>
               <option value="">Todos</option>
               {hotels.map((hotel) => (
                 <option key={hotel.id} value={hotel.id}>
@@ -143,9 +147,9 @@ export function UsersViewFilterableSection({
             </select>
           </label>
 
-          <label style={{ display: "grid", gap: "0.35rem" }}>
+          <label className="pms-field">
             <span>Role</span>
-            <select value={draftFilters.roleId} onChange={(event) => updateDraft("roleId", event.target.value)} style={viewFiltersFieldStyle}>
+            <select value={draftFilters.roleId} onChange={(event) => updateDraft("roleId", event.target.value)} className={viewFiltersFieldClassName}>
               <option value="">Todas</option>
               {roles.map((role) => (
                 <option key={role.id} value={role.id}>
@@ -155,14 +159,14 @@ export function UsersViewFilterableSection({
             </select>
           </label>
 
-          <label style={{ display: "grid", gap: "0.35rem" }}>
+          <label className="pms-field">
             <span>Criado a partir de</span>
-            <input type="date" value={draftFilters.createdFrom} onChange={(event) => updateDraft("createdFrom", event.target.value)} style={viewFiltersFieldStyle} />
+            <input type="date" value={draftFilters.createdFrom} onChange={(event) => updateDraft("createdFrom", event.target.value)} className={viewFiltersFieldClassName} />
           </label>
 
-          <label style={{ display: "grid", gap: "0.35rem" }}>
+          <label className="pms-field">
             <span>Criado ate</span>
-            <input type="date" value={draftFilters.createdTo} onChange={(event) => updateDraft("createdTo", event.target.value)} style={viewFiltersFieldStyle} />
+            <input type="date" value={draftFilters.createdTo} onChange={(event) => updateDraft("createdTo", event.target.value)} className={viewFiltersFieldClassName} />
           </label>
         </div>
       </ViewFiltersModal>

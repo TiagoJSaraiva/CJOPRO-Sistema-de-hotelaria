@@ -86,7 +86,7 @@ export function CountryLocaleFields({ defaultCountryCode = "BR" }: CountryLocale
 
   return (
     <>
-      <div style={{ display: "grid", gap: "0.35rem" }}>
+      <div className="pms-field">
         <label htmlFor="create-country">Pais</label>
         <select
           id="create-country"
@@ -94,7 +94,7 @@ export function CountryLocaleFields({ defaultCountryCode = "BR" }: CountryLocale
           value={countryCode}
           onChange={handleCountryChange}
           required
-          style={{ border: "1px solid #d2d2d2", borderRadius: "8px", padding: "0.55rem" }}
+          className="pms-field-input"
         >
           {COUNTRY_OPTIONS.map((option) => (
             <option key={option.code} value={option.code}>
@@ -104,7 +104,7 @@ export function CountryLocaleFields({ defaultCountryCode = "BR" }: CountryLocale
         </select>
       </div>
 
-      <div style={{ display: "grid", gap: "0.35rem" }}>
+      <div className="pms-field">
         <label htmlFor="create-timezone">Timezone</label>
         <input
           id="create-timezone"
@@ -114,7 +114,7 @@ export function CountryLocaleFields({ defaultCountryCode = "BR" }: CountryLocale
           value={timezone}
           onChange={(event) => setTimezone(event.target.value)}
           onBlur={handleTimezoneBlur}
-          style={{ border: "1px solid #d2d2d2", borderRadius: "8px", padding: "0.55rem" }}
+          className="pms-field-input"
         />
         <datalist id="timezone-options">
           {ALL_TIMEZONES.map((timezoneOption) => (
@@ -123,7 +123,7 @@ export function CountryLocaleFields({ defaultCountryCode = "BR" }: CountryLocale
         </datalist>
       </div>
 
-      <div style={{ display: "grid", gap: "0.35rem" }}>
+      <div className="pms-field">
         <label htmlFor="create-currency">Moeda</label>
         <input
           id="create-currency"
@@ -133,7 +133,7 @@ export function CountryLocaleFields({ defaultCountryCode = "BR" }: CountryLocale
           value={currency}
           onChange={(event) => setCurrency(event.target.value.toUpperCase())}
           onBlur={handleCurrencyBlur}
-          style={{ border: "1px solid #d2d2d2", borderRadius: "8px", padding: "0.55rem" }}
+          className="pms-field-input"
         />
         <datalist id="currency-options">
           {ALL_CURRENCIES.map((currencyOption) => (

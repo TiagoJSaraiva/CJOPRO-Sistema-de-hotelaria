@@ -19,39 +19,22 @@ export function AdaptiveLoadingFallback({
 
   return (
     <div
-      className={className}
+      className={`grid w-full place-items-center p-4 text-center [container-type:inline-size] ${className ?? ""}`}
       style={{
         minHeight,
-        width: "100%",
-        display: "grid",
-        placeItems: "center",
-        textAlign: "center",
-        padding: "1rem",
-        containerType: "inline-size",
         ...style
       }}
       role="status"
       aria-live="polite"
     >
-      <div style={{ display: "grid", justifyItems: "center", gap: "0.6rem" }}>
+      <div className="grid justify-items-center gap-[0.6rem]">
         <span
           aria-hidden="true"
-          style={{
-            width: "1.15rem",
-            height: "1.15rem",
-            borderRadius: "999px",
-            border: "2px solid rgba(91, 100, 112, 0.25)",
-            borderTopColor: "#5b6470",
-            animation: "pms-spin 0.8s linear infinite"
-          }}
+          className="h-[1.15rem] w-[1.15rem] animate-[pms-spin_0.8s_linear_infinite] rounded-full border-2 border-[rgba(91,100,112,0.25)] border-t-[#5b6470]"
         />
         <p
+          className="m-0 text-[clamp(0.95rem,3.2cqi,1.5rem)] font-semibold tracking-[0.02em] text-[#5b6470]"
           style={{
-            margin: 0,
-            color: "#5b6470",
-            fontWeight: 600,
-            letterSpacing: "0.02em",
-            fontSize: "clamp(0.95rem, 3.2cqi, 1.5rem)",
             opacity: shouldDelayLabel ? 0 : 1,
             animation: shouldDelayLabel ? "pms-fade-in 140ms ease forwards" : undefined,
             animationDelay: shouldDelayLabel ? `${labelDelayMs}ms` : undefined

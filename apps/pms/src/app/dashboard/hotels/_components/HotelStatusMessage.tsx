@@ -23,5 +23,5 @@ export function HotelStatusMessage({ status }: HotelStatusMessageProps) {
 
   const isError = status.includes("error") || status.includes("forbidden") || status.includes("missing") || status.includes("conflict");
 
-  return <p style={{ marginBottom: 0, color: isError ? "#b00020" : "#1f6f51" }}>{statusMessages[status]}</p>;
+  return <p className={`mb-0 ${isError ? "text-[#b00020]" : "text-[#1f6f51]"}`}>{statusMessages[status]}</p>;
 }

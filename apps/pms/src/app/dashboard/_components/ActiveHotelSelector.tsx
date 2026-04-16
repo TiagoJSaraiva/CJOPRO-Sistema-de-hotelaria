@@ -44,22 +44,16 @@ export function ActiveHotelSelector({ options, initialHotelId, onChangeAction }:
   };
 
   return (
-    <label style={{ display: "inline-flex", alignItems: "center", gap: "0.35rem", color: "#3f3f3f", fontSize: "0.88rem" }}>
+    <label className="inline-flex items-center gap-[0.35rem] text-[0.88rem] text-[#3f3f3f]">
       Hotel
       <select
         name="hotelId"
         value={value}
         disabled={isPending}
         onChange={(event) => handleChange(event.target.value)}
-        style={{
-          minWidth: "200px",
-          border: "1px solid #d0d0d0",
-          background: "#fff",
-          borderRadius: "8px",
-          padding: "0.4rem 0.55rem",
-          cursor: isPending ? "wait" : "pointer",
-          color: "#222"
-        }}
+        className={`min-w-[200px] rounded-lg border border-[#d0d0d0] bg-white px-[0.55rem] py-[0.4rem] text-[#222] ${
+          isPending ? "cursor-wait" : "cursor-pointer"
+        }`}
       >
         {normalizedOptions.map((option) => (
           <option key={option.value} value={option.value}>

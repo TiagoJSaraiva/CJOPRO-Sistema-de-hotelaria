@@ -24,21 +24,21 @@ function UserDataPreview({ userItem }: { userItem: AdminUser }) {
   const lastLogin = userItem.last_login_at ? new Date(userItem.last_login_at).toLocaleString("pt-BR") : "-";
 
   return (
-    <div style={{ display: "grid", gap: "0.7rem", marginTop: "0.85rem" }}>
-      <p style={{ margin: 0 }}>
+    <div className="mt-[0.85rem] grid gap-[0.7rem]">
+      <p className="m-0">
         <strong>Status:</strong> {userItem.is_active ? "Ativo" : "Inativo"}
       </p>
-      <p style={{ margin: 0 }}>
+      <p className="m-0">
         <strong>Criado em:</strong> {createdAt}
       </p>
-      <p style={{ margin: 0 }}>
+      <p className="m-0">
         <strong>Ultimo acesso:</strong> {lastLogin}
       </p>
 
       <div>
         <strong>Papeis vinculados:</strong>
         {userItem.role_assignments.length ? (
-          <ul style={{ marginTop: "0.45rem", marginBottom: 0, paddingLeft: "1.1rem" }}>
+          <ul className="mb-0 mt-[0.45rem] pl-[1.1rem]">
             {userItem.role_assignments.map((assignment) => (
               <li key={`${assignment.role_id}-${assignment.hotel_id || "global"}`}>
                 {formatUserRoleAssignmentLabel(assignment)}
@@ -46,7 +46,7 @@ function UserDataPreview({ userItem }: { userItem: AdminUser }) {
             ))}
           </ul>
         ) : (
-          <p style={{ margin: "0.35rem 0 0", color: "#626c79" }}>Sem papeis vinculados.</p>
+          <p className="m-0 mt-[0.35rem] text-[#626c79]">Sem papeis vinculados.</p>
         )}
       </div>
     </div>
@@ -55,21 +55,21 @@ function UserDataPreview({ userItem }: { userItem: AdminUser }) {
 
 function UserEditForm({ userItem, hotels, roles }: { userItem: AdminUser; hotels: AdminHotelOption[]; roles: AdminRoleOption[] }) {
   return (
-    <form action={updateUserAction} style={{ display: "grid", gap: "0.65rem", marginTop: "0.85rem" }}>
+    <form action={updateUserAction} className="mt-[0.85rem] grid gap-[0.65rem]">
       <input type="hidden" name="id" value={userItem.id} />
 
-      <div style={{ display: "grid", gap: "0.35rem" }}>
+      <div className="pms-field">
         <label htmlFor={`name-${userItem.id}`}>Nome</label>
         <input
           id={`name-${userItem.id}`}
           name="name"
           defaultValue={userItem.name}
           required
-          style={{ border: "1px solid #d2d2d2", borderRadius: "8px", padding: "0.55rem" }}
+          className="pms-field-input"
         />
       </div>
 
-      <div style={{ display: "grid", gap: "0.35rem" }}>
+      <div className="pms-field">
         <label htmlFor={`email-${userItem.id}`}>Email</label>
         <input
           id={`email-${userItem.id}`}
@@ -77,32 +77,29 @@ function UserEditForm({ userItem, hotels, roles }: { userItem: AdminUser; hotels
           type="email"
           defaultValue={userItem.email}
           required
-          style={{ border: "1px solid #d2d2d2", borderRadius: "8px", padding: "0.55rem" }}
+          className="pms-field-input"
         />
       </div>
 
-      <div style={{ display: "grid", gap: "0.35rem" }}>
+      <div className="pms-field">
         <label htmlFor={`password-${userItem.id}`}>Nova senha temporaria (opcional)</label>
         <input
           id={`password-${userItem.id}`}
           name="password_hash"
           type="password"
           minLength={6}
-          style={{ border: "1px solid #d2d2d2", borderRadius: "8px", padding: "0.55rem" }}
+          className="pms-field-input"
         />
       </div>
 
       <UserRoleAssignmentsField hotels={hotels} roles={roles} defaultAssignments={userItem.role_assignments} />
 
-      <label style={{ display: "flex", alignItems: "center", gap: "0.5rem" }}>
+      <label className="flex items-center gap-2">
         <input name="is_active" type="checkbox" defaultChecked={userItem.is_active} />
         <span>Usuario ativo</span>
       </label>
 
-      <button
-        type="submit"
-        style={{ border: 0, background: "#1c6d4e", color: "#fff", borderRadius: "8px", padding: "0.55rem 0.75rem", cursor: "pointer", justifySelf: "start" }}
-      >
+      <button type="submit" className="justify-self-start rounded-lg border-0 bg-[#1c6d4e] px-[0.75rem] py-[0.55rem] text-white">
         Salvar alteracoes
       </button>
     </form>
@@ -116,26 +113,21 @@ export function UserListItem({ userItem, hotels, roles, canRead, canUpdate, canD
   const canDeleteThisUser = canDelete && !isCurrentUser;
 
   return (
-    <article style={{ background: "#fff", border: "1px solid #e2e2e2", borderRadius: "12px", padding: "0.95rem" }}>
-      <div style={{ display: "flex", justifyContent: "space-between", gap: "0.75rem", alignItems: "center", flexWrap: "wrap" }}>
+    <article className="rounded-xl border border-[#e2e2e2] bg-white p-[0.95rem]">
+      <div className="flex flex-wrap items-center justify-between gap-3">
         <div>
-          <h3 style={{ marginTop: 0, marginBottom: "0.2rem" }}>{userItem.name}</h3>
-          <p style={{ margin: 0, color: "#555" }}>{userItem.email}</p>
+          <h3 className="mb-[0.2rem] mt-0">{userItem.name}</h3>
+          <p className="m-0 text-[#555]">{userItem.email}</p>
         </div>
 
-        <div style={{ display: "flex", gap: "0.5rem", flexWrap: "wrap", alignItems: "center" }}>
+        <div className="flex flex-wrap items-center gap-2">
           {canRead ? (
             <Link
               href={viewHref}
               scroll={false}
-              style={{
-                textDecoration: "none",
-                border: "1px solid #2d6cdf",
-                color: "#1b4db3",
-                background: isViewing ? "#e9f0ff" : "#fff",
-                borderRadius: "8px",
-                padding: "0.45rem 0.65rem"
-              }}
+              className={`rounded-lg border border-[#2d6cdf] px-[0.65rem] py-[0.45rem] no-underline ${
+                isViewing ? "bg-[#e9f0ff] text-[#1b4db3]" : "bg-white text-[#1b4db3]"
+              }`}
             >
               Visualizar dados
             </Link>
@@ -145,14 +137,9 @@ export function UserListItem({ userItem, hotels, roles, canRead, canUpdate, canD
             <Link
               href={editHref}
               scroll={false}
-              style={{
-                textDecoration: "none",
-                border: "1px solid #0f766e",
-                color: "#0a5f58",
-                background: isEditing ? "#ddf5f2" : "#fff",
-                borderRadius: "8px",
-                padding: "0.45rem 0.65rem"
-              }}
+              className={`rounded-lg border border-[#0f766e] px-[0.65rem] py-[0.45rem] no-underline ${
+                isEditing ? "bg-[#ddf5f2] text-[#0a5f58]" : "bg-white text-[#0a5f58]"
+              }`}
             >
               Editar dados
             </Link>
@@ -163,7 +150,7 @@ export function UserListItem({ userItem, hotels, roles, canRead, canUpdate, canD
               <input type="hidden" name="id" value={userItem.id} />
               <button
                 type="submit"
-                style={{ border: "1px solid #c83a3a", background: "#fff", color: "#b00020", borderRadius: "8px", padding: "0.45rem 0.65rem", cursor: "pointer" }}
+                className="rounded-lg border border-[#c83a3a] bg-white px-[0.65rem] py-[0.45rem] text-[#b00020]"
               >
                 Apagar dados
               </button>

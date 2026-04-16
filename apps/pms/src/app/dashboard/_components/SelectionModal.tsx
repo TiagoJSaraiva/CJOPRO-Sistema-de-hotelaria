@@ -1,7 +1,5 @@
 "use client";
 
-import type { CSSProperties } from "react";
-
 type SelectionModalItem = {
   id: string;
   label: string;
@@ -17,27 +15,8 @@ type SelectionModalProps = {
   onClose: () => void;
 };
 
-const overlayStyle: CSSProperties = {
-  position: "fixed",
-  inset: 0,
-  background: "rgba(9, 18, 31, 0.45)",
-  display: "grid",
-  placeItems: "center",
-  zIndex: 1000,
-  padding: "1rem"
-};
-
-const panelStyle: CSSProperties = {
-  width: "min(620px, 100%)",
-  maxHeight: "75vh",
-  overflow: "auto",
-  background: "#fff",
-  borderRadius: "12px",
-  border: "1px solid #d9dfe7",
-  padding: "1rem",
-  display: "grid",
-  gap: "0.75rem"
-};
+const overlayClassName = "fixed inset-0 z-[1000] grid place-items-center bg-[rgba(9,18,31,0.45)] p-4";
+const panelClassName = "grid max-h-[75vh] w-full max-w-[620px] gap-[0.75rem] overflow-auto rounded-xl border border-[#d9dfe7] bg-white p-4";
 
 export function SelectionModal({ open, title, items, emptyMessage, onSelect, onClose }: SelectionModalProps) {
   if (!open) {
@@ -45,42 +24,35 @@ export function SelectionModal({ open, title, items, emptyMessage, onSelect, onC
   }
 
   return (
-    <div style={overlayStyle} role="dialog" aria-modal="true" aria-label={title}>
-      <section style={panelStyle}>
-        <header style={{ display: "flex", justifyContent: "space-between", gap: "0.75rem", alignItems: "center" }}>
-          <h3 style={{ margin: 0 }}>{title}</h3>
+    <div className={overlayClassName} role="dialog" aria-modal="true" aria-label={title}>
+      <section className={panelClassName}>
+        <header className="flex items-center justify-between gap-3">
+          <h3 className="m-0">{title}</h3>
           <button
             type="button"
             onClick={onClose}
-            style={{ border: "1px solid #d2d6db", borderRadius: "8px", background: "#fff", padding: "0.35rem 0.55rem", cursor: "pointer" }}
+            className="cursor-pointer rounded-lg border border-[#d2d6db] bg-white px-[0.55rem] py-[0.35rem]"
           >
             Fechar
           </button>
         </header>
 
         {items.length ? (
-          <div style={{ display: "grid", gap: "0.55rem" }}>
+          <div className="grid gap-[0.55rem]">
             {items.map((item) => (
               <button
                 key={item.id}
                 type="button"
                 onClick={() => onSelect(item.id)}
-                style={{
-                  textAlign: "left",
-                  border: "1px solid #d5dce7",
-                  background: "#f9fbff",
-                  borderRadius: "10px",
-                  padding: "0.6rem 0.75rem",
-                  cursor: "pointer"
-                }}
+                className="cursor-pointer rounded-[10px] border border-[#d5dce7] bg-[#f9fbff] px-[0.75rem] py-[0.6rem] text-left"
               >
                 <strong>{item.label}</strong>
-                {item.description ? <p style={{ margin: "0.25rem 0 0", color: "#526070" }}>{item.description}</p> : null}
+                {item.description ? <p className="m-0 mt-[0.25rem] text-[#526070]">{item.description}</p> : null}
               </button>
             ))}
           </div>
         ) : (
-          <p style={{ margin: 0, color: "#5f6b7a" }}>{emptyMessage}</p>
+          <p className="m-0 text-[#5f6b7a]">{emptyMessage}</p>
         )}
       </section>
     </div>

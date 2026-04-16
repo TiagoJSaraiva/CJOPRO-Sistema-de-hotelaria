@@ -26,8 +26,8 @@ export default async function UsersViewPage({ searchParams }: UsersViewPageProps
     }
 
     return (
-      <section style={{ background: "#fff", border: "1px solid #e2e2e2", borderRadius: "12px", padding: "1rem" }}>
-        <h2 style={{ marginTop: 0 }}>Usuarios</h2>
+      <section className="pms-surface-card">
+        <h2 className="mt-0">Usuarios</h2>
         <p>Sem permissao para visualizar usuarios.</p>
       </section>
     );
@@ -42,9 +42,9 @@ export default async function UsersViewPage({ searchParams }: UsersViewPageProps
   const mode = searchParams?.mode === "edit" ? "edit" : "view";
 
   return (
-    <section style={{ display: "grid", gap: "1rem" }}>
+    <section className="pms-page-stack">
       <section>
-        <h1 style={{ marginTop: 0, marginBottom: "0.35rem", fontSize: "3rem", marginLeft: "1rem" }}>Usuarios</h1>
+        <h1 className="pms-page-title">Usuarios</h1>
         <UserStatusMessage status={searchParams?.status} />
       </section>
 

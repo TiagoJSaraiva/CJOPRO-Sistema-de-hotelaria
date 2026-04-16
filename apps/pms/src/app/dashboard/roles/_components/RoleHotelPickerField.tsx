@@ -47,23 +47,18 @@ export function RoleHotelPickerField({
   }
 
   return (
-    <div style={{ display: "grid", gap: "0.45rem" }}>
+    <div className="grid gap-[0.45rem]">
 
-      <div style={{ display: "flex", gap: "0.55rem", flexWrap: "wrap", alignItems: "center" }}>
-        <span style={{ border: "1px solid #d5dbe5", borderRadius: "8px", background: "#fbfdff", padding: "0.45rem 0.65rem" }}>{selectedHotelName}</span>
+      <div className="flex flex-wrap items-center gap-[0.55rem]">
+        <span className="rounded-lg border border-[#d5dbe5] bg-[#fbfdff] px-[0.65rem] py-[0.45rem]">{selectedHotelName}</span>
 
         <button
           type="button"
           disabled={!canSelectHotel}
           onClick={() => setIsModalOpen(true)}
-          style={{
-            border: "1px solid #2b6ad6",
-            color: canSelectHotel ? "#1c4eb0" : "#7b8ba6",
-            background: "#fff",
-            borderRadius: "8px",
-            padding: "0.4rem 0.6rem",
-            cursor: canSelectHotel ? "pointer" : "not-allowed"
-          }}
+          className={`rounded-lg border border-[#2b6ad6] bg-white px-[0.6rem] py-[0.4rem] ${
+            canSelectHotel ? "text-[#1c4eb0]" : "cursor-not-allowed text-[#7b8ba6]"
+          }`}
         >
           Selecionar hotel
         </button>

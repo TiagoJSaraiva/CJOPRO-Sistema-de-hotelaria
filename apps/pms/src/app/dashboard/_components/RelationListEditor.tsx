@@ -17,34 +17,25 @@ type RelationListEditorProps = {
 
 export function RelationListEditor({ title, addLabel, emptyMessage, items, onAdd, onRemove }: RelationListEditorProps) {
   return (
-    <section style={{ border: "1px solid #d7dce5", borderRadius: "10px", padding: "0.7rem", display: "grid", gap: "0.55rem" }}>
+    <section className="grid gap-[0.55rem] rounded-[10px] border border-[#d7dce5] p-[0.7rem]">
       <strong>{title}</strong>
 
       {items.length ? (
-        <div style={{ display: "grid", gap: "0.45rem" }}>
+        <div className="grid gap-[0.45rem]">
           {items.map((item) => (
             <article
               key={item.id}
-              style={{
-                display: "flex",
-                justifyContent: "space-between",
-                alignItems: "center",
-                gap: "0.55rem",
-                border: "1px solid #e4e8ef",
-                borderRadius: "8px",
-                padding: "0.45rem 0.55rem",
-                background: "#fbfcff"
-              }}
+              className="flex items-center justify-between gap-[0.55rem] rounded-lg border border-[#e4e8ef] bg-[#fbfcff] px-[0.55rem] py-[0.45rem]"
             >
-              <div style={{ minWidth: 0 }}>
-                <p style={{ margin: 0, fontWeight: 600 }}>{item.primary}</p>
-                {item.secondary ? <p style={{ margin: "0.1rem 0 0", color: "#5c6876", fontSize: "0.92rem" }}>{item.secondary}</p> : null}
+              <div className="min-w-0">
+                <p className="m-0 font-semibold">{item.primary}</p>
+                {item.secondary ? <p className="m-0 mt-[0.1rem] text-[0.92rem] text-[#5c6876]">{item.secondary}</p> : null}
               </div>
 
               <button
                 type="button"
                 onClick={() => onRemove(item.id)}
-                style={{ border: "1px solid #c83a3a", color: "#b00020", background: "#fff", borderRadius: "7px", padding: "0.22rem 0.5rem", cursor: "pointer" }}
+                className="cursor-pointer rounded-[7px] border border-[#c83a3a] bg-white px-[0.5rem] py-[0.22rem] text-[#b00020]"
                 aria-label={`Remover ${item.primary}`}
               >
                 X
@@ -53,13 +44,13 @@ export function RelationListEditor({ title, addLabel, emptyMessage, items, onAdd
           ))}
         </div>
       ) : (
-        <p style={{ margin: 0, color: "#5e6976" }}>{emptyMessage}</p>
+        <p className="m-0 text-[#5e6976]">{emptyMessage}</p>
       )}
 
       <button
         type="button"
         onClick={onAdd}
-        style={{ justifySelf: "start", border: "1px solid #186a5c", color: "#0f5d51", background: "#fff", borderRadius: "8px", padding: "0.42rem 0.65rem", cursor: "pointer" }}
+        className="justify-self-start rounded-lg border border-[#186a5c] bg-white px-[0.65rem] py-[0.42rem] text-[#0f5d51]"
       >
         {addLabel}
       </button>

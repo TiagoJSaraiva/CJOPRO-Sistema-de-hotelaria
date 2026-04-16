@@ -20,7 +20,7 @@ export function PermissionTabs({ activeKey, items }: PermissionTabsProps) {
   }
 
   return (
-    <nav style={{ display: "flex", gap: "0.55rem", flexWrap: "wrap" }}>
+    <nav className="flex flex-wrap gap-[0.55rem]">
       {visibleItems.map((item) => {
         const isActive = item.key === activeKey;
 
@@ -28,16 +28,9 @@ export function PermissionTabs({ activeKey, items }: PermissionTabsProps) {
           <Link
             key={item.key}
             href={item.href}
-            style={{
-              textDecoration: "none",
-              borderRadius: "999px",
-              border: isActive ? "1px solid #0f766e" : "1px solid #d2d6db",
-              background: isActive ? "#dff7f4" : "#fff",
-              color: "#1d2939",
-              fontWeight: 600,
-              padding: "0.45rem 0.85rem",
-              lineHeight: 1
-            }}
+            className={`rounded-full border px-[0.85rem] py-[0.45rem] font-semibold leading-none no-underline ${
+              isActive ? "border-[#0f766e] bg-[#dff7f4] text-[#1d2939]" : "border-[#d2d6db] bg-white text-[#1d2939]"
+            }`}
           >
             {item.label}
           </Link>

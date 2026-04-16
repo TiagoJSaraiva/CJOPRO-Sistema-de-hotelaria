@@ -18,46 +18,46 @@ function HotelDataPreview({ hotel }: { hotel: AdminHotel }) {
   const updatedAt = hotel.updated_at ? new Date(hotel.updated_at).toLocaleString("pt-BR") : "-";
 
   return (
-    <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(200px, 1fr))", gap: "0.75rem", marginTop: "0.9rem" }}>
+    <div className="mt-[0.9rem] grid grid-cols-[repeat(auto-fit,minmax(200px,1fr))] gap-[0.75rem]">
       <div>
         <strong>Razao social:</strong>
-        <p style={{ margin: "0.2rem 0 0" }}>{hotel.legal_name || "-"}</p>
+        <p className="m-0 mt-[0.2rem]">{hotel.legal_name || "-"}</p>
       </div>
       <div>
         <strong>Tax ID:</strong>
-        <p style={{ margin: "0.2rem 0 0" }}>{hotel.tax_id || "-"}</p>
+        <p className="m-0 mt-[0.2rem]">{hotel.tax_id || "-"}</p>
       </div>
       <div>
         <strong>Email:</strong>
-        <p style={{ margin: "0.2rem 0 0" }}>{hotel.email || "-"}</p>
+        <p className="m-0 mt-[0.2rem]">{hotel.email || "-"}</p>
       </div>
       <div>
         <strong>Telefone:</strong>
-        <p style={{ margin: "0.2rem 0 0" }}>{hotel.phone || "-"}</p>
+        <p className="m-0 mt-[0.2rem]">{hotel.phone || "-"}</p>
       </div>
       <div>
         <strong>Cidade:</strong>
-        <p style={{ margin: "0.2rem 0 0" }}>{hotel.city || "-"}</p>
+        <p className="m-0 mt-[0.2rem]">{hotel.city || "-"}</p>
       </div>
       <div>
         <strong>Estado:</strong>
-        <p style={{ margin: "0.2rem 0 0" }}>{hotel.state || "-"}</p>
+        <p className="m-0 mt-[0.2rem]">{hotel.state || "-"}</p>
       </div>
       <div>
         <strong>Pais:</strong>
-        <p style={{ margin: "0.2rem 0 0" }}>{hotel.country || "-"}</p>
+        <p className="m-0 mt-[0.2rem]">{hotel.country || "-"}</p>
       </div>
       <div>
         <strong>Status:</strong>
-        <p style={{ margin: "0.2rem 0 0" }}>{hotel.is_active ? "Ativo" : "Inativo"}</p>
+        <p className="m-0 mt-[0.2rem]">{hotel.is_active ? "Ativo" : "Inativo"}</p>
       </div>
       <div>
         <strong>Criado em:</strong>
-        <p style={{ margin: "0.2rem 0 0" }}>{createdAt}</p>
+        <p className="m-0 mt-[0.2rem]">{createdAt}</p>
       </div>
       <div>
         <strong>Atualizado em:</strong>
-        <p style={{ margin: "0.2rem 0 0" }}>{updatedAt}</p>
+        <p className="m-0 mt-[0.2rem]">{updatedAt}</p>
       </div>
     </div>
   );
@@ -65,56 +65,53 @@ function HotelDataPreview({ hotel }: { hotel: AdminHotel }) {
 
 function HotelEditForm({ hotel }: { hotel: AdminHotel }) {
   return (
-    <form action={updateHotelAction} style={{ display: "grid", gap: "0.65rem", marginTop: "0.9rem" }}>
+    <form action={updateHotelAction} className="mt-[0.9rem] grid gap-[0.65rem]">
       <input type="hidden" name="id" value={hotel.id} />
 
-      <div style={{ display: "grid", gap: "0.35rem" }}>
+      <div className="pms-field">
         <label htmlFor={`name-${hotel.id}`}>Nome</label>
         <input
           id={`name-${hotel.id}`}
           name="name"
           defaultValue={hotel.name}
           required
-          style={{ border: "1px solid #d2d2d2", borderRadius: "8px", padding: "0.55rem" }}
+          className="pms-field-input"
         />
       </div>
 
-      <div style={{ display: "grid", gap: "0.35rem" }}>
+      <div className="pms-field">
         <label htmlFor={`slug-${hotel.id}`}>Slug</label>
         <input
           id={`slug-${hotel.id}`}
           name="slug"
           defaultValue={hotel.slug}
           required
-          style={{ border: "1px solid #d2d2d2", borderRadius: "8px", padding: "0.55rem" }}
+          className="pms-field-input"
         />
       </div>
 
-      <div style={{ display: "grid", gap: "0.35rem" }}>
+      <div className="pms-field">
         <label htmlFor={`city-${hotel.id}`}>Cidade</label>
-        <input id={`city-${hotel.id}`} name="city" defaultValue={hotel.city || ""} style={{ border: "1px solid #d2d2d2", borderRadius: "8px", padding: "0.55rem" }} />
+        <input id={`city-${hotel.id}`} name="city" defaultValue={hotel.city || ""} className="pms-field-input" />
       </div>
 
-      <div style={{ display: "grid", gap: "0.35rem" }}>
+      <div className="pms-field">
         <label htmlFor={`email-${hotel.id}`}>Email</label>
         <input
           id={`email-${hotel.id}`}
           name="email"
           type="email"
           defaultValue={hotel.email || ""}
-          style={{ border: "1px solid #d2d2d2", borderRadius: "8px", padding: "0.55rem" }}
+          className="pms-field-input"
         />
       </div>
 
-      <label style={{ display: "flex", alignItems: "center", gap: "0.5rem" }}>
+      <label className="flex items-center gap-2">
         <input name="is_active" type="checkbox" defaultChecked={hotel.is_active} />
         <span>Hotel ativo</span>
       </label>
 
-      <button
-        type="submit"
-        style={{ border: 0, background: "#1c6d4e", color: "#fff", borderRadius: "8px", padding: "0.55rem 0.75rem", cursor: "pointer", justifySelf: "start" }}
-      >
+      <button type="submit" className="justify-self-start rounded-lg border-0 bg-[#1c6d4e] px-[0.75rem] py-[0.55rem] text-white">
         Salvar alteracoes
       </button>
     </form>
@@ -126,26 +123,21 @@ export function HotelListItem({ hotel, canRead, canUpdate, canDelete, isViewing,
   const editHref = `/dashboard/hotels/view?hotelId=${hotel.id}&mode=edit`;
 
   return (
-    <article style={{ background: "#fff", border: "1px solid #e2e2e2", borderRadius: "12px", padding: "0.95rem" }}>
-      <div style={{ display: "flex", justifyContent: "space-between", gap: "0.75rem", alignItems: "center", flexWrap: "wrap" }}>
+    <article className="rounded-xl border border-[#e2e2e2] bg-white p-[0.95rem]">
+      <div className="flex flex-wrap items-center justify-between gap-3">
         <div>
-          <h3 style={{ marginTop: 0, marginBottom: "0.2rem" }}>{hotel.name}</h3>
-          <p style={{ margin: 0, color: "#555" }}>Slug: {hotel.slug}</p>
+          <h3 className="mb-[0.2rem] mt-0">{hotel.name}</h3>
+          <p className="m-0 text-[#555]">Slug: {hotel.slug}</p>
         </div>
 
-        <div style={{ display: "flex", gap: "0.5rem", flexWrap: "wrap", alignItems: "center" }}>
+        <div className="flex flex-wrap items-center gap-2">
           {canRead ? (
             <Link
               href={viewHref}
               scroll={false}
-              style={{
-                textDecoration: "none",
-                border: "1px solid #2d6cdf",
-                color: "#1b4db3",
-                background: isViewing ? "#e9f0ff" : "#fff",
-                borderRadius: "8px",
-                padding: "0.45rem 0.65rem"
-              }}
+              className={`rounded-lg border border-[#2d6cdf] px-[0.65rem] py-[0.45rem] no-underline ${
+                isViewing ? "bg-[#e9f0ff] text-[#1b4db3]" : "bg-white text-[#1b4db3]"
+              }`}
             >
               Visualizar dados
             </Link>
@@ -155,14 +147,9 @@ export function HotelListItem({ hotel, canRead, canUpdate, canDelete, isViewing,
             <Link
               href={editHref}
               scroll={false}
-              style={{
-                textDecoration: "none",
-                border: "1px solid #0f766e",
-                color: "#0a5f58",
-                background: isEditing ? "#ddf5f2" : "#fff",
-                borderRadius: "8px",
-                padding: "0.45rem 0.65rem"
-              }}
+              className={`rounded-lg border border-[#0f766e] px-[0.65rem] py-[0.45rem] no-underline ${
+                isEditing ? "bg-[#ddf5f2] text-[#0a5f58]" : "bg-white text-[#0a5f58]"
+              }`}
             >
               Editar dados
             </Link>
@@ -173,7 +160,7 @@ export function HotelListItem({ hotel, canRead, canUpdate, canDelete, isViewing,
               <input type="hidden" name="id" value={hotel.id} />
               <button
                 type="submit"
-                style={{ border: "1px solid #c83a3a", background: "#fff", color: "#b00020", borderRadius: "8px", padding: "0.45rem 0.65rem", cursor: "pointer" }}
+                className="rounded-lg border border-[#c83a3a] bg-white px-[0.65rem] py-[0.45rem] text-[#b00020]"
               >
                 Apagar dados
               </button>
