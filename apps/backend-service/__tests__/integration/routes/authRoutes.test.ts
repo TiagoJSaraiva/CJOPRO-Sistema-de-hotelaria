@@ -10,7 +10,7 @@ vi.mock("@hotel/shared", async () => {
   };
 });
 
-import { AUTH_ERROR_CODE, PERMISSIONS, createServerClient, type SessionPayload } from "@hotel/shared";
+import { ACTIVE_HOTEL_HEADER_NAME, AUTH_ERROR_CODE, PERMISSIONS, createServerClient, type SessionPayload } from "@hotel/shared";
 import { createApp } from "../../../src/app";
 import { hashTemporaryPassword, signToken, verifyToken } from "../../../src/auth/session";
 
@@ -164,13 +164,71 @@ describe("routes/auth", () => {
           roleName: "Administrador",
           roleType: "SYSTEM_ROLE",
           hotelId: null,
-          hotelName: null
+          hotelName: null,
+          permissions: [PERMISSIONS.USER_READ]
         }
       ]
     });
     expect(verifyToken(body.token)).not.toBeNull();
     expect(supabase.update).toHaveBeenCalled();
     expect(supabase.updateEq).toHaveBeenCalledWith("id", "user-1");
+  });
+
+  it("retorna hotel do assignment para role generica vinculada por user_roles", async () => {
+    const passwordHash = await hashTemporaryPassword("Secret#123");
+
+    const supabase = createLoginSupabaseMock({
+      userRow: {
+        id: "user-1",
+        name: "Gestor",
+        email: "gestor@example.com",
+        is_active: true,
+        password_hash: passwordHash,
+        failed_attempts: 0,
+        locked_until: null,
+        user_roles: [
+          {
+            hotel_id: "hotel-legal-id",
+            hotels: { name: "Hotel Legal" },
+            roles: {
+              id: "role-gestor",
+              name: "Gestor de Hotel",
+              role_type: "HOTEL_ROLE",
+              hotel_id: null,
+              hotels: { name: null },
+              role_permissions: [{ permissions: { name: PERMISSIONS.USER_READ } }]
+            }
+          }
+        ]
+      },
+      userError: null
+    });
+
+    vi.mocked(createServerClient).mockReturnValue(supabase as any);
+
+    const response = await app.inject({
+      method: "POST",
+      url: "/auth/login",
+      payload: {
+        email: "gestor@example.com",
+        password: "Secret#123"
+      }
+    });
+
+    expect(response.statusCode).toBe(200);
+
+    const body = response.json();
+
+    expect(body.user.roleAssignments).toEqual([
+      {
+        roleId: "role-gestor",
+        roleName: "Gestor de Hotel",
+        roleType: "HOTEL_ROLE",
+        hotelId: "hotel-legal-id",
+        hotelName: "Hotel Legal",
+        permissions: [PERMISSIONS.USER_READ]
+      }
+    ]);
   });
 
   it("retorna 429 quando usuario esta temporariamente bloqueado", async () => {
@@ -242,6 +300,71 @@ describe("routes/auth", () => {
         roles: mePayload.roles,
         permissions: mePayload.permissions,
         roleAssignments: mePayload.roleAssignments
+      }
+    });
+  });
+
+  it("recorta permissoes no /auth/me pelo hotel ativo selecionado", async () => {
+    const token = signToken({
+      ...mePayload,
+      roles: ["System Admin", "Gestor Hotel Legal"],
+      permissions: [PERMISSIONS.PERMISSION_CREATE, PERMISSIONS.USER_READ],
+      roleAssignments: [
+        {
+          roleId: "role-system",
+          roleName: "System Admin",
+          roleType: "SYSTEM_ROLE",
+          hotelId: null,
+          hotelName: null,
+          permissions: [PERMISSIONS.PERMISSION_CREATE]
+        },
+        {
+          roleId: "role-hotel",
+          roleName: "Gestor Hotel Legal",
+          roleType: "HOTEL_ROLE",
+          hotelId: "hotel-legal-id",
+          hotelName: "Hotel Legal",
+          permissions: [PERMISSIONS.USER_READ]
+        }
+      ]
+    });
+
+    const response = await app.inject({
+      method: "GET",
+      url: "/auth/me",
+      headers: {
+        authorization: `Bearer ${token}`,
+        [ACTIVE_HOTEL_HEADER_NAME]: "hotel-legal-id"
+      }
+    });
+
+    expect(response.statusCode).toBe(200);
+    expect(response.json()).toEqual({
+      user: {
+        id: "user-1",
+        name: "Admin",
+        email: "admin@example.com",
+        tenantId: null,
+        roles: ["Gestor Hotel Legal"],
+        permissions: [PERMISSIONS.USER_READ],
+        roleAssignments: [
+          {
+            roleId: "role-system",
+            roleName: "System Admin",
+            roleType: "SYSTEM_ROLE",
+            hotelId: null,
+            hotelName: null,
+            permissions: [PERMISSIONS.PERMISSION_CREATE]
+          },
+          {
+            roleId: "role-hotel",
+            roleName: "Gestor Hotel Legal",
+            roleType: "HOTEL_ROLE",
+            hotelId: "hotel-legal-id",
+            hotelName: "Hotel Legal",
+            permissions: [PERMISSIONS.USER_READ]
+          }
+        ]
       }
     });
   });

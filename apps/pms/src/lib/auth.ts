@@ -1,5 +1,7 @@
 import { cookies } from "next/headers";
 import {
+  ACTIVE_HOTEL_GLOBAL_VALUE,
+  ACTIVE_HOTEL_HEADER_NAME,
   AUTH_ERROR_CODE,
   AUTH_ERROR_MESSAGE,
   type AuthErrorResponse,
@@ -8,6 +10,7 @@ import {
   type LoginSuccessResponse,
   type MeSuccessResponse
 } from "@hotel/shared";
+import { getActiveHotelCookieValue } from "./activeHotel";
 
 const SESSION_COOKIE_NAME = "pms_session_token";
 const DEFAULT_BACKEND_URL = "http://localhost:3334";
@@ -58,14 +61,20 @@ export async function getUserFromSession(): Promise<AuthUser | null> {
   }
 
   let response: Response;
+  const activeHotelId = getActiveHotelCookieValue();
+  const headers: Record<string, string> = {
+    Authorization: `Bearer ${token}`
+  };
+
+  if (activeHotelId !== undefined) {
+    headers[ACTIVE_HOTEL_HEADER_NAME] = activeHotelId || ACTIVE_HOTEL_GLOBAL_VALUE;
+  }
 
   try {
     response = await fetch(`${getBackendUrl()}/auth/me`, {
       method: "GET",
       cache: "no-store",
-      headers: {
-        Authorization: `Bearer ${token}`
-      }
+      headers
     });
   } catch {
     // Backend offline or network issue: treat as unauthenticated to avoid crashing SSR.

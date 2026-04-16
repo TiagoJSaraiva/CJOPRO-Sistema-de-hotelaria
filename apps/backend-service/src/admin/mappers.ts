@@ -74,30 +74,57 @@ export function mapAuthUserFromDb(item: DbAuthUserRow): AuthUser {
   const validPermissions = new Set<PermissionName>(Object.values(PERMISSIONS));
   const roleAssignments: AuthUser["roleAssignments"] = [];
 
+  const collectRolePermissionNames = (rolePermissions: DbRolePermissionRow[] | null | undefined): string[] => {
+    if (!Array.isArray(rolePermissions)) {
+      return [];
+    }
+
+    const names = new Set<string>();
+
+    for (const permissionRow of rolePermissions) {
+      const permission = Array.isArray(permissionRow?.permissions) ? permissionRow.permissions[0] : permissionRow?.permissions;
+      const permissionName = normalizeOptionalText(permission?.name);
+
+      if (!permissionName) {
+        continue;
+      }
+
+      names.add(permissionName);
+    }
+
+    return Array.from(names);
+  };
+
   if (Array.isArray(item.user_roles)) {
     for (const row of item.user_roles) {
       const role = Array.isArray(row?.roles) ? row.roles[0] : row?.roles;
+      const assignmentHotel = Array.isArray(row?.hotels) ? row.hotels[0] : row?.hotels;
       const roleHotel = Array.isArray(role?.hotels) ? role.hotels[0] : role?.hotels;
       const roleId = normalizeOptionalText(role?.id);
       const roleName = normalizeOptionalText(role?.name);
-      const roleHotelId = normalizeOptionalText(role?.hotel_id || row?.hotel_id || null);
+      const assignmentHotelId = normalizeOptionalText(row?.hotel_id || null);
+      const assignmentHotelName = normalizeOptionalText(assignmentHotel?.name);
+      const roleHotelId = normalizeOptionalText(role?.hotel_id || null);
       const roleHotelName = normalizeOptionalText(roleHotel?.name);
+      const effectiveHotelId = assignmentHotelId || roleHotelId;
+      const effectiveHotelName = assignmentHotelName || roleHotelName;
+      const rolePermissions = role?.role_permissions;
+      const assignmentPermissions = collectRolePermissionNames(rolePermissions);
 
       if (roleId && roleName) {
         roleAssignments.push({
           roleId,
           roleName,
           roleType: role?.role_type === "HOTEL_ROLE" ? "HOTEL_ROLE" : "SYSTEM_ROLE",
-          hotelId: roleHotelId,
-          hotelName: roleHotelName
+          hotelId: effectiveHotelId,
+          hotelName: effectiveHotelName,
+          permissions: assignmentPermissions
         });
       }
 
       if (roleName) {
         roleNames.add(roleName);
       }
-
-      const rolePermissions = role?.role_permissions;
 
       if (!Array.isArray(rolePermissions)) {
         continue;
