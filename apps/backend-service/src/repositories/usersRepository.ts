@@ -82,7 +82,7 @@ function isMissingRpcFunctionError(error: unknown): boolean {
 export interface UsersRepository {
   listReferenceHotels(): Promise<Array<{ id: string; name: string }>>;
   listReferenceRoles(): Promise<UserRoleLookupRow[]>;
-  listUsersWithRelations(): Promise<UserWithRelationsRow[]>;
+  listUsersWithRelations(activeHotelId?: string | null): Promise<UserWithRelationsRow[]>;
   findRolesByIds(roleIds: string[]): Promise<UserRoleLookupRow[]>;
   createUserWithRoles(
     payload: { name: string; email: string; password_hash: string; is_active: boolean },
@@ -90,7 +90,7 @@ export interface UsersRepository {
   ): Promise<{ result: UserWriteResult; id?: string }>;
   createUser(payload: { name: string; email: string; password_hash: string; is_active: boolean }): Promise<{ result: UserWriteResult; id?: string }>;
   assignUserRoles(items: Array<{ user_id: string; role_id: string; hotel_id: string | null }>): Promise<void>;
-  getUserWithRelationsById(id: string): Promise<UserWithRelationsRow | null>;
+  getUserWithRelationsById(id: string, activeHotelId?: string | null): Promise<UserWithRelationsRow | null>;
   updateUserWithRoles(
     id: string,
     payload: Record<string, unknown>,
@@ -205,12 +205,17 @@ class SupabaseUsersRepository implements UsersRepository {
     return (data || []) as UserRoleLookupRow[];
   }
 
-  async listUsersWithRelations(): Promise<UserWithRelationsRow[]> {
+  async listUsersWithRelations(activeHotelId?: string | null): Promise<UserWithRelationsRow[]> {
     const supabase = createServerClient();
-    const { data, error } = await supabase
+    let query = supabase
       .from("users")
-      .select("id,name,email,is_active,last_login_at,created_at,user_roles(role_id,hotel_id,hotels(name),roles(id,name,role_type,hotel_id,hotels(name)))")
-      .order("created_at", { ascending: false });
+      .select("id,name,email,is_active,last_login_at,created_at,user_roles(role_id,hotel_id,hotels(name),roles(id,name,role_type,hotel_id,hotels(name)))");
+
+    if (activeHotelId !== undefined && activeHotelId !== null) {
+      query = query.filter("user_roles.hotel_id", "eq", activeHotelId);
+    }
+
+    const { data, error } = await query.order("created_at", { ascending: false });
 
     if (error) {
       throw error;
@@ -288,13 +293,17 @@ class SupabaseUsersRepository implements UsersRepository {
     }
   }
 
-  async getUserWithRelationsById(id: string): Promise<UserWithRelationsRow | null> {
+  async getUserWithRelationsById(id: string, activeHotelId?: string | null): Promise<UserWithRelationsRow | null> {
     const supabase = createServerClient();
-    const { data, error } = await supabase
+    let query = supabase
       .from("users")
-      .select("id,name,email,is_active,last_login_at,created_at,user_roles(role_id,hotel_id,hotels(name),roles(id,name,role_type,hotel_id,hotels(name)))")
-      .eq("id", id)
-      .single();
+      .select("id,name,email,is_active,last_login_at,created_at,user_roles(role_id,hotel_id,hotels(name),roles(id,name,role_type,hotel_id,hotels(name)))");
+
+    if (activeHotelId !== undefined && activeHotelId !== null) {
+      query = query.filter("user_roles.hotel_id", "eq", activeHotelId);
+    }
+
+    const { data, error } = await query.eq("id", id).single();
 
     if (error) {
       if (isSupabaseNotFoundError(error)) {

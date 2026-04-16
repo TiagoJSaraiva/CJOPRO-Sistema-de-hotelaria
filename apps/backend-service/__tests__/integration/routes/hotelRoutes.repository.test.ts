@@ -42,7 +42,7 @@ afterEach(async () => {
 describe("routes/hotels with injected repository", () => {
   it("lista hoteis com repository injetado", async () => {
     const repository: HotelsRepository = {
-      listHotels: vi.fn(async () => [
+      listHotels: vi.fn(async (activeHotelId?: string | null) => [
         {
           id: "hotel-1",
           name: "Hotel Centro"

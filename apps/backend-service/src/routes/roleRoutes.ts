@@ -9,7 +9,7 @@ import {
   type HotelIdParams
 } from "@hotel/shared";
 import { mapAdminRole, normalizePermissionIds } from "../admin/mappers";
-import { ensureAuthorized, ensureAuthorizedAny } from "../auth/authorization";
+import { ensureAuthorized, ensureAuthorizedAny, ensureAuthorizedWithScope } from "../auth/authorization";
 import { normalizeOptionalText } from "../common/text";
 import { createRolesRepository, type RolesRepository } from "../repositories/rolesRepository";
 
@@ -44,12 +44,13 @@ export function registerRoleRoutes(app: FastifyInstance, repository: RolesReposi
   });
 
   app.get("/admin/roles", async (request, reply) => {
-    if (!ensureAuthorized(request, reply, PERMISSIONS.ROLE_READ)) {
+    const authWithScope = ensureAuthorizedWithScope(request, reply, PERMISSIONS.ROLE_READ);
+    if (!authWithScope) {
       return;
     }
 
     try {
-      const data = await repository.listRolesWithRelations();
+      const data = await repository.listRolesWithRelations(authWithScope.activeHotelId);
 
       return reply.send({ items: data.map(mapAdminRole) });
     } catch (error) {

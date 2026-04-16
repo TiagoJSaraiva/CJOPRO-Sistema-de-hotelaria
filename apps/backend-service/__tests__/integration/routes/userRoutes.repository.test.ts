@@ -29,12 +29,12 @@ function createUsersRepositoryMock(overrides: Partial<UsersRepository> = {}): Us
   return {
     listReferenceHotels: vi.fn(async () => []),
     listReferenceRoles: vi.fn(async () => []),
-    listUsersWithRelations: vi.fn(async () => []),
+    listUsersWithRelations: vi.fn(async (activeHotelId?: string | null) => []),
     findRolesByIds: vi.fn(async () => []),
     createUserWithRoles: vi.fn(async () => ({ result: "ok", id: "user-2" })),
     createUser: vi.fn(async () => ({ result: "ok", id: "user-2" })),
     assignUserRoles: vi.fn(async () => undefined),
-    getUserWithRelationsById: vi.fn(async () => ({
+    getUserWithRelationsById: vi.fn(async (id: string, activeHotelId?: string | null) => ({
       id: "user-2",
       name: "Operador",
       email: "op@hotel.com",

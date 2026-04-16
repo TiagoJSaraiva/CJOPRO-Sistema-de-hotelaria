@@ -58,17 +58,52 @@ describe("admin/mappers", () => {
           roleName: "Administrador",
           roleType: "SYSTEM_ROLE",
           hotelId: "hotel-fallback",
-          hotelName: null
+          hotelName: "Hotel Reserva",
+          permissions: [PERMISSIONS.USER_READ, "invalid_permission"]
         },
         {
           roleId: "role-2",
           roleName: "Gestor",
           roleType: "HOTEL_ROLE",
           hotelId: "hotel-2",
-          hotelName: "Hotel Azul"
+          hotelName: "Hotel Azul",
+          permissions: [PERMISSIONS.USER_UPDATE]
         }
       ]
     });
+  });
+
+  it("mapAuthUserFromDb prioriza hotel de user_roles sobre hotel da role", () => {
+    const result = mapAuthUserFromDb({
+      id: "user-1",
+      name: "Admin",
+      email: "admin@example.com",
+      user_roles: [
+        {
+          hotel_id: "hotel-assignment",
+          hotels: { name: "Hotel do Assignment" },
+          roles: {
+            id: "role-1",
+            name: "Recepcao",
+            role_type: "HOTEL_ROLE",
+            hotel_id: "hotel-da-role",
+            hotels: { name: "Hotel da Role" },
+            role_permissions: []
+          }
+        }
+      ]
+    });
+
+    expect(result.roleAssignments).toEqual([
+      {
+        roleId: "role-1",
+        roleName: "Recepcao",
+        roleType: "HOTEL_ROLE",
+        hotelId: "hotel-assignment",
+        hotelName: "Hotel do Assignment",
+        permissions: []
+      }
+    ]);
   });
 
   it("normalizeRoleAssignments remove duplicidades e invalores", () => {

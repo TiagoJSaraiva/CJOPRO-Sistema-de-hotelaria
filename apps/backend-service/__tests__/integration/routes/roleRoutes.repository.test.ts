@@ -29,7 +29,7 @@ function createRolesRepositoryMock(overrides: Partial<RolesRepository> = {}): Ro
   return {
     listReferenceHotels: vi.fn(async () => []),
     listReferencePermissions: vi.fn(async () => []),
-    listRolesWithRelations: vi.fn(async () => []),
+    listRolesWithRelations: vi.fn(async (activeHotelId?: string | null) => []),
     hotelExists: vi.fn(async () => true),
     findPermissionsByIds: vi.fn(async () => []),
     createRoleWithPermissions: vi.fn(async () => ({ result: "ok", id: "role-2" })),

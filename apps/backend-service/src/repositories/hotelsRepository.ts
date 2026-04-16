@@ -1,6 +1,7 @@
 import { createServerClient } from "@hotel/shared";
 import type { AdminHotel } from "@hotel/shared";
 import { isSupabaseConflictError, isSupabaseForeignKeyError, isSupabaseNotFoundError } from "./supabaseError";
+import { applyHotelContextFilter } from "../common/hotelContextFilter";
 
 const HOTEL_SELECT_FIELDS =
   "id,name,legal_name,tax_id,email,phone,address_line,address_number,address_complement,district,city,state,country,zip_code,timezone,currency,slug,is_active,created_at,updated_at";
@@ -8,16 +9,18 @@ const HOTEL_SELECT_FIELDS =
 export type HotelWriteResult = "ok" | "conflict" | "not-found";
 
 export interface HotelsRepository {
-  listHotels(): Promise<AdminHotel[]>;
+  listHotels(activeHotelId?: string | null): Promise<AdminHotel[]>;
   createHotel(payload: Record<string, unknown>): Promise<{ result: HotelWriteResult; item?: AdminHotel }>;
   updateHotel(id: string, payload: Record<string, unknown>): Promise<{ result: HotelWriteResult; item?: AdminHotel }>;
   deleteHotel(id: string): Promise<HotelWriteResult>;
 }
 
 class SupabaseHotelsRepository implements HotelsRepository {
-  async listHotels(): Promise<AdminHotel[]> {
+  async listHotels(activeHotelId?: string | null): Promise<AdminHotel[]> {
     const supabase = createServerClient();
-    const { data, error } = await supabase.from("hotels").select(HOTEL_SELECT_FIELDS).order("created_at", { ascending: false });
+    let query = supabase.from("hotels").select(HOTEL_SELECT_FIELDS);
+    query = applyHotelContextFilter(query, activeHotelId);
+    const { data, error } = await query.order("created_at", { ascending: false });
 
     if (error) {
       throw error;

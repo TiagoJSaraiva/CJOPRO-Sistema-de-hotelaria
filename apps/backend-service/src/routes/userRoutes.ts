@@ -9,7 +9,7 @@ import {
   type HotelIdParams
 } from "@hotel/shared";
 import { mapAdminUser, mapRoleOption, normalizeRoleAssignments } from "../admin/mappers";
-import { ensureAuthorized, ensureAuthorizedAny } from "../auth/authorization";
+import { ensureAuthorized, ensureAuthorizedAny, ensureAuthorizedWithScope } from "../auth/authorization";
 import { hashTemporaryPassword } from "../auth/session";
 import { normalizeOptionalText } from "../common/text";
 import { createUsersRepository, type UsersRepository } from "../repositories/usersRepository";
@@ -117,12 +117,13 @@ export function registerUserRoutes(app: FastifyInstance, repository: UsersReposi
   });
 
   app.get("/admin/users", async (request, reply) => {
-    if (!ensureAuthorized(request, reply, PERMISSIONS.USER_READ)) {
+    const authWithScope = ensureAuthorizedWithScope(request, reply, PERMISSIONS.USER_READ);
+    if (!authWithScope) {
       return;
     }
 
     try {
-      const data = await repository.listUsersWithRelations();
+      const data = await repository.listUsersWithRelations(authWithScope.activeHotelId);
 
       return reply.send({ items: data.map(mapAdminUser) });
     } catch (error) {
@@ -132,7 +133,8 @@ export function registerUserRoutes(app: FastifyInstance, repository: UsersReposi
   });
 
   app.post<{ Body: UserCreateBody }>("/admin/users", async (request, reply) => {
-    if (!ensureAuthorized(request, reply, PERMISSIONS.USER_CREATE)) {
+    const authWithScope = ensureAuthorizedWithScope(request, reply, PERMISSIONS.USER_CREATE);
+    if (!authWithScope) {
       return;
     }
 
@@ -191,7 +193,7 @@ export function registerUserRoutes(app: FastifyInstance, repository: UsersReposi
       return reply.status(500).send({ message: "Falha ao criar usuario." });
     }
 
-    const userWithRelations = await repository.getUserWithRelationsById(createResult.id).catch((error) => {
+    const userWithRelations = await repository.getUserWithRelationsById(createResult.id, authWithScope.activeHotelId).catch((error) => {
       request.log.error(error);
       return null;
     });
@@ -204,7 +206,8 @@ export function registerUserRoutes(app: FastifyInstance, repository: UsersReposi
   });
 
   app.put<{ Params: HotelIdParams; Body: UserUpdateBody }>("/admin/users/:id", async (request, reply) => {
-    if (!ensureAuthorized(request, reply, PERMISSIONS.USER_UPDATE)) {
+    const authWithScope = ensureAuthorizedWithScope(request, reply, PERMISSIONS.USER_UPDATE);
+    if (!authWithScope) {
       return;
     }
 
@@ -212,6 +215,15 @@ export function registerUserRoutes(app: FastifyInstance, repository: UsersReposi
 
     if (!id) {
       return reply.status(400).send({ message: "Id do usuario e obrigatorio para atualizacao." });
+    }
+
+    const userToUpdate = await repository.getUserWithRelationsById(id, authWithScope.activeHotelId).catch((error) => {
+      request.log.error(error);
+      return null;
+    });
+
+    if (!userToUpdate) {
+      return reply.status(404).send({ message: "Usuario nao encontrado ou nao tem acesso neste contexto." });
     }
 
     const payload: Record<string, unknown> = {};
@@ -301,7 +313,7 @@ export function registerUserRoutes(app: FastifyInstance, repository: UsersReposi
       return reply.status(404).send({ message: "Usuario nao encontrado." });
     }
 
-    const updatedUser = await repository.getUserWithRelationsById(id).catch((error) => {
+    const updatedUser = await repository.getUserWithRelationsById(id, authWithScope.activeHotelId).catch((error) => {
       request.log.error(error);
       return null;
     });
@@ -314,7 +326,8 @@ export function registerUserRoutes(app: FastifyInstance, repository: UsersReposi
   });
 
   app.delete<{ Params: HotelIdParams }>("/admin/users/:id", async (request, reply) => {
-    if (!ensureAuthorized(request, reply, PERMISSIONS.USER_DELETE)) {
+    const authWithScope = ensureAuthorizedWithScope(request, reply, PERMISSIONS.USER_DELETE);
+    if (!authWithScope) {
       return;
     }
 
@@ -322,6 +335,15 @@ export function registerUserRoutes(app: FastifyInstance, repository: UsersReposi
 
     if (!id) {
       return reply.status(400).send({ message: "Id do usuario e obrigatorio para exclusao." });
+    }
+
+    const userToDelete = await repository.getUserWithRelationsById(id, authWithScope.activeHotelId).catch((error) => {
+      request.log.error(error);
+      return null;
+    });
+
+    if (!userToDelete) {
+      return reply.status(404).send({ message: "Usuario nao encontrado ou nao tem acesso neste contexto." });
     }
 
     const deleteResult = await repository.deleteUser(id).catch((error) => {

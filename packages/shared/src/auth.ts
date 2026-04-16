@@ -50,6 +50,7 @@ export type AuthUserRoleAssignment = {
   roleType: AdminRoleType;
   hotelId: string | null;
   hotelName: string | null;
+  permissions?: string[];
 };
 
 export type LoginRequest = {

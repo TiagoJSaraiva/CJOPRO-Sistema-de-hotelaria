@@ -20,17 +20,18 @@ import {
   type AdminHotelUpdateInput,
   type HotelIdParams
 } from "@hotel/shared";
-import { ensureAuthorized } from "../auth/authorization";
+import { ensureAuthorized, ensureAuthorizedWithScope } from "../auth/authorization";
 import { normalizeOptionalText } from "../common/text";
 import { createHotelsRepository, type HotelsRepository } from "../repositories/hotelsRepository";
 
 export function registerHotelRoutes(app: FastifyInstance, repository: HotelsRepository = createHotelsRepository()): void {
   app.get("/admin/hotels", async (request, reply) => {
-    if (!ensureAuthorized(request, reply, PERMISSIONS.HOTEL_READ)) {
+    const authWithScope = ensureAuthorizedWithScope(request, reply, PERMISSIONS.HOTEL_READ);
+    if (!authWithScope) {
       return;
     }
 
-    const data = await repository.listHotels().catch((error) => {
+    const data = await repository.listHotels(authWithScope.activeHotelId).catch((error) => {
       request.log.error(error);
       return null;
     });

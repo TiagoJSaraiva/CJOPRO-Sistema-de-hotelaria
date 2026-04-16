@@ -10,6 +10,7 @@ import {
   type SessionPayload
 } from "@hotel/shared";
 import { mapAuthUserFromDb } from "../admin/mappers";
+import { resolveActiveHotelContext } from "../auth/activeHotel";
 import { normalizeOptionalText } from "../common/text";
 import { getAuthError, getSessionFromRequest, matchesPasswordHash, SESSION_TTL_SECONDS, signToken } from "../auth/session";
 import { createAuthRepository, type AuthRepository } from "../repositories/authRepository";
@@ -30,6 +31,48 @@ function accountLockedError(retryAfterSeconds: number): AuthErrorResponse {
     code: AUTH_ERROR_CODE.ACCOUNT_LOCKED,
     message: AUTH_ERROR_MESSAGE[AUTH_ERROR_CODE.ACCOUNT_LOCKED],
     retryAfterSeconds
+  };
+}
+
+function getScopedAuthUser(payload: SessionPayload, activeHotelId: string | null): MeSuccessResponse["user"] {
+  const assignments = payload.roleAssignments || [];
+  const hasPerAssignmentPermissions = assignments.some((assignment) => Array.isArray(assignment.permissions));
+
+  if (!hasPerAssignmentPermissions) {
+    return {
+      id: payload.id,
+      name: payload.name,
+      email: payload.email,
+      tenantId: payload.tenantId,
+      roles: payload.roles,
+      permissions: payload.permissions,
+      roleAssignments: payload.roleAssignments
+    };
+  }
+
+  const scopedAssignments = assignments.filter((assignment) => {
+    if (activeHotelId === null) {
+      return assignment.hotelId === null;
+    }
+
+    return assignment.hotelId === activeHotelId;
+  });
+
+  const roles = Array.from(new Set(scopedAssignments.map((assignment) => assignment.roleName).filter(Boolean)));
+  const permissions = Array.from(
+    new Set(
+      scopedAssignments.flatMap((assignment) => assignment.permissions || []).map((permission) => String(permission || "").trim()).filter(Boolean)
+    )
+  );
+
+  return {
+    id: payload.id,
+    name: payload.name,
+    email: payload.email,
+    tenantId: payload.tenantId,
+    roles,
+    permissions,
+    roleAssignments: payload.roleAssignments
   };
 }
 
@@ -158,16 +201,16 @@ export function registerAuthRoutes(app: FastifyInstance, repository: AuthReposit
       return reply.status(401).send(getAuthError(AUTH_ERROR_CODE.TOKEN_INVALID_OR_EXPIRED));
     }
 
+    const contextResult = resolveActiveHotelContext(payload, request.headers);
+
+    if (!contextResult.ok) {
+      return reply.status(contextResult.statusCode).send({ message: contextResult.message });
+    }
+
+    const scopedUser = getScopedAuthUser(payload, contextResult.activeHotelId);
+
     const response: MeSuccessResponse = {
-      user: {
-        id: payload.id,
-        name: payload.name,
-        email: payload.email,
-        tenantId: payload.tenantId,
-        roles: payload.roles,
-        permissions: payload.permissions,
-        roleAssignments: payload.roleAssignments
-      }
+      user: scopedUser
     };
 
     return reply.send(response);
