@@ -51,73 +51,38 @@ export default async function DashboardLayout({ children }: { children: ReactNod
   const activeHotelOptions = listActiveHotelOptions(user);
   const preferredHotelId = getActiveHotelCookieValue();
   const activeHotelId = resolveActiveHotelForUser(user, preferredHotelId);
+  const navLinkClassName = "rounded-lg border border-[#d2d2d2] bg-white px-[0.7rem] py-[0.45rem] font-medium leading-none text-[#232323] no-underline";
 
   return (
-    <main style={{ minHeight: "100vh", padding: "1.25rem", background: "#f5f6f8" }}>
-      <header
-        style={{
-          display: "flex",
-          justifyContent: "space-between",
-          alignItems: "center",
-          gap: "1rem",
-          marginBottom: "1rem"
-        }}
-      >
-        <div style={{ display: "flex", alignItems: "center", gap: "1rem", minWidth: 0, flexWrap: "wrap" }}>
-          <Link href="/dashboard" aria-label="Voltar para inicio" style={{ display: "inline-flex", alignItems: "center" }}>
-            <Image src="/img/logo.png" alt="Logo" width={116} height={34} priority style={{ width: "116px", height: "40px" }} />
+    <main className="min-h-screen bg-[#f5f6f8] p-5">
+      <header className="mb-4 flex flex-wrap items-center justify-between gap-4">
+        <div className="flex min-w-0 flex-wrap items-center gap-4">
+          <Link href="/dashboard" aria-label="Voltar para inicio" className="inline-flex items-center">
+            <Image src="/img/logo.png" alt="Logo" width={116} height={34} priority className="h-10 w-[116px]" />
           </Link>
 
-          <nav style={{ display: "flex", gap: "0.55rem", flexWrap: "wrap" }}>
-            <Link
-              href="/dashboard"
-              style={{
-                textDecoration: "none",
-                color: "#232323",
-                fontWeight: 500,
-                border: "1px solid #d2d2d2",
-                background: "#fff",
-                borderRadius: "8px",
-                padding: "0.45rem 0.7rem",
-                lineHeight: 1
-              }}
-            >
+          <nav className="flex flex-wrap gap-[0.55rem]">
+            <Link href="/dashboard" className={navLinkClassName}>
               Inicio
             </Link>
 
             {navItems.map((item) => (
-              <Link
-                key={item.href}
-                href={item.href}
-                style={{
-                  textDecoration: "none",
-                  color: "#232323",
-                  fontWeight: 500,
-                  border: "1px solid #d2d2d2",
-                  background: "#fff",
-                  borderRadius: "8px",
-                  padding: "0.45rem 0.7rem",
-                  lineHeight: 1
-                }}
-              >
+              <Link key={item.href} href={item.href} className={navLinkClassName}>
                 {item.label}
               </Link>
             ))}
           </nav>
         </div>
 
-        <div style={{ display: "flex", alignItems: "center", gap: "0.75rem", flexWrap: "wrap", justifyContent: "flex-end" }}>
+        <div className="flex flex-wrap items-center justify-end gap-3">
           {activeHotelOptions.length > 1 ? (
             <ActiveHotelSelector options={activeHotelOptions} initialHotelId={activeHotelId} onChangeAction={setActiveHotelAction} />
           ) : null}
 
-          <span style={{ color: "#3f3f3f", fontSize: "0.95rem", whiteSpace: "nowrap" }}>{userDisplayName}</span>
+          <span className="whitespace-nowrap text-[0.95rem] text-[#3f3f3f]">{userDisplayName}</span>
 
           <form action={logoutAction}>
-            <button
-              type="submit"
-              style={{ border: "1px solid #d0d0d0", background: "#fff", borderRadius: "8px", padding: "0.45rem 0.8rem", cursor: "pointer" }}
-            >
+            <button type="submit" className="cursor-pointer rounded-lg border border-[#d0d0d0] bg-white px-[0.8rem] py-[0.45rem]">
               Sair
             </button>
           </form>

@@ -80,7 +80,8 @@ export function registerPermissionRoutes(
   });
 
   app.put<{ Params: HotelIdParams; Body: PermissionUpdateBody }>("/admin/permissions/:id", async (request, reply) => {
-    if (!ensureAuthorizedSystem(request, reply, PERMISSIONS.PERMISSION_UPDATE)) {
+    const session = ensureAuthorizedSystem(request, reply, PERMISSIONS.PERMISSION_UPDATE);
+    if (!session) {
       return;
     }
 
@@ -90,6 +91,28 @@ export function registerPermissionRoutes(
 
     if (!id) {
       return reply.status(400).send(adminError(ADMIN_ERROR_CODE.VALIDATION, "Id da permissao e obrigatorio para atualizacao."));
+    }
+
+    const permission = await repository.getPermissionById(id).catch((error) => {
+      request.log.error(error);
+      return undefined;
+    });
+
+    if (permission === undefined) {
+      return reply.status(500).send(adminError(ADMIN_ERROR_CODE.INTERNAL, "Falha ao consultar permissao para atualizacao."));
+    }
+
+    if (!permission) {
+      return reply.status(404).send(adminError(ADMIN_ERROR_CODE.NOT_FOUND, "Permissao nao encontrada."));
+    }
+
+    const hasSelfPermissionBySession = session.permissions.includes(permission.name);
+    const hasSelfPermissionByAssignment = (session.roleAssignments || []).some((assignment) => (assignment.permissions || []).includes(permission.name));
+
+    if (hasSelfPermissionBySession || hasSelfPermissionByAssignment) {
+      return reply
+        .status(403)
+        .send(adminError(ADMIN_ERROR_CODE.SELF_ACTION_FORBIDDEN, "Nao e permitido atualizar uma permissao vinculada ao proprio usuario."));
     }
 
     if (request.body?.name !== undefined && !name) {

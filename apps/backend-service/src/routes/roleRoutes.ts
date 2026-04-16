@@ -157,7 +157,8 @@ export function registerRoleRoutes(app: FastifyInstance, repository: RolesReposi
   });
 
   app.put<{ Params: HotelIdParams; Body: RoleUpdateBody }>("/admin/roles/:id", async (request, reply) => {
-    if (!ensureAuthorizedSystem(request, reply, PERMISSIONS.ROLE_UPDATE)) {
+    const session = ensureAuthorizedSystem(request, reply, PERMISSIONS.ROLE_UPDATE);
+    if (!session) {
       return;
     }
 
@@ -165,6 +166,14 @@ export function registerRoleRoutes(app: FastifyInstance, repository: RolesReposi
 
     if (!id) {
       return reply.status(400).send(adminError(ADMIN_ERROR_CODE.VALIDATION, "Id da role e obrigatorio para atualizacao."));
+    }
+
+    const isSelfRole = (session.roleAssignments || []).some((assignment) => assignment.roleId === id);
+
+    if (isSelfRole) {
+      return reply
+        .status(403)
+        .send(adminError(ADMIN_ERROR_CODE.SELF_ACTION_FORBIDDEN, "Nao e permitido atualizar uma role vinculada ao proprio usuario."));
     }
 
     const payload: Record<string, unknown> = {};

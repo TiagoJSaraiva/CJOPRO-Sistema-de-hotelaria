@@ -2,7 +2,7 @@ import { AdaptiveLoadingFallback } from "../../_components/AdaptiveLoadingFallba
 
 export default function UsersLoading() {
   return (
-    <section style={{ background: "#fff", border: "1px solid #e2e2e2", borderRadius: "12px", padding: "1rem" }}>
+    <section className="pms-surface-card">
       <AdaptiveLoadingFallback minHeight="24vh" label="Carregando usuarios..." />
     </section>
   );

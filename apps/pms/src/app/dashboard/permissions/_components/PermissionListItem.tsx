@@ -16,37 +16,34 @@ type PermissionListItemProps = {
 
 function PermissionEditForm({ permissionItem }: { permissionItem: AdminPermission }) {
   return (
-    <form action={updatePermissionAction} style={{ display: "grid", gap: "0.65rem", marginTop: "0.85rem" }}>
+    <form action={updatePermissionAction} className="mt-[0.85rem] grid gap-[0.65rem]">
       <input type="hidden" name="id" value={permissionItem.id} />
 
-      <div style={{ display: "grid", gap: "0.35rem" }}>
+      <div className="pms-field">
         <label htmlFor={`permission-name-${permissionItem.id}`}>Nome</label>
         <input
           id={`permission-name-${permissionItem.id}`}
           name="name"
           defaultValue={permissionItem.name}
           required
-          style={{ border: "1px solid #d2d2d2", borderRadius: "8px", padding: "0.55rem" }}
+          className="pms-field-input"
         />
       </div>
 
-      <div style={{ display: "grid", gap: "0.35rem" }}>
+      <div className="pms-field">
         <label htmlFor={`permission-type-${permissionItem.id}`}>Tipo</label>
         <select
           id={`permission-type-${permissionItem.id}`}
           name="type"
           defaultValue={permissionItem.type}
-          style={{ border: "1px solid #d2d2d2", borderRadius: "8px", padding: "0.55rem" }}
+          className="pms-field-input"
         >
           <option value={ADMIN_PERMISSION_TYPES.SYSTEM}>SYSTEM PERMISSION</option>
           <option value={ADMIN_PERMISSION_TYPES.HOTEL}>HOTEL PERMISSION</option>
         </select>
       </div>
 
-      <button
-        type="submit"
-        style={{ border: 0, background: "#1c6d4e", color: "#fff", borderRadius: "8px", padding: "0.55rem 0.75rem", cursor: "pointer", justifySelf: "start" }}
-      >
+      <button type="submit" className="justify-self-start rounded-lg border-0 bg-[#1c6d4e] px-[0.75rem] py-[0.55rem] text-white">
         Salvar alteracoes
       </button>
     </form>
@@ -58,47 +55,48 @@ export function PermissionListItem({ permissionItem, canRead, canUpdate, canDele
   const editHref = `/dashboard/permissions/view?permissionId=${permissionItem.id}&mode=edit`;
 
   return (
-    <article style={{ background: "#fff", border: "1px solid #e2e2e2", borderRadius: "12px", padding: "0.95rem" }}>
-      <div style={{ display: "flex", justifyContent: "space-between", gap: "0.75rem", alignItems: "center", flexWrap: "wrap" }}>
+    <article className="rounded-xl border border-[#e2e2e2] bg-white p-[0.95rem]">
+      <div className="flex flex-wrap items-center justify-between gap-3">
         <div>
-          <h3 style={{ marginTop: 0, marginBottom: "0.2rem" }}>{permissionItem.name}</h3>
-          <p style={{ margin: 0, color: "#555" }}>Tipo: {permissionItem.type === ADMIN_PERMISSION_TYPES.SYSTEM ? "SYSTEM" : "HOTEL"}</p>
-          <p style={{ margin: 0, color: "#555" }}>ID: {permissionItem.id}</p>
+          <h3 className="mb-[0.2rem] mt-0">{permissionItem.name}</h3>
+          <p className="m-0 text-[#555]">Tipo: {permissionItem.type === ADMIN_PERMISSION_TYPES.SYSTEM ? "SYSTEM" : "HOTEL"}</p>
+          <p className="m-0 text-[#555]">ID: {permissionItem.id}</p>
         </div>
 
-        <div style={{ display: "flex", gap: "0.5rem", flexWrap: "wrap", alignItems: "center" }}>
+        <div className="flex flex-wrap items-center gap-2">
           {canRead ? (
             <Link
               href={viewHref}
               scroll={false}
-              style={{
-                textDecoration: "none",
-                border: "1px solid #2d6cdf",
-                color: "#1b4db3",
-                background: isViewing ? "#e9f0ff" : "#fff",
-                borderRadius: "8px",
-                padding: "0.45rem 0.65rem"
-              }}
+              className={`rounded-lg border border-[#2d6cdf] px-[0.65rem] py-[0.45rem] no-underline ${
+                isViewing ? "bg-[#e9f0ff] text-[#1b4db3]" : "bg-white text-[#1b4db3]"
+              }`}
             >
               Visualizar dados
             </Link>
           ) : null}
 
-          {canUpdate ? (
+          {canUpdate && !isCurrentUserPermission ? (
             <Link
               href={editHref}
               scroll={false}
-              style={{
-                textDecoration: "none",
-                border: "1px solid #0f766e",
-                color: "#0a5f58",
-                background: isEditing ? "#ddf5f2" : "#fff",
-                borderRadius: "8px",
-                padding: "0.45rem 0.65rem"
-              }}
+              className={`rounded-lg border border-[#0f766e] px-[0.65rem] py-[0.45rem] no-underline ${
+                isEditing ? "bg-[#ddf5f2] text-[#0a5f58]" : "bg-white text-[#0a5f58]"
+              }`}
             >
               Editar dados
             </Link>
+          ) : null}
+
+          {canUpdate && isCurrentUserPermission ? (
+            <button
+              type="button"
+              disabled
+              title="Voce nao pode editar uma permissao vinculada ao proprio usuario."
+              className="cursor-not-allowed rounded-lg border border-[#b8dccc] bg-[#effaf5] px-[0.65rem] py-[0.45rem] text-[#4f8b75]"
+            >
+              Editar dados
+            </button>
           ) : null}
 
           {canDelete && !isCurrentUserPermission ? (
@@ -106,7 +104,7 @@ export function PermissionListItem({ permissionItem, canRead, canUpdate, canDele
               <input type="hidden" name="id" value={permissionItem.id} />
               <button
                 type="submit"
-                style={{ border: "1px solid #c83a3a", background: "#fff", color: "#b00020", borderRadius: "8px", padding: "0.45rem 0.65rem", cursor: "pointer" }}
+                className="rounded-lg border border-[#c83a3a] bg-white px-[0.65rem] py-[0.45rem] text-[#b00020]"
               >
                 Apagar dados
               </button>
@@ -118,7 +116,7 @@ export function PermissionListItem({ permissionItem, canRead, canUpdate, canDele
               type="button"
               disabled
               title="Voce nao pode apagar uma permissao vinculada ao proprio usuario."
-              style={{ border: "1px solid #f1a1a1", color: "#b45353", background: "#fff6f6", borderRadius: "8px", padding: "0.45rem 0.65rem", cursor: "not-allowed" }}
+              className="cursor-not-allowed rounded-lg border border-[#f1a1a1] bg-[#fff6f6] px-[0.65rem] py-[0.45rem] text-[#b45353]"
             >
               Apagar dados
             </button>
@@ -127,17 +125,17 @@ export function PermissionListItem({ permissionItem, canRead, canUpdate, canDele
       </div>
 
       {isViewing ? (
-        <div style={{ marginTop: "0.8rem" }}>
-          <p style={{ margin: 0 }}>
+        <div className="mt-[0.8rem]">
+          <p className="m-0">
             <strong>Nome:</strong> {permissionItem.name}
           </p>
-          <p style={{ margin: "0.35rem 0 0" }}>
+          <p className="m-0 mt-[0.35rem]">
             <strong>Tipo:</strong> {permissionItem.type === ADMIN_PERMISSION_TYPES.SYSTEM ? "SYSTEM PERMISSION" : "HOTEL PERMISSION"}
           </p>
         </div>
       ) : null}
 
-      {isEditing ? <PermissionEditForm permissionItem={permissionItem} /> : null}
+      {isEditing && !isCurrentUserPermission ? <PermissionEditForm permissionItem={permissionItem} /> : null}
     </article>
   );
 }

@@ -9,43 +9,33 @@ export const dynamic = "force-static";
 export default function LoginPage() {
 
   return (
-    <main style={{ minHeight: "100vh", display: "grid", placeItems: "center", padding: "2rem", background: "linear-gradient(160deg, #f8f0e8 0%, #f4f9ff 100%)" }}>
-      <section
-        style={{
-          width: "100%",
-          maxWidth: "420px",
-          background: "#ffffff",
-          border: "1px solid #e6e6e6",
-          borderRadius: "14px",
-          padding: "1.5rem",
-          boxShadow: "0 8px 20px rgba(0, 0, 0, 0.06)"
-        }}
-      >
-        <h1 style={{ marginTop: 0, marginBottom: "0.4rem" }}>Login do PMS</h1>
-        <p style={{ marginTop: 0, color: "#555" }}>Use email e senha para acessar seu dashboard.</p>
+    <main className="grid min-h-screen place-items-center bg-[linear-gradient(160deg,#f8f0e8_0%,#f4f9ff_100%)] p-8">
+      <section className="w-full max-w-[420px] rounded-[14px] border border-[#e6e6e6] bg-white p-6 shadow-[0_8px_20px_rgba(0,0,0,0.06)]">
+        <h1 className="mb-[0.4rem] mt-0">Login do PMS</h1>
+        <p className="mt-0 text-[#555]">Use email e senha para acessar seu dashboard.</p>
 
         <LoginErrorMessage />
 
-        <form action={loginAction} style={{ display: "grid", gap: "0.9rem" }}>
-          <label style={{ display: "grid", gap: "0.4rem" }}>
+        <form action={loginAction} className="grid gap-[0.9rem]">
+          <label className="grid gap-[0.4rem]">
             <span>Email</span>
             <input
               name="email"
               type="email"
               autoComplete="email"
               required
-              style={{ border: "1px solid #d0d0d0", borderRadius: "8px", padding: "0.7rem" }}
+              className="rounded-lg border border-[#d0d0d0] p-[0.7rem]"
             />
           </label>
 
-          <label style={{ display: "grid", gap: "0.4rem" }}>
+          <label className="grid gap-[0.4rem]">
             <span>Senha</span>
             <input
               name="password"
               type="password"
               autoComplete="current-password"
               required
-              style={{ border: "1px solid #d0d0d0", borderRadius: "8px", padding: "0.7rem" }}
+              className="rounded-lg border border-[#d0d0d0] p-[0.7rem]"
             />
           </label>
 
@@ -54,7 +44,7 @@ export default function LoginPage() {
           </PendingSubmitButton>
         </form>
 
-        <p style={{ marginBottom: 0, marginTop: "1rem", color: "#666", fontSize: "0.9rem" }}>
+        <p className="mb-0 mt-4 text-[0.9rem] text-[#666]">
           Ainda sem tela inicial? Volte para a <Link href="/">home</Link>.
         </p>
       </section>

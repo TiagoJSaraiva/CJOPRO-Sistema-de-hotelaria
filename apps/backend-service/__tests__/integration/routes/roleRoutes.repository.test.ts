@@ -67,6 +67,42 @@ afterEach(async () => {
 });
 
 describe("routes/roles with injected repository", () => {
+  it("bloqueia atualizacao de role vinculada ao proprio usuario", async () => {
+    const repository = createRolesRepositoryMock();
+    const app = await createRolesTestApp(repository);
+
+    const nowInSeconds = Math.floor(Date.now() / 1000);
+    const token = signToken({
+      id: "user-1",
+      name: "Admin",
+      email: "admin@example.com",
+      tenantId: null,
+      roles: ["Admin"],
+      permissions: [PERMISSIONS.ROLE_UPDATE],
+      roleAssignments: [{ roleId: "role-own", roleName: "Admin", roleType: "SYSTEM_ROLE", hotelId: null, hotelName: null }],
+      iat: nowInSeconds,
+      exp: nowInSeconds + 3600
+    });
+
+    const response = await app.inject({
+      method: "PUT",
+      url: "/admin/roles/role-own",
+      headers: {
+        authorization: `Bearer ${token}`
+      },
+      payload: {
+        name: "Admin Atualizado"
+      }
+    });
+
+    expect(response.statusCode).toBe(403);
+    expect(response.json()).toEqual({
+      code: "ADMIN_SELF_ACTION_FORBIDDEN",
+      message: "Nao e permitido atualizar uma role vinculada ao proprio usuario."
+    });
+    expect(repository.updateRoleWithPermissions).not.toHaveBeenCalled();
+  });
+
   it("bloqueia exclusao de role vinculada ao proprio usuario", async () => {
     const repository = createRolesRepositoryMock();
     const app = await createRolesTestApp(repository);

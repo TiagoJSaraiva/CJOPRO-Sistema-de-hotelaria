@@ -8,35 +8,35 @@ type PermissionCreateFormProps = {
 
 export function PermissionCreateForm({ formKey }: PermissionCreateFormProps) {
   return (
-    <article style={{ background: "#fff", border: "1px solid #e2e2e2", borderRadius: "12px", padding: "1rem" }}>
-      <h3 style={{ marginTop: 0 }}>Criar permissao</h3>
+    <article className="pms-surface-card">
+      <h3 className="mt-0">Criar permissao</h3>
 
-      <form key={formKey} action={createPermissionAction} style={{ display: "grid", gap: "0.7rem" }}>
-        <div style={{ display: "grid", gap: "0.35rem" }}>
+      <form key={formKey} action={createPermissionAction} className="grid gap-[0.7rem]">
+        <div className="pms-field">
           <label htmlFor="create-permission-name">Nome</label>
           <input
             id="create-permission-name"
             name="name"
             minLength={3}
             required
-            style={{ border: "1px solid #d2d2d2", borderRadius: "8px", padding: "0.55rem" }}
+            className="pms-field-input"
           />
         </div>
 
-        <div style={{ display: "grid", gap: "0.35rem" }}>
+        <div className="pms-field">
           <label htmlFor="create-permission-type">Tipo</label>
           <select
             id="create-permission-type"
             name="type"
             defaultValue={ADMIN_PERMISSION_TYPES.SYSTEM}
-            style={{ border: "1px solid #d2d2d2", borderRadius: "8px", padding: "0.55rem" }}
+            className="pms-field-input"
           >
             <option value={ADMIN_PERMISSION_TYPES.SYSTEM}>SYSTEM PERMISSION</option>
             <option value={ADMIN_PERMISSION_TYPES.HOTEL}>HOTEL PERMISSION</option>
           </select>
         </div>
 
-        <PendingSubmitButton pendingLabel="Criando permissao..." style={{ justifySelf: "start" }}>
+        <PendingSubmitButton pendingLabel="Criando permissao..." className="justify-self-start">
           Criar permissao
         </PendingSubmitButton>
       </form>

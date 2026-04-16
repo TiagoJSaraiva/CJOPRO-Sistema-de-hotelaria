@@ -1,6 +1,6 @@
 "use client";
 
-import type { CSSProperties, ReactNode } from "react";
+import type { ReactNode } from "react";
 
 type ViewFiltersActionsBarProps = {
   appliedFilterCount: number;
@@ -18,52 +18,21 @@ type ViewFiltersModalProps = {
   children: ReactNode;
 };
 
-const overlayStyle: CSSProperties = {
-  position: "fixed",
-  inset: 0,
-  background: "rgba(9, 18, 31, 0.45)",
-  display: "grid",
-  placeItems: "center",
-  zIndex: 1000,
-  padding: "1rem"
-};
+const overlayClassName = "fixed inset-0 z-[1000] grid place-items-center bg-[rgba(9,18,31,0.45)] p-4";
+const panelClassName = "grid max-h-[82vh] w-full max-w-[760px] gap-[0.9rem] overflow-auto rounded-xl border border-[#d9dfe7] bg-white p-4";
 
-const panelStyle: CSSProperties = {
-  width: "min(760px, 100%)",
-  maxHeight: "82vh",
-  overflow: "auto",
-  background: "#fff",
-  borderRadius: "12px",
-  border: "1px solid #d9dfe7",
-  padding: "1rem",
-  display: "grid",
-  gap: "0.9rem"
-};
-
-export const viewFiltersFieldStyle: CSSProperties = {
-  border: "1px solid #d2d2d2",
-  borderRadius: "8px",
-  padding: "0.55rem"
-};
+export const viewFiltersFieldClassName = "w-full min-w-0 rounded-lg border border-[#d2d2d2] p-[0.55rem]";
 
 export function ViewFiltersActionsBar({ appliedFilterCount, onOpen, onClear, children }: ViewFiltersActionsBarProps) {
   return (
-    <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", gap: "0.75rem", flexWrap: "wrap" }}>
-      <div style={{ flex: 1, minWidth: "220px" }}>{children}</div>
+    <div className="flex flex-wrap items-center justify-between gap-3">
+      <div className="min-w-[220px] flex-1">{children}</div>
 
-      <div style={{ display: "flex", gap: "0.5rem", flexWrap: "wrap" }}>
+      <div className="flex flex-wrap gap-2">
         <button
           type="button"
           onClick={onOpen}
-          style={{
-            border: "1px solid #0f766e",
-            borderRadius: "8px",
-            background: "#fff",
-            color: "#0a5f58",
-            padding: "0.45rem 0.7rem",
-            cursor: "pointer",
-            fontWeight: 600
-          }}
+          className="cursor-pointer rounded-lg border border-[#0f766e] bg-white px-[0.7rem] py-[0.45rem] font-semibold text-[#0a5f58]"
         >
           Filtrar dados{appliedFilterCount ? ` (${appliedFilterCount})` : ""}
         </button>
@@ -72,14 +41,7 @@ export function ViewFiltersActionsBar({ appliedFilterCount, onOpen, onClear, chi
           <button
             type="button"
             onClick={onClear}
-            style={{
-              border: "1px solid #d2d6db",
-              borderRadius: "8px",
-              background: "#fff",
-              color: "#334155",
-              padding: "0.45rem 0.7rem",
-              cursor: "pointer"
-            }}
+            className="cursor-pointer rounded-lg border border-[#d2d6db] bg-white px-[0.7rem] py-[0.45rem] text-[#334155]"
           >
             Limpar filtros
           </button>
@@ -95,15 +57,15 @@ export function ViewFiltersModal({ title, open, onClose, onApply, onClear, child
   }
 
   return (
-    <div style={overlayStyle} role="dialog" aria-modal="true" aria-label={title}>
-      <section style={panelStyle}>
-        <header style={{ display: "flex", justifyContent: "space-between", gap: "0.75rem", alignItems: "center", flexWrap: "wrap" }}>
-          <h3 style={{ margin: 0 }}>{title}</h3>
+    <div className={overlayClassName} role="dialog" aria-modal="true" aria-label={title}>
+      <section className={panelClassName}>
+        <header className="flex flex-wrap items-center justify-between gap-3">
+          <h3 className="m-0">{title}</h3>
 
           <button
             type="button"
             onClick={onClose}
-            style={{ border: "1px solid #d2d6db", borderRadius: "8px", background: "#fff", padding: "0.35rem 0.55rem", cursor: "pointer" }}
+            className="cursor-pointer rounded-lg border border-[#d2d6db] bg-white px-[0.55rem] py-[0.35rem]"
           >
             Fechar
           </button>
@@ -111,11 +73,11 @@ export function ViewFiltersModal({ title, open, onClose, onApply, onClear, child
 
         {children}
 
-        <footer style={{ display: "flex", justifyContent: "flex-end", gap: "0.6rem", flexWrap: "wrap" }}>
+        <footer className="flex flex-wrap justify-end gap-[0.6rem]">
           <button
             type="button"
             onClick={onClear}
-            style={{ border: "1px solid #d2d6db", borderRadius: "8px", background: "#fff", padding: "0.5rem 0.8rem", cursor: "pointer" }}
+            className="cursor-pointer rounded-lg border border-[#d2d6db] bg-white px-[0.8rem] py-[0.5rem]"
           >
             Limpar
           </button>
@@ -123,7 +85,7 @@ export function ViewFiltersModal({ title, open, onClose, onApply, onClear, child
           <button
             type="button"
             onClick={onApply}
-            style={{ border: "1px solid #14564c", borderRadius: "8px", background: "#1b7a6c", color: "#fff", padding: "0.5rem 0.8rem", cursor: "pointer" }}
+            className="cursor-pointer rounded-lg border border-[#14564c] bg-[#1b7a6c] px-[0.8rem] py-[0.5rem] text-white"
           >
             Aplicar filtros
           </button>

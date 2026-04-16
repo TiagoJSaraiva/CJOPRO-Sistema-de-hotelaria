@@ -4,7 +4,7 @@ import { useMemo, useState, type ReactNode } from "react";
 import type { AdminHotel } from "@hotel/shared";
 import { HotelListItem } from "./HotelListItem";
 import { DEFAULT_HOTEL_VIEW_FILTERS, applyHotelViewFilters, countAppliedHotelFilters, type HotelViewFilters } from "./hotelViewFilters";
-import { ViewFiltersActionsBar, ViewFiltersModal, viewFiltersFieldStyle } from "../../_components/ViewFiltersBase";
+import { ViewFiltersActionsBar, ViewFiltersModal, viewFiltersFieldClassName } from "../../_components/ViewFiltersBase";
 
 type HotelsViewFilterableSectionProps = {
   hotels: AdminHotel[];
@@ -44,7 +44,7 @@ export function HotelsViewFilterableSection({ hotels, canRead, canUpdate, canDel
   };
 
   return (
-    <section style={{ display: "grid", gap: "0.85rem" }}>
+    <section className="grid gap-[0.85rem]">
       <ViewFiltersActionsBar
         appliedFilterCount={appliedFilterCount}
         onOpen={() => {
@@ -56,11 +56,11 @@ export function HotelsViewFilterableSection({ hotels, canRead, canUpdate, canDel
         {children}
       </ViewFiltersActionsBar>
 
-      <p style={{ margin: 0, color: "#475467" }}>
+      <p className="pms-status-muted">
         Exibindo {filteredHotels.length} de {hotels.length} hoteis.
       </p>
 
-      <section style={{ display: "grid", gap: "0.75rem" }}>
+      <section className="grid gap-[0.75rem]">
         {filteredHotels.length ? (
           filteredHotels.map((hotel) => (
             <HotelListItem
@@ -74,7 +74,7 @@ export function HotelsViewFilterableSection({ hotels, canRead, canUpdate, canDel
             />
           ))
         ) : (
-          <article style={{ background: "#fff", border: "1px solid #e2e2e2", borderRadius: "12px", padding: "1rem", color: "#666" }}>
+          <article className="pms-empty-state">
             {appliedFilterCount ? "Nenhum hotel corresponde aos filtros aplicados." : "Nenhum hotel cadastrado ate o momento."}
           </article>
         )}
@@ -87,39 +87,43 @@ export function HotelsViewFilterableSection({ hotels, canRead, canUpdate, canDel
         onApply={handleApply}
         onClear={handleClear}
       >
-        <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(220px, 1fr))", gap: "0.75rem" }}>
-          <label style={{ display: "grid", gap: "0.35rem" }}>
+        <div className="grid grid-cols-[repeat(auto-fit,minmax(220px,1fr))] gap-[0.75rem]">
+          <label className="pms-field">
             <span>Nome ou slug</span>
             <input
               value={draftFilters.search}
               onChange={(event) => updateDraft("search", event.target.value)}
               placeholder="Ex.: centro ou hotel-centro"
-              style={viewFiltersFieldStyle}
+              className={viewFiltersFieldClassName}
             />
           </label>
 
-          <label style={{ display: "grid", gap: "0.35rem" }}>
+          <label className="pms-field">
             <span>Status</span>
-            <select value={draftFilters.status} onChange={(event) => updateDraft("status", event.target.value as HotelViewFilters["status"])} style={viewFiltersFieldStyle}>
+            <select
+              value={draftFilters.status}
+              onChange={(event) => updateDraft("status", event.target.value as HotelViewFilters["status"])}
+              className={viewFiltersFieldClassName}
+            >
               <option value="all">Todos</option>
               <option value="active">Ativo</option>
               <option value="inactive">Inativo</option>
             </select>
           </label>
 
-          <label style={{ display: "grid", gap: "0.35rem" }}>
+          <label className="pms-field">
             <span>Cidade</span>
-            <input value={draftFilters.city} onChange={(event) => updateDraft("city", event.target.value)} placeholder="Ex.: Sao Paulo" style={viewFiltersFieldStyle} />
+            <input value={draftFilters.city} onChange={(event) => updateDraft("city", event.target.value)} placeholder="Ex.: Sao Paulo" className={viewFiltersFieldClassName} />
           </label>
 
-          <label style={{ display: "grid", gap: "0.35rem" }}>
+          <label className="pms-field">
             <span>Estado</span>
-            <input value={draftFilters.state} onChange={(event) => updateDraft("state", event.target.value)} placeholder="Ex.: SP" style={viewFiltersFieldStyle} />
+            <input value={draftFilters.state} onChange={(event) => updateDraft("state", event.target.value)} placeholder="Ex.: SP" className={viewFiltersFieldClassName} />
           </label>
 
-          <label style={{ display: "grid", gap: "0.35rem" }}>
+          <label className="pms-field">
             <span>Pais</span>
-            <input value={draftFilters.country} onChange={(event) => updateDraft("country", event.target.value)} placeholder="Ex.: BR" style={viewFiltersFieldStyle} />
+            <input value={draftFilters.country} onChange={(event) => updateDraft("country", event.target.value)} placeholder="Ex.: BR" className={viewFiltersFieldClassName} />
           </label>
         </div>
       </ViewFiltersModal>

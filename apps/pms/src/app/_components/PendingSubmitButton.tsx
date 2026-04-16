@@ -13,15 +13,6 @@ type PendingSubmitButtonProps = {
   className?: string;
 };
 
-const spinnerStyle: CSSProperties = {
-  width: "1rem",
-  height: "1rem",
-  borderRadius: "999px",
-  border: "2px solid rgba(255, 255, 255, 0.35)",
-  borderTopColor: "#ffffff",
-  animation: "pms-spin 0.8s linear infinite"
-};
-
 export function PendingSubmitButton({
   children,
   pendingLabel = "Carregando...",
@@ -93,26 +84,16 @@ export function PendingSubmitButton({
       type="submit"
       disabled={pending || isVisualPending}
       aria-busy={isVisualPending}
-      className={className}
-      style={{
-        border: 0,
-        borderRadius: "8px",
-        padding: "0.6rem 0.8rem",
-        background: "#0f6d5f",
-        color: "#fff",
-        fontWeight: 600,
-        cursor: pending || isVisualPending ? "not-allowed" : "pointer",
-        opacity: pending || isVisualPending ? 0.88 : 1,
-        display: "inline-flex",
-        alignItems: "center",
-        justifyContent: "center",
-        minWidth: "9rem",
-        minHeight: "2.35rem",
-        ...style
-      }}
+      className={`inline-flex min-h-[2.35rem] min-w-36 items-center justify-center rounded-lg border-0 bg-[#0f6d5f] px-[0.8rem] py-[0.6rem] font-semibold text-white ${
+        pending || isVisualPending ? "cursor-not-allowed opacity-[0.88]" : "cursor-pointer"
+      } ${className ?? ""}`}
+      style={style}
     >
       {isVisualPending && showSpinner ? (
-        <span style={spinnerStyle} aria-hidden="true" />
+        <span
+          aria-hidden="true"
+          className="h-4 w-4 animate-[pms-spin_0.8s_linear_infinite] rounded-full border-2 border-[rgba(255,255,255,0.35)] border-t-white"
+        />
       ) : isVisualPending ? (
         pendingLabel
       ) : (

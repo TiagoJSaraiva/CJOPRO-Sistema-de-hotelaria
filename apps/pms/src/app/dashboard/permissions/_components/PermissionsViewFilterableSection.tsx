@@ -9,7 +9,7 @@ import {
   countAppliedPermissionFilters,
   type PermissionViewFilters
 } from "./permissionViewFilters";
-import { ViewFiltersActionsBar, ViewFiltersModal, viewFiltersFieldStyle } from "../../_components/ViewFiltersBase";
+import { ViewFiltersActionsBar, ViewFiltersModal, viewFiltersFieldClassName } from "../../_components/ViewFiltersBase";
 
 type PermissionsViewFilterableSectionProps = {
   permissions: AdminPermission[];
@@ -55,7 +55,7 @@ export function PermissionsViewFilterableSection({
   };
 
   return (
-    <section style={{ display: "grid", gap: "0.85rem" }}>
+    <section className="grid gap-[0.85rem]">
       <ViewFiltersActionsBar
         appliedFilterCount={appliedFilterCount}
         onOpen={() => {
@@ -67,11 +67,11 @@ export function PermissionsViewFilterableSection({
         {children}
       </ViewFiltersActionsBar>
 
-      <p style={{ margin: 0, color: "#475467" }}>
+      <p className="pms-status-muted">
         Exibindo {filteredPermissions.length} de {permissions.length} permissoes.
       </p>
 
-      <section style={{ display: "grid", gap: "0.75rem" }}>
+      <section className="grid gap-[0.75rem]">
         {filteredPermissions.length ? (
           filteredPermissions.map((item) => (
             <PermissionListItem
@@ -86,7 +86,7 @@ export function PermissionsViewFilterableSection({
             />
           ))
         ) : (
-          <article style={{ background: "#fff", border: "1px solid #e2e2e2", borderRadius: "12px", padding: "1rem", color: "#666" }}>
+          <article className="pms-empty-state">
             {appliedFilterCount ? "Nenhuma permissao corresponde aos filtros aplicados." : "Nenhuma permissao cadastrada ate o momento."}
           </article>
         )}
@@ -99,18 +99,18 @@ export function PermissionsViewFilterableSection({
         onApply={handleApply}
         onClear={handleClear}
       >
-        <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(220px, 1fr))", gap: "0.75rem" }}>
-          <label style={{ display: "grid", gap: "0.35rem" }}>
+        <div className="grid grid-cols-[repeat(auto-fit,minmax(220px,1fr))] gap-[0.75rem]">
+          <label className="pms-field">
             <span>Nome da permissao</span>
             <input
               value={draftFilters.search}
               onChange={(event) => setDraftFilters((current) => ({ ...current, search: event.target.value }))}
               placeholder="Ex.: USER_READ"
-              style={viewFiltersFieldStyle}
+              className={viewFiltersFieldClassName}
             />
           </label>
 
-          <label style={{ display: "grid", gap: "0.35rem" }}>
+          <label className="pms-field">
             <span>Tipo</span>
             <select
               value={draftFilters.type}
@@ -120,7 +120,7 @@ export function PermissionsViewFilterableSection({
                   type: event.target.value as "" | "SYSTEM_PERMISSION" | "HOTEL_PERMISSION"
                 }))
               }
-              style={viewFiltersFieldStyle}
+              className={viewFiltersFieldClassName}
             >
               <option value="">Todos</option>
               <option value={ADMIN_PERMISSION_TYPES.SYSTEM}>SYSTEM PERMISSION</option>
