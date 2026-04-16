@@ -6,7 +6,7 @@ import { registerPermissionRoutes } from "./routes/permissionRoutes";
 import { registerRoleRoutes } from "./routes/roleRoutes";
 import { registerUserRoutes } from "./routes/userRoutes";
 
-const DEFAULT_ALLOWED_ORIGINS = [
+const DEFAULT_ALLOWED_ORIGINS = [ // LOCALHOSTS PARA DESENVOLVIMENTO. DEPOIS COLOCAR AQUI AS URLS REAIS DOS SERVIÇOS HOSPEDADOS
   "http://localhost:3000",
   "http://localhost:3001",
   "http://localhost:3333",
