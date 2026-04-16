@@ -107,7 +107,7 @@ export default async function DashboardLayout({ children }: { children: ReactNod
         </div>
 
         <div style={{ display: "flex", alignItems: "center", gap: "0.75rem", flexWrap: "wrap", justifyContent: "flex-end" }}>
-          {activeHotelOptions.length ? (
+          {activeHotelOptions.length > 1 ? (
             <ActiveHotelSelector options={activeHotelOptions} initialHotelId={activeHotelId} onChangeAction={setActiveHotelAction} />
           ) : null}
 
