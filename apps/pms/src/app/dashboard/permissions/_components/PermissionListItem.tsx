@@ -9,6 +9,7 @@ type PermissionListItemProps = {
   canRead: boolean;
   canUpdate: boolean;
   canDelete: boolean;
+  isCurrentUserPermission: boolean;
   isViewing: boolean;
   isEditing: boolean;
 };
@@ -52,7 +53,7 @@ function PermissionEditForm({ permissionItem }: { permissionItem: AdminPermissio
   );
 }
 
-export function PermissionListItem({ permissionItem, canRead, canUpdate, canDelete, isViewing, isEditing }: PermissionListItemProps) {
+export function PermissionListItem({ permissionItem, canRead, canUpdate, canDelete, isCurrentUserPermission, isViewing, isEditing }: PermissionListItemProps) {
   const viewHref = `/dashboard/permissions/view?permissionId=${permissionItem.id}&mode=view`;
   const editHref = `/dashboard/permissions/view?permissionId=${permissionItem.id}&mode=edit`;
 
@@ -100,7 +101,7 @@ export function PermissionListItem({ permissionItem, canRead, canUpdate, canDele
             </Link>
           ) : null}
 
-          {canDelete ? (
+          {canDelete && !isCurrentUserPermission ? (
             <form action={deletePermissionAction}>
               <input type="hidden" name="id" value={permissionItem.id} />
               <button
@@ -110,6 +111,17 @@ export function PermissionListItem({ permissionItem, canRead, canUpdate, canDele
                 Apagar dados
               </button>
             </form>
+          ) : null}
+
+          {canDelete && isCurrentUserPermission ? (
+            <button
+              type="button"
+              disabled
+              title="Voce nao pode apagar uma permissao vinculada ao proprio usuario."
+              style={{ border: "1px solid #f1a1a1", color: "#b45353", background: "#fff6f6", borderRadius: "8px", padding: "0.45rem 0.65rem", cursor: "not-allowed" }}
+            >
+              Apagar dados
+            </button>
           ) : null}
         </div>
       </div>

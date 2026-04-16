@@ -41,6 +41,7 @@ export default async function RolesViewPage({ searchParams }: RolesViewPageProps
 
   const activeRoleId = String(searchParams?.roleId || "").trim();
   const mode = searchParams?.mode === "edit" ? "edit" : "view";
+  const currentUserRoleIds = Array.from(new Set((user?.roleAssignments || []).map((assignment) => assignment.roleId).filter(Boolean)));
 
   return (
     <section style={{ display: "grid", gap: "1rem" }}>
@@ -56,6 +57,7 @@ export default async function RolesViewPage({ searchParams }: RolesViewPageProps
         canRead={access.canRead}
         canUpdate={access.canUpdate}
         canDelete={access.canDelete}
+        currentUserRoleIds={currentUserRoleIds}
         activeRoleId={activeRoleId}
         mode={mode}
       >

@@ -1,16 +1,12 @@
 import { cookies } from "next/headers";
 import {
   ACTIVE_HOTEL_GLOBAL_VALUE,
+  type ActiveHotelOption,
   type AuthUser
 } from "@hotel/shared";
 
 const ACTIVE_HOTEL_COOKIE_NAME = "pms_active_hotel";
 const ACTIVE_HOTEL_COOKIE_MAX_AGE_SECONDS = 60 * 60 * 24 * 180;
-
-type ActiveHotelOption = {
-  hotelId: string | null;
-  label: string;
-};
 
 function normalizeHotelName(value: string | null): string {
   const trimmed = String(value || "").trim();
@@ -114,7 +110,8 @@ export function resolveActiveHotelForUser(
     return null;
   }
 
-  return accessibleHotels[0].id;
+  const firstHotel = accessibleHotels[0];
+  return firstHotel ? firstHotel.id : null;
 }
 
 export function saveActiveHotelCookie(hotelId: string | null): void {
@@ -132,4 +129,3 @@ export function clearActiveHotelCookie(): void {
 }
 
 export { ACTIVE_HOTEL_COOKIE_NAME };
-export type { ActiveHotelOption };

@@ -14,7 +14,7 @@ function createToken(permissions: string[]): string {
     tenantId: null,
     roles: ["Admin"],
     permissions,
-    roleAssignments: [],
+    roleAssignments: [{ roleId: "role-system", roleName: "Admin", roleType: "SYSTEM_ROLE", hotelId: null, hotelName: null }],
     iat: nowInSeconds,
     exp: nowInSeconds + 3600
   };
@@ -84,7 +84,45 @@ describe("routes/hotels", () => {
 
     expect(response.statusCode).toBe(400);
     expect(response.json()).toEqual({
+      code: "ADMIN_VALIDATION_ERROR",
       message: "Campos obrigatorios ausentes no cadastro inicial do hotel."
+    });
+  });
+
+  it("retorna 403 quando usuario sem escopo global tenta acessar endpoint global", async () => {
+    const nowInSeconds = Math.floor(Date.now() / 1000);
+    const token = signToken({
+      id: "user-hotel",
+      name: "Gestor Hotel",
+      email: "gestor@hotel.com",
+      tenantId: null,
+      roles: ["Gestor Hotel"],
+      permissions: [PERMISSIONS.HOTEL_READ],
+      roleAssignments: [
+        {
+          roleId: "role-hotel",
+          roleName: "Gestor Hotel",
+          roleType: "HOTEL_ROLE",
+          hotelId: "hotel-1",
+          hotelName: "Hotel Centro"
+        }
+      ],
+      iat: nowInSeconds,
+      exp: nowInSeconds + 3600
+    });
+
+    const response = await app.inject({
+      method: "GET",
+      url: "/admin/hotels",
+      headers: {
+        authorization: `Bearer ${token}`
+      }
+    });
+
+    expect(response.statusCode).toBe(403);
+    expect(response.json()).toEqual({
+      code: "ADMIN_SCOPE_NOT_ALLOWED",
+      message: "Acesso global de sistema obrigatorio para esta operacao."
     });
   });
 });

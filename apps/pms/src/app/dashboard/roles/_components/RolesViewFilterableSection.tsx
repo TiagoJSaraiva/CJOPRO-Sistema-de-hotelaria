@@ -13,6 +13,7 @@ type RolesViewFilterableSectionProps = {
   canRead: boolean;
   canUpdate: boolean;
   canDelete: boolean;
+  currentUserRoleIds: string[];
   activeRoleId: string;
   mode: "view" | "edit";
   children?: ReactNode;
@@ -25,6 +26,7 @@ export function RolesViewFilterableSection({
   canRead,
   canUpdate,
   canDelete,
+  currentUserRoleIds,
   activeRoleId,
   mode,
   children
@@ -81,6 +83,7 @@ export function RolesViewFilterableSection({
               canRead={canRead}
               canUpdate={canUpdate}
               canDelete={canDelete}
+              isCurrentUserRole={currentUserRoleIds.includes(item.id)}
               isViewing={activeRoleId === item.id && mode === "view"}
               isEditing={activeRoleId === item.id && mode === "edit"}
             />

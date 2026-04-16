@@ -6,16 +6,14 @@ import {
   AUTH_ERROR_MESSAGE,
   type AuthErrorResponse,
   type AuthUser,
+  type LoginResult,
   type LoginRequest,
-  type LoginSuccessResponse,
   type MeSuccessResponse
 } from "@hotel/shared";
 import { getActiveHotelCookieValue } from "./activeHotel";
 
 const SESSION_COOKIE_NAME = "pms_session_token";
 const DEFAULT_BACKEND_URL = "http://localhost:3334";
-
-export type LoginResult = LoginSuccessResponse;
 
 function getBackendUrl(): string {
   return process.env.BACKEND_SERVICE_URL || DEFAULT_BACKEND_URL;

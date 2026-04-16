@@ -16,6 +16,7 @@ type PermissionsViewFilterableSectionProps = {
   canRead: boolean;
   canUpdate: boolean;
   canDelete: boolean;
+  currentUserPermissionNames: string[];
   activePermissionId: string;
   mode: "view" | "edit";
   children?: ReactNode;
@@ -26,6 +27,7 @@ export function PermissionsViewFilterableSection({
   canRead,
   canUpdate,
   canDelete,
+  currentUserPermissionNames,
   activePermissionId,
   mode,
   children
@@ -78,6 +80,7 @@ export function PermissionsViewFilterableSection({
               canRead={canRead}
               canUpdate={canUpdate}
               canDelete={canDelete}
+              isCurrentUserPermission={currentUserPermissionNames.includes(item.name)}
               isViewing={activePermissionId === item.id && mode === "view"}
               isEditing={activePermissionId === item.id && mode === "edit"}
             />

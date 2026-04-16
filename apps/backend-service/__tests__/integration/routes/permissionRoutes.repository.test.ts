@@ -17,7 +17,7 @@ function createToken(permissions: string[]): string {
     tenantId: null,
     roles: ["Admin"],
     permissions,
-    roleAssignments: [],
+    roleAssignments: [{ roleId: "role-system", roleName: "Admin", roleType: "SYSTEM_ROLE", hotelId: null, hotelName: null }],
     iat: nowInSeconds,
     exp: nowInSeconds + 3600
   };
@@ -28,6 +28,7 @@ function createToken(permissions: string[]): string {
 function createPermissionsRepositoryMock(overrides: Partial<PermissionsRepository> = {}): PermissionsRepository {
   return {
     listPermissions: vi.fn(async () => []),
+    getPermissionById: vi.fn(async (id: string) => ({ id, name: "perm_name", type: "SYSTEM_PERMISSION" })),
     createPermission: vi.fn(async () => ({ result: "ok", item: { id: "perm-1", name: "perm_name", type: "SYSTEM_PERMISSION" } })),
     updatePermission: vi.fn(async () => ({ result: "ok", item: { id: "perm-1", name: "perm_name", type: "SYSTEM_PERMISSION" } })),
     deletePermission: vi.fn(async () => "ok"),
@@ -50,6 +51,50 @@ afterEach(async () => {
 });
 
 describe("routes/permissions with injected repository", () => {
+  it("bloqueia exclusao de permissao vinculada ao proprio usuario", async () => {
+    const repository = createPermissionsRepositoryMock({
+      getPermissionById: vi.fn(async () => ({ id: "perm-1", name: "perm_name", type: "SYSTEM_PERMISSION" }))
+    });
+
+    const app = await createPermissionsTestApp(repository);
+    const nowInSeconds = Math.floor(Date.now() / 1000);
+    const token = signToken({
+      id: "user-1",
+      name: "Admin",
+      email: "admin@example.com",
+      tenantId: null,
+      roles: ["Admin"],
+      permissions: [PERMISSIONS.PERMISSION_DELETE, "perm_name"],
+      roleAssignments: [
+        {
+          roleId: "role-system",
+          roleName: "Admin",
+          roleType: "SYSTEM_ROLE",
+          hotelId: null,
+          hotelName: null,
+          permissions: ["perm_name"]
+        }
+      ],
+      iat: nowInSeconds,
+      exp: nowInSeconds + 3600
+    });
+
+    const response = await app.inject({
+      method: "DELETE",
+      url: "/admin/permissions/perm-1",
+      headers: {
+        authorization: `Bearer ${token}`
+      }
+    });
+
+    expect(response.statusCode).toBe(403);
+    expect(response.json()).toEqual({
+      code: "ADMIN_SELF_ACTION_FORBIDDEN",
+      message: "Nao e permitido excluir uma permissao vinculada ao proprio usuario."
+    });
+    expect(repository.deletePermission).not.toHaveBeenCalled();
+  });
+
   it("retorna 409 quando delete de permissao sinaliza conflito", async () => {
     const repository = createPermissionsRepositoryMock({
       deletePermission: vi.fn(async () => "conflict")
@@ -66,6 +111,6 @@ describe("routes/permissions with injected repository", () => {
     });
 
     expect(response.statusCode).toBe(409);
-    expect(response.json()).toEqual({ message: "Permissao nao pode ser excluida: possui dependencias ativas." });
+    expect(response.json()).toEqual({ code: "ADMIN_CONFLICT", message: "Permissao nao pode ser excluida: possui dependencias ativas." });
   });
 });

@@ -36,6 +36,7 @@ export default async function PermissionsViewPage({ searchParams }: PermissionsV
   const activePermissionId = String(searchParams?.permissionId || "").trim();
   const mode = searchParams?.mode === "edit" ? "edit" : "view";
   const permissions = await listPermissions();
+  const currentUserPermissionNames = Array.from(new Set(user?.permissions || []));
 
   return (
     <section style={{ display: "grid", gap: "1rem" }}>
@@ -49,6 +50,7 @@ export default async function PermissionsViewPage({ searchParams }: PermissionsV
         canRead={access.canRead}
         canUpdate={access.canUpdate}
         canDelete={access.canDelete}
+        currentUserPermissionNames={currentUserPermissionNames}
         activePermissionId={activePermissionId}
         mode={mode}
       >

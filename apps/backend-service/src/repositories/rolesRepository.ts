@@ -1,6 +1,5 @@
 import { createServerClient } from "@hotel/shared";
 import { isSupabaseConflictError, isSupabaseForeignKeyError, isSupabaseNotFoundError } from "./supabaseError";
-import { applyHotelContextFilter } from "../common/hotelContextFilter";
 
 export type RoleWriteResult = "ok" | "conflict" | "not-found";
 
@@ -73,7 +72,7 @@ function isRolePermissionsDependencyError(error: unknown): boolean {
 export interface RolesRepository {
   listReferenceHotels(): Promise<Array<{ id: string; name: string }>>;
   listReferencePermissions(): Promise<Array<{ id: string; name: string; type: "SYSTEM_PERMISSION" | "HOTEL_PERMISSION" }>>;
-  listRolesWithRelations(activeHotelId?: string | null): Promise<RoleWithRelationsRow[]>;
+  listRolesWithRelations(): Promise<RoleWithRelationsRow[]>;
   hotelExists(hotelId: string): Promise<boolean>;
   findPermissionsByIds(permissionIds: string[]): Promise<Array<{ id: string; type: "SYSTEM_PERMISSION" | "HOTEL_PERMISSION" }>>;
   createRoleWithPermissions(
@@ -199,11 +198,12 @@ class SupabaseRolesRepository implements RolesRepository {
     return (data || []) as Array<{ id: string; name: string; type: "SYSTEM_PERMISSION" | "HOTEL_PERMISSION" }>;
   }
 
-  async listRolesWithRelations(activeHotelId?: string | null): Promise<RoleWithRelationsRow[]> {
+  async listRolesWithRelations(): Promise<RoleWithRelationsRow[]> {
     const supabase = createServerClient();
-    let query = supabase.from("roles").select("id,name,role_type,hotel_id,hotels(name),role_permissions(permission_id,permissions(id,name,type))");
-    query = applyHotelContextFilter(query, activeHotelId);
-    const { data, error } = await query.order("name", { ascending: true });
+    const { data, error } = await supabase
+      .from("roles")
+      .select("id,name,role_type,hotel_id,hotels(name),role_permissions(permission_id,permissions(id,name,type))")
+      .order("name", { ascending: true });
 
     if (error) {
       throw error;

@@ -10,8 +10,22 @@ export type AdminOkResponse = {
   ok: boolean;
 };
 
+export const ADMIN_ERROR_CODE = {
+  FORBIDDEN: "ADMIN_FORBIDDEN",
+  SCOPE_NOT_ALLOWED: "ADMIN_SCOPE_NOT_ALLOWED",
+  VALIDATION: "ADMIN_VALIDATION_ERROR",
+  NOT_FOUND: "ADMIN_NOT_FOUND",
+  CONFLICT: "ADMIN_CONFLICT",
+  INTERNAL: "ADMIN_INTERNAL_ERROR",
+  SELF_ACTION_FORBIDDEN: "ADMIN_SELF_ACTION_FORBIDDEN"
+} as const;
+
+export type AdminErrorCode = (typeof ADMIN_ERROR_CODE)[keyof typeof ADMIN_ERROR_CODE];
+
 export type AdminErrorResponse = {
-  message?: string;
+  code: AdminErrorCode;
+  message: string;
+  details?: string;
 };
 
 export const ADMIN_PERMISSION_TYPES = {

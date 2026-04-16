@@ -20,31 +20,31 @@ import {
   type AdminHotelUpdateInput,
   type HotelIdParams
 } from "@hotel/shared";
-import { ensureAuthorized, ensureAuthorizedWithScope } from "../auth/authorization";
+import { ensureAuthorizedSystem } from "../auth/authorization";
+import { adminError, ADMIN_ERROR_CODE } from "../common/adminError";
 import { normalizeOptionalText } from "../common/text";
 import { createHotelsRepository, type HotelsRepository } from "../repositories/hotelsRepository";
 
 export function registerHotelRoutes(app: FastifyInstance, repository: HotelsRepository = createHotelsRepository()): void {
   app.get("/admin/hotels", async (request, reply) => {
-    const authWithScope = ensureAuthorizedWithScope(request, reply, PERMISSIONS.HOTEL_READ);
-    if (!authWithScope) {
+    if (!ensureAuthorizedSystem(request, reply, PERMISSIONS.HOTEL_READ)) {
       return;
     }
 
-    const data = await repository.listHotels(authWithScope.activeHotelId).catch((error) => {
+    const data = await repository.listHotels().catch((error) => {
       request.log.error(error);
       return null;
     });
 
     if (!data) {
-      return reply.status(500).send({ message: "Falha ao consultar hoteis." });
+      return reply.status(500).send(adminError(ADMIN_ERROR_CODE.INTERNAL, "Falha ao consultar hoteis."));
     }
 
     return reply.send({ items: data });
   });
 
   app.post<{ Body: AdminHotelCreateInput }>("/admin/hotels", async (request, reply) => {
-    if (!ensureAuthorized(request, reply, PERMISSIONS.HOTEL_CREATE)) {
+    if (!ensureAuthorizedSystem(request, reply, PERMISSIONS.HOTEL_CREATE)) {
       return;
     }
 
@@ -77,27 +77,29 @@ export function registerHotelRoutes(app: FastifyInstance, repository: HotelsRepo
       !zipCode ||
       !slug
     ) {
-      return reply.status(400).send({ message: "Campos obrigatorios ausentes no cadastro inicial do hotel." });
+      return reply.status(400).send(adminError(ADMIN_ERROR_CODE.VALIDATION, "Campos obrigatorios ausentes no cadastro inicial do hotel."));
     }
 
     if (!isValidCountryCode(country)) {
-      return reply.status(400).send({ message: "Country invalido. Use codigo ISO de 2 letras (ex.: BR, US, PT)." });
+      return reply
+        .status(400)
+        .send(adminError(ADMIN_ERROR_CODE.VALIDATION, "Country invalido. Use codigo ISO de 2 letras (ex.: BR, US, PT)."));
     }
 
     if (!isValidEmail(email)) {
-      return reply.status(400).send({ message: "Email invalido." });
+      return reply.status(400).send(adminError(ADMIN_ERROR_CODE.VALIDATION, "Email invalido."));
     }
 
     if (!isValidPhone(phone)) {
-      return reply.status(400).send({ message: "Telefone invalido. Informe entre 8 e 15 digitos." });
+      return reply.status(400).send(adminError(ADMIN_ERROR_CODE.VALIDATION, "Telefone invalido. Informe entre 8 e 15 digitos."));
     }
 
     if (!isValidSlug(slug)) {
-      return reply.status(400).send({ message: "Slug invalido. Use apenas letras minusculas, numeros e hifen." });
+      return reply.status(400).send(adminError(ADMIN_ERROR_CODE.VALIDATION, "Slug invalido. Use apenas letras minusculas, numeros e hifen."));
     }
 
     if (!isValidZipCodeByCountry(country, zipCode)) {
-      return reply.status(400).send({ message: "CEP/Zip code invalido para o pais informado." });
+      return reply.status(400).send(adminError(ADMIN_ERROR_CODE.VALIDATION, "CEP/Zip code invalido para o pais informado."));
     }
 
     const localeSuggestion = suggestLocaleByCountry(country);
@@ -107,21 +109,23 @@ export function registerHotelRoutes(app: FastifyInstance, repository: HotelsRepo
     if (!timezone || !currency) {
       return reply
         .status(400)
-        .send({ message: "Timezone e currency sao obrigatorios (podem ser inferidos automaticamente pelo country)." });
+        .send(adminError(ADMIN_ERROR_CODE.VALIDATION, "Timezone e currency sao obrigatorios (podem ser inferidos automaticamente pelo country)."));
     }
 
     if (!isValidTimezone(timezone)) {
-      return reply.status(400).send({ message: "Timezone invalido." });
+      return reply.status(400).send(adminError(ADMIN_ERROR_CODE.VALIDATION, "Timezone invalido."));
     }
 
     if (!isValidCurrency(currency)) {
-      return reply.status(400).send({ message: "Moeda invalida." });
+      return reply.status(400).send(adminError(ADMIN_ERROR_CODE.VALIDATION, "Moeda invalida."));
     }
 
     const taxIdValidation = validateTaxIdByCountry(country, taxId);
 
     if (!taxIdValidation.isValid) {
-      return reply.status(400).send({ message: taxIdValidation.message || "Tax ID invalido para o pais informado." });
+      return reply
+        .status(400)
+        .send(adminError(ADMIN_ERROR_CODE.VALIDATION, taxIdValidation.message || "Tax ID invalido para o pais informado."));
     }
 
     const payload = {
@@ -150,29 +154,29 @@ export function registerHotelRoutes(app: FastifyInstance, repository: HotelsRepo
     });
 
     if (!createResult) {
-      return reply.status(500).send({ message: "Falha ao criar hotel." });
+      return reply.status(500).send(adminError(ADMIN_ERROR_CODE.INTERNAL, "Falha ao criar hotel."));
     }
 
     if (createResult.result === "conflict") {
-      return reply.status(409).send({ message: "Slug ja utilizado por outro hotel." });
+      return reply.status(409).send(adminError(ADMIN_ERROR_CODE.CONFLICT, "Slug ja utilizado por outro hotel."));
     }
 
     if (!createResult.item) {
-      return reply.status(500).send({ message: "Falha ao criar hotel." });
+      return reply.status(500).send(adminError(ADMIN_ERROR_CODE.INTERNAL, "Falha ao criar hotel."));
     }
 
     return reply.status(201).send({ item: createResult.item });
   });
 
   app.put<{ Params: HotelIdParams; Body: AdminHotelUpdateInput }>("/admin/hotels/:id", async (request, reply) => {
-    if (!ensureAuthorized(request, reply, PERMISSIONS.HOTEL_UPDATE)) {
+    if (!ensureAuthorizedSystem(request, reply, PERMISSIONS.HOTEL_UPDATE)) {
       return;
     }
 
     const id = request.params.id;
 
     if (!id) {
-      return reply.status(400).send({ message: "Id do hotel e obrigatorio para atualizacao." });
+      return reply.status(400).send(adminError(ADMIN_ERROR_CODE.VALIDATION, "Id do hotel e obrigatorio para atualizacao."));
     }
 
     const payload: Record<string, unknown> = {};
@@ -181,7 +185,7 @@ export function registerHotelRoutes(app: FastifyInstance, repository: HotelsRepo
       const parsedName = request.body.name.trim();
 
       if (!parsedName) {
-        return reply.status(400).send({ message: "Nome do hotel nao pode ficar vazio." });
+        return reply.status(400).send(adminError(ADMIN_ERROR_CODE.VALIDATION, "Nome do hotel nao pode ficar vazio."));
       }
 
       payload.name = parsedName;
@@ -191,7 +195,7 @@ export function registerHotelRoutes(app: FastifyInstance, repository: HotelsRepo
       const parsedLegalName = normalizeOptionalText(request.body.legal_name);
 
       if (!parsedLegalName) {
-        return reply.status(400).send({ message: "Razao social nao pode ficar vazia." });
+        return reply.status(400).send(adminError(ADMIN_ERROR_CODE.VALIDATION, "Razao social nao pode ficar vazia."));
       }
 
       payload.legal_name = parsedLegalName;
@@ -201,11 +205,11 @@ export function registerHotelRoutes(app: FastifyInstance, repository: HotelsRepo
       const parsedSlug = normalizeSlug(request.body.slug);
 
       if (!parsedSlug) {
-        return reply.status(400).send({ message: "Slug nao pode ficar vazio." });
+        return reply.status(400).send(adminError(ADMIN_ERROR_CODE.VALIDATION, "Slug nao pode ficar vazio."));
       }
 
       if (!isValidSlug(parsedSlug)) {
-        return reply.status(400).send({ message: "Slug invalido. Use apenas letras minusculas, numeros e hifen." });
+        return reply.status(400).send(adminError(ADMIN_ERROR_CODE.VALIDATION, "Slug invalido. Use apenas letras minusculas, numeros e hifen."));
       }
 
       payload.slug = parsedSlug;
@@ -215,11 +219,11 @@ export function registerHotelRoutes(app: FastifyInstance, repository: HotelsRepo
       const parsedEmail = normalizeOptionalText(normalizeEmail(request.body.email || ""));
 
       if (!parsedEmail) {
-        return reply.status(400).send({ message: "Email nao pode ficar vazio." });
+        return reply.status(400).send(adminError(ADMIN_ERROR_CODE.VALIDATION, "Email nao pode ficar vazio."));
       }
 
       if (!isValidEmail(parsedEmail)) {
-        return reply.status(400).send({ message: "Email invalido." });
+        return reply.status(400).send(adminError(ADMIN_ERROR_CODE.VALIDATION, "Email invalido."));
       }
 
       payload.email = parsedEmail;
@@ -229,11 +233,11 @@ export function registerHotelRoutes(app: FastifyInstance, repository: HotelsRepo
       const parsedPhone = normalizeOptionalText(sanitizePhone(request.body.phone || ""));
 
       if (!parsedPhone) {
-        return reply.status(400).send({ message: "Telefone nao pode ficar vazio." });
+        return reply.status(400).send(adminError(ADMIN_ERROR_CODE.VALIDATION, "Telefone nao pode ficar vazio."));
       }
 
       if (!isValidPhone(parsedPhone)) {
-        return reply.status(400).send({ message: "Telefone invalido. Informe entre 8 e 15 digitos." });
+        return reply.status(400).send(adminError(ADMIN_ERROR_CODE.VALIDATION, "Telefone invalido. Informe entre 8 e 15 digitos."));
       }
 
       payload.phone = parsedPhone;
@@ -267,13 +271,13 @@ export function registerHotelRoutes(app: FastifyInstance, repository: HotelsRepo
       const parsedCountry = normalizeOptionalText(request.body.country);
 
       if (!parsedCountry) {
-        return reply.status(400).send({ message: "Country nao pode ficar vazio." });
+        return reply.status(400).send(adminError(ADMIN_ERROR_CODE.VALIDATION, "Country nao pode ficar vazio."));
       }
 
       const normalizedCountry = normalizeCountryCode(parsedCountry);
 
       if (!isValidCountryCode(normalizedCountry)) {
-        return reply.status(400).send({ message: "Country invalido. Use codigo ISO de 2 letras." });
+        return reply.status(400).send(adminError(ADMIN_ERROR_CODE.VALIDATION, "Country invalido. Use codigo ISO de 2 letras."));
       }
 
       payload.country = normalizedCountry;
@@ -284,11 +288,11 @@ export function registerHotelRoutes(app: FastifyInstance, repository: HotelsRepo
       const parsedCountry = normalizeOptionalText((payload.country as string | null | undefined) || request.body?.country);
 
       if (!parsedZipCode) {
-        return reply.status(400).send({ message: "CEP/Zip code nao pode ficar vazio." });
+        return reply.status(400).send(adminError(ADMIN_ERROR_CODE.VALIDATION, "CEP/Zip code nao pode ficar vazio."));
       }
 
       if (parsedCountry && !isValidZipCodeByCountry(parsedCountry, parsedZipCode)) {
-        return reply.status(400).send({ message: "CEP/Zip code invalido para o pais informado." });
+        return reply.status(400).send(adminError(ADMIN_ERROR_CODE.VALIDATION, "CEP/Zip code invalido para o pais informado."));
       }
 
       payload.zip_code = parsedZipCode;
@@ -298,11 +302,11 @@ export function registerHotelRoutes(app: FastifyInstance, repository: HotelsRepo
       const parsedTimezone = normalizeOptionalText(request.body.timezone);
 
       if (!parsedTimezone) {
-        return reply.status(400).send({ message: "Timezone nao pode ficar vazio." });
+        return reply.status(400).send(adminError(ADMIN_ERROR_CODE.VALIDATION, "Timezone nao pode ficar vazio."));
       }
 
       if (!isValidTimezone(parsedTimezone)) {
-        return reply.status(400).send({ message: "Timezone invalido." });
+        return reply.status(400).send(adminError(ADMIN_ERROR_CODE.VALIDATION, "Timezone invalido."));
       }
 
       payload.timezone = parsedTimezone;
@@ -312,13 +316,13 @@ export function registerHotelRoutes(app: FastifyInstance, repository: HotelsRepo
       const parsedCurrency = normalizeOptionalText(request.body.currency);
 
       if (!parsedCurrency) {
-        return reply.status(400).send({ message: "Moeda nao pode ficar vazia." });
+        return reply.status(400).send(adminError(ADMIN_ERROR_CODE.VALIDATION, "Moeda nao pode ficar vazia."));
       }
 
       const normalizedCurrency = normalizeCurrency(parsedCurrency);
 
       if (!isValidCurrency(normalizedCurrency)) {
-        return reply.status(400).send({ message: "Moeda invalida." });
+        return reply.status(400).send(adminError(ADMIN_ERROR_CODE.VALIDATION, "Moeda invalida."));
       }
 
       payload.currency = normalizedCurrency;
@@ -333,24 +337,26 @@ export function registerHotelRoutes(app: FastifyInstance, repository: HotelsRepo
       const countryForValidation = normalizeOptionalText(request.body?.country);
 
       if (!parsedTaxId) {
-        return reply.status(400).send({ message: "Tax ID nao pode ficar vazio." });
+        return reply.status(400).send(adminError(ADMIN_ERROR_CODE.VALIDATION, "Tax ID nao pode ficar vazio."));
       }
 
       if (!countryForValidation) {
-        return reply.status(400).send({ message: "Ao atualizar tax_id, informe tambem o campo country." });
+        return reply.status(400).send(adminError(ADMIN_ERROR_CODE.VALIDATION, "Ao atualizar tax_id, informe tambem o campo country."));
       }
 
       const taxIdValidation = validateTaxIdByCountry(countryForValidation, parsedTaxId);
 
       if (!taxIdValidation.isValid) {
-        return reply.status(400).send({ message: taxIdValidation.message || "Tax ID invalido para o pais informado." });
+        return reply
+          .status(400)
+          .send(adminError(ADMIN_ERROR_CODE.VALIDATION, taxIdValidation.message || "Tax ID invalido para o pais informado."));
       }
 
       payload.tax_id = taxIdValidation.normalizedTaxId;
     }
 
     if (!Object.keys(payload).length) {
-      return reply.status(400).send({ message: "Nenhum campo informado para atualizacao." });
+      return reply.status(400).send(adminError(ADMIN_ERROR_CODE.VALIDATION, "Nenhum campo informado para atualizacao."));
     }
 
     const updateResult = await repository.updateHotel(id, payload).catch((error) => {
@@ -359,33 +365,33 @@ export function registerHotelRoutes(app: FastifyInstance, repository: HotelsRepo
     });
 
     if (!updateResult) {
-      return reply.status(500).send({ message: "Falha ao atualizar hotel." });
+      return reply.status(500).send(adminError(ADMIN_ERROR_CODE.INTERNAL, "Falha ao atualizar hotel."));
     }
 
     if (updateResult.result === "not-found") {
-      return reply.status(404).send({ message: "Hotel nao encontrado." });
+      return reply.status(404).send(adminError(ADMIN_ERROR_CODE.NOT_FOUND, "Hotel nao encontrado."));
     }
 
     if (updateResult.result === "conflict") {
-      return reply.status(409).send({ message: "Slug ja utilizado por outro hotel." });
+      return reply.status(409).send(adminError(ADMIN_ERROR_CODE.CONFLICT, "Slug ja utilizado por outro hotel."));
     }
 
     if (!updateResult.item) {
-      return reply.status(500).send({ message: "Falha ao atualizar hotel." });
+      return reply.status(500).send(adminError(ADMIN_ERROR_CODE.INTERNAL, "Falha ao atualizar hotel."));
     }
 
     return reply.send({ item: updateResult.item });
   });
 
   app.delete<{ Params: HotelIdParams }>("/admin/hotels/:id", async (request, reply) => {
-    if (!ensureAuthorized(request, reply, PERMISSIONS.HOTEL_DELETE)) {
+    if (!ensureAuthorizedSystem(request, reply, PERMISSIONS.HOTEL_DELETE)) {
       return;
     }
 
     const id = request.params.id;
 
     if (!id) {
-      return reply.status(400).send({ message: "Id do hotel e obrigatorio para exclusao." });
+      return reply.status(400).send(adminError(ADMIN_ERROR_CODE.VALIDATION, "Id do hotel e obrigatorio para exclusao."));
     }
 
     const deleteResult = await repository.deleteHotel(id).catch((error) => {
@@ -394,15 +400,15 @@ export function registerHotelRoutes(app: FastifyInstance, repository: HotelsRepo
     });
 
     if (!deleteResult) {
-      return reply.status(500).send({ message: "Falha ao excluir hotel." });
+      return reply.status(500).send(adminError(ADMIN_ERROR_CODE.INTERNAL, "Falha ao excluir hotel."));
     }
 
     if (deleteResult === "not-found") {
-      return reply.status(404).send({ message: "Hotel nao encontrado." });
+      return reply.status(404).send(adminError(ADMIN_ERROR_CODE.NOT_FOUND, "Hotel nao encontrado."));
     }
 
     if (deleteResult === "conflict") {
-      return reply.status(409).send({ message: "Hotel nao pode ser excluido: possui dependencias ativas." });
+      return reply.status(409).send(adminError(ADMIN_ERROR_CODE.CONFLICT, "Hotel nao pode ser excluido: possui dependencias ativas."));
     }
 
     return reply.send({ ok: true });

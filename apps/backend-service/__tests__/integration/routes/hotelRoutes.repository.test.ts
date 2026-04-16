@@ -17,7 +17,7 @@ function createToken(permissions: string[]): string {
     tenantId: null,
     roles: ["Admin"],
     permissions,
-    roleAssignments: [],
+    roleAssignments: [{ roleId: "role-system", roleName: "Admin", roleType: "SYSTEM_ROLE", hotelId: null, hotelName: null }],
     iat: nowInSeconds,
     exp: nowInSeconds + 3600
   };
@@ -42,7 +42,7 @@ afterEach(async () => {
 describe("routes/hotels with injected repository", () => {
   it("lista hoteis com repository injetado", async () => {
     const repository: HotelsRepository = {
-      listHotels: vi.fn(async (activeHotelId?: string | null) => [
+      listHotels: vi.fn(async () => [
         {
           id: "hotel-1",
           name: "Hotel Centro"
@@ -112,7 +112,7 @@ describe("routes/hotels with injected repository", () => {
     });
 
     expect(response.statusCode).toBe(409);
-    expect(response.json()).toEqual({ message: "Slug ja utilizado por outro hotel." });
+    expect(response.json()).toEqual({ code: "ADMIN_CONFLICT", message: "Slug ja utilizado por outro hotel." });
     expect(repository.createHotel).toHaveBeenCalledTimes(1);
   });
 
@@ -135,6 +135,6 @@ describe("routes/hotels with injected repository", () => {
     });
 
     expect(response.statusCode).toBe(409);
-    expect(response.json()).toEqual({ message: "Hotel nao pode ser excluido: possui dependencias ativas." });
+    expect(response.json()).toEqual({ code: "ADMIN_CONFLICT", message: "Hotel nao pode ser excluido: possui dependencias ativas." });
   });
 });

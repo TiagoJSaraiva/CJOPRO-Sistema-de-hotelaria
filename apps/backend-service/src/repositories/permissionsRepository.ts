@@ -11,6 +11,7 @@ type PermissionRow = {
 
 export interface PermissionsRepository {
   listPermissions(): Promise<PermissionRow[]>;
+  getPermissionById(id: string): Promise<PermissionRow | null>;
   createPermission(payload: { name: string; type: "SYSTEM_PERMISSION" | "HOTEL_PERMISSION" }): Promise<{ result: PermissionWriteResult; item?: PermissionRow }>;
   updatePermission(
     id: string,
@@ -29,6 +30,21 @@ class SupabasePermissionsRepository implements PermissionsRepository {
     }
 
     return (data || []) as PermissionRow[];
+  }
+
+  async getPermissionById(id: string): Promise<PermissionRow | null> {
+    const supabase = createServerClient();
+    const { data, error } = await supabase.from("permissions").select("id,name,type").eq("id", id).single();
+
+    if (error) {
+      if (isSupabaseNotFoundError(error)) {
+        return null;
+      }
+
+      throw error;
+    }
+
+    return data as PermissionRow;
   }
 
   async createPermission(payload: { name: string; type: "SYSTEM_PERMISSION" | "HOTEL_PERMISSION" }): Promise<{ result: PermissionWriteResult; item?: PermissionRow }> {

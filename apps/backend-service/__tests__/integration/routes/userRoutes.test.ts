@@ -86,6 +86,7 @@ describe("routes/users", () => {
 
     expect(response.statusCode).toBe(400);
     expect(response.json()).toEqual({
+      code: "ADMIN_VALIDATION_ERROR",
       message: "Nome, email e senha temporaria sao obrigatorios."
     });
   });

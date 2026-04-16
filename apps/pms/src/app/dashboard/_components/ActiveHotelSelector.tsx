@@ -2,8 +2,7 @@
 
 import { useRouter } from "next/navigation";
 import { useMemo, useState, useTransition } from "react";
-import type { ActiveHotelOption } from "../../../lib/activeHotel";
-import { ACTIVE_HOTEL_GLOBAL_VALUE } from "@hotel/shared";
+import { ACTIVE_HOTEL_GLOBAL_VALUE, type ActiveHotelOption } from "@hotel/shared";
 
 type ActiveHotelSelectorProps = {
   options: ActiveHotelOption[];

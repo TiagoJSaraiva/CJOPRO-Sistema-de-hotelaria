@@ -17,7 +17,7 @@ function createToken(permissions: string[]): string {
     tenantId: null,
     roles: ["Admin"],
     permissions,
-    roleAssignments: [],
+    roleAssignments: [{ roleId: "role-system", roleName: "Admin", roleType: "SYSTEM_ROLE", hotelId: null, hotelName: null }],
     iat: nowInSeconds,
     exp: nowInSeconds + 3600
   };
@@ -29,7 +29,7 @@ function createRolesRepositoryMock(overrides: Partial<RolesRepository> = {}): Ro
   return {
     listReferenceHotels: vi.fn(async () => []),
     listReferencePermissions: vi.fn(async () => []),
-    listRolesWithRelations: vi.fn(async (activeHotelId?: string | null) => []),
+    listRolesWithRelations: vi.fn(async () => []),
     hotelExists: vi.fn(async () => true),
     findPermissionsByIds: vi.fn(async () => []),
     createRoleWithPermissions: vi.fn(async () => ({ result: "ok", id: "role-2" })),
@@ -67,6 +67,39 @@ afterEach(async () => {
 });
 
 describe("routes/roles with injected repository", () => {
+  it("bloqueia exclusao de role vinculada ao proprio usuario", async () => {
+    const repository = createRolesRepositoryMock();
+    const app = await createRolesTestApp(repository);
+
+    const nowInSeconds = Math.floor(Date.now() / 1000);
+    const token = signToken({
+      id: "user-1",
+      name: "Admin",
+      email: "admin@example.com",
+      tenantId: null,
+      roles: ["Admin"],
+      permissions: [PERMISSIONS.ROLE_DELETE],
+      roleAssignments: [{ roleId: "role-own", roleName: "Admin", roleType: "SYSTEM_ROLE", hotelId: null, hotelName: null }],
+      iat: nowInSeconds,
+      exp: nowInSeconds + 3600
+    });
+
+    const response = await app.inject({
+      method: "DELETE",
+      url: "/admin/roles/role-own",
+      headers: {
+        authorization: `Bearer ${token}`
+      }
+    });
+
+    expect(response.statusCode).toBe(403);
+    expect(response.json()).toEqual({
+      code: "ADMIN_SELF_ACTION_FORBIDDEN",
+      message: "Nao e permitido excluir uma role vinculada ao proprio usuario."
+    });
+    expect(repository.deleteRole).not.toHaveBeenCalled();
+  });
+
   it("cria role com operacao atomica de permissoes", async () => {
     const repository = createRolesRepositoryMock({
       findPermissionsByIds: vi.fn(async () => [
@@ -125,6 +158,7 @@ describe("routes/roles with injected repository", () => {
 
     expect(response.statusCode).toBe(400);
     expect(response.json()).toEqual({
+      code: "ADMIN_VALIDATION_ERROR",
       message: "Role de sistema aceita apenas permissoes do tipo SYSTEM_PERMISSION."
     });
   });
@@ -151,7 +185,7 @@ describe("routes/roles with injected repository", () => {
     });
 
     expect(response.statusCode).toBe(409);
-    expect(response.json()).toEqual({ message: "Nome de role ja existente." });
+    expect(response.json()).toEqual({ code: "ADMIN_CONFLICT", message: "Nome de role ja existente." });
   });
 
   it("retorna 409 quando delete de role sinaliza conflito", async () => {
@@ -170,7 +204,7 @@ describe("routes/roles with injected repository", () => {
     });
 
     expect(response.statusCode).toBe(409);
-    expect(response.json()).toEqual({ message: "Role nao pode ser excluida: possui dependencias ativas." });
+    expect(response.json()).toEqual({ code: "ADMIN_CONFLICT", message: "Role nao pode ser excluida: possui dependencias ativas." });
   });
 
   it("retorna 200 quando delete de role e concluido", async () => {
@@ -208,6 +242,6 @@ describe("routes/roles with injected repository", () => {
     });
 
     expect(response.statusCode).toBe(404);
-    expect(response.json()).toEqual({ message: "Role nao encontrada." });
+    expect(response.json()).toEqual({ code: "ADMIN_NOT_FOUND", message: "Role nao encontrada." });
   });
 });

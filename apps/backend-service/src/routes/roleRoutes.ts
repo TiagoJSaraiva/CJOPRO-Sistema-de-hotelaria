@@ -1,6 +1,7 @@
 import type { FastifyInstance } from "fastify";
 import {
   ADMIN_PERMISSION_TYPES,
+  ADMIN_ERROR_CODE,
   ADMIN_ROLE_TYPES,
   PERMISSIONS,
   type AdminRoleCreateInput,
@@ -9,7 +10,8 @@ import {
   type HotelIdParams
 } from "@hotel/shared";
 import { mapAdminRole, normalizePermissionIds } from "../admin/mappers";
-import { ensureAuthorized, ensureAuthorizedAny, ensureAuthorizedWithScope } from "../auth/authorization";
+import { ensureAuthorizedSystem, ensureAuthorizedAnySystem } from "../auth/authorization";
+import { adminError } from "../common/adminError";
 import { normalizeOptionalText } from "../common/text";
 import { createRolesRepository, type RolesRepository } from "../repositories/rolesRepository";
 
@@ -26,7 +28,7 @@ function parseRoleType(value: unknown): AdminRoleType | null {
 
 export function registerRoleRoutes(app: FastifyInstance, repository: RolesRepository = createRolesRepository()): void {
   app.get("/admin/roles/reference-data", async (request, reply) => {
-    if (!ensureAuthorizedAny(request, reply, [PERMISSIONS.ROLE_READ, PERMISSIONS.ROLE_CREATE, PERMISSIONS.ROLE_UPDATE])) {
+    if (!ensureAuthorizedAnySystem(request, reply, [PERMISSIONS.ROLE_READ, PERMISSIONS.ROLE_CREATE, PERMISSIONS.ROLE_UPDATE])) {
       return;
     }
 
@@ -39,28 +41,27 @@ export function registerRoleRoutes(app: FastifyInstance, repository: RolesReposi
       });
     } catch (error) {
       request.log.error(error);
-      return reply.status(500).send({ message: "Falha ao consultar dados auxiliares de roles." });
+      return reply.status(500).send(adminError(ADMIN_ERROR_CODE.INTERNAL, "Falha ao consultar dados auxiliares de roles."));
     }
   });
 
   app.get("/admin/roles", async (request, reply) => {
-    const authWithScope = ensureAuthorizedWithScope(request, reply, PERMISSIONS.ROLE_READ);
-    if (!authWithScope) {
+    if (!ensureAuthorizedSystem(request, reply, PERMISSIONS.ROLE_READ)) {
       return;
     }
 
     try {
-      const data = await repository.listRolesWithRelations(authWithScope.activeHotelId);
+      const data = await repository.listRolesWithRelations();
 
       return reply.send({ items: data.map(mapAdminRole) });
     } catch (error) {
       request.log.error(error);
-      return reply.status(500).send({ message: "Falha ao consultar roles." });
+      return reply.status(500).send(adminError(ADMIN_ERROR_CODE.INTERNAL, "Falha ao consultar roles."));
     }
   });
 
   app.post<{ Body: RoleCreateBody }>("/admin/roles", async (request, reply) => {
-    if (!ensureAuthorized(request, reply, PERMISSIONS.ROLE_CREATE)) {
+    if (!ensureAuthorizedSystem(request, reply, PERMISSIONS.ROLE_CREATE)) {
       return;
     }
 
@@ -70,15 +71,15 @@ export function registerRoleRoutes(app: FastifyInstance, repository: RolesReposi
     const permissionIds = normalizePermissionIds(request.body?.permission_ids || []);
 
     if (!name) {
-      return reply.status(400).send({ message: "Nome da role e obrigatorio." });
+      return reply.status(400).send(adminError(ADMIN_ERROR_CODE.VALIDATION, "Nome da role e obrigatorio."));
     }
 
     if (!roleType) {
-      return reply.status(400).send({ message: "Tipo da role e obrigatorio." });
+      return reply.status(400).send(adminError(ADMIN_ERROR_CODE.VALIDATION, "Tipo da role e obrigatorio."));
     }
 
     if (roleType === ADMIN_ROLE_TYPES.SYSTEM && hotelId) {
-      return reply.status(400).send({ message: "Roles de sistema nao podem ter hotel associado." });
+      return reply.status(400).send(adminError(ADMIN_ERROR_CODE.VALIDATION, "Roles de sistema nao podem ter hotel associado."));
     }
 
     if (roleType === ADMIN_ROLE_TYPES.HOTEL && hotelId) {
@@ -88,11 +89,11 @@ export function registerRoleRoutes(app: FastifyInstance, repository: RolesReposi
       });
 
       if (exists === null) {
-        return reply.status(500).send({ message: "Falha ao validar hotel da role." });
+        return reply.status(500).send(adminError(ADMIN_ERROR_CODE.INTERNAL, "Falha ao validar hotel da role."));
       }
 
       if (!exists) {
-        return reply.status(400).send({ message: "Hotel selecionado nao existe." });
+        return reply.status(400).send(adminError(ADMIN_ERROR_CODE.VALIDATION, "Hotel selecionado nao existe."));
       }
     }
 
@@ -103,11 +104,11 @@ export function registerRoleRoutes(app: FastifyInstance, repository: RolesReposi
       });
 
       if (permissions === null) {
-        return reply.status(500).send({ message: "Falha ao validar permissoes da role." });
+        return reply.status(500).send(adminError(ADMIN_ERROR_CODE.INTERNAL, "Falha ao validar permissoes da role."));
       }
 
       if (permissions.length !== permissionIds.length) {
-        return reply.status(400).send({ message: "Uma ou mais permissoes selecionadas nao existem." });
+        return reply.status(400).send(adminError(ADMIN_ERROR_CODE.VALIDATION, "Uma ou mais permissoes selecionadas nao existem."));
       }
 
       const expectedPermissionType =
@@ -117,6 +118,7 @@ export function registerRoleRoutes(app: FastifyInstance, repository: RolesReposi
 
       if (hasInvalidPermissionType) {
         return reply.status(400).send({
+          code: ADMIN_ERROR_CODE.VALIDATION,
           message:
             roleType === ADMIN_ROLE_TYPES.SYSTEM
               ? "Role de sistema aceita apenas permissoes do tipo SYSTEM_PERMISSION."
@@ -131,15 +133,15 @@ export function registerRoleRoutes(app: FastifyInstance, repository: RolesReposi
     });
 
     if (!createRoleResult) {
-      return reply.status(500).send({ message: "Falha ao criar role." });
+      return reply.status(500).send(adminError(ADMIN_ERROR_CODE.INTERNAL, "Falha ao criar role."));
     }
 
     if (createRoleResult.result === "conflict") {
-      return reply.status(409).send({ message: "Nome de role ja existente." });
+      return reply.status(409).send(adminError(ADMIN_ERROR_CODE.CONFLICT, "Nome de role ja existente."));
     }
 
     if (!createRoleResult.id) {
-      return reply.status(500).send({ message: "Falha ao criar role." });
+      return reply.status(500).send(adminError(ADMIN_ERROR_CODE.INTERNAL, "Falha ao criar role."));
     }
 
     const roleWithRelations = await repository.getRoleWithRelationsById(createRoleResult.id).catch((error) => {
@@ -148,21 +150,21 @@ export function registerRoleRoutes(app: FastifyInstance, repository: RolesReposi
     });
 
     if (!roleWithRelations) {
-      return reply.status(500).send({ message: "Falha ao consultar role criada." });
+      return reply.status(500).send(adminError(ADMIN_ERROR_CODE.INTERNAL, "Falha ao consultar role criada."));
     }
 
     return reply.status(201).send({ item: mapAdminRole(roleWithRelations) });
   });
 
   app.put<{ Params: HotelIdParams; Body: RoleUpdateBody }>("/admin/roles/:id", async (request, reply) => {
-    if (!ensureAuthorized(request, reply, PERMISSIONS.ROLE_UPDATE)) {
+    if (!ensureAuthorizedSystem(request, reply, PERMISSIONS.ROLE_UPDATE)) {
       return;
     }
 
     const id = request.params.id;
 
     if (!id) {
-      return reply.status(400).send({ message: "Id da role e obrigatorio para atualizacao." });
+      return reply.status(400).send(adminError(ADMIN_ERROR_CODE.VALIDATION, "Id da role e obrigatorio para atualizacao."));
     }
 
     const payload: Record<string, unknown> = {};
@@ -171,7 +173,7 @@ export function registerRoleRoutes(app: FastifyInstance, repository: RolesReposi
       const parsedName = normalizeOptionalText(request.body.name);
 
       if (!parsedName) {
-        return reply.status(400).send({ message: "Nome da role nao pode ficar vazio." });
+        return reply.status(400).send(adminError(ADMIN_ERROR_CODE.VALIDATION, "Nome da role nao pode ficar vazio."));
       }
 
       payload.name = parsedName;
@@ -181,7 +183,7 @@ export function registerRoleRoutes(app: FastifyInstance, repository: RolesReposi
       const parsedRoleType = parseRoleType(request.body.role_type);
 
       if (!parsedRoleType) {
-        return reply.status(400).send({ message: "Tipo da role invalido para atualizacao." });
+        return reply.status(400).send(adminError(ADMIN_ERROR_CODE.VALIDATION, "Tipo da role invalido para atualizacao."));
       }
 
       payload.role_type = parsedRoleType;
@@ -195,7 +197,7 @@ export function registerRoleRoutes(app: FastifyInstance, repository: RolesReposi
     const permissionIds = hasPermissionsPayload ? normalizePermissionIds(request.body?.permission_ids) : [];
 
     if (!Object.keys(payload).length && !hasPermissionsPayload) {
-      return reply.status(400).send({ message: "Nenhum campo informado para atualizacao." });
+      return reply.status(400).send(adminError(ADMIN_ERROR_CODE.VALIDATION, "Nenhum campo informado para atualizacao."));
     }
 
     const currentRole = await repository.getRoleWithRelationsById(id).catch((error) => {
@@ -204,7 +206,7 @@ export function registerRoleRoutes(app: FastifyInstance, repository: RolesReposi
     });
 
     if (!currentRole) {
-      return reply.status(404).send({ message: "Role nao encontrada." });
+      return reply.status(404).send(adminError(ADMIN_ERROR_CODE.NOT_FOUND, "Role nao encontrada."));
     }
 
     const effectiveRoleType = (payload.role_type as AdminRoleType | undefined) || currentRole.role_type || ADMIN_ROLE_TYPES.SYSTEM;
@@ -214,7 +216,7 @@ export function registerRoleRoutes(app: FastifyInstance, repository: RolesReposi
         : currentRole.hotel_id || null;
 
     if (effectiveRoleType === ADMIN_ROLE_TYPES.SYSTEM && effectiveHotelId) {
-      return reply.status(400).send({ message: "Roles de sistema nao podem ter hotel associado." });
+      return reply.status(400).send(adminError(ADMIN_ERROR_CODE.VALIDATION, "Roles de sistema nao podem ter hotel associado."));
     }
 
     if (effectiveRoleType === ADMIN_ROLE_TYPES.HOTEL && effectiveHotelId) {
@@ -224,11 +226,11 @@ export function registerRoleRoutes(app: FastifyInstance, repository: RolesReposi
       });
 
       if (exists === null) {
-        return reply.status(500).send({ message: "Falha ao validar hotel da role." });
+        return reply.status(500).send(adminError(ADMIN_ERROR_CODE.INTERNAL, "Falha ao validar hotel da role."));
       }
 
       if (!exists) {
-        return reply.status(400).send({ message: "Hotel selecionado nao existe." });
+        return reply.status(400).send(adminError(ADMIN_ERROR_CODE.VALIDATION, "Hotel selecionado nao existe."));
       }
     }
 
@@ -239,11 +241,11 @@ export function registerRoleRoutes(app: FastifyInstance, repository: RolesReposi
       });
 
       if (permissions === null) {
-        return reply.status(500).send({ message: "Falha ao validar permissoes da role." });
+        return reply.status(500).send(adminError(ADMIN_ERROR_CODE.INTERNAL, "Falha ao validar permissoes da role."));
       }
 
       if (permissions.length !== permissionIds.length) {
-        return reply.status(400).send({ message: "Uma ou mais permissoes selecionadas nao existem." });
+        return reply.status(400).send(adminError(ADMIN_ERROR_CODE.VALIDATION, "Uma ou mais permissoes selecionadas nao existem."));
       }
 
       const expectedPermissionType =
@@ -253,6 +255,7 @@ export function registerRoleRoutes(app: FastifyInstance, repository: RolesReposi
 
       if (hasInvalidPermissionType) {
         return reply.status(400).send({
+          code: ADMIN_ERROR_CODE.VALIDATION,
           message:
             effectiveRoleType === ADMIN_ROLE_TYPES.SYSTEM
               ? "Role de sistema aceita apenas permissoes do tipo SYSTEM_PERMISSION."
@@ -269,15 +272,15 @@ export function registerRoleRoutes(app: FastifyInstance, repository: RolesReposi
       });
 
     if (!updateResult) {
-      return reply.status(500).send({ message: "Falha ao atualizar role." });
+      return reply.status(500).send(adminError(ADMIN_ERROR_CODE.INTERNAL, "Falha ao atualizar role."));
     }
 
     if (updateResult === "conflict") {
-      return reply.status(409).send({ message: "Nome de role ja existente." });
+      return reply.status(409).send(adminError(ADMIN_ERROR_CODE.CONFLICT, "Nome de role ja existente."));
     }
 
     if (updateResult === "not-found") {
-      return reply.status(404).send({ message: "Role nao encontrada." });
+      return reply.status(404).send(adminError(ADMIN_ERROR_CODE.NOT_FOUND, "Role nao encontrada."));
     }
 
     const updatedRole = await repository.getRoleWithRelationsById(id).catch((error) => {
@@ -286,14 +289,15 @@ export function registerRoleRoutes(app: FastifyInstance, repository: RolesReposi
     });
 
     if (!updatedRole) {
-      return reply.status(500).send({ message: "Falha ao consultar role atualizada." });
+      return reply.status(500).send(adminError(ADMIN_ERROR_CODE.INTERNAL, "Falha ao consultar role atualizada."));
     }
 
     return reply.send({ item: mapAdminRole(updatedRole) });
   });
 
   app.delete<{ Params: HotelIdParams }>("/admin/roles/:id", async (request, reply) => {
-    if (!ensureAuthorized(request, reply, PERMISSIONS.ROLE_DELETE)) {
+    const session = ensureAuthorizedSystem(request, reply, PERMISSIONS.ROLE_DELETE);
+    if (!session) {
       return;
     }
 
@@ -302,7 +306,15 @@ export function registerRoleRoutes(app: FastifyInstance, repository: RolesReposi
 
     if (!id) {
       request.log.warn("roles.delete.missing-id");
-      return reply.status(400).send({ message: "Id da role e obrigatorio para exclusao." });
+      return reply.status(400).send(adminError(ADMIN_ERROR_CODE.VALIDATION, "Id da role e obrigatorio para exclusao."));
+    }
+
+    const isSelfRole = (session.roleAssignments || []).some((assignment) => assignment.roleId === id);
+
+    if (isSelfRole) {
+      return reply
+        .status(403)
+        .send(adminError(ADMIN_ERROR_CODE.SELF_ACTION_FORBIDDEN, "Nao e permitido excluir uma role vinculada ao proprio usuario."));
     }
 
     const deleteResult = await repository.deleteRole(id).catch((error) => {
@@ -312,17 +324,17 @@ export function registerRoleRoutes(app: FastifyInstance, repository: RolesReposi
 
     if (!deleteResult) {
       request.log.error({ roleId: id }, "roles.delete.failed-unexpected");
-      return reply.status(500).send({ message: "Falha ao excluir role." });
+      return reply.status(500).send(adminError(ADMIN_ERROR_CODE.INTERNAL, "Falha ao excluir role."));
     }
 
     if (deleteResult === "not-found") {
       request.log.warn({ roleId: id }, "roles.delete.not-found");
-      return reply.status(404).send({ message: "Role nao encontrada." });
+      return reply.status(404).send(adminError(ADMIN_ERROR_CODE.NOT_FOUND, "Role nao encontrada."));
     }
 
     if (deleteResult === "conflict") {
       request.log.warn({ roleId: id }, "roles.delete.conflict");
-      return reply.status(409).send({ message: "Role nao pode ser excluida: possui dependencias ativas." });
+      return reply.status(409).send(adminError(ADMIN_ERROR_CODE.CONFLICT, "Role nao pode ser excluida: possui dependencias ativas."));
     }
 
     request.log.info({ roleId: id }, "roles.delete.success");

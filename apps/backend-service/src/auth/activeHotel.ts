@@ -33,7 +33,7 @@ function listAccessibleHotelIds(session: Pick<SessionPayload, "roleAssignments">
   return Array.from(ids).sort((a, b) => a.localeCompare(b, "pt-BR", { sensitivity: "base" }));
 }
 
-function canAccessGlobalScope(session: Pick<SessionPayload, "roleAssignments">): boolean {
+export function canAccessGlobalScope(session: Pick<SessionPayload, "roleAssignments">): boolean {
   return (session.roleAssignments || []).some((assignment) => !assignment.hotelId);
 }
 

@@ -53,6 +53,11 @@ export type AuthUserRoleAssignment = {
   permissions?: string[];
 };
 
+export type ActiveHotelOption = {
+  hotelId: string | null;
+  label: string;
+};
+
 export type LoginRequest = {
   email: string;
   password: string;
@@ -63,6 +68,8 @@ export type LoginSuccessResponse = {
   expiresIn: number;
   user: AuthUser;
 };
+
+export type LoginResult = LoginSuccessResponse;
 
 export type MeSuccessResponse = {
   user: AuthUser;

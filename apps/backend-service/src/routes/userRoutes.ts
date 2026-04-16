@@ -1,5 +1,6 @@
 import type { FastifyInstance } from "fastify";
 import {
+  ADMIN_ERROR_CODE,
   ADMIN_ROLE_TYPES,
   PERMISSIONS,
   isValidEmail,
@@ -10,6 +11,7 @@ import {
 } from "@hotel/shared";
 import { mapAdminUser, mapRoleOption, normalizeRoleAssignments } from "../admin/mappers";
 import { ensureAuthorized, ensureAuthorizedAny, ensureAuthorizedWithScope } from "../auth/authorization";
+import { adminError } from "../common/adminError";
 import { hashTemporaryPassword } from "../auth/session";
 import { normalizeOptionalText } from "../common/text";
 import { createUsersRepository, type UsersRepository } from "../repositories/usersRepository";
@@ -112,7 +114,7 @@ export function registerUserRoutes(app: FastifyInstance, repository: UsersReposi
       });
     } catch (error) {
       request.log.error(error);
-      return reply.status(500).send({ message: "Falha ao consultar dados auxiliares de usuarios." });
+      return reply.status(500).send(adminError(ADMIN_ERROR_CODE.INTERNAL, "Falha ao consultar dados auxiliares de usuarios."));
     }
   });
 
@@ -128,7 +130,7 @@ export function registerUserRoutes(app: FastifyInstance, repository: UsersReposi
       return reply.send({ items: data.map(mapAdminUser) });
     } catch (error) {
       request.log.error(error);
-      return reply.status(500).send({ message: "Falha ao consultar usuarios." });
+      return reply.status(500).send(adminError(ADMIN_ERROR_CODE.INTERNAL, "Falha ao consultar usuarios."));
     }
   });
 
@@ -144,17 +146,17 @@ export function registerUserRoutes(app: FastifyInstance, repository: UsersReposi
     const roleAssignments = normalizeRoleAssignments(request.body?.role_assignments || []);
 
     if (!name || !email || !tempPassword) {
-      return reply.status(400).send({ message: "Nome, email e senha temporaria sao obrigatorios." });
+      return reply.status(400).send(adminError(ADMIN_ERROR_CODE.VALIDATION, "Nome, email e senha temporaria sao obrigatorios."));
     }
 
     if (!isValidEmail(email)) {
-      return reply.status(400).send({ message: "Email invalido." });
+      return reply.status(400).send(adminError(ADMIN_ERROR_CODE.VALIDATION, "Email invalido."));
     }
 
     const roleAssignmentsValidation = await validateAndNormalizeRoleAssignments(repository, roleAssignments);
 
     if (!roleAssignmentsValidation.ok) {
-      return reply.status(roleAssignmentsValidation.status).send({ message: roleAssignmentsValidation.message });
+      return reply.status(roleAssignmentsValidation.status).send(adminError(ADMIN_ERROR_CODE.VALIDATION, roleAssignmentsValidation.message));
     }
 
     const passwordHash = await hashTemporaryPassword(tempPassword).catch((error) => {
@@ -163,7 +165,7 @@ export function registerUserRoutes(app: FastifyInstance, repository: UsersReposi
     });
 
     if (!passwordHash) {
-      return reply.status(500).send({ message: "Falha ao criar usuario." });
+      return reply.status(500).send(adminError(ADMIN_ERROR_CODE.INTERNAL, "Falha ao criar usuario."));
     }
 
     const createResult = await repository
@@ -182,15 +184,15 @@ export function registerUserRoutes(app: FastifyInstance, repository: UsersReposi
       });
 
     if (!createResult) {
-      return reply.status(500).send({ message: "Falha ao criar usuario." });
+      return reply.status(500).send(adminError(ADMIN_ERROR_CODE.INTERNAL, "Falha ao criar usuario."));
     }
 
     if (createResult.result === "conflict") {
-      return reply.status(409).send({ message: "Email ja utilizado por outro usuario." });
+      return reply.status(409).send(adminError(ADMIN_ERROR_CODE.CONFLICT, "Email ja utilizado por outro usuario."));
     }
 
     if (!createResult.id) {
-      return reply.status(500).send({ message: "Falha ao criar usuario." });
+      return reply.status(500).send(adminError(ADMIN_ERROR_CODE.INTERNAL, "Falha ao criar usuario."));
     }
 
     const userWithRelations = await repository.getUserWithRelationsById(createResult.id, authWithScope.activeHotelId).catch((error) => {
@@ -199,7 +201,7 @@ export function registerUserRoutes(app: FastifyInstance, repository: UsersReposi
     });
 
     if (!userWithRelations) {
-      return reply.status(500).send({ message: "Falha ao consultar usuario criado." });
+      return reply.status(500).send(adminError(ADMIN_ERROR_CODE.INTERNAL, "Falha ao consultar usuario criado."));
     }
 
     return reply.status(201).send({ item: mapAdminUser(userWithRelations) });
@@ -214,7 +216,11 @@ export function registerUserRoutes(app: FastifyInstance, repository: UsersReposi
     const id = request.params.id;
 
     if (!id) {
-      return reply.status(400).send({ message: "Id do usuario e obrigatorio para atualizacao." });
+      return reply.status(400).send(adminError(ADMIN_ERROR_CODE.VALIDATION, "Id do usuario e obrigatorio para atualizacao."));
+    }
+
+    if (id === authWithScope.session.id) {
+      return reply.status(403).send(adminError(ADMIN_ERROR_CODE.SELF_ACTION_FORBIDDEN, "Nao e permitido atualizar o proprio usuario por esta rota."));
     }
 
     const userToUpdate = await repository.getUserWithRelationsById(id, authWithScope.activeHotelId).catch((error) => {
@@ -223,7 +229,7 @@ export function registerUserRoutes(app: FastifyInstance, repository: UsersReposi
     });
 
     if (!userToUpdate) {
-      return reply.status(404).send({ message: "Usuario nao encontrado ou nao tem acesso neste contexto." });
+      return reply.status(404).send(adminError(ADMIN_ERROR_CODE.NOT_FOUND, "Usuario nao encontrado ou nao tem acesso neste contexto."));
     }
 
     const payload: Record<string, unknown> = {};
@@ -232,7 +238,7 @@ export function registerUserRoutes(app: FastifyInstance, repository: UsersReposi
       const parsedName = normalizeOptionalText(request.body.name);
 
       if (!parsedName) {
-        return reply.status(400).send({ message: "Nome nao pode ficar vazio." });
+        return reply.status(400).send(adminError(ADMIN_ERROR_CODE.VALIDATION, "Nome nao pode ficar vazio."));
       }
 
       payload.name = parsedName;
@@ -242,11 +248,11 @@ export function registerUserRoutes(app: FastifyInstance, repository: UsersReposi
       const parsedEmail = normalizeOptionalText(normalizeEmail(request.body.email || ""));
 
       if (!parsedEmail) {
-        return reply.status(400).send({ message: "Email nao pode ficar vazio." });
+        return reply.status(400).send(adminError(ADMIN_ERROR_CODE.VALIDATION, "Email nao pode ficar vazio."));
       }
 
       if (!isValidEmail(parsedEmail)) {
-        return reply.status(400).send({ message: "Email invalido." });
+        return reply.status(400).send(adminError(ADMIN_ERROR_CODE.VALIDATION, "Email invalido."));
       }
 
       payload.email = parsedEmail;
@@ -256,7 +262,7 @@ export function registerUserRoutes(app: FastifyInstance, repository: UsersReposi
       const parsedPassword = normalizeOptionalText(request.body.password_hash);
 
       if (!parsedPassword) {
-        return reply.status(400).send({ message: "Senha temporaria nao pode ficar vazia." });
+        return reply.status(400).send(adminError(ADMIN_ERROR_CODE.VALIDATION, "Senha temporaria nao pode ficar vazia."));
       }
 
       const passwordHash = await hashTemporaryPassword(parsedPassword).catch((error) => {
@@ -265,7 +271,7 @@ export function registerUserRoutes(app: FastifyInstance, repository: UsersReposi
       });
 
       if (!passwordHash) {
-        return reply.status(500).send({ message: "Falha ao atualizar usuario." });
+        return reply.status(500).send(adminError(ADMIN_ERROR_CODE.INTERNAL, "Falha ao atualizar usuario."));
       }
 
       payload.password_hash = passwordHash;
@@ -279,7 +285,7 @@ export function registerUserRoutes(app: FastifyInstance, repository: UsersReposi
     const roleAssignments = hasRoleAssignments ? normalizeRoleAssignments(request.body?.role_assignments) : [];
 
     if (!Object.keys(payload).length && !hasRoleAssignments) {
-      return reply.status(400).send({ message: "Nenhum campo informado para atualizacao." });
+      return reply.status(400).send(adminError(ADMIN_ERROR_CODE.VALIDATION, "Nenhum campo informado para atualizacao."));
     }
 
     let normalizedAssignments: Array<{ role_id: string; hotel_id: string | null }> | undefined;
@@ -288,7 +294,7 @@ export function registerUserRoutes(app: FastifyInstance, repository: UsersReposi
       const roleAssignmentsValidation = await validateAndNormalizeRoleAssignments(repository, roleAssignments);
 
       if (!roleAssignmentsValidation.ok) {
-        return reply.status(roleAssignmentsValidation.status).send({ message: roleAssignmentsValidation.message });
+        return reply.status(roleAssignmentsValidation.status).send(adminError(ADMIN_ERROR_CODE.VALIDATION, roleAssignmentsValidation.message));
       }
 
       normalizedAssignments = roleAssignmentsValidation.normalizedAssignments;
@@ -302,15 +308,15 @@ export function registerUserRoutes(app: FastifyInstance, repository: UsersReposi
       });
 
     if (!updateResult) {
-      return reply.status(500).send({ message: "Falha ao atualizar usuario." });
+      return reply.status(500).send(adminError(ADMIN_ERROR_CODE.INTERNAL, "Falha ao atualizar usuario."));
     }
 
     if (updateResult === "conflict") {
-      return reply.status(409).send({ message: "Email ja utilizado por outro usuario." });
+      return reply.status(409).send(adminError(ADMIN_ERROR_CODE.CONFLICT, "Email ja utilizado por outro usuario."));
     }
 
     if (updateResult === "not-found") {
-      return reply.status(404).send({ message: "Usuario nao encontrado." });
+      return reply.status(404).send(adminError(ADMIN_ERROR_CODE.NOT_FOUND, "Usuario nao encontrado."));
     }
 
     const updatedUser = await repository.getUserWithRelationsById(id, authWithScope.activeHotelId).catch((error) => {
@@ -319,7 +325,7 @@ export function registerUserRoutes(app: FastifyInstance, repository: UsersReposi
     });
 
     if (!updatedUser) {
-      return reply.status(500).send({ message: "Falha ao consultar usuario atualizado." });
+      return reply.status(500).send(adminError(ADMIN_ERROR_CODE.INTERNAL, "Falha ao consultar usuario atualizado."));
     }
 
     return reply.send({ item: mapAdminUser(updatedUser) });
@@ -334,7 +340,11 @@ export function registerUserRoutes(app: FastifyInstance, repository: UsersReposi
     const id = request.params.id;
 
     if (!id) {
-      return reply.status(400).send({ message: "Id do usuario e obrigatorio para exclusao." });
+      return reply.status(400).send(adminError(ADMIN_ERROR_CODE.VALIDATION, "Id do usuario e obrigatorio para exclusao."));
+    }
+
+    if (id === authWithScope.session.id) {
+      return reply.status(403).send(adminError(ADMIN_ERROR_CODE.SELF_ACTION_FORBIDDEN, "Nao e permitido excluir o proprio usuario por esta rota."));
     }
 
     const userToDelete = await repository.getUserWithRelationsById(id, authWithScope.activeHotelId).catch((error) => {
@@ -343,7 +353,7 @@ export function registerUserRoutes(app: FastifyInstance, repository: UsersReposi
     });
 
     if (!userToDelete) {
-      return reply.status(404).send({ message: "Usuario nao encontrado ou nao tem acesso neste contexto." });
+      return reply.status(404).send(adminError(ADMIN_ERROR_CODE.NOT_FOUND, "Usuario nao encontrado ou nao tem acesso neste contexto."));
     }
 
     const deleteResult = await repository.deleteUser(id).catch((error) => {
@@ -352,15 +362,15 @@ export function registerUserRoutes(app: FastifyInstance, repository: UsersReposi
     });
 
     if (!deleteResult) {
-      return reply.status(500).send({ message: "Falha ao excluir usuario." });
+      return reply.status(500).send(adminError(ADMIN_ERROR_CODE.INTERNAL, "Falha ao excluir usuario."));
     }
 
     if (deleteResult === "not-found") {
-      return reply.status(404).send({ message: "Usuario nao encontrado." });
+      return reply.status(404).send(adminError(ADMIN_ERROR_CODE.NOT_FOUND, "Usuario nao encontrado."));
     }
 
     if (deleteResult === "conflict") {
-      return reply.status(409).send({ message: "Usuario nao pode ser excluido: possui dependencias ativas." });
+      return reply.status(409).send(adminError(ADMIN_ERROR_CODE.CONFLICT, "Usuario nao pode ser excluido: possui dependencias ativas."));
     }
 
     return reply.send({ ok: true });

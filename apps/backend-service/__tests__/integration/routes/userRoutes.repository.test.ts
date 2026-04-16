@@ -29,12 +29,12 @@ function createUsersRepositoryMock(overrides: Partial<UsersRepository> = {}): Us
   return {
     listReferenceHotels: vi.fn(async () => []),
     listReferenceRoles: vi.fn(async () => []),
-    listUsersWithRelations: vi.fn(async (activeHotelId?: string | null) => []),
+    listUsersWithRelations: vi.fn(async (activeHotelId: string | null) => []),
     findRolesByIds: vi.fn(async () => []),
     createUserWithRoles: vi.fn(async () => ({ result: "ok", id: "user-2" })),
     createUser: vi.fn(async () => ({ result: "ok", id: "user-2" })),
     assignUserRoles: vi.fn(async () => undefined),
-    getUserWithRelationsById: vi.fn(async (id: string, activeHotelId?: string | null) => ({
+    getUserWithRelationsById: vi.fn(async (id: string, activeHotelId: string | null) => ({
       id: "user-2",
       name: "Operador",
       email: "op@hotel.com",
@@ -78,6 +78,50 @@ afterEach(async () => {
 });
 
 describe("routes/users with injected repository", () => {
+  it("bloqueia atualizacao do proprio usuario", async () => {
+    const repository = createUsersRepositoryMock();
+    const app = await createUsersTestApp(repository);
+
+    const response = await app.inject({
+      method: "PUT",
+      url: "/admin/users/user-1",
+      headers: {
+        authorization: `Bearer ${createToken([PERMISSIONS.USER_UPDATE])}`
+      },
+      payload: {
+        name: "Admin",
+        email: "admin@example.com"
+      }
+    });
+
+    expect(response.statusCode).toBe(403);
+    expect(response.json()).toEqual({
+      code: "ADMIN_SELF_ACTION_FORBIDDEN",
+      message: "Nao e permitido atualizar o proprio usuario por esta rota."
+    });
+    expect(repository.updateUserWithRoles).not.toHaveBeenCalled();
+  });
+
+  it("bloqueia exclusao do proprio usuario", async () => {
+    const repository = createUsersRepositoryMock();
+    const app = await createUsersTestApp(repository);
+
+    const response = await app.inject({
+      method: "DELETE",
+      url: "/admin/users/user-1",
+      headers: {
+        authorization: `Bearer ${createToken([PERMISSIONS.USER_DELETE])}`
+      }
+    });
+
+    expect(response.statusCode).toBe(403);
+    expect(response.json()).toEqual({
+      code: "ADMIN_SELF_ACTION_FORBIDDEN",
+      message: "Nao e permitido excluir o proprio usuario por esta rota."
+    });
+    expect(repository.deleteUser).not.toHaveBeenCalled();
+  });
+
   it("cria usuario com operacao atomica de papeis", async () => {
     const repository = createUsersRepositoryMock({
       findRolesByIds: vi.fn(async () => [
@@ -149,6 +193,7 @@ describe("routes/users with injected repository", () => {
 
     expect(response.statusCode).toBe(400);
     expect(response.json()).toEqual({
+      code: "ADMIN_VALIDATION_ERROR",
       message: "Roles genericas de hotel exigem um hotel de contexto."
     });
   });
@@ -175,7 +220,7 @@ describe("routes/users with injected repository", () => {
     });
 
     expect(response.statusCode).toBe(409);
-    expect(response.json()).toEqual({ message: "Email ja utilizado por outro usuario." });
+    expect(response.json()).toEqual({ code: "ADMIN_CONFLICT", message: "Email ja utilizado por outro usuario." });
   });
 
   it("retorna 409 quando delete de usuario sinaliza conflito", async () => {
@@ -187,13 +232,13 @@ describe("routes/users with injected repository", () => {
 
     const response = await app.inject({
       method: "DELETE",
-      url: "/admin/users/user-1",
+      url: "/admin/users/user-2",
       headers: {
         authorization: `Bearer ${createToken([PERMISSIONS.USER_DELETE])}`
       }
     });
 
     expect(response.statusCode).toBe(409);
-    expect(response.json()).toEqual({ message: "Usuario nao pode ser excluido: possui dependencias ativas." });
+    expect(response.json()).toEqual({ code: "ADMIN_CONFLICT", message: "Usuario nao pode ser excluido: possui dependencias ativas." });
   });
 });

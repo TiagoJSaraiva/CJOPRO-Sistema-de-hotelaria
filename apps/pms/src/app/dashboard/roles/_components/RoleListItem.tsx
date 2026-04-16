@@ -14,6 +14,7 @@ type RoleListItemProps = {
   canRead: boolean;
   canUpdate: boolean;
   canDelete: boolean;
+  isCurrentUserRole: boolean;
   isViewing: boolean;
   isEditing: boolean;
 };
@@ -96,7 +97,7 @@ function RoleEditForm({ roleItem, hotels, permissions }: { roleItem: AdminRole; 
   );
 }
 
-export function RoleListItem({ roleItem, hotels, permissions, canRead, canUpdate, canDelete, isViewing, isEditing }: RoleListItemProps) {
+export function RoleListItem({ roleItem, hotels, permissions, canRead, canUpdate, canDelete, isCurrentUserRole, isViewing, isEditing }: RoleListItemProps) {
   const viewHref = `/dashboard/roles/view?roleId=${roleItem.id}&mode=view`;
   const editHref = `/dashboard/roles/view?roleId=${roleItem.id}&mode=edit`;
   const roleScopeLabel =
@@ -151,7 +152,7 @@ export function RoleListItem({ roleItem, hotels, permissions, canRead, canUpdate
             </Link>
           ) : null}
 
-          {canDelete ? (
+          {canDelete && !isCurrentUserRole ? (
             <form action={deleteRoleAction}>
               <input type="hidden" name="id" value={roleItem.id} />
               <button
@@ -161,6 +162,17 @@ export function RoleListItem({ roleItem, hotels, permissions, canRead, canUpdate
                 Apagar dados
               </button>
             </form>
+          ) : null}
+
+          {canDelete && isCurrentUserRole ? (
+            <button
+              type="button"
+              disabled
+              title="Voce nao pode apagar uma role vinculada ao proprio usuario."
+              style={{ border: "1px solid #f1a1a1", color: "#b45353", background: "#fff6f6", borderRadius: "8px", padding: "0.45rem 0.65rem", cursor: "not-allowed" }}
+            >
+              Apagar dados
+            </button>
           ) : null}
         </div>
       </div>
