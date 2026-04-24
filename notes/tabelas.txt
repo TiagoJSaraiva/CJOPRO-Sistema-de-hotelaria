@@ -1,0 +1,107 @@
+OBJETIVO
+Planejar estrutura de tabelas para fluxo de reservas em hotel.
+
+OBSERVACOES GERAIS
+- Padronizar nomes (snake_case).
+- Toda tabela deve ter: id, created_at, updated_at.
+- Campos de status devem ter valores definidos (enum/tabela de dominio).
+- Evitar dados duplicados entre tabelas.
+
+ROOMS
+- id
+- hotel_id (fk -> hotels.id, not null)
+- room_number (not null, unique por hotel)
+- room_type (single, couple, suite, etc.)
+- max_occupancy (not null)
+- base_daily_rate (not null)
+- status (available, occupied, maintenance, blocked)
+- notes
+- created_at
+- updated_at
+
+CUSTOMERS
+- id
+- full_name (not null)
+- document_number (not null)
+- document_type (cpf, passport, rg, etc., not null)
+- email
+- mobile_phone
+- phone
+- birth_date (not null)
+- nationality
+- notes
+- created_at
+- updated_at
+
+RESERVATIONS
+- id
+- hotel_id (fk -> hotels.id, not null)
+- booking_customer_id (fk -> customers.id, not null)
+- reservation_code (unique, not null)
+- planned_checkin_date (not null)
+- planned_checkout_date (not null)
+- actual_checkin_date
+- actual_checkout_date
+- guest_count (not null)
+- reservation_status (pending, confirmed, checked_in, checked_out, canceled, no_show)
+- reservation_source (front_desk, website, phone, agency)
+- payment_status (pending, partial, paid, refunded)
+- estimated_total_amount
+- final_total_amount
+- notes
+- created_at
+- updated_at
+
+RESERVATION_ROOMS
+(usar esta tabela se uma reserva puder envolver mais de um quarto)
+- id
+- reservation_id (fk -> reservations.id, not null)
+- room_id (fk -> rooms.id, not null)
+- applied_daily_rate
+- discount_amount
+- surcharge_amount
+- created_at
+- updated_at
+
+RESERVATION_CUSTOMERS
+(hospedes vinculados a reserva, incluindo o titular se desejar)
+- id
+- reservation_id (fk -> reservations.id, not null)
+- customer_id (fk -> customers.id, not null)
+- is_primary (boolean, default false)
+- created_at
+- updated_at
+
+PRODUCTS
+(voce marcou para depois, mas ja deixo o minimo aqui)
+- id
+- hotel_id (fk -> hotels.id, not null)
+- name (not null)
+- category (minibar, restaurant, laundry, etc.)
+- unit_price (not null)
+- status (active/inactive)
+- created_at
+- updated_at
+
+RESERVATION_CONSUMPTION
+- id
+- reservation_id (fk -> reservations.id, not null)
+- product_id (fk -> products.id, not null)
+- quantity (not null)
+- charged_unit_price (not null)
+- item_total_amount (derivado ou persistido)
+- consumption_date
+- notes
+- created_at
+- updated_at
+
+REGRAS IMPORTANTES (NEGOCIO)
+- planned_checkout_date deve ser maior que planned_checkin_date.
+- guest_count da reserva nao pode ultrapassar capacidade total dos quartos vinculados.
+- room em maintenance/blocked nao pode ser reservado.
+- nao permitir sobreposicao de reserva confirmed para o mesmo room no mesmo periodo.
+- document_number deve ser unico por document_type, quando aplicavel.
+
+PONTO DE ATENCAO
+Se o projeto for permitir apenas 1 quarto por reserva, RESERVATIONS pode manter room_id.
+Se houver chance de multi-quarto (familia/grupos), manter RESERVATION_ROOMS e remover room_id direto de RESERVATIONS.
