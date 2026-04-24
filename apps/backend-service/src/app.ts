@@ -5,6 +5,12 @@ import { registerHotelRoutes } from "./routes/hotelRoutes";
 import { registerPermissionRoutes } from "./routes/permissionRoutes";
 import { registerRoleRoutes } from "./routes/roleRoutes";
 import { registerUserRoutes } from "./routes/userRoutes";
+import { registerRoomRoutes } from "./routes/roomRoutes";
+import { registerCustomerRoutes } from "./routes/customerRoutes";
+import { registerReservationRoutes } from "./routes/reservationRoutes";
+import { registerProductRoutes } from "./routes/productRoutes";
+import { registerSeasonRoutes } from "./routes/seasonRoutes";
+import { registerSeasonRoomRateRoutes } from "./routes/seasonRoomRateRoutes";
 
 const DEFAULT_ALLOWED_ORIGINS = [ // LOCALHOSTS PARA DESENVOLVIMENTO. DEPOIS COLOCAR AQUI AS URLS REAIS DOS SERVIÇOS HOSPEDADOS
   "http://localhost:3000",
@@ -52,6 +58,12 @@ export function createApp(): FastifyInstance {
   registerUserRoutes(app);
   registerRoleRoutes(app);
   registerPermissionRoutes(app);
+  registerRoomRoutes(app);
+  registerCustomerRoutes(app);
+  registerReservationRoutes(app);
+  registerProductRoutes(app);
+  registerSeasonRoutes(app);
+  registerSeasonRoomRateRoutes(app);
 
   return app;
 }

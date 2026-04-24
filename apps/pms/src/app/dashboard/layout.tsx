@@ -41,6 +41,13 @@ export default async function DashboardLayout({ children }: { children: ReactNod
 
   const moduleEntryAccess: Record<string, boolean> = {
     "/dashboard/hotels": user.permissions.includes(PERMISSIONS.HOTEL_READ) || user.permissions.includes(PERMISSIONS.HOTEL_CREATE),
+    "/dashboard/rooms": user.permissions.includes(PERMISSIONS.ROOM_READ) || user.permissions.includes(PERMISSIONS.ROOM_CREATE),
+    "/dashboard/customers": user.permissions.includes(PERMISSIONS.CUSTOMER_READ) || user.permissions.includes(PERMISSIONS.CUSTOMER_CREATE),
+    "/dashboard/reservations": user.permissions.includes(PERMISSIONS.RESERVATION_READ) || user.permissions.includes(PERMISSIONS.RESERVATION_CREATE),
+    "/dashboard/products": user.permissions.includes(PERMISSIONS.PRODUCT_READ) || user.permissions.includes(PERMISSIONS.PRODUCT_CREATE),
+    "/dashboard/seasons": user.permissions.includes(PERMISSIONS.SEASON_READ) || user.permissions.includes(PERMISSIONS.SEASON_CREATE),
+    "/dashboard/season-room-rates":
+      user.permissions.includes(PERMISSIONS.SEASON_ROOM_RATE_READ) || user.permissions.includes(PERMISSIONS.SEASON_ROOM_RATE_CREATE),
     "/dashboard/users": user.permissions.includes(PERMISSIONS.USER_READ) || user.permissions.includes(PERMISSIONS.USER_CREATE),
     "/dashboard/roles": user.permissions.includes(PERMISSIONS.ROLE_READ) || user.permissions.includes(PERMISSIONS.ROLE_CREATE),
     "/dashboard/permissions": user.permissions.includes(PERMISSIONS.PERMISSION_READ) || user.permissions.includes(PERMISSIONS.PERMISSION_CREATE)

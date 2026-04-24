@@ -11,10 +11,28 @@ import {
   AdminPermission,
   AdminPermissionCreateInput,
   AdminPermissionUpdateInput,
+  AdminProduct,
+  AdminProductCreateInput,
+  AdminProductUpdateInput,
+  AdminReservation,
+  AdminReservationCreateInput,
+  AdminReservationUpdateInput,
+  AdminRoom,
+  AdminRoomCreateInput,
+  AdminRoomUpdateInput,
   AdminRolesReferenceData,
   AdminRole,
   AdminRoleCreateInput,
   AdminRoleUpdateInput,
+  AdminSeason,
+  AdminSeasonCreateInput,
+  AdminSeasonRoomRate,
+  AdminSeasonRoomRateCreateInput,
+  AdminSeasonRoomRateUpdateInput,
+  AdminSeasonUpdateInput,
+  AdminCustomer,
+  AdminCustomerCreateInput,
+  AdminCustomerUpdateInput,
   AdminUser,
   AdminUserCreateInput,
   AdminUserUpdateInput,
@@ -155,6 +173,9 @@ async function getAdminData<T>(path: string): Promise<T> {
 }
 
 export type {
+  AdminCustomer,
+  AdminCustomerCreateInput,
+  AdminCustomerUpdateInput,
   AdminErrorResponse,
   AdminHotel,
   AdminHotelCreateInput,
@@ -162,10 +183,25 @@ export type {
   AdminPermission,
   AdminPermissionCreateInput,
   AdminPermissionUpdateInput,
+  AdminProduct,
+  AdminProductCreateInput,
+  AdminProductUpdateInput,
+  AdminReservation,
+  AdminReservationCreateInput,
+  AdminReservationUpdateInput,
+  AdminRoom,
+  AdminRoomCreateInput,
+  AdminRoomUpdateInput,
   AdminRolesReferenceData,
   AdminRole,
   AdminRoleCreateInput,
   AdminRoleUpdateInput,
+  AdminSeason,
+  AdminSeasonCreateInput,
+  AdminSeasonRoomRate,
+  AdminSeasonRoomRateCreateInput,
+  AdminSeasonRoomRateUpdateInput,
+  AdminSeasonUpdateInput,
   AdminUser,
   AdminUserCreateInput,
   AdminUserUpdateInput,
@@ -242,4 +278,100 @@ export function updatePermission(id: string, payload: AdminPermissionUpdateInput
 
 export function deletePermission(id: string): Promise<null> {
   return requestAdmin<never>(`/admin/permissions/${id}`, "DELETE");
+}
+
+export function listRooms(): Promise<AdminRoom[]> {
+  return getAdminList<AdminRoom>("/admin/rooms");
+}
+
+export function createRoom(payload: AdminRoomCreateInput): Promise<AdminRoom | null> {
+  return requestAdmin<AdminRoom>("/admin/rooms", "POST", payload);
+}
+
+export function updateRoom(id: string, payload: AdminRoomUpdateInput): Promise<AdminRoom | null> {
+  return requestAdmin<AdminRoom>(`/admin/rooms/${id}`, "PUT", payload);
+}
+
+export function deleteRoom(id: string): Promise<null> {
+  return requestAdmin<never>(`/admin/rooms/${id}`, "DELETE");
+}
+
+export function listCustomers(): Promise<AdminCustomer[]> {
+  return getAdminList<AdminCustomer>("/admin/customers");
+}
+
+export function createCustomer(payload: AdminCustomerCreateInput): Promise<AdminCustomer | null> {
+  return requestAdmin<AdminCustomer>("/admin/customers", "POST", payload);
+}
+
+export function updateCustomer(id: string, payload: AdminCustomerUpdateInput): Promise<AdminCustomer | null> {
+  return requestAdmin<AdminCustomer>(`/admin/customers/${id}`, "PUT", payload);
+}
+
+export function deleteCustomer(id: string): Promise<null> {
+  return requestAdmin<never>(`/admin/customers/${id}`, "DELETE");
+}
+
+export function listReservations(): Promise<AdminReservation[]> {
+  return getAdminList<AdminReservation>("/admin/reservations");
+}
+
+export function createReservation(payload: AdminReservationCreateInput): Promise<AdminReservation | null> {
+  return requestAdmin<AdminReservation>("/admin/reservations", "POST", payload);
+}
+
+export function updateReservation(id: string, payload: AdminReservationUpdateInput): Promise<AdminReservation | null> {
+  return requestAdmin<AdminReservation>(`/admin/reservations/${id}`, "PUT", payload);
+}
+
+export function deleteReservation(id: string): Promise<null> {
+  return requestAdmin<never>(`/admin/reservations/${id}`, "DELETE");
+}
+
+export function listProducts(): Promise<AdminProduct[]> {
+  return getAdminList<AdminProduct>("/admin/products");
+}
+
+export function createProduct(payload: AdminProductCreateInput): Promise<AdminProduct | null> {
+  return requestAdmin<AdminProduct>("/admin/products", "POST", payload);
+}
+
+export function updateProduct(id: string, payload: AdminProductUpdateInput): Promise<AdminProduct | null> {
+  return requestAdmin<AdminProduct>(`/admin/products/${id}`, "PUT", payload);
+}
+
+export function deleteProduct(id: string): Promise<null> {
+  return requestAdmin<never>(`/admin/products/${id}`, "DELETE");
+}
+
+export function listSeasons(): Promise<AdminSeason[]> {
+  return getAdminList<AdminSeason>("/admin/seasons");
+}
+
+export function createSeason(payload: AdminSeasonCreateInput): Promise<AdminSeason | null> {
+  return requestAdmin<AdminSeason>("/admin/seasons", "POST", payload);
+}
+
+export function updateSeason(id: string, payload: AdminSeasonUpdateInput): Promise<AdminSeason | null> {
+  return requestAdmin<AdminSeason>(`/admin/seasons/${id}`, "PUT", payload);
+}
+
+export function deleteSeason(id: string): Promise<null> {
+  return requestAdmin<never>(`/admin/seasons/${id}`, "DELETE");
+}
+
+export function listSeasonRoomRates(): Promise<AdminSeasonRoomRate[]> {
+  return getAdminList<AdminSeasonRoomRate>("/admin/season-room-rates");
+}
+
+export function createSeasonRoomRate(payload: AdminSeasonRoomRateCreateInput): Promise<AdminSeasonRoomRate | null> {
+  return requestAdmin<AdminSeasonRoomRate>("/admin/season-room-rates", "POST", payload);
+}
+
+export function updateSeasonRoomRate(id: string, payload: AdminSeasonRoomRateUpdateInput): Promise<AdminSeasonRoomRate | null> {
+  return requestAdmin<AdminSeasonRoomRate>(`/admin/season-room-rates/${id}`, "PUT", payload);
+}
+
+export function deleteSeasonRoomRate(id: string): Promise<null> {
+  return requestAdmin<never>(`/admin/season-room-rates/${id}`, "DELETE");
 }
