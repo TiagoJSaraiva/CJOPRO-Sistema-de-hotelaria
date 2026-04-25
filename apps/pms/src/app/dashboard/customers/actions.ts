@@ -8,15 +8,27 @@ import { getUserFromSession } from "../../../lib/auth";
 
 function revalidateCustomerPage(): void {
   revalidatePath("/dashboard/customers");
+  revalidatePath("/dashboard/customers/create");
+  revalidatePath("/dashboard/customers/view");
 }
 
-function redirectWithStatus(status: string): never {
-  redirect(`/dashboard/customers?status=${status}&r=${Date.now().toString(36)}`);
+function redirectWithStatus(status: string, section: "create" | "view" | "root" = "root"): never {
+  const nonce = Date.now().toString(36);
+
+  if (section === "root") {
+    redirect(`/dashboard/customers?status=${status}&r=${nonce}`);
+  }
+
+  redirect(`/dashboard/customers/${section}?status=${status}&r=${nonce}`);
 }
 
 export async function createCustomerAction(formData: FormData): Promise<void> {
   const user = await getUserFromSession();
-  if (!user || !user.permissions.includes(PERMISSIONS.CUSTOMER_CREATE)) redirectWithStatus("forbidden");
+
+  if (!user || !user.permissions.includes(PERMISSIONS.CUSTOMER_CREATE)) {
+    const fallback = user?.permissions.includes(PERMISSIONS.CUSTOMER_READ) ? "view" : "root";
+    redirectWithStatus("forbidden", fallback);
+  }
 
   const fullName = String(formData.get("full_name") || "").trim();
   const documentNumber = String(formData.get("document_number") || "").trim();
@@ -24,7 +36,7 @@ export async function createCustomerAction(formData: FormData): Promise<void> {
   const birthDate = String(formData.get("birth_date") || "").trim();
 
   if (!fullName || !documentNumber || !documentType || !birthDate) {
-    redirectWithStatus("create_missing_fields");
+    redirectWithStatus("create_missing_fields", "create");
   }
 
   try {
@@ -40,22 +52,26 @@ export async function createCustomerAction(formData: FormData): Promise<void> {
       notes: String(formData.get("notes") || "").trim() || null
     });
   } catch {
-    redirectWithStatus("create_error");
+    redirectWithStatus("create_error", "create");
   }
 
   revalidateCustomerPage();
-  redirectWithStatus("created");
+  redirectWithStatus("created", "create");
 }
 
 export async function updateCustomerAction(formData: FormData): Promise<void> {
   const user = await getUserFromSession();
-  if (!user || !user.permissions.includes(PERMISSIONS.CUSTOMER_UPDATE)) redirectWithStatus("forbidden");
+
+  if (!user || !user.permissions.includes(PERMISSIONS.CUSTOMER_UPDATE)) {
+    const fallback = user?.permissions.includes(PERMISSIONS.CUSTOMER_READ) ? "view" : "root";
+    redirectWithStatus("forbidden", fallback);
+  }
 
   const id = String(formData.get("id") || "").trim();
   const fullName = String(formData.get("full_name") || "").trim();
 
   if (!id || !fullName) {
-    redirectWithStatus("update_missing_fields");
+    redirectWithStatus("update_missing_fields", "view");
   }
 
   try {
@@ -71,26 +87,33 @@ export async function updateCustomerAction(formData: FormData): Promise<void> {
       notes: String(formData.get("notes") || "").trim() || null
     });
   } catch {
-    redirectWithStatus("update_error");
+    redirectWithStatus("update_error", "view");
   }
 
   revalidateCustomerPage();
-  redirectWithStatus("updated");
+  redirectWithStatus("updated", "view");
 }
 
 export async function deleteCustomerAction(formData: FormData): Promise<void> {
   const user = await getUserFromSession();
-  if (!user || !user.permissions.includes(PERMISSIONS.CUSTOMER_DELETE)) redirectWithStatus("forbidden");
+
+  if (!user || !user.permissions.includes(PERMISSIONS.CUSTOMER_DELETE)) {
+    const fallback = user?.permissions.includes(PERMISSIONS.CUSTOMER_READ) ? "view" : "root";
+    redirectWithStatus("forbidden", fallback);
+  }
 
   const id = String(formData.get("id") || "").trim();
-  if (!id) redirectWithStatus("delete_missing_id");
+
+  if (!id) {
+    redirectWithStatus("delete_missing_id", "view");
+  }
 
   try {
     await deleteCustomer(id);
   } catch {
-    redirectWithStatus("delete_error");
+    redirectWithStatus("delete_error", "view");
   }
 
   revalidateCustomerPage();
-  redirectWithStatus("deleted");
+  redirectWithStatus("deleted", "view");
 }

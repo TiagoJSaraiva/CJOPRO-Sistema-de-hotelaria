@@ -8,15 +8,27 @@ import { getUserFromSession } from "../../../lib/auth";
 
 function revalidateReservationsPage(): void {
   revalidatePath("/dashboard/reservations");
+  revalidatePath("/dashboard/reservations/create");
+  revalidatePath("/dashboard/reservations/view");
 }
 
-function redirectWithStatus(status: string): never {
-  redirect(`/dashboard/reservations?status=${status}&r=${Date.now().toString(36)}`);
+function redirectWithStatus(status: string, section: "create" | "view" | "root" = "root"): never {
+  const nonce = Date.now().toString(36);
+
+  if (section === "root") {
+    redirect(`/dashboard/reservations?status=${status}&r=${nonce}`);
+  }
+
+  redirect(`/dashboard/reservations/${section}?status=${status}&r=${nonce}`);
 }
 
 export async function createReservationAction(formData: FormData): Promise<void> {
   const user = await getUserFromSession();
-  if (!user || !user.permissions.includes(PERMISSIONS.RESERVATION_CREATE)) redirectWithStatus("forbidden");
+
+  if (!user || !user.permissions.includes(PERMISSIONS.RESERVATION_CREATE)) {
+    const fallback = user?.permissions.includes(PERMISSIONS.RESERVATION_READ) ? "view" : "root";
+    redirectWithStatus("forbidden", fallback);
+  }
 
   const bookingCustomerId = String(formData.get("booking_customer_id") || "").trim();
   const reservationCode = String(formData.get("reservation_code") || "").trim();
@@ -25,7 +37,7 @@ export async function createReservationAction(formData: FormData): Promise<void>
   const guestCount = Number(formData.get("guest_count") || "0");
 
   if (!bookingCustomerId || !reservationCode || !plannedCheckinDate || !plannedCheckoutDate || !Number.isFinite(guestCount) || guestCount <= 0) {
-    redirectWithStatus("create_missing_fields");
+    redirectWithStatus("create_missing_fields", "create");
   }
 
   try {
@@ -49,19 +61,26 @@ export async function createReservationAction(formData: FormData): Promise<void>
       notes: String(formData.get("notes") || "").trim() || null
     });
   } catch {
-    redirectWithStatus("create_error");
+    redirectWithStatus("create_error", "create");
   }
 
   revalidateReservationsPage();
-  redirectWithStatus("created");
+  redirectWithStatus("created", "create");
 }
 
 export async function updateReservationAction(formData: FormData): Promise<void> {
   const user = await getUserFromSession();
-  if (!user || !user.permissions.includes(PERMISSIONS.RESERVATION_UPDATE)) redirectWithStatus("forbidden");
+
+  if (!user || !user.permissions.includes(PERMISSIONS.RESERVATION_UPDATE)) {
+    const fallback = user?.permissions.includes(PERMISSIONS.RESERVATION_READ) ? "view" : "root";
+    redirectWithStatus("forbidden", fallback);
+  }
 
   const id = String(formData.get("id") || "").trim();
-  if (!id) redirectWithStatus("update_missing_fields");
+
+  if (!id) {
+    redirectWithStatus("update_missing_fields", "view");
+  }
 
   try {
     await updateReservation(id, {
@@ -84,26 +103,33 @@ export async function updateReservationAction(formData: FormData): Promise<void>
       notes: String(formData.get("notes") || "").trim() || null
     });
   } catch {
-    redirectWithStatus("update_error");
+    redirectWithStatus("update_error", "view");
   }
 
   revalidateReservationsPage();
-  redirectWithStatus("updated");
+  redirectWithStatus("updated", "view");
 }
 
 export async function deleteReservationAction(formData: FormData): Promise<void> {
   const user = await getUserFromSession();
-  if (!user || !user.permissions.includes(PERMISSIONS.RESERVATION_DELETE)) redirectWithStatus("forbidden");
+
+  if (!user || !user.permissions.includes(PERMISSIONS.RESERVATION_DELETE)) {
+    const fallback = user?.permissions.includes(PERMISSIONS.RESERVATION_READ) ? "view" : "root";
+    redirectWithStatus("forbidden", fallback);
+  }
 
   const id = String(formData.get("id") || "").trim();
-  if (!id) redirectWithStatus("delete_missing_id");
+
+  if (!id) {
+    redirectWithStatus("delete_missing_id", "view");
+  }
 
   try {
     await deleteReservation(id);
   } catch {
-    redirectWithStatus("delete_error");
+    redirectWithStatus("delete_error", "view");
   }
 
   revalidateReservationsPage();
-  redirectWithStatus("deleted");
+  redirectWithStatus("deleted", "view");
 }

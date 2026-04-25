@@ -18,3 +18,15 @@ export function getProductsAccess(user: UserLike): ProductsAccess {
     canDelete: permissions.includes(PERMISSIONS.PRODUCT_DELETE)
   };
 }
+
+export function getProductsDefaultRoute(access: ProductsAccess): "/dashboard/products/view" | "/dashboard/products/create" | null {
+  if (access.canRead) {
+    return "/dashboard/products/view";
+  }
+
+  if (access.canCreate) {
+    return "/dashboard/products/create";
+  }
+
+  return null;
+}

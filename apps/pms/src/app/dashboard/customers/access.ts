@@ -19,3 +19,15 @@ export function getCustomersAccess(user: UserLike): CustomersAccess {
     canDelete: permissions.includes(PERMISSIONS.CUSTOMER_DELETE)
   };
 }
+
+export function getCustomersDefaultRoute(access: CustomersAccess): "/dashboard/customers/view" | "/dashboard/customers/create" | null {
+  if (access.canRead) {
+    return "/dashboard/customers/view";
+  }
+
+  if (access.canCreate) {
+    return "/dashboard/customers/create";
+  }
+
+  return null;
+}

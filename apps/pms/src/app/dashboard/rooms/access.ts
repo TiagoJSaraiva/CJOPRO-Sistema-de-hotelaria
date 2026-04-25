@@ -19,3 +19,15 @@ export function getRoomsAccess(user: UserLike): RoomsAccess {
     canDelete: permissions.includes(PERMISSIONS.ROOM_DELETE)
   };
 }
+
+export function getRoomsDefaultRoute(access: RoomsAccess): "/dashboard/rooms/view" | "/dashboard/rooms/create" | null {
+  if (access.canRead) {
+    return "/dashboard/rooms/view";
+  }
+
+  if (access.canCreate) {
+    return "/dashboard/rooms/create";
+  }
+
+  return null;
+}

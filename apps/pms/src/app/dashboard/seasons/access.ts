@@ -18,3 +18,15 @@ export function getSeasonsAccess(user: UserLike): SeasonsAccess {
     canDelete: permissions.includes(PERMISSIONS.SEASON_DELETE)
   };
 }
+
+export function getSeasonsDefaultRoute(access: SeasonsAccess): "/dashboard/seasons/view" | "/dashboard/seasons/create" | null {
+  if (access.canRead) {
+    return "/dashboard/seasons/view";
+  }
+
+  if (access.canCreate) {
+    return "/dashboard/seasons/create";
+  }
+
+  return null;
+}

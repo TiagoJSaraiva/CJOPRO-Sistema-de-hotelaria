@@ -18,3 +18,17 @@ export function getReservationsAccess(user: UserLike): ReservationsAccess {
     canDelete: permissions.includes(PERMISSIONS.RESERVATION_DELETE)
   };
 }
+
+export function getReservationsDefaultRoute(
+  access: ReservationsAccess
+): "/dashboard/reservations/view" | "/dashboard/reservations/create" | null {
+  if (access.canRead) {
+    return "/dashboard/reservations/view";
+  }
+
+  if (access.canCreate) {
+    return "/dashboard/reservations/create";
+  }
+
+  return null;
+}

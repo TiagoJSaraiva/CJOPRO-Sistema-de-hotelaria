@@ -8,15 +8,27 @@ import { getUserFromSession } from "../../../lib/auth";
 
 function revalidateRoomPage(): void {
   revalidatePath("/dashboard/rooms");
+  revalidatePath("/dashboard/rooms/create");
+  revalidatePath("/dashboard/rooms/view");
 }
 
-function redirectWithStatus(status: string): never {
-  redirect(`/dashboard/rooms?status=${status}&r=${Date.now().toString(36)}`);
+function redirectWithStatus(status: string, section: "create" | "view" | "root" = "root"): never {
+  const nonce = Date.now().toString(36);
+
+  if (section === "root") {
+    redirect(`/dashboard/rooms?status=${status}&r=${nonce}`);
+  }
+
+  redirect(`/dashboard/rooms/${section}?status=${status}&r=${nonce}`);
 }
 
 export async function createRoomAction(formData: FormData): Promise<void> {
   const user = await getUserFromSession();
-  if (!user || !user.permissions.includes(PERMISSIONS.ROOM_CREATE)) redirectWithStatus("forbidden");
+
+  if (!user || !user.permissions.includes(PERMISSIONS.ROOM_CREATE)) {
+    const fallback = user?.permissions.includes(PERMISSIONS.ROOM_READ) ? "view" : "root";
+    redirectWithStatus("forbidden", fallback);
+  }
 
   const roomNumber = String(formData.get("room_number") || "").trim();
   const roomType = String(formData.get("room_type") || "").trim();
@@ -26,7 +38,7 @@ export async function createRoomAction(formData: FormData): Promise<void> {
   const notes = String(formData.get("notes") || "").trim() || null;
 
   if (!roomNumber || !roomType || !Number.isFinite(maxOccupancy) || maxOccupancy <= 0 || !Number.isFinite(baseDailyRate) || baseDailyRate < 0) {
-    redirectWithStatus("create_missing_fields");
+    redirectWithStatus("create_missing_fields", "create");
   }
 
   try {
@@ -39,16 +51,20 @@ export async function createRoomAction(formData: FormData): Promise<void> {
       notes
     });
   } catch {
-    redirectWithStatus("create_error");
+    redirectWithStatus("create_error", "create");
   }
 
   revalidateRoomPage();
-  redirectWithStatus("created");
+  redirectWithStatus("created", "create");
 }
 
 export async function updateRoomAction(formData: FormData): Promise<void> {
   const user = await getUserFromSession();
-  if (!user || !user.permissions.includes(PERMISSIONS.ROOM_UPDATE)) redirectWithStatus("forbidden");
+
+  if (!user || !user.permissions.includes(PERMISSIONS.ROOM_UPDATE)) {
+    const fallback = user?.permissions.includes(PERMISSIONS.ROOM_READ) ? "view" : "root";
+    redirectWithStatus("forbidden", fallback);
+  }
 
   const id = String(formData.get("id") || "").trim();
   const roomNumber = String(formData.get("room_number") || "").trim();
@@ -59,7 +75,7 @@ export async function updateRoomAction(formData: FormData): Promise<void> {
   const notes = String(formData.get("notes") || "").trim() || null;
 
   if (!id || !roomNumber || !roomType || !Number.isFinite(maxOccupancy) || !Number.isFinite(baseDailyRate)) {
-    redirectWithStatus("update_missing_fields");
+    redirectWithStatus("update_missing_fields", "view");
   }
 
   try {
@@ -72,26 +88,33 @@ export async function updateRoomAction(formData: FormData): Promise<void> {
       notes
     });
   } catch {
-    redirectWithStatus("update_error");
+    redirectWithStatus("update_error", "view");
   }
 
   revalidateRoomPage();
-  redirectWithStatus("updated");
+  redirectWithStatus("updated", "view");
 }
 
 export async function deleteRoomAction(formData: FormData): Promise<void> {
   const user = await getUserFromSession();
-  if (!user || !user.permissions.includes(PERMISSIONS.ROOM_DELETE)) redirectWithStatus("forbidden");
+
+  if (!user || !user.permissions.includes(PERMISSIONS.ROOM_DELETE)) {
+    const fallback = user?.permissions.includes(PERMISSIONS.ROOM_READ) ? "view" : "root";
+    redirectWithStatus("forbidden", fallback);
+  }
 
   const id = String(formData.get("id") || "").trim();
-  if (!id) redirectWithStatus("delete_missing_id");
+
+  if (!id) {
+    redirectWithStatus("delete_missing_id", "view");
+  }
 
   try {
     await deleteRoom(id);
   } catch {
-    redirectWithStatus("delete_error");
+    redirectWithStatus("delete_error", "view");
   }
 
   revalidateRoomPage();
-  redirectWithStatus("deleted");
+  redirectWithStatus("deleted", "view");
 }

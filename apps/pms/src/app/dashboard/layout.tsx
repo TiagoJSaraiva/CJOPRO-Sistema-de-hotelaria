@@ -7,6 +7,7 @@ import { getUserFromSession } from "../../lib/auth";
 import { getActiveHotelCookieValue, listActiveHotelOptions, resolveActiveHotelForUser } from "../../lib/activeHotel";
 import { logoutAction, setActiveHotelAction } from "./actions";
 import { ActiveHotelSelector } from "./_components/ActiveHotelSelector";
+import { getRoomsAccess } from "./rooms/access";
 
 const NAME_CONNECTORS = new Set(["da", "de", "do", "das", "dos", "e"]);
 
@@ -39,9 +40,11 @@ export default async function DashboardLayout({ children }: { children: ReactNod
     redirect("/login");
   }
 
+  const roomsAccess = getRoomsAccess(user);
+
   const moduleEntryAccess: Record<string, boolean> = {
     "/dashboard/hotels": user.permissions.includes(PERMISSIONS.HOTEL_READ) || user.permissions.includes(PERMISSIONS.HOTEL_CREATE),
-    "/dashboard/rooms": user.permissions.includes(PERMISSIONS.ROOM_READ) || user.permissions.includes(PERMISSIONS.ROOM_CREATE),
+    "/dashboard/rooms": roomsAccess.canRead || roomsAccess.canCreate,
     "/dashboard/customers": user.permissions.includes(PERMISSIONS.CUSTOMER_READ) || user.permissions.includes(PERMISSIONS.CUSTOMER_CREATE),
     "/dashboard/reservations": user.permissions.includes(PERMISSIONS.RESERVATION_READ) || user.permissions.includes(PERMISSIONS.RESERVATION_CREATE),
     "/dashboard/products": user.permissions.includes(PERMISSIONS.PRODUCT_READ) || user.permissions.includes(PERMISSIONS.PRODUCT_CREATE),

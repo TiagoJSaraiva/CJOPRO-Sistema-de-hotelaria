@@ -18,3 +18,17 @@ export function getSeasonRoomRatesAccess(user: UserLike): SeasonRoomRatesAccess 
     canDelete: permissions.includes(PERMISSIONS.SEASON_ROOM_RATE_DELETE)
   };
 }
+
+export function getSeasonRoomRatesDefaultRoute(
+  access: SeasonRoomRatesAccess
+): "/dashboard/season-room-rates/view" | "/dashboard/season-room-rates/create" | null {
+  if (access.canRead) {
+    return "/dashboard/season-room-rates/view";
+  }
+
+  if (access.canCreate) {
+    return "/dashboard/season-room-rates/create";
+  }
+
+  return null;
+}
