@@ -6,16 +6,17 @@ type DashboardEntityPageShellProps = {
   activeTabKey: string;
   tabs: PermissionTabItem[];
   status?: string;
+  statusContent?: ReactNode;
   children: ReactNode;
 };
 
-export function DashboardEntityPageShell({ title, activeTabKey, tabs, status, children }: DashboardEntityPageShellProps) {
+export function DashboardEntityPageShell({ title, activeTabKey, tabs, status, statusContent, children }: DashboardEntityPageShellProps) {
   return (
     <section className="pms-page-stack">
       <section>
         <h1 className="pms-page-title">{title}</h1>
         <PermissionTabs activeKey={activeTabKey} items={tabs} />
-        {status ? <p className="pms-status-muted">Status: {status}</p> : null}
+        {statusContent || (status ? <p className="pms-status-muted">Status: {status}</p> : null)}
       </section>
 
       {children}

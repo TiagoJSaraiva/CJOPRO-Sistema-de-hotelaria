@@ -1,5 +1,6 @@
 import { redirect } from "next/navigation";
-import { PermissionTabs } from "../../_components/PermissionTabs";
+import { DashboardAccessDeniedCard } from "../../_components/DashboardAccessDeniedCard";
+import { DashboardEntityPageShell } from "../../_components/DashboardEntityPageShell";
 import { getUsersReferenceData } from "../../../../lib/adminApi";
 import { getUserFromSession } from "../../../../lib/auth";
 import { getUsersAccess, getUsersDefaultRoute } from "../access";
@@ -24,31 +25,22 @@ export default async function UsersCreatePage({ searchParams }: UsersCreatePageP
       redirect(fallback);
     }
 
-    return (
-      <section className="pms-surface-card">
-        <h2 className="mt-0">Usuarios</h2>
-        <p>Sem permissao para criar usuario.</p>
-      </section>
-    );
+    return <DashboardAccessDeniedCard title="Usuarios" message="Sem permissao para criar usuario." />;
   }
 
   const referenceData = await getUsersReferenceData().catch(() => ({ hotels: [], roles: [] }));
 
   return (
-    <section className="pms-page-stack">
-      <section>
-        <h1 className="pms-page-title">Usuarios</h1>
-        <PermissionTabs
-          activeKey="create"
-          items={[
-            { key: "create", label: "Criar usuario", href: "/dashboard/users/create", isVisible: access.canCreate },
-            { key: "view", label: "Ver usuarios", href: "/dashboard/users/view", isVisible: access.canRead }
-          ]}
-        />
-        <UserStatusMessage status={searchParams?.status} />
-      </section>
-
+    <DashboardEntityPageShell
+      title="Usuarios"
+      activeTabKey="create"
+      tabs={[
+        { key: "create", label: "Criar usuario", href: "/dashboard/users/create", isVisible: access.canCreate },
+        { key: "view", label: "Ver usuarios", href: "/dashboard/users/view", isVisible: access.canRead }
+      ]}
+      statusContent={<UserStatusMessage status={searchParams?.status} />}
+    >
       <UserCreateForm formKey={searchParams?.r} hotels={referenceData.hotels} roles={referenceData.roles} />
-    </section>
+    </DashboardEntityPageShell>
   );
 }

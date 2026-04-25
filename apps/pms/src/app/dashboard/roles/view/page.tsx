@@ -1,5 +1,6 @@
 import { redirect } from "next/navigation";
-import { PermissionTabs } from "../../_components/PermissionTabs";
+import { DashboardAccessDeniedCard } from "../../_components/DashboardAccessDeniedCard";
+import { DashboardEntityPageShell } from "../../_components/DashboardEntityPageShell";
 import { getRolesReferenceData, listRoles } from "../../../../lib/adminApi";
 import { getUserFromSession } from "../../../../lib/auth";
 import { getRolesAccess, getRolesDefaultRoute } from "../access";
@@ -26,12 +27,7 @@ export default async function RolesViewPage({ searchParams }: RolesViewPageProps
       redirect(fallback);
     }
 
-    return (
-      <section className="pms-surface-card">
-        <h2 className="mt-0">Roles</h2>
-        <p>Sem permissao para visualizar roles.</p>
-      </section>
-    );
+    return <DashboardAccessDeniedCard title="Roles" message="Sem permissao para visualizar roles." />;
   }
 
   const [roles, referenceData] = await Promise.all([
@@ -44,12 +40,15 @@ export default async function RolesViewPage({ searchParams }: RolesViewPageProps
   const currentUserRoleIds = Array.from(new Set((user?.roleAssignments || []).map((assignment) => assignment.roleId).filter(Boolean)));
 
   return (
-    <section className="pms-page-stack">
-      <section>
-        <h1 className="pms-page-title">Roles</h1>
-        <RoleStatusMessage status={searchParams?.status} detail={searchParams?.detail} />
-      </section>
-
+    <DashboardEntityPageShell
+      title="Roles"
+      activeTabKey="view"
+      tabs={[
+        { key: "create", label: "Criar role", href: "/dashboard/roles/create", isVisible: access.canCreate },
+        { key: "view", label: "Ver roles", href: "/dashboard/roles/view", isVisible: access.canRead }
+      ]}
+      statusContent={<RoleStatusMessage status={searchParams?.status} detail={searchParams?.detail} />}
+    >
       <RolesViewFilterableSection
         roles={roles}
         hotels={referenceData.hotels}
@@ -60,15 +59,7 @@ export default async function RolesViewPage({ searchParams }: RolesViewPageProps
         currentUserRoleIds={currentUserRoleIds}
         activeRoleId={activeRoleId}
         mode={mode}
-      >
-        <PermissionTabs
-          activeKey="view"
-          items={[
-            { key: "create", label: "Criar role", href: "/dashboard/roles/create", isVisible: access.canCreate },
-            { key: "view", label: "Ver roles", href: "/dashboard/roles/view", isVisible: access.canRead }
-          ]}
-        />
-      </RolesViewFilterableSection>
-    </section>
+      />
+    </DashboardEntityPageShell>
   );
 }

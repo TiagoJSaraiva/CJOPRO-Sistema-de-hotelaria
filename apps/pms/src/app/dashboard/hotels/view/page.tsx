@@ -1,5 +1,6 @@
 import { redirect } from "next/navigation";
-import { PermissionTabs } from "../../_components/PermissionTabs";
+import { DashboardAccessDeniedCard } from "../../_components/DashboardAccessDeniedCard";
+import { DashboardEntityPageShell } from "../../_components/DashboardEntityPageShell";
 import { getUserFromSession } from "../../../../lib/auth";
 import { listHotels } from "../../../../lib/adminApi";
 import { getHotelAccess, getHotelDefaultRoute } from "../access";
@@ -25,12 +26,7 @@ export default async function HotelViewPage({ searchParams }: HotelViewPageProps
       redirect(fallback);
     }
 
-    return (
-      <section className="pms-surface-card">
-        <h2 className="mt-0">Hoteis</h2>
-        <p>Sem permissao para visualizar hoteis.</p>
-      </section>
-    );
+    return <DashboardAccessDeniedCard title="Hoteis" message="Sem permissao para visualizar hoteis." />;
   }
 
   const activeHotelId = String(searchParams?.hotelId || "").trim();
@@ -38,12 +34,15 @@ export default async function HotelViewPage({ searchParams }: HotelViewPageProps
   const hotels = await listHotels();
 
   return (
-    <section className="pms-page-stack">
-      <section>
-        <h1 className="pms-page-title">Hoteis</h1>
-        <HotelStatusMessage status={searchParams?.status} />
-      </section>
-
+    <DashboardEntityPageShell
+      title="Hoteis"
+      activeTabKey="view"
+      tabs={[
+        { key: "create", label: "Criar hotel", href: "/dashboard/hotels/create", isVisible: access.canCreate },
+        { key: "view", label: "Ver hoteis", href: "/dashboard/hotels/view", isVisible: access.canRead }
+      ]}
+      statusContent={<HotelStatusMessage status={searchParams?.status} />}
+    >
       <HotelsViewFilterableSection
         hotels={hotels}
         canRead={access.canRead}
@@ -51,15 +50,7 @@ export default async function HotelViewPage({ searchParams }: HotelViewPageProps
         canDelete={access.canDelete}
         activeHotelId={activeHotelId}
         mode={mode}
-      >
-        <PermissionTabs
-          activeKey="view"
-          items={[
-            { key: "create", label: "Criar hotel", href: "/dashboard/hotels/create", isVisible: access.canCreate },
-            { key: "view", label: "Ver hoteis", href: "/dashboard/hotels/view", isVisible: access.canRead }
-          ]}
-        />
-      </HotelsViewFilterableSection>
-    </section>
+      />
+    </DashboardEntityPageShell>
   );
 }

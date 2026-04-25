@@ -1,5 +1,6 @@
 import { redirect } from "next/navigation";
-import { PermissionTabs } from "../../_components/PermissionTabs";
+import { DashboardAccessDeniedCard } from "../../_components/DashboardAccessDeniedCard";
+import { DashboardEntityPageShell } from "../../_components/DashboardEntityPageShell";
 import { getUsersReferenceData, listUsers } from "../../../../lib/adminApi";
 import { getUserFromSession } from "../../../../lib/auth";
 import { getUsersAccess, getUsersDefaultRoute } from "../access";
@@ -25,12 +26,7 @@ export default async function UsersViewPage({ searchParams }: UsersViewPageProps
       redirect(fallback);
     }
 
-    return (
-      <section className="pms-surface-card">
-        <h2 className="mt-0">Usuarios</h2>
-        <p>Sem permissao para visualizar usuarios.</p>
-      </section>
-    );
+    return <DashboardAccessDeniedCard title="Usuarios" message="Sem permissao para visualizar usuarios." />;
   }
 
   const [users, referenceData] = await Promise.all([
@@ -42,12 +38,15 @@ export default async function UsersViewPage({ searchParams }: UsersViewPageProps
   const mode = searchParams?.mode === "edit" ? "edit" : "view";
 
   return (
-    <section className="pms-page-stack">
-      <section>
-        <h1 className="pms-page-title">Usuarios</h1>
-        <UserStatusMessage status={searchParams?.status} />
-      </section>
-
+    <DashboardEntityPageShell
+      title="Usuarios"
+      activeTabKey="view"
+      tabs={[
+        { key: "create", label: "Criar usuario", href: "/dashboard/users/create", isVisible: access.canCreate },
+        { key: "view", label: "Ver usuarios", href: "/dashboard/users/view", isVisible: access.canRead }
+      ]}
+      statusContent={<UserStatusMessage status={searchParams?.status} />}
+    >
       <UsersViewFilterableSection
         users={users}
         hotels={referenceData.hotels}
@@ -58,15 +57,7 @@ export default async function UsersViewPage({ searchParams }: UsersViewPageProps
         currentUserId={user?.id}
         activeUserId={activeUserId}
         mode={mode}
-      >
-        <PermissionTabs
-          activeKey="view"
-          items={[
-            { key: "create", label: "Criar usuario", href: "/dashboard/users/create", isVisible: access.canCreate },
-            { key: "view", label: "Ver usuarios", href: "/dashboard/users/view", isVisible: access.canRead }
-          ]}
-        />
-      </UsersViewFilterableSection>
-    </section>
+      />
+    </DashboardEntityPageShell>
   );
 }

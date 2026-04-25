@@ -1,5 +1,6 @@
 import { redirect } from "next/navigation";
-import { PermissionTabs } from "../../_components/PermissionTabs";
+import { DashboardAccessDeniedCard } from "../../_components/DashboardAccessDeniedCard";
+import { DashboardEntityPageShell } from "../../_components/DashboardEntityPageShell";
 import { getRolesReferenceData } from "../../../../lib/adminApi";
 import { getUserFromSession } from "../../../../lib/auth";
 import { getRolesAccess, getRolesDefaultRoute } from "../access";
@@ -24,31 +25,22 @@ export default async function RolesCreatePage({ searchParams }: RolesCreatePageP
       redirect(fallback);
     }
 
-    return (
-      <section className="pms-surface-card">
-        <h2 className="mt-0">Roles</h2>
-        <p>Sem permissao para criar role.</p>
-      </section>
-    );
+    return <DashboardAccessDeniedCard title="Roles" message="Sem permissao para criar role." />;
   }
 
   const referenceData = await getRolesReferenceData().catch(() => ({ hotels: [], permissions: [] }));
 
   return (
-    <section className="pms-page-stack">
-      <section>
-        <h1 className="pms-page-title">Roles</h1>
-        <PermissionTabs
-          activeKey="create"
-          items={[
-            { key: "create", label: "Criar role", href: "/dashboard/roles/create", isVisible: access.canCreate },
-            { key: "view", label: "Ver roles", href: "/dashboard/roles/view", isVisible: access.canRead }
-          ]}
-        />
-        <RoleStatusMessage status={searchParams?.status} />
-      </section>
-
+    <DashboardEntityPageShell
+      title="Roles"
+      activeTabKey="create"
+      tabs={[
+        { key: "create", label: "Criar role", href: "/dashboard/roles/create", isVisible: access.canCreate },
+        { key: "view", label: "Ver roles", href: "/dashboard/roles/view", isVisible: access.canRead }
+      ]}
+      statusContent={<RoleStatusMessage status={searchParams?.status} />}
+    >
       <RoleCreateForm formKey={searchParams?.r} hotels={referenceData.hotels} permissions={referenceData.permissions} />
-    </section>
+    </DashboardEntityPageShell>
   );
 }

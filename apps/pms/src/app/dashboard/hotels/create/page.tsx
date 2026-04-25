@@ -1,5 +1,6 @@
 import { redirect } from "next/navigation";
-import { PermissionTabs } from "../../_components/PermissionTabs";
+import { DashboardAccessDeniedCard } from "../../_components/DashboardAccessDeniedCard";
+import { DashboardEntityPageShell } from "../../_components/DashboardEntityPageShell";
 import { getUserFromSession } from "../../../../lib/auth";
 import { getHotelAccess, getHotelDefaultRoute } from "../access";
 import { HotelCreateForm } from "../_components/HotelCreateForm";
@@ -23,29 +24,20 @@ export default async function HotelCreatePage({ searchParams }: HotelCreatePageP
       redirect(fallback);
     }
 
-    return (
-      <section className="pms-surface-card">
-        <h2 className="mt-0">Hoteis</h2>
-        <p>Sem permissao para criar hotel.</p>
-      </section>
-    );
+    return <DashboardAccessDeniedCard title="Hoteis" message="Sem permissao para criar hotel." />;
   }
 
   return (
-    <section className="pms-page-stack">
-      <section>
-        <h1 className="pms-page-title">Hoteis</h1>
-        <PermissionTabs
-          activeKey="create"
-          items={[
-            { key: "create", label: "Criar hotel", href: "/dashboard/hotels/create", isVisible: access.canCreate },
-            { key: "view", label: "Ver hoteis", href: "/dashboard/hotels/view", isVisible: access.canRead }
-          ]}
-        />
-        <HotelStatusMessage status={searchParams?.status} />
-      </section>
-
+    <DashboardEntityPageShell
+      title="Hoteis"
+      activeTabKey="create"
+      tabs={[
+        { key: "create", label: "Criar hotel", href: "/dashboard/hotels/create", isVisible: access.canCreate },
+        { key: "view", label: "Ver hoteis", href: "/dashboard/hotels/view", isVisible: access.canRead }
+      ]}
+      statusContent={<HotelStatusMessage status={searchParams?.status} />}
+    >
       <HotelCreateForm formKey={searchParams?.r} />
-    </section>
+    </DashboardEntityPageShell>
   );
 }
