@@ -1,5 +1,6 @@
 import { redirect } from "next/navigation";
-import { PermissionTabs } from "../../_components/PermissionTabs";
+import { DashboardAccessDeniedCard } from "../../_components/DashboardAccessDeniedCard";
+import { DashboardEntityPageShell } from "../../_components/DashboardEntityPageShell";
 import { listSeasons } from "../../../../lib/adminApi";
 import { getUserFromSession } from "../../../../lib/auth";
 import { getSeasonsAccess, getSeasonsDefaultRoute } from "../access";
@@ -8,6 +9,8 @@ import { SeasonsViewFilterableSection } from "../_components/SeasonsViewFilterab
 type SeasonsViewPageProps = {
   searchParams?: {
     status?: string;
+    seasonId?: string;
+    mode?: string;
   };
 };
 
@@ -22,31 +25,31 @@ export default async function SeasonsViewPage({ searchParams }: SeasonsViewPageP
       redirect(fallback);
     }
 
-    return (
-      <section className="pms-surface-card">
-        <h2 className="mt-0">Temporadas</h2>
-        <p>Sem permissao para visualizar temporadas.</p>
-      </section>
-    );
+    return <DashboardAccessDeniedCard title="Temporadas" message="Sem permissao para visualizar temporadas." />;
   }
 
   const seasons = await listSeasons();
+  const activeSeasonId = String(searchParams?.seasonId || "").trim();
+  const mode = searchParams?.mode === "edit" ? "edit" : "view";
 
   return (
-    <section className="pms-page-stack">
-      <section>
-        <h1 className="pms-page-title">Temporadas</h1>
-        <PermissionTabs
-          activeKey="view"
-          items={[
-            { key: "create", label: "Criar temporada", href: "/dashboard/seasons/create", isVisible: access.canCreate },
-            { key: "view", label: "Ver temporadas", href: "/dashboard/seasons/view", isVisible: access.canRead }
-          ]}
-        />
-        {searchParams?.status ? <p className="pms-status-muted">Status: {searchParams.status}</p> : null}
-      </section>
-
-      <SeasonsViewFilterableSection seasons={seasons} canUpdate={access.canUpdate} canDelete={access.canDelete} />
-    </section>
+    <DashboardEntityPageShell
+      title="Temporadas"
+      activeTabKey="view"
+      tabs={[
+        { key: "create", label: "Criar temporada", href: "/dashboard/seasons/create", isVisible: access.canCreate },
+        { key: "view", label: "Ver temporadas", href: "/dashboard/seasons/view", isVisible: access.canRead }
+      ]}
+      status={searchParams?.status}
+    >
+      <SeasonsViewFilterableSection
+        seasons={seasons}
+        canRead={access.canRead}
+        canUpdate={access.canUpdate}
+        canDelete={access.canDelete}
+        activeSeasonId={activeSeasonId}
+        mode={mode}
+      />
+    </DashboardEntityPageShell>
   );
 }

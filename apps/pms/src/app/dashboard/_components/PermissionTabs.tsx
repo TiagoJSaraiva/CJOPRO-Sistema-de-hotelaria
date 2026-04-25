@@ -1,6 +1,6 @@
 import Link from "next/link";
 
-type PermissionTabItem = {
+export type PermissionTabItem = {
   key: string;
   label: string;
   href: string;

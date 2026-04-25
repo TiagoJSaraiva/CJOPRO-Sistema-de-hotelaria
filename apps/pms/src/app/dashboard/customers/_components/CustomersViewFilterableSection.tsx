@@ -2,7 +2,6 @@
 
 import { useMemo } from "react";
 import type { AdminCustomer } from "@hotel/shared";
-import { deleteCustomerAction, updateCustomerAction } from "../actions";
 import {
   DEFAULT_CUSTOMER_VIEW_FILTERS,
   applyCustomerViewFilters,
@@ -12,15 +11,19 @@ import {
 import { viewFiltersFieldClassName } from "../../_components/ViewFiltersBase";
 import { EntityViewFilterableSection } from "../../_components/EntityViewFilterableSection";
 import { useViewFiltersState } from "../../_components/useViewFiltersState";
+import { CustomerListItem } from "./CustomerListItem";
 
 type CustomersViewFilterableSectionProps = {
   customers: AdminCustomer[];
+  canRead: boolean;
   canUpdate: boolean;
   canDelete: boolean;
+  activeCustomerId: string;
+  mode: "view" | "edit";
   children?: React.ReactNode;
 };
 
-export function CustomersViewFilterableSection({ customers, canUpdate, canDelete, children }: CustomersViewFilterableSectionProps) {
+export function CustomersViewFilterableSection({ customers, canRead, canUpdate, canDelete, activeCustomerId, mode, children }: CustomersViewFilterableSectionProps) {
   const {
     isModalOpen,
     appliedFilters,
@@ -51,39 +54,14 @@ export function CustomersViewFilterableSection({ customers, canUpdate, canDelete
       filteredEmptyMessage="Nenhum cliente corresponde aos filtros aplicados."
       getItemKey={(customer) => customer.id}
       renderItem={(customer) => (
-        <article className="rounded-xl border border-[#e2e2e2] bg-white p-[0.95rem]">
-          <h3 className="m-0">{customer.full_name}</h3>
-          <p className="m-0 mt-[0.2rem] text-[#555]">
-            {customer.document_type}: {customer.document_number}
-          </p>
-
-          {canUpdate ? (
-            <form action={updateCustomerAction} className="mt-[0.65rem] grid gap-[0.45rem] md:grid-cols-3">
-              <input type="hidden" name="id" value={customer.id} />
-              <input name="full_name" defaultValue={customer.full_name} required className="pms-field-input" />
-              <input name="document_number" defaultValue={customer.document_number} required className="pms-field-input" />
-              <input name="document_type" defaultValue={customer.document_type} required className="pms-field-input" />
-              <input name="birth_date" type="date" defaultValue={customer.birth_date} required className="pms-field-input" />
-              <input name="email" type="email" defaultValue={customer.email || ""} className="pms-field-input" />
-              <input name="mobile_phone" defaultValue={customer.mobile_phone || ""} className="pms-field-input" />
-              <input name="phone" defaultValue={customer.phone || ""} className="pms-field-input" />
-              <input name="nationality" defaultValue={customer.nationality || ""} className="pms-field-input" />
-              <input name="notes" defaultValue={customer.notes || ""} className="pms-field-input" />
-              <button type="submit" className="justify-self-start rounded-lg border border-[#0f766e] bg-white px-[0.65rem] py-[0.45rem] text-[#0a5f58]">
-                Salvar
-              </button>
-            </form>
-          ) : null}
-
-          {canDelete ? (
-            <form action={deleteCustomerAction} className="mt-[0.45rem]">
-              <input type="hidden" name="id" value={customer.id} />
-              <button type="submit" className="rounded-lg border border-[#c83a3a] bg-white px-[0.65rem] py-[0.45rem] text-[#b00020]">
-                Apagar
-              </button>
-            </form>
-          ) : null}
-        </article>
+        <CustomerListItem
+          customer={customer}
+          canRead={canRead}
+          canUpdate={canUpdate}
+          canDelete={canDelete}
+          isViewing={activeCustomerId === customer.id && mode === "view"}
+          isEditing={activeCustomerId === customer.id && mode === "edit"}
+        />
       )}
       filters={
         <div className="grid grid-cols-1 gap-[0.75rem] md:grid-cols-2 xl:grid-cols-4">

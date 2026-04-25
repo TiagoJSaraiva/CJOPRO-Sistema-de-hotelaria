@@ -1,5 +1,6 @@
 import { redirect } from "next/navigation";
-import { PermissionTabs } from "../../_components/PermissionTabs";
+import { DashboardAccessDeniedCard } from "../../_components/DashboardAccessDeniedCard";
+import { DashboardEntityPageShell } from "../../_components/DashboardEntityPageShell";
 import { listProducts } from "../../../../lib/adminApi";
 import { getUserFromSession } from "../../../../lib/auth";
 import { getProductsAccess, getProductsDefaultRoute } from "../access";
@@ -8,6 +9,8 @@ import { ProductsViewFilterableSection } from "../_components/ProductsViewFilter
 type ProductsViewPageProps = {
   searchParams?: {
     status?: string;
+    productId?: string;
+    mode?: string;
   };
 };
 
@@ -22,31 +25,31 @@ export default async function ProductsViewPage({ searchParams }: ProductsViewPag
       redirect(fallback);
     }
 
-    return (
-      <section className="pms-surface-card">
-        <h2 className="mt-0">Produtos</h2>
-        <p>Sem permissao para visualizar produtos.</p>
-      </section>
-    );
+    return <DashboardAccessDeniedCard title="Produtos" message="Sem permissao para visualizar produtos." />;
   }
 
   const products = await listProducts();
+  const activeProductId = String(searchParams?.productId || "").trim();
+  const mode = searchParams?.mode === "edit" ? "edit" : "view";
 
   return (
-    <section className="pms-page-stack">
-      <section>
-        <h1 className="pms-page-title">Produtos</h1>
-        <PermissionTabs
-          activeKey="view"
-          items={[
-            { key: "create", label: "Criar produto", href: "/dashboard/products/create", isVisible: access.canCreate },
-            { key: "view", label: "Ver produtos", href: "/dashboard/products/view", isVisible: access.canRead }
-          ]}
-        />
-        {searchParams?.status ? <p className="pms-status-muted">Status: {searchParams.status}</p> : null}
-      </section>
-
-      <ProductsViewFilterableSection products={products} canUpdate={access.canUpdate} canDelete={access.canDelete} />
-    </section>
+    <DashboardEntityPageShell
+      title="Produtos"
+      activeTabKey="view"
+      tabs={[
+        { key: "create", label: "Criar produto", href: "/dashboard/products/create", isVisible: access.canCreate },
+        { key: "view", label: "Ver produtos", href: "/dashboard/products/view", isVisible: access.canRead }
+      ]}
+      status={searchParams?.status}
+    >
+      <ProductsViewFilterableSection
+        products={products}
+        canRead={access.canRead}
+        canUpdate={access.canUpdate}
+        canDelete={access.canDelete}
+        activeProductId={activeProductId}
+        mode={mode}
+      />
+    </DashboardEntityPageShell>
   );
 }

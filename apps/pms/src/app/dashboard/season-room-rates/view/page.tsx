@@ -1,5 +1,6 @@
 import { redirect } from "next/navigation";
-import { PermissionTabs } from "../../_components/PermissionTabs";
+import { DashboardAccessDeniedCard } from "../../_components/DashboardAccessDeniedCard";
+import { DashboardEntityPageShell } from "../../_components/DashboardEntityPageShell";
 import { listSeasonRoomRates } from "../../../../lib/adminApi";
 import { getUserFromSession } from "../../../../lib/auth";
 import { getSeasonRoomRatesAccess, getSeasonRoomRatesDefaultRoute } from "../access";
@@ -8,6 +9,8 @@ import { SeasonRoomRatesViewFilterableSection } from "../_components/SeasonRoomR
 type SeasonRoomRatesViewPageProps = {
   searchParams?: {
     status?: string;
+    seasonRoomRateId?: string;
+    mode?: string;
   };
 };
 
@@ -22,41 +25,41 @@ export default async function SeasonRoomRatesViewPage({ searchParams }: SeasonRo
       redirect(fallback);
     }
 
-    return (
-      <section className="pms-surface-card">
-        <h2 className="mt-0">Tarifas por Temporada</h2>
-        <p>Sem permissao para visualizar tarifas de temporada.</p>
-      </section>
-    );
+    return <DashboardAccessDeniedCard title="Tarifas por Temporada" message="Sem permissao para visualizar tarifas de temporada." />;
   }
 
   const items = await listSeasonRoomRates();
+  const activeSeasonRoomRateId = String(searchParams?.seasonRoomRateId || "").trim();
+  const mode = searchParams?.mode === "edit" ? "edit" : "view";
 
   return (
-    <section className="pms-page-stack">
-      <section>
-        <h1 className="pms-page-title">Tarifas por Temporada</h1>
-        <PermissionTabs
-          activeKey="view"
-          items={[
-            {
-              key: "create",
-              label: "Criar tarifa",
-              href: "/dashboard/season-room-rates/create",
-              isVisible: access.canCreate
-            },
-            {
-              key: "view",
-              label: "Ver tarifas",
-              href: "/dashboard/season-room-rates/view",
-              isVisible: access.canRead
-            }
-          ]}
-        />
-        {searchParams?.status ? <p className="pms-status-muted">Status: {searchParams.status}</p> : null}
-      </section>
-
-      <SeasonRoomRatesViewFilterableSection items={items} canUpdate={access.canUpdate} canDelete={access.canDelete} />
-    </section>
+    <DashboardEntityPageShell
+      title="Tarifas por Temporada"
+      activeTabKey="view"
+      tabs={[
+        {
+          key: "create",
+          label: "Criar tarifa",
+          href: "/dashboard/season-room-rates/create",
+          isVisible: access.canCreate
+        },
+        {
+          key: "view",
+          label: "Ver tarifas",
+          href: "/dashboard/season-room-rates/view",
+          isVisible: access.canRead
+        }
+      ]}
+      status={searchParams?.status}
+    >
+      <SeasonRoomRatesViewFilterableSection
+        items={items}
+        canRead={access.canRead}
+        canUpdate={access.canUpdate}
+        canDelete={access.canDelete}
+        activeSeasonRoomRateId={activeSeasonRoomRateId}
+        mode={mode}
+      />
+    </DashboardEntityPageShell>
   );
 }

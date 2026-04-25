@@ -1,5 +1,6 @@
 import { redirect } from "next/navigation";
-import { PermissionTabs } from "../../_components/PermissionTabs";
+import { DashboardAccessDeniedCard } from "../../_components/DashboardAccessDeniedCard";
+import { DashboardEntityPageShell } from "../../_components/DashboardEntityPageShell";
 import { listReservations } from "../../../../lib/adminApi";
 import { getUserFromSession } from "../../../../lib/auth";
 import { getReservationsAccess, getReservationsDefaultRoute } from "../access";
@@ -8,6 +9,8 @@ import { ReservationsViewFilterableSection } from "../_components/ReservationsVi
 type ReservationsViewPageProps = {
   searchParams?: {
     status?: string;
+    reservationId?: string;
+    mode?: string;
   };
 };
 
@@ -22,31 +25,31 @@ export default async function ReservationsViewPage({ searchParams }: Reservation
       redirect(fallback);
     }
 
-    return (
-      <section className="pms-surface-card">
-        <h2 className="mt-0">Reservas</h2>
-        <p>Sem permissao para visualizar reservas.</p>
-      </section>
-    );
+    return <DashboardAccessDeniedCard title="Reservas" message="Sem permissao para visualizar reservas." />;
   }
 
   const reservations = await listReservations();
+  const activeReservationId = String(searchParams?.reservationId || "").trim();
+  const mode = searchParams?.mode === "edit" ? "edit" : "view";
 
   return (
-    <section className="pms-page-stack">
-      <section>
-        <h1 className="pms-page-title">Reservas</h1>
-        <PermissionTabs
-          activeKey="view"
-          items={[
-            { key: "create", label: "Criar reserva", href: "/dashboard/reservations/create", isVisible: access.canCreate },
-            { key: "view", label: "Ver reservas", href: "/dashboard/reservations/view", isVisible: access.canRead }
-          ]}
-        />
-        {searchParams?.status ? <p className="pms-status-muted">Status: {searchParams.status}</p> : null}
-      </section>
-
-      <ReservationsViewFilterableSection reservations={reservations} canUpdate={access.canUpdate} canDelete={access.canDelete} />
-    </section>
+    <DashboardEntityPageShell
+      title="Reservas"
+      activeTabKey="view"
+      tabs={[
+        { key: "create", label: "Criar reserva", href: "/dashboard/reservations/create", isVisible: access.canCreate },
+        { key: "view", label: "Ver reservas", href: "/dashboard/reservations/view", isVisible: access.canRead }
+      ]}
+      status={searchParams?.status}
+    >
+      <ReservationsViewFilterableSection
+        reservations={reservations}
+        canRead={access.canRead}
+        canUpdate={access.canUpdate}
+        canDelete={access.canDelete}
+        activeReservationId={activeReservationId}
+        mode={mode}
+      />
+    </DashboardEntityPageShell>
   );
 }

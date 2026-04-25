@@ -1,5 +1,6 @@
 import { redirect } from "next/navigation";
-import { PermissionTabs } from "../../_components/PermissionTabs";
+import { DashboardAccessDeniedCard } from "../../_components/DashboardAccessDeniedCard";
+import { DashboardEntityPageShell } from "../../_components/DashboardEntityPageShell";
 import { listCustomers } from "../../../../lib/adminApi";
 import { getUserFromSession } from "../../../../lib/auth";
 import { getCustomersAccess, getCustomersDefaultRoute } from "../access";
@@ -8,6 +9,8 @@ import { CustomersViewFilterableSection } from "../_components/CustomersViewFilt
 type CustomersViewPageProps = {
   searchParams?: {
     status?: string;
+    customerId?: string;
+    mode?: string;
   };
 };
 
@@ -22,31 +25,31 @@ export default async function CustomersViewPage({ searchParams }: CustomersViewP
       redirect(fallback);
     }
 
-    return (
-      <section className="pms-surface-card">
-        <h2 className="mt-0">Clientes</h2>
-        <p>Sem permissao para visualizar clientes.</p>
-      </section>
-    );
+    return <DashboardAccessDeniedCard title="Clientes" message="Sem permissao para visualizar clientes." />;
   }
 
   const customers = await listCustomers();
+  const activeCustomerId = String(searchParams?.customerId || "").trim();
+  const mode = searchParams?.mode === "edit" ? "edit" : "view";
 
   return (
-    <section className="pms-page-stack">
-      <section>
-        <h1 className="pms-page-title">Clientes</h1>
-        <PermissionTabs
-          activeKey="view"
-          items={[
-            { key: "create", label: "Criar cliente", href: "/dashboard/customers/create", isVisible: access.canCreate },
-            { key: "view", label: "Ver clientes", href: "/dashboard/customers/view", isVisible: access.canRead }
-          ]}
-        />
-        {searchParams?.status ? <p className="pms-status-muted">Status: {searchParams.status}</p> : null}
-      </section>
-
-      <CustomersViewFilterableSection customers={customers} canUpdate={access.canUpdate} canDelete={access.canDelete} />
-    </section>
+    <DashboardEntityPageShell
+      title="Clientes"
+      activeTabKey="view"
+      tabs={[
+        { key: "create", label: "Criar cliente", href: "/dashboard/customers/create", isVisible: access.canCreate },
+        { key: "view", label: "Ver clientes", href: "/dashboard/customers/view", isVisible: access.canRead }
+      ]}
+      status={searchParams?.status}
+    >
+      <CustomersViewFilterableSection
+        customers={customers}
+        canRead={access.canRead}
+        canUpdate={access.canUpdate}
+        canDelete={access.canDelete}
+        activeCustomerId={activeCustomerId}
+        mode={mode}
+      />
+    </DashboardEntityPageShell>
   );
 }

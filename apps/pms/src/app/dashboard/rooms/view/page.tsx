@@ -1,5 +1,6 @@
 import { redirect } from "next/navigation";
-import { PermissionTabs } from "../../_components/PermissionTabs";
+import { DashboardAccessDeniedCard } from "../../_components/DashboardAccessDeniedCard";
+import { DashboardEntityPageShell } from "../../_components/DashboardEntityPageShell";
 import { listRooms } from "../../../../lib/adminApi";
 import { getUserFromSession } from "../../../../lib/auth";
 import { getRoomsAccess, getRoomsDefaultRoute } from "../access";
@@ -8,6 +9,8 @@ import { RoomsViewFilterableSection } from "../_components/RoomsViewFilterableSe
 type RoomsViewPageProps = {
   searchParams?: {
     status?: string;
+    roomId?: string;
+    mode?: string;
   };
 };
 
@@ -22,31 +25,31 @@ export default async function RoomsViewPage({ searchParams }: RoomsViewPageProps
       redirect(fallback);
     }
 
-    return (
-      <section className="pms-surface-card">
-        <h2 className="mt-0">Quartos</h2>
-        <p>Sem permissao para visualizar quartos.</p>
-      </section>
-    );
+    return <DashboardAccessDeniedCard title="Quartos" message="Sem permissao para visualizar quartos." />;
   }
 
   const rooms = await listRooms();
+  const activeRoomId = String(searchParams?.roomId || "").trim();
+  const mode = searchParams?.mode === "edit" ? "edit" : "view";
 
   return (
-    <section className="pms-page-stack">
-      <section>
-        <h1 className="pms-page-title">Quartos</h1>
-        <PermissionTabs
-          activeKey="view"
-          items={[
-            { key: "create", label: "Criar quarto", href: "/dashboard/rooms/create", isVisible: access.canCreate },
-            { key: "view", label: "Ver quartos", href: "/dashboard/rooms/view", isVisible: access.canRead }
-          ]}
-        />
-        {searchParams?.status ? <p className="pms-status-muted">Status: {searchParams.status}</p> : null}
-      </section>
-
-      <RoomsViewFilterableSection rooms={rooms} canUpdate={access.canUpdate} canDelete={access.canDelete} />
-    </section>
+    <DashboardEntityPageShell
+      title="Quartos"
+      activeTabKey="view"
+      tabs={[
+        { key: "create", label: "Criar quarto", href: "/dashboard/rooms/create", isVisible: access.canCreate },
+        { key: "view", label: "Ver quartos", href: "/dashboard/rooms/view", isVisible: access.canRead }
+      ]}
+      status={searchParams?.status}
+    >
+      <RoomsViewFilterableSection
+        rooms={rooms}
+        canRead={access.canRead}
+        canUpdate={access.canUpdate}
+        canDelete={access.canDelete}
+        activeRoomId={activeRoomId}
+        mode={mode}
+      />
+    </DashboardEntityPageShell>
   );
 }

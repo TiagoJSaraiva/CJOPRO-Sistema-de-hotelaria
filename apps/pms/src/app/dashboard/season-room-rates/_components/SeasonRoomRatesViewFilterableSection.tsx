@@ -2,7 +2,6 @@
 
 import { useMemo } from "react";
 import type { AdminSeasonRoomRate } from "@hotel/shared";
-import { deleteSeasonRoomRateAction, updateSeasonRoomRateAction } from "../actions";
 import {
   DEFAULT_SEASON_ROOM_RATE_VIEW_FILTERS,
   applySeasonRoomRateViewFilters,
@@ -12,15 +11,19 @@ import {
 import { viewFiltersFieldClassName } from "../../_components/ViewFiltersBase";
 import { EntityViewFilterableSection } from "../../_components/EntityViewFilterableSection";
 import { useViewFiltersState } from "../../_components/useViewFiltersState";
+import { SeasonRoomRateListItem } from "./SeasonRoomRateListItem";
 
 type SeasonRoomRatesViewFilterableSectionProps = {
   items: AdminSeasonRoomRate[];
+  canRead: boolean;
   canUpdate: boolean;
   canDelete: boolean;
+  activeSeasonRoomRateId: string;
+  mode: "view" | "edit";
   children?: React.ReactNode;
 };
 
-export function SeasonRoomRatesViewFilterableSection({ items, canUpdate, canDelete, children }: SeasonRoomRatesViewFilterableSectionProps) {
+export function SeasonRoomRatesViewFilterableSection({ items, canRead, canUpdate, canDelete, activeSeasonRoomRateId, mode, children }: SeasonRoomRatesViewFilterableSectionProps) {
   const {
     isModalOpen,
     appliedFilters,
@@ -51,31 +54,14 @@ export function SeasonRoomRatesViewFilterableSection({ items, canUpdate, canDele
       filteredEmptyMessage="Nenhuma tarifa por temporada corresponde aos filtros aplicados."
       getItemKey={(item) => item.id}
       renderItem={(item) => (
-        <article className="rounded-xl border border-[#e2e2e2] bg-white p-[0.95rem]">
-          <h3 className="m-0">{item.room_type}</h3>
-          <p className="m-0 mt-[0.2rem] text-[#555]">Season: {item.season_id} | R$ {item.daily_rate.toFixed(2)}</p>
-
-          {canUpdate ? (
-            <form action={updateSeasonRoomRateAction} className="mt-[0.65rem] grid gap-[0.45rem] md:grid-cols-3">
-              <input type="hidden" name="id" value={item.id} />
-              <input name="season_id" defaultValue={item.season_id} required className="pms-field-input" />
-              <input name="room_type" defaultValue={item.room_type} required className="pms-field-input" />
-              <input name="daily_rate" type="number" min={0} step="0.01" defaultValue={item.daily_rate} required className="pms-field-input" />
-              <button type="submit" className="justify-self-start rounded-lg border border-[#0f766e] bg-white px-[0.65rem] py-[0.45rem] text-[#0a5f58]">
-                Salvar
-              </button>
-            </form>
-          ) : null}
-
-          {canDelete ? (
-            <form action={deleteSeasonRoomRateAction} className="mt-[0.45rem]">
-              <input type="hidden" name="id" value={item.id} />
-              <button type="submit" className="rounded-lg border border-[#c83a3a] bg-white px-[0.65rem] py-[0.45rem] text-[#b00020]">
-                Apagar
-              </button>
-            </form>
-          ) : null}
-        </article>
+        <SeasonRoomRateListItem
+          item={item}
+          canRead={canRead}
+          canUpdate={canUpdate}
+          canDelete={canDelete}
+          isViewing={activeSeasonRoomRateId === item.id && mode === "view"}
+          isEditing={activeSeasonRoomRateId === item.id && mode === "edit"}
+        />
       )}
       filters={
         <div className="grid grid-cols-1 gap-[0.75rem] md:grid-cols-2 xl:grid-cols-4">
