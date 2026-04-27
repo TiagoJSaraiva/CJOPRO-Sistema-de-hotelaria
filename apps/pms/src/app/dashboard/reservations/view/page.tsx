@@ -5,6 +5,7 @@ import { listReservations } from "../../../../lib/adminApi";
 import { getUserFromSession } from "../../../../lib/auth";
 import { getReservationsAccess, getReservationsDefaultRoute } from "../access";
 import { ReservationsViewFilterableSection } from "../_components/ReservationsViewFilterableSection";
+import { ReservationStatusMessage } from "../_components/ReservationStatusMessage";
 
 type ReservationsViewPageProps = {
   searchParams?: {
@@ -40,7 +41,7 @@ export default async function ReservationsViewPage({ searchParams }: Reservation
         { key: "create", label: "Criar reserva", href: "/dashboard/reservations/create", isVisible: access.canCreate },
         { key: "view", label: "Ver reservas", href: "/dashboard/reservations/view", isVisible: access.canRead }
       ]}
-      status={searchParams?.status}
+      statusContent={<ReservationStatusMessage status={searchParams?.status} />}
     >
       <ReservationsViewFilterableSection
         reservations={reservations}

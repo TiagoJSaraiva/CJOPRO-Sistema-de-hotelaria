@@ -5,6 +5,7 @@ import { DashboardEntityPageShell } from "../../_components/DashboardEntityPageS
 import { getUserFromSession } from "../../../../lib/auth";
 import { createProductAction } from "../actions";
 import { getProductsAccess, getProductsDefaultRoute } from "../access";
+import { ProductStatusMessage } from "../_components/ProductStatusMessage";
 
 type ProductsCreatePageProps = {
   searchParams?: {
@@ -35,7 +36,7 @@ export default async function ProductsCreatePage({ searchParams }: ProductsCreat
         { key: "create", label: "Criar produto", href: "/dashboard/products/create", isVisible: access.canCreate },
         { key: "view", label: "Ver produtos", href: "/dashboard/products/view", isVisible: access.canRead }
       ]}
-      status={searchParams?.status}
+      statusContent={<ProductStatusMessage status={searchParams?.status} />}
     >
       <DashboardCreateFormCard title="Criar produto" submitLabel="Criar produto" action={createProductAction} resetKey={searchParams?.r}>
         <input name="name" placeholder="Nome" required className="pms-field-input" />

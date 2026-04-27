@@ -5,6 +5,7 @@ import { listCustomers } from "../../../../lib/adminApi";
 import { getUserFromSession } from "../../../../lib/auth";
 import { getCustomersAccess, getCustomersDefaultRoute } from "../access";
 import { CustomersViewFilterableSection } from "../_components/CustomersViewFilterableSection";
+import { CustomerStatusMessage } from "../_components/CustomerStatusMessage";
 
 type CustomersViewPageProps = {
   searchParams?: {
@@ -40,7 +41,7 @@ export default async function CustomersViewPage({ searchParams }: CustomersViewP
         { key: "create", label: "Criar cliente", href: "/dashboard/customers/create", isVisible: access.canCreate },
         { key: "view", label: "Ver clientes", href: "/dashboard/customers/view", isVisible: access.canRead }
       ]}
-      status={searchParams?.status}
+      statusContent={<CustomerStatusMessage status={searchParams?.status} />}
     >
       <CustomersViewFilterableSection
         customers={customers}

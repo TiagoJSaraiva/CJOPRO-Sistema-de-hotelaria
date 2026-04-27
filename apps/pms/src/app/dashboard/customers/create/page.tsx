@@ -5,6 +5,7 @@ import { DashboardEntityPageShell } from "../../_components/DashboardEntityPageS
 import { getUserFromSession } from "../../../../lib/auth";
 import { createCustomerAction } from "../actions";
 import { getCustomersAccess, getCustomersDefaultRoute } from "../access";
+import { CustomerStatusMessage } from "../_components/CustomerStatusMessage";
 
 type CustomersCreatePageProps = {
   searchParams?: {
@@ -35,7 +36,7 @@ export default async function CustomersCreatePage({ searchParams }: CustomersCre
         { key: "create", label: "Criar cliente", href: "/dashboard/customers/create", isVisible: access.canCreate },
         { key: "view", label: "Ver clientes", href: "/dashboard/customers/view", isVisible: access.canRead }
       ]}
-      status={searchParams?.status}
+      statusContent={<CustomerStatusMessage status={searchParams?.status} />}
     >
       <DashboardCreateFormCard title="Criar cliente" submitLabel="Criar cliente" action={createCustomerAction} resetKey={searchParams?.r}>
         <input name="full_name" placeholder="Nome completo" required className="pms-field-input" />

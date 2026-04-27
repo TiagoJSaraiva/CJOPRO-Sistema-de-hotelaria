@@ -5,6 +5,7 @@ import { listSeasons } from "../../../../lib/adminApi";
 import { getUserFromSession } from "../../../../lib/auth";
 import { getSeasonsAccess, getSeasonsDefaultRoute } from "../access";
 import { SeasonsViewFilterableSection } from "../_components/SeasonsViewFilterableSection";
+import { SeasonStatusMessage } from "../_components/SeasonStatusMessage";
 
 type SeasonsViewPageProps = {
   searchParams?: {
@@ -40,7 +41,7 @@ export default async function SeasonsViewPage({ searchParams }: SeasonsViewPageP
         { key: "create", label: "Criar temporada", href: "/dashboard/seasons/create", isVisible: access.canCreate },
         { key: "view", label: "Ver temporadas", href: "/dashboard/seasons/view", isVisible: access.canRead }
       ]}
-      status={searchParams?.status}
+      statusContent={<SeasonStatusMessage status={searchParams?.status} />}
     >
       <SeasonsViewFilterableSection
         seasons={seasons}

@@ -5,6 +5,7 @@ import { listSeasonRoomRates } from "../../../../lib/adminApi";
 import { getUserFromSession } from "../../../../lib/auth";
 import { getSeasonRoomRatesAccess, getSeasonRoomRatesDefaultRoute } from "../access";
 import { SeasonRoomRatesViewFilterableSection } from "../_components/SeasonRoomRatesViewFilterableSection";
+import { SeasonRoomRateStatusMessage } from "../_components/SeasonRoomRateStatusMessage";
 
 type SeasonRoomRatesViewPageProps = {
   searchParams?: {
@@ -50,7 +51,7 @@ export default async function SeasonRoomRatesViewPage({ searchParams }: SeasonRo
           isVisible: access.canRead
         }
       ]}
-      status={searchParams?.status}
+      statusContent={<SeasonRoomRateStatusMessage status={searchParams?.status} />}
     >
       <SeasonRoomRatesViewFilterableSection
         items={items}

@@ -5,6 +5,7 @@ import { DashboardEntityPageShell } from "../../_components/DashboardEntityPageS
 import { getUserFromSession } from "../../../../lib/auth";
 import { createReservationAction } from "../actions";
 import { getReservationsAccess, getReservationsDefaultRoute } from "../access";
+import { ReservationStatusMessage } from "../_components/ReservationStatusMessage";
 
 type ReservationsCreatePageProps = {
   searchParams?: {
@@ -35,7 +36,7 @@ export default async function ReservationsCreatePage({ searchParams }: Reservati
         { key: "create", label: "Criar reserva", href: "/dashboard/reservations/create", isVisible: access.canCreate },
         { key: "view", label: "Ver reservas", href: "/dashboard/reservations/view", isVisible: access.canRead }
       ]}
-      status={searchParams?.status}
+      statusContent={<ReservationStatusMessage status={searchParams?.status} />}
     >
       <DashboardCreateFormCard title="Criar reserva" submitLabel="Criar reserva" action={createReservationAction} resetKey={searchParams?.r}>
         <input name="booking_customer_id" placeholder="Booking customer ID" required className="pms-field-input" />

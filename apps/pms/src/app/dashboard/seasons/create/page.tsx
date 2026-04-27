@@ -5,6 +5,7 @@ import { DashboardEntityPageShell } from "../../_components/DashboardEntityPageS
 import { getUserFromSession } from "../../../../lib/auth";
 import { createSeasonAction } from "../actions";
 import { getSeasonsAccess, getSeasonsDefaultRoute } from "../access";
+import { SeasonStatusMessage } from "../_components/SeasonStatusMessage";
 
 type SeasonsCreatePageProps = {
   searchParams?: {
@@ -35,7 +36,7 @@ export default async function SeasonsCreatePage({ searchParams }: SeasonsCreateP
         { key: "create", label: "Criar temporada", href: "/dashboard/seasons/create", isVisible: access.canCreate },
         { key: "view", label: "Ver temporadas", href: "/dashboard/seasons/view", isVisible: access.canRead }
       ]}
-      status={searchParams?.status}
+      statusContent={<SeasonStatusMessage status={searchParams?.status} />}
     >
       <DashboardCreateFormCard title="Criar temporada" submitLabel="Criar temporada" action={createSeasonAction} resetKey={searchParams?.r}>
         <input name="name" placeholder="Nome" required className="pms-field-input" />

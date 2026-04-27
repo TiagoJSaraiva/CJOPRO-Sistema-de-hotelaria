@@ -5,6 +5,7 @@ import { DashboardEntityPageShell } from "../../_components/DashboardEntityPageS
 import { getUserFromSession } from "../../../../lib/auth";
 import { createSeasonRoomRateAction } from "../actions";
 import { getSeasonRoomRatesAccess, getSeasonRoomRatesDefaultRoute } from "../access";
+import { SeasonRoomRateStatusMessage } from "../_components/SeasonRoomRateStatusMessage";
 
 type SeasonRoomRatesCreatePageProps = {
   searchParams?: {
@@ -45,7 +46,7 @@ export default async function SeasonRoomRatesCreatePage({ searchParams }: Season
           isVisible: access.canRead
         }
       ]}
-      status={searchParams?.status}
+      statusContent={<SeasonRoomRateStatusMessage status={searchParams?.status} />}
     >
       <DashboardCreateFormCard title="Criar tarifa" submitLabel="Criar tarifa" action={createSeasonRoomRateAction} resetKey={searchParams?.r}>
         <input name="season_id" placeholder="Season ID" required className="pms-field-input" />

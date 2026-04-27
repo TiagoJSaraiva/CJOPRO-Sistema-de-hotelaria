@@ -5,6 +5,7 @@ import { DashboardEntityPageShell } from "../../_components/DashboardEntityPageS
 import { getUserFromSession } from "../../../../lib/auth";
 import { createRoomAction } from "../actions";
 import { getRoomsAccess, getRoomsDefaultRoute } from "../access";
+import { RoomStatusMessage } from "../_components/RoomStatusMessage";
 
 type RoomsCreatePageProps = {
   searchParams?: {
@@ -35,7 +36,7 @@ export default async function RoomsCreatePage({ searchParams }: RoomsCreatePageP
         { key: "create", label: "Criar quarto", href: "/dashboard/rooms/create", isVisible: access.canCreate },
         { key: "view", label: "Ver quartos", href: "/dashboard/rooms/view", isVisible: access.canRead }
       ]}
-      status={searchParams?.status}
+      statusContent={<RoomStatusMessage status={searchParams?.status} />}
     >
       <DashboardCreateFormCard title="Criar quarto" submitLabel="Criar quarto" action={createRoomAction} resetKey={searchParams?.r}>
         <input name="room_number" placeholder="Numero" required className="pms-field-input" />

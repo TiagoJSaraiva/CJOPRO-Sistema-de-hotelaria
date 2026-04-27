@@ -5,6 +5,7 @@ import { listProducts } from "../../../../lib/adminApi";
 import { getUserFromSession } from "../../../../lib/auth";
 import { getProductsAccess, getProductsDefaultRoute } from "../access";
 import { ProductsViewFilterableSection } from "../_components/ProductsViewFilterableSection";
+import { ProductStatusMessage } from "../_components/ProductStatusMessage";
 
 type ProductsViewPageProps = {
   searchParams?: {
@@ -40,7 +41,7 @@ export default async function ProductsViewPage({ searchParams }: ProductsViewPag
         { key: "create", label: "Criar produto", href: "/dashboard/products/create", isVisible: access.canCreate },
         { key: "view", label: "Ver produtos", href: "/dashboard/products/view", isVisible: access.canRead }
       ]}
-      status={searchParams?.status}
+      statusContent={<ProductStatusMessage status={searchParams?.status} />}
     >
       <ProductsViewFilterableSection
         products={products}

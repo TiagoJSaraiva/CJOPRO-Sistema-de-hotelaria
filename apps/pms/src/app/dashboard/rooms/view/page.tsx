@@ -5,6 +5,7 @@ import { listRooms } from "../../../../lib/adminApi";
 import { getUserFromSession } from "../../../../lib/auth";
 import { getRoomsAccess, getRoomsDefaultRoute } from "../access";
 import { RoomsViewFilterableSection } from "../_components/RoomsViewFilterableSection";
+import { RoomStatusMessage } from "../_components/RoomStatusMessage";
 
 type RoomsViewPageProps = {
   searchParams?: {
@@ -40,7 +41,7 @@ export default async function RoomsViewPage({ searchParams }: RoomsViewPageProps
         { key: "create", label: "Criar quarto", href: "/dashboard/rooms/create", isVisible: access.canCreate },
         { key: "view", label: "Ver quartos", href: "/dashboard/rooms/view", isVisible: access.canRead }
       ]}
-      status={searchParams?.status}
+      statusContent={<RoomStatusMessage status={searchParams?.status} />}
     >
       <RoomsViewFilterableSection
         rooms={rooms}
