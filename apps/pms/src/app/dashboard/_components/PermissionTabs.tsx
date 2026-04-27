@@ -1,27 +1,24 @@
 import Link from "next/link";
+import { shouldRenderEntityTabs, type DashboardEntityTabItem } from "./DashboardEntityTabsLayout";
 
-export type PermissionTabItem = {
-  key: string;
-  label: string;
-  href: string;
-  isVisible: boolean;
-};
+export type PermissionTabItem = DashboardEntityTabItem;
 
 type PermissionTabsProps = {
   activeKey: string;
   items: PermissionTabItem[];
+  className?: string;
 };
 
-export function PermissionTabs({ activeKey, items }: PermissionTabsProps) {
-  const visibleItems = items.filter((item) => item.isVisible);
-
-  if (visibleItems.length <= 1) {
+export function PermissionTabs({ activeKey, items, className }: PermissionTabsProps) {
+  if (!shouldRenderEntityTabs(items)) {
     return null;
   }
 
   return (
-    <nav className="flex flex-wrap gap-[0.55rem]">
-      {visibleItems.map((item) => {
+    <nav className={`flex flex-wrap gap-[0.55rem]${className ? ` ${className}` : ""}`}>
+      {items
+        .filter((item) => item.isVisible)
+        .map((item) => {
         const isActive = item.key === activeKey;
 
         return (

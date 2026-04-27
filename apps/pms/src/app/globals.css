@@ -32,6 +32,14 @@ body {
 		@apply ml-4 mb-[0.35rem] mt-0 text-5xl;
 	}
 
+	.pms-entity-tabs-header {
+		@apply mt-[0.6rem];
+	}
+
+	.pms-entity-tabs-inline {
+		@apply mt-[0.1rem];
+	}
+
 	.pms-panel-title {
 		@apply mb-[0.45rem] mt-0;
 	}

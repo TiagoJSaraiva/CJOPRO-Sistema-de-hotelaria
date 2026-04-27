@@ -2,6 +2,9 @@
 
 import type { ReactNode } from "react";
 import { ViewFiltersActionsBar, ViewFiltersModal } from "./ViewFiltersBase";
+import { PermissionTabs } from "./PermissionTabs";
+import { useDashboardEntityTabs } from "./DashboardEntityTabsContext";
+import { shouldPlaceTabsInFilterBar } from "./DashboardEntityTabsLayout";
 
 type EntityViewFilterableSectionProps<T> = {
   appliedFilterCount: number;
@@ -40,9 +43,15 @@ export function EntityViewFilterableSection<T>({
   filters,
   children
 }: EntityViewFilterableSectionProps<T>) {
+  const tabsContext = useDashboardEntityTabs();
+  const viewTabs = tabsContext && shouldPlaceTabsInFilterBar(tabsContext.activeTabKey) ? (
+    <PermissionTabs activeKey={tabsContext.activeTabKey} items={tabsContext.tabs} className="pms-entity-tabs-inline" />
+  ) : null;
+
   return (
     <section className="grid gap-[0.85rem]">
       <ViewFiltersActionsBar appliedFilterCount={appliedFilterCount} onOpen={onOpenFilters} onClear={onClearFilters}>
+        {viewTabs}
         {children}
       </ViewFiltersActionsBar>
 
