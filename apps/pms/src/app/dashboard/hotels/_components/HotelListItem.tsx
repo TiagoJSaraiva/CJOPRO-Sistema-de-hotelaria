@@ -1,8 +1,9 @@
 "use client";
 
-import Link from "next/link";
 import type { AdminHotel } from "../../../../lib/adminApi";
 import { deleteHotelAction, updateHotelAction } from "../actions";
+import { DashboardEntityActionButtons } from "../../_components/DashboardEntityActionButtons";
+import { DashboardEntityListItemFrame } from "../../_components/DashboardEntityListItemFrame";
 
 type HotelListItemProps = {
   hotel: AdminHotel;
@@ -123,54 +124,25 @@ export function HotelListItem({ hotel, canRead, canUpdate, canDelete, isViewing,
   const editHref = `/dashboard/hotels/view?hotelId=${hotel.id}&mode=edit`;
 
   return (
-    <article className="rounded-xl border border-[#e2e2e2] bg-white p-[0.95rem]">
-      <div className="flex flex-wrap items-center justify-between gap-3">
-        <div>
-          <h3 className="mb-[0.2rem] mt-0">{hotel.name}</h3>
-          <p className="m-0 text-[#555]">Slug: {hotel.slug}</p>
-        </div>
-
-        <div className="flex flex-wrap items-center gap-2">
-          {canRead ? (
-            <Link
-              href={viewHref}
-              scroll={false}
-              className={`rounded-lg border border-[#2d6cdf] px-[0.65rem] py-[0.45rem] no-underline ${
-                isViewing ? "bg-[#e9f0ff] text-[#1b4db3]" : "bg-white text-[#1b4db3]"
-              }`}
-            >
-              Visualizar dados
-            </Link>
-          ) : null}
-
-          {canUpdate ? (
-            <Link
-              href={editHref}
-              scroll={false}
-              className={`rounded-lg border border-[#0f766e] px-[0.65rem] py-[0.45rem] no-underline ${
-                isEditing ? "bg-[#ddf5f2] text-[#0a5f58]" : "bg-white text-[#0a5f58]"
-              }`}
-            >
-              Editar dados
-            </Link>
-          ) : null}
-
-          {canDelete ? (
-            <form action={deleteHotelAction}>
-              <input type="hidden" name="id" value={hotel.id} />
-              <button
-                type="submit"
-                className="rounded-lg border border-[#c83a3a] bg-white px-[0.65rem] py-[0.45rem] text-[#b00020]"
-              >
-                Apagar dados
-              </button>
-            </form>
-          ) : null}
-        </div>
-      </div>
-
+    <DashboardEntityListItemFrame
+      title={hotel.name}
+      subtitle={`Slug: ${hotel.slug}`}
+      actions={
+        <DashboardEntityActionButtons
+          canRead={canRead}
+          canUpdate={canUpdate}
+          canDelete={canDelete}
+          isViewing={isViewing}
+          isEditing={isEditing}
+          viewHref={viewHref}
+          editHref={editHref}
+          deleteId={hotel.id}
+          deleteAction={deleteHotelAction}
+        />
+      }
+    >
       {isViewing ? <HotelDataPreview hotel={hotel} /> : null}
       {isEditing ? <HotelEditForm hotel={hotel} /> : null}
-    </article>
+    </DashboardEntityListItemFrame>
   );
 }

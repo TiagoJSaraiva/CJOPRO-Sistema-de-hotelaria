@@ -1,8 +1,9 @@
 "use client";
 
-import Link from "next/link";
 import type { AdminReservation } from "@hotel/shared";
 import { deleteReservationAction, updateReservationAction } from "../actions";
+import { DashboardEntityActionButtons } from "../../_components/DashboardEntityActionButtons";
+import { DashboardEntityListItemFrame } from "../../_components/DashboardEntityListItemFrame";
 
 type ReservationListItemProps = {
   reservation: AdminReservation;
@@ -164,51 +165,25 @@ export function ReservationListItem({ reservation, canRead, canUpdate, canDelete
   const editHref = `/dashboard/reservations/view?reservationId=${reservation.id}&mode=edit`;
 
   return (
-    <article className="rounded-xl border border-[#e2e2e2] bg-white p-[0.95rem]">
-      <div className="flex flex-wrap items-center justify-between gap-3">
-        <div>
-          <h3 className="mb-[0.2rem] mt-0">Reserva {reservation.reservation_code}</h3>
-          <p className="m-0 text-[#555]">{reservation.planned_checkin_date} ate {reservation.planned_checkout_date} | {reservation.reservation_status}</p>
-        </div>
-
-        <div className="flex flex-wrap items-center gap-2">
-          {canRead ? (
-            <Link
-              href={viewHref}
-              scroll={false}
-              className={`rounded-lg border border-[#2d6cdf] px-[0.65rem] py-[0.45rem] no-underline ${
-                isViewing ? "bg-[#e9f0ff] text-[#1b4db3]" : "bg-white text-[#1b4db3]"
-              }`}
-            >
-              Visualizar dados
-            </Link>
-          ) : null}
-
-          {canUpdate ? (
-            <Link
-              href={editHref}
-              scroll={false}
-              className={`rounded-lg border border-[#0f766e] px-[0.65rem] py-[0.45rem] no-underline ${
-                isEditing ? "bg-[#ddf5f2] text-[#0a5f58]" : "bg-white text-[#0a5f58]"
-              }`}
-            >
-              Editar dados
-            </Link>
-          ) : null}
-
-          {canDelete ? (
-            <form action={deleteReservationAction}>
-              <input type="hidden" name="id" value={reservation.id} />
-              <button type="submit" className="rounded-lg border border-[#c83a3a] bg-white px-[0.65rem] py-[0.45rem] text-[#b00020]">
-                Apagar dados
-              </button>
-            </form>
-          ) : null}
-        </div>
-      </div>
-
+    <DashboardEntityListItemFrame
+      title={`Reserva ${reservation.reservation_code}`}
+      subtitle={`${reservation.planned_checkin_date} ate ${reservation.planned_checkout_date} | ${reservation.reservation_status}`}
+      actions={
+        <DashboardEntityActionButtons
+          canRead={canRead}
+          canUpdate={canUpdate}
+          canDelete={canDelete}
+          isViewing={isViewing}
+          isEditing={isEditing}
+          viewHref={viewHref}
+          editHref={editHref}
+          deleteId={reservation.id}
+          deleteAction={deleteReservationAction}
+        />
+      }
+    >
       {isViewing ? <ReservationDataPreview reservation={reservation} /> : null}
       {isEditing ? <ReservationEditForm reservation={reservation} /> : null}
-    </article>
+    </DashboardEntityListItemFrame>
   );
 }

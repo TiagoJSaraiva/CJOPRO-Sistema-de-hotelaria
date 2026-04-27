@@ -1,8 +1,9 @@
 "use client";
 
-import Link from "next/link";
 import type { AdminProduct } from "@hotel/shared";
 import { deleteProductAction, updateProductAction } from "../actions";
+import { DashboardEntityActionButtons } from "../../_components/DashboardEntityActionButtons";
+import { DashboardEntityListItemFrame } from "../../_components/DashboardEntityListItemFrame";
 
 type ProductListItemProps = {
   product: AdminProduct;
@@ -87,51 +88,25 @@ export function ProductListItem({ product, canRead, canUpdate, canDelete, isView
   const editHref = `/dashboard/products/view?productId=${product.id}&mode=edit`;
 
   return (
-    <article className="rounded-xl border border-[#e2e2e2] bg-white p-[0.95rem]">
-      <div className="flex flex-wrap items-center justify-between gap-3">
-        <div>
-          <h3 className="mb-[0.2rem] mt-0">{product.name}</h3>
-          <p className="m-0 text-[#555]">R$ {product.unit_price.toFixed(2)} | {product.status}</p>
-        </div>
-
-        <div className="flex flex-wrap items-center gap-2">
-          {canRead ? (
-            <Link
-              href={viewHref}
-              scroll={false}
-              className={`rounded-lg border border-[#2d6cdf] px-[0.65rem] py-[0.45rem] no-underline ${
-                isViewing ? "bg-[#e9f0ff] text-[#1b4db3]" : "bg-white text-[#1b4db3]"
-              }`}
-            >
-              Visualizar dados
-            </Link>
-          ) : null}
-
-          {canUpdate ? (
-            <Link
-              href={editHref}
-              scroll={false}
-              className={`rounded-lg border border-[#0f766e] px-[0.65rem] py-[0.45rem] no-underline ${
-                isEditing ? "bg-[#ddf5f2] text-[#0a5f58]" : "bg-white text-[#0a5f58]"
-              }`}
-            >
-              Editar dados
-            </Link>
-          ) : null}
-
-          {canDelete ? (
-            <form action={deleteProductAction}>
-              <input type="hidden" name="id" value={product.id} />
-              <button type="submit" className="rounded-lg border border-[#c83a3a] bg-white px-[0.65rem] py-[0.45rem] text-[#b00020]">
-                Apagar dados
-              </button>
-            </form>
-          ) : null}
-        </div>
-      </div>
-
+    <DashboardEntityListItemFrame
+      title={product.name}
+      subtitle={`R$ ${product.unit_price.toFixed(2)} | ${product.status}`}
+      actions={
+        <DashboardEntityActionButtons
+          canRead={canRead}
+          canUpdate={canUpdate}
+          canDelete={canDelete}
+          isViewing={isViewing}
+          isEditing={isEditing}
+          viewHref={viewHref}
+          editHref={editHref}
+          deleteId={product.id}
+          deleteAction={deleteProductAction}
+        />
+      }
+    >
       {isViewing ? <ProductDataPreview product={product} /> : null}
       {isEditing ? <ProductEditForm product={product} /> : null}
-    </article>
+    </DashboardEntityListItemFrame>
   );
 }

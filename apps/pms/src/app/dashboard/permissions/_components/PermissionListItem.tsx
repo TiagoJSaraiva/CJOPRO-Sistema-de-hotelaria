@@ -1,8 +1,9 @@
 "use client";
 
-import Link from "next/link";
 import { ADMIN_PERMISSION_TYPES, type AdminPermission } from "@hotel/shared";
 import { deletePermissionAction, updatePermissionAction } from "../actions";
+import { DashboardEntityActionButtons } from "../../_components/DashboardEntityActionButtons";
+import { DashboardEntityListItemFrame } from "../../_components/DashboardEntityListItemFrame";
 
 type PermissionListItemProps = {
   permissionItem: AdminPermission;
@@ -55,75 +56,27 @@ export function PermissionListItem({ permissionItem, canRead, canUpdate, canDele
   const editHref = `/dashboard/permissions/view?permissionId=${permissionItem.id}&mode=edit`;
 
   return (
-    <article className="rounded-xl border border-[#e2e2e2] bg-white p-[0.95rem]">
-      <div className="flex flex-wrap items-center justify-between gap-3">
-        <div>
-          <h3 className="mb-[0.2rem] mt-0">{permissionItem.name}</h3>
-          <p className="m-0 text-[#555]">Tipo: {permissionItem.type === ADMIN_PERMISSION_TYPES.SYSTEM ? "SYSTEM" : "HOTEL"}</p>
-          <p className="m-0 text-[#555]">ID: {permissionItem.id}</p>
-        </div>
-
-        <div className="flex flex-wrap items-center gap-2">
-          {canRead ? (
-            <Link
-              href={viewHref}
-              scroll={false}
-              className={`rounded-lg border border-[#2d6cdf] px-[0.65rem] py-[0.45rem] no-underline ${
-                isViewing ? "bg-[#e9f0ff] text-[#1b4db3]" : "bg-white text-[#1b4db3]"
-              }`}
-            >
-              Visualizar dados
-            </Link>
-          ) : null}
-
-          {canUpdate && !isCurrentUserPermission ? (
-            <Link
-              href={editHref}
-              scroll={false}
-              className={`rounded-lg border border-[#0f766e] px-[0.65rem] py-[0.45rem] no-underline ${
-                isEditing ? "bg-[#ddf5f2] text-[#0a5f58]" : "bg-white text-[#0a5f58]"
-              }`}
-            >
-              Editar dados
-            </Link>
-          ) : null}
-
-          {canUpdate && isCurrentUserPermission ? (
-            <button
-              type="button"
-              disabled
-              title="Voce nao pode editar uma permissao vinculada ao proprio usuario."
-              className="cursor-not-allowed rounded-lg border border-[#b8dccc] bg-[#effaf5] px-[0.65rem] py-[0.45rem] text-[#4f8b75]"
-            >
-              Editar dados
-            </button>
-          ) : null}
-
-          {canDelete && !isCurrentUserPermission ? (
-            <form action={deletePermissionAction}>
-              <input type="hidden" name="id" value={permissionItem.id} />
-              <button
-                type="submit"
-                className="rounded-lg border border-[#c83a3a] bg-white px-[0.65rem] py-[0.45rem] text-[#b00020]"
-              >
-                Apagar dados
-              </button>
-            </form>
-          ) : null}
-
-          {canDelete && isCurrentUserPermission ? (
-            <button
-              type="button"
-              disabled
-              title="Voce nao pode apagar uma permissao vinculada ao proprio usuario."
-              className="cursor-not-allowed rounded-lg border border-[#f1a1a1] bg-[#fff6f6] px-[0.65rem] py-[0.45rem] text-[#b45353]"
-            >
-              Apagar dados
-            </button>
-          ) : null}
-        </div>
-      </div>
-
+    <DashboardEntityListItemFrame
+      title={permissionItem.name}
+      subtitle={`Tipo: ${permissionItem.type === ADMIN_PERMISSION_TYPES.SYSTEM ? "SYSTEM" : "HOTEL"} | ID: ${permissionItem.id}`}
+      actions={
+        <DashboardEntityActionButtons
+          canRead={canRead}
+          canUpdate={canUpdate}
+          canDelete={canDelete}
+          isViewing={isViewing}
+          isEditing={isEditing}
+          viewHref={viewHref}
+          editHref={editHref}
+          deleteId={permissionItem.id}
+          deleteAction={deletePermissionAction}
+          editDisabled={isCurrentUserPermission}
+          editDisabledTitle="Voce nao pode editar uma permissao vinculada ao proprio usuario."
+          deleteDisabled={isCurrentUserPermission}
+          deleteDisabledTitle="Voce nao pode apagar uma permissao vinculada ao proprio usuario."
+        />
+      }
+    >
       {isViewing ? (
         <div className="mt-[0.8rem]">
           <p className="m-0">
@@ -136,6 +89,6 @@ export function PermissionListItem({ permissionItem, canRead, canUpdate, canDele
       ) : null}
 
       {isEditing && !isCurrentUserPermission ? <PermissionEditForm permissionItem={permissionItem} /> : null}
-    </article>
+    </DashboardEntityListItemFrame>
   );
 }

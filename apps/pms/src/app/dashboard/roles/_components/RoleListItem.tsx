@@ -1,11 +1,12 @@
 "use client";
 
-import Link from "next/link";
 import { useState } from "react";
 import { ADMIN_ROLE_TYPES, type AdminHotelOption, type AdminPermissionOption, type AdminRole, type AdminRoleType } from "@hotel/shared";
 import { deleteRoleAction, updateRoleAction } from "../actions";
 import { RoleHotelPickerField } from "./RoleHotelPickerField";
 import { RolePermissionAssignmentsField } from "./RolePermissionAssignmentsField";
+import { DashboardEntityActionButtons } from "../../_components/DashboardEntityActionButtons";
+import { DashboardEntityListItemFrame } from "../../_components/DashboardEntityListItemFrame";
 
 type RoleListItemProps = {
   roleItem: AdminRole;
@@ -105,78 +106,29 @@ export function RoleListItem({ roleItem, hotels, permissions, canRead, canUpdate
         : "Generica";
 
   return (
-    <article className="rounded-xl border border-[#e2e2e2] bg-white p-[0.95rem]">
-      <div className="flex flex-wrap items-center justify-between gap-3">
-        <div>
-          <h3 className="mb-[0.2rem] mt-0">{roleItem.name}</h3>
-          <p className="m-0 text-[#555]">
-            {roleItem.role_type === ADMIN_ROLE_TYPES.SYSTEM ? "SYSTEM ROLE" : "HOTEL ROLE"} - {roleScopeLabel}
-          </p>
-        </div>
-
-        <div className="flex flex-wrap items-center gap-2">
-          {canRead ? (
-            <Link
-              href={viewHref}
-              scroll={false}
-              className={`rounded-lg border border-[#2d6cdf] px-[0.65rem] py-[0.45rem] no-underline ${
-                isViewing ? "bg-[#e9f0ff] text-[#1b4db3]" : "bg-white text-[#1b4db3]"
-              }`}
-            >
-              Visualizar dados
-            </Link>
-          ) : null}
-
-          {canUpdate && !isCurrentUserRole ? (
-            <Link
-              href={editHref}
-              scroll={false}
-              className={`rounded-lg border border-[#0f766e] px-[0.65rem] py-[0.45rem] no-underline ${
-                isEditing ? "bg-[#ddf5f2] text-[#0a5f58]" : "bg-white text-[#0a5f58]"
-              }`}
-            >
-              Editar dados
-            </Link>
-          ) : null}
-
-          {canUpdate && isCurrentUserRole ? (
-            <button
-              type="button"
-              disabled
-              title="Voce nao pode editar uma role vinculada ao proprio usuario."
-              className="cursor-not-allowed rounded-lg border border-[#b8dccc] bg-[#effaf5] px-[0.65rem] py-[0.45rem] text-[#4f8b75]"
-            >
-              Editar dados
-            </button>
-          ) : null}
-
-          {canDelete && !isCurrentUserRole ? (
-            <form action={deleteRoleAction}>
-              <input type="hidden" name="id" value={roleItem.id} />
-              <button
-                type="submit"
-                className="rounded-lg border border-[#c83a3a] bg-white px-[0.65rem] py-[0.45rem] text-[#b00020]"
-              >
-                Apagar dados
-              </button>
-            </form>
-          ) : null}
-
-          {canDelete && isCurrentUserRole ? (
-            <button
-              type="button"
-              disabled
-              title="Voce nao pode apagar uma role vinculada ao proprio usuario."
-              className="cursor-not-allowed rounded-lg border border-[#f1a1a1] bg-[#fff6f6] px-[0.65rem] py-[0.45rem] text-[#b45353]"
-            >
-              Apagar dados
-            </button>
-          ) : null}
-        </div>
-      </div>
-
+    <DashboardEntityListItemFrame
+      title={roleItem.name}
+      subtitle={`${roleItem.role_type === ADMIN_ROLE_TYPES.SYSTEM ? "SYSTEM ROLE" : "HOTEL ROLE"} - ${roleScopeLabel}`}
+      actions={
+        <DashboardEntityActionButtons
+          canRead={canRead}
+          canUpdate={canUpdate}
+          canDelete={canDelete}
+          isViewing={isViewing}
+          isEditing={isEditing}
+          viewHref={viewHref}
+          editHref={editHref}
+          deleteId={roleItem.id}
+          deleteAction={deleteRoleAction}
+          editDisabled={isCurrentUserRole}
+          editDisabledTitle="Voce nao pode editar uma role vinculada ao proprio usuario."
+          deleteDisabled={isCurrentUserRole}
+          deleteDisabledTitle="Voce nao pode apagar uma role vinculada ao proprio usuario."
+        />
+      }
+    >
       {isViewing ? <RoleDataPreview roleItem={roleItem} /> : null}
       {isEditing && !isCurrentUserRole ? <RoleEditForm roleItem={roleItem} hotels={hotels} permissions={permissions} /> : null}
-    </article>
+    </DashboardEntityListItemFrame>
   );
 }

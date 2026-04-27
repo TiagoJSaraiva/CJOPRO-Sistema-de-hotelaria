@@ -1,8 +1,9 @@
 "use client";
 
-import Link from "next/link";
 import type { AdminSeason } from "@hotel/shared";
 import { deleteSeasonAction, updateSeasonAction } from "../actions";
+import { DashboardEntityActionButtons } from "../../_components/DashboardEntityActionButtons";
+import { DashboardEntityListItemFrame } from "../../_components/DashboardEntityListItemFrame";
 
 type SeasonListItemProps = {
   season: AdminSeason;
@@ -84,51 +85,25 @@ export function SeasonListItem({ season, canRead, canUpdate, canDelete, isViewin
   const editHref = `/dashboard/seasons/view?seasonId=${season.id}&mode=edit`;
 
   return (
-    <article className="rounded-xl border border-[#e2e2e2] bg-white p-[0.95rem]">
-      <div className="flex flex-wrap items-center justify-between gap-3">
-        <div>
-          <h3 className="mb-[0.2rem] mt-0">{season.name}</h3>
-          <p className="m-0 text-[#555]">{season.start_date} ate {season.end_date} | {season.is_active ? "ativa" : "inativa"}</p>
-        </div>
-
-        <div className="flex flex-wrap items-center gap-2">
-          {canRead ? (
-            <Link
-              href={viewHref}
-              scroll={false}
-              className={`rounded-lg border border-[#2d6cdf] px-[0.65rem] py-[0.45rem] no-underline ${
-                isViewing ? "bg-[#e9f0ff] text-[#1b4db3]" : "bg-white text-[#1b4db3]"
-              }`}
-            >
-              Visualizar dados
-            </Link>
-          ) : null}
-
-          {canUpdate ? (
-            <Link
-              href={editHref}
-              scroll={false}
-              className={`rounded-lg border border-[#0f766e] px-[0.65rem] py-[0.45rem] no-underline ${
-                isEditing ? "bg-[#ddf5f2] text-[#0a5f58]" : "bg-white text-[#0a5f58]"
-              }`}
-            >
-              Editar dados
-            </Link>
-          ) : null}
-
-          {canDelete ? (
-            <form action={deleteSeasonAction}>
-              <input type="hidden" name="id" value={season.id} />
-              <button type="submit" className="rounded-lg border border-[#c83a3a] bg-white px-[0.65rem] py-[0.45rem] text-[#b00020]">
-                Apagar dados
-              </button>
-            </form>
-          ) : null}
-        </div>
-      </div>
-
+    <DashboardEntityListItemFrame
+      title={season.name}
+      subtitle={`${season.start_date} ate ${season.end_date} | ${season.is_active ? "ativa" : "inativa"}`}
+      actions={
+        <DashboardEntityActionButtons
+          canRead={canRead}
+          canUpdate={canUpdate}
+          canDelete={canDelete}
+          isViewing={isViewing}
+          isEditing={isEditing}
+          viewHref={viewHref}
+          editHref={editHref}
+          deleteId={season.id}
+          deleteAction={deleteSeasonAction}
+        />
+      }
+    >
       {isViewing ? <SeasonDataPreview season={season} /> : null}
       {isEditing ? <SeasonEditForm season={season} /> : null}
-    </article>
+    </DashboardEntityListItemFrame>
   );
 }
