@@ -1,10 +1,12 @@
 "use client";
 
-import { useMemo, useState, type ReactNode } from "react";
+import { useMemo, type ReactNode } from "react";
 import { type AdminHotelOption, type AdminRoleOption, type AdminUser } from "@hotel/shared";
 import { UserListItem } from "./UserListItem";
 import { DEFAULT_USER_VIEW_FILTERS, applyUserViewFilters, countAppliedUserFilters, type UserViewFilters } from "./userViewFilters";
-import { ViewFiltersActionsBar, ViewFiltersModal, viewFiltersFieldClassName } from "../../_components/ViewFiltersBase";
+import { viewFiltersFieldClassName } from "../../_components/ViewFiltersBase";
+import { EntityViewFilterableSection } from "../../_components/EntityViewFilterableSection";
+import { useViewFiltersState } from "../../_components/useViewFiltersState";
 import { formatRoleOptionLabel } from "./userRoleLabels";
 
 type UsersViewFilterableSectionProps = {
@@ -36,87 +38,56 @@ export function UsersViewFilterableSection({
   mode,
   children
 }: UsersViewFilterableSectionProps) {
-  const [isModalOpen, setIsModalOpen] = useState(false);
-  const [appliedFilters, setAppliedFilters] = useState<UserViewFilters>(DEFAULT_USER_VIEW_FILTERS);
-  const [draftFilters, setDraftFilters] = useState<UserViewFilters>(DEFAULT_USER_VIEW_FILTERS);
+  const {
+    isModalOpen,
+    appliedFilters,
+    draftFilters,
+    openFilters,
+    closeFilters,
+    applyFilters,
+    clearFilters,
+    updateDraftFilter
+  } = useViewFiltersState<UserViewFilters>(DEFAULT_USER_VIEW_FILTERS);
 
   const appliedFilterCount = countAppliedUserFilters(appliedFilters);
 
   const filteredUsers = useMemo(() => applyUserViewFilters(users, appliedFilters), [users, appliedFilters]);
 
-  const openModal = () => {
-    setDraftFilters(appliedFilters);
-    setIsModalOpen(true);
-  };
-
-  const closeModal = () => {
-    setIsModalOpen(false);
-  };
-
-  const handleApplyFilters = () => {
-    setAppliedFilters(draftFilters);
-    setIsModalOpen(false);
-  };
-
-  const handleClearFilters = () => {
-    setAppliedFilters(DEFAULT_USER_VIEW_FILTERS);
-    setDraftFilters(DEFAULT_USER_VIEW_FILTERS);
-    setIsModalOpen(false);
-  };
-
-  const updateDraft = <K extends keyof UserViewFilters>(key: K, value: UserViewFilters[K]) => {
-    setDraftFilters((current) => ({
-      ...current,
-      [key]: value
-    }));
-  };
-
   return (
-    <section className="grid gap-[0.85rem]">
-      <ViewFiltersActionsBar appliedFilterCount={appliedFilterCount} onOpen={openModal} onClear={handleClearFilters}>
-        {children}
-      </ViewFiltersActionsBar>
-
-      <p className="pms-status-muted">
-        Exibindo {filteredUsers.length} de {users.length} usuarios.
-      </p>
-
-      <section className="grid gap-[0.75rem]">
-        {filteredUsers.length ? (
-          filteredUsers.map((item) => (
-            <UserListItem
-              key={item.id}
-              userItem={item}
-              hotels={hotels}
-              roles={roles}
-              canRead={canRead}
-              canUpdate={canUpdate}
-              canDelete={canDelete}
-              isCurrentUser={currentUserId === item.id}
-              isViewing={activeUserId === item.id && mode === "view"}
-              isEditing={activeUserId === item.id && mode === "edit"}
-            />
-          ))
-        ) : (
-          <article className="pms-empty-state">
-            {appliedFilterCount ? "Nenhum usuario corresponde aos filtros aplicados." : "Nenhum usuario cadastrado ate o momento."}
-          </article>
-        )}
-      </section>
-
-      <ViewFiltersModal
-        title="Filtros de usuarios"
-        open={isModalOpen}
-        onClose={closeModal}
-        onApply={handleApplyFilters}
-        onClear={handleClearFilters}
-      >
+    <EntityViewFilterableSection
+      appliedFilterCount={appliedFilterCount}
+      totalCount={users.length}
+      filteredItems={filteredUsers}
+      itemLabelPlural="usuarios"
+      filtersTitle="Filtros de usuarios"
+      isModalOpen={isModalOpen}
+      onOpenFilters={openFilters}
+      onCloseFilters={closeFilters}
+      onApplyFilters={applyFilters}
+      onClearFilters={clearFilters}
+      emptyMessage="Nenhum usuario cadastrado ate o momento."
+      filteredEmptyMessage="Nenhum usuario corresponde aos filtros aplicados."
+      getItemKey={(item) => item.id}
+      renderItem={(item) => (
+        <UserListItem
+          userItem={item}
+          hotels={hotels}
+          roles={roles}
+          canRead={canRead}
+          canUpdate={canUpdate}
+          canDelete={canDelete}
+          isCurrentUser={currentUserId === item.id}
+          isViewing={activeUserId === item.id && mode === "view"}
+          isEditing={activeUserId === item.id && mode === "edit"}
+        />
+      )}
+      filters={
         <div className="grid grid-cols-1 gap-[0.75rem] md:grid-cols-2 xl:grid-cols-3">
           <label className="pms-field">
             <span>Nome ou email</span>
             <input
               value={draftFilters.search}
-              onChange={(event) => updateDraft("search", event.target.value)}
+              onChange={(event) => updateDraftFilter("search", event.target.value)}
               placeholder="Ex.: maria ou hotel.com"
               className={viewFiltersFieldClassName}
             />
@@ -126,7 +97,7 @@ export function UsersViewFilterableSection({
             <span>Status</span>
             <select
               value={draftFilters.status}
-              onChange={(event) => updateDraft("status", event.target.value as UserViewFilters["status"])}
+              onChange={(event) => updateDraftFilter("status", event.target.value as UserViewFilters["status"])}
               className={viewFiltersFieldClassName}
             >
               <option value="all">Todos</option>
@@ -137,7 +108,7 @@ export function UsersViewFilterableSection({
 
           <label className="pms-field">
             <span>Hotel</span>
-            <select value={draftFilters.hotelId} onChange={(event) => updateDraft("hotelId", event.target.value)} className={viewFiltersFieldClassName}>
+            <select value={draftFilters.hotelId} onChange={(event) => updateDraftFilter("hotelId", event.target.value)} className={viewFiltersFieldClassName}>
               <option value="">Todos</option>
               {hotels.map((hotel) => (
                 <option key={hotel.id} value={hotel.id}>
@@ -149,7 +120,7 @@ export function UsersViewFilterableSection({
 
           <label className="pms-field">
             <span>Role</span>
-            <select value={draftFilters.roleId} onChange={(event) => updateDraft("roleId", event.target.value)} className={viewFiltersFieldClassName}>
+            <select value={draftFilters.roleId} onChange={(event) => updateDraftFilter("roleId", event.target.value)} className={viewFiltersFieldClassName}>
               <option value="">Todas</option>
               {roles.map((role) => (
                 <option key={role.id} value={role.id}>
@@ -161,15 +132,17 @@ export function UsersViewFilterableSection({
 
           <label className="pms-field">
             <span>Criado a partir de</span>
-            <input type="date" value={draftFilters.createdFrom} onChange={(event) => updateDraft("createdFrom", event.target.value)} className={viewFiltersFieldClassName} />
+            <input type="date" value={draftFilters.createdFrom} onChange={(event) => updateDraftFilter("createdFrom", event.target.value)} className={viewFiltersFieldClassName} />
           </label>
 
           <label className="pms-field">
             <span>Criado ate</span>
-            <input type="date" value={draftFilters.createdTo} onChange={(event) => updateDraft("createdTo", event.target.value)} className={viewFiltersFieldClassName} />
+            <input type="date" value={draftFilters.createdTo} onChange={(event) => updateDraftFilter("createdTo", event.target.value)} className={viewFiltersFieldClassName} />
           </label>
         </div>
-      </ViewFiltersModal>
-    </section>
+      }
+    >
+      {children}
+    </EntityViewFilterableSection>
   );
 }

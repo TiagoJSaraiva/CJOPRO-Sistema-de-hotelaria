@@ -1,3 +1,5 @@
+import { DashboardStatusMessage } from "../../_components/DashboardStatusMessage";
+
 const statusMessages: Record<string, string> = {
   created: "Role criada com sucesso.",
   updated: "Role atualizada com sucesso.",
@@ -20,13 +22,5 @@ type RoleStatusMessageProps = {
 };
 
 export function RoleStatusMessage({ status, detail }: RoleStatusMessageProps) {
-  if (!status || !statusMessages[status]) {
-    return null;
-  }
-
-  const isError = status.includes("error") || status.includes("forbidden") || status.includes("missing") || status.includes("conflict");
-  const showDetail = isError && !!detail;
-  const renderedText = showDetail ? `${statusMessages[status]} Detalhe tecnico: ${detail}` : statusMessages[status];
-
-  return <p className={`mb-0 ${isError ? "text-[#b00020]" : "text-[#1f6f51]"}`}>{renderedText}</p>;
+  return <DashboardStatusMessage status={status} detail={detail} messages={statusMessages} />;
 }

@@ -1,10 +1,12 @@
 "use client";
 
-import { useMemo, useState, type ReactNode } from "react";
+import { useMemo, type ReactNode } from "react";
 import { ADMIN_ROLE_TYPES, type AdminHotelOption, type AdminPermissionOption, type AdminRole } from "@hotel/shared";
 import { RoleListItem } from "./RoleListItem";
 import { DEFAULT_ROLE_VIEW_FILTERS, applyRoleViewFilters, countAppliedRoleFilters, type RoleViewFilters } from "./roleViewFilters";
-import { ViewFiltersActionsBar, ViewFiltersModal, viewFiltersFieldClassName } from "../../_components/ViewFiltersBase";
+import { viewFiltersFieldClassName } from "../../_components/ViewFiltersBase";
+import { EntityViewFilterableSection } from "../../_components/EntityViewFilterableSection";
+import { useViewFiltersState } from "../../_components/useViewFiltersState";
 
 type RolesViewFilterableSectionProps = {
   roles: AdminRole[];
@@ -31,83 +33,56 @@ export function RolesViewFilterableSection({
   mode,
   children
 }: RolesViewFilterableSectionProps) {
-  const [isModalOpen, setIsModalOpen] = useState(false);
-  const [appliedFilters, setAppliedFilters] = useState<RoleViewFilters>(DEFAULT_ROLE_VIEW_FILTERS);
-  const [draftFilters, setDraftFilters] = useState<RoleViewFilters>(DEFAULT_ROLE_VIEW_FILTERS);
+  const {
+    isModalOpen,
+    appliedFilters,
+    draftFilters,
+    openFilters,
+    closeFilters,
+    applyFilters,
+    clearFilters,
+    updateDraftFilter
+  } = useViewFiltersState<RoleViewFilters>(DEFAULT_ROLE_VIEW_FILTERS);
 
   const appliedFilterCount = countAppliedRoleFilters(appliedFilters);
 
   const filteredRoles = useMemo(() => applyRoleViewFilters(roles, appliedFilters), [roles, appliedFilters]);
 
-  const openModal = () => {
-    setDraftFilters(appliedFilters);
-    setIsModalOpen(true);
-  };
-
-  const handleApply = () => {
-    setAppliedFilters(draftFilters);
-    setIsModalOpen(false);
-  };
-
-  const handleClear = () => {
-    setAppliedFilters(DEFAULT_ROLE_VIEW_FILTERS);
-    setDraftFilters(DEFAULT_ROLE_VIEW_FILTERS);
-    setIsModalOpen(false);
-  };
-
-  const updateDraft = <K extends keyof RoleViewFilters>(key: K, value: RoleViewFilters[K]) => {
-    setDraftFilters((current) => ({
-      ...current,
-      [key]: value
-    }));
-  };
-
   return (
-    <section className="grid gap-[0.85rem]">
-      <ViewFiltersActionsBar appliedFilterCount={appliedFilterCount} onOpen={openModal} onClear={handleClear}>
-        {children}
-      </ViewFiltersActionsBar>
-
-      <p className="pms-status-muted">
-        Exibindo {filteredRoles.length} de {roles.length} roles.
-      </p>
-
-      <section className="grid gap-[0.75rem]">
-        {filteredRoles.length ? (
-          filteredRoles.map((item) => (
-            <RoleListItem
-              key={item.id}
-              roleItem={item}
-              hotels={hotels}
-              permissions={permissions}
-              canRead={canRead}
-              canUpdate={canUpdate}
-              canDelete={canDelete}
-              isCurrentUserRole={currentUserRoleIds.includes(item.id)}
-              isViewing={activeRoleId === item.id && mode === "view"}
-              isEditing={activeRoleId === item.id && mode === "edit"}
-            />
-          ))
-        ) : (
-          <article className="pms-empty-state">
-            {appliedFilterCount ? "Nenhuma role corresponde aos filtros aplicados." : "Nenhuma role cadastrada ate o momento."}
-          </article>
-        )}
-      </section>
-
-      <ViewFiltersModal
-        title="Filtros de roles"
-        open={isModalOpen}
-        onClose={() => setIsModalOpen(false)}
-        onApply={handleApply}
-        onClear={handleClear}
-      >
+    <EntityViewFilterableSection
+      appliedFilterCount={appliedFilterCount}
+      totalCount={roles.length}
+      filteredItems={filteredRoles}
+      itemLabelPlural="roles"
+      filtersTitle="Filtros de roles"
+      isModalOpen={isModalOpen}
+      onOpenFilters={openFilters}
+      onCloseFilters={closeFilters}
+      onApplyFilters={applyFilters}
+      onClearFilters={clearFilters}
+      emptyMessage="Nenhuma role cadastrada ate o momento."
+      filteredEmptyMessage="Nenhuma role corresponde aos filtros aplicados."
+      getItemKey={(item) => item.id}
+      renderItem={(item) => (
+        <RoleListItem
+          roleItem={item}
+          hotels={hotels}
+          permissions={permissions}
+          canRead={canRead}
+          canUpdate={canUpdate}
+          canDelete={canDelete}
+          isCurrentUserRole={currentUserRoleIds.includes(item.id)}
+          isViewing={activeRoleId === item.id && mode === "view"}
+          isEditing={activeRoleId === item.id && mode === "edit"}
+        />
+      )}
+      filters={
         <div className="grid grid-cols-1 gap-[0.75rem] md:grid-cols-2 xl:grid-cols-3">
           <label className="pms-field">
             <span>Nome da role</span>
             <input
               value={draftFilters.search}
-              onChange={(event) => updateDraft("search", event.target.value)}
+              onChange={(event) => updateDraftFilter("search", event.target.value)}
               placeholder="Ex.: admin"
               className={viewFiltersFieldClassName}
             />
@@ -117,7 +92,7 @@ export function RolesViewFilterableSection({
             <span>Tipo da role</span>
             <select
               value={draftFilters.roleType}
-              onChange={(event) => updateDraft("roleType", event.target.value as RoleViewFilters["roleType"])}
+              onChange={(event) => updateDraftFilter("roleType", event.target.value as RoleViewFilters["roleType"])}
               className={viewFiltersFieldClassName}
             >
               <option value="">Todos</option>
@@ -128,7 +103,7 @@ export function RolesViewFilterableSection({
 
           <label className="pms-field">
             <span>Hotel</span>
-            <select value={draftFilters.hotelId} onChange={(event) => updateDraft("hotelId", event.target.value)} className={viewFiltersFieldClassName}>
+            <select value={draftFilters.hotelId} onChange={(event) => updateDraftFilter("hotelId", event.target.value)} className={viewFiltersFieldClassName}>
               <option value="">Todos</option>
               {hotels.map((hotel) => (
                 <option key={hotel.id} value={hotel.id}>
@@ -140,7 +115,7 @@ export function RolesViewFilterableSection({
 
           <label className="pms-field">
             <span>Permissao vinculada</span>
-            <select value={draftFilters.permissionId} onChange={(event) => updateDraft("permissionId", event.target.value)} className={viewFiltersFieldClassName}>
+            <select value={draftFilters.permissionId} onChange={(event) => updateDraftFilter("permissionId", event.target.value)} className={viewFiltersFieldClassName}>
               <option value="">Todas</option>
               {permissions.map((permission) => (
                 <option key={permission.id} value={permission.id}>
@@ -150,7 +125,9 @@ export function RolesViewFilterableSection({
             </select>
           </label>
         </div>
-      </ViewFiltersModal>
-    </section>
+      }
+    >
+      {children}
+    </EntityViewFilterableSection>
   );
 }

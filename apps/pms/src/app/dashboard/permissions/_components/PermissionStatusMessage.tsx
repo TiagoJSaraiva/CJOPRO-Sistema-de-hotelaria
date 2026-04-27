@@ -1,3 +1,5 @@
+import { DashboardStatusMessage } from "../../_components/DashboardStatusMessage";
+
 const statusMessages: Record<string, string> = {
   created: "Permissao criada com sucesso.",
   updated: "Permissao atualizada com sucesso.",
@@ -17,11 +19,5 @@ type PermissionStatusMessageProps = {
 };
 
 export function PermissionStatusMessage({ status }: PermissionStatusMessageProps) {
-  if (!status || !statusMessages[status]) {
-    return null;
-  }
-
-  const isError = status.includes("error") || status.includes("forbidden") || status.includes("missing") || status.includes("conflict");
-
-  return <p className={`mb-0 ${isError ? "text-[#b00020]" : "text-[#1f6f51]"}`}>{statusMessages[status]}</p>;
+  return <DashboardStatusMessage status={status} messages={statusMessages} />;
 }

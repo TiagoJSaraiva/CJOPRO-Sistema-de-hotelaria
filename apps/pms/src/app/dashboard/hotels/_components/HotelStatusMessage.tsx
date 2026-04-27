@@ -1,3 +1,5 @@
+import { DashboardStatusMessage } from "../../_components/DashboardStatusMessage";
+
 const statusMessages: Record<string, string> = {
   created: "Hotel criado com sucesso.",
   updated: "Hotel atualizado com sucesso.",
@@ -17,11 +19,5 @@ type HotelStatusMessageProps = {
 };
 
 export function HotelStatusMessage({ status }: HotelStatusMessageProps) {
-  if (!status || !statusMessages[status]) {
-    return null;
-  }
-
-  const isError = status.includes("error") || status.includes("forbidden") || status.includes("missing") || status.includes("conflict");
-
-  return <p className={`mb-0 ${isError ? "text-[#b00020]" : "text-[#1f6f51]"}`}>{statusMessages[status]}</p>;
+  return <DashboardStatusMessage status={status} messages={statusMessages} />;
 }

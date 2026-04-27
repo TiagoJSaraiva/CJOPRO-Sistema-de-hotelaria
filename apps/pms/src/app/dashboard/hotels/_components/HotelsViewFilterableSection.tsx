@@ -1,10 +1,12 @@
 "use client";
 
-import { useMemo, useState, type ReactNode } from "react";
+import { useMemo, type ReactNode } from "react";
 import type { AdminHotel } from "@hotel/shared";
 import { HotelListItem } from "./HotelListItem";
 import { DEFAULT_HOTEL_VIEW_FILTERS, applyHotelViewFilters, countAppliedHotelFilters, type HotelViewFilters } from "./hotelViewFilters";
-import { ViewFiltersActionsBar, ViewFiltersModal, viewFiltersFieldClassName } from "../../_components/ViewFiltersBase";
+import { viewFiltersFieldClassName } from "../../_components/ViewFiltersBase";
+import { EntityViewFilterableSection } from "../../_components/EntityViewFilterableSection";
+import { useViewFiltersState } from "../../_components/useViewFiltersState";
 
 type HotelsViewFilterableSectionProps = {
   hotels: AdminHotel[];
@@ -17,82 +19,53 @@ type HotelsViewFilterableSectionProps = {
 };
 
 export function HotelsViewFilterableSection({ hotels, canRead, canUpdate, canDelete, activeHotelId, mode, children }: HotelsViewFilterableSectionProps) {
-  const [isModalOpen, setIsModalOpen] = useState(false);
-  const [appliedFilters, setAppliedFilters] = useState<HotelViewFilters>(DEFAULT_HOTEL_VIEW_FILTERS);
-  const [draftFilters, setDraftFilters] = useState<HotelViewFilters>(DEFAULT_HOTEL_VIEW_FILTERS);
+  const {
+    isModalOpen,
+    appliedFilters,
+    draftFilters,
+    openFilters,
+    closeFilters,
+    applyFilters,
+    clearFilters,
+    updateDraftFilter
+  } = useViewFiltersState<HotelViewFilters>(DEFAULT_HOTEL_VIEW_FILTERS);
 
   const appliedFilterCount = countAppliedHotelFilters(appliedFilters);
 
   const filteredHotels = useMemo(() => applyHotelViewFilters(hotels, appliedFilters), [hotels, appliedFilters]);
 
-  const handleApply = () => {
-    setAppliedFilters(draftFilters);
-    setIsModalOpen(false);
-  };
-
-  const handleClear = () => {
-    setAppliedFilters(DEFAULT_HOTEL_VIEW_FILTERS);
-    setDraftFilters(DEFAULT_HOTEL_VIEW_FILTERS);
-    setIsModalOpen(false);
-  };
-
-  const updateDraft = <K extends keyof HotelViewFilters>(key: K, value: HotelViewFilters[K]) => {
-    setDraftFilters((current) => ({
-      ...current,
-      [key]: value
-    }));
-  };
-
   return (
-    <section className="grid gap-[0.85rem]">
-      <ViewFiltersActionsBar
-        appliedFilterCount={appliedFilterCount}
-        onOpen={() => {
-          setDraftFilters(appliedFilters);
-          setIsModalOpen(true);
-        }}
-        onClear={handleClear}
-      >
-        {children}
-      </ViewFiltersActionsBar>
-
-      <p className="pms-status-muted">
-        Exibindo {filteredHotels.length} de {hotels.length} hoteis.
-      </p>
-
-      <section className="grid gap-[0.75rem]">
-        {filteredHotels.length ? (
-          filteredHotels.map((hotel) => (
-            <HotelListItem
-              key={hotel.id}
-              hotel={hotel}
-              canRead={canRead}
-              canUpdate={canUpdate}
-              canDelete={canDelete}
-              isViewing={activeHotelId === hotel.id && mode === "view"}
-              isEditing={activeHotelId === hotel.id && mode === "edit"}
-            />
-          ))
-        ) : (
-          <article className="pms-empty-state">
-            {appliedFilterCount ? "Nenhum hotel corresponde aos filtros aplicados." : "Nenhum hotel cadastrado ate o momento."}
-          </article>
-        )}
-      </section>
-
-      <ViewFiltersModal
-        title="Filtros de hoteis"
-        open={isModalOpen}
-        onClose={() => setIsModalOpen(false)}
-        onApply={handleApply}
-        onClear={handleClear}
-      >
+    <EntityViewFilterableSection
+      appliedFilterCount={appliedFilterCount}
+      totalCount={hotels.length}
+      filteredItems={filteredHotels}
+      itemLabelPlural="hoteis"
+      filtersTitle="Filtros de hoteis"
+      isModalOpen={isModalOpen}
+      onOpenFilters={openFilters}
+      onCloseFilters={closeFilters}
+      onApplyFilters={applyFilters}
+      onClearFilters={clearFilters}
+      emptyMessage="Nenhum hotel cadastrado ate o momento."
+      filteredEmptyMessage="Nenhum hotel corresponde aos filtros aplicados."
+      getItemKey={(hotel) => hotel.id}
+      renderItem={(hotel) => (
+        <HotelListItem
+          hotel={hotel}
+          canRead={canRead}
+          canUpdate={canUpdate}
+          canDelete={canDelete}
+          isViewing={activeHotelId === hotel.id && mode === "view"}
+          isEditing={activeHotelId === hotel.id && mode === "edit"}
+        />
+      )}
+      filters={
         <div className="grid grid-cols-[repeat(auto-fit,minmax(220px,1fr))] gap-[0.75rem]">
           <label className="pms-field">
             <span>Nome ou slug</span>
             <input
               value={draftFilters.search}
-              onChange={(event) => updateDraft("search", event.target.value)}
+              onChange={(event) => updateDraftFilter("search", event.target.value)}
               placeholder="Ex.: centro ou hotel-centro"
               className={viewFiltersFieldClassName}
             />
@@ -102,7 +75,7 @@ export function HotelsViewFilterableSection({ hotels, canRead, canUpdate, canDel
             <span>Status</span>
             <select
               value={draftFilters.status}
-              onChange={(event) => updateDraft("status", event.target.value as HotelViewFilters["status"])}
+              onChange={(event) => updateDraftFilter("status", event.target.value as HotelViewFilters["status"])}
               className={viewFiltersFieldClassName}
             >
               <option value="all">Todos</option>
@@ -113,20 +86,22 @@ export function HotelsViewFilterableSection({ hotels, canRead, canUpdate, canDel
 
           <label className="pms-field">
             <span>Cidade</span>
-            <input value={draftFilters.city} onChange={(event) => updateDraft("city", event.target.value)} placeholder="Ex.: Sao Paulo" className={viewFiltersFieldClassName} />
+            <input value={draftFilters.city} onChange={(event) => updateDraftFilter("city", event.target.value)} placeholder="Ex.: Sao Paulo" className={viewFiltersFieldClassName} />
           </label>
 
           <label className="pms-field">
             <span>Estado</span>
-            <input value={draftFilters.state} onChange={(event) => updateDraft("state", event.target.value)} placeholder="Ex.: SP" className={viewFiltersFieldClassName} />
+            <input value={draftFilters.state} onChange={(event) => updateDraftFilter("state", event.target.value)} placeholder="Ex.: SP" className={viewFiltersFieldClassName} />
           </label>
 
           <label className="pms-field">
             <span>Pais</span>
-            <input value={draftFilters.country} onChange={(event) => updateDraft("country", event.target.value)} placeholder="Ex.: BR" className={viewFiltersFieldClassName} />
+            <input value={draftFilters.country} onChange={(event) => updateDraftFilter("country", event.target.value)} placeholder="Ex.: BR" className={viewFiltersFieldClassName} />
           </label>
         </div>
-      </ViewFiltersModal>
-    </section>
+      }
+    >
+      {children}
+    </EntityViewFilterableSection>
   );
 }

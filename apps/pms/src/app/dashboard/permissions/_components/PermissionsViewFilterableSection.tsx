@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo, useState, type ReactNode } from "react";
+import { useMemo, type ReactNode } from "react";
 import { ADMIN_PERMISSION_TYPES, type AdminPermission } from "@hotel/shared";
 import { PermissionListItem } from "./PermissionListItem";
 import {
@@ -9,7 +9,9 @@ import {
   countAppliedPermissionFilters,
   type PermissionViewFilters
 } from "./permissionViewFilters";
-import { ViewFiltersActionsBar, ViewFiltersModal, viewFiltersFieldClassName } from "../../_components/ViewFiltersBase";
+import { viewFiltersFieldClassName } from "../../_components/ViewFiltersBase";
+import { EntityViewFilterableSection } from "../../_components/EntityViewFilterableSection";
+import { useViewFiltersState } from "../../_components/useViewFiltersState";
 
 type PermissionsViewFilterableSectionProps = {
   permissions: AdminPermission[];
@@ -32,9 +34,16 @@ export function PermissionsViewFilterableSection({
   mode,
   children
 }: PermissionsViewFilterableSectionProps) {
-  const [isModalOpen, setIsModalOpen] = useState(false);
-  const [appliedFilters, setAppliedFilters] = useState<PermissionViewFilters>(DEFAULT_PERMISSION_VIEW_FILTERS);
-  const [draftFilters, setDraftFilters] = useState<PermissionViewFilters>(DEFAULT_PERMISSION_VIEW_FILTERS);
+  const {
+    isModalOpen,
+    appliedFilters,
+    draftFilters,
+    openFilters,
+    closeFilters,
+    applyFilters,
+    clearFilters,
+    updateDraftFilter
+  } = useViewFiltersState<PermissionViewFilters>(DEFAULT_PERMISSION_VIEW_FILTERS);
 
   const appliedFilterCount = countAppliedPermissionFilters(appliedFilters);
 
@@ -43,68 +52,39 @@ export function PermissionsViewFilterableSection({
     [permissions, appliedFilters]
   );
 
-  const handleApply = () => {
-    setAppliedFilters(draftFilters);
-    setIsModalOpen(false);
-  };
-
-  const handleClear = () => {
-    setAppliedFilters(DEFAULT_PERMISSION_VIEW_FILTERS);
-    setDraftFilters(DEFAULT_PERMISSION_VIEW_FILTERS);
-    setIsModalOpen(false);
-  };
-
   return (
-    <section className="grid gap-[0.85rem]">
-      <ViewFiltersActionsBar
-        appliedFilterCount={appliedFilterCount}
-        onOpen={() => {
-          setDraftFilters(appliedFilters);
-          setIsModalOpen(true);
-        }}
-        onClear={handleClear}
-      >
-        {children}
-      </ViewFiltersActionsBar>
-
-      <p className="pms-status-muted">
-        Exibindo {filteredPermissions.length} de {permissions.length} permissoes.
-      </p>
-
-      <section className="grid gap-[0.75rem]">
-        {filteredPermissions.length ? (
-          filteredPermissions.map((item) => (
-            <PermissionListItem
-              key={item.id}
-              permissionItem={item}
-              canRead={canRead}
-              canUpdate={canUpdate}
-              canDelete={canDelete}
-              isCurrentUserPermission={currentUserPermissionNames.includes(item.name)}
-              isViewing={activePermissionId === item.id && mode === "view"}
-              isEditing={activePermissionId === item.id && mode === "edit"}
-            />
-          ))
-        ) : (
-          <article className="pms-empty-state">
-            {appliedFilterCount ? "Nenhuma permissao corresponde aos filtros aplicados." : "Nenhuma permissao cadastrada ate o momento."}
-          </article>
-        )}
-      </section>
-
-      <ViewFiltersModal
-        title="Filtros de permissoes"
-        open={isModalOpen}
-        onClose={() => setIsModalOpen(false)}
-        onApply={handleApply}
-        onClear={handleClear}
-      >
+    <EntityViewFilterableSection
+      appliedFilterCount={appliedFilterCount}
+      totalCount={permissions.length}
+      filteredItems={filteredPermissions}
+      itemLabelPlural="permissoes"
+      filtersTitle="Filtros de permissoes"
+      isModalOpen={isModalOpen}
+      onOpenFilters={openFilters}
+      onCloseFilters={closeFilters}
+      onApplyFilters={applyFilters}
+      onClearFilters={clearFilters}
+      emptyMessage="Nenhuma permissao cadastrada ate o momento."
+      filteredEmptyMessage="Nenhuma permissao corresponde aos filtros aplicados."
+      getItemKey={(item) => item.id}
+      renderItem={(item) => (
+        <PermissionListItem
+          permissionItem={item}
+          canRead={canRead}
+          canUpdate={canUpdate}
+          canDelete={canDelete}
+          isCurrentUserPermission={currentUserPermissionNames.includes(item.name)}
+          isViewing={activePermissionId === item.id && mode === "view"}
+          isEditing={activePermissionId === item.id && mode === "edit"}
+        />
+      )}
+      filters={
         <div className="grid grid-cols-[repeat(auto-fit,minmax(220px,1fr))] gap-[0.75rem]">
           <label className="pms-field">
             <span>Nome da permissao</span>
             <input
               value={draftFilters.search}
-              onChange={(event) => setDraftFilters((current) => ({ ...current, search: event.target.value }))}
+              onChange={(event) => updateDraftFilter("search", event.target.value)}
               placeholder="Ex.: USER_READ"
               className={viewFiltersFieldClassName}
             />
@@ -114,12 +94,7 @@ export function PermissionsViewFilterableSection({
             <span>Tipo</span>
             <select
               value={draftFilters.type}
-              onChange={(event) =>
-                setDraftFilters((current) => ({
-                  ...current,
-                  type: event.target.value as "" | "SYSTEM_PERMISSION" | "HOTEL_PERMISSION"
-                }))
-              }
+              onChange={(event) => updateDraftFilter("type", event.target.value as "" | "SYSTEM_PERMISSION" | "HOTEL_PERMISSION")}
               className={viewFiltersFieldClassName}
             >
               <option value="">Todos</option>
@@ -128,7 +103,9 @@ export function PermissionsViewFilterableSection({
             </select>
           </label>
         </div>
-      </ViewFiltersModal>
-    </section>
+      }
+    >
+      {children}
+    </EntityViewFilterableSection>
   );
 }
