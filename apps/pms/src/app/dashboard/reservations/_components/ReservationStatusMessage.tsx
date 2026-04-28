@@ -15,8 +15,9 @@ const statusMessages: Record<string, string> = {
 
 type ReservationStatusMessageProps = {
   status?: string;
+  detail?: string;
 };
 
-export function ReservationStatusMessage({ status }: ReservationStatusMessageProps) {
-  return <DashboardStatusMessage status={status} messages={statusMessages} />;
+export function ReservationStatusMessage({ status, detail }: ReservationStatusMessageProps) {
+  return <DashboardStatusMessage status={status} detail={detail} messages={statusMessages} />;
 }

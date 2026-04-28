@@ -37,11 +37,15 @@ export default async function ReservationsCreatePage({ searchParams }: Reservati
         { key: "create", label: "Criar reserva", href: "/dashboard/reservations/create", isVisible: access.canCreate },
         { key: "view", label: "Ver reservas", href: "/dashboard/reservations/view", isVisible: access.canRead }
       ]}
-      statusContent={<ReservationStatusMessage status={searchParams?.status} />}
+      statusContent={<ReservationStatusMessage status={searchParams?.status} detail={searchParams?.detail} />}
     >
       <DashboardCreateFormCard title="Criar reserva" submitLabel="Criar reserva" action={createReservationAction} resetKey={searchParams?.r}>
-        <FormField label="Booking customer ID" htmlFor="create-reservation-booking-customer-id">
-          <input id="create-reservation-booking-customer-id" name="booking_customer_id" required className="pms-field-input" />
+        <FormField label="Documento do titular da reserva - Tipo" htmlFor="create-reservation-booking-customer-document-type">
+          <input id="create-reservation-booking-customer-document-type" name="booking_customer_document_type" required className="pms-field-input" />
+        </FormField>
+
+        <FormField label="Documento do titular da reserva - Numero" htmlFor="create-reservation-booking-customer-document">
+          <input id="create-reservation-booking-customer-document" name="booking_customer_document" required className="pms-field-input" />
         </FormField>
 
         <FormField label="Codigo da reserva" htmlFor="create-reservation-code">

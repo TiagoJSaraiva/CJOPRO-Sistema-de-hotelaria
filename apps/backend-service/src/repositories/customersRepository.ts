@@ -10,6 +10,7 @@ export type CustomerWriteResult = "ok" | "conflict" | "not-found";
 export interface CustomersRepository {
   listCustomers(activeHotelId: string): Promise<AdminCustomer[]>;
   createCustomer(activeHotelId: string, payload: Record<string, unknown>): Promise<{ result: CustomerWriteResult; item?: AdminCustomer }>;
+  findCustomerByDocument(activeHotelId: string, documentType: string | null, documentNumber: string): Promise<AdminCustomer | null>;
   updateCustomer(id: string, activeHotelId: string, payload: Record<string, unknown>): Promise<{ result: CustomerWriteResult; item?: AdminCustomer }>;
   deleteCustomer(id: string, activeHotelId: string): Promise<CustomerWriteResult>;
 }
@@ -45,6 +46,26 @@ class SupabaseCustomersRepository implements CustomersRepository {
     }
 
     return { result: "ok", item: data as AdminCustomer };
+  }
+
+  async findCustomerByDocument(activeHotelId: string, documentType: string | null, documentNumber: string): Promise<AdminCustomer | null> {
+    const supabase = createServerClient();
+    let query = supabase.from("customers").select(CUSTOMER_SELECT_FIELDS);
+    query = applyHotelContextFilter(query, activeHotelId);
+
+    if (documentType) {
+      query = query.eq("document_type", documentType);
+    }
+
+    query = query.eq("document_number", documentNumber);
+
+    const { data, error } = await (query as any).maybeSingle();
+
+    if (error) {
+      throw error;
+    }
+
+    return (data as AdminCustomer) || null;
   }
 
   async updateCustomer(id: string, activeHotelId: string, payload: Record<string, unknown>): Promise<{ result: CustomerWriteResult; item?: AdminCustomer }> {

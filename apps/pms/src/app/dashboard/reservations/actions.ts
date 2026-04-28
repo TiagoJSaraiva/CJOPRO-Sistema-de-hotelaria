@@ -12,14 +12,31 @@ function revalidateReservationsPage(): void {
   revalidatePath("/dashboard/reservations/view");
 }
 
-function redirectWithStatus(status: string, section: "create" | "view" | "root" = "root"): never {
+function redirectWithStatus(status: string, section: "create" | "view" | "root" = "root", detail?: string): never {
   const nonce = Date.now().toString(36);
+  const detailParam = detail ? `&detail=${encodeURIComponent(detail.slice(0, 220))}` : "";
 
   if (section === "root") {
-    redirect(`/dashboard/reservations?status=${status}&r=${nonce}`);
+    redirect(`/dashboard/reservations?status=${status}${detailParam}&r=${nonce}`);
   }
 
-  redirect(`/dashboard/reservations/${section}?status=${status}&r=${nonce}`);
+  redirect(`/dashboard/reservations/${section}?status=${status}${detailParam}&r=${nonce}`);
+}
+
+function getErrorDetail(error: unknown): string {
+  if (typeof error === "object" && error !== null && "details" in error) {
+    const details = String((error as { details?: unknown }).details || "").trim();
+
+    if (details) {
+      return details;
+    }
+  }
+
+  if (error instanceof Error && error.message.trim()) {
+    return error.message.trim();
+  }
+
+  return "Falha inesperada ao comunicar com o backend.";
 }
 
 export async function createReservationAction(formData: FormData): Promise<void> {
@@ -31,18 +48,26 @@ export async function createReservationAction(formData: FormData): Promise<void>
   }
 
   const bookingCustomerId = String(formData.get("booking_customer_id") || "").trim();
+  const bookingCustomerDocument = String(formData.get("booking_customer_document") || "").trim();
+  const bookingCustomerDocumentType = String(formData.get("booking_customer_document_type") || "").trim();
   const reservationCode = String(formData.get("reservation_code") || "").trim();
   const plannedCheckinDate = String(formData.get("planned_checkin_date") || "").trim();
   const plannedCheckoutDate = String(formData.get("planned_checkout_date") || "").trim();
   const guestCount = Number(formData.get("guest_count") || "0");
 
-  if (!bookingCustomerId || !reservationCode || !plannedCheckinDate || !plannedCheckoutDate || !Number.isFinite(guestCount) || guestCount <= 0) {
+  if (!bookingCustomerId && !bookingCustomerDocument) {
+    redirectWithStatus("create_missing_fields", "create");
+  }
+
+  if (!reservationCode || !plannedCheckinDate || !plannedCheckoutDate || !Number.isFinite(guestCount) || guestCount <= 0) {
     redirectWithStatus("create_missing_fields", "create");
   }
 
   try {
     await createReservation({
-      booking_customer_id: bookingCustomerId,
+      booking_customer_id: bookingCustomerId || undefined,
+      booking_customer_document: bookingCustomerDocument || undefined,
+      booking_customer_document_type: bookingCustomerDocumentType || undefined,
       reservation_code: reservationCode,
       planned_checkin_date: plannedCheckinDate,
       planned_checkout_date: plannedCheckoutDate,
@@ -60,8 +85,21 @@ export async function createReservationAction(formData: FormData): Promise<void>
       final_total_amount: Number(formData.get("final_total_amount") || "0"),
       notes: String(formData.get("notes") || "").trim() || null
     });
-  } catch {
-    redirectWithStatus("create_error", "create");
+  } catch (error) {
+    const detail = getErrorDetail(error);
+
+    console.error("[reservations/createReservationAction] falha ao criar reserva", {
+      bookingCustomerId,
+      bookingCustomerDocument,
+      bookingCustomerDocumentType,
+      reservationCode,
+      plannedCheckinDate,
+      plannedCheckoutDate,
+      guestCount,
+      detail
+    });
+
+    redirectWithStatus("create_error", "create", detail);
   }
 
   revalidateReservationsPage();

@@ -11,6 +11,7 @@ import { adminError } from "../common/adminError";
 import { normalizeOptionalText } from "../common/text";
 import { requireActiveHotelId } from "../common/requireActiveHotelScope";
 import { createReservationsRepository, type ReservationsRepository } from "../repositories/reservationsRepository";
+import { createCustomersRepository } from "../repositories/customersRepository";
 
 type ReservationCreateBody = Partial<AdminReservationCreateInput>;
 type ReservationUpdateBody = Partial<AdminReservationUpdateInput>;
@@ -43,14 +44,36 @@ export function registerReservationRoutes(
     const activeHotelId = requireActiveHotelId(reply, auth.activeHotelId);
     if (!activeHotelId) return;
 
-    const bookingCustomerId = normalizeOptionalText(request.body?.booking_customer_id);
+    let bookingCustomerId = normalizeOptionalText(request.body?.booking_customer_id);
+    const bookingCustomerDocument = normalizeOptionalText(request.body?.booking_customer_document);
+    const bookingCustomerDocumentType = normalizeOptionalText(request.body?.booking_customer_document_type);
     const reservationCode = normalizeOptionalText(request.body?.reservation_code);
     const plannedCheckinDate = normalizeOptionalText(request.body?.planned_checkin_date);
     const plannedCheckoutDate = normalizeOptionalText(request.body?.planned_checkout_date);
     const guestCount = Number(request.body?.guest_count);
 
-    if (!bookingCustomerId || !reservationCode || !plannedCheckinDate || !plannedCheckoutDate || !Number.isFinite(guestCount) || guestCount <= 0) {
+    // Allow either booking_customer_id or booking_customer_document (+ type) to identify the booking customer
+    if (!bookingCustomerId && !bookingCustomerDocument) {
+      return reply.status(400).send(adminError(ADMIN_ERROR_CODE.VALIDATION, "Informe o id do cliente ou o documento do titular da reserva."));
+    }
+
+    if (!reservationCode || !plannedCheckinDate || !plannedCheckoutDate || !Number.isFinite(guestCount) || guestCount <= 0) {
       return reply.status(400).send(adminError(ADMIN_ERROR_CODE.VALIDATION, "Dados invalidos para criar reserva."));
+    }
+
+    // If document provided, resolve to customer id within the active hotel scope
+    if (!bookingCustomerId && bookingCustomerDocument) {
+      const customersRepo = createCustomersRepository();
+      const found = await customersRepo.findCustomerByDocument(activeHotelId, bookingCustomerDocumentType, bookingCustomerDocument).catch((error) => {
+        request.log.error({ activeHotelId, bookingCustomerDocument, bookingCustomerDocumentType, error }, "Erro ao buscar cliente por documento");
+        return null;
+      });
+
+      if (!found) {
+        return reply.status(404).send(adminError(ADMIN_ERROR_CODE.NOT_FOUND, "Cliente nao encontrado neste hotel com o documento informado."));
+      }
+
+      bookingCustomerId = found.id;
     }
 
     const createResult = await repository
