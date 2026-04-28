@@ -2,6 +2,7 @@ import { redirect } from "next/navigation";
 import { DashboardAccessDeniedCard } from "../../_components/DashboardAccessDeniedCard";
 import { DashboardCreateFormCard } from "../../_components/DashboardCreateFormCard";
 import { DashboardEntityPageShell } from "../../_components/DashboardEntityPageShell";
+import { FormField } from "../../_components/FormField";
 import { getUserFromSession } from "../../../../lib/auth";
 import { createProductAction } from "../actions";
 import { getProductsAccess, getProductsDefaultRoute } from "../access";
@@ -39,13 +40,24 @@ export default async function ProductsCreatePage({ searchParams }: ProductsCreat
       statusContent={<ProductStatusMessage status={searchParams?.status} />}
     >
       <DashboardCreateFormCard title="Criar produto" submitLabel="Criar produto" action={createProductAction} resetKey={searchParams?.r}>
-        <input name="name" placeholder="Nome" required className="pms-field-input" />
-        <input name="category" placeholder="Categoria" className="pms-field-input" />
-        <input name="unit_price" type="number" min={0} step="0.01" placeholder="Preco unitario" required className="pms-field-input" />
-        <select name="status" defaultValue="active" className="pms-field-input">
-          <option value="active">active</option>
-          <option value="inactive">inactive</option>
-        </select>
+        <FormField label="Nome" htmlFor="create-product-name">
+          <input id="create-product-name" name="name" required className="pms-field-input" />
+        </FormField>
+
+        <FormField label="Categoria" htmlFor="create-product-category">
+          <input id="create-product-category" name="category" className="pms-field-input" />
+        </FormField>
+
+        <FormField label="Preco unitario" htmlFor="create-product-unit-price">
+          <input id="create-product-unit-price" name="unit_price" type="number" min={0} step="0.01" required className="pms-field-input" />
+        </FormField>
+
+        <FormField label="Status" htmlFor="create-product-status">
+          <select id="create-product-status" name="status" defaultValue="active" className="pms-field-input">
+            <option value="active">active</option>
+            <option value="inactive">inactive</option>
+          </select>
+        </FormField>
       </DashboardCreateFormCard>
     </DashboardEntityPageShell>
   );

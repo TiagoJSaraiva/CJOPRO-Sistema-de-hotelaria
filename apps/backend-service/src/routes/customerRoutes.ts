@@ -9,6 +9,30 @@ import { createCustomersRepository, type CustomersRepository } from "../reposito
 type CustomerCreateBody = Partial<AdminCustomerCreateInput>;
 type CustomerUpdateBody = Partial<AdminCustomerUpdateInput>;
 
+function getAdminErrorDetails(error: unknown): string {
+  if (error instanceof Error && error.message.trim()) {
+    return error.message.trim();
+  }
+
+  if (typeof error === "object" && error !== null) {
+    const errorObject = error as {
+      code?: unknown;
+      details?: unknown;
+      hint?: unknown;
+    };
+
+    const parts = [errorObject.code, errorObject.details, errorObject.hint]
+      .map((value) => String(value || "").trim())
+      .filter(Boolean);
+
+    if (parts.length) {
+      return parts.join(" | ");
+    }
+  }
+
+  return "Erro inesperado ao salvar cliente.";
+}
+
 export function registerCustomerRoutes(app: FastifyInstance, repository: CustomersRepository = createCustomersRepository()): void {
   app.get("/admin/customers", async (request, reply) => {
     const auth = ensureAuthorizedWithScope(request, reply, PERMISSIONS.CUSTOMER_READ);
@@ -43,6 +67,19 @@ export function registerCustomerRoutes(app: FastifyInstance, repository: Custome
       return reply.status(400).send(adminError(ADMIN_ERROR_CODE.VALIDATION, "Nome, documento, tipo de documento e data de nascimento sao obrigatorios."));
     }
 
+    request.log.info(
+      {
+        activeHotelId,
+        fullName,
+        documentNumber,
+        documentType,
+        birthDate
+      },
+      "Criando cliente"
+    );
+
+    let createError: unknown = null;
+
     const createResult = await repository
       .createCustomer(activeHotelId, {
         full_name: fullName,
@@ -56,11 +93,22 @@ export function registerCustomerRoutes(app: FastifyInstance, repository: Custome
         notes: normalizeOptionalText(request.body?.notes)
       })
       .catch((error) => {
-        request.log.error(error);
+        createError = error;
+        request.log.error(
+          {
+            activeHotelId,
+            fullName,
+            documentNumber,
+            documentType,
+            birthDate,
+            error
+          },
+          "Falha ao criar cliente"
+        );
         return null;
       });
 
-    if (!createResult) return reply.status(500).send(adminError(ADMIN_ERROR_CODE.INTERNAL, "Falha ao criar cliente."));
+    if (!createResult) return reply.status(500).send(adminError(ADMIN_ERROR_CODE.INTERNAL, "Falha ao criar cliente.", getAdminErrorDetails(createError)));
     if (createResult.result === "conflict") return reply.status(409).send(adminError(ADMIN_ERROR_CODE.CONFLICT, "Cliente ja cadastrado com esse documento."));
     if (!createResult.item) return reply.status(500).send(adminError(ADMIN_ERROR_CODE.INTERNAL, "Falha ao criar cliente."));
 

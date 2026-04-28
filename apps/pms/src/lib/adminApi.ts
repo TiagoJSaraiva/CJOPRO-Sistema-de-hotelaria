@@ -127,8 +127,12 @@ async function requestAdmin<T>(
 
   if (!response.ok) {
     const payload = (await response.json().catch(() => ({}))) as AdminErrorResponse;
-    const error = new Error(payload.message || "Falha na operacao administrativa.") as Error & { statusCode?: number };
+    const error = new Error(payload.message || "Falha na operacao administrativa.") as Error & {
+      statusCode?: number;
+      details?: string;
+    };
     error.statusCode = response.status;
+    error.details = payload.details;
     throw error;
   }
 

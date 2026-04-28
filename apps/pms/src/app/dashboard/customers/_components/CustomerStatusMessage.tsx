@@ -15,8 +15,9 @@ const statusMessages: Record<string, string> = {
 
 type CustomerStatusMessageProps = {
   status?: string;
+  detail?: string;
 };
 
-export function CustomerStatusMessage({ status }: CustomerStatusMessageProps) {
-  return <DashboardStatusMessage status={status} messages={statusMessages} />;
+export function CustomerStatusMessage({ status, detail }: CustomerStatusMessageProps) {
+  return <DashboardStatusMessage status={status} detail={detail} messages={statusMessages} />;
 }

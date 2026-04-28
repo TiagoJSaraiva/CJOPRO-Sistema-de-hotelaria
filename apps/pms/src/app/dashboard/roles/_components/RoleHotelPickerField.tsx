@@ -47,10 +47,11 @@ export function RoleHotelPickerField({
   }
 
   return (
-    <div className="grid gap-[0.45rem]">
+    <div className="pms-field md:col-span-2">
+      <label htmlFor="create-role-hotel-select">Hotel da role</label>
 
       <div className="flex flex-wrap items-center gap-[0.55rem]">
-        <span className="rounded-lg border border-[#d5dbe5] bg-[#fbfdff] px-[0.65rem] py-[0.45rem]">{selectedHotelName}</span>
+        <span id="create-role-hotel-select" className="rounded-lg border border-[#d5dbe5] bg-[#fbfdff] px-[0.65rem] py-[0.45rem]">{selectedHotelName}</span>
 
         <button
           type="button"

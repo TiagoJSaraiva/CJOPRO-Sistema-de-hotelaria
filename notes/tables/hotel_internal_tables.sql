@@ -69,6 +69,7 @@ create table if not exists rooms (
 
 create table if not exists customers (
 	id uuid primary key default gen_random_uuid(),
+	hotel_id uuid not null references hotels(id) on delete restrict,
 	full_name text not null,
 	document_number text not null,
 	document_type text not null,
@@ -80,7 +81,7 @@ create table if not exists customers (
 	notes text,
 	created_at timestamptz not null default now(),
 	updated_at timestamptz not null default now(),
-	unique (document_type, document_number)
+	unique (hotel_id, document_type, document_number)
 );
 
 create table if not exists reservations (
@@ -287,6 +288,7 @@ create index if not exists idx_rooms_hotel_id on rooms(hotel_id);
 create index if not exists idx_rooms_hotel_type on rooms(hotel_id, room_type);
 
 create index if not exists idx_customers_document on customers(document_type, document_number);
+create index if not exists idx_customers_hotel_id on customers(hotel_id);
 
 create index if not exists idx_reservations_hotel_dates on reservations(hotel_id, planned_checkin_date, planned_checkout_date);
 create index if not exists idx_reservations_status on reservations(reservation_status);

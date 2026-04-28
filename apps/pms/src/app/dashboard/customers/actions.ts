@@ -12,14 +12,31 @@ function revalidateCustomerPage(): void {
   revalidatePath("/dashboard/customers/view");
 }
 
-function redirectWithStatus(status: string, section: "create" | "view" | "root" = "root"): never {
+function redirectWithStatus(status: string, section: "create" | "view" | "root" = "root", detail?: string): never {
   const nonce = Date.now().toString(36);
+  const detailParam = detail ? `&detail=${encodeURIComponent(detail.slice(0, 220))}` : "";
 
   if (section === "root") {
-    redirect(`/dashboard/customers?status=${status}&r=${nonce}`);
+    redirect(`/dashboard/customers?status=${status}${detailParam}&r=${nonce}`);
   }
 
-  redirect(`/dashboard/customers/${section}?status=${status}&r=${nonce}`);
+  redirect(`/dashboard/customers/${section}?status=${status}${detailParam}&r=${nonce}`);
+}
+
+function getErrorDetail(error: unknown): string {
+  if (typeof error === "object" && error !== null && "details" in error) {
+    const details = String((error as { details?: unknown }).details || "").trim();
+
+    if (details) {
+      return details;
+    }
+  }
+
+  if (error instanceof Error && error.message.trim()) {
+    return error.message.trim();
+  }
+
+  return "Falha inesperada ao comunicar com o backend.";
 }
 
 export async function createCustomerAction(formData: FormData): Promise<void> {
@@ -51,8 +68,18 @@ export async function createCustomerAction(formData: FormData): Promise<void> {
       nationality: String(formData.get("nationality") || "").trim() || null,
       notes: String(formData.get("notes") || "").trim() || null
     });
-  } catch {
-    redirectWithStatus("create_error", "create");
+  } catch (error) {
+    const detail = getErrorDetail(error);
+
+    console.error("[customers/createCustomerAction] falha ao criar cliente", {
+      fullName,
+      documentNumber,
+      documentType,
+      birthDate,
+      detail
+    });
+
+    redirectWithStatus("create_error", "create", detail);
   }
 
   revalidateCustomerPage();

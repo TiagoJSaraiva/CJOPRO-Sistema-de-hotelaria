@@ -1,6 +1,7 @@
 import { ADMIN_PERMISSION_TYPES } from "@hotel/shared";
 import { createPermissionAction } from "../actions";
 import { PendingSubmitButton } from "../../../_components/PendingSubmitButton";
+import { FormField } from "../../_components/FormField";
 
 type PermissionCreateFormProps = {
   formKey?: string;
@@ -11,9 +12,8 @@ export function PermissionCreateForm({ formKey }: PermissionCreateFormProps) {
     <article className="pms-surface-card">
       <h3 className="mt-0">Criar permissao</h3>
 
-      <form key={formKey} action={createPermissionAction} className="grid gap-[0.7rem]">
-        <div className="pms-field">
-          <label htmlFor="create-permission-name">Nome</label>
+      <form key={formKey} action={createPermissionAction} className="grid gap-[0.7rem] md:grid-cols-2">
+        <FormField label="Nome" htmlFor="create-permission-name">
           <input
             id="create-permission-name"
             name="name"
@@ -21,10 +21,9 @@ export function PermissionCreateForm({ formKey }: PermissionCreateFormProps) {
             required
             className="pms-field-input"
           />
-        </div>
+        </FormField>
 
-        <div className="pms-field">
-          <label htmlFor="create-permission-type">Tipo</label>
+        <FormField label="Tipo" htmlFor="create-permission-type">
           <select
             id="create-permission-type"
             name="type"
@@ -34,9 +33,9 @@ export function PermissionCreateForm({ formKey }: PermissionCreateFormProps) {
             <option value={ADMIN_PERMISSION_TYPES.SYSTEM}>SYSTEM PERMISSION</option>
             <option value={ADMIN_PERMISSION_TYPES.HOTEL}>HOTEL PERMISSION</option>
           </select>
-        </div>
+        </FormField>
 
-        <PendingSubmitButton pendingLabel="Criando permissao..." className="justify-self-start">
+        <PendingSubmitButton pendingLabel="Criando permissao..." className="justify-self-start md:col-span-2">
           Criar permissao
         </PendingSubmitButton>
       </form>

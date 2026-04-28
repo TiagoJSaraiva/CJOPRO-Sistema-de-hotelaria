@@ -7,6 +7,7 @@ import { createRoleAction } from "../actions";
 import { RoleHotelPickerField } from "./RoleHotelPickerField";
 import { RolePermissionAssignmentsField } from "./RolePermissionAssignmentsField";
 import { PendingSubmitButton } from "../../../_components/PendingSubmitButton";
+import { FormField } from "../../_components/FormField";
 
 type RoleCreateFormProps = {
   formKey?: string;
@@ -21,14 +22,12 @@ export function RoleCreateForm({ formKey, hotels, permissions }: RoleCreateFormP
     <article className="pms-surface-card">
       <h3 className="mt-0">Criar role</h3>
 
-      <form key={formKey} action={createRoleAction} className="grid gap-[0.7rem]">
-        <div className="pms-field">
-          <label htmlFor="create-role-name">Nome</label>
+      <form key={formKey} action={createRoleAction} className="grid gap-[0.7rem] md:grid-cols-2">
+        <FormField label="Nome" htmlFor="create-role-name">
           <input id="create-role-name" name="name" minLength={2} required className="pms-field-input" />
-        </div>
+        </FormField>
 
-        <div className="pms-field">
-          <label htmlFor="create-role-type">Tipo da role</label>
+        <FormField label="Tipo da role" htmlFor="create-role-type">
           <select
             id="create-role-type"
             name="role_type"
@@ -39,12 +38,12 @@ export function RoleCreateForm({ formKey, hotels, permissions }: RoleCreateFormP
             <option value={ADMIN_ROLE_TYPES.SYSTEM}>SYSTEM ROLE</option>
             <option value={ADMIN_ROLE_TYPES.HOTEL}>HOTEL ROLE</option>
           </select>
-        </div>
+        </FormField>
 
         <RoleHotelPickerField hotels={hotels} roleType={roleType} />
         <RolePermissionAssignmentsField roleType={roleType} permissions={permissions} />
 
-        <PendingSubmitButton pendingLabel="Criando papel..." className="justify-self-start">
+        <PendingSubmitButton pendingLabel="Criando papel..." className="justify-self-start md:col-span-2">
           Criar papel
         </PendingSubmitButton>
       </form>

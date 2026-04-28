@@ -1,6 +1,7 @@
 import { createHotelAction } from "../actions";
 import { CountryLocaleFields } from "./CountryLocaleFields";
 import { PendingSubmitButton } from "../../../_components/PendingSubmitButton";
+import { FormField } from "../../_components/FormField";
 
 type HotelCreateFormProps = {
   formKey?: string;
@@ -11,19 +12,16 @@ export function HotelCreateForm({ formKey }: HotelCreateFormProps) {
     <article className="pms-surface-card">
       <h3 className="mt-0">Criar hotel</h3>
 
-      <form key={formKey} action={createHotelAction} className="grid gap-[0.7rem]">
-        <div className="pms-field">
-          <label htmlFor="create-name">Nome</label>
+      <form key={formKey} action={createHotelAction} className="grid gap-[0.7rem] md:grid-cols-2">
+        <FormField label="Nome" htmlFor="create-name">
           <input id="create-name" name="name" minLength={2} required className="pms-field-input" />
-        </div>
+        </FormField>
 
-        <div className="pms-field">
-          <label htmlFor="create-legal-name">Razao Social</label>
+        <FormField label="Razao Social" htmlFor="create-legal-name">
           <input id="create-legal-name" name="legal_name" minLength={3} required className="pms-field-input" />
-        </div>
+        </FormField>
 
-        <div className="pms-field">
-          <label htmlFor="create-tax-id">CNPJ / Tax ID</label>
+        <FormField label="CNPJ / Tax ID" htmlFor="create-tax-id">
           <input
             id="create-tax-id"
             name="tax_id"
@@ -33,10 +31,9 @@ export function HotelCreateForm({ formKey }: HotelCreateFormProps) {
             required
             className="pms-field-input"
           />
-        </div>
+        </FormField>
 
-        <div className="pms-field">
-          <label htmlFor="create-slug">Slug</label>
+        <FormField label="Slug" htmlFor="create-slug">
           <input
             id="create-slug"
             name="slug"
@@ -45,15 +42,13 @@ export function HotelCreateForm({ formKey }: HotelCreateFormProps) {
             required
             className="pms-field-input"
           />
-        </div>
+        </FormField>
 
-        <div className="pms-field">
-          <label htmlFor="create-email">Email</label>
+        <FormField label="Email" htmlFor="create-email">
           <input id="create-email" name="email" type="email" required className="pms-field-input" />
-        </div>
+        </FormField>
 
-        <div className="pms-field">
-          <label htmlFor="create-phone">Telefone</label>
+        <FormField label="Telefone" htmlFor="create-phone">
           <input
             id="create-phone"
             name="phone"
@@ -63,42 +58,35 @@ export function HotelCreateForm({ formKey }: HotelCreateFormProps) {
             required
             className="pms-field-input"
           />
-        </div>
+        </FormField>
 
-        <div className="pms-field">
-          <label htmlFor="create-address-line">Endereco (logradouro)</label>
+        <FormField label="Endereco (logradouro)" htmlFor="create-address-line">
           <input id="create-address-line" name="address_line" minLength={3} required className="pms-field-input" />
-        </div>
+        </FormField>
 
-        <div className="pms-field">
-          <label htmlFor="create-address-number">Numero</label>
+        <FormField label="Numero" htmlFor="create-address-number">
           <input id="create-address-number" name="address_number" minLength={1} required className="pms-field-input" />
-        </div>
+        </FormField>
 
-        <div className="pms-field">
-          <label htmlFor="create-address-complement">Complemento (opcional)</label>
+        <FormField label="Complemento (opcional)" htmlFor="create-address-complement" fullWidth>
           <input id="create-address-complement" name="address_complement" className="pms-field-input" />
-        </div>
+        </FormField>
 
-        <div className="pms-field">
-          <label htmlFor="create-district">Bairro</label>
+        <FormField label="Bairro" htmlFor="create-district">
           <input id="create-district" name="district" minLength={2} required className="pms-field-input" />
-        </div>
+        </FormField>
 
-        <div className="pms-field">
-          <label htmlFor="create-city">Cidade</label>
+        <FormField label="Cidade" htmlFor="create-city">
           <input id="create-city" name="city" minLength={2} required className="pms-field-input" />
-        </div>
+        </FormField>
 
-        <div className="pms-field">
-          <label htmlFor="create-state">Estado</label>
+        <FormField label="Estado" htmlFor="create-state">
           <input id="create-state" name="state" minLength={2} required className="pms-field-input" />
-        </div>
+        </FormField>
 
         <CountryLocaleFields defaultCountryCode="BR" />
 
-        <div className="pms-field">
-          <label htmlFor="create-zip-code">CEP / Zip code</label>
+        <FormField label="CEP / Zip code" htmlFor="create-zip-code">
           <input
             id="create-zip-code"
             name="zip_code"
@@ -107,9 +95,9 @@ export function HotelCreateForm({ formKey }: HotelCreateFormProps) {
             required
             className="pms-field-input"
           />
-        </div>
+        </FormField>
 
-        <PendingSubmitButton pendingLabel="Criando hotel..." className="justify-self-start">
+        <PendingSubmitButton pendingLabel="Criando hotel..." className="justify-self-start md:col-span-2">
           Criar hotel
         </PendingSubmitButton>
       </form>

@@ -175,18 +175,20 @@ export function UserRoleAssignmentsField({ roles, hotels, defaultAssignments, in
 
   return (
     <>
-      <RelationListEditor
-        title="Papeis"
-        addLabel="Adicionar papel"
-        emptyMessage="Nenhum papel vinculado ao usuario."
-        items={assignmentRows}
-        onAdd={handleAddClick}
-        onRemove={(assignmentKey) =>
-          setAssignments((current) => current.filter((item) => `${item.role_id}::${item.hotel_id || "__null__"}` !== assignmentKey))
-        }
-      />
+      <div className="grid gap-[0.45rem] md:col-span-2">
+        <RelationListEditor
+          title="Papeis"
+          addLabel="Adicionar papel"
+          emptyMessage="Nenhum papel vinculado ao usuario."
+          items={assignmentRows}
+          onAdd={handleAddClick}
+          onRemove={(assignmentKey) =>
+            setAssignments((current) => current.filter((item) => `${item.role_id}::${item.hotel_id || "__null__"}` !== assignmentKey))
+          }
+        />
 
-      <input type="hidden" name={inputName} value={serializedValue} readOnly />
+        <input type="hidden" name={inputName} value={serializedValue} readOnly />
+      </div>
 
       <SelectionModal
         open={isContextModalOpen}

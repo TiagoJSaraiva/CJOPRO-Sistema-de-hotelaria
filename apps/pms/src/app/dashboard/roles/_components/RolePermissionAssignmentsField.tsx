@@ -68,16 +68,18 @@ export function RolePermissionAssignmentsField({
 
   return (
     <>
-      <RelationListEditor
-        title="Permissoes da role"
-        addLabel="Adicionar permissao"
-        emptyMessage="Nenhuma permissao vinculada a role."
-        items={items.map((item) => ({ id: item.id, primary: item.name }))}
-        onAdd={() => setIsModalOpen(true)}
-        onRemove={(permissionId) => setItems((current) => current.filter((item) => item.id !== permissionId))}
-      />
+      <div className="grid gap-[0.45rem] md:col-span-2">
+        <RelationListEditor
+          title="Permissoes da role"
+          addLabel="Adicionar permissao"
+          emptyMessage="Nenhuma permissao vinculada a role."
+          items={items.map((item) => ({ id: item.id, primary: item.name }))}
+          onAdd={() => setIsModalOpen(true)}
+          onRemove={(permissionId) => setItems((current) => current.filter((item) => item.id !== permissionId))}
+        />
 
-      <input type="hidden" name={inputName} value={serializedValue} readOnly />
+        <input type="hidden" name={inputName} value={serializedValue} readOnly />
+      </div>
 
       <SelectionModal
         open={isModalOpen}
