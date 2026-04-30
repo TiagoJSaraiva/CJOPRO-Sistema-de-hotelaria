@@ -299,8 +299,10 @@ export type AdminReservation = {
 };
 
 export type AdminReservationCreateInput = {
-  booking_customer_id: string;
-  reservation_code: string;
+  booking_customer_id?: string;
+  booking_customer_document?: string | null;
+  booking_customer_document_type?: string | null;
+  reservation_code?: string;
   planned_checkin_date: string;
   planned_checkout_date: string;
   actual_checkin_date?: string | null;

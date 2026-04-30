@@ -87,11 +87,6 @@ function ReservationEditForm({ reservation }: { reservation: AdminReservation })
       </div>
 
       <div className="pms-field">
-        <label htmlFor={`reservation-code-${reservation.id}`}>Codigo</label>
-        <input id={`reservation-code-${reservation.id}`} name="reservation_code" defaultValue={reservation.reservation_code} required className="pms-field-input" />
-      </div>
-
-      <div className="pms-field">
         <label htmlFor={`reservation-checkin-${reservation.id}`}>Check-in previsto</label>
         <input id={`reservation-checkin-${reservation.id}`} name="planned_checkin_date" type="date" defaultValue={reservation.planned_checkin_date} required className="pms-field-input" />
       </div>

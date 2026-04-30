@@ -11,6 +11,7 @@ import { ReservationStatusMessage } from "../_components/ReservationStatusMessag
 type ReservationsCreatePageProps = {
   searchParams?: {
     status?: string;
+    detail?: string;
     r?: string;
   };
 };
@@ -46,10 +47,6 @@ export default async function ReservationsCreatePage({ searchParams }: Reservati
 
         <FormField label="Documento do titular da reserva - Numero" htmlFor="create-reservation-booking-customer-document">
           <input id="create-reservation-booking-customer-document" name="booking_customer_document" required className="pms-field-input" />
-        </FormField>
-
-        <FormField label="Codigo da reserva" htmlFor="create-reservation-code">
-          <input id="create-reservation-code" name="reservation_code" required className="pms-field-input" />
         </FormField>
 
         <FormField label="Check-in planejado" htmlFor="create-reservation-checkin-date">

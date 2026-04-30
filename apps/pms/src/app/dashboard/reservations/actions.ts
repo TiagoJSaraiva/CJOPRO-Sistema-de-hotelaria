@@ -50,7 +50,6 @@ export async function createReservationAction(formData: FormData): Promise<void>
   const bookingCustomerId = String(formData.get("booking_customer_id") || "").trim();
   const bookingCustomerDocument = String(formData.get("booking_customer_document") || "").trim();
   const bookingCustomerDocumentType = String(formData.get("booking_customer_document_type") || "").trim();
-  const reservationCode = String(formData.get("reservation_code") || "").trim();
   const plannedCheckinDate = String(formData.get("planned_checkin_date") || "").trim();
   const plannedCheckoutDate = String(formData.get("planned_checkout_date") || "").trim();
   const guestCount = Number(formData.get("guest_count") || "0");
@@ -59,7 +58,7 @@ export async function createReservationAction(formData: FormData): Promise<void>
     redirectWithStatus("create_missing_fields", "create");
   }
 
-  if (!reservationCode || !plannedCheckinDate || !plannedCheckoutDate || !Number.isFinite(guestCount) || guestCount <= 0) {
+  if (!plannedCheckinDate || !plannedCheckoutDate || !Number.isFinite(guestCount) || guestCount <= 0) {
     redirectWithStatus("create_missing_fields", "create");
   }
 
@@ -68,7 +67,6 @@ export async function createReservationAction(formData: FormData): Promise<void>
       booking_customer_id: bookingCustomerId || undefined,
       booking_customer_document: bookingCustomerDocument || undefined,
       booking_customer_document_type: bookingCustomerDocumentType || undefined,
-      reservation_code: reservationCode,
       planned_checkin_date: plannedCheckinDate,
       planned_checkout_date: plannedCheckoutDate,
       guest_count: guestCount,
@@ -92,7 +90,6 @@ export async function createReservationAction(formData: FormData): Promise<void>
       bookingCustomerId,
       bookingCustomerDocument,
       bookingCustomerDocumentType,
-      reservationCode,
       plannedCheckinDate,
       plannedCheckoutDate,
       guestCount,
@@ -123,7 +120,6 @@ export async function updateReservationAction(formData: FormData): Promise<void>
   try {
     await updateReservation(id, {
       booking_customer_id: String(formData.get("booking_customer_id") || "").trim(),
-      reservation_code: String(formData.get("reservation_code") || "").trim(),
       planned_checkin_date: String(formData.get("planned_checkin_date") || "").trim(),
       planned_checkout_date: String(formData.get("planned_checkout_date") || "").trim(),
       guest_count: Number(formData.get("guest_count") || "0"),

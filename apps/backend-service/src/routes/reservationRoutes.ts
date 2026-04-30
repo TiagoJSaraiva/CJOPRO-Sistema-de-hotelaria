@@ -9,6 +9,7 @@ import {
 import { ensureAuthorizedWithScope } from "../auth/authorization";
 import { adminError } from "../common/adminError";
 import { normalizeOptionalText } from "../common/text";
+import { generateReservationCode } from "../common/reservationCodeGenerator";
 import { requireActiveHotelId } from "../common/requireActiveHotelScope";
 import { createReservationsRepository, type ReservationsRepository } from "../repositories/reservationsRepository";
 import { createCustomersRepository } from "../repositories/customersRepository";
@@ -47,7 +48,7 @@ export function registerReservationRoutes(
     let bookingCustomerId = normalizeOptionalText(request.body?.booking_customer_id);
     const bookingCustomerDocument = normalizeOptionalText(request.body?.booking_customer_document);
     const bookingCustomerDocumentType = normalizeOptionalText(request.body?.booking_customer_document_type);
-    const reservationCode = normalizeOptionalText(request.body?.reservation_code);
+    let reservationCode = normalizeOptionalText(request.body?.reservation_code);
     const plannedCheckinDate = normalizeOptionalText(request.body?.planned_checkin_date);
     const plannedCheckoutDate = normalizeOptionalText(request.body?.planned_checkout_date);
     const guestCount = Number(request.body?.guest_count);
@@ -57,8 +58,31 @@ export function registerReservationRoutes(
       return reply.status(400).send(adminError(ADMIN_ERROR_CODE.VALIDATION, "Informe o id do cliente ou o documento do titular da reserva."));
     }
 
-    if (!reservationCode || !plannedCheckinDate || !plannedCheckoutDate || !Number.isFinite(guestCount) || guestCount <= 0) {
+    if (!plannedCheckinDate || !plannedCheckoutDate || !Number.isFinite(guestCount) || guestCount <= 0) {
       return reply.status(400).send(adminError(ADMIN_ERROR_CODE.VALIDATION, "Dados invalidos para criar reserva."));
+    }
+
+    // Auto-generate reservation code if not provided (6 chars, alphanumeric, unique per hotel)
+    if (!reservationCode) {
+      let attempts = 0;
+      const maxAttempts = 10;
+
+      while (!reservationCode && attempts < maxAttempts) {
+        const candidate = generateReservationCode();
+        const existingReservations = await repository.listReservations(activeHotelId).catch(() => []);
+        const exists = existingReservations.some((r) => r.reservation_code === candidate);
+
+        if (!exists) {
+          reservationCode = candidate;
+        } else {
+          attempts++;
+        }
+      }
+
+      if (!reservationCode) {
+        request.log.error({ activeHotelId, attempts: maxAttempts }, "Falha ao gerar codigo de reserva unico");
+        return reply.status(500).send(adminError(ADMIN_ERROR_CODE.INTERNAL, "Falha ao gerar codigo de reserva."));
+      }
     }
 
     // If document provided, resolve to customer id within the active hotel scope
