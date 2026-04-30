@@ -4,9 +4,11 @@ import { DashboardCreateFormCard } from "../../_components/DashboardCreateFormCa
 import { DashboardEntityPageShell } from "../../_components/DashboardEntityPageShell";
 import { FormField } from "../../_components/FormField";
 import { getUserFromSession } from "../../../../lib/auth";
+import { listSeasons } from "../../../../lib/adminApi";
 import { createSeasonRoomRateAction } from "../actions";
 import { getSeasonRoomRatesAccess, getSeasonRoomRatesDefaultRoute } from "../access";
 import { SeasonRoomRateStatusMessage } from "../_components/SeasonRoomRateStatusMessage";
+import { SeasonRoomSelect } from "../_components/SeasonRoomSelect";
 
 type SeasonRoomRatesCreatePageProps = {
   searchParams?: {
@@ -29,6 +31,8 @@ export default async function SeasonRoomRatesCreatePage({ searchParams }: Season
     return <DashboardAccessDeniedCard title="Tarifas por Temporada" message="Sem permissao para criar tarifa de temporada." />;
   }
 
+  const seasons = await listSeasons();
+
   return (
     <DashboardEntityPageShell
       title="Tarifas por Temporada"
@@ -50,15 +54,15 @@ export default async function SeasonRoomRatesCreatePage({ searchParams }: Season
       statusContent={<SeasonRoomRateStatusMessage status={searchParams?.status} />}
     >
       <DashboardCreateFormCard title="Criar tarifa" submitLabel="Criar tarifa" action={createSeasonRoomRateAction} resetKey={searchParams?.r}>
-        <FormField label="Season ID" htmlFor="create-season-rate-season-id">
-          <input id="create-season-rate-season-id" name="season_id" required className="pms-field-input" />
+        <FormField label="Temporada" htmlFor="create-season-rate-season-id">
+          <SeasonRoomSelect id="create-season-rate-season-id" name="season_id" seasons={seasons} required />
         </FormField>
 
-        <FormField label="Room type" htmlFor="create-season-rate-room-type">
+        <FormField label="Tipo de quarto" htmlFor="create-season-rate-room-type">
           <input id="create-season-rate-room-type" name="room_type" required className="pms-field-input" />
         </FormField>
 
-        <FormField label="Daily rate" htmlFor="create-season-rate-daily-rate">
+        <FormField label="Taxa diária" htmlFor="create-season-rate-daily-rate">
           <input id="create-season-rate-daily-rate" name="daily_rate" type="number" min={0} step="0.01" required className="pms-field-input" />
         </FormField>
       </DashboardCreateFormCard>

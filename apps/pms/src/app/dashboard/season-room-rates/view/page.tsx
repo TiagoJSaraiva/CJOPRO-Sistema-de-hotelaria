@@ -1,7 +1,7 @@
 import { redirect } from "next/navigation";
 import { DashboardAccessDeniedCard } from "../../_components/DashboardAccessDeniedCard";
 import { DashboardEntityPageShell } from "../../_components/DashboardEntityPageShell";
-import { listSeasonRoomRates } from "../../../../lib/adminApi";
+import { listSeasonRoomRates, listSeasons } from "../../../../lib/adminApi";
 import { getUserFromSession } from "../../../../lib/auth";
 import { getSeasonRoomRatesAccess, getSeasonRoomRatesDefaultRoute } from "../access";
 import { SeasonRoomRatesViewFilterableSection } from "../_components/SeasonRoomRatesViewFilterableSection";
@@ -30,6 +30,7 @@ export default async function SeasonRoomRatesViewPage({ searchParams }: SeasonRo
   }
 
   const items = await listSeasonRoomRates();
+  const seasons = await listSeasons();
   const activeSeasonRoomRateId = String(searchParams?.seasonRoomRateId || "").trim();
   const mode = searchParams?.mode === "edit" ? "edit" : "view";
 
@@ -55,6 +56,7 @@ export default async function SeasonRoomRatesViewPage({ searchParams }: SeasonRo
     >
       <SeasonRoomRatesViewFilterableSection
         items={items}
+        seasons={seasons}
         canRead={access.canRead}
         canUpdate={access.canUpdate}
         canDelete={access.canDelete}

@@ -11,13 +11,15 @@ import { adminError } from "../common/adminError";
 import { normalizeOptionalText } from "../common/text";
 import { requireActiveHotelId } from "../common/requireActiveHotelScope";
 import { createSeasonRoomRatesRepository, type SeasonRoomRatesRepository } from "../repositories/seasonRoomRatesRepository";
+import { createSeasonsRepository, type SeasonsRepository } from "../repositories/seasonsRepository";
 
 type SeasonRoomRateCreateBody = Partial<AdminSeasonRoomRateCreateInput>;
 type SeasonRoomRateUpdateBody = Partial<AdminSeasonRoomRateUpdateInput>;
 
 export function registerSeasonRoomRateRoutes(
   app: FastifyInstance,
-  repository: SeasonRoomRatesRepository = createSeasonRoomRatesRepository()
+  repository: SeasonRoomRatesRepository = createSeasonRoomRatesRepository(),
+  seasonsRepository: SeasonsRepository = createSeasonsRepository()
 ): void {
   app.get("/admin/season-room-rates", async (request, reply) => {
     const auth = ensureAuthorizedWithScope(request, reply, PERMISSIONS.SEASON_ROOM_RATE_READ);
@@ -49,6 +51,19 @@ export function registerSeasonRoomRateRoutes(
 
     if (!seasonId || !roomType || !Number.isFinite(dailyRate) || dailyRate < 0) {
       return reply.status(400).send(adminError(ADMIN_ERROR_CODE.VALIDATION, "Season, room type e daily rate valido sao obrigatorios."));
+    }
+
+    const season = await seasonsRepository.findSeasonById(activeHotelId, seasonId).catch((error) => {
+      request.log.error({ activeHotelId, seasonId, error }, "Erro ao buscar temporada para tarifa por temporada");
+      return undefined;
+    });
+
+    if (season === undefined) {
+      return reply.status(500).send(adminError(ADMIN_ERROR_CODE.INTERNAL, "Falha ao consultar temporada."));
+    }
+
+    if (!season) {
+      return reply.status(404).send(adminError(ADMIN_ERROR_CODE.NOT_FOUND, "Temporada nao encontrada neste hotel."));
     }
 
     const createResult = await repository
@@ -85,6 +100,25 @@ export function registerSeasonRoomRateRoutes(
     if (request.body?.daily_rate !== undefined) payload.daily_rate = Number(request.body.daily_rate);
 
     if (!Object.keys(payload).length) return reply.status(400).send(adminError(ADMIN_ERROR_CODE.VALIDATION, "Nenhum campo informado para atualizacao."));
+
+    if (payload.season_id !== undefined) {
+      if (!payload.season_id) {
+        return reply.status(400).send(adminError(ADMIN_ERROR_CODE.VALIDATION, "Season valido e obrigatorio para atualizacao."));
+      }
+
+      const season = await seasonsRepository.findSeasonById(activeHotelId, String(payload.season_id)).catch((error) => {
+        request.log.error({ activeHotelId, seasonId: payload.season_id, error }, "Erro ao buscar temporada para atualizacao de tarifa por temporada");
+        return undefined;
+      });
+
+      if (season === undefined) {
+        return reply.status(500).send(adminError(ADMIN_ERROR_CODE.INTERNAL, "Falha ao consultar temporada."));
+      }
+
+      if (!season) {
+        return reply.status(404).send(adminError(ADMIN_ERROR_CODE.NOT_FOUND, "Temporada nao encontrada neste hotel."));
+      }
+    }
 
     const updateResult = await repository.updateSeasonRoomRate(id, activeHotelId, payload).catch((error) => {
       request.log.error(error);

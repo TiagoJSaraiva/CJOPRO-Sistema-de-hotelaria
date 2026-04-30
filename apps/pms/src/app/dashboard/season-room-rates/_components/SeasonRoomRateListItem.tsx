@@ -1,27 +1,31 @@
 "use client";
 
-import Link from "next/link";
-import type { AdminSeasonRoomRate } from "@hotel/shared";
+import type { AdminSeason, AdminSeasonRoomRate } from "@hotel/shared";
 import { deleteSeasonRoomRateAction, updateSeasonRoomRateAction } from "../actions";
+import { DashboardEntityActionButtons } from "../../_components/DashboardEntityActionButtons";
+import { DashboardEntityListItemFrame } from "../../_components/DashboardEntityListItemFrame";
+import { SeasonRoomSelect } from "./SeasonRoomSelect";
 
 type SeasonRoomRateListItemProps = {
   item: AdminSeasonRoomRate;
   canRead: boolean;
+  seasons: AdminSeason[];
   canUpdate: boolean;
   canDelete: boolean;
   isViewing: boolean;
   isEditing: boolean;
 };
 
-function SeasonRoomRateDataPreview({ item }: { item: AdminSeasonRoomRate }) {
+function SeasonRoomRateDataPreview({ item, seasons }: { item: AdminSeasonRoomRate; seasons: AdminSeason[] }) {
   const createdAt = item.created_at ? new Date(item.created_at).toLocaleString("pt-BR") : "-";
   const updatedAt = item.updated_at ? new Date(item.updated_at).toLocaleString("pt-BR") : "-";
 
+  const season = seasons.find((entry) => entry.id === item.season_id);
   return (
     <div className="mt-[0.85rem] grid grid-cols-[repeat(auto-fit,minmax(200px,1fr))] gap-[0.75rem]">
       <div>
-        <strong>Season ID:</strong>
-        <p className="m-0 mt-[0.2rem]">{item.season_id}</p>
+        <strong>Temporada:</strong>
+        <p className="m-0 mt-[0.2rem]">{season ? season.name : item.season_id}</p>
       </div>
       <div>
         <strong>Room type:</strong>
@@ -43,14 +47,14 @@ function SeasonRoomRateDataPreview({ item }: { item: AdminSeasonRoomRate }) {
   );
 }
 
-function SeasonRoomRateEditForm({ item }: { item: AdminSeasonRoomRate }) {
+function SeasonRoomRateEditForm({ item, seasons }: { item: AdminSeasonRoomRate; seasons: AdminSeason[] }) {
   return (
     <form action={updateSeasonRoomRateAction} className="mt-[0.85rem] grid gap-[0.65rem]">
       <input type="hidden" name="id" value={item.id} />
 
       <div className="pms-field">
-        <label htmlFor={`season-room-rate-season-id-${item.id}`}>Season ID</label>
-        <input id={`season-room-rate-season-id-${item.id}`} name="season_id" defaultValue={item.season_id} required className="pms-field-input" />
+        <label htmlFor={`season-room-rate-season-id-${item.id}`}>Temporada</label>
+        <SeasonRoomSelect id={`season-room-rate-season-id-${item.id}`} name="season_id" seasons={seasons} defaultValue={item.season_id} required />
       </div>
 
       <div className="pms-field">
@@ -70,56 +74,31 @@ function SeasonRoomRateEditForm({ item }: { item: AdminSeasonRoomRate }) {
   );
 }
 
-export function SeasonRoomRateListItem({ item, canRead, canUpdate, canDelete, isViewing, isEditing }: SeasonRoomRateListItemProps) {
+export function SeasonRoomRateListItem({ item, seasons, canRead, canUpdate, canDelete, isViewing, isEditing }: SeasonRoomRateListItemProps) {
   const viewHref = `/dashboard/season-room-rates/view?seasonRoomRateId=${item.id}&mode=view`;
   const editHref = `/dashboard/season-room-rates/view?seasonRoomRateId=${item.id}&mode=edit`;
+  const season = seasons.find((entry) => entry.id === item.season_id);
 
   return (
-    <article className="rounded-xl border border-[#e2e2e2] bg-white p-[0.95rem]">
-      <div className="flex flex-wrap items-center justify-between gap-3">
-        <div>
-          <h3 className="mb-[0.2rem] mt-0">{item.room_type}</h3>
-          <p className="m-0 text-[#555]">Season: {item.season_id} | R$ {item.daily_rate.toFixed(2)}</p>
-        </div>
-
-        <div className="flex flex-wrap items-center gap-2">
-          {canRead ? (
-            <Link
-              href={viewHref}
-              scroll={false}
-              className={`rounded-lg border border-[#2d6cdf] px-[0.65rem] py-[0.45rem] no-underline ${
-                isViewing ? "bg-[#e9f0ff] text-[#1b4db3]" : "bg-white text-[#1b4db3]"
-              }`}
-            >
-              Visualizar dados
-            </Link>
-          ) : null}
-
-          {canUpdate ? (
-            <Link
-              href={editHref}
-              scroll={false}
-              className={`rounded-lg border border-[#0f766e] px-[0.65rem] py-[0.45rem] no-underline ${
-                isEditing ? "bg-[#ddf5f2] text-[#0a5f58]" : "bg-white text-[#0a5f58]"
-              }`}
-            >
-              Editar dados
-            </Link>
-          ) : null}
-
-          {canDelete ? (
-            <form action={deleteSeasonRoomRateAction}>
-              <input type="hidden" name="id" value={item.id} />
-              <button type="submit" className="rounded-lg border border-[#c83a3a] bg-white px-[0.65rem] py-[0.45rem] text-[#b00020]">
-                Apagar dados
-              </button>
-            </form>
-          ) : null}
-        </div>
-      </div>
-
-      {isViewing ? <SeasonRoomRateDataPreview item={item} /> : null}
-      {isEditing ? <SeasonRoomRateEditForm item={item} /> : null}
-    </article>
+    <DashboardEntityListItemFrame
+      title={item.room_type}
+      subtitle={`${season ? season.name : item.season_id} | R$ ${item.daily_rate.toFixed(2)}`}
+      actions={
+        <DashboardEntityActionButtons
+          canRead={canRead}
+          canUpdate={canUpdate}
+          canDelete={canDelete}
+          isViewing={isViewing}
+          isEditing={isEditing}
+          viewHref={viewHref}
+          editHref={editHref}
+          deleteId={item.id}
+          deleteAction={deleteSeasonRoomRateAction}
+        />
+      }
+    >
+      {isViewing ? <SeasonRoomRateDataPreview item={item} seasons={seasons} /> : null}
+      {isEditing ? <SeasonRoomRateEditForm item={item} seasons={seasons} /> : null}
+    </DashboardEntityListItemFrame>
   );
 }

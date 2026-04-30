@@ -1,7 +1,7 @@
 "use client";
 
 import { useMemo } from "react";
-import type { AdminSeasonRoomRate } from "@hotel/shared";
+import type { AdminSeason, AdminSeasonRoomRate } from "@hotel/shared";
 import {
   DEFAULT_SEASON_ROOM_RATE_VIEW_FILTERS,
   applySeasonRoomRateViewFilters,
@@ -15,6 +15,7 @@ import { SeasonRoomRateListItem } from "./SeasonRoomRateListItem";
 
 type SeasonRoomRatesViewFilterableSectionProps = {
   items: AdminSeasonRoomRate[];
+  seasons: AdminSeason[];
   canRead: boolean;
   canUpdate: boolean;
   canDelete: boolean;
@@ -23,7 +24,7 @@ type SeasonRoomRatesViewFilterableSectionProps = {
   children?: React.ReactNode;
 };
 
-export function SeasonRoomRatesViewFilterableSection({ items, canRead, canUpdate, canDelete, activeSeasonRoomRateId, mode, children }: SeasonRoomRatesViewFilterableSectionProps) {
+export function SeasonRoomRatesViewFilterableSection({ items, seasons, canRead, canUpdate, canDelete, activeSeasonRoomRateId, mode, children }: SeasonRoomRatesViewFilterableSectionProps) {
   const {
     isModalOpen,
     appliedFilters,
@@ -56,6 +57,7 @@ export function SeasonRoomRatesViewFilterableSection({ items, canRead, canUpdate
       renderItem={(item) => (
         <SeasonRoomRateListItem
           item={item}
+          seasons={seasons}
           canRead={canRead}
           canUpdate={canUpdate}
           canDelete={canDelete}

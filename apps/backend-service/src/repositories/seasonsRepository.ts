@@ -9,6 +9,7 @@ export type SeasonWriteResult = "ok" | "conflict" | "not-found";
 
 export interface SeasonsRepository {
   listSeasons(activeHotelId: string): Promise<AdminSeason[]>;
+  findSeasonById(activeHotelId: string, id: string): Promise<AdminSeason | null>;
   createSeason(activeHotelId: string, payload: Record<string, unknown>): Promise<{ result: SeasonWriteResult; item?: AdminSeason }>;
   updateSeason(id: string, activeHotelId: string, payload: Record<string, unknown>): Promise<{ result: SeasonWriteResult; item?: AdminSeason }>;
   deleteSeason(id: string, activeHotelId: string): Promise<SeasonWriteResult>;
@@ -26,6 +27,23 @@ class SupabaseSeasonsRepository implements SeasonsRepository {
     }
 
     return (data || []) as AdminSeason[];
+  }
+
+  async findSeasonById(activeHotelId: string, id: string): Promise<AdminSeason | null> {
+    const supabase = createServerClient();
+    let query = supabase.from("seasons").select(SEASON_SELECT_FIELDS).eq("id", id);
+    query = applyHotelContextFilter(query, activeHotelId);
+    const { data, error } = await query.single();
+
+    if (error) {
+      if (isSupabaseNotFoundError(error)) {
+        return null;
+      }
+
+      throw error;
+    }
+
+    return data as AdminSeason;
   }
 
   async createSeason(activeHotelId: string, payload: Record<string, unknown>): Promise<{ result: SeasonWriteResult; item?: AdminSeason }> {
