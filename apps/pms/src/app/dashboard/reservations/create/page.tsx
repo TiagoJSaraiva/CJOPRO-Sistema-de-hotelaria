@@ -1,4 +1,5 @@
 import { redirect } from "next/navigation";
+import { translateReservationSource, translateReservationStatus } from "@hotel/shared";
 import { DashboardAccessDeniedCard } from "../../_components/DashboardAccessDeniedCard";
 import { DashboardCreateFormCard } from "../../_components/DashboardCreateFormCard";
 import { DashboardEntityPageShell } from "../../_components/DashboardEntityPageShell";
@@ -63,21 +64,21 @@ export default async function ReservationsCreatePage({ searchParams }: Reservati
 
         <FormField label="Status da reserva" htmlFor="create-reservation-status">
           <select id="create-reservation-status" name="reservation_status" defaultValue="pending" className="pms-field-input">
-            <option value="pending">pending</option>
-            <option value="confirmed">confirmed</option>
-            <option value="checked_in">checked_in</option>
-            <option value="checked_out">checked_out</option>
-            <option value="canceled">canceled</option>
-            <option value="no_show">no_show</option>
+            <option value="pending">{translateReservationStatus("pending")}</option>
+            <option value="confirmed">{translateReservationStatus("confirmed")}</option>
+            <option value="checked_in">{translateReservationStatus("checked_in")}</option>
+            <option value="checked_out">{translateReservationStatus("checked_out")}</option>
+            <option value="canceled">{translateReservationStatus("canceled")}</option>
+            <option value="no_show">{translateReservationStatus("no_show")}</option>
           </select>
         </FormField>
 
         <FormField label="Origem da reserva" htmlFor="create-reservation-source">
           <select id="create-reservation-source" name="reservation_source" defaultValue="front_desk" className="pms-field-input">
-            <option value="front_desk">front_desk</option>
-            <option value="website">website</option>
-            <option value="phone">phone</option>
-            <option value="agency">agency</option>
+            <option value="front_desk">{translateReservationSource("front_desk")}</option>
+            <option value="website">{translateReservationSource("website")}</option>
+            <option value="phone">{translateReservationSource("phone")}</option>
+            <option value="agency">{translateReservationSource("agency")}</option>
           </select>
         </FormField>
 

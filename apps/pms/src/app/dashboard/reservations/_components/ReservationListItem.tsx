@@ -1,6 +1,7 @@
 "use client";
 
 import type { AdminReservation } from "@hotel/shared";
+import { translateReservationSource, translateReservationStatus } from "@hotel/shared";
 import { deleteReservationAction, updateReservationAction } from "../actions";
 import { DashboardEntityActionButtons } from "../../_components/DashboardEntityActionButtons";
 import { DashboardEntityListItemFrame } from "../../_components/DashboardEntityListItemFrame";
@@ -42,11 +43,11 @@ function ReservationDataPreview({ reservation }: { reservation: AdminReservation
       </div>
       <div>
         <strong>Status:</strong>
-        <p className="m-0 mt-[0.2rem]">{reservation.reservation_status}</p>
+        <p className="m-0 mt-[0.2rem]">{translateReservationStatus(reservation.reservation_status)}</p>
       </div>
       <div>
         <strong>Origem:</strong>
-        <p className="m-0 mt-[0.2rem]">{reservation.reservation_source || "-"}</p>
+        <p className="m-0 mt-[0.2rem]">{translateReservationSource(reservation.reservation_source || "front_desk")}</p>
       </div>
       <div>
         <strong>Pagamento:</strong>
@@ -104,22 +105,22 @@ function ReservationEditForm({ reservation }: { reservation: AdminReservation })
       <div className="pms-field">
         <label htmlFor={`reservation-status-${reservation.id}`}>Status da reserva</label>
         <select id={`reservation-status-${reservation.id}`} name="reservation_status" defaultValue={reservation.reservation_status} className="pms-field-input">
-          <option value="pending">pending</option>
-          <option value="confirmed">confirmed</option>
-          <option value="checked_in">checked_in</option>
-          <option value="checked_out">checked_out</option>
-          <option value="canceled">canceled</option>
-          <option value="no_show">no_show</option>
+          <option value="pending">{translateReservationStatus("pending")}</option>
+          <option value="confirmed">{translateReservationStatus("confirmed")}</option>
+          <option value="checked_in">{translateReservationStatus("checked_in")}</option>
+          <option value="checked_out">{translateReservationStatus("checked_out")}</option>
+          <option value="canceled">{translateReservationStatus("canceled")}</option>
+          <option value="no_show">{translateReservationStatus("no_show")}</option>
         </select>
       </div>
 
       <div className="pms-field">
         <label htmlFor={`reservation-source-${reservation.id}`}>Origem</label>
         <select id={`reservation-source-${reservation.id}`} name="reservation_source" defaultValue={reservation.reservation_source || "front_desk"} className="pms-field-input">
-          <option value="front_desk">front_desk</option>
-          <option value="website">website</option>
-          <option value="phone">phone</option>
-          <option value="agency">agency</option>
+          <option value="front_desk">{translateReservationSource("front_desk")}</option>
+          <option value="website">{translateReservationSource("website")}</option>
+          <option value="phone">{translateReservationSource("phone")}</option>
+          <option value="agency">{translateReservationSource("agency")}</option>
         </select>
       </div>
 

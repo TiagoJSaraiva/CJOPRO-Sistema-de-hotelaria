@@ -1,6 +1,7 @@
 "use client";
 
 import type { AdminRoom } from "@hotel/shared";
+import { translateRoomStatus } from "@hotel/shared";
 import { deleteRoomAction, updateRoomAction } from "../actions";
 import { DashboardEntityActionButtons } from "../../_components/DashboardEntityActionButtons";
 import { DashboardEntityListItemFrame } from "../../_components/DashboardEntityListItemFrame";
@@ -27,7 +28,7 @@ function RoomDataPreview({ room }: { room: AdminRoom }) {
       </div>
       <div>
         <strong>Status:</strong>
-        <p className="m-0 mt-[0.2rem]">{room.status}</p>
+        <p className="m-0 mt-[0.2rem]">{translateRoomStatus(room.status)}</p>
       </div>
       <div>
         <strong>Capacidade maxima:</strong>
@@ -73,10 +74,10 @@ function RoomEditForm({ room }: { room: AdminRoom }) {
       <div className="pms-field">
         <label htmlFor={`room-status-${room.id}`}>Status</label>
         <select id={`room-status-${room.id}`} name="status" defaultValue={room.status} className="pms-field-input">
-          <option value="available">available</option>
-          <option value="occupied">occupied</option>
-          <option value="maintenance">maintenance</option>
-          <option value="blocked">blocked</option>
+          <option value="available">{translateRoomStatus("available")}</option>
+          <option value="occupied">{translateRoomStatus("occupied")}</option>
+          <option value="maintenance">{translateRoomStatus("maintenance")}</option>
+          <option value="blocked">{translateRoomStatus("blocked")}</option>
         </select>
       </div>
 

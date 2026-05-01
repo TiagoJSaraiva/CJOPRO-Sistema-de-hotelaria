@@ -2,6 +2,7 @@
 
 import { useMemo } from "react";
 import type { AdminReservation } from "@hotel/shared";
+import { translateReservationSource, translateReservationStatus } from "@hotel/shared";
 import {
   DEFAULT_RESERVATION_VIEW_FILTERS,
   applyReservationViewFilters,
@@ -79,12 +80,12 @@ export function ReservationsViewFilterableSection({ reservations, canRead, canUp
             <span>Status da reserva</span>
             <select value={draftFilters.status} onChange={(event) => updateDraftFilter("status", event.target.value as ReservationViewFilters["status"])} className={viewFiltersFieldClassName}>
               <option value="all">Todos</option>
-              <option value="pending">Pendente</option>
-              <option value="confirmed">Confirmada</option>
-              <option value="checked_in">Check-in</option>
-              <option value="checked_out">Check-out</option>
-              <option value="canceled">Cancelada</option>
-              <option value="no_show">No show</option>
+              <option value="pending">{translateReservationStatus("pending")}</option>
+              <option value="confirmed">{translateReservationStatus("confirmed")}</option>
+              <option value="checked_in">{translateReservationStatus("checked_in")}</option>
+              <option value="checked_out">{translateReservationStatus("checked_out")}</option>
+              <option value="canceled">{translateReservationStatus("canceled")}</option>
+              <option value="no_show">{translateReservationStatus("no_show")}</option>
             </select>
           </label>
 
@@ -103,10 +104,10 @@ export function ReservationsViewFilterableSection({ reservations, canRead, canUp
             <span>Origem</span>
             <select value={draftFilters.source} onChange={(event) => updateDraftFilter("source", event.target.value as ReservationViewFilters["source"])} className={viewFiltersFieldClassName}>
               <option value="all">Todas</option>
-              <option value="front_desk">front_desk</option>
-              <option value="website">website</option>
-              <option value="phone">phone</option>
-              <option value="agency">agency</option>
+              <option value="front_desk">{translateReservationSource("front_desk")}</option>
+              <option value="website">{translateReservationSource("website")}</option>
+              <option value="phone">{translateReservationSource("phone")}</option>
+              <option value="agency">{translateReservationSource("agency")}</option>
             </select>
           </label>
 

@@ -2,6 +2,7 @@
 
 import { useMemo } from "react";
 import type { AdminRoom } from "@hotel/shared";
+import { translateRoomStatus } from "@hotel/shared";
 import { DEFAULT_ROOM_VIEW_FILTERS, applyRoomViewFilters, countAppliedRoomFilters, type RoomViewFilters } from "./roomViewFilters";
 import { viewFiltersFieldClassName } from "../../_components/ViewFiltersBase";
 import { EntityViewFilterableSection } from "../../_components/EntityViewFilterableSection";
@@ -78,10 +79,10 @@ export function RoomsViewFilterableSection({ rooms, canRead, canUpdate, canDelet
               className={viewFiltersFieldClassName}
             >
               <option value="all">Todos</option>
-              <option value="available">Disponível</option>
-              <option value="occupied">Ocupado</option>
-              <option value="maintenance">Manutenção</option>
-              <option value="blocked">Bloqueado</option>
+              <option value="available">{translateRoomStatus("available")}</option>
+              <option value="occupied">{translateRoomStatus("occupied")}</option>
+              <option value="maintenance">{translateRoomStatus("maintenance")}</option>
+              <option value="blocked">{translateRoomStatus("blocked")}</option>
             </select>
           </label>
 

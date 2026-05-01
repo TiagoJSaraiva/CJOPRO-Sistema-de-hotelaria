@@ -1,4 +1,5 @@
 import { redirect } from "next/navigation";
+import { translateRoomStatus } from "@hotel/shared";
 import { DashboardAccessDeniedCard } from "../../_components/DashboardAccessDeniedCard";
 import { DashboardCreateFormCard } from "../../_components/DashboardCreateFormCard";
 import { DashboardEntityPageShell } from "../../_components/DashboardEntityPageShell";
@@ -58,10 +59,10 @@ export default async function RoomsCreatePage({ searchParams }: RoomsCreatePageP
 
         <FormField label="Status" htmlFor="create-room-status">
           <select id="create-room-status" name="status" defaultValue="available" className="pms-field-input">
-            <option value="available">available</option>
-            <option value="occupied">occupied</option>
-            <option value="maintenance">maintenance</option>
-            <option value="blocked">blocked</option>
+            <option value="available">{translateRoomStatus("available")}</option>
+            <option value="occupied">{translateRoomStatus("occupied")}</option>
+            <option value="maintenance">{translateRoomStatus("maintenance")}</option>
+            <option value="blocked">{translateRoomStatus("blocked")}</option>
           </select>
         </FormField>
 
