@@ -111,7 +111,7 @@ export function registerReservationRoutes(
         guest_count: guestCount,
         reservation_status: normalizeOptionalText(request.body?.reservation_status) || "pending",
         reservation_source: normalizeOptionalText(request.body?.reservation_source),
-        payment_status: normalizeOptionalText(request.body?.payment_status) || "pending",
+        paid_amount: request.body?.paid_amount === undefined ? 0 : Number(request.body.paid_amount),
         estimated_total_amount:
           request.body?.estimated_total_amount === undefined ? null : Number(request.body.estimated_total_amount),
         final_total_amount: request.body?.final_total_amount === undefined ? null : Number(request.body.final_total_amount),
@@ -149,7 +149,7 @@ export function registerReservationRoutes(
     if (request.body?.guest_count !== undefined) payload.guest_count = Number(request.body.guest_count);
     if (request.body?.reservation_status !== undefined) payload.reservation_status = normalizeOptionalText(request.body.reservation_status);
     if (request.body?.reservation_source !== undefined) payload.reservation_source = normalizeOptionalText(request.body.reservation_source);
-    if (request.body?.payment_status !== undefined) payload.payment_status = normalizeOptionalText(request.body.payment_status);
+    if (request.body?.paid_amount !== undefined) payload.paid_amount = Number(request.body.paid_amount);
     if (request.body?.estimated_total_amount !== undefined) payload.estimated_total_amount = Number(request.body.estimated_total_amount);
     if (request.body?.final_total_amount !== undefined) payload.final_total_amount = Number(request.body.final_total_amount);
     if (request.body?.notes !== undefined) payload.notes = normalizeOptionalText(request.body.notes);

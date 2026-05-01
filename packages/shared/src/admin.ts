@@ -276,7 +276,6 @@ export type AdminCustomerUpdateInput = Partial<AdminCustomerCreateInput>;
 
 export type ReservationStatus = "pending" | "confirmed" | "checked_in" | "checked_out" | "canceled" | "no_show";
 export type ReservationSource = "front_desk" | "website" | "phone" | "agency";
-export type ReservationPaymentStatus = "pending" | "partial" | "paid" | "refunded";
 
 export type AdminReservation = {
   id: string;
@@ -290,7 +289,7 @@ export type AdminReservation = {
   guest_count: number;
   reservation_status: ReservationStatus;
   reservation_source: ReservationSource | null;
-  payment_status: ReservationPaymentStatus;
+  paid_amount: number;
   estimated_total_amount: number | null;
   final_total_amount: number | null;
   notes: string | null;
@@ -310,7 +309,7 @@ export type AdminReservationCreateInput = {
   guest_count: number;
   reservation_status?: ReservationStatus;
   reservation_source?: ReservationSource | null;
-  payment_status?: ReservationPaymentStatus;
+  paid_amount?: number;
   estimated_total_amount?: number | null;
   final_total_amount?: number | null;
   notes?: string | null;

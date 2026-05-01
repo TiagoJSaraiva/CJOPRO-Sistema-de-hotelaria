@@ -55,7 +55,7 @@ describe("entity view filters", () => {
     expect(countAppliedCustomerFilters({ ...DEFAULT_CUSTOMER_VIEW_FILTERS, search: "maria", documentType: "CPF", birthFrom: "1990-01-01" })).toBe(3);
   });
 
-  it("filtra reservas por status, pagamento, origem e check-in", () => {
+  it("filtra reservas por status, origem e check-in", () => {
     const reservations: AdminReservation[] = [
       {
         id: "res1",
@@ -69,7 +69,7 @@ describe("entity view filters", () => {
         guest_count: 2,
         reservation_status: "confirmed",
         reservation_source: "website",
-        payment_status: "paid",
+        paid_amount: 500,
         estimated_total_amount: 500,
         final_total_amount: 500,
         notes: "vista",
@@ -88,7 +88,7 @@ describe("entity view filters", () => {
         guest_count: 1,
         reservation_status: "pending",
         reservation_source: "front_desk",
-        payment_status: "pending",
+        paid_amount: 0,
         estimated_total_amount: 200,
         final_total_amount: null,
         notes: null,
@@ -101,14 +101,13 @@ describe("entity view filters", () => {
       ...DEFAULT_RESERVATION_VIEW_FILTERS,
       search: "res-1",
       status: "confirmed",
-      paymentStatus: "paid",
       source: "website",
       plannedCheckinFrom: "2026-04-01",
       plannedCheckinTo: "2026-04-30"
     });
 
     expect(result.map((item) => item.id)).toEqual(["res1"]);
-    expect(countAppliedReservationFilters({ ...DEFAULT_RESERVATION_VIEW_FILTERS, status: "confirmed", paymentStatus: "paid", source: "website" })).toBe(3);
+    expect(countAppliedReservationFilters({ ...DEFAULT_RESERVATION_VIEW_FILTERS, status: "confirmed", source: "website" })).toBe(2);
   });
 
   it("filtra produtos por busca, status e faixa de preco", () => {

@@ -50,8 +50,8 @@ function ReservationDataPreview({ reservation }: { reservation: AdminReservation
         <p className="m-0 mt-[0.2rem]">{translateReservationSource(reservation.reservation_source || "front_desk")}</p>
       </div>
       <div>
-        <strong>Pagamento:</strong>
-        <p className="m-0 mt-[0.2rem]">{reservation.payment_status}</p>
+        <strong>Total pago:</strong>
+        <p className="m-0 mt-[0.2rem]">R$ {(reservation.paid_amount || 0).toFixed(2)}</p>
       </div>
       <div>
         <strong>Total estimado:</strong>
@@ -125,13 +125,8 @@ function ReservationEditForm({ reservation }: { reservation: AdminReservation })
       </div>
 
       <div className="pms-field">
-        <label htmlFor={`reservation-payment-status-${reservation.id}`}>Status de pagamento</label>
-        <select id={`reservation-payment-status-${reservation.id}`} name="payment_status" defaultValue={reservation.payment_status} className="pms-field-input">
-          <option value="pending">pending</option>
-          <option value="partial">partial</option>
-          <option value="paid">paid</option>
-          <option value="refunded">refunded</option>
-        </select>
+        <label htmlFor={`reservation-paid-amount-${reservation.id}`}>Total pago</label>
+        <input id={`reservation-paid-amount-${reservation.id}`} name="paid_amount" type="number" min={0} step="0.01" defaultValue={reservation.paid_amount || 0} className="pms-field-input" />
       </div>
 
       <div className="pms-field">

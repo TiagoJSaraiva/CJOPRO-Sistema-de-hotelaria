@@ -78,7 +78,7 @@ export async function createReservationAction(formData: FormData): Promise<void>
         | "canceled"
         | "no_show"),
       reservation_source: (String(formData.get("reservation_source") || "").trim() as "front_desk" | "website" | "phone" | "agency") || null,
-      payment_status: (String(formData.get("payment_status") || "pending").trim() as "pending" | "partial" | "paid" | "refunded"),
+      paid_amount: Number(formData.get("paid_amount") || "0"),
       estimated_total_amount: Number(formData.get("estimated_total_amount") || "0"),
       final_total_amount: Number(formData.get("final_total_amount") || "0"),
       notes: String(formData.get("notes") || "").trim() || null
@@ -131,7 +131,7 @@ export async function updateReservationAction(formData: FormData): Promise<void>
         | "canceled"
         | "no_show"),
       reservation_source: (String(formData.get("reservation_source") || "").trim() as "front_desk" | "website" | "phone" | "agency") || null,
-      payment_status: (String(formData.get("payment_status") || "pending").trim() as "pending" | "partial" | "paid" | "refunded"),
+      paid_amount: Number(formData.get("paid_amount") || "0"),
       estimated_total_amount: Number(formData.get("estimated_total_amount") || "0"),
       final_total_amount: Number(formData.get("final_total_amount") || "0"),
       notes: String(formData.get("notes") || "").trim() || null

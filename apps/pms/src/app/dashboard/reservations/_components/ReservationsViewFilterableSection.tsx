@@ -90,17 +90,6 @@ export function ReservationsViewFilterableSection({ reservations, canRead, canUp
           </label>
 
           <label className="pms-field">
-            <span>Status de pagamento</span>
-            <select value={draftFilters.paymentStatus} onChange={(event) => updateDraftFilter("paymentStatus", event.target.value as ReservationViewFilters["paymentStatus"])} className={viewFiltersFieldClassName}>
-              <option value="all">Todos</option>
-              <option value="pending">Pendente</option>
-              <option value="partial">Parcial</option>
-              <option value="paid">Pago</option>
-              <option value="refunded">Reembolsado</option>
-            </select>
-          </label>
-
-          <label className="pms-field">
             <span>Origem</span>
             <select value={draftFilters.source} onChange={(event) => updateDraftFilter("source", event.target.value as ReservationViewFilters["source"])} className={viewFiltersFieldClassName}>
               <option value="all">Todas</option>

@@ -82,13 +82,8 @@ export default async function ReservationsCreatePage({ searchParams }: Reservati
           </select>
         </FormField>
 
-        <FormField label="Status do pagamento" htmlFor="create-reservation-payment-status">
-          <select id="create-reservation-payment-status" name="payment_status" defaultValue="pending" className="pms-field-input">
-            <option value="pending">pending</option>
-            <option value="partial">partial</option>
-            <option value="paid">paid</option>
-            <option value="refunded">refunded</option>
-          </select>
+        <FormField label="Total pago" htmlFor="create-reservation-paid-amount">
+          <input id="create-reservation-paid-amount" name="paid_amount" type="number" min={0} step="0.01" defaultValue={0} className="pms-field-input" />
         </FormField>
 
         <FormField label="Valor total estimado" htmlFor="create-reservation-estimated-total-amount">

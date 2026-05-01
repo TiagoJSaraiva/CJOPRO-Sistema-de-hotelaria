@@ -4,7 +4,7 @@ import { createServerClient } from "../common/supabaseServer";
 import { isSupabaseConflictError, isSupabaseForeignKeyError, isSupabaseNotFoundError } from "./supabaseError";
 
 const RESERVATION_SELECT_FIELDS =
-  "id,hotel_id,booking_customer_id,reservation_code,planned_checkin_date,planned_checkout_date,actual_checkin_date,actual_checkout_date,guest_count,reservation_status,reservation_source,payment_status,estimated_total_amount,final_total_amount,notes,created_at,updated_at";
+  "id,hotel_id,booking_customer_id,reservation_code,planned_checkin_date,planned_checkout_date,actual_checkin_date,actual_checkout_date,guest_count,reservation_status,reservation_source,paid_amount,estimated_total_amount,final_total_amount,notes,created_at,updated_at";
 
 export type ReservationWriteResult = "ok" | "conflict" | "not-found";
 

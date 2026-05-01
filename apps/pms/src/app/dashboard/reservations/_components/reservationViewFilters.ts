@@ -1,9 +1,8 @@
-import type { AdminReservation, ReservationPaymentStatus, ReservationSource, ReservationStatus } from "@hotel/shared";
+import type { AdminReservation, ReservationSource, ReservationStatus } from "@hotel/shared";
 
 export type ReservationViewFilters = {
   search: string;
   status: "all" | ReservationStatus;
-  paymentStatus: "all" | ReservationPaymentStatus;
   source: "all" | ReservationSource;
   plannedCheckinFrom: string;
   plannedCheckinTo: string;
@@ -12,7 +11,6 @@ export type ReservationViewFilters = {
 export const DEFAULT_RESERVATION_VIEW_FILTERS: ReservationViewFilters = {
   search: "",
   status: "all",
-  paymentStatus: "all",
   source: "all",
   plannedCheckinFrom: "",
   plannedCheckinTo: ""
@@ -39,7 +37,6 @@ export function countAppliedReservationFilters(filters: ReservationViewFilters):
 
   if (filters.search.trim()) total += 1;
   if (filters.status !== "all") total += 1;
-  if (filters.paymentStatus !== "all") total += 1;
   if (filters.source !== "all") total += 1;
   if (filters.plannedCheckinFrom.trim()) total += 1;
   if (filters.plannedCheckinTo.trim()) total += 1;
@@ -62,10 +59,6 @@ export function applyReservationViewFilters(reservations: AdminReservation[], fi
     }
 
     if (filters.status !== "all" && reservation.reservation_status !== filters.status) {
-      return false;
-    }
-
-    if (filters.paymentStatus !== "all" && reservation.payment_status !== filters.paymentStatus) {
       return false;
     }
 
