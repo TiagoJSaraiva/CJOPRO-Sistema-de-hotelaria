@@ -6,7 +6,7 @@
  * All functions are pure and return fallback to original value if not found
  */
 
-import type { RoomStatus, ReservationSource, ReservationStatus } from "./admin";
+import type { RoomStatus, ReservationSource, ReservationStatus, TransactionStatus, TransactionType } from "./admin";
 
 const ROOM_STATUS_LABELS: Record<RoomStatus, string> = {
   available: "Disponível",
@@ -29,6 +29,20 @@ const RESERVATION_STATUS_LABELS: Record<ReservationStatus, string> = {
   checked_out: "Check out realizado",
   canceled: "Cancelada",
   no_show: "No show",
+};
+
+const TRANSACTION_TYPE_LABELS: Record<TransactionType, string> = {
+  INCOME: "Receita",
+  EXPENSE: "Despesa",
+  REFUND: "Reembolso",
+};
+
+const TRANSACTION_STATUS_LABELS: Record<TransactionStatus, string> = {
+  PENDING: "Pendente",
+  COMPLETED: "Concluida",
+  FAILED: "Falhou",
+  CANCELLED: "Cancelada",
+  REFUNDED: "Reembolsada",
 };
 
 /**
@@ -56,4 +70,22 @@ export function translateReservationSource(source: ReservationSource): string {
  */
 export function translateReservationStatus(status: ReservationStatus): string {
   return RESERVATION_STATUS_LABELS[status] ?? status;
+}
+
+/**
+ * Translate transaction type enum value to pt-BR label
+ * @param type - Transaction type enum value (INCOME, EXPENSE, REFUND)
+ * @returns Portuguese label or original value if not found
+ */
+export function translateTransactionType(type: TransactionType): string {
+  return TRANSACTION_TYPE_LABELS[type] ?? type;
+}
+
+/**
+ * Translate transaction status enum value to pt-BR label
+ * @param status - Transaction status enum value (PENDING, COMPLETED, FAILED, CANCELLED, REFUNDED)
+ * @returns Portuguese label or original value if not found
+ */
+export function translateTransactionStatus(status: TransactionStatus): string {
+  return TRANSACTION_STATUS_LABELS[status] ?? status;
 }

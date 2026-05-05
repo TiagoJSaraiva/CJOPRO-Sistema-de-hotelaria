@@ -317,6 +317,33 @@ export type AdminReservationCreateInput = {
 
 export type AdminReservationUpdateInput = Partial<AdminReservationCreateInput>;
 
+export type TransactionType = "INCOME" | "EXPENSE" | "REFUND";
+export type TransactionStatus = "PENDING" | "COMPLETED" | "FAILED" | "CANCELLED" | "REFUNDED";
+
+export type AdminFinancialTransaction = {
+  id: string;
+  hotel_id: string;
+  type: TransactionType;
+  category: string;
+  amount: number;
+  currency: string;
+  description: string | null;
+  status: TransactionStatus;
+  created_at?: string;
+  updated_at?: string;
+};
+
+export type AdminFinancialTransactionCreateInput = {
+  type: TransactionType;
+  category: string;
+  amount: number;
+  currency?: string;
+  description?: string | null;
+  status?: TransactionStatus;
+};
+
+export type AdminFinancialTransactionUpdateInput = Partial<AdminFinancialTransactionCreateInput>;
+
 export type ProductStatus = "active" | "inactive";
 
 export type AdminProduct = {

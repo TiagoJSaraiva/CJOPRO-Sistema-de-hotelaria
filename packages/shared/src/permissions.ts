@@ -15,6 +15,10 @@ export const PERMISSIONS = {
   RESERVATION_READ: "read_reservation",
   RESERVATION_UPDATE: "update_reservation",
   RESERVATION_DELETE: "delete_reservation",
+  TRANSACTION_CREATE: "create_transactions",
+  TRANSACTION_READ: "read_transactions",
+  TRANSACTION_UPDATE: "update_transactions",
+  TRANSACTION_DELETE: "delete_transactions",
   PRODUCT_CREATE: "create_product",
   PRODUCT_READ: "read_product",
   PRODUCT_UPDATE: "update_product",
@@ -63,6 +67,11 @@ export const ADMIN_NAV_ITEMS = [
     href: "/dashboard/reservations",
     label: "Reservas",
     permission: PERMISSIONS.RESERVATION_READ
+  },
+  {
+    href: "/dashboard/transactions",
+    label: "Transacoes",
+    permission: PERMISSIONS.TRANSACTION_READ
   },
   {
     href: "/dashboard/products",

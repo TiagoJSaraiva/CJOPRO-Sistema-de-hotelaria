@@ -1,6 +1,7 @@
 import { describe, expect, it } from "vitest";
 import type {
   AdminCustomer,
+  AdminFinancialTransaction,
   AdminProduct,
   AdminReservation,
   AdminRoom,
@@ -23,6 +24,11 @@ import {
   countAppliedProductFilters,
   DEFAULT_PRODUCT_VIEW_FILTERS
 } from "../../../src/app/dashboard/products/_components/productViewFilters";
+import {
+  applyTransactionViewFilters,
+  countAppliedTransactionFilters,
+  DEFAULT_TRANSACTION_VIEW_FILTERS
+} from "../../../src/app/dashboard/transactions/_components/transactionViewFilters";
 import { applySeasonViewFilters, countAppliedSeasonFilters, DEFAULT_SEASON_VIEW_FILTERS } from "../../../src/app/dashboard/seasons/_components/seasonViewFilters";
 import {
   applySeasonRoomRateViewFilters,
@@ -120,6 +126,47 @@ describe("entity view filters", () => {
 
     expect(result.map((item) => item.id)).toEqual(["p1"]);
     expect(countAppliedProductFilters({ ...DEFAULT_PRODUCT_VIEW_FILTERS, search: "cafe", status: "active" })).toBe(2);
+  });
+
+  it("filtra transacoes por busca, tipo, status e faixa de valor", () => {
+    const transactions: AdminFinancialTransaction[] = [
+      {
+        id: "t1",
+        hotel_id: "h1",
+        type: "INCOME",
+        category: "Hospedagem",
+        amount: 1200,
+        currency: "BRL",
+        description: "Reserva premium",
+        status: "COMPLETED",
+        created_at: "2026-05-01T00:00:00.000Z",
+        updated_at: "2026-05-01T00:00:00.000Z"
+      },
+      {
+        id: "t2",
+        hotel_id: "h1",
+        type: "EXPENSE",
+        category: "Manutencao",
+        amount: 450,
+        currency: "BRL",
+        description: null,
+        status: "PENDING",
+        created_at: "2026-05-01T00:00:00.000Z",
+        updated_at: "2026-05-01T00:00:00.000Z"
+      }
+    ];
+
+    const result = applyTransactionViewFilters(transactions, {
+      ...DEFAULT_TRANSACTION_VIEW_FILTERS,
+      search: "reserva",
+      type: "INCOME",
+      status: "COMPLETED",
+      minAmount: "1000",
+      maxAmount: "2000"
+    });
+
+    expect(result.map((item) => item.id)).toEqual(["t1"]);
+    expect(countAppliedTransactionFilters({ ...DEFAULT_TRANSACTION_VIEW_FILTERS, search: "reserva", type: "INCOME" })).toBe(2);
   });
 
   it("filtra temporadas por nome, status e data", () => {

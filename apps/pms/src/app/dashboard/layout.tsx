@@ -47,6 +47,7 @@ export default async function DashboardLayout({ children }: { children: ReactNod
     "/dashboard/rooms": roomsAccess.canRead || roomsAccess.canCreate,
     "/dashboard/customers": user.permissions.includes(PERMISSIONS.CUSTOMER_READ) || user.permissions.includes(PERMISSIONS.CUSTOMER_CREATE),
     "/dashboard/reservations": user.permissions.includes(PERMISSIONS.RESERVATION_READ) || user.permissions.includes(PERMISSIONS.RESERVATION_CREATE),
+    "/dashboard/transactions": user.permissions.includes(PERMISSIONS.TRANSACTION_READ) || user.permissions.includes(PERMISSIONS.TRANSACTION_CREATE),
     "/dashboard/products": user.permissions.includes(PERMISSIONS.PRODUCT_READ) || user.permissions.includes(PERMISSIONS.PRODUCT_CREATE),
     "/dashboard/seasons": user.permissions.includes(PERMISSIONS.SEASON_READ) || user.permissions.includes(PERMISSIONS.SEASON_CREATE),
     "/dashboard/season-room-rates":

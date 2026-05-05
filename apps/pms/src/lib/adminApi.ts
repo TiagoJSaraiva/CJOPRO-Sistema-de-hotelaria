@@ -14,6 +14,9 @@ import {
   AdminProduct,
   AdminProductCreateInput,
   AdminProductUpdateInput,
+  AdminFinancialTransaction,
+  AdminFinancialTransactionCreateInput,
+  AdminFinancialTransactionUpdateInput,
   AdminReservation,
   AdminReservationCreateInput,
   AdminReservationUpdateInput,
@@ -190,6 +193,9 @@ export type {
   AdminProduct,
   AdminProductCreateInput,
   AdminProductUpdateInput,
+  AdminFinancialTransaction,
+  AdminFinancialTransactionCreateInput,
+  AdminFinancialTransactionUpdateInput,
   AdminReservation,
   AdminReservationCreateInput,
   AdminReservationUpdateInput,
@@ -330,6 +336,22 @@ export function updateReservation(id: string, payload: AdminReservationUpdateInp
 
 export function deleteReservation(id: string): Promise<null> {
   return requestAdmin<never>(`/admin/reservations/${id}`, "DELETE");
+}
+
+export function listFinancialTransactions(): Promise<AdminFinancialTransaction[]> {
+  return getAdminList<AdminFinancialTransaction>("/admin/financial-transactions");
+}
+
+export function createFinancialTransaction(payload: AdminFinancialTransactionCreateInput): Promise<AdminFinancialTransaction | null> {
+  return requestAdmin<AdminFinancialTransaction>("/admin/financial-transactions", "POST", payload);
+}
+
+export function updateFinancialTransaction(id: string, payload: AdminFinancialTransactionUpdateInput): Promise<AdminFinancialTransaction | null> {
+  return requestAdmin<AdminFinancialTransaction>(`/admin/financial-transactions/${id}`, "PUT", payload);
+}
+
+export function deleteFinancialTransaction(id: string): Promise<null> {
+  return requestAdmin<never>(`/admin/financial-transactions/${id}`, "DELETE");
 }
 
 export function listProducts(): Promise<AdminProduct[]> {

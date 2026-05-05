@@ -5,6 +5,7 @@ import { getReservationsDefaultRoute, type ReservationsAccess } from "../../../s
 import { getProductsDefaultRoute, type ProductsAccess } from "../../../src/app/dashboard/products/access";
 import { getSeasonsDefaultRoute, type SeasonsAccess } from "../../../src/app/dashboard/seasons/access";
 import { getSeasonRoomRatesDefaultRoute, type SeasonRoomRatesAccess } from "../../../src/app/dashboard/season-room-rates/access";
+import { getTransactionsDefaultRoute, type TransactionsAccess } from "../../../src/app/dashboard/transactions/access";
 
 type AccessState = {
   canCreate: boolean;
@@ -30,6 +31,7 @@ describe("dashboard access default routes", () => {
     expect(getRoomsDefaultRoute(access as RoomsAccess)).toBe("/dashboard/rooms/view");
     expect(getCustomersDefaultRoute(access as CustomersAccess)).toBe("/dashboard/customers/view");
     expect(getReservationsDefaultRoute(access as ReservationsAccess)).toBe("/dashboard/reservations/view");
+    expect(getTransactionsDefaultRoute(access as TransactionsAccess)).toBe("/dashboard/transactions/view");
     expect(getProductsDefaultRoute(access as ProductsAccess)).toBe("/dashboard/products/view");
     expect(getSeasonsDefaultRoute(access as SeasonsAccess)).toBe("/dashboard/seasons/view");
     expect(getSeasonRoomRatesDefaultRoute(access as SeasonRoomRatesAccess)).toBe("/dashboard/season-room-rates/view");
@@ -41,6 +43,7 @@ describe("dashboard access default routes", () => {
     expect(getRoomsDefaultRoute(access as RoomsAccess)).toBe("/dashboard/rooms/create");
     expect(getCustomersDefaultRoute(access as CustomersAccess)).toBe("/dashboard/customers/create");
     expect(getReservationsDefaultRoute(access as ReservationsAccess)).toBe("/dashboard/reservations/create");
+    expect(getTransactionsDefaultRoute(access as TransactionsAccess)).toBe("/dashboard/transactions/create");
     expect(getProductsDefaultRoute(access as ProductsAccess)).toBe("/dashboard/products/create");
     expect(getSeasonsDefaultRoute(access as SeasonsAccess)).toBe("/dashboard/seasons/create");
     expect(getSeasonRoomRatesDefaultRoute(access as SeasonRoomRatesAccess)).toBe("/dashboard/season-room-rates/create");
@@ -52,6 +55,7 @@ describe("dashboard access default routes", () => {
     expect(getRoomsDefaultRoute(access as RoomsAccess)).toBeNull();
     expect(getCustomersDefaultRoute(access as CustomersAccess)).toBeNull();
     expect(getReservationsDefaultRoute(access as ReservationsAccess)).toBeNull();
+    expect(getTransactionsDefaultRoute(access as TransactionsAccess)).toBeNull();
     expect(getProductsDefaultRoute(access as ProductsAccess)).toBeNull();
     expect(getSeasonsDefaultRoute(access as SeasonsAccess)).toBeNull();
     expect(getSeasonRoomRatesDefaultRoute(access as SeasonRoomRatesAccess)).toBeNull();
