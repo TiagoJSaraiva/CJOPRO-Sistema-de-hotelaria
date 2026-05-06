@@ -29,7 +29,7 @@ create table public.reservations ( id uuid not null default gen_random_uuid (), 
 
 
 
-create table public.stay (
+create table public.stays (
   id uuid not null default gen_random_uuid (),
   reservation_id uuid not null,
   room_id uuid not null,
@@ -43,18 +43,18 @@ create table public.stay (
   checkout_date_actual timestamp with time zone null,
   total_paid numeric null default '0'::numeric,
 
-  constraint stay_pkey
+  constraint stays_pkey
     primary key (id),
 
-  constraint stay_reservation_id_room_id_key
+  constraint stays_reservation_id_room_id_key
     unique (reservation_id, room_id),
 
-  constraint stay_reservation_id_fkey
+  constraint stays_reservation_id_fkey
     foreign key (reservation_id)
     references reservations (id)
     on delete cascade,
 
-  constraint stay_room_id_fkey
+  constraint stays_room_id_fkey
     foreign key (room_id)
     references rooms (id)
     on delete restrict
@@ -89,7 +89,7 @@ create table public.stay_consumption (
 
   constraint stay_consumption_stay_id_fkey
     foreign key (stay_id)
-    references stay (id)
+    references stays (id)
     on delete cascade
 );
 
@@ -115,7 +115,7 @@ create table public.stay_customers (
 
   constraint stay_customers_stay_id_fkey
     foreign key (stay_id)
-    references stay (id)
+    references stays (id)
     on update cascade
     on delete cascade
 );
