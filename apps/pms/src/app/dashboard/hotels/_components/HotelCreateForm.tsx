@@ -26,7 +26,7 @@ export function HotelCreateForm({ formKey }: HotelCreateFormProps) {
             id="create-tax-id"
             name="tax_id"
             inputMode="numeric"
-            pattern="[0-9./-]{11,18}"
+            //pattern="[0-9./\-]{11,18}"
             title="Informe um CNPJ/Tax ID valido."
             required
             className="pms-field-input"
@@ -37,7 +37,7 @@ export function HotelCreateForm({ formKey }: HotelCreateFormProps) {
           <input
             id="create-slug"
             name="slug"
-            pattern="[a-z0-9-]+"
+            //pattern="[a-z0-9\-]+"
             title="Use apenas letras minusculas, numeros e hifen."
             required
             className="pms-field-input"
@@ -53,7 +53,7 @@ export function HotelCreateForm({ formKey }: HotelCreateFormProps) {
             id="create-phone"
             name="phone"
             inputMode="tel"
-            pattern="[0-9 ()+-]{8,25}"
+            //pattern="[0-9 ()\+\-]{8,25}"
             title="Telefone deve conter apenas numeros e simbolos de telefone."
             required
             className="pms-field-input"

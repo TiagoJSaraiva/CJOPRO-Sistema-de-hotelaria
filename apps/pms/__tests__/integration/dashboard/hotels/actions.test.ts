@@ -63,6 +63,7 @@ function buildCreateFormData(overrides: Record<string, string> = {}): FormData {
 describe("dashboard/hotels/actions", () => {
   beforeEach(() => {
     vi.clearAllMocks();
+    vi.spyOn(console, "error").mockImplementation(() => undefined);
   });
 
   it("redireciona com forbidden quando usuario nao autenticado", async () => {
@@ -119,6 +120,29 @@ describe("dashboard/hotels/actions", () => {
     expect(revalidatePathMock).toHaveBeenCalledWith("/dashboard/hotels");
     expect(revalidatePathMock).toHaveBeenCalledWith("/dashboard/hotels/create");
     expect(revalidatePathMock).toHaveBeenCalledWith("/dashboard/hotels/view");
+  });
+
+  it("loga falha de criacao quando a API rejeita a request", async () => {
+    getUserFromSessionMock.mockResolvedValueOnce({
+      id: "user-1",
+      permissions: [PERMISSIONS.HOTEL_CREATE]
+    });
+    createHotelMock.mockRejectedValueOnce(new Error("Backend indisponivel"));
+
+    await expect(createHotelAction(buildCreateFormData())).rejects.toThrow(
+      "REDIRECT:/dashboard/hotels/create?status=create_error"
+    );
+
+    expect(console.error).toHaveBeenCalledWith(
+      "[dashboard/hotels] Falha ao criar hotel",
+      expect.objectContaining({
+        userId: "user-1",
+        payload: expect.objectContaining({
+          name: "Hotel Centro",
+          slug: "hotel-centro"
+        })
+      })
+    );
   });
 
   it("atualiza hotel e redireciona para updated", async () => {

@@ -113,7 +113,13 @@ export async function createHotelAction(formData: FormData): Promise<void> {
 
   try {
     await createHotel(payload);
-  } catch {
+  } catch (error) {
+    console.error("[dashboard/hotels] Falha ao criar hotel", {
+      userId: user?.id,
+      permissions: user?.permissions,
+      payload,
+      error
+    });
     redirectWithStatus("create_error", "create");
   }
 
@@ -138,7 +144,14 @@ export async function updateHotelAction(formData: FormData): Promise<void> {
 
   try {
     await updateHotel(id, payload);
-  } catch {
+  } catch (error) {
+    console.error("[dashboard/hotels] Falha ao atualizar hotel", {
+      userId: user?.id,
+      permissions: user?.permissions,
+      hotelId: id,
+      payload,
+      error
+    });
     redirectWithStatus("update_error", "view");
   }
 
@@ -163,6 +176,13 @@ export async function deleteHotelAction(formData: FormData): Promise<void> {
   try {
     await deleteHotel(id);
   } catch (error) {
+    console.error("[dashboard/hotels] Falha ao excluir hotel", {
+      userId: user?.id,
+      permissions: user?.permissions,
+      hotelId: id,
+      error
+    });
+
     if (isDeleteConflictError(error)) {
       redirectWithStatus("delete_conflict", "view");
     }

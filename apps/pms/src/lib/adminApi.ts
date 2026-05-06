@@ -130,6 +130,15 @@ async function requestAdmin<T>(
 
   if (!response.ok) {
     const payload = (await response.json().catch(() => ({}))) as AdminErrorResponse;
+    console.error("[adminApi] Request failed", {
+      method,
+      path,
+      status: response.status,
+      statusText: response.statusText,
+      error: payload,
+      requestBody: hasBody ? body : undefined,
+      backendUrl: getBackendUrl()
+    });
     const error = new Error(payload.message || "Falha na operacao administrativa.") as Error & {
       statusCode?: number;
       details?: string;

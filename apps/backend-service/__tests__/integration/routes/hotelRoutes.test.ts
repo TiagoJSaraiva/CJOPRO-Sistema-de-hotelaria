@@ -125,4 +125,66 @@ describe("routes/hotels", () => {
       message: "Acesso global de sistema obrigatorio para esta operacao."
     });
   });
+
+  it("retorna 400 quando CNPJ invalido e enviado para pais BR", async () => {
+    const token = createToken([PERMISSIONS.HOTEL_CREATE]);
+
+    const response = await app.inject({
+      method: "POST",
+      url: "/admin/hotels",
+      headers: {
+        authorization: `Bearer ${token}`
+      },
+      payload: {
+        name: "Hotel Centro",
+        legal_name: "Hotel Centro LTDA",
+        tax_id: "23.636.568/0001-30", // CNPJ inválido: dígitos verificadores deveriam ser 07, não 30
+        slug: "hotel-centro",
+        email: "contato@hotel.com",
+        phone: "11999999999",
+        address_line: "Rua Central",
+        address_number: "100",
+        district: "Centro",
+        city: "Sao Paulo",
+        state: "SP",
+        country: "BR",
+        zip_code: "01001-000"
+      }
+    });
+
+    expect(response.statusCode).toBe(400);
+    expect(response.json().code).toBe("ADMIN_VALIDATION_ERROR");
+    expect(response.json().message).toContain("CNPJ invalido");
+  });
+
+  it("cria hotel com sucesso quando CNPJ valido e enviado para pais BR", async () => {
+    const token = createToken([PERMISSIONS.HOTEL_CREATE]);
+
+    const response = await app.inject({
+      method: "POST",
+      url: "/admin/hotels",
+      headers: {
+        authorization: `Bearer ${token}`
+      },
+      payload: {
+        name: "Hotel Centro",
+        legal_name: "Hotel Centro LTDA",
+        tax_id: "04.252.011/0001-10", // CNPJ válido
+        slug: "hotel-centro-valid",
+        email: "contato@hotel.com",
+        phone: "11999999999",
+        address_line: "Rua Central",
+        address_number: "100",
+        district: "Centro",
+        city: "Sao Paulo",
+        state: "SP",
+        country: "BR",
+        zip_code: "01001-000"
+      }
+    });
+
+    expect(response.statusCode).toBe(201);
+    expect(response.json().item).toBeDefined();
+    expect(response.json().item.tax_id).toBe("04252011000110"); // normalizado
+  });
 });
