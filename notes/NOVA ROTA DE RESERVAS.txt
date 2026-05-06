@@ -1,0 +1,12 @@
+Formato de "tabela excel"
+
+tabela 
+Título da tabela é Intervalo de dias sendo carregados no momento dentro da tabela. Por exemplo
+05/05/2026 - 15/05/2026
+
+coluna - dias (a partir do dia atual, crescente, mostrando dia da semana+numero).
+linhas - numero dos quartos do hotel selecionado por activeHotelId e ordenados por tipo (em ordem alfabética)
+Preenchimento das células: cor branca representa sem reserva no dia, vermelho de reservado. Ao clicar com o mouse: Abre no elemento html ao lado uma descrição da reserva praquele dia selecionado. Descrição a se considerar. Ao clicar num dia branco, ele fica verde (vários dias podem ser clicados), e no elemento HTML ao lado aparece informações:
+- dias selecionados.
+- Quarto(s) selecionados.
+- Preço no total dos dias reservados para todos os quartos, calculado em uma somatória entre todos os quartos selecionados + a tarifa para aquele tipo de quarto correspondendo a season ativa naquela data que o quarto foi selecionado (buscando em qual season na tabela season aquela data corresponde, por meio de verificar o start_date e end_date de todas as seasons cujo hotel_id equivale ao activeHotelId do user, e selecionando a season cuja data da reserva está no meio das datas de começo e fim. E depois de identificar a season, da reserva, usar a season e o tipo do quarto para buscar na tabela season_room_rates qual é a taxa extra diária pra aquela reserva, e usar isso na somatória: room.base_daily_rate + taxa extra da season atual pro tipo de quarto do tipo do quarto reservado)
