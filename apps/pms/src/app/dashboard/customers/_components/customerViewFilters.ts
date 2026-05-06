@@ -21,7 +21,16 @@ function parseDateStart(value: string): number | null {
     return null;
   }
 
-  const [year, month, day] = raw.split("-").map(Number);
+  const parts = raw.split("-");
+  if (parts.length !== 3) {
+    return null;
+  }
+  const year = Number(parts[0]);
+  const month = Number(parts[1]);
+  const day = Number(parts[2]);
+  if (!Number.isFinite(year) || !Number.isFinite(month) || !Number.isFinite(day)) {
+    return null;
+  }
   const timestamp = new Date(year, month - 1, day).getTime();
   return Number.isNaN(timestamp) ? null : timestamp;
 }
@@ -33,7 +42,16 @@ function parseDateEnd(value: string): number | null {
     return null;
   }
 
-  const [year, month, day] = raw.split("-").map(Number);
+  const parts = raw.split("-");
+  if (parts.length !== 3) {
+    return null;
+  }
+  const year = Number(parts[0]);
+  const month = Number(parts[1]);
+  const day = Number(parts[2]);
+  if (!Number.isFinite(year) || !Number.isFinite(month) || !Number.isFinite(day)) {
+    return null;
+  }
   const timestamp = new Date(year, month - 1, day, 23, 59, 59, 999).getTime();
   return Number.isNaN(timestamp) ? null : timestamp;
 }

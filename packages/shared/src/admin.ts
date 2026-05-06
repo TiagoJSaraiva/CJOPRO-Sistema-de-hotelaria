@@ -276,22 +276,19 @@ export type AdminCustomerUpdateInput = Partial<AdminCustomerCreateInput>;
 
 export type ReservationStatus = "pending" | "confirmed" | "checked_in" | "checked_out" | "canceled" | "no_show";
 export type ReservationSource = "front_desk" | "website" | "phone" | "agency";
+export type PaymentStatus = "pending" | "partial" | "paid" | "refunded";
 
 export type AdminReservation = {
   id: string;
   hotel_id: string;
   booking_customer_id: string;
   reservation_code: string;
-  planned_checkin_date: string;
-  planned_checkout_date: string;
-  actual_checkin_date: string | null;
-  actual_checkout_date: string | null;
   guest_count: number;
   reservation_status: ReservationStatus;
   reservation_source: ReservationSource | null;
-  paid_amount: number;
-  estimated_total_amount: number | null;
-  final_total_amount: number | null;
+  estimated_total_price: number | null;
+  final_total_price: number | null;
+  payment_status: PaymentStatus | null;
   notes: string | null;
   created_at?: string;
   updated_at?: string;
@@ -302,16 +299,12 @@ export type AdminReservationCreateInput = {
   booking_customer_document?: string | null;
   booking_customer_document_type?: string | null;
   reservation_code?: string;
-  planned_checkin_date: string;
-  planned_checkout_date: string;
-  actual_checkin_date?: string | null;
-  actual_checkout_date?: string | null;
   guest_count: number;
   reservation_status?: ReservationStatus;
   reservation_source?: ReservationSource | null;
-  paid_amount?: number;
-  estimated_total_amount?: number | null;
-  final_total_amount?: number | null;
+  estimated_total_price?: number | null;
+  final_total_price?: number | null;
+  payment_status?: PaymentStatus | null;
   notes?: string | null;
 };
 

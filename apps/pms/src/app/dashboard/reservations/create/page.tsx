@@ -1,5 +1,5 @@
 import { redirect } from "next/navigation";
-import { translateReservationSource, translateReservationStatus } from "@hotel/shared";
+import { translatePaymentStatus, translateReservationSource, translateReservationStatus } from "@hotel/shared";
 import { DashboardAccessDeniedCard } from "../../_components/DashboardAccessDeniedCard";
 import { DashboardCreateFormCard } from "../../_components/DashboardCreateFormCard";
 import { DashboardEntityPageShell } from "../../_components/DashboardEntityPageShell";
@@ -50,14 +50,6 @@ export default async function ReservationsCreatePage({ searchParams }: Reservati
           <input id="create-reservation-booking-customer-document" name="booking_customer_document" required className="pms-field-input" />
         </FormField>
 
-        <FormField label="Check-in planejado" htmlFor="create-reservation-checkin-date">
-          <input id="create-reservation-checkin-date" name="planned_checkin_date" type="date" required className="pms-field-input" />
-        </FormField>
-
-        <FormField label="Checkout planejado" htmlFor="create-reservation-checkout-date">
-          <input id="create-reservation-checkout-date" name="planned_checkout_date" type="date" required className="pms-field-input" />
-        </FormField>
-
         <FormField label="Quantidade de hospedes" htmlFor="create-reservation-guest-count">
           <input id="create-reservation-guest-count" name="guest_count" type="number" min={1} defaultValue={1} required className="pms-field-input" />
         </FormField>
@@ -82,16 +74,21 @@ export default async function ReservationsCreatePage({ searchParams }: Reservati
           </select>
         </FormField>
 
-        <FormField label="Total pago" htmlFor="create-reservation-paid-amount">
-          <input id="create-reservation-paid-amount" name="paid_amount" type="number" min={0} step="0.01" defaultValue={0} className="pms-field-input" />
+        <FormField label="Status do pagamento" htmlFor="create-reservation-payment-status">
+          <select id="create-reservation-payment-status" name="payment_status" defaultValue="pending" className="pms-field-input">
+            <option value="pending">{translatePaymentStatus("pending")}</option>
+            <option value="partial">{translatePaymentStatus("partial")}</option>
+            <option value="paid">{translatePaymentStatus("paid")}</option>
+            <option value="refunded">{translatePaymentStatus("refunded")}</option>
+          </select>
         </FormField>
 
-        <FormField label="Valor total estimado" htmlFor="create-reservation-estimated-total-amount">
-          <input id="create-reservation-estimated-total-amount" name="estimated_total_amount" type="number" min={0} step="0.01" defaultValue={0} className="pms-field-input" />
+        <FormField label="Valor total estimado" htmlFor="create-reservation-estimated-total-price">
+          <input id="create-reservation-estimated-total-price" name="estimated_total_price" type="number" min={0} step="0.01" defaultValue={0} className="pms-field-input" />
         </FormField>
 
-        <FormField label="Valor total final" htmlFor="create-reservation-final-total-amount">
-          <input id="create-reservation-final-total-amount" name="final_total_amount" type="number" min={0} step="0.01" defaultValue={0} className="pms-field-input" />
+        <FormField label="Valor total final" htmlFor="create-reservation-final-total-price">
+          <input id="create-reservation-final-total-price" name="final_total_price" type="number" min={0} step="0.01" defaultValue={0} className="pms-field-input" />
         </FormField>
 
         <FormField label="Observacoes" htmlFor="create-reservation-notes" fullWidth>

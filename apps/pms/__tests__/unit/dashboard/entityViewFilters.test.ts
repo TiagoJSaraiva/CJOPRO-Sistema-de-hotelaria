@@ -61,23 +61,19 @@ describe("entity view filters", () => {
     expect(countAppliedCustomerFilters({ ...DEFAULT_CUSTOMER_VIEW_FILTERS, search: "maria", documentType: "CPF", birthFrom: "1990-01-01" })).toBe(3);
   });
 
-  it("filtra reservas por status, origem e check-in", () => {
+  it("filtra reservas por status e origem", () => {
     const reservations: AdminReservation[] = [
       {
         id: "res1",
         hotel_id: "h1",
         booking_customer_id: "c1",
         reservation_code: "RES-1",
-        planned_checkin_date: "2026-04-10",
-        planned_checkout_date: "2026-04-12",
-        actual_checkin_date: null,
-        actual_checkout_date: null,
         guest_count: 2,
         reservation_status: "confirmed",
         reservation_source: "website",
-        paid_amount: 500,
-        estimated_total_amount: 500,
-        final_total_amount: 500,
+        estimated_total_price: 500,
+        final_total_price: 500,
+        payment_status: "partial",
         notes: "vista",
         created_at: "2026-04-01T00:00:00.000Z",
         updated_at: "2026-04-01T00:00:00.000Z"
@@ -87,16 +83,12 @@ describe("entity view filters", () => {
         hotel_id: "h1",
         booking_customer_id: "c2",
         reservation_code: "RES-2",
-        planned_checkin_date: "2026-05-10",
-        planned_checkout_date: "2026-05-12",
-        actual_checkin_date: null,
-        actual_checkout_date: null,
         guest_count: 1,
         reservation_status: "pending",
         reservation_source: "front_desk",
-        paid_amount: 0,
-        estimated_total_amount: 200,
-        final_total_amount: null,
+        estimated_total_price: 200,
+        final_total_price: null,
+        payment_status: "pending",
         notes: null,
         created_at: "2026-04-01T00:00:00.000Z",
         updated_at: "2026-04-01T00:00:00.000Z"
@@ -107,9 +99,7 @@ describe("entity view filters", () => {
       ...DEFAULT_RESERVATION_VIEW_FILTERS,
       search: "res-1",
       status: "confirmed",
-      source: "website",
-      plannedCheckinFrom: "2026-04-01",
-      plannedCheckinTo: "2026-04-30"
+      source: "website"
     });
 
     expect(result.map((item) => item.id)).toEqual(["res1"]);

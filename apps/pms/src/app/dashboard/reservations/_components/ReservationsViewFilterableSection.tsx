@@ -98,17 +98,7 @@ export function ReservationsViewFilterableSection({ reservations, canRead, canUp
               <option value="phone">{translateReservationSource("phone")}</option>
               <option value="agency">{translateReservationSource("agency")}</option>
             </select>
-          </label>
-
-          <label className="pms-field">
-            <span>Check-in a partir de</span>
-            <input type="date" value={draftFilters.plannedCheckinFrom} onChange={(event) => updateDraftFilter("plannedCheckinFrom", event.target.value)} className={viewFiltersFieldClassName} />
-          </label>
-
-          <label className="pms-field">
-            <span>Check-in até</span>
-            <input type="date" value={draftFilters.plannedCheckinTo} onChange={(event) => updateDraftFilter("plannedCheckinTo", event.target.value)} className={viewFiltersFieldClassName} />
-          </label>
+          </label>
         </div>
       }
     >

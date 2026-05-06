@@ -6,7 +6,7 @@
  * All functions are pure and return fallback to original value if not found
  */
 
-import type { RoomStatus, ReservationSource, ReservationStatus, TransactionStatus, TransactionType } from "./admin";
+import type { PaymentStatus, RoomStatus, ReservationSource, ReservationStatus, TransactionStatus, TransactionType } from "./admin";
 
 const ROOM_STATUS_LABELS: Record<RoomStatus, string> = {
   available: "Disponível",
@@ -29,6 +29,13 @@ const RESERVATION_STATUS_LABELS: Record<ReservationStatus, string> = {
   checked_out: "Check out realizado",
   canceled: "Cancelada",
   no_show: "No show",
+};
+
+const PAYMENT_STATUS_LABELS: Record<PaymentStatus, string> = {
+  pending: "Pendente",
+  partial: "Parcial",
+  paid: "Pago",
+  refunded: "Reembolsado",
 };
 
 const TRANSACTION_TYPE_LABELS: Record<TransactionType, string> = {
@@ -70,6 +77,10 @@ export function translateReservationSource(source: ReservationSource): string {
  */
 export function translateReservationStatus(status: ReservationStatus): string {
   return RESERVATION_STATUS_LABELS[status] ?? status;
+}
+
+export function translatePaymentStatus(status: PaymentStatus): string {
+  return PAYMENT_STATUS_LABELS[status] ?? status;
 }
 
 /**

@@ -1,7 +1,7 @@
 "use client";
 
 import type { AdminReservation } from "@hotel/shared";
-import { translateReservationSource, translateReservationStatus } from "@hotel/shared";
+import { translatePaymentStatus, translateReservationSource, translateReservationStatus } from "@hotel/shared";
 import { deleteReservationAction, updateReservationAction } from "../actions";
 import { DashboardEntityActionButtons } from "../../_components/DashboardEntityActionButtons";
 import { DashboardEntityListItemFrame } from "../../_components/DashboardEntityListItemFrame";
@@ -30,14 +30,6 @@ function ReservationDataPreview({ reservation }: { reservation: AdminReservation
         <p className="m-0 mt-[0.2rem]">{reservation.booking_customer_id}</p>
       </div>
       <div>
-        <strong>Check-in previsto:</strong>
-        <p className="m-0 mt-[0.2rem]">{reservation.planned_checkin_date}</p>
-      </div>
-      <div>
-        <strong>Check-out previsto:</strong>
-        <p className="m-0 mt-[0.2rem]">{reservation.planned_checkout_date}</p>
-      </div>
-      <div>
         <strong>Hospedes:</strong>
         <p className="m-0 mt-[0.2rem]">{reservation.guest_count}</p>
       </div>
@@ -50,16 +42,16 @@ function ReservationDataPreview({ reservation }: { reservation: AdminReservation
         <p className="m-0 mt-[0.2rem]">{translateReservationSource(reservation.reservation_source || "front_desk")}</p>
       </div>
       <div>
-        <strong>Total pago:</strong>
-        <p className="m-0 mt-[0.2rem]">R$ {(reservation.paid_amount || 0).toFixed(2)}</p>
+        <strong>Status de pagamento:</strong>
+        <p className="m-0 mt-[0.2rem]">{translatePaymentStatus(reservation.payment_status || "pending")}</p>
       </div>
       <div>
         <strong>Total estimado:</strong>
-        <p className="m-0 mt-[0.2rem]">R$ {(reservation.estimated_total_amount || 0).toFixed(2)}</p>
+        <p className="m-0 mt-[0.2rem]">R$ {(reservation.estimated_total_price || 0).toFixed(2)}</p>
       </div>
       <div>
         <strong>Total final:</strong>
-        <p className="m-0 mt-[0.2rem]">R$ {(reservation.final_total_amount || 0).toFixed(2)}</p>
+        <p className="m-0 mt-[0.2rem]">R$ {(reservation.final_total_price || 0).toFixed(2)}</p>
       </div>
       <div>
         <strong>Criado em:</strong>
@@ -85,16 +77,6 @@ function ReservationEditForm({ reservation }: { reservation: AdminReservation })
       <div className="pms-field">
         <label htmlFor={`reservation-booking-customer-${reservation.id}`}>Cliente (ID)</label>
         <input id={`reservation-booking-customer-${reservation.id}`} name="booking_customer_id" defaultValue={reservation.booking_customer_id} required className="pms-field-input" />
-      </div>
-
-      <div className="pms-field">
-        <label htmlFor={`reservation-checkin-${reservation.id}`}>Check-in previsto</label>
-        <input id={`reservation-checkin-${reservation.id}`} name="planned_checkin_date" type="date" defaultValue={reservation.planned_checkin_date} required className="pms-field-input" />
-      </div>
-
-      <div className="pms-field">
-        <label htmlFor={`reservation-checkout-${reservation.id}`}>Check-out previsto</label>
-        <input id={`reservation-checkout-${reservation.id}`} name="planned_checkout_date" type="date" defaultValue={reservation.planned_checkout_date} required className="pms-field-input" />
       </div>
 
       <div className="pms-field">
@@ -125,18 +107,23 @@ function ReservationEditForm({ reservation }: { reservation: AdminReservation })
       </div>
 
       <div className="pms-field">
-        <label htmlFor={`reservation-paid-amount-${reservation.id}`}>Total pago</label>
-        <input id={`reservation-paid-amount-${reservation.id}`} name="paid_amount" type="number" min={0} step="0.01" defaultValue={reservation.paid_amount || 0} className="pms-field-input" />
+        <label htmlFor={`reservation-payment-status-${reservation.id}`}>Status do pagamento</label>
+        <select id={`reservation-payment-status-${reservation.id}`} name="payment_status" defaultValue={reservation.payment_status || "pending"} className="pms-field-input">
+          <option value="pending">{translatePaymentStatus("pending")}</option>
+          <option value="partial">{translatePaymentStatus("partial")}</option>
+          <option value="paid">{translatePaymentStatus("paid")}</option>
+          <option value="refunded">{translatePaymentStatus("refunded")}</option>
+        </select>
       </div>
 
       <div className="pms-field">
         <label htmlFor={`reservation-estimated-total-${reservation.id}`}>Total estimado</label>
-        <input id={`reservation-estimated-total-${reservation.id}`} name="estimated_total_amount" type="number" min={0} step="0.01" defaultValue={reservation.estimated_total_amount || 0} className="pms-field-input" />
+        <input id={`reservation-estimated-total-${reservation.id}`} name="estimated_total_price" type="number" min={0} step="0.01" defaultValue={reservation.estimated_total_price || 0} className="pms-field-input" />
       </div>
 
       <div className="pms-field">
         <label htmlFor={`reservation-final-total-${reservation.id}`}>Total final</label>
-        <input id={`reservation-final-total-${reservation.id}`} name="final_total_amount" type="number" min={0} step="0.01" defaultValue={reservation.final_total_amount || 0} className="pms-field-input" />
+        <input id={`reservation-final-total-${reservation.id}`} name="final_total_price" type="number" min={0} step="0.01" defaultValue={reservation.final_total_price || 0} className="pms-field-input" />
       </div>
 
       <div className="pms-field">
@@ -158,7 +145,7 @@ export function ReservationListItem({ reservation, canRead, canUpdate, canDelete
   return (
     <DashboardEntityListItemFrame
       title={`Reserva ${reservation.reservation_code}`}
-      subtitle={`${reservation.planned_checkin_date} ate ${reservation.planned_checkout_date} | ${reservation.reservation_status}`}
+      subtitle={`${reservation.guest_count} hospedes | ${reservation.reservation_status}`}
       actions={
         <DashboardEntityActionButtons
           canRead={canRead}

@@ -49,8 +49,6 @@ export function registerReservationRoutes(
     const bookingCustomerDocument = normalizeOptionalText(request.body?.booking_customer_document);
     const bookingCustomerDocumentType = normalizeOptionalText(request.body?.booking_customer_document_type);
     let reservationCode = normalizeOptionalText(request.body?.reservation_code);
-    const plannedCheckinDate = normalizeOptionalText(request.body?.planned_checkin_date);
-    const plannedCheckoutDate = normalizeOptionalText(request.body?.planned_checkout_date);
     const guestCount = Number(request.body?.guest_count);
 
     // Allow either booking_customer_id or booking_customer_document (+ type) to identify the booking customer
@@ -58,7 +56,7 @@ export function registerReservationRoutes(
       return reply.status(400).send(adminError(ADMIN_ERROR_CODE.VALIDATION, "Informe o id do cliente ou o documento do titular da reserva."));
     }
 
-    if (!plannedCheckinDate || !plannedCheckoutDate || !Number.isFinite(guestCount) || guestCount <= 0) {
+    if (!Number.isFinite(guestCount) || guestCount <= 0) {
       return reply.status(400).send(adminError(ADMIN_ERROR_CODE.VALIDATION, "Dados invalidos para criar reserva."));
     }
 
@@ -104,17 +102,12 @@ export function registerReservationRoutes(
       .createReservation(activeHotelId, {
         booking_customer_id: bookingCustomerId,
         reservation_code: reservationCode,
-        planned_checkin_date: plannedCheckinDate,
-        planned_checkout_date: plannedCheckoutDate,
-        actual_checkin_date: normalizeOptionalText(request.body?.actual_checkin_date),
-        actual_checkout_date: normalizeOptionalText(request.body?.actual_checkout_date),
         guest_count: guestCount,
         reservation_status: normalizeOptionalText(request.body?.reservation_status) || "pending",
         reservation_source: normalizeOptionalText(request.body?.reservation_source),
-        paid_amount: request.body?.paid_amount === undefined ? 0 : Number(request.body.paid_amount),
-        estimated_total_amount:
-          request.body?.estimated_total_amount === undefined ? null : Number(request.body.estimated_total_amount),
-        final_total_amount: request.body?.final_total_amount === undefined ? null : Number(request.body.final_total_amount),
+        estimated_total_price: request.body?.estimated_total_price === undefined ? null : Number(request.body.estimated_total_price),
+        final_total_price: request.body?.final_total_price === undefined ? null : Number(request.body.final_total_price),
+        payment_status: normalizeOptionalText(request.body?.payment_status),
         notes: normalizeOptionalText(request.body?.notes)
       })
       .catch((error) => {
@@ -142,16 +135,12 @@ export function registerReservationRoutes(
     const payload: Record<string, unknown> = {};
     if (request.body?.booking_customer_id !== undefined) payload.booking_customer_id = normalizeOptionalText(request.body.booking_customer_id);
     if (request.body?.reservation_code !== undefined) payload.reservation_code = normalizeOptionalText(request.body.reservation_code);
-    if (request.body?.planned_checkin_date !== undefined) payload.planned_checkin_date = normalizeOptionalText(request.body.planned_checkin_date);
-    if (request.body?.planned_checkout_date !== undefined) payload.planned_checkout_date = normalizeOptionalText(request.body.planned_checkout_date);
-    if (request.body?.actual_checkin_date !== undefined) payload.actual_checkin_date = normalizeOptionalText(request.body.actual_checkin_date);
-    if (request.body?.actual_checkout_date !== undefined) payload.actual_checkout_date = normalizeOptionalText(request.body.actual_checkout_date);
     if (request.body?.guest_count !== undefined) payload.guest_count = Number(request.body.guest_count);
     if (request.body?.reservation_status !== undefined) payload.reservation_status = normalizeOptionalText(request.body.reservation_status);
     if (request.body?.reservation_source !== undefined) payload.reservation_source = normalizeOptionalText(request.body.reservation_source);
-    if (request.body?.paid_amount !== undefined) payload.paid_amount = Number(request.body.paid_amount);
-    if (request.body?.estimated_total_amount !== undefined) payload.estimated_total_amount = Number(request.body.estimated_total_amount);
-    if (request.body?.final_total_amount !== undefined) payload.final_total_amount = Number(request.body.final_total_amount);
+    if (request.body?.estimated_total_price !== undefined) payload.estimated_total_price = Number(request.body.estimated_total_price);
+    if (request.body?.final_total_price !== undefined) payload.final_total_price = Number(request.body.final_total_price);
+    if (request.body?.payment_status !== undefined) payload.payment_status = normalizeOptionalText(request.body.payment_status);
     if (request.body?.notes !== undefined) payload.notes = normalizeOptionalText(request.body.notes);
 
     if (!Object.keys(payload).length) return reply.status(400).send(adminError(ADMIN_ERROR_CODE.VALIDATION, "Nenhum campo informado para atualizacao."));

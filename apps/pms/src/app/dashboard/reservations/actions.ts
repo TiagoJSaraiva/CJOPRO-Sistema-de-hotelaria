@@ -50,15 +50,13 @@ export async function createReservationAction(formData: FormData): Promise<void>
   const bookingCustomerId = String(formData.get("booking_customer_id") || "").trim();
   const bookingCustomerDocument = String(formData.get("booking_customer_document") || "").trim();
   const bookingCustomerDocumentType = String(formData.get("booking_customer_document_type") || "").trim();
-  const plannedCheckinDate = String(formData.get("planned_checkin_date") || "").trim();
-  const plannedCheckoutDate = String(formData.get("planned_checkout_date") || "").trim();
   const guestCount = Number(formData.get("guest_count") || "0");
 
   if (!bookingCustomerId && !bookingCustomerDocument) {
     redirectWithStatus("create_missing_fields", "create");
   }
 
-  if (!plannedCheckinDate || !plannedCheckoutDate || !Number.isFinite(guestCount) || guestCount <= 0) {
+  if (!Number.isFinite(guestCount) || guestCount <= 0) {
     redirectWithStatus("create_missing_fields", "create");
   }
 
@@ -67,8 +65,6 @@ export async function createReservationAction(formData: FormData): Promise<void>
       booking_customer_id: bookingCustomerId || undefined,
       booking_customer_document: bookingCustomerDocument || undefined,
       booking_customer_document_type: bookingCustomerDocumentType || undefined,
-      planned_checkin_date: plannedCheckinDate,
-      planned_checkout_date: plannedCheckoutDate,
       guest_count: guestCount,
       reservation_status: (String(formData.get("reservation_status") || "pending").trim() as
         | "pending"
@@ -78,9 +74,9 @@ export async function createReservationAction(formData: FormData): Promise<void>
         | "canceled"
         | "no_show"),
       reservation_source: (String(formData.get("reservation_source") || "").trim() as "front_desk" | "website" | "phone" | "agency") || null,
-      paid_amount: Number(formData.get("paid_amount") || "0"),
-      estimated_total_amount: Number(formData.get("estimated_total_amount") || "0"),
-      final_total_amount: Number(formData.get("final_total_amount") || "0"),
+      payment_status: (String(formData.get("payment_status") || "pending").trim() as "pending" | "partial" | "paid" | "refunded"),
+      estimated_total_price: Number(formData.get("estimated_total_price") || "0"),
+      final_total_price: Number(formData.get("final_total_price") || "0"),
       notes: String(formData.get("notes") || "").trim() || null
     });
   } catch (error) {
@@ -90,8 +86,6 @@ export async function createReservationAction(formData: FormData): Promise<void>
       bookingCustomerId,
       bookingCustomerDocument,
       bookingCustomerDocumentType,
-      plannedCheckinDate,
-      plannedCheckoutDate,
       guestCount,
       detail
     });
@@ -120,8 +114,6 @@ export async function updateReservationAction(formData: FormData): Promise<void>
   try {
     await updateReservation(id, {
       booking_customer_id: String(formData.get("booking_customer_id") || "").trim(),
-      planned_checkin_date: String(formData.get("planned_checkin_date") || "").trim(),
-      planned_checkout_date: String(formData.get("planned_checkout_date") || "").trim(),
       guest_count: Number(formData.get("guest_count") || "0"),
       reservation_status: (String(formData.get("reservation_status") || "pending").trim() as
         | "pending"
@@ -131,9 +123,9 @@ export async function updateReservationAction(formData: FormData): Promise<void>
         | "canceled"
         | "no_show"),
       reservation_source: (String(formData.get("reservation_source") || "").trim() as "front_desk" | "website" | "phone" | "agency") || null,
-      paid_amount: Number(formData.get("paid_amount") || "0"),
-      estimated_total_amount: Number(formData.get("estimated_total_amount") || "0"),
-      final_total_amount: Number(formData.get("final_total_amount") || "0"),
+      payment_status: (String(formData.get("payment_status") || "pending").trim() as "pending" | "partial" | "paid" | "refunded"),
+      estimated_total_price: Number(formData.get("estimated_total_price") || "0"),
+      final_total_price: Number(formData.get("final_total_price") || "0"),
       notes: String(formData.get("notes") || "").trim() || null
     });
   } catch {
