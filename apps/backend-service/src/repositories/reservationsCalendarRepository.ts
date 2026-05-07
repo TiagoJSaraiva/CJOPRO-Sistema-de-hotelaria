@@ -103,7 +103,7 @@ class SupabaseReservationsCalendarRepository implements ReservationsCalendarRepo
 
     const roomsResult = await supabase
       .from("rooms")
-      .select("id,room_number,room_type")
+      .select("id,room_number,room_type,max_occupancy")
       .eq("hotel_id", activeHotelId)
       .order("room_type", { ascending: true })
       .order("room_number", { ascending: true });
@@ -117,7 +117,8 @@ class SupabaseReservationsCalendarRepository implements ReservationsCalendarRepo
         ({
           room_id: String(room.id),
           room_number: String(room.room_number),
-          room_type: String(room.room_type)
+          room_type: String(room.room_type),
+          max_occupancy: Number(room.max_occupancy || 0)
         }) satisfies AdminReservationCalendarRoomRow
     );
 

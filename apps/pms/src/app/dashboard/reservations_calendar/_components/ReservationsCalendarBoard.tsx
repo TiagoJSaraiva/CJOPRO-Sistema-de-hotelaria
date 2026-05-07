@@ -49,7 +49,6 @@ export function ReservationsCalendarBoard({ data, startDate, customers }: Reserv
   const [error, setError] = useState<string | null>(null);
   const [bookingMode, setBookingMode] = useState<"existing" | "create_inline">("existing");
   const [existingCustomerId, setExistingCustomerId] = useState<string>(customers[0]?.id || "");
-  const [guestCount, setGuestCount] = useState("1");
   const [reservationStatus, setReservationStatus] = useState<ReservationStatus>("confirmed");
   const [reservationSource, setReservationSource] = useState<ReservationSource>("front_desk");
   const [notes, setNotes] = useState("");
@@ -146,7 +145,6 @@ export function ReservationsCalendarBoard({ data, startDate, customers }: Reserv
     return {
       booking_customer,
       selected_cells: selectedCellsPayload,
-      guest_count: Number(guestCount || "0"),
       reservation_status: reservationStatus,
       reservation_source: reservationSource || null,
       notes: notes || null
@@ -224,7 +222,9 @@ export function ReservationsCalendarBoard({ data, startDate, customers }: Reserv
                 <div key={room.room_id} className="grid border-b border-[#efefef]" style={{ gridTemplateColumns: `${LEFT_PANEL_WIDTH}px repeat(${data.days.length}, ${CELL_WIDTH}px)`, minHeight: ROW_HEIGHT }}>
                   <div className="border-r border-[#efefef] px-3 py-2">
                     <p className="m-0 text-sm font-semibold">{room.room_type.toUpperCase()}</p>
-                    <p className="m-0 text-sm">{room.room_number}</p>
+                    <p className="m-0 text-sm">
+                      {room.room_number} • {room.max_occupancy} hospedes
+                    </p>
                   </div>
                   {data.days.map((day) => {
                     const key = `${room.room_id}::${day.date}`;
@@ -321,6 +321,9 @@ export function ReservationsCalendarBoard({ data, startDate, customers }: Reserv
           {!selectedStay && !candidateStayIds.length ? (
             <div className="space-y-2 text-sm">
               <p><strong>Selecao:</strong> {selectedCells.size} celulas, {roomsCount} quarto(s)</p>
+              <p className="rounded bg-[#eff6ff] p-2 text-xs text-[#1e3a8a]">
+                Os hospedes serao vinculados no check-in desta estadia.
+              </p>
               <label className="block">
                 <span className="mb-1 block">Status da reserva</span>
                 <select value={reservationStatus} onChange={(event) => setReservationStatus(event.target.value as ReservationStatus)} className="pms-field-input">
@@ -331,10 +334,6 @@ export function ReservationsCalendarBoard({ data, startDate, customers }: Reserv
                   <option value="canceled">canceled</option>
                   <option value="no_show">no_show</option>
                 </select>
-              </label>
-              <label className="block">
-                <span className="mb-1 block">Qtde de hospedes</span>
-                <input value={guestCount} onChange={(event) => setGuestCount(event.target.value)} type="number" min={1} className="pms-field-input" />
               </label>
               <label className="block">
                 <span className="mb-1 block">Origem</span>

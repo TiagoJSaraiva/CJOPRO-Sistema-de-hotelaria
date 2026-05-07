@@ -407,6 +407,7 @@ export type AdminReservationCalendarRoomRow = {
   room_id: string;
   room_number: string;
   room_type: string;
+  max_occupancy: number;
 };
 
 export type AdminReservationCalendarStayBlock = {
@@ -475,7 +476,6 @@ export type AdminReservationCalendarSelectedCell = {
 export type AdminReservationCalendarBookingCreateInput = {
   booking_customer: AdminReservationCalendarBookingCustomer;
   selected_cells: AdminReservationCalendarSelectedCell[];
-  guest_count: number;
   reservation_status: ReservationStatus;
   reservation_source?: ReservationSource | null;
   notes?: string | null;

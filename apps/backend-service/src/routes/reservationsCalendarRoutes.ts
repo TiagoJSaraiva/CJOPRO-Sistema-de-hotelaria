@@ -68,6 +68,7 @@ type GroupedSelection = {
   room_id: string;
   start_date: string;
   end_date: string;
+  checkout_date: string;
   nights: number;
 };
 
@@ -107,14 +108,26 @@ function buildContinuousGroups(selectedCells: Array<{ room_id: string; date: str
       const prevPlusOne = dateToIso(new Date(parseIsoDate(prev).getTime() + 86400000));
       if (current !== prevPlusOne) {
         const nights = Math.round((parseIsoDate(prev).getTime() - parseIsoDate(start).getTime()) / 86400000) + 1;
-        result.push({ room_id: roomId, start_date: start, end_date: prev, nights });
+        result.push({
+          room_id: roomId,
+          start_date: start,
+          end_date: prev,
+          checkout_date: dateToIso(new Date(parseIsoDate(prev).getTime() + 86400000)),
+          nights
+        });
         start = current;
       }
       prev = current;
     }
 
     const nights = Math.round((parseIsoDate(prev).getTime() - parseIsoDate(start).getTime()) / 86400000) + 1;
-    result.push({ room_id: roomId, start_date: start, end_date: prev, nights });
+    result.push({
+      room_id: roomId,
+      start_date: start,
+      end_date: prev,
+      checkout_date: dateToIso(new Date(parseIsoDate(prev).getTime() + 86400000)),
+      nights
+    });
   }
 
   return result;
@@ -241,6 +254,13 @@ async function computeBooking(
   }
 
   const groups = buildContinuousGroups(normalizedCells);
+  if (groups.some((group) => group.nights < 2)) {
+    return {
+      ok: false,
+      statusCode: 400,
+      message: "Cada sequencia selecionada deve ter no minimo 2 dias (check-in e checkout no dia seguinte ou posterior)."
+    };
+  }
   return {
     ok: true,
     groups,
@@ -322,11 +342,6 @@ export function registerReservationsCalendarRoutes(
       return reply.status(computed.statusCode).send(adminError(code, computed.message));
     }
 
-    const guestCount = Number(payload.guest_count || 0);
-    if (!Number.isFinite(guestCount) || guestCount <= 0) {
-      return reply.status(400).send(adminError(ADMIN_ERROR_CODE.VALIDATION, "guest_count deve ser maior que zero."));
-    }
-
     const status = normalizeOptionalText(payload.reservation_status || "pending");
     if (!status) {
       return reply.status(400).send(adminError(ADMIN_ERROR_CODE.VALIDATION, "reservation_status obrigatorio."));
@@ -381,7 +396,7 @@ export function registerReservationsCalendarRoutes(
     const createReservationResult = await reservationsRepository.createReservation(activeHotelId, {
       booking_customer_id: bookingCustomerId,
       reservation_code: reservationCode,
-      guest_count: guestCount,
+      guest_count: computed.data.rooms_count,
       reservation_status: status,
       reservation_source: normalizeOptionalText(payload.reservation_source),
       estimated_total_price: computed.data.total_price,
@@ -410,7 +425,7 @@ export function registerReservationsCalendarRoutes(
           applied_daily_rate: Number((groupTotal / group.nights).toFixed(2)),
           total_price_estimated: Number(groupTotal.toFixed(2)),
           checkin_date_expected: `${group.start_date}T12:00:00.000Z`,
-          checkout_date_expected: `${group.end_date}T12:00:00.000Z`
+          checkout_date_expected: `${group.checkout_date}T12:00:00.000Z`
         })
         .select("id")
         .single();
