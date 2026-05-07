@@ -430,9 +430,24 @@ export function registerReservationsCalendarRoutes(
         .select("id")
         .single();
       if (stayError || !stayData?.id) {
+        request.log.error(
+          {
+            stayError,
+            reservationId,
+            group,
+            roomId: room.id
+          },
+          "Falha ao inserir stay no fluxo de booking do calendario"
+        );
         await supabase.from("stays").delete().eq("reservation_id", reservationId);
         await reservationsRepository.deleteReservation(reservationId, activeHotelId);
-        return reply.status(409).send(adminError(ADMIN_ERROR_CODE.CONFLICT, "Falha ao criar estadias da reserva."));
+        const details =
+          stayError && typeof stayError === "object"
+            ? [String((stayError as { code?: string }).code || ""), String((stayError as { message?: string }).message || "")]
+                .filter(Boolean)
+                .join(" | ") || undefined
+            : undefined;
+        return reply.status(409).send(adminError(ADMIN_ERROR_CODE.CONFLICT, "Falha ao criar estadias da reserva.", details));
       }
       createdStayIds.push(String(stayData.id));
     }

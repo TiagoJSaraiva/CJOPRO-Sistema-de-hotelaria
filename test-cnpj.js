@@ -6,12 +6,12 @@ console.log('Tamanho:', value.length);
 
 // Validar manualmente
 if (value.length !== 14) {
-  console.log('❌ FALHA: Tamanho errado');
+  console.log('FALHA: Tamanho errado');
   process.exit(0);
 }
 
 if (/^(\d)\1{13}$/.test(value)) {
-  console.log('❌ FALHA: Todos os dígitos são iguais');
+  console.log('FALHA: Todos os dígitos são iguais');
   process.exit(0);
 }
 
@@ -37,4 +37,4 @@ const actual = value.slice(12);
 const isValid = actual === expected;
 console.log('Dígitos esperados:', expected);
 console.log('Dígitos reais:', actual);
-console.log(isValid ? '✅ CNPJ VÁLIDO' : '❌ CNPJ INVÁLIDO');
+console.log(isValid ? 'CNPJ VÁLIDO' : 'CNPJ INVÁLIDO');
