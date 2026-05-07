@@ -2,12 +2,21 @@
 
 import Link from "next/link";
 import { useMemo, useState } from "react";
-import type { AdminReservationCalendarResponse, ReservationStatus } from "@hotel/shared";
+import { useRouter } from "next/navigation";
+import type {
+  AdminCustomer,
+  AdminReservationCalendarBookingCreateInput,
+  AdminReservationCalendarBookingCreateResponse,
+  AdminReservationCalendarResponse,
+  ReservationSource,
+  ReservationStatus
+} from "@hotel/shared";
 import { addDaysIso, CALENDAR_WINDOW_DAYS, formatDateRangeLabel } from "./calendarUtils";
 
 type ReservationsCalendarBoardProps = {
   data: AdminReservationCalendarResponse;
   startDate: string;
+  customers: AdminCustomer[];
 };
 
 const CELL_WIDTH = 44;
@@ -30,13 +39,53 @@ function statusLabel(status: ReservationStatus | null): string {
   return status.replace("_", " ");
 }
 
-export function ReservationsCalendarBoard({ data, startDate }: ReservationsCalendarBoardProps) {
+export function ReservationsCalendarBoard({ data, startDate, customers }: ReservationsCalendarBoardProps) {
+  const router = useRouter();
   const [selectedStayId, setSelectedStayId] = useState<string | null>(null);
   const [candidateStayIds, setCandidateStayIds] = useState<string[]>([]);
+  const [selectedCells, setSelectedCells] = useState<Set<string>>(new Set());
+  const [simulation, setSimulation] = useState<AdminReservationCalendarBookingCreateResponse | null>(null);
+  const [isPending, setIsPending] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+  const [bookingMode, setBookingMode] = useState<"existing" | "create_inline">("existing");
+  const [existingCustomerId, setExistingCustomerId] = useState<string>(customers[0]?.id || "");
+  const [guestCount, setGuestCount] = useState("1");
+  const [reservationStatus, setReservationStatus] = useState<ReservationStatus>("confirmed");
+  const [reservationSource, setReservationSource] = useState<ReservationSource>("front_desk");
+  const [notes, setNotes] = useState("");
+  const [inlineCustomer, setInlineCustomer] = useState({
+    full_name: "",
+    document_number: "",
+    document_type: "cpf",
+    birth_date: "",
+    email: "",
+    mobile_phone: "",
+    phone: "",
+    nationality: "",
+    notes: ""
+  });
 
   const selectedStay = useMemo(() => data.stays.find((item) => item.id === selectedStayId) || null, [data.stays, selectedStayId]);
   const daysMap = useMemo(() => new Map(data.days.map((day, index) => [day.date, index])), [data.days]);
   const roomIndexMap = useMemo(() => new Map(data.rooms.map((room, index) => [room.room_id, index])), [data.rooms]);
+  const occupiedCellSet = useMemo(() => {
+    const set = new Set<string>();
+    for (const stay of data.stays) {
+      for (const day of data.days) {
+        if (day.date >= stay.start_date && day.date <= stay.end_date) {
+          set.add(`${stay.room_id}::${day.date}`);
+        }
+      }
+    }
+    for (const block of data.blocks) {
+      for (const day of data.days) {
+        if (day.date >= block.start_date && day.date <= block.end_date) {
+          set.add(`${block.room_id}::${day.date}`);
+        }
+      }
+    }
+    return set;
+  }, [data.stays, data.blocks, data.days]);
 
   const overlayBlocks = useMemo(() => {
     return data.stays
@@ -45,18 +94,11 @@ export function ReservationsCalendarBoard({ data, startDate }: ReservationsCalen
         const startIndex = daysMap.get(stay.start_date);
         const endIndex = daysMap.get(stay.end_date);
         if (roomIndex === undefined || startIndex === undefined || endIndex === undefined) return null;
-
         const leftOffset = LEFT_PANEL_WIDTH + startIndex * CELL_WIDTH + (stay.start_half === "right" ? CELL_WIDTH / 2 : 0);
         const rightOffset = (endIndex + 1) * CELL_WIDTH - (stay.end_half === "left" ? CELL_WIDTH / 2 : 0);
         const width = Math.max(8, rightOffset - (startIndex * CELL_WIDTH + (stay.start_half === "right" ? CELL_WIDTH / 2 : 0)));
         const top = roomIndex * ROW_HEIGHT + 6;
-
-        return {
-          stay,
-          left: leftOffset,
-          top,
-          width
-        };
+        return { stay, left: leftOffset, top, width };
       })
       .filter(Boolean) as Array<{ stay: AdminReservationCalendarResponse["stays"][number]; left: number; top: number; width: number }>;
   }, [data.stays, daysMap, roomIndexMap]);
@@ -64,6 +106,83 @@ export function ReservationsCalendarBoard({ data, startDate }: ReservationsCalen
   const rangeLabel = formatDateRangeLabel(data.days);
   const prevHref = `/dashboard/reservations_calendar/view?start_date=${addDaysIso(startDate, -CALENDAR_WINDOW_DAYS)}`;
   const nextHref = `/dashboard/reservations_calendar/view?start_date=${addDaysIso(startDate, CALENDAR_WINDOW_DAYS)}`;
+
+  const selectedCellsPayload = Array.from(selectedCells).map((key) => {
+    const [room_id = "", date = ""] = key.split("::");
+    return { room_id, date };
+  });
+  const roomsCount = new Set(selectedCellsPayload.map((item) => item.room_id)).size;
+
+  async function postJson<T>(url: string, payload: unknown): Promise<T> {
+    const response = await fetch(url, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(payload)
+    });
+    const dataResponse = await response.json();
+    if (!response.ok) {
+      throw new Error(String(dataResponse?.message || "Falha na operacao."));
+    }
+    return dataResponse as T;
+  }
+
+  function buildBookingPayload(): AdminReservationCalendarBookingCreateInput {
+    const booking_customer =
+      bookingMode === "existing"
+        ? { mode: "existing" as const, customer_id: existingCustomerId }
+        : {
+            mode: "create_inline" as const,
+            full_name: inlineCustomer.full_name,
+            document_number: inlineCustomer.document_number,
+            document_type: inlineCustomer.document_type,
+            birth_date: inlineCustomer.birth_date,
+            email: inlineCustomer.email || null,
+            mobile_phone: inlineCustomer.mobile_phone || null,
+            phone: inlineCustomer.phone || null,
+            nationality: inlineCustomer.nationality || null,
+            notes: inlineCustomer.notes || null
+          };
+
+    return {
+      booking_customer,
+      selected_cells: selectedCellsPayload,
+      guest_count: Number(guestCount || "0"),
+      reservation_status: reservationStatus,
+      reservation_source: reservationSource || null,
+      notes: notes || null
+    };
+  }
+
+  async function handleSimulate() {
+    try {
+      setError(null);
+      setIsPending(true);
+      const payload = buildBookingPayload();
+      const result = await postJson<AdminReservationCalendarBookingCreateResponse>("/api/reservations-calendar/simulate", payload);
+      setSimulation(result);
+    } catch (requestError) {
+      setSimulation(null);
+      setError(requestError instanceof Error ? requestError.message : "Falha ao simular reserva.");
+    } finally {
+      setIsPending(false);
+    }
+  }
+
+  async function handleConfirm() {
+    try {
+      setError(null);
+      setIsPending(true);
+      const payload = buildBookingPayload();
+      const result = await postJson<AdminReservationCalendarBookingCreateResponse>("/api/reservations-calendar/booking", payload);
+      setSimulation(result);
+      setSelectedCells(new Set());
+      router.refresh();
+    } catch (requestError) {
+      setError(requestError instanceof Error ? requestError.message : "Falha ao confirmar reserva.");
+    } finally {
+      setIsPending(false);
+    }
+  }
 
   return (
     <section className="pms-surface-card">
@@ -87,7 +206,7 @@ export function ReservationsCalendarBoard({ data, startDate }: ReservationsCalen
         </div>
       </div>
 
-      <div className="grid grid-cols-[1fr_280px] gap-4">
+      <div className="grid grid-cols-[1fr_340px] gap-4">
         <div className="overflow-auto rounded border border-[#d8d8d8] bg-white">
           <div style={{ width: LEFT_PANEL_WIDTH + data.days.length * CELL_WIDTH }} className="relative">
             <div className="sticky top-0 z-20 grid border-b border-[#dfdfdf] bg-[#fafafa]" style={{ gridTemplateColumns: `${LEFT_PANEL_WIDTH}px repeat(${data.days.length}, ${CELL_WIDTH}px)` }}>
@@ -102,38 +221,48 @@ export function ReservationsCalendarBoard({ data, startDate }: ReservationsCalen
 
             <div className="relative">
               {data.rooms.map((room) => (
-                <div
-                  key={room.room_id}
-                  className="grid border-b border-[#efefef]"
-                  style={{ gridTemplateColumns: `${LEFT_PANEL_WIDTH}px repeat(${data.days.length}, ${CELL_WIDTH}px)`, minHeight: ROW_HEIGHT }}
-                >
+                <div key={room.room_id} className="grid border-b border-[#efefef]" style={{ gridTemplateColumns: `${LEFT_PANEL_WIDTH}px repeat(${data.days.length}, ${CELL_WIDTH}px)`, minHeight: ROW_HEIGHT }}>
                   <div className="border-r border-[#efefef] px-3 py-2">
                     <p className="m-0 text-sm font-semibold">{room.room_type.toUpperCase()}</p>
                     <p className="m-0 text-sm">{room.room_number}</p>
                   </div>
-                  {data.days.map((day) => (
-                    <button
-                      key={`${room.room_id}-${day.date}`}
-                      type="button"
-                      className="border-l border-[#f2f2f2] bg-transparent"
-                      onClick={() => {
-                        const candidates = data.stays.filter(
-                          (stay) => stay.room_id === room.room_id && day.date >= stay.start_date && day.date <= stay.end_date
-                        );
-                        if (candidates.length === 1) {
-                          const first = candidates[0];
-                          if (!first) return;
+                  {data.days.map((day) => {
+                    const key = `${room.room_id}::${day.date}`;
+                    const occupied = occupiedCellSet.has(key);
+                    const selected = selectedCells.has(key);
+                    return (
+                      <button
+                        key={`${room.room_id}-${day.date}`}
+                        type="button"
+                        className="border-l border-[#f2f2f2]"
+                        style={{ backgroundColor: selected ? "#bbf7d0" : "transparent", cursor: occupied ? "not-allowed" : "pointer" }}
+                        onClick={() => {
+                          if (occupied) {
+                            const candidates = data.stays.filter((stay) => stay.room_id === room.room_id && day.date >= stay.start_date && day.date <= stay.end_date);
+                            if (candidates.length === 1) {
+                              setCandidateStayIds([]);
+                              setSelectedStayId(candidates[0]!.id);
+                              return;
+                            }
+                            if (candidates.length > 1) {
+                              setCandidateStayIds(candidates.map((item) => item.id));
+                              setSelectedStayId(null);
+                            }
+                            return;
+                          }
                           setCandidateStayIds([]);
-                          setSelectedStayId(first.id);
-                          return;
-                        }
-                        if (candidates.length > 1) {
-                          setCandidateStayIds(candidates.map((item) => item.id));
                           setSelectedStayId(null);
-                        }
-                      }}
-                    />
-                  ))}
+                          setSimulation(null);
+                          setSelectedCells((previous) => {
+                            const next = new Set(previous);
+                            if (next.has(key)) next.delete(key);
+                            else next.add(key);
+                            return next;
+                          });
+                        }}
+                      />
+                    );
+                  })}
                 </div>
               ))}
 
@@ -143,12 +272,7 @@ export function ReservationsCalendarBoard({ data, startDate }: ReservationsCalen
                     key={block.stay.id}
                     type="button"
                     className="pointer-events-auto absolute h-[30px] cursor-pointer rounded border-[3px] border-[#0f172a] text-left text-[11px] text-white"
-                    style={{
-                      left: block.left,
-                      top: block.top,
-                      width: block.width,
-                      backgroundColor: STATUS_COLORS[block.stay.reservation_status || "pending"] || STATUS_COLORS.pending
-                    }}
+                    style={{ left: block.left, top: block.top, width: block.width, backgroundColor: STATUS_COLORS[block.stay.reservation_status || "pending"] || STATUS_COLORS.pending }}
                     onClick={() => {
                       setCandidateStayIds([]);
                       setSelectedStayId(block.stay.id);
@@ -163,7 +287,9 @@ export function ReservationsCalendarBoard({ data, startDate }: ReservationsCalen
         </div>
 
         <aside className="rounded border border-[#d8d8d8] bg-white p-3">
-          <h3 className="mt-0">Detalhes</h3>
+          <h3 className="mt-0">Painel</h3>
+          {error ? <p className="rounded bg-[#fee2e2] p-2 text-sm text-[#7f1d1d]">{error}</p> : null}
+
           {candidateStayIds.length > 1 ? (
             <div>
               <p className="text-sm">Existem multiplas estadias nesta data. Escolha uma:</p>
@@ -182,25 +308,86 @@ export function ReservationsCalendarBoard({ data, startDate }: ReservationsCalen
             </div>
           ) : null}
 
-          {!candidateStayIds.length && !selectedStay ? <p className="text-sm text-[#666]">Clique em um bloco para ver detalhes da estadia.</p> : null}
-
           {selectedStay ? (
             <div className="text-sm">
-              <p>
-                <strong>Reserva:</strong> {selectedStay.reservation_code || "Sem codigo"}
-              </p>
-              <p>
-                <strong>Status:</strong> {statusLabel(selectedStay.reservation_status)}
-              </p>
-              <p>
-                <strong>Hospede:</strong> {selectedStay.customer_name || "Nao informado"}
-              </p>
-              <p>
-                <strong>Check-in:</strong> {selectedStay.checkin_date_expected}
-              </p>
-              <p>
-                <strong>Check-out:</strong> {selectedStay.checkout_date_expected}
-              </p>
+              <p><strong>Reserva:</strong> {selectedStay.reservation_code || "Sem codigo"}</p>
+              <p><strong>Status:</strong> {statusLabel(selectedStay.reservation_status)}</p>
+              <p><strong>Hospede:</strong> {selectedStay.customer_name || "Nao informado"}</p>
+              <p><strong>Check-in:</strong> {selectedStay.checkin_date_expected}</p>
+              <p><strong>Check-out:</strong> {selectedStay.checkout_date_expected}</p>
+            </div>
+          ) : null}
+
+          {!selectedStay && !candidateStayIds.length ? (
+            <div className="space-y-2 text-sm">
+              <p><strong>Selecao:</strong> {selectedCells.size} celulas, {roomsCount} quarto(s)</p>
+              <label className="block">
+                <span className="mb-1 block">Status da reserva</span>
+                <select value={reservationStatus} onChange={(event) => setReservationStatus(event.target.value as ReservationStatus)} className="pms-field-input">
+                  <option value="pending">pending</option>
+                  <option value="confirmed">confirmed</option>
+                  <option value="checked_in">checked_in</option>
+                  <option value="checked_out">checked_out</option>
+                  <option value="canceled">canceled</option>
+                  <option value="no_show">no_show</option>
+                </select>
+              </label>
+              <label className="block">
+                <span className="mb-1 block">Qtde de hospedes</span>
+                <input value={guestCount} onChange={(event) => setGuestCount(event.target.value)} type="number" min={1} className="pms-field-input" />
+              </label>
+              <label className="block">
+                <span className="mb-1 block">Origem</span>
+                <select value={reservationSource} onChange={(event) => setReservationSource(event.target.value as ReservationSource)} className="pms-field-input">
+                  <option value="front_desk">front_desk</option>
+                  <option value="website">website</option>
+                  <option value="phone">phone</option>
+                  <option value="agency">agency</option>
+                </select>
+              </label>
+              <label className="block">
+                <span className="mb-1 block">Observacoes</span>
+                <textarea value={notes} onChange={(event) => setNotes(event.target.value)} className="pms-field-input" />
+              </label>
+              <div>
+                <span className="mb-1 block">Titular</span>
+                <div className="mb-2 flex gap-2">
+                  <button type="button" className="rounded border border-[#d8d8d8] px-2 py-1" onClick={() => setBookingMode("existing")}>Existente</button>
+                  <button type="button" className="rounded border border-[#d8d8d8] px-2 py-1" onClick={() => setBookingMode("create_inline")}>Novo cliente</button>
+                </div>
+                {bookingMode === "existing" ? (
+                  <select value={existingCustomerId} onChange={(event) => setExistingCustomerId(event.target.value)} className="pms-field-input">
+                    {customers.map((customer) => (
+                      <option key={customer.id} value={customer.id}>
+                        {customer.full_name} - {customer.document_number}
+                      </option>
+                    ))}
+                  </select>
+                ) : (
+                  <div className="space-y-2">
+                    <input placeholder="Nome completo" value={inlineCustomer.full_name} onChange={(event) => setInlineCustomer((prev) => ({ ...prev, full_name: event.target.value }))} className="pms-field-input" />
+                    <input placeholder="Documento" value={inlineCustomer.document_number} onChange={(event) => setInlineCustomer((prev) => ({ ...prev, document_number: event.target.value }))} className="pms-field-input" />
+                    <input placeholder="Tipo doc (cpf)" value={inlineCustomer.document_type} onChange={(event) => setInlineCustomer((prev) => ({ ...prev, document_type: event.target.value }))} className="pms-field-input" />
+                    <input type="date" value={inlineCustomer.birth_date} onChange={(event) => setInlineCustomer((prev) => ({ ...prev, birth_date: event.target.value }))} className="pms-field-input" />
+                  </div>
+                )}
+              </div>
+              <div className="flex gap-2">
+                <button type="button" onClick={handleSimulate} disabled={isPending || !selectedCells.size} className="cursor-pointer rounded border border-[#d8d8d8] bg-white px-3 py-2">
+                  Simular
+                </button>
+                <button type="button" onClick={handleConfirm} disabled={isPending || !selectedCells.size} className="cursor-pointer rounded border border-[#166534] bg-[#16a34a] px-3 py-2 text-white">
+                  Confirmar reserva
+                </button>
+              </div>
+
+              {simulation ? (
+                <div className="rounded bg-[#f8fafc] p-2 text-xs">
+                  <p className="m-0"><strong>Total:</strong> R$ {simulation.total_price.toFixed(2)}</p>
+                  <p className="m-0"><strong>Diarias:</strong> {simulation.nights_count}</p>
+                  <p className="m-0"><strong>Quartos:</strong> {simulation.rooms_count}</p>
+                </div>
+              ) : null}
             </div>
           ) : null}
         </aside>

@@ -19,6 +19,8 @@ import {
   AdminFinancialTransactionUpdateInput,
   AdminReservation,
   AdminReservationCalendarResponse,
+  AdminReservationCalendarBookingCreateInput,
+  AdminReservationCalendarBookingCreateResponse,
   AdminReservationCreateInput,
   AdminReservationUpdateInput,
   AdminRoom,
@@ -208,6 +210,8 @@ export type {
   AdminFinancialTransactionUpdateInput,
   AdminReservation,
   AdminReservationCalendarResponse,
+  AdminReservationCalendarBookingCreateInput,
+  AdminReservationCalendarBookingCreateResponse,
   AdminReservationCreateInput,
   AdminReservationUpdateInput,
   AdminRoom,
@@ -355,6 +359,20 @@ export function getReservationsCalendar(startDate: string, days = 20): Promise<A
     days: String(days)
   });
   return getAdminData<AdminReservationCalendarResponse>(`/admin/reservations/calendar?${query.toString()}`);
+}
+
+export function simulateReservationsCalendarBooking(
+  payload: AdminReservationCalendarBookingCreateInput
+): Promise<AdminReservationCalendarBookingCreateResponse> {
+  return requestAdmin<AdminReservationCalendarBookingCreateResponse>("/admin/reservations/calendar/booking/simulate", "POST", payload).then(
+    (result) => result as AdminReservationCalendarBookingCreateResponse
+  );
+}
+
+export function createReservationsCalendarBooking(
+  payload: AdminReservationCalendarBookingCreateInput
+): Promise<AdminReservationCalendarBookingCreateResponse | null> {
+  return requestAdmin<AdminReservationCalendarBookingCreateResponse>("/admin/reservations/calendar/booking", "POST", payload);
 }
 
 export function listFinancialTransactions(): Promise<AdminFinancialTransaction[]> {

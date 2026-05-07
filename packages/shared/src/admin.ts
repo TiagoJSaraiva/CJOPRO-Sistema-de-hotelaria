@@ -448,3 +448,56 @@ export type AdminReservationCalendarResponse = {
   blocks: AdminReservationCalendarRoomBlock[];
   legend: AdminReservationCalendarLegendItem[];
 };
+
+export type AdminReservationCalendarBookingCustomer =
+  | {
+      mode: "existing";
+      customer_id: string;
+    }
+  | {
+      mode: "create_inline";
+      full_name: string;
+      document_number: string;
+      document_type: string;
+      birth_date: string;
+      email?: string | null;
+      mobile_phone?: string | null;
+      phone?: string | null;
+      nationality?: string | null;
+      notes?: string | null;
+    };
+
+export type AdminReservationCalendarSelectedCell = {
+  room_id: string;
+  date: string;
+};
+
+export type AdminReservationCalendarBookingCreateInput = {
+  booking_customer: AdminReservationCalendarBookingCustomer;
+  selected_cells: AdminReservationCalendarSelectedCell[];
+  guest_count: number;
+  reservation_status: ReservationStatus;
+  reservation_source?: ReservationSource | null;
+  notes?: string | null;
+};
+
+export type AdminReservationCalendarBookingPriceBreakdown = {
+  room_id: string;
+  room_number: string;
+  room_type: string;
+  date: string;
+  base_daily_rate: number;
+  season_extra_rate: number;
+  final_daily_rate: number;
+};
+
+export type AdminReservationCalendarBookingCreateResponse = {
+  reservation_id?: string;
+  reservation_code?: string;
+  customer_id?: string;
+  stay_ids?: string[];
+  total_price: number;
+  nights_count: number;
+  rooms_count: number;
+  breakdown: AdminReservationCalendarBookingPriceBreakdown[];
+};

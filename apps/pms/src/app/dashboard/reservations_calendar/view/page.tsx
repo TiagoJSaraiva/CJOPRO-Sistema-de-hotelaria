@@ -1,7 +1,7 @@
 import { redirect } from "next/navigation";
 import { DashboardAccessDeniedCard } from "../../_components/DashboardAccessDeniedCard";
 import { DashboardEntityPageShell } from "../../_components/DashboardEntityPageShell";
-import { getReservationsCalendar } from "../../../../lib/adminApi";
+import { getReservationsCalendar, listCustomers } from "../../../../lib/adminApi";
 import { getUserFromSession } from "../../../../lib/auth";
 import { getReservationsCalendarAccess, getReservationsCalendarDefaultRoute } from "../access";
 import { ReservationsCalendarBoard } from "../_components/ReservationsCalendarBoard";
@@ -34,7 +34,7 @@ export default async function ReservationsCalendarViewPage({ searchParams }: Res
   }
 
   const startDate = resolveStartDate(searchParams?.start_date);
-  const data = await getReservationsCalendar(startDate, CALENDAR_WINDOW_DAYS);
+  const [data, customers] = await Promise.all([getReservationsCalendar(startDate, CALENDAR_WINDOW_DAYS), listCustomers()]);
 
   return (
     <DashboardEntityPageShell
@@ -42,7 +42,7 @@ export default async function ReservationsCalendarViewPage({ searchParams }: Res
       activeTabKey="view"
       tabs={[{ key: "view", label: "Visualizacao", href: "/dashboard/reservations_calendar/view", isVisible: access.canAccess }]}
     >
-      <ReservationsCalendarBoard data={data} startDate={startDate} />
+      <ReservationsCalendarBoard data={data} startDate={startDate} customers={customers} />
     </DashboardEntityPageShell>
   );
 }
