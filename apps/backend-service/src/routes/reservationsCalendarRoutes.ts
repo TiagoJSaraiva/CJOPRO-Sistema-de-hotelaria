@@ -387,11 +387,6 @@ export function registerReservationsCalendarRoutes(
       return reply.status(computed.statusCode).send(adminError(code, computed.message));
     }
 
-    const status = normalizeOptionalText(payload.reservation_status || "pending");
-    if (!status) {
-      return reply.status(400).send(adminError(ADMIN_ERROR_CODE.VALIDATION, "reservation_status obrigatorio."));
-    }
-
     let bookingCustomerId: string | null = null;
     const bookingCustomer = payload.booking_customer;
     if (!bookingCustomer || typeof bookingCustomer !== "object") {
@@ -442,7 +437,6 @@ export function registerReservationsCalendarRoutes(
       booking_customer_id: bookingCustomerId,
       reservation_code: reservationCode,
       guest_count: computed.data.rooms_count,
-      reservation_status: status,
       reservation_source: normalizeOptionalText(payload.reservation_source),
       estimated_total_price: computed.data.total_price,
       final_total_price: computed.data.total_price,
@@ -467,6 +461,7 @@ export function registerReservationsCalendarRoutes(
         .insert({
           reservation_id: reservationId,
           room_id: room.id,
+          stay_status: "confirmed",
           applied_daily_rate: Number((groupTotal / group.nights).toFixed(2)),
           total_price_estimated: Number(groupTotal.toFixed(2)),
           checkin_date_expected: `${group.start_date}T12:00:00.000Z`,

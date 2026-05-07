@@ -1,5 +1,5 @@
 import { redirect } from "next/navigation";
-import { translatePaymentStatus, translateReservationSource, translateReservationStatus } from "@hotel/shared";
+import { translatePaymentStatus, translateReservationSource } from "@hotel/shared";
 import { DashboardAccessDeniedCard } from "../../_components/DashboardAccessDeniedCard";
 import { DashboardCreateFormCard } from "../../_components/DashboardCreateFormCard";
 import { DashboardEntityPageShell } from "../../_components/DashboardEntityPageShell";
@@ -52,17 +52,6 @@ export default async function ReservationsCreatePage({ searchParams }: Reservati
 
         <FormField label="Quantidade de hospedes" htmlFor="create-reservation-guest-count">
           <input id="create-reservation-guest-count" name="guest_count" type="number" min={1} defaultValue={1} required className="pms-field-input" />
-        </FormField>
-
-        <FormField label="Status da reserva" htmlFor="create-reservation-status">
-          <select id="create-reservation-status" name="reservation_status" defaultValue="pending" className="pms-field-input">
-            <option value="pending">{translateReservationStatus("pending")}</option>
-            <option value="confirmed">{translateReservationStatus("confirmed")}</option>
-            <option value="checked_in">{translateReservationStatus("checked_in")}</option>
-            <option value="checked_out">{translateReservationStatus("checked_out")}</option>
-            <option value="canceled">{translateReservationStatus("canceled")}</option>
-            <option value="no_show">{translateReservationStatus("no_show")}</option>
-          </select>
         </FormField>
 
         <FormField label="Origem da reserva" htmlFor="create-reservation-source">

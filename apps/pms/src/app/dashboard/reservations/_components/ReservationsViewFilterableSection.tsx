@@ -2,7 +2,7 @@
 
 import { useMemo } from "react";
 import type { AdminReservation } from "@hotel/shared";
-import { translateReservationSource, translateReservationStatus } from "@hotel/shared";
+import { translateReservationSource } from "@hotel/shared";
 import {
   DEFAULT_RESERVATION_VIEW_FILTERS,
   applyReservationViewFilters,
@@ -74,19 +74,6 @@ export function ReservationsViewFilterableSection({ reservations, canRead, canUp
               placeholder="Ex.: RES-2026, cliente, observações"
               className={viewFiltersFieldClassName}
             />
-          </label>
-
-          <label className="pms-field">
-            <span>Status da reserva</span>
-            <select value={draftFilters.status} onChange={(event) => updateDraftFilter("status", event.target.value as ReservationViewFilters["status"])} className={viewFiltersFieldClassName}>
-              <option value="all">Todos</option>
-              <option value="pending">{translateReservationStatus("pending")}</option>
-              <option value="confirmed">{translateReservationStatus("confirmed")}</option>
-              <option value="checked_in">{translateReservationStatus("checked_in")}</option>
-              <option value="checked_out">{translateReservationStatus("checked_out")}</option>
-              <option value="canceled">{translateReservationStatus("canceled")}</option>
-              <option value="no_show">{translateReservationStatus("no_show")}</option>
-            </select>
           </label>
 
           <label className="pms-field">

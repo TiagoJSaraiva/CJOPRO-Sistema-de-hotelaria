@@ -103,7 +103,6 @@ export function registerReservationRoutes(
         booking_customer_id: bookingCustomerId,
         reservation_code: reservationCode,
         guest_count: guestCount,
-        reservation_status: normalizeOptionalText(request.body?.reservation_status) || "pending",
         reservation_source: normalizeOptionalText(request.body?.reservation_source),
         estimated_total_price: request.body?.estimated_total_price === undefined ? null : Number(request.body.estimated_total_price),
         final_total_price: request.body?.final_total_price === undefined ? null : Number(request.body.final_total_price),
@@ -136,7 +135,6 @@ export function registerReservationRoutes(
     if (request.body?.booking_customer_id !== undefined) payload.booking_customer_id = normalizeOptionalText(request.body.booking_customer_id);
     if (request.body?.reservation_code !== undefined) payload.reservation_code = normalizeOptionalText(request.body.reservation_code);
     if (request.body?.guest_count !== undefined) payload.guest_count = Number(request.body.guest_count);
-    if (request.body?.reservation_status !== undefined) payload.reservation_status = normalizeOptionalText(request.body.reservation_status);
     if (request.body?.reservation_source !== undefined) payload.reservation_source = normalizeOptionalText(request.body.reservation_source);
     if (request.body?.estimated_total_price !== undefined) payload.estimated_total_price = Number(request.body.estimated_total_price);
     if (request.body?.final_total_price !== undefined) payload.final_total_price = Number(request.body.final_total_price);

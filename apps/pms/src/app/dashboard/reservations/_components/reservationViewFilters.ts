@@ -1,14 +1,12 @@
-import type { AdminReservation, ReservationSource, ReservationStatus } from "@hotel/shared";
+import type { AdminReservation, ReservationSource } from "@hotel/shared";
 
 export type ReservationViewFilters = {
   search: string;
-  status: "all" | ReservationStatus;
   source: "all" | ReservationSource;
 };
 
 export const DEFAULT_RESERVATION_VIEW_FILTERS: ReservationViewFilters = {
   search: "",
-  status: "all",
   source: "all"
 };
 
@@ -16,7 +14,6 @@ export function countAppliedReservationFilters(filters: ReservationViewFilters):
   let total = 0;
 
   if (filters.search.trim()) total += 1;
-  if (filters.status !== "all") total += 1;
   if (filters.source !== "all") total += 1;
 
   return total;
@@ -32,10 +29,6 @@ export function applyReservationViewFilters(reservations: AdminReservation[], fi
       if (!haystack.includes(search)) {
         return false;
       }
-    }
-
-    if (filters.status !== "all" && reservation.reservation_status !== filters.status) {
-      return false;
     }
 
     if (filters.source !== "all" && reservation.reservation_source !== filters.source) {

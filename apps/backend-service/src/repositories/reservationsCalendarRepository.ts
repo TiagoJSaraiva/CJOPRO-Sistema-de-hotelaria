@@ -10,11 +10,11 @@ type StayRow = {
   id: string;
   room_id: string;
   reservation_id: string;
+  stay_status?: string | null;
   checkin_date_expected: string;
   checkout_date_expected: string;
   reservations?: {
     reservation_code?: string | null;
-    reservation_status?: string | null;
     customers?: {
       full_name?: string | null;
     } | null;
@@ -84,7 +84,7 @@ function normalizeStayBlocks(rows: StayRow[], windowStart: string, windowEnd: st
         room_id: stay.room_id,
         reservation_id: stay.reservation_id,
         reservation_code: stay.reservations?.reservation_code || null,
-        reservation_status: (stay.reservations?.reservation_status as AdminReservationCalendarStayBlock["reservation_status"]) || null,
+        stay_status: (stay.stay_status as AdminReservationCalendarStayBlock["stay_status"]) || null,
         customer_name: stay.reservations?.customers?.full_name || null,
         checkin_date_expected: toIsoDate(checkin),
         checkout_date_expected: toIsoDate(checkout),
@@ -137,7 +137,7 @@ class SupabaseReservationsCalendarRepository implements ReservationsCalendarRepo
 
     const staysResult = await supabase
       .from("stays")
-      .select("id,room_id,reservation_id,checkin_date_expected,checkout_date_expected,reservations:reservation_id(reservation_code,reservation_status,customers:booking_customer_id(full_name))")
+      .select("id,room_id,reservation_id,stay_status,checkin_date_expected,checkout_date_expected,reservations:reservation_id(reservation_code,customers:booking_customer_id(full_name))")
       .in("room_id", roomIds)
       .lt("checkin_date_expected", `${endDate}T23:59:59.999Z`)
       .gt("checkout_date_expected", `${startDate}T00:00:00.000Z`);

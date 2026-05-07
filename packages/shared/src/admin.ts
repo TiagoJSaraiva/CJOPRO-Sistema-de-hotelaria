@@ -284,7 +284,6 @@ export type AdminReservation = {
   booking_customer_id: string;
   reservation_code: string;
   guest_count: number;
-  reservation_status: ReservationStatus;
   reservation_source: ReservationSource | null;
   estimated_total_price: number | null;
   final_total_price: number | null;
@@ -300,7 +299,6 @@ export type AdminReservationCreateInput = {
   booking_customer_document_type?: string | null;
   reservation_code?: string;
   guest_count: number;
-  reservation_status?: ReservationStatus;
   reservation_source?: ReservationSource | null;
   estimated_total_price?: number | null;
   final_total_price?: number | null;
@@ -415,7 +413,7 @@ export type AdminReservationCalendarStayBlock = {
   room_id: string;
   reservation_id: string;
   reservation_code: string | null;
-  reservation_status: ReservationStatus | null;
+  stay_status: ReservationStatus | null;
   customer_name: string | null;
   checkin_date_expected: string;
   checkout_date_expected: string;
@@ -477,7 +475,6 @@ export type AdminReservationCalendarSelectedCell = {
 export type AdminReservationCalendarBookingCreateInput = {
   booking_customer: AdminReservationCalendarBookingCustomer;
   selected_cells: AdminReservationCalendarSelectedCell[];
-  reservation_status: ReservationStatus;
   reservation_source?: ReservationSource | null;
   notes?: string | null;
 };

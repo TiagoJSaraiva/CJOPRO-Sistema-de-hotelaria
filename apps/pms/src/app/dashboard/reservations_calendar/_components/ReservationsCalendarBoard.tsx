@@ -58,7 +58,6 @@ export function ReservationsCalendarBoard({ data, startDate, customers }: Reserv
   const [error, setError] = useState<string | null>(null);
   const [bookingMode, setBookingMode] = useState<"existing" | "create_inline">("existing");
   const [existingCustomerId, setExistingCustomerId] = useState<string>(customers[0]?.id || "");
-  const [reservationStatus, setReservationStatus] = useState<ReservationStatus>("confirmed");
   const [reservationSource, setReservationSource] = useState<ReservationSource>("front_desk");
   const [notes, setNotes] = useState("");
   const [inlineCustomer, setInlineCustomer] = useState({
@@ -178,7 +177,6 @@ export function ReservationsCalendarBoard({ data, startDate, customers }: Reserv
     return {
       booking_customer,
       selected_cells: selectedCellsPayload,
-      reservation_status: reservationStatus,
       reservation_source: reservationSource || null,
       notes: notes || null
     };
@@ -323,7 +321,7 @@ export function ReservationsCalendarBoard({ data, startDate, customers }: Reserv
                           top: 0,
                           width: block.width,
                           height: BLOCK_HEIGHT,
-                          backgroundColor: STATUS_COLORS[block.stay.reservation_status || "pending"] || STATUS_COLORS.pending
+                          backgroundColor: STATUS_COLORS[block.stay.stay_status || "pending"] || STATUS_COLORS.pending
                         }}
                         onClick={() => {
                           setCandidateStayIds([]);
@@ -341,7 +339,7 @@ export function ReservationsCalendarBoard({ data, startDate, customers }: Reserv
         </div>
 
         <aside className="rounded border border-[#d8d8d8] bg-white p-3">
-          <h3 className="mt-0"></h3>
+          <h3 className="mt-0">Painel</h3>
           {error ? <p className="rounded bg-[#fee2e2] p-2 text-sm text-[#7f1d1d]">{error}</p> : null}
 
           {candidateStayIds.length > 1 ? (
@@ -354,7 +352,7 @@ export function ReservationsCalendarBoard({ data, startDate, customers }: Reserv
                   return (
                     <button key={stay.id} type="button" className="cursor-pointer rounded border border-[#d8d8d8] bg-white px-2 py-2 text-left" onClick={() => setSelectedStayId(stay.id)}>
                       <strong>{stay.reservation_code || "Sem codigo"}</strong>
-                      <div className="text-xs">{statusLabel(stay.reservation_status)}</div>
+                      <div className="text-xs">{statusLabel(stay.stay_status)}</div>
                     </button>
                   );
                 })}
@@ -365,7 +363,7 @@ export function ReservationsCalendarBoard({ data, startDate, customers }: Reserv
           {selectedStay ? (
             <div className="text-sm">
               <p><strong>Reserva:</strong> {selectedStay.reservation_code || "Sem codigo"}</p>
-              <p><strong>Status:</strong> {statusLabel(selectedStay.reservation_status)}</p>
+              <p><strong>Status:</strong> {statusLabel(selectedStay.stay_status)}</p>
               <p><strong>Titular:</strong> {selectedStay.customer_name || "Nao informado"}</p>
               <p><strong>Check-in:</strong> {selectedStay.checkin_date_expected}</p>
               <p><strong>Check-out:</strong> {selectedStay.checkout_date_expected}</p>
@@ -378,17 +376,6 @@ export function ReservationsCalendarBoard({ data, startDate, customers }: Reserv
               <p className="rounded bg-[#eff6ff] p-2 text-xs text-[#1e3a8a]">
                 Os hospedes serao vinculados no check-in desta estadia.
               </p>
-              <label className="block">
-                <span className="mb-1 block">Status da reserva</span>
-                <select value={reservationStatus} onChange={(event) => setReservationStatus(event.target.value as ReservationStatus)} className="pms-field-input">
-                  <option value="pending">pending</option>
-                  <option value="confirmed">confirmed</option>
-                  <option value="checked_in">checked_in</option>
-                  <option value="checked_out">checked_out</option>
-                  <option value="canceled">canceled</option>
-                  <option value="no_show">no_show</option>
-                </select>
-              </label>
               <label className="block">
                 <span className="mb-1 block">Origem</span>
                 <select value={reservationSource} onChange={(event) => setReservationSource(event.target.value as ReservationSource)} className="pms-field-input">

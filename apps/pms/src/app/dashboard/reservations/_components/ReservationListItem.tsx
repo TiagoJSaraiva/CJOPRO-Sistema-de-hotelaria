@@ -1,7 +1,7 @@
 "use client";
 
 import type { AdminReservation } from "@hotel/shared";
-import { translatePaymentStatus, translateReservationSource, translateReservationStatus } from "@hotel/shared";
+import { translatePaymentStatus, translateReservationSource } from "@hotel/shared";
 import { deleteReservationAction, updateReservationAction } from "../actions";
 import { DashboardEntityActionButtons } from "../../_components/DashboardEntityActionButtons";
 import { DashboardEntityListItemFrame } from "../../_components/DashboardEntityListItemFrame";
@@ -32,10 +32,6 @@ function ReservationDataPreview({ reservation }: { reservation: AdminReservation
       <div>
         <strong>Hospedes:</strong>
         <p className="m-0 mt-[0.2rem]">{reservation.guest_count}</p>
-      </div>
-      <div>
-        <strong>Status:</strong>
-        <p className="m-0 mt-[0.2rem]">{translateReservationStatus(reservation.reservation_status)}</p>
       </div>
       <div>
         <strong>Origem:</strong>
@@ -82,18 +78,6 @@ function ReservationEditForm({ reservation }: { reservation: AdminReservation })
       <div className="pms-field">
         <label htmlFor={`reservation-guest-count-${reservation.id}`}>Hospedes</label>
         <input id={`reservation-guest-count-${reservation.id}`} name="guest_count" type="number" min={1} defaultValue={reservation.guest_count} required className="pms-field-input" />
-      </div>
-
-      <div className="pms-field">
-        <label htmlFor={`reservation-status-${reservation.id}`}>Status da reserva</label>
-        <select id={`reservation-status-${reservation.id}`} name="reservation_status" defaultValue={reservation.reservation_status} className="pms-field-input">
-          <option value="pending">{translateReservationStatus("pending")}</option>
-          <option value="confirmed">{translateReservationStatus("confirmed")}</option>
-          <option value="checked_in">{translateReservationStatus("checked_in")}</option>
-          <option value="checked_out">{translateReservationStatus("checked_out")}</option>
-          <option value="canceled">{translateReservationStatus("canceled")}</option>
-          <option value="no_show">{translateReservationStatus("no_show")}</option>
-        </select>
       </div>
 
       <div className="pms-field">
@@ -145,7 +129,7 @@ export function ReservationListItem({ reservation, canRead, canUpdate, canDelete
   return (
     <DashboardEntityListItemFrame
       title={`Reserva ${reservation.reservation_code}`}
-      subtitle={`${reservation.guest_count} hospedes | ${reservation.reservation_status}`}
+      subtitle={`${reservation.guest_count} hospedes`}
       actions={
         <DashboardEntityActionButtons
           canRead={canRead}
