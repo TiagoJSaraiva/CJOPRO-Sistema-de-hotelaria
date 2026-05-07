@@ -18,6 +18,7 @@ import {
   AdminFinancialTransactionCreateInput,
   AdminFinancialTransactionUpdateInput,
   AdminReservation,
+  AdminReservationCalendarResponse,
   AdminReservationCreateInput,
   AdminReservationUpdateInput,
   AdminRoom,
@@ -206,6 +207,7 @@ export type {
   AdminFinancialTransactionCreateInput,
   AdminFinancialTransactionUpdateInput,
   AdminReservation,
+  AdminReservationCalendarResponse,
   AdminReservationCreateInput,
   AdminReservationUpdateInput,
   AdminRoom,
@@ -345,6 +347,14 @@ export function updateReservation(id: string, payload: AdminReservationUpdateInp
 
 export function deleteReservation(id: string): Promise<null> {
   return requestAdmin<never>(`/admin/reservations/${id}`, "DELETE");
+}
+
+export function getReservationsCalendar(startDate: string, days = 20): Promise<AdminReservationCalendarResponse> {
+  const query = new URLSearchParams({
+    start_date: startDate,
+    days: String(days)
+  });
+  return getAdminData<AdminReservationCalendarResponse>(`/admin/reservations/calendar?${query.toString()}`);
 }
 
 export function listFinancialTransactions(): Promise<AdminFinancialTransaction[]> {

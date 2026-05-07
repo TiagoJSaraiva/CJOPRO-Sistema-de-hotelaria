@@ -6,6 +6,7 @@ import { getProductsDefaultRoute, type ProductsAccess } from "../../../src/app/d
 import { getSeasonsDefaultRoute, type SeasonsAccess } from "../../../src/app/dashboard/seasons/access";
 import { getSeasonRoomRatesDefaultRoute, type SeasonRoomRatesAccess } from "../../../src/app/dashboard/season-room-rates/access";
 import { getTransactionsDefaultRoute, type TransactionsAccess } from "../../../src/app/dashboard/transactions/access";
+import { getReservationsCalendarDefaultRoute, type ReservationsCalendarAccess } from "../../../src/app/dashboard/reservations_calendar/access";
 
 type AccessState = {
   canCreate: boolean;
@@ -35,6 +36,7 @@ describe("dashboard access default routes", () => {
     expect(getProductsDefaultRoute(access as ProductsAccess)).toBe("/dashboard/products/view");
     expect(getSeasonsDefaultRoute(access as SeasonsAccess)).toBe("/dashboard/seasons/view");
     expect(getSeasonRoomRatesDefaultRoute(access as SeasonRoomRatesAccess)).toBe("/dashboard/season-room-rates/view");
+    expect(getReservationsCalendarDefaultRoute({ canAccess: true } as ReservationsCalendarAccess)).toBe("/dashboard/reservations_calendar/view");
   });
 
   it("retorna rota create quando canRead=false e canCreate=true", () => {
@@ -47,6 +49,7 @@ describe("dashboard access default routes", () => {
     expect(getProductsDefaultRoute(access as ProductsAccess)).toBe("/dashboard/products/create");
     expect(getSeasonsDefaultRoute(access as SeasonsAccess)).toBe("/dashboard/seasons/create");
     expect(getSeasonRoomRatesDefaultRoute(access as SeasonRoomRatesAccess)).toBe("/dashboard/season-room-rates/create");
+    expect(getReservationsCalendarDefaultRoute({ canAccess: true } as ReservationsCalendarAccess)).toBe("/dashboard/reservations_calendar/view");
   });
 
   it("retorna null quando usuario nao tem read e nem create", () => {
@@ -59,5 +62,6 @@ describe("dashboard access default routes", () => {
     expect(getProductsDefaultRoute(access as ProductsAccess)).toBeNull();
     expect(getSeasonsDefaultRoute(access as SeasonsAccess)).toBeNull();
     expect(getSeasonRoomRatesDefaultRoute(access as SeasonRoomRatesAccess)).toBeNull();
+    expect(getReservationsCalendarDefaultRoute({ canAccess: false } as ReservationsCalendarAccess)).toBeNull();
   });
 });

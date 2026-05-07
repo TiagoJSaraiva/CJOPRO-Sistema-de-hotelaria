@@ -396,3 +396,55 @@ export type AdminSeasonRoomRateCreateInput = {
 };
 
 export type AdminSeasonRoomRateUpdateInput = Partial<AdminSeasonRoomRateCreateInput>;
+
+export type AdminReservationCalendarDay = {
+  date: string;
+  day_number: number;
+  weekday_short: string;
+};
+
+export type AdminReservationCalendarRoomRow = {
+  room_id: string;
+  room_number: string;
+  room_type: string;
+};
+
+export type AdminReservationCalendarStayBlock = {
+  id: string;
+  room_id: string;
+  reservation_id: string;
+  reservation_code: string | null;
+  reservation_status: ReservationStatus | null;
+  customer_name: string | null;
+  checkin_date_expected: string;
+  checkout_date_expected: string;
+  start_date: string;
+  end_date: string;
+  start_half: "left" | "right" | null;
+  end_half: "left" | "right" | null;
+};
+
+export type AdminReservationCalendarRoomBlock = {
+  id: string;
+  room_id: string;
+  label: string | null;
+  status: string;
+  start_date: string;
+  end_date: string;
+};
+
+export type AdminReservationCalendarLegendItem = {
+  key: string;
+  label: string;
+  color: string;
+};
+
+export type AdminReservationCalendarResponse = {
+  window_start: string;
+  window_end: string;
+  days: AdminReservationCalendarDay[];
+  rooms: AdminReservationCalendarRoomRow[];
+  stays: AdminReservationCalendarStayBlock[];
+  blocks: AdminReservationCalendarRoomBlock[];
+  legend: AdminReservationCalendarLegendItem[];
+};

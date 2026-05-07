@@ -15,3 +15,11 @@ O sistema deve tratar reservas e estadias como entidades separadas. A reserva re
 Além das reservas, a grid também deverá suportar bloqueios operacionais de quartos, como manutenção, limpeza pesada, dedetização ou interdições. Esses bloqueios deverão possuir representação visual própria dentro da timeline, mas não devem ser tratados internamente como reservas.
 A visualização também deverá suportar múltiplos status operacionais representados visualmente através de cores padronizadas, permitindo identificar rapidamente situações como reservas confirmadas, hóspedes hospedados, checkouts do dia, no-show, manutenção e outros estados relevantes para a operação do hotel.
 O sistema deverá considerar regras operacionais padrão de hotelaria relacionadas a horários de check-in e checkout. O calendário visual trabalhará principalmente em nível de data, permitindo que um checkout e um check-in coexistam na mesma data sem conflito visual, enquanto a lógica operacional interna utilizará horários reais para validação precisa de conflitos.
+
+Extra sobre arquitetura:
+
+A tabela não deve armazenar a lógica visual principal diretamente em cada célula. Cada célula da matriz [quarto][dia] deve funcionar como uma coordenada interativa, contendo apenas as informações necessárias para identificar o quarto e a data clicada. Reservas, estadias e bloqueios operacionais devem ser renderizados em uma camada de overlay acima da grid base.
+
+A grid base será responsável por exibir a estrutura visual de linhas e colunas, permitir seleção de células livres e servir como referência espacial para posicionamento dos blocos. Já a camada de overlay será responsável por desenhar os blocos contínuos de estadias, reservas e bloqueios, utilizando posicionamento calculado a partir do quarto, data inicial, data final e status.
+
+Cada estadia ou bloqueio deve ser renderizado como um único bloco visual contínuo, e não como várias células coloridas separadas. Isso melhora performance, reduz complexidade do DOM, facilita bordas grossas, drag-and-drop futuro, redimensionamento de estadia e distinção visual entre check-in e checkout no mesmo dia.
