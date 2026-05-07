@@ -12,6 +12,7 @@ import type {
   ReservationStatus
 } from "@hotel/shared";
 import { addDaysIso, CALENDAR_WINDOW_DAYS, formatDateRangeLabel } from "./calendarUtils";
+import { computeStayBlockLayout } from "./stayBlockLayout";
 
 type ReservationsCalendarBoardProps = {
   data: AdminReservationCalendarResponse;
@@ -20,8 +21,10 @@ type ReservationsCalendarBoardProps = {
 };
 
 const CELL_WIDTH = 44;
-const ROW_HEIGHT = 42;
+const ROW_HEIGHT = 58;
 const LEFT_PANEL_WIDTH = 200;
+const BLOCK_HEIGHT = 30;
+const BLOCK_VERTICAL_GAP = Math.max(0, (ROW_HEIGHT - BLOCK_HEIGHT) / 2);
 
 const STATUS_COLORS: Record<string, string> = {
   pending: "#0ea5e9",
@@ -34,6 +37,12 @@ const STATUS_COLORS: Record<string, string> = {
   maintenance: "#ef4444"
 };
 
+type SelectionSide = "checkin" | "checkout" | "full";
+type CellOccupancy = {
+  left: boolean;
+  right: boolean;
+};
+
 function statusLabel(status: ReservationStatus | null): string {
   if (!status) return "N/A";
   return status.replace("_", " ");
@@ -43,7 +52,7 @@ export function ReservationsCalendarBoard({ data, startDate, customers }: Reserv
   const router = useRouter();
   const [selectedStayId, setSelectedStayId] = useState<string | null>(null);
   const [candidateStayIds, setCandidateStayIds] = useState<string[]>([]);
-  const [selectedCells, setSelectedCells] = useState<Set<string>>(new Set());
+  const [selectedCells, setSelectedCells] = useState<Map<string, SelectionSide>>(new Map());
   const [simulation, setSimulation] = useState<AdminReservationCalendarBookingCreateResponse | null>(null);
   const [isPending, setIsPending] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -66,49 +75,73 @@ export function ReservationsCalendarBoard({ data, startDate, customers }: Reserv
 
   const selectedStay = useMemo(() => data.stays.find((item) => item.id === selectedStayId) || null, [data.stays, selectedStayId]);
   const daysMap = useMemo(() => new Map(data.days.map((day, index) => [day.date, index])), [data.days]);
-  const roomIndexMap = useMemo(() => new Map(data.rooms.map((room, index) => [room.room_id, index])), [data.rooms]);
-  const occupiedCellSet = useMemo(() => {
-    const set = new Set<string>();
+  const occupiedCellsBySide = useMemo(() => {
+    const map = new Map<string, CellOccupancy>();
+    const mark = (roomId: string, date: string, side: "left" | "right" | "full") => {
+      const key = `${roomId}::${date}`;
+      const current = map.get(key) || { left: false, right: false };
+      if (side === "full") {
+        current.left = true;
+        current.right = true;
+      } else {
+        current[side] = true;
+      }
+      map.set(key, current);
+    };
+
     for (const stay of data.stays) {
       for (const day of data.days) {
         if (day.date >= stay.start_date && day.date <= stay.end_date) {
-          set.add(`${stay.room_id}::${day.date}`);
+          if (day.date === stay.start_date && stay.start_half) {
+            mark(stay.room_id, day.date, stay.start_half);
+            continue;
+          }
+          if (day.date === stay.end_date && stay.end_half) {
+            mark(stay.room_id, day.date, stay.end_half);
+            continue;
+          }
+          mark(stay.room_id, day.date, "full");
         }
       }
     }
     for (const block of data.blocks) {
       for (const day of data.days) {
         if (day.date >= block.start_date && day.date <= block.end_date) {
-          set.add(`${block.room_id}::${day.date}`);
+          mark(block.room_id, day.date, "full");
         }
       }
     }
-    return set;
+    return map;
   }, [data.stays, data.blocks, data.days]);
 
-  const overlayBlocks = useMemo(() => {
-    return data.stays
-      .map((stay) => {
-        const roomIndex = roomIndexMap.get(stay.room_id);
-        const startIndex = daysMap.get(stay.start_date);
-        const endIndex = daysMap.get(stay.end_date);
-        if (roomIndex === undefined || startIndex === undefined || endIndex === undefined) return null;
-        const leftOffset = LEFT_PANEL_WIDTH + startIndex * CELL_WIDTH + (stay.start_half === "right" ? CELL_WIDTH / 2 : 0);
-        const rightOffset = (endIndex + 1) * CELL_WIDTH - (stay.end_half === "left" ? CELL_WIDTH / 2 : 0);
-        const width = Math.max(8, rightOffset - (startIndex * CELL_WIDTH + (stay.start_half === "right" ? CELL_WIDTH / 2 : 0)));
-        const top = roomIndex * ROW_HEIGHT + 6;
-        return { stay, left: leftOffset, top, width };
-      })
-      .filter(Boolean) as Array<{ stay: AdminReservationCalendarResponse["stays"][number]; left: number; top: number; width: number }>;
-  }, [data.stays, daysMap, roomIndexMap]);
+  const stayBlocksByRoom = useMemo(() => {
+    const grouped = new Map<string, Array<{ stay: AdminReservationCalendarResponse["stays"][number]; left: number; width: number }>>();
+    for (const stay of data.stays) {
+      const startIndex = daysMap.get(stay.start_date);
+      const endIndex = daysMap.get(stay.end_date);
+      if (startIndex === undefined || endIndex === undefined) continue;
+      const layout = computeStayBlockLayout({
+        startIndex,
+        endIndex,
+        startHalf: stay.start_half,
+        endHalf: stay.end_half,
+        cellWidth: CELL_WIDTH
+      });
+      const list = grouped.get(stay.room_id) || [];
+      list.push({ stay, left: layout.left, width: layout.width });
+      grouped.set(stay.room_id, list);
+    }
+    return grouped;
+  }, [data.stays, daysMap]);
 
   const rangeLabel = formatDateRangeLabel(data.days);
   const prevHref = `/dashboard/reservations_calendar/view?start_date=${addDaysIso(startDate, -CALENDAR_WINDOW_DAYS)}`;
   const nextHref = `/dashboard/reservations_calendar/view?start_date=${addDaysIso(startDate, CALENDAR_WINDOW_DAYS)}`;
 
   const selectedCellsPayload = Array.from(selectedCells).map((key) => {
-    const [room_id = "", date = ""] = key.split("::");
-    return { room_id, date };
+    const [cellKey, side] = key;
+    const [room_id = "", date = ""] = cellKey.split("::");
+    return { room_id, date, side };
   });
   const roomsCount = new Set(selectedCellsPayload.map((item) => item.room_id)).size;
 
@@ -173,7 +206,7 @@ export function ReservationsCalendarBoard({ data, startDate, customers }: Reserv
       const payload = buildBookingPayload();
       const result = await postJson<AdminReservationCalendarBookingCreateResponse>("/api/reservations-calendar/booking", payload);
       setSimulation(result);
-      setSelectedCells(new Set());
+      setSelectedCells(new Map());
       router.refresh();
     } catch (requestError) {
       setError(requestError instanceof Error ? requestError.message : "Falha ao confirmar reserva.");
@@ -217,27 +250,36 @@ export function ReservationsCalendarBoard({ data, startDate, customers }: Reserv
               ))}
             </div>
 
-            <div className="relative">
+            <div>
               {data.rooms.map((room) => (
-                <div key={room.room_id} className="grid border-b border-[#efefef]" style={{ gridTemplateColumns: `${LEFT_PANEL_WIDTH}px repeat(${data.days.length}, ${CELL_WIDTH}px)`, minHeight: ROW_HEIGHT }}>
+                <div key={room.room_id} className="relative grid border-b border-[#efefef]" style={{ gridTemplateColumns: `${LEFT_PANEL_WIDTH}px repeat(${data.days.length}, ${CELL_WIDTH}px)`, height: ROW_HEIGHT }}>
                   <div className="border-r border-[#efefef] px-3 py-2">
                     <p className="m-0 text-sm font-semibold">{room.room_type.toUpperCase()}</p>
                     <p className="m-0 text-sm">
-                      {room.room_number} • {room.max_occupancy} hospedes
+                      {room.room_number} | {room.max_occupancy} hospedes
                     </p>
                   </div>
                   {data.days.map((day) => {
                     const key = `${room.room_id}::${day.date}`;
-                    const occupied = occupiedCellSet.has(key);
-                    const selected = selectedCells.has(key);
+                    const occupied = occupiedCellsBySide.get(key) || { left: false, right: false };
+                    const hasAnyOccupiedSide = occupied.left || occupied.right;
+                    const selectedSide = selectedCells.get(key);
+                    const selected =
+                      selectedSide === "full"
+                        ? "#bbf7d0"
+                        : selectedSide === "checkin"
+                          ? "linear-gradient(90deg, transparent 0%, transparent 50%, #bbf7d0 50%, #bbf7d0 100%)"
+                          : selectedSide === "checkout"
+                            ? "linear-gradient(90deg, #bbf7d0 0%, #bbf7d0 50%, transparent 50%, transparent 100%)"
+                            : "transparent";
                     return (
                       <button
                         key={`${room.room_id}-${day.date}`}
                         type="button"
                         className="border-l border-[#f2f2f2]"
-                        style={{ backgroundColor: selected ? "#bbf7d0" : "transparent", cursor: occupied ? "not-allowed" : "pointer" }}
+                        style={{ background: selected, cursor: "pointer" }}
                         onClick={() => {
-                          if (occupied) {
+                          if (occupied.left && occupied.right) {
                             const candidates = data.stays.filter((stay) => stay.room_id === room.room_id && day.date >= stay.start_date && day.date <= stay.end_date);
                             if (candidates.length === 1) {
                               setCandidateStayIds([]);
@@ -250,44 +292,56 @@ export function ReservationsCalendarBoard({ data, startDate, customers }: Reserv
                             }
                             return;
                           }
+
+                          let sideToToggle: SelectionSide = "full";
+                          if (hasAnyOccupiedSide) {
+                            sideToToggle = occupied.right ? "checkout" : "checkin";
+                          }
+
                           setCandidateStayIds([]);
                           setSelectedStayId(null);
                           setSimulation(null);
                           setSelectedCells((previous) => {
-                            const next = new Set(previous);
-                            if (next.has(key)) next.delete(key);
-                            else next.add(key);
+                            const next = new Map(previous);
+                            if (next.get(key) === sideToToggle) next.delete(key);
+                            else next.set(key, sideToToggle);
                             return next;
                           });
                         }}
                       />
                     );
                   })}
+
+                  <div className="pointer-events-none absolute left-[200px] right-0 z-10" style={{ top: BLOCK_VERTICAL_GAP, height: BLOCK_HEIGHT }}>
+                    {(stayBlocksByRoom.get(room.room_id) || []).map((block) => (
+                      <button
+                        key={block.stay.id}
+                        type="button"
+                        className="pointer-events-auto absolute cursor-pointer rounded border-[2px] border-[#0f172a] text-left text-[11px] text-white"
+                        style={{
+                          left: block.left,
+                          top: 0,
+                          width: block.width,
+                          height: BLOCK_HEIGHT,
+                          backgroundColor: STATUS_COLORS[block.stay.reservation_status || "pending"] || STATUS_COLORS.pending
+                        }}
+                        onClick={() => {
+                          setCandidateStayIds([]);
+                          setSelectedStayId(block.stay.id);
+                        }}
+                      >
+                        <span className="block truncate px-2 py-1">{block.stay.reservation_code || "Sem codigo"}</span>
+                      </button>
+                    ))}
+                  </div>
                 </div>
               ))}
-
-              <div className="pointer-events-none absolute inset-0 z-10">
-                {overlayBlocks.map((block) => (
-                  <button
-                    key={block.stay.id}
-                    type="button"
-                    className="pointer-events-auto absolute h-[30px] cursor-pointer rounded border-[3px] border-[#0f172a] text-left text-[11px] text-white"
-                    style={{ left: block.left, top: block.top, width: block.width, backgroundColor: STATUS_COLORS[block.stay.reservation_status || "pending"] || STATUS_COLORS.pending }}
-                    onClick={() => {
-                      setCandidateStayIds([]);
-                      setSelectedStayId(block.stay.id);
-                    }}
-                  >
-                    <span className="block truncate px-2 py-1">{block.stay.reservation_code || "Sem codigo"}</span>
-                  </button>
-                ))}
-              </div>
             </div>
           </div>
         </div>
 
         <aside className="rounded border border-[#d8d8d8] bg-white p-3">
-          <h3 className="mt-0">Painel</h3>
+          <h3 className="mt-0"></h3>
           {error ? <p className="rounded bg-[#fee2e2] p-2 text-sm text-[#7f1d1d]">{error}</p> : null}
 
           {candidateStayIds.length > 1 ? (
@@ -312,7 +366,7 @@ export function ReservationsCalendarBoard({ data, startDate, customers }: Reserv
             <div className="text-sm">
               <p><strong>Reserva:</strong> {selectedStay.reservation_code || "Sem codigo"}</p>
               <p><strong>Status:</strong> {statusLabel(selectedStay.reservation_status)}</p>
-              <p><strong>Hospede:</strong> {selectedStay.customer_name || "Nao informado"}</p>
+              <p><strong>Titular:</strong> {selectedStay.customer_name || "Nao informado"}</p>
               <p><strong>Check-in:</strong> {selectedStay.checkin_date_expected}</p>
               <p><strong>Check-out:</strong> {selectedStay.checkout_date_expected}</p>
             </div>

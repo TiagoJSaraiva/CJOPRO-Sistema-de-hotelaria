@@ -471,6 +471,7 @@ export type AdminReservationCalendarBookingCustomer =
 export type AdminReservationCalendarSelectedCell = {
   room_id: string;
   date: string;
+  side: "checkin" | "checkout" | "full";
 };
 
 export type AdminReservationCalendarBookingCreateInput = {

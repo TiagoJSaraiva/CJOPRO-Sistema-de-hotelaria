@@ -72,6 +72,8 @@ type GroupedSelection = {
   nights: number;
 };
 
+type SelectedCellSide = "checkin" | "checkout" | "full";
+
 function parseIsoDate(value: string): Date {
   const [yearRaw = "1970", monthRaw = "01", dayRaw = "01"] = value.split("-");
   const year = Number(yearRaw);
@@ -133,6 +135,23 @@ function buildContinuousGroups(selectedCells: Array<{ room_id: string; date: str
   return result;
 }
 
+function addOccupancySide(
+  map: Map<string, { left: boolean; right: boolean }>,
+  roomId: string,
+  date: string,
+  side: "left" | "right" | "full"
+): void {
+  const key = `${roomId}::${date}`;
+  const current = map.get(key) || { left: false, right: false };
+  if (side === "full") {
+    current.left = true;
+    current.right = true;
+  } else {
+    current[side] = true;
+  }
+  map.set(key, current);
+}
+
 function getOverlappingSeason(dateIso: string, seasons: SeasonRow[]): SeasonRow | null {
   return (
     seasons.find((season) => {
@@ -153,11 +172,17 @@ async function computeBooking(
   const normalizedCells = selectedCells
     .map((cell) => ({
       room_id: String(cell?.room_id || "").trim(),
-      date: String(cell?.date || "").trim()
+      date: String(cell?.date || "").trim(),
+      side: String(cell?.side || "").trim() as SelectedCellSide
     }))
     .filter((cell) => cell.room_id && cell.date);
 
-  if (!normalizedCells.length || normalizedCells.some((cell) => !assertIsoDate(cell.date))) {
+  if (
+    !normalizedCells.length ||
+    normalizedCells.some(
+      (cell) => !assertIsoDate(cell.date) || (cell.side !== "full" && cell.side !== "checkin" && cell.side !== "checkout")
+    )
+  ) {
     return { ok: false, statusCode: 400, message: "selected_cells invalido." };
   }
 
@@ -193,15 +218,28 @@ async function computeBooking(
     return { ok: false, statusCode: 500, message: "Falha ao validar conflitos de disponibilidade." };
   }
 
-  const selectedSet = new Set(normalizedCells.map((cell) => `${cell.room_id}::${cell.date}`));
+  const occupiedByCell = new Map<string, { left: boolean; right: boolean }>();
   for (const stay of (conflictResult.data || []) as StayConflictRow[]) {
-    const start = parseIsoDate(dateToIso(new Date(stay.checkin_date_expected)));
-    const end = parseIsoDate(dateToIso(new Date(stay.checkout_date_expected)));
-    for (let cursor = new Date(start); cursor <= end; cursor = new Date(cursor.getTime() + 86400000)) {
-      const key = `${stay.room_id}::${dateToIso(cursor)}`;
-      if (selectedSet.has(key)) {
-        return { ok: false, statusCode: 409, message: "Conflito de disponibilidade em uma ou mais celulas selecionadas." };
-      }
+    const checkinDate = dateToIso(new Date(stay.checkin_date_expected));
+    const checkoutDate = dateToIso(new Date(stay.checkout_date_expected));
+
+    addOccupancySide(occupiedByCell, stay.room_id, checkinDate, "right");
+    addOccupancySide(occupiedByCell, stay.room_id, checkoutDate, "left");
+
+    const internalStart = addDays(checkinDate, 1);
+    const internalEnd = addDays(checkoutDate, -1);
+    for (let cursor = internalStart; cursor <= internalEnd; cursor = addDays(cursor, 1)) {
+      addOccupancySide(occupiedByCell, stay.room_id, cursor, "full");
+    }
+  }
+
+  for (const cell of normalizedCells) {
+    const key = `${cell.room_id}::${cell.date}`;
+    const occupied = occupiedByCell.get(key) || { left: false, right: false };
+    const hasConflict =
+      cell.side === "full" ? occupied.left || occupied.right : cell.side === "checkin" ? occupied.right : occupied.left;
+    if (hasConflict) {
+      return { ok: false, statusCode: 409, message: "Conflito de disponibilidade em uma ou mais celulas selecionadas." };
     }
   }
 
@@ -235,7 +273,7 @@ async function computeBooking(
 
   const breakdown: AdminReservationCalendarBookingPriceBreakdown[] = [];
   let totalPrice = 0;
-  for (const cell of normalizedCells) {
+  for (const cell of normalizedCells.filter((item) => item.side !== "checkout")) {
     const room = roomsById.get(cell.room_id)!;
     const season = getOverlappingSeason(cell.date, seasons);
     const extra = season ? ratesByKey.get(`${season.id}::${room.room_type}`) || 0 : 0;
@@ -253,12 +291,19 @@ async function computeBooking(
     });
   }
 
-  const groups = buildContinuousGroups(normalizedCells);
-  if (groups.some((group) => group.nights < 2)) {
+  const groups = buildContinuousGroups(normalizedCells.filter((item) => item.side !== "checkout"));
+  if (!groups.length) {
     return {
       ok: false,
       statusCode: 400,
-      message: "Cada sequencia selecionada deve ter no minimo 2 dias (check-in e checkout no dia seguinte ou posterior)."
+      message: "Selecione ao menos 1 diaria valida para compor uma estadia."
+    };
+  }
+  if (groups.some((group) => group.nights < 1)) {
+    return {
+      ok: false,
+      statusCode: 400,
+      message: "Cada sequencia selecionada deve ter no minimo 1 diaria."
     };
   }
   return {
