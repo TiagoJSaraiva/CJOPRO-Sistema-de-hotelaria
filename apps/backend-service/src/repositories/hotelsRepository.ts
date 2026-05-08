@@ -3,7 +3,7 @@ import { createServerClient } from "../common/supabaseServer";
 import { isSupabaseConflictError, isSupabaseForeignKeyError, isSupabaseNotFoundError } from "./supabaseError";
 
 const HOTEL_SELECT_FIELDS =
-  "id,name,legal_name,tax_id,email,phone,address_line,address_number,address_complement,district,city,state,country,zip_code,timezone,currency,slug,is_active,created_at,updated_at";
+  "id,name,legal_name,tax_id,email,phone,address_line,address_number,address_complement,district,city,state,country,zip_code,timezone,currency,checkin_time_start,checkin_time_limit,checkout_time_start,checkout_time_limit,slug,is_active,created_at,updated_at";
 
 export type HotelWriteResult = "ok" | "conflict" | "not-found";
 

@@ -42,7 +42,11 @@ function parseCreateHotelPayload(formData: FormData): AdminHotelCreateInput {
     country: String(formData.get("country") || "").trim().toUpperCase(),
     zip_code: String(formData.get("zip_code") || "").trim(),
     timezone: toOptionalText(formData.get("timezone")),
-    currency: toOptionalText(formData.get("currency"))?.toUpperCase() || null
+    currency: toOptionalText(formData.get("currency"))?.toUpperCase() || null,
+    checkin_time_start: toOptionalText(formData.get("checkin_time_start")),
+    checkin_time_limit: toOptionalText(formData.get("checkin_time_limit")),
+    checkout_time_start: toOptionalText(formData.get("checkout_time_start")),
+    checkout_time_limit: toOptionalText(formData.get("checkout_time_limit"))
   };
 }
 
@@ -52,6 +56,10 @@ function parseUpdateHotelPayload(formData: FormData): AdminHotelUpdateInput {
     slug: normalizeSlug(String(formData.get("slug") || "")),
     city: toOptionalText(formData.get("city")),
     email: toOptionalText(formData.get("email"))?.toLowerCase() || null,
+    checkin_time_start: toOptionalText(formData.get("checkin_time_start")),
+    checkin_time_limit: toOptionalText(formData.get("checkin_time_limit")),
+    checkout_time_start: toOptionalText(formData.get("checkout_time_start")),
+    checkout_time_limit: toOptionalText(formData.get("checkout_time_limit")),
     is_active: formData.get("is_active") === "on"
   };
 }

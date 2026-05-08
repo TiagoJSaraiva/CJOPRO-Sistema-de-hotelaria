@@ -25,6 +25,10 @@ import { adminError, ADMIN_ERROR_CODE } from "../common/adminError";
 import { normalizeOptionalText } from "../common/text";
 import { createHotelsRepository, type HotelsRepository } from "../repositories/hotelsRepository";
 
+function isValidTimeOfDay(value: string): boolean {
+  return /^([01]\d|2[0-3]):([0-5]\d)$/.test(value);
+}
+
 export function registerHotelRoutes(app: FastifyInstance, repository: HotelsRepository = createHotelsRepository()): void {
   app.get("/admin/hotels", async (request, reply) => {
     if (!ensureAuthorizedSystem(request, reply, PERMISSIONS.HOTEL_READ)) {
@@ -145,8 +149,24 @@ export function registerHotelRoutes(app: FastifyInstance, repository: HotelsRepo
       zip_code: zipCode,
       timezone,
       currency,
+      checkin_time_start: normalizeOptionalText(request.body?.checkin_time_start),
+      checkin_time_limit: normalizeOptionalText(request.body?.checkin_time_limit),
+      checkout_time_start: normalizeOptionalText(request.body?.checkout_time_start),
+      checkout_time_limit: normalizeOptionalText(request.body?.checkout_time_limit),
       is_active: true
     };
+
+    const createTimeFields = [
+      ["checkin_time_start", payload.checkin_time_start],
+      ["checkin_time_limit", payload.checkin_time_limit],
+      ["checkout_time_start", payload.checkout_time_start],
+      ["checkout_time_limit", payload.checkout_time_limit]
+    ] as const;
+    for (const [field, value] of createTimeFields) {
+      if (value && !isValidTimeOfDay(value)) {
+        return reply.status(400).send(adminError(ADMIN_ERROR_CODE.VALIDATION, `${field} invalido. Use o formato HH:mm.`));
+      }
+    }
 
     const createResult = await repository.createHotel(payload).catch((error) => {
       request.log.error(error);
@@ -326,6 +346,38 @@ export function registerHotelRoutes(app: FastifyInstance, repository: HotelsRepo
       }
 
       payload.currency = normalizedCurrency;
+    }
+
+    if (request.body?.checkin_time_start !== undefined) {
+      const parsed = normalizeOptionalText(request.body.checkin_time_start);
+      if (parsed && !isValidTimeOfDay(parsed)) {
+        return reply.status(400).send(adminError(ADMIN_ERROR_CODE.VALIDATION, "checkin_time_start invalido. Use o formato HH:mm."));
+      }
+      payload.checkin_time_start = parsed;
+    }
+
+    if (request.body?.checkin_time_limit !== undefined) {
+      const parsed = normalizeOptionalText(request.body.checkin_time_limit);
+      if (parsed && !isValidTimeOfDay(parsed)) {
+        return reply.status(400).send(adminError(ADMIN_ERROR_CODE.VALIDATION, "checkin_time_limit invalido. Use o formato HH:mm."));
+      }
+      payload.checkin_time_limit = parsed;
+    }
+
+    if (request.body?.checkout_time_start !== undefined) {
+      const parsed = normalizeOptionalText(request.body.checkout_time_start);
+      if (parsed && !isValidTimeOfDay(parsed)) {
+        return reply.status(400).send(adminError(ADMIN_ERROR_CODE.VALIDATION, "checkout_time_start invalido. Use o formato HH:mm."));
+      }
+      payload.checkout_time_start = parsed;
+    }
+
+    if (request.body?.checkout_time_limit !== undefined) {
+      const parsed = normalizeOptionalText(request.body.checkout_time_limit);
+      if (parsed && !isValidTimeOfDay(parsed)) {
+        return reply.status(400).send(adminError(ADMIN_ERROR_CODE.VALIDATION, "checkout_time_limit invalido. Use o formato HH:mm."));
+      }
+      payload.checkout_time_limit = parsed;
     }
 
     if (request.body?.is_active !== undefined) {

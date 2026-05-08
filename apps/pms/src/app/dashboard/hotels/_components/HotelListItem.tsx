@@ -53,6 +53,18 @@ function HotelDataPreview({ hotel }: { hotel: AdminHotel }) {
         <p className="m-0 mt-[0.2rem]">{hotel.is_active ? "Ativo" : "Inativo"}</p>
       </div>
       <div>
+        <strong>Janela check-in:</strong>
+        <p className="m-0 mt-[0.2rem]">
+          {hotel.checkin_time_start || "-"} ate {hotel.checkin_time_limit || "-"}
+        </p>
+      </div>
+      <div>
+        <strong>Janela checkout:</strong>
+        <p className="m-0 mt-[0.2rem]">
+          {hotel.checkout_time_start || "-"} ate {hotel.checkout_time_limit || "-"}
+        </p>
+      </div>
+      <div>
         <strong>Criado em:</strong>
         <p className="m-0 mt-[0.2rem]">{createdAt}</p>
       </div>
@@ -105,6 +117,26 @@ function HotelEditForm({ hotel }: { hotel: AdminHotel }) {
           defaultValue={hotel.email || ""}
           className="pms-field-input"
         />
+      </div>
+
+      <div className="pms-field">
+        <label htmlFor={`checkin-start-${hotel.id}`}>Check-in inicio (HH:mm)</label>
+        <input id={`checkin-start-${hotel.id}`} name="checkin_time_start" defaultValue={hotel.checkin_time_start || ""} className="pms-field-input" />
+      </div>
+
+      <div className="pms-field">
+        <label htmlFor={`checkin-limit-${hotel.id}`}>Check-in limite (HH:mm)</label>
+        <input id={`checkin-limit-${hotel.id}`} name="checkin_time_limit" defaultValue={hotel.checkin_time_limit || ""} className="pms-field-input" />
+      </div>
+
+      <div className="pms-field">
+        <label htmlFor={`checkout-start-${hotel.id}`}>Checkout inicio (HH:mm)</label>
+        <input id={`checkout-start-${hotel.id}`} name="checkout_time_start" defaultValue={hotel.checkout_time_start || ""} className="pms-field-input" />
+      </div>
+
+      <div className="pms-field">
+        <label htmlFor={`checkout-limit-${hotel.id}`}>Checkout limite (HH:mm)</label>
+        <input id={`checkout-limit-${hotel.id}`} name="checkout_time_limit" defaultValue={hotel.checkout_time_limit || ""} className="pms-field-input" />
       </div>
 
       <label className="flex items-center gap-2">

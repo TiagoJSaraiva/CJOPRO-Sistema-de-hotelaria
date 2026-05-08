@@ -1,13 +1,14 @@
 "use client";
 
 import Link from "next/link";
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
 import type {
   AdminCustomer,
   AdminReservationCalendarBookingCreateInput,
   AdminReservationCalendarBookingCreateResponse,
   AdminReservationCalendarResponse,
+  AdminStayOperationalPanelResponse,
   ReservationSource,
   ReservationStatus
 } from "@hotel/shared";
@@ -56,6 +57,11 @@ export function ReservationsCalendarBoard({ data, startDate, customers }: Reserv
   const [simulation, setSimulation] = useState<AdminReservationCalendarBookingCreateResponse | null>(null);
   const [isPending, setIsPending] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [panelData, setPanelData] = useState<AdminStayOperationalPanelResponse | null>(null);
+  const [panelLoading, setPanelLoading] = useState(false);
+  const [paymentAmount, setPaymentAmount] = useState<string>("");
+  const [paymentMethod, setPaymentMethod] = useState<string>("cash");
+  const [paymentNote, setPaymentNote] = useState<string>("");
   const [bookingMode, setBookingMode] = useState<"existing" | "create_inline">("existing");
   const [existingCustomerId, setExistingCustomerId] = useState<string>(customers[0]?.id || "");
   const [reservationSource, setReservationSource] = useState<ReservationSource>("front_desk");
@@ -157,6 +163,18 @@ export function ReservationsCalendarBoard({ data, startDate, customers }: Reserv
     return dataResponse as T;
   }
 
+  async function getJson<T>(url: string): Promise<T> {
+    const response = await fetch(url, {
+      method: "GET",
+      headers: { "Content-Type": "application/json" }
+    });
+    const dataResponse = await response.json();
+    if (!response.ok) {
+      throw new Error(String(dataResponse?.message || "Falha na operacao."));
+    }
+    return dataResponse as T;
+  }
+
   function buildBookingPayload(): AdminReservationCalendarBookingCreateInput {
     const booking_customer =
       bookingMode === "existing"
@@ -208,6 +226,73 @@ export function ReservationsCalendarBoard({ data, startDate, customers }: Reserv
       router.refresh();
     } catch (requestError) {
       setError(requestError instanceof Error ? requestError.message : "Falha ao confirmar reserva.");
+    } finally {
+      setIsPending(false);
+    }
+  }
+
+  useEffect(() => {
+    let cancelled = false;
+    async function loadPanel() {
+      if (!selectedStayId) {
+        setPanelData(null);
+        return;
+      }
+      try {
+        setPanelLoading(true);
+        const panel = await getJson<AdminStayOperationalPanelResponse>(`/api/stays/${selectedStayId}/panel`);
+        if (!cancelled) {
+          setPanelData(panel);
+        }
+      } catch (requestError) {
+        if (!cancelled) {
+          setPanelData(null);
+          setError(requestError instanceof Error ? requestError.message : "Falha ao carregar painel da estadia.");
+        }
+      } finally {
+        if (!cancelled) {
+          setPanelLoading(false);
+        }
+      }
+    }
+    void loadPanel();
+    return () => {
+      cancelled = true;
+    };
+  }, [selectedStayId]);
+
+  async function handleStayAction(action: "checkin" | "checkout" | "no-show" | "cancel") {
+    if (!selectedStayId) return;
+    try {
+      setError(null);
+      setIsPending(true);
+      const panel = await postJson<AdminStayOperationalPanelResponse>(`/api/stays/${selectedStayId}/${action}`, {});
+      setPanelData(panel);
+      router.refresh();
+    } catch (requestError) {
+      setError(requestError instanceof Error ? requestError.message : "Falha ao executar acao operacional.");
+    } finally {
+      setIsPending(false);
+    }
+  }
+
+  async function handleAddPayment() {
+    if (!selectedStayId) return;
+    try {
+      setError(null);
+      setIsPending(true);
+      const amount = Number(paymentAmount || "0");
+      const panel = await postJson<AdminStayOperationalPanelResponse>(`/api/stays/${selectedStayId}/payments`, {
+        amount,
+        method: paymentMethod,
+        note: paymentNote || null
+      });
+      setPanelData(panel);
+      setPaymentAmount("");
+      setPaymentNote("");
+      router.refresh();
+    } catch (requestError) {
+      setError(requestError instanceof Error ? requestError.message : "Falha ao registrar pagamento.");
     } finally {
       setIsPending(false);
     }
@@ -274,6 +359,7 @@ export function ReservationsCalendarBoard({ data, startDate, customers }: Reserv
                             if (candidates.length === 1) {
                               setCandidateStayIds([]);
                               setSelectedStayId(candidates[0]!.id);
+                              setSimulation(null);
                               return;
                             }
                             if (candidates.length > 1) {
@@ -290,6 +376,7 @@ export function ReservationsCalendarBoard({ data, startDate, customers }: Reserv
 
                           setCandidateStayIds([]);
                           setSelectedStayId(null);
+                          setPanelData(null);
                           setSimulation(null);
                           setSelectedCells((previous) => {
                             const next = new Map(previous);
@@ -354,11 +441,117 @@ export function ReservationsCalendarBoard({ data, startDate, customers }: Reserv
 
           {selectedStay ? (
             <div className="text-sm">
-              <p><strong>Reserva:</strong> {selectedStay.reservation_code || "Sem codigo"}</p>
-              <p><strong>Status:</strong> {statusLabel(selectedStay.stay_status)}</p>
-              <p><strong>Titular:</strong> {selectedStay.customer_name || "Nao informado"}</p>
-              <p><strong>Check-in:</strong> {selectedStay.checkin_date_expected}</p>
-              <p><strong>Check-out:</strong> {selectedStay.checkout_date_expected}</p>
+              {panelLoading ? <p>Carregando painel operacional...</p> : null}
+              {panelData ? (
+                <div className="space-y-3">
+                  <div>
+                    <p><strong>Reserva:</strong> {panelData.stay.reservation_code || "Sem codigo"}</p>
+                    <p><strong>Titular:</strong> {panelData.stay.customer_name || "Nao informado"}</p>
+                    <p><strong>Status:</strong> {statusLabel(panelData.stay.stay_status)}</p>
+                    <p><strong>Check-in esperado:</strong> {panelData.stay.checkin_date_expected}</p>
+                    <p><strong>Check-out esperado:</strong> {panelData.stay.checkout_date_expected}</p>
+                    <p><strong>Check-in real:</strong> {panelData.stay.checkin_date_actual || "-"}</p>
+                    <p><strong>Check-out real:</strong> {panelData.stay.checkout_date_actual || "-"}</p>
+                  </div>
+
+                  <div className="rounded bg-[#f8fafc] p-2 text-xs">
+                    <p className="m-0"><strong>Pagamento estadia:</strong> {panelData.stay.stay_payment_status}</p>
+                    <p className="m-0"><strong>Total:</strong> R$ {panelData.stay.total_price_estimated.toFixed(2)}</p>
+                    <p className="m-0"><strong>Pago:</strong> R$ {panelData.stay.total_paid.toFixed(2)}</p>
+                    <p className="m-0"><strong>Saldo:</strong> R$ {(panelData.stay.total_price_estimated - panelData.stay.total_paid).toFixed(2)}</p>
+                  </div>
+
+                  <div className="rounded bg-[#f8fafc] p-2 text-xs">
+                    <p className="m-0"><strong>Pagamento reserva:</strong> {panelData.reservation.payment_status}</p>
+                    <p className="m-0"><strong>Total reserva:</strong> R$ {panelData.reservation.total_due.toFixed(2)}</p>
+                    <p className="m-0"><strong>Pago reserva:</strong> R$ {panelData.reservation.total_paid.toFixed(2)}</p>
+                  </div>
+
+                  <div className="space-y-2">
+                    <p className="m-0 text-xs font-semibold">Registrar pagamento</p>
+                    <input
+                      type="number"
+                      min={0}
+                      step="0.01"
+                      value={paymentAmount}
+                      onChange={(event) => setPaymentAmount(event.target.value)}
+                      placeholder="Valor"
+                      className="pms-field-input"
+                    />
+                    <select value={paymentMethod} onChange={(event) => setPaymentMethod(event.target.value)} className="pms-field-input">
+                      <option value="cash">cash</option>
+                      <option value="card">card</option>
+                      <option value="pix">pix</option>
+                      <option value="bank_transfer">bank_transfer</option>
+                    </select>
+                    <input value={paymentNote} onChange={(event) => setPaymentNote(event.target.value)} placeholder="Observacao (opcional)" className="pms-field-input" />
+                    <button type="button" onClick={handleAddPayment} disabled={isPending || !paymentAmount} className="cursor-pointer rounded border border-[#d8d8d8] bg-white px-2 py-1">
+                      Registrar pagamento
+                    </button>
+                  </div>
+
+                  <div className="space-y-1">
+                    <p className="m-0 text-xs font-semibold">Acoes operacionais</p>
+                    <button
+                      type="button"
+                      onClick={() => handleStayAction("checkin")}
+                      disabled={isPending || !panelData.eligibility.can_checkin}
+                      className="mr-2 cursor-pointer rounded border border-[#d8d8d8] bg-white px-2 py-1 text-xs disabled:cursor-not-allowed"
+                      title={panelData.eligibility.checkin_block_reason || ""}
+                    >
+                      Check-in
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => handleStayAction("checkout")}
+                      disabled={isPending || !panelData.eligibility.can_checkout}
+                      className="mr-2 cursor-pointer rounded border border-[#d8d8d8] bg-white px-2 py-1 text-xs disabled:cursor-not-allowed"
+                      title={panelData.eligibility.checkout_block_reason || ""}
+                    >
+                      Check-out
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => handleStayAction("no-show")}
+                      disabled={isPending || !panelData.eligibility.can_no_show}
+                      className="mr-2 cursor-pointer rounded border border-[#d8d8d8] bg-white px-2 py-1 text-xs disabled:cursor-not-allowed"
+                      title={panelData.eligibility.no_show_block_reason || ""}
+                    >
+                      No-show
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => handleStayAction("cancel")}
+                      disabled={isPending || !panelData.eligibility.can_cancel}
+                      className="cursor-pointer rounded border border-[#d8d8d8] bg-white px-2 py-1 text-xs disabled:cursor-not-allowed"
+                      title={panelData.eligibility.cancel_block_reason || ""}
+                    >
+                      Cancelar
+                    </button>
+                  </div>
+
+                  {panelData.payments.length ? (
+                    <div>
+                      <p className="m-0 text-xs font-semibold">Historico de pagamentos</p>
+                      <div className="mt-1 max-h-32 overflow-auto text-xs">
+                        {panelData.payments.map((payment) => (
+                          <p key={payment.id} className="m-0">
+                            {payment.paid_at.slice(0, 10)} - {payment.method} - R$ {payment.amount.toFixed(2)}
+                          </p>
+                        ))}
+                      </div>
+                    </div>
+                  ) : null}
+                </div>
+              ) : (
+                <div>
+                  <p><strong>Reserva:</strong> {selectedStay.reservation_code || "Sem codigo"}</p>
+                  <p><strong>Status:</strong> {statusLabel(selectedStay.stay_status)}</p>
+                  <p><strong>Titular:</strong> {selectedStay.customer_name || "Nao informado"}</p>
+                  <p><strong>Check-in:</strong> {selectedStay.checkin_date_expected}</p>
+                  <p><strong>Check-out:</strong> {selectedStay.checkout_date_expected}</p>
+                </div>
+              )}
             </div>
           ) : null}
 

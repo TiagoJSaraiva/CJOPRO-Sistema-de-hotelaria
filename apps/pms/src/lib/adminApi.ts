@@ -21,6 +21,8 @@ import {
   AdminReservationCalendarResponse,
   AdminReservationCalendarBookingCreateInput,
   AdminReservationCalendarBookingCreateResponse,
+  AdminStayOperationalPanelResponse,
+  AdminStayPaymentCreateInput,
   AdminReservationCreateInput,
   AdminReservationUpdateInput,
   AdminRoom,
@@ -212,6 +214,8 @@ export type {
   AdminReservationCalendarResponse,
   AdminReservationCalendarBookingCreateInput,
   AdminReservationCalendarBookingCreateResponse,
+  AdminStayOperationalPanelResponse,
+  AdminStayPaymentCreateInput,
   AdminReservationCreateInput,
   AdminReservationUpdateInput,
   AdminRoom,
@@ -373,6 +377,34 @@ export function createReservationsCalendarBooking(
   payload: AdminReservationCalendarBookingCreateInput
 ): Promise<AdminReservationCalendarBookingCreateResponse | null> {
   return requestAdmin<AdminReservationCalendarBookingCreateResponse>("/admin/reservations/calendar/booking", "POST", payload);
+}
+
+export async function getStayOperationalPanel(stayId: string): Promise<AdminStayOperationalPanelResponse> {
+  const response = await getAdminData<AdminItemResponse<AdminStayOperationalPanelResponse>>(`/admin/stays/${stayId}/panel`);
+  return response.item;
+}
+
+export function createStayPayment(
+  stayId: string,
+  payload: AdminStayPaymentCreateInput
+): Promise<AdminStayOperationalPanelResponse | null> {
+  return requestAdmin<AdminStayOperationalPanelResponse>(`/admin/stays/${stayId}/payments`, "POST", payload);
+}
+
+export function executeStayCheckin(stayId: string): Promise<AdminStayOperationalPanelResponse | null> {
+  return requestAdmin<AdminStayOperationalPanelResponse>(`/admin/stays/${stayId}/checkin`, "POST", {});
+}
+
+export function executeStayCheckout(stayId: string): Promise<AdminStayOperationalPanelResponse | null> {
+  return requestAdmin<AdminStayOperationalPanelResponse>(`/admin/stays/${stayId}/checkout`, "POST", {});
+}
+
+export function executeStayNoShow(stayId: string): Promise<AdminStayOperationalPanelResponse | null> {
+  return requestAdmin<AdminStayOperationalPanelResponse>(`/admin/stays/${stayId}/no-show`, "POST", {});
+}
+
+export function executeStayCancel(stayId: string): Promise<AdminStayOperationalPanelResponse | null> {
+  return requestAdmin<AdminStayOperationalPanelResponse>(`/admin/stays/${stayId}/cancel`, "POST", {});
 }
 
 export function listFinancialTransactions(): Promise<AdminFinancialTransaction[]> {

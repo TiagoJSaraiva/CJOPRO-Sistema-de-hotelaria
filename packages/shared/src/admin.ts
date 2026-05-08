@@ -68,6 +68,10 @@ export type AdminHotel = {
   zip_code: string | null;
   timezone: string | null;
   currency: string | null;
+  checkin_time_start?: string | null;
+  checkin_time_limit?: string | null;
+  checkout_time_start?: string | null;
+  checkout_time_limit?: string | null;
   email: string | null;
   is_active: boolean;
   created_at?: string;
@@ -91,6 +95,10 @@ export type AdminHotelCreateInput = {
   zip_code: string;
   timezone: string | null;
   currency: string | null;
+  checkin_time_start?: string | null;
+  checkin_time_limit?: string | null;
+  checkout_time_start?: string | null;
+  checkout_time_limit?: string | null;
 };
 
 export type AdminHotelUpdateInput = {
@@ -110,6 +118,10 @@ export type AdminHotelUpdateInput = {
   zip_code?: string | null;
   timezone?: string | null;
   currency?: string | null;
+  checkin_time_start?: string | null;
+  checkin_time_limit?: string | null;
+  checkout_time_start?: string | null;
+  checkout_time_limit?: string | null;
   is_active?: boolean;
 };
 
@@ -412,6 +424,9 @@ export type AdminReservationCalendarStayBlock = {
   reservation_id: string;
   reservation_code: string | null;
   stay_status: ReservationStatus | null;
+  total_price_estimated: number | null;
+  total_paid: number;
+  stay_payment_status: "pending" | "partial" | "paid";
   customer_name: string | null;
   checkin_date_expected: string;
   checkout_date_expected: string;
@@ -496,4 +511,70 @@ export type AdminReservationCalendarBookingCreateResponse = {
   nights_count: number;
   rooms_count: number;
   breakdown: AdminReservationCalendarBookingPriceBreakdown[];
+};
+
+export type AdminStayPaymentStatus = "pending" | "partial" | "paid";
+
+export type AdminStayPayment = {
+  id: string;
+  stay_id: string;
+  amount: number;
+  method: string;
+  note: string | null;
+  paid_at: string;
+  created_at: string;
+  created_by: string | null;
+};
+
+export type AdminStayPaymentCreateInput = {
+  amount: number;
+  method: string;
+  note?: string | null;
+  paid_at?: string | null;
+};
+
+export type AdminStayOperationalPanelResponse = {
+  stay: {
+    id: string;
+    reservation_id: string;
+    reservation_code: string | null;
+    room_id: string;
+    room_number: string;
+    room_type: string;
+    customer_name: string | null;
+    stay_status: ReservationStatus;
+    checkin_date_expected: string;
+    checkout_date_expected: string;
+    checkin_date_actual: string | null;
+    checkout_date_actual: string | null;
+    total_price_estimated: number;
+    total_paid: number;
+    stay_payment_status: AdminStayPaymentStatus;
+  };
+  reservation: {
+    id: string;
+    code: string | null;
+    total_due: number;
+    total_paid: number;
+    payment_status: AdminStayPaymentStatus;
+  };
+  hotel: {
+    id: string;
+    timezone: string;
+    checkin_time_start: string | null;
+    checkin_time_limit: string | null;
+    checkout_time_start: string | null;
+    checkout_time_limit: string | null;
+  };
+  eligibility: {
+    can_checkin: boolean;
+    checkin_block_reason: string | null;
+    can_checkout: boolean;
+    checkout_block_reason: string | null;
+    can_no_show: boolean;
+    no_show_block_reason: string | null;
+    can_cancel: boolean;
+    cancel_block_reason: string | null;
+  };
+  payments: AdminStayPayment[];
 };

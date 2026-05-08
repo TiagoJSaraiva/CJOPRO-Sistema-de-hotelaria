@@ -11,6 +11,8 @@ type StayRow = {
   room_id: string;
   reservation_id: string;
   stay_status?: string | null;
+  total_price_estimated?: number | null;
+  total_paid?: number | null;
   checkin_date_expected: string;
   checkout_date_expected: string;
   reservations?: {
@@ -20,6 +22,19 @@ type StayRow = {
     } | null;
   } | null;
 };
+
+function derivePaymentStatus(totalPaid: number, totalDue: number): AdminReservationCalendarStayBlock["stay_payment_status"] {
+  if (totalDue <= 0) {
+    return "paid";
+  }
+  if (totalPaid <= 0) {
+    return "pending";
+  }
+  if (totalPaid >= totalDue) {
+    return "paid";
+  }
+  return "partial";
+}
 
 type RoomBlockRow = {
   id: string;
@@ -85,6 +100,9 @@ function normalizeStayBlocks(rows: StayRow[], windowStart: string, windowEnd: st
         reservation_id: stay.reservation_id,
         reservation_code: stay.reservations?.reservation_code || null,
         stay_status: (stay.stay_status as AdminReservationCalendarStayBlock["stay_status"]) || null,
+        total_price_estimated: stay.total_price_estimated === null || stay.total_price_estimated === undefined ? null : Number(stay.total_price_estimated),
+        total_paid: Number(stay.total_paid || 0),
+        stay_payment_status: derivePaymentStatus(Number(stay.total_paid || 0), Number(stay.total_price_estimated || 0)),
         customer_name: stay.reservations?.customers?.full_name || null,
         checkin_date_expected: toIsoDate(checkin),
         checkout_date_expected: toIsoDate(checkout),
@@ -137,7 +155,7 @@ class SupabaseReservationsCalendarRepository implements ReservationsCalendarRepo
 
     const staysResult = await supabase
       .from("stays")
-      .select("id,room_id,reservation_id,stay_status,checkin_date_expected,checkout_date_expected,reservations:reservation_id(reservation_code,customers:booking_customer_id(full_name))")
+      .select("id,room_id,reservation_id,stay_status,total_price_estimated,total_paid,checkin_date_expected,checkout_date_expected,reservations:reservation_id(reservation_code,customers:booking_customer_id(full_name))")
       .in("room_id", roomIds)
       .lt("checkin_date_expected", `${endDate}T23:59:59.999Z`)
       .gt("checkout_date_expected", `${startDate}T00:00:00.000Z`);

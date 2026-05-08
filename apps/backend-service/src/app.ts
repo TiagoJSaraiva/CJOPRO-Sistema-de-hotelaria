@@ -13,6 +13,7 @@ import { registerProductRoutes } from "./routes/productRoutes";
 import { registerSeasonRoutes } from "./routes/seasonRoutes";
 import { registerSeasonRoomRateRoutes } from "./routes/seasonRoomRateRoutes";
 import { registerFinancialTransactionRoutes } from "./routes/financialTransactionRoutes";
+import { registerStayOperationsRoutes } from "./routes/stayOperationsRoutes";
 
 const DEFAULT_ALLOWED_ORIGINS = [ // LOCALHOSTS PARA DESENVOLVIMENTO. DEPOIS COLOCAR AQUI AS URLS REAIS DOS SERVIÇOS HOSPEDADOS
   "http://localhost:3000",
@@ -64,6 +65,7 @@ export function createApp(): FastifyInstance {
   registerCustomerRoutes(app);
   registerReservationRoutes(app);
   registerReservationsCalendarRoutes(app);
+  registerStayOperationsRoutes(app);
   registerProductRoutes(app);
   registerSeasonRoutes(app);
   registerSeasonRoomRateRoutes(app);

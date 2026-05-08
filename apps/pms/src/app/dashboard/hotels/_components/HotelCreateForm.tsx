@@ -97,6 +97,22 @@ export function HotelCreateForm({ formKey }: HotelCreateFormProps) {
           />
         </FormField>
 
+        <FormField label="Check-in inicio (HH:mm)" htmlFor="create-checkin-time-start">
+          <input id="create-checkin-time-start" name="checkin_time_start" placeholder="14:00" className="pms-field-input" />
+        </FormField>
+
+        <FormField label="Check-in limite (HH:mm)" htmlFor="create-checkin-time-limit">
+          <input id="create-checkin-time-limit" name="checkin_time_limit" placeholder="23:00" className="pms-field-input" />
+        </FormField>
+
+        <FormField label="Checkout inicio (HH:mm)" htmlFor="create-checkout-time-start">
+          <input id="create-checkout-time-start" name="checkout_time_start" placeholder="06:00" className="pms-field-input" />
+        </FormField>
+
+        <FormField label="Checkout limite (HH:mm)" htmlFor="create-checkout-time-limit">
+          <input id="create-checkout-time-limit" name="checkout_time_limit" placeholder="12:00" className="pms-field-input" />
+        </FormField>
+
         <PendingSubmitButton pendingLabel="Criando hotel..." className="justify-self-start md:col-span-2">
           Criar hotel
         </PendingSubmitButton>
