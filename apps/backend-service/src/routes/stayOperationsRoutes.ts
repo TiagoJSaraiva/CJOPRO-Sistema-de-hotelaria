@@ -54,11 +54,13 @@ type StayPaymentRow = {
   id: string;
   stay_id: string;
   amount: number;
-  method: string;
-  note: string | null;
+  payment_method: string | null;
+  description: string | null;
   paid_at: string;
   created_at: string;
   created_by: string | null;
+  type: "INCOME" | "EXPENSE" | "REFUND";
+  status: "PENDING" | "COMPLETED" | "FAILED" | "CANCELLED" | "REFUNDED";
 };
 
 function toIsoDate(value: string): string {
@@ -211,9 +213,12 @@ async function loadStayPanel(activeHotelId: string, stayId: string): Promise<Adm
       .select("total_price_estimated,total_paid")
       .eq("reservation_id", reservationId),
     supabase
-      .from("stay_payments")
-      .select("id,stay_id,amount,method,note,paid_at,created_at,created_by")
+      .from("financial_transactions")
+      .select("id,stay_id,amount,payment_method,description,paid_at,created_at,created_by,type,status")
+      .eq("hotel_id", activeHotelId)
       .eq("stay_id", stay.id)
+      .eq("category", "STAY_PAYMENT")
+      .in("status", ["COMPLETED", "REFUNDED"])
       .order("paid_at", { ascending: false })
       .order("created_at", { ascending: false })
   ]);
@@ -237,8 +242,8 @@ async function loadStayPanel(activeHotelId: string, stayId: string): Promise<Adm
         id: String(payment.id),
         stay_id: String(payment.stay_id),
         amount: Number(payment.amount || 0),
-        method: String(payment.method || ""),
-        note: payment.note ? String(payment.note) : null,
+        method: String(payment.payment_method || "unknown"),
+        note: payment.description ? String(payment.description) : null,
         paid_at: String(payment.paid_at),
         created_at: String(payment.created_at),
         created_by: payment.created_by ? String(payment.created_by) : null
@@ -345,11 +350,17 @@ export function registerStayOperationsRoutes(app: FastifyInstance): void {
     }
 
     const supabase = createServerClient();
-    const { error: insertError } = await supabase.from("stay_payments").insert({
-      stay_id: stayId,
+    const { error: insertError } = await supabase.from("financial_transactions").insert({
+      hotel_id: activeHotelId,
+      type: "INCOME",
+      category: "STAY_PAYMENT",
       amount: Number(amount.toFixed(2)),
-      method,
-      note: note || null,
+      currency: "BRL",
+      description: note || null,
+      status: "COMPLETED",
+      stay_id: stayId,
+      reservation_id: panelBefore.stay.reservation_id,
+      payment_method: method,
       paid_at: paidAt || new Date().toISOString(),
       created_by: auth.session.id
     });
@@ -359,13 +370,28 @@ export function registerStayOperationsRoutes(app: FastifyInstance): void {
       return reply.status(409).send(adminError(ADMIN_ERROR_CODE.CONFLICT, "Falha ao registrar pagamento."));
     }
 
-    const paymentsSumResult = await supabase.from("stay_payments").select("amount").eq("stay_id", stayId);
+    const paymentsSumResult = await supabase
+      .from("financial_transactions")
+      .select("amount,type,status")
+      .eq("hotel_id", activeHotelId)
+      .eq("stay_id", stayId)
+      .eq("category", "STAY_PAYMENT")
+      .in("status", ["COMPLETED", "REFUNDED"]);
     if (paymentsSumResult.error) {
       request.log.error(paymentsSumResult.error);
       return reply.status(500).send(adminError(ADMIN_ERROR_CODE.INTERNAL, "Falha ao recalcular total pago da estadia."));
     }
 
-    const recalculatedTotalPaid = ((paymentsSumResult.data || []) as Array<{ amount: number | null }>).reduce((sum, row) => sum + Number(row.amount || 0), 0);
+    const recalculatedTotalPaid = ((paymentsSumResult.data || []) as Array<{ amount: number | null; type: "INCOME" | "EXPENSE" | "REFUND"; status: string }>).reduce(
+      (sum, row) => {
+        const amountValue = Number(row.amount || 0);
+        if (row.type === "REFUND") {
+          return sum - amountValue;
+        }
+        return sum + amountValue;
+      },
+      0
+    );
     const { error: updateStayError } = await supabase
       .from("stays")
       .update({ total_paid: Number(recalculatedTotalPaid.toFixed(2)) })
@@ -519,4 +545,3 @@ export function registerStayOperationsRoutes(app: FastifyInstance): void {
     return reply.send({ item: refreshed });
   });
 }
-
