@@ -215,15 +215,7 @@ export function ReservationsCalendarBoard({ data, startDate, customers }: Reserv
 
   return (
     <section className="pms-surface-card">
-      <div className="mb-4 flex flex-wrap items-center justify-between gap-4">
-        <div className="flex flex-wrap items-center gap-3">
-          {data.legend.map((item) => (
-            <span key={item.key} className="inline-flex items-center gap-2 text-sm">
-              <span style={{ backgroundColor: item.color }} className="inline-block h-4 w-4 rounded-full" />
-              {item.label}
-            </span>
-          ))}
-        </div>
+      <div className="mb-4 flex items-center justify-center">
         <div className="flex items-center gap-3 text-2xl font-semibold">
           <Link href={prevHref} className="rounded border border-[#d8d8d8] px-3 no-underline">
             {"<"}

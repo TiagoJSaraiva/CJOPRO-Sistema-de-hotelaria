@@ -1,7 +1,7 @@
 "use client";
 
 import type { AdminReservation } from "@hotel/shared";
-import { translatePaymentStatus, translateReservationSource } from "@hotel/shared";
+import { translateReservationSource } from "@hotel/shared";
 import { deleteReservationAction, updateReservationAction } from "../actions";
 import { DashboardEntityActionButtons } from "../../_components/DashboardEntityActionButtons";
 import { DashboardEntityListItemFrame } from "../../_components/DashboardEntityListItemFrame";
@@ -36,10 +36,6 @@ function ReservationDataPreview({ reservation }: { reservation: AdminReservation
       <div>
         <strong>Origem:</strong>
         <p className="m-0 mt-[0.2rem]">{translateReservationSource(reservation.reservation_source || "front_desk")}</p>
-      </div>
-      <div>
-        <strong>Status de pagamento:</strong>
-        <p className="m-0 mt-[0.2rem]">{translatePaymentStatus(reservation.payment_status || "pending")}</p>
       </div>
       <div>
         <strong>Total estimado:</strong>
@@ -87,16 +83,6 @@ function ReservationEditForm({ reservation }: { reservation: AdminReservation })
           <option value="website">{translateReservationSource("website")}</option>
           <option value="phone">{translateReservationSource("phone")}</option>
           <option value="agency">{translateReservationSource("agency")}</option>
-        </select>
-      </div>
-
-      <div className="pms-field">
-        <label htmlFor={`reservation-payment-status-${reservation.id}`}>Status do pagamento</label>
-        <select id={`reservation-payment-status-${reservation.id}`} name="payment_status" defaultValue={reservation.payment_status || "pending"} className="pms-field-input">
-          <option value="pending">{translatePaymentStatus("pending")}</option>
-          <option value="partial">{translatePaymentStatus("partial")}</option>
-          <option value="paid">{translatePaymentStatus("paid")}</option>
-          <option value="refunded">{translatePaymentStatus("refunded")}</option>
         </select>
       </div>
 

@@ -72,7 +72,6 @@ describe("entity view filters", () => {
         reservation_source: "website",
         estimated_total_price: 500,
         final_total_price: 500,
-        payment_status: "partial",
         notes: "vista",
         created_at: "2026-04-01T00:00:00.000Z",
         updated_at: "2026-04-01T00:00:00.000Z"
@@ -86,7 +85,6 @@ describe("entity view filters", () => {
         reservation_source: "front_desk",
         estimated_total_price: 200,
         final_total_price: null,
-        payment_status: "pending",
         notes: null,
         created_at: "2026-04-01T00:00:00.000Z",
         updated_at: "2026-04-01T00:00:00.000Z"

@@ -440,8 +440,7 @@ export function registerReservationsCalendarRoutes(
       reservation_source: normalizeOptionalText(payload.reservation_source),
       estimated_total_price: computed.data.total_price,
       final_total_price: computed.data.total_price,
-      notes: normalizeOptionalText(payload.notes),
-      payment_status: "pending"
+      notes: normalizeOptionalText(payload.notes)
     });
 
     if (createReservationResult.result !== "ok" || !createReservationResult.item) {

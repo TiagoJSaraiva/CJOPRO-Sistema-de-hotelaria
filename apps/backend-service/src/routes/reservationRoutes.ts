@@ -106,7 +106,6 @@ export function registerReservationRoutes(
         reservation_source: normalizeOptionalText(request.body?.reservation_source),
         estimated_total_price: request.body?.estimated_total_price === undefined ? null : Number(request.body.estimated_total_price),
         final_total_price: request.body?.final_total_price === undefined ? null : Number(request.body.final_total_price),
-        payment_status: normalizeOptionalText(request.body?.payment_status),
         notes: normalizeOptionalText(request.body?.notes)
       })
       .catch((error) => {
@@ -138,7 +137,6 @@ export function registerReservationRoutes(
     if (request.body?.reservation_source !== undefined) payload.reservation_source = normalizeOptionalText(request.body.reservation_source);
     if (request.body?.estimated_total_price !== undefined) payload.estimated_total_price = Number(request.body.estimated_total_price);
     if (request.body?.final_total_price !== undefined) payload.final_total_price = Number(request.body.final_total_price);
-    if (request.body?.payment_status !== undefined) payload.payment_status = normalizeOptionalText(request.body.payment_status);
     if (request.body?.notes !== undefined) payload.notes = normalizeOptionalText(request.body.notes);
 
     if (!Object.keys(payload).length) return reply.status(400).send(adminError(ADMIN_ERROR_CODE.VALIDATION, "Nenhum campo informado para atualizacao."));

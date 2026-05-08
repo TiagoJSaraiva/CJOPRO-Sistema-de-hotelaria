@@ -287,7 +287,6 @@ export type AdminReservation = {
   reservation_source: ReservationSource | null;
   estimated_total_price: number | null;
   final_total_price: number | null;
-  payment_status: PaymentStatus | null;
   notes: string | null;
   created_at?: string;
   updated_at?: string;
@@ -302,7 +301,6 @@ export type AdminReservationCreateInput = {
   reservation_source?: ReservationSource | null;
   estimated_total_price?: number | null;
   final_total_price?: number | null;
-  payment_status?: PaymentStatus | null;
   notes?: string | null;
 };
 

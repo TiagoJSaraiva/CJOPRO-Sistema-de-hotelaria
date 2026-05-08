@@ -1,5 +1,5 @@
 import { redirect } from "next/navigation";
-import { translatePaymentStatus, translateReservationSource } from "@hotel/shared";
+import { translateReservationSource } from "@hotel/shared";
 import { DashboardAccessDeniedCard } from "../../_components/DashboardAccessDeniedCard";
 import { DashboardCreateFormCard } from "../../_components/DashboardCreateFormCard";
 import { DashboardEntityPageShell } from "../../_components/DashboardEntityPageShell";
@@ -60,15 +60,6 @@ export default async function ReservationsCreatePage({ searchParams }: Reservati
             <option value="website">{translateReservationSource("website")}</option>
             <option value="phone">{translateReservationSource("phone")}</option>
             <option value="agency">{translateReservationSource("agency")}</option>
-          </select>
-        </FormField>
-
-        <FormField label="Status do pagamento" htmlFor="create-reservation-payment-status">
-          <select id="create-reservation-payment-status" name="payment_status" defaultValue="pending" className="pms-field-input">
-            <option value="pending">{translatePaymentStatus("pending")}</option>
-            <option value="partial">{translatePaymentStatus("partial")}</option>
-            <option value="paid">{translatePaymentStatus("paid")}</option>
-            <option value="refunded">{translatePaymentStatus("refunded")}</option>
           </select>
         </FormField>
 

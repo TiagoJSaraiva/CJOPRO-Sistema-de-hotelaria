@@ -1,5 +1,5 @@
 -- All-in-one migration: move operational status to stays.stay_status
--- and remove reservations.reservation_status.
+-- and remove legacy columns from reservations.
 -- Run in Supabase SQL editor with a privileged role.
 
 begin;
@@ -32,9 +32,9 @@ alter table public.stays
 -- 3) Remove known index depending on reservations.reservation_status.
 drop index if exists public.idx_reservations_status;
 
--- 4) Drop legacy column in reservations if still present.
+-- 4) Drop legacy columns in reservations if still present.
 alter table public.reservations
-  drop column if exists reservation_status;
+  drop column if exists reservation_status,
+  drop column if exists payment_status;
 
 commit;
-
