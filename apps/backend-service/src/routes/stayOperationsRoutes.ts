@@ -69,7 +69,7 @@ function toIsoDate(value: string): string {
 
 function parseTimeToMinutes(value: string | null | undefined): number | null {
   if (!value) return null;
-  const match = /^([01]\d|2[0-3]):([0-5]\d)$/.exec(value);
+  const match = /^([01]\d|2[0-3]):([0-5]\d)(:[0-5]\d)?$/.exec(value);
   if (!match) return null;
   const hour = Number(match[1]);
   const minute = Number(match[2]);

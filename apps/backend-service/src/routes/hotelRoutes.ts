@@ -26,7 +26,7 @@ import { normalizeOptionalText } from "../common/text";
 import { createHotelsRepository, type HotelsRepository } from "../repositories/hotelsRepository";
 
 function isValidTimeOfDay(value: string): boolean {
-  return /^([01]\d|2[0-3]):([0-5]\d)$/.test(value);
+  return /^([01]\d|2[0-3]):([0-5]\d)(:[0-5]\d)?$/.test(value);
 }
 
 export function registerHotelRoutes(app: FastifyInstance, repository: HotelsRepository = createHotelsRepository()): void {

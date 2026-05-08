@@ -12,6 +12,7 @@ import type {
   ReservationSource,
   ReservationStatus
 } from "@hotel/shared";
+import { translateReservationSource } from "@hotel/shared";
 import { addDaysIso, CALENDAR_WINDOW_DAYS, formatDateRangeLabel } from "./calendarUtils";
 import { computeStayBlockLayout } from "./stayBlockLayout";
 
@@ -28,15 +29,23 @@ const BLOCK_HEIGHT = 30;
 const BLOCK_VERTICAL_GAP = Math.max(0, (ROW_HEIGHT - BLOCK_HEIGHT) / 2);
 
 const STATUS_COLORS: Record<string, string> = {
-  pending: "#0ea5e9",
   confirmed: "#22c55e",
-  checked_in: "#16a34a",
-  checked_out: "#86efac",
+  checked_in: "#2563eb",
+  checked_out: "#0f766e",
   canceled: "#f97316",
   no_show: "#a3a3a3",
   blocked: "#ef4444",
   maintenance: "#ef4444"
 };
+
+const LEGEND_ITEMS: Array<{ key: string; label: string }> = [
+  { key: "confirmed", label: "Confirmada" },
+  { key: "checked_in", label: "Checked-in" },
+  { key: "checked_out", label: "Checked-out" },
+  { key: "no_show", label: "No-show" },
+  { key: "canceled", label: "Cancelada" },
+  { key: "blocked", label: "Bloqueada" }
+];
 
 type SelectionSide = "checkin" | "checkout" | "full";
 type CellOccupancy = {
@@ -47,6 +56,16 @@ type CellOccupancy = {
 function statusLabel(status: ReservationStatus | null): string {
   if (!status) return "N/A";
   return status.replace("_", " ");
+}
+
+function paymentMethodLabel(method: string): string {
+  if (method === "cash") return "Dinheiro";
+  if (method === "card") return "Cartao";
+  if (method === "credit_card") return "Cartao de credito";
+  if (method === "debit_card") return "Cartao de debito";
+  if (method === "pix") return "Pix";
+  if (method === "bank_transfer") return "Transferencia bancaria";
+  return method;
 }
 
 export function ReservationsCalendarBoard({ data, startDate, customers }: ReservationsCalendarBoardProps) {
@@ -300,7 +319,16 @@ export function ReservationsCalendarBoard({ data, startDate, customers }: Reserv
 
   return (
     <section className="pms-surface-card">
-      <div className="mb-4 flex items-center justify-center">
+      <div className="mb-4 flex flex-wrap items-center justify-between gap-3">
+        <div className="flex flex-wrap items-center gap-4 text-sm">
+          {LEGEND_ITEMS.map((item) => (
+            <span key={item.key} className="inline-flex items-center gap-2">
+              <span className="inline-block h-4 w-4 rounded-full" style={{ backgroundColor: STATUS_COLORS[item.key] || STATUS_COLORS.pending }} />
+              {item.label}
+            </span>
+          ))}
+        </div>
+
         <div className="flex items-center gap-3 text-2xl font-semibold">
           <Link href={prevHref} className="rounded border border-[#d8d8d8] px-3 no-underline">
             {"<"}
@@ -479,10 +507,11 @@ export function ReservationsCalendarBoard({ data, startDate, customers }: Reserv
                       className="pms-field-input"
                     />
                     <select value={paymentMethod} onChange={(event) => setPaymentMethod(event.target.value)} className="pms-field-input">
-                      <option value="cash">cash</option>
-                      <option value="card">card</option>
-                      <option value="pix">pix</option>
-                      <option value="bank_transfer">bank_transfer</option>
+                      <option value="cash">{paymentMethodLabel("cash")}</option>
+                      <option value="pix">{paymentMethodLabel("pix")}</option>
+                      <option value="credit_card">{paymentMethodLabel("credit_card")}</option>
+                      <option value="debit_card">{paymentMethodLabel("debit_card")}</option>
+                      <option value="bank_transfer">{paymentMethodLabel("bank_transfer")}</option>
                     </select>
                     <input value={paymentNote} onChange={(event) => setPaymentNote(event.target.value)} placeholder="Observacao (opcional)" className="pms-field-input" />
                     <button type="button" onClick={handleAddPayment} disabled={isPending || !paymentAmount} className="cursor-pointer rounded border border-[#d8d8d8] bg-white px-2 py-1">
@@ -564,10 +593,10 @@ export function ReservationsCalendarBoard({ data, startDate, customers }: Reserv
               <label className="block">
                 <span className="mb-1 block">Origem</span>
                 <select value={reservationSource} onChange={(event) => setReservationSource(event.target.value as ReservationSource)} className="pms-field-input">
-                  <option value="front_desk">front_desk</option>
-                  <option value="website">website</option>
-                  <option value="phone">phone</option>
-                  <option value="agency">agency</option>
+                  <option value="front_desk">{translateReservationSource("front_desk")}</option>
+                  <option value="website">{translateReservationSource("website")}</option>
+                  <option value="phone">{translateReservationSource("phone")}</option>
+                  <option value="agency">{translateReservationSource("agency")}</option>
                 </select>
               </label>
               <label className="block">
