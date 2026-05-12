@@ -36,15 +36,6 @@ function derivePaymentStatus(totalPaid: number, totalDue: number): AdminReservat
   return "partial";
 }
 
-type RoomBlockRow = {
-  id: string;
-  room_id: string;
-  status: string;
-  label?: string | null;
-  start_date: string;
-  end_date: string;
-};
-
 export interface ReservationsCalendarRepository {
   getTimeline(activeHotelId: string, startDate: string, endDate: string): Promise<AdminReservationCalendarResponse>;
 }

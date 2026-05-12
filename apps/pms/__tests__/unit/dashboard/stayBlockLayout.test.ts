@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { computeStayBlockLayout } from "../../../src/app/dashboard/reservations_calendar/_components/stayBlockLayout";
+import { computeStayBlockLayout } from "../../../src/app/dashboard/reservations/_components/stayBlockLayout";
 
 describe("stay block layout", () => {
   const cellWidth = 44;

@@ -17,14 +17,11 @@ import {
   AdminFinancialTransaction,
   AdminFinancialTransactionCreateInput,
   AdminFinancialTransactionUpdateInput,
-  AdminReservation,
   AdminReservationCalendarResponse,
   AdminReservationCalendarBookingCreateInput,
   AdminReservationCalendarBookingCreateResponse,
   AdminStayOperationalPanelResponse,
   AdminStayPaymentCreateInput,
-  AdminReservationCreateInput,
-  AdminReservationUpdateInput,
   AdminRoom,
   AdminRoomCreateInput,
   AdminRoomUpdateInput,
@@ -210,14 +207,11 @@ export type {
   AdminFinancialTransaction,
   AdminFinancialTransactionCreateInput,
   AdminFinancialTransactionUpdateInput,
-  AdminReservation,
   AdminReservationCalendarResponse,
   AdminReservationCalendarBookingCreateInput,
   AdminReservationCalendarBookingCreateResponse,
   AdminStayOperationalPanelResponse,
   AdminStayPaymentCreateInput,
-  AdminReservationCreateInput,
-  AdminReservationUpdateInput,
   AdminRoom,
   AdminRoomCreateInput,
   AdminRoomUpdateInput,
@@ -339,22 +333,6 @@ export function updateCustomer(id: string, payload: AdminCustomerUpdateInput): P
 
 export function deleteCustomer(id: string): Promise<null> {
   return requestAdmin<never>(`/admin/customers/${id}`, "DELETE");
-}
-
-export function listReservations(): Promise<AdminReservation[]> {
-  return getAdminList<AdminReservation>("/admin/reservations");
-}
-
-export function createReservation(payload: AdminReservationCreateInput): Promise<AdminReservation | null> {
-  return requestAdmin<AdminReservation>("/admin/reservations", "POST", payload);
-}
-
-export function updateReservation(id: string, payload: AdminReservationUpdateInput): Promise<AdminReservation | null> {
-  return requestAdmin<AdminReservation>(`/admin/reservations/${id}`, "PUT", payload);
-}
-
-export function deleteReservation(id: string): Promise<null> {
-  return requestAdmin<never>(`/admin/reservations/${id}`, "DELETE");
 }
 
 export function getReservationsCalendar(startDate: string, days = 20): Promise<AdminReservationCalendarResponse> {

@@ -10,7 +10,7 @@ import {
   type HotelIdParams
 } from "@hotel/shared";
 import { mapAdminUser, mapRoleOption, normalizeRoleAssignments } from "../admin/mappers";
-import { ensureAuthorized, ensureAuthorizedAny, ensureAuthorizedWithScope } from "../auth/authorization";
+import { ensureAuthorizedAny, ensureAuthorizedWithScope } from "../auth/authorization";
 import { adminError } from "../common/adminError";
 import { hashTemporaryPassword } from "../auth/session";
 import { normalizeOptionalText } from "../common/text";

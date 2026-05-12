@@ -2,32 +2,20 @@ import { PERMISSIONS, type AuthUser } from "@hotel/shared";
 
 type UserLike = Pick<AuthUser, "permissions"> | null;
 
-export type ReservationsAccess = {
-  canCreate: boolean;
-  canRead: boolean;
-  canUpdate: boolean;
-  canDelete: boolean;
+export type ReservationsCalendarAccess = {
+  canAccess: boolean;
 };
 
-export function getReservationsAccess(user: UserLike): ReservationsAccess {
+export function getReservationsCalendarAccess(user: UserLike): ReservationsCalendarAccess {
   const permissions = user?.permissions || [];
   return {
-    canCreate: permissions.includes(PERMISSIONS.RESERVATION_CREATE),
-    canRead: permissions.includes(PERMISSIONS.RESERVATION_READ),
-    canUpdate: permissions.includes(PERMISSIONS.RESERVATION_UPDATE),
-    canDelete: permissions.includes(PERMISSIONS.RESERVATION_DELETE)
+    canAccess: permissions.includes(PERMISSIONS.RESERVATIONS_CALENDAR_ACCESS)
   };
 }
 
-export function getReservationsDefaultRoute(
-  access: ReservationsAccess
-): "/dashboard/reservations/view" | "/dashboard/reservations/create" | null {
-  if (access.canRead) {
+export function getReservationsCalendarDefaultRoute(access: ReservationsCalendarAccess): "/dashboard/reservations/view" | null {
+  if (access.canAccess) {
     return "/dashboard/reservations/view";
-  }
-
-  if (access.canCreate) {
-    return "/dashboard/reservations/create";
   }
 
   return null;

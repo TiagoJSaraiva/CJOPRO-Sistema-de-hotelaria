@@ -3,7 +3,6 @@ import type {
   AdminCustomer,
   AdminFinancialTransaction,
   AdminProduct,
-  AdminReservation,
   AdminRoom,
   AdminSeason,
   AdminSeasonRoomRate
@@ -14,11 +13,6 @@ import {
   countAppliedCustomerFilters,
   DEFAULT_CUSTOMER_VIEW_FILTERS
 } from "../../../src/app/dashboard/customers/_components/customerViewFilters";
-import {
-  applyReservationViewFilters,
-  countAppliedReservationFilters,
-  DEFAULT_RESERVATION_VIEW_FILTERS
-} from "../../../src/app/dashboard/reservations/_components/reservationViewFilters";
 import {
   applyProductViewFilters,
   countAppliedProductFilters,
@@ -59,46 +53,6 @@ describe("entity view filters", () => {
 
     expect(result.map((item) => item.id)).toEqual(["c1"]);
     expect(countAppliedCustomerFilters({ ...DEFAULT_CUSTOMER_VIEW_FILTERS, search: "maria", documentType: "CPF", birthFrom: "1990-01-01" })).toBe(3);
-  });
-
-  it("filtra reservas por busca e origem", () => {
-    const reservations: AdminReservation[] = [
-      {
-        id: "res1",
-        hotel_id: "h1",
-        booking_customer_id: "c1",
-        reservation_code: "RES-1",
-        guest_count: 2,
-        reservation_source: "website",
-        estimated_total_price: 500,
-        final_total_price: 500,
-        notes: "vista",
-        created_at: "2026-04-01T00:00:00.000Z",
-        updated_at: "2026-04-01T00:00:00.000Z"
-      },
-      {
-        id: "res2",
-        hotel_id: "h1",
-        booking_customer_id: "c2",
-        reservation_code: "RES-2",
-        guest_count: 1,
-        reservation_source: "front_desk",
-        estimated_total_price: 200,
-        final_total_price: null,
-        notes: null,
-        created_at: "2026-04-01T00:00:00.000Z",
-        updated_at: "2026-04-01T00:00:00.000Z"
-      }
-    ];
-
-    const result = applyReservationViewFilters(reservations, {
-      ...DEFAULT_RESERVATION_VIEW_FILTERS,
-      search: "res-1",
-      source: "website"
-    });
-
-    expect(result.map((item) => item.id)).toEqual(["res1"]);
-    expect(countAppliedReservationFilters({ ...DEFAULT_RESERVATION_VIEW_FILTERS, source: "website" })).toBe(1);
   });
 
   it("filtra produtos por busca, status e faixa de preco", () => {

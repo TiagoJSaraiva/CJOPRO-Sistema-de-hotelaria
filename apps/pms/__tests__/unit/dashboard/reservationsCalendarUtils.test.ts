@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { addDaysIso, formatDateRangeLabel } from "../../../src/app/dashboard/reservations_calendar/_components/calendarUtils";
+import { addDaysIso, formatDateRangeLabel } from "../../../src/app/dashboard/reservations/_components/calendarUtils";
 
 describe("reservations calendar utils", () => {
   it("avanca e retrocede dias em formato ISO", () => {

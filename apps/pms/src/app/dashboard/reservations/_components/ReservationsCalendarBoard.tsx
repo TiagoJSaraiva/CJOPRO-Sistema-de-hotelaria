@@ -159,8 +159,8 @@ export function ReservationsCalendarBoard({ data, startDate, customers }: Reserv
   }, [data.stays, daysMap]);
 
   const rangeLabel = formatDateRangeLabel(data.days);
-  const prevHref = `/dashboard/reservations_calendar/view?start_date=${addDaysIso(startDate, -CALENDAR_WINDOW_DAYS)}`;
-  const nextHref = `/dashboard/reservations_calendar/view?start_date=${addDaysIso(startDate, CALENDAR_WINDOW_DAYS)}`;
+  const prevHref = `/dashboard/reservations/view?start_date=${addDaysIso(startDate, -CALENDAR_WINDOW_DAYS)}`;
+  const nextHref = `/dashboard/reservations/view?start_date=${addDaysIso(startDate, CALENDAR_WINDOW_DAYS)}`;
 
   const selectedCellsPayload = Array.from(selectedCells).map((key) => {
     const [cellKey, side] = key;

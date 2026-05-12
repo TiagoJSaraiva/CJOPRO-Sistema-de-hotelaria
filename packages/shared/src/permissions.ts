@@ -67,11 +67,6 @@ export const ADMIN_NAV_ITEMS = [
   {
     href: "/dashboard/reservations",
     label: "Reservas",
-    permission: PERMISSIONS.RESERVATION_READ
-  },
-  {
-    href: "/dashboard/reservations_calendar",
-    label: "Calendario de Reservas",
     permission: PERMISSIONS.RESERVATIONS_CALENDAR_ACCESS
   },
   {
