@@ -18,7 +18,7 @@ export default async function TransactionsPage({ searchParams }: TransactionsPag
   if (!targetRoute) {
     return (
       <section className="pms-surface-card">
-        <h1 className="pms-page-title">Transacoes</h1>
+        <h1 className="pms-page-title">Gastos e transacoes</h1>
         <p>Sem permissao para visualizar este modulo.</p>
       </section>
     );

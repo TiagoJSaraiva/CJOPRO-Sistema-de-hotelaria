@@ -78,6 +78,12 @@ describe("entity view filters", () => {
         currency: "BRL",
         description: "Reserva premium",
         status: "COMPLETED",
+        payment_method: "PIX",
+        paid_at: "2026-05-01T10:00:00.000Z",
+        due_date: "2026-05-01",
+        counterparty: "Hospede",
+        cost_center: "Recepcao",
+        reference_code: "RES-1",
         created_at: "2026-05-01T00:00:00.000Z",
         updated_at: "2026-05-01T00:00:00.000Z"
       },
@@ -90,6 +96,12 @@ describe("entity view filters", () => {
         currency: "BRL",
         description: null,
         status: "PENDING",
+        payment_method: null,
+        paid_at: null,
+        due_date: "2026-05-10",
+        counterparty: "Fornecedor tecnico",
+        cost_center: "Manutencao",
+        reference_code: "NF-20",
         created_at: "2026-05-01T00:00:00.000Z",
         updated_at: "2026-05-01T00:00:00.000Z"
       }
@@ -106,6 +118,27 @@ describe("entity view filters", () => {
 
     expect(result.map((item) => item.id)).toEqual(["t1"]);
     expect(countAppliedTransactionFilters({ ...DEFAULT_TRANSACTION_VIEW_FILTERS, search: "reserva", type: "INCOME" })).toBe(2);
+
+    const overdueResult = applyTransactionViewFilters(
+      transactions,
+      {
+        ...DEFAULT_TRANSACTION_VIEW_FILTERS,
+        settlement: "overdue",
+        costCenter: "manutencao",
+        dateTo: "2026-05-12"
+      },
+      new Date("2026-05-12T12:00:00.000Z")
+    );
+
+    expect(overdueResult.map((item) => item.id)).toEqual(["t2"]);
+    expect(
+      countAppliedTransactionFilters({
+        ...DEFAULT_TRANSACTION_VIEW_FILTERS,
+        settlement: "overdue",
+        costCenter: "manutencao",
+        dateTo: "2026-05-12"
+      })
+    ).toBe(3);
   });
 
   it("filtra temporadas por nome, status e data", () => {

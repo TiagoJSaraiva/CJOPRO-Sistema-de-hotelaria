@@ -27,27 +27,27 @@ export default async function TransactionsCreatePage({ searchParams }: Transacti
       redirect(fallback);
     }
 
-    return <DashboardAccessDeniedCard title="Transacoes" message="Sem permissao para criar transacao." />;
+    return <DashboardAccessDeniedCard title="Gastos e transacoes" message="Sem permissao para criar lancamento financeiro." />;
   }
 
   return (
     <DashboardEntityPageShell
-      title="Transacoes"
+      title="Gastos e transacoes"
       activeTabKey="create"
       tabs={[
-        { key: "create", label: "Criar transacao", href: "/dashboard/transactions/create", isVisible: access.canCreate },
-        { key: "view", label: "Ver transacoes", href: "/dashboard/transactions/view", isVisible: access.canRead }
+        { key: "create", label: "Lancamento", href: "/dashboard/transactions/create", isVisible: access.canCreate },
+        { key: "view", label: "Monitoramento", href: "/dashboard/transactions/view", isVisible: access.canRead }
       ]}
       statusContent={<TransactionStatusMessage status={searchParams?.status} />}
     >
       <DashboardCreateFormCard
-        title="Criar transacao"
-        submitLabel="Criar transacao"
+        title="Registrar gasto ou movimentacao"
+        submitLabel="Salvar lancamento"
         action={createTransactionAction}
         resetKey={searchParams?.r}
       >
         <FormField label="Tipo" htmlFor="create-transaction-type">
-          <select id="create-transaction-type" name="type" defaultValue="INCOME" className="pms-field-input">
+          <select id="create-transaction-type" name="type" defaultValue="EXPENSE" className="pms-field-input">
             <option value="INCOME">{translateTransactionType("INCOME")}</option>
             <option value="EXPENSE">{translateTransactionType("EXPENSE")}</option>
             <option value="REFUND">{translateTransactionType("REFUND")}</option>
@@ -55,7 +55,15 @@ export default async function TransactionsCreatePage({ searchParams }: Transacti
         </FormField>
 
         <FormField label="Categoria" htmlFor="create-transaction-category">
-          <input id="create-transaction-category" name="category" required className="pms-field-input" />
+          <input id="create-transaction-category" name="category" required placeholder="Ex.: Manutencao, lavanderia" className="pms-field-input" />
+        </FormField>
+
+        <FormField label="Fornecedor ou favorecido" htmlFor="create-transaction-counterparty">
+          <input id="create-transaction-counterparty" name="counterparty" placeholder="Ex.: Energia SP" className="pms-field-input" />
+        </FormField>
+
+        <FormField label="Centro de custo" htmlFor="create-transaction-cost-center">
+          <input id="create-transaction-cost-center" name="cost_center" placeholder="Ex.: Operacao, Governanca" className="pms-field-input" />
         </FormField>
 
         <FormField label="Valor" htmlFor="create-transaction-amount">
@@ -67,7 +75,7 @@ export default async function TransactionsCreatePage({ searchParams }: Transacti
         </FormField>
 
         <FormField label="Status" htmlFor="create-transaction-status">
-          <select id="create-transaction-status" name="status" defaultValue="COMPLETED" className="pms-field-input">
+          <select id="create-transaction-status" name="status" defaultValue="PENDING" className="pms-field-input">
             <option value="PENDING">{translateTransactionStatus("PENDING")}</option>
             <option value="COMPLETED">{translateTransactionStatus("COMPLETED")}</option>
             <option value="FAILED">{translateTransactionStatus("FAILED")}</option>
@@ -76,8 +84,32 @@ export default async function TransactionsCreatePage({ searchParams }: Transacti
           </select>
         </FormField>
 
+        <FormField label="Vencimento" htmlFor="create-transaction-due-date">
+          <input id="create-transaction-due-date" name="due_date" type="date" className="pms-field-input" />
+        </FormField>
+
+        <FormField label="Pago em" htmlFor="create-transaction-paid-at">
+          <input id="create-transaction-paid-at" name="paid_at" type="datetime-local" className="pms-field-input" />
+        </FormField>
+
+        <FormField label="Metodo de pagamento" htmlFor="create-transaction-payment-method">
+          <input id="create-transaction-payment-method" name="payment_method" placeholder="PIX, cartao, dinheiro" className="pms-field-input" />
+        </FormField>
+
+        <FormField label="Documento/referencia" htmlFor="create-transaction-reference-code">
+          <input id="create-transaction-reference-code" name="reference_code" placeholder="NF, recibo, pedido interno" className="pms-field-input" />
+        </FormField>
+
+        <FormField label="Reserva vinculada" htmlFor="create-transaction-reservation-id">
+          <input id="create-transaction-reservation-id" name="reservation_id" placeholder="UUID da reserva, se houver" className="pms-field-input" />
+        </FormField>
+
+        <FormField label="Estadia vinculada" htmlFor="create-transaction-stay-id">
+          <input id="create-transaction-stay-id" name="stay_id" placeholder="UUID da estadia, se houver" className="pms-field-input" />
+        </FormField>
+
         <FormField label="Descricao" htmlFor="create-transaction-description" fullWidth>
-          <input id="create-transaction-description" name="description" className="pms-field-input" />
+          <input id="create-transaction-description" name="description" placeholder="Observacoes operacionais, aprovador ou contexto" className="pms-field-input" />
         </FormField>
       </DashboardCreateFormCard>
     </DashboardEntityPageShell>

@@ -330,6 +330,15 @@ export type AdminFinancialTransaction = {
   currency: string;
   description: string | null;
   status: TransactionStatus;
+  stay_id?: string | null;
+  reservation_id?: string | null;
+  payment_method?: string | null;
+  paid_at?: string | null;
+  due_date?: string | null;
+  counterparty?: string | null;
+  cost_center?: string | null;
+  reference_code?: string | null;
+  created_by?: string | null;
   created_at?: string;
   updated_at?: string;
 };
@@ -341,6 +350,14 @@ export type AdminFinancialTransactionCreateInput = {
   currency?: string;
   description?: string | null;
   status?: TransactionStatus;
+  stay_id?: string | null;
+  reservation_id?: string | null;
+  payment_method?: string | null;
+  paid_at?: string | null;
+  due_date?: string | null;
+  counterparty?: string | null;
+  cost_center?: string | null;
+  reference_code?: string | null;
 };
 
 export type AdminFinancialTransactionUpdateInput = Partial<AdminFinancialTransactionCreateInput>;

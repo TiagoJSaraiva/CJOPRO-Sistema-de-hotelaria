@@ -104,7 +104,15 @@ describe("dashboard/transactions/actions", () => {
       amount: 1200,
       currency: "BRL",
       description: "Reserva premium",
-      status: "COMPLETED"
+      status: "COMPLETED",
+      payment_method: null,
+      paid_at: null,
+      due_date: null,
+      counterparty: null,
+      cost_center: null,
+      reference_code: null,
+      stay_id: null,
+      reservation_id: null
     });
     expect(revalidatePathMock).toHaveBeenCalledWith("/dashboard/transactions");
   });
@@ -132,7 +140,15 @@ describe("dashboard/transactions/actions", () => {
       amount: 300,
       currency: "BRL",
       description: "Troca de equipamentos",
-      status: "PENDING"
+      status: "PENDING",
+      payment_method: null,
+      paid_at: null,
+      due_date: null,
+      counterparty: null,
+      cost_center: null,
+      reference_code: null,
+      stay_id: null,
+      reservation_id: null
     });
   });
 

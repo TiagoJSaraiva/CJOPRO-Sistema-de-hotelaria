@@ -122,7 +122,16 @@ describe("routes/financial-transactions with injected repository", () => {
       amount: 1200,
       currency: "BRL",
       description: null,
-      status: "COMPLETED"
+      status: "COMPLETED",
+      payment_method: null,
+      paid_at: expect.any(String),
+      due_date: null,
+      counterparty: null,
+      cost_center: null,
+      reference_code: null,
+      stay_id: null,
+      reservation_id: null,
+      created_by: "user-1"
     });
     expect(response.json()).toEqual({
       item: {

@@ -26,7 +26,7 @@ export default async function TransactionsViewPage({ searchParams }: Transaction
       redirect(fallback);
     }
 
-    return <DashboardAccessDeniedCard title="Transacoes" message="Sem permissao para visualizar transacoes." />;
+    return <DashboardAccessDeniedCard title="Gastos e transacoes" message="Sem permissao para visualizar lancamentos financeiros." />;
   }
 
   const transactions = await listFinancialTransactions();
@@ -35,16 +35,17 @@ export default async function TransactionsViewPage({ searchParams }: Transaction
 
   return (
     <DashboardEntityPageShell
-      title="Transacoes"
+      title="Gastos e transacoes"
       activeTabKey="view"
       tabs={[
-        { key: "create", label: "Criar transacao", href: "/dashboard/transactions/create", isVisible: access.canCreate },
-        { key: "view", label: "Ver transacoes", href: "/dashboard/transactions/view", isVisible: access.canRead }
+        { key: "create", label: "Lancamento", href: "/dashboard/transactions/create", isVisible: access.canCreate },
+        { key: "view", label: "Monitoramento", href: "/dashboard/transactions/view", isVisible: access.canRead }
       ]}
       statusContent={<TransactionStatusMessage status={searchParams?.status} />}
     >
       <TransactionsViewFilterableSection
         transactions={transactions}
+        canCreate={access.canCreate}
         canRead={access.canRead}
         canUpdate={access.canUpdate}
         canDelete={access.canDelete}
