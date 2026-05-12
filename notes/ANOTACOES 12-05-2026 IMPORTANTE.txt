@@ -1,0 +1,14 @@
+Sistema PMS
+
+próximas coisas a fazer:
+
+- Remover receita prevista da rota de reservas - P2
+- Adicionar configuração para admin, entre pagamento do check in ou na reserva, e também tornar configurável aquela coisa que prevê a possibilidade de 2 clientes reservarem ao mesmo tempo em datas que se sobrepõem - P2
+- Adicionar status "Pendente" no calendário de reservas - P2
+- Separar checkout de checkin: Checkout deve ser feito em uma interface diferente, pesquisando o quarto do cliente que quer fazer checkout. - P2
+- Adicionar aquela coisa de configurar baixa temporada com descontos para quartos - P2
+
+
+- Fazer com que tela de operações financeiras emita relatório para ADMIN do hotel - P1
+- CRIAR DOCUMENTAÇÃO: SOBRE O SISTEMA ATUAL (OQUE EXISTE ATÉ AGORA) - P1
+- CRIAR RELATÓRIO: SOBRE O SISTEMA ATUAL (OQUE EXISTE ATÉ AGORA) - P1
