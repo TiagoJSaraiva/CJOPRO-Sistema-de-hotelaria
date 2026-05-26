@@ -355,7 +355,7 @@ export function registerReservationsCalendarRoutes(
     });
 
     if (!timeline) {
-      return reply.status(500).send(adminError(ADMIN_ERROR_CODE.INTERNAL, "Falha ao consultar calendario de reservas."));
+      return reply.status(500).send(adminError(ADMIN_ERROR_CODE.INTERNAL, "Falha ao consultar calendário de reservas."));
     }
 
     return reply.send(timeline);
@@ -476,7 +476,7 @@ export function registerReservationsCalendarRoutes(
             group,
             roomId: room.id
           },
-          "Falha ao inserir stay no fluxo de booking do calendario"
+          "Falha ao inserir stay no fluxo de booking do calendário"
         );
         await supabase.from("stays").delete().eq("reservation_id", reservationId);
         await reservationsRepository.deleteReservation(reservationId, activeHotelId);

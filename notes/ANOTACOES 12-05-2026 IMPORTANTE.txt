@@ -10,5 +10,4 @@ próximas coisas a fazer:
 
 
 - Fazer com que tela de operações financeiras emita relatório para ADMIN do hotel - P1
-- CRIAR DOCUMENTAÇÃO: SOBRE O SISTEMA ATUAL (OQUE EXISTE ATÉ AGORA) - P1
-- CRIAR RELATÓRIO: SOBRE O SISTEMA ATUAL (OQUE EXISTE ATÉ AGORA) - P1
+- CRIAR DOCUMENTAÇÃO: SOBRE O SISTEMA ATUAL (OQUE EXISTE ATÉ AGORA) Seguindo o modelo de relatório do ifsp - P1 

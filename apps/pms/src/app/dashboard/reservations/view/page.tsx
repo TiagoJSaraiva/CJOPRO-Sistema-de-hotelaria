@@ -30,7 +30,7 @@ export default async function ReservationsCalendarViewPage({ searchParams }: Res
     if (fallback) {
       redirect(fallback);
     }
-    return <DashboardAccessDeniedCard title="Calendario de Reservas" message="Sem permissao para visualizar o calendario de reservas." />;
+    return <DashboardAccessDeniedCard title="Calendário de Reservas" message="Sem permissao para visualizar o calendário de reservas." />;
   }
 
   const startDate = resolveStartDate(searchParams?.start_date);
@@ -38,7 +38,7 @@ export default async function ReservationsCalendarViewPage({ searchParams }: Res
 
   return (
     <DashboardEntityPageShell
-      title="Calendario de Reservas"
+      title="Calendário de Reservas"
       activeTabKey="view"
       tabs={[{ key: "view", label: "Visualizacao", href: "/dashboard/reservations/view", isVisible: access.canAccess }]}
     >

@@ -42,7 +42,7 @@ Restrições:
 ## apps/booking-engine-service (Node + Fastify)
 
 Responsabilidades:
-- Executar fluxo especifico do motor de reservas/simulacao.
+- Executar fluxo especifico do motor de reservas/simulação.
 - Expor endpoints do proprio contexto de booking engine.
 - Integrar com backend-service quando necessaário por contrato definido.
 

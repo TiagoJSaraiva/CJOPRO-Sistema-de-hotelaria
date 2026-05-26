@@ -26,8 +26,8 @@ test.describe("PMS route visual consistency", () => {
     await page.goto("/dashboard/reservations/view?start_date=2026-05-12");
 
     await expect(page).toHaveTitle(/PMS/);
-    await expect(page.getByRole("heading", { name: "Calendario de Reservas" })).toBeVisible();
-    await expect(page.getByTestId("reservation-summary-metrics")).toContainText("Ocupacao do recorte");
+    await expect(page.getByRole("heading", { name: "Calendário de Reservas" })).toBeVisible();
+    await expect(page.getByTestId("reservation-summary-metrics")).toContainText("Ocupação do recorte");
     await expect(page.getByTestId("reservation-summary-metrics")).toContainText("Receita prevista");
     await expect(page.getByTestId("reservation-calendar-grid")).toBeVisible();
     await expect(page.getByTestId("reservation-side-panel")).toContainText("Painel operacional");
@@ -39,7 +39,7 @@ test.describe("PMS route visual consistency", () => {
     await expect(page.getByRole("button", { name: "Simular" })).toBeEnabled();
 
     await page.getByRole("button", { name: "Simular" }).click();
-    await expect(page.getByTestId("reservation-side-panel")).toContainText("Resultado da simulacao");
+    await expect(page.getByTestId("reservation-side-panel")).toContainText("Resultado da simulação");
     await expect(page.getByTestId("reservation-side-panel")).toContainText("R$ 180,00");
 
     await page.getByRole("button", { name: /Abrir reserva RES-1001/ }).click();

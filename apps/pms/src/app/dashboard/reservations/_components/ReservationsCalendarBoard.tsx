@@ -519,9 +519,9 @@ export function ReservationsCalendarBoard({ data, startDate, customers }: Reserv
 
   return (
     <section className="grid gap-4" data-testid="reservations-calendar-board">
-      <section className="grid grid-cols-1 gap-3 md:grid-cols-2 xl:grid-cols-4" data-testid="reservation-summary-metrics">
+      <section className="grid grid-cols-1 gap-3 md:grid-cols-2 xl:grid-cols-3" data-testid="reservation-summary-metrics">
         <MetricCard
-          label="Ocupacao do recorte"
+          label="Ocupação do recorte"
           value={formatPercent(calendarSummary.occupancyRate)}
           detail={`${calendarSummary.occupiedRoomDays} de ${calendarSummary.totalRoomDays} diarias mapeadas`}
           tone={calendarSummary.occupancyRate > 75 ? "good" : calendarSummary.occupancyRate > 45 ? "warning" : "neutral"}
@@ -529,14 +529,8 @@ export function ReservationsCalendarBoard({ data, startDate, customers }: Reserv
         <MetricCard
           label="Estadias ativas"
           value={String(calendarSummary.activeStays)}
-          detail={`${data.stays.length} reserva(s) no calendario`}
+          detail={`${data.stays.length} reserva(s) no calendário`}
           tone={calendarSummary.activeStays ? "good" : "neutral"}
-        />
-        <MetricCard
-          label="Receita prevista"
-          value={formatMoney(calendarSummary.projectedRevenue)}
-          detail={`${formatMoney(calendarSummary.openBalance)} em aberto`}
-          tone={calendarSummary.openBalance > 0 ? "warning" : "good"}
         />
         <MetricCard
           label="Bloqueios"
@@ -886,7 +880,7 @@ export function ReservationsCalendarBoard({ data, startDate, customers }: Reserv
 
           {!selectedStay && !candidateStayIds.length ? (
             <div className="grid gap-4 text-sm">
-              <PanelSection title="Nova reserva" description="Selecione uma ou mais celulas livres no mapa para habilitar a simulacao.">
+              <PanelSection title="Nova reserva" description="Selecione uma ou mais celulas livres no mapa para habilitar a simulação.">
                 <div className="grid grid-cols-2 gap-2">
                   <PaymentSummaryCard label="Celulas" value={String(selectedCells.size)} detail="Selecionadas" />
                   <PaymentSummaryCard label="Quartos" value={String(roomsCount)} detail="No recorte" />
@@ -896,7 +890,7 @@ export function ReservationsCalendarBoard({ data, startDate, customers }: Reserv
                 </p>
               </PanelSection>
 
-              <PanelSection title="Origem e observacoes">
+              <PanelSection title="Origem e observações">
                 <label className="pms-field">
                   <span>Origem</span>
                   <select value={reservationSource} onChange={(event) => setReservationSource(event.target.value as ReservationSource)} className="pms-field-input w-full">
@@ -949,7 +943,7 @@ export function ReservationsCalendarBoard({ data, startDate, customers }: Reserv
               </div>
 
               {simulation ? (
-                <PanelSection title="Resultado da simulacao">
+                <PanelSection title="Resultado da simulação">
                   <div className="grid grid-cols-3 gap-2">
                     <PaymentSummaryCard label="Total" value={formatMoney(simulation.total_price)} detail="Previsto" tone="good" />
                     <PaymentSummaryCard label="Diarias" value={String(simulation.nights_count)} detail="Calculadas" />

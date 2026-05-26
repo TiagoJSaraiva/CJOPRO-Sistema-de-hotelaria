@@ -10,7 +10,7 @@ export default async function ReservationsCalendarPage() {
   if (!targetRoute) {
     return (
       <section className="pms-surface-card">
-        <h1 className="pms-page-title">Calendario de Reservas</h1>
+        <h1 className="pms-page-title">Calendário de Reservas</h1>
         <p>Sem permissao para visualizar este modulo.</p>
       </section>
     );
