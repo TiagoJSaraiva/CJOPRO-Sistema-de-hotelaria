@@ -10,7 +10,7 @@ type PermissionCreateFormProps = {
 export function PermissionCreateForm({ formKey }: PermissionCreateFormProps) {
   return (
     <article className="pms-surface-card">
-      <h3 className="mt-0">Criar permissao</h3>
+      <h3 className="mt-0">Criar permissão</h3>
 
       <form key={formKey} action={createPermissionAction} className="grid gap-[0.7rem] md:grid-cols-2">
         <FormField label="Nome" htmlFor="create-permission-name">
@@ -35,8 +35,8 @@ export function PermissionCreateForm({ formKey }: PermissionCreateFormProps) {
           </select>
         </FormField>
 
-        <PendingSubmitButton pendingLabel="Criando permissao..." className="justify-self-start md:col-span-2">
-          Criar permissao
+        <PendingSubmitButton pendingLabel="Criando permissão..." className="justify-self-start md:col-span-2">
+          Criar permissão
         </PendingSubmitButton>
       </form>
     </article>

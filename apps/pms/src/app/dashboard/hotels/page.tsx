@@ -17,8 +17,8 @@ export default async function HotelsPage({ searchParams }: HotelsPageProps) {
   if (!targetRoute) {
     return (
       <section className="pms-surface-card">
-        <h1 className="pms-page-title">Hoteis</h1>
-        <p>Sem permissao para visualizar este modulo.</p>
+        <h1 className="pms-page-title">Hotéis</h1>
+        <p>Sem permissão para visualizar este módulo.</p>
       </section>
     );
   }

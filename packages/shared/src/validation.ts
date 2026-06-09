@@ -151,7 +151,7 @@ export function validateTaxIdByCountry(country: string, taxId: string): TaxIdVal
     return {
       isValid,
       normalizedTaxId,
-      message: isValid ? undefined : "CNPJ invalido para o pais informado."
+      message: isValid ? undefined : "CNPJ inválido para o país informado."
     };
   }
 

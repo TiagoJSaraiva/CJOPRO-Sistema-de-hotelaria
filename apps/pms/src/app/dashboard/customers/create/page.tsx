@@ -27,7 +27,7 @@ export default async function CustomersCreatePage({ searchParams }: CustomersCre
       redirect(fallback);
     }
 
-    return <DashboardAccessDeniedCard title="Clientes" message="Sem permissao para criar cliente." />;
+    return <DashboardAccessDeniedCard title="Clientes" message="Sem permissão para criar cliente." />;
   }
 
   return (
@@ -73,7 +73,7 @@ export default async function CustomersCreatePage({ searchParams }: CustomersCre
           <input id="create-customer-nationality" name="nationality" className="pms-field-input" />
         </FormField>
 
-        <FormField label="Observacoes" htmlFor="create-customer-notes" fullWidth>
+        <FormField label="Observações" htmlFor="create-customer-notes" fullWidth>
           <input id="create-customer-notes" name="notes" className="pms-field-input" />
         </FormField>
       </DashboardCreateFormCard>

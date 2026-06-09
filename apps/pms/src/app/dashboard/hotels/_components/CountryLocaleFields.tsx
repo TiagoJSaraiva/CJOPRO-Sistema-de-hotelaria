@@ -68,7 +68,7 @@ export function CountryLocaleFields({ defaultCountryCode = "BR" }: CountryLocale
       return;
     }
 
-    event.target.setCustomValidity("Timezone invalido. Escolha um timezone existente.");
+    event.target.setCustomValidity("Timezone inválido. Escolha um timezone existente.");
     event.target.reportValidity();
   };
 
@@ -80,14 +80,14 @@ export function CountryLocaleFields({ defaultCountryCode = "BR" }: CountryLocale
       return;
     }
 
-    event.target.setCustomValidity("Moeda invalida. Informe um codigo de moeda existente.");
+    event.target.setCustomValidity("Moeda inválida. Informe um código de moeda existente.");
     event.target.reportValidity();
   };
 
   return (
     <>
       <div className="pms-field">
-        <label htmlFor="create-country">Pais</label>
+        <label htmlFor="create-country">País</label>
         <select
           id="create-country"
           name="country"

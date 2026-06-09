@@ -27,7 +27,7 @@ export default async function RolesViewPage({ searchParams }: RolesViewPageProps
       redirect(fallback);
     }
 
-    return <DashboardAccessDeniedCard title="Roles" message="Sem permissao para visualizar roles." />;
+    return <DashboardAccessDeniedCard title="Roles" message="Sem permissão para visualizar roles." />;
   }
 
   const [roles, referenceData] = await Promise.all([

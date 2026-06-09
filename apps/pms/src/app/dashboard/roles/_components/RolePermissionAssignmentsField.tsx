@@ -70,9 +70,9 @@ export function RolePermissionAssignmentsField({
     <>
       <div className="grid gap-[0.45rem] md:col-span-2">
         <RelationListEditor
-          title="Permissoes da role"
-          addLabel="Adicionar permissao"
-          emptyMessage="Nenhuma permissao vinculada a role."
+          title="Permissões da role"
+          addLabel="Adicionar permissão"
+          emptyMessage="Nenhuma permissão vinculada à role."
           items={items.map((item) => ({ id: item.id, primary: item.name }))}
           onAdd={() => setIsModalOpen(true)}
           onRemove={(permissionId) => setItems((current) => current.filter((item) => item.id !== permissionId))}
@@ -83,13 +83,13 @@ export function RolePermissionAssignmentsField({
 
       <SelectionModal
         open={isModalOpen}
-        title="Selecione uma permissao"
+        title="Selecione uma permissão"
         items={availablePermissions.map((permission) => ({
           id: permission.id,
           label: permission.name,
           description: permission.type === ADMIN_PERMISSION_TYPES.SYSTEM ? "SYSTEM PERMISSION" : "HOTEL PERMISSION"
         }))}
-        emptyMessage="Nao existem permissoes disponiveis para o tipo de role selecionado."
+        emptyMessage="Não existem permissões disponíveis para o tipo de role selecionado."
         onSelect={(permissionId) => {
           const selectedPermission = permissions.find((permission) => permission.id === permissionId);
 

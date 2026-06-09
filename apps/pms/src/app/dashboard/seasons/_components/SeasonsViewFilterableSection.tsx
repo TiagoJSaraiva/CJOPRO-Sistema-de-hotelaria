@@ -45,7 +45,7 @@ export function SeasonsViewFilterableSection({ seasons, canRead, canUpdate, canD
       onCloseFilters={closeFilters}
       onApplyFilters={applyFilters}
       onClearFilters={clearFilters}
-      emptyMessage="Nenhuma temporada cadastrada ate o momento."
+      emptyMessage="Nenhuma temporada cadastrada até o momento."
       filteredEmptyMessage="Nenhuma temporada corresponde aos filtros aplicados."
       getItemKey={(season) => season.id}
       renderItem={(season) => (

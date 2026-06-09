@@ -99,12 +99,12 @@ describe("TransactionsViewFilterableSection report menu", () => {
     renderTransactionsSection();
 
     await user.click(screen.getByRole("button", { name: "Filtrar dados" }));
-    await user.type(screen.getByPlaceholderText("Categoria, fornecedor, descricao ou referencia"), "Energia");
+    await user.type(screen.getByPlaceholderText("Categoria, fornecedor, descrição ou referência"), "Energia");
     await user.click(screen.getByRole("button", { name: "Aplicar filtros" }));
 
     expect(screen.getByText("Exibindo 1 de 2 lançamentos financeiros.")).toBeTruthy();
 
-    await user.click(screen.getByRole("button", { name: "Gerar relatorio" }));
+    await user.click(screen.getByRole("button", { name: "Gerar relatório" }));
     await user.click(screen.getByRole("menuitem", { name: "Recorte filtrado" }));
 
     const calls = generatePdfMock.mock.calls as unknown as Array<[FinancialTransactionReportInput]>;
@@ -118,7 +118,7 @@ describe("TransactionsViewFilterableSection report menu", () => {
     expect(filteredCall.generatedBy).toBe("Marina Costa");
     expect(filteredCall.transactions.map((transaction: AdminFinancialTransaction) => transaction.id)).toEqual(["transaction-2"]);
 
-    await user.click(screen.getByRole("button", { name: "Gerar relatorio" }));
+    await user.click(screen.getByRole("button", { name: "Gerar relatório" }));
     await user.click(screen.getByRole("menuitem", { name: "Todas do hotel" }));
 
     const allCall = calls[1]?.[0];

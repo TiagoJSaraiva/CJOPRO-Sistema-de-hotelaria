@@ -50,7 +50,7 @@ export function ProductsViewFilterableSection({ products, canRead, canUpdate, ca
       onCloseFilters={closeFilters}
       onApplyFilters={applyFilters}
       onClearFilters={clearFilters}
-      emptyMessage="Nenhum produto cadastrado ate o momento."
+      emptyMessage="Nenhum produto cadastrado até o momento."
       filteredEmptyMessage="Nenhum produto corresponde aos filtros aplicados."
       getItemKey={(product) => product.id}
       renderItem={(product) => (

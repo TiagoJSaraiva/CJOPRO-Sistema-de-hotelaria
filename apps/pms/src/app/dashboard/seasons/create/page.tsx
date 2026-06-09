@@ -26,7 +26,7 @@ export default async function SeasonsCreatePage({ searchParams }: SeasonsCreateP
       redirect(fallback);
     }
 
-    return <DashboardAccessDeniedCard title="Temporadas" message="Sem permissao para criar temporada." />;
+    return <DashboardAccessDeniedCard title="Temporadas" message="Sem permissão para criar temporada." />;
   }
 
   return (

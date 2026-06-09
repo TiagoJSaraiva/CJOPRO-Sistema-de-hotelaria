@@ -97,11 +97,11 @@ function UserEditForm({ userItem, hotels, roles }: { userItem: AdminUser; hotels
 
       <label className="flex items-center gap-2">
         <input name="is_active" type="checkbox" defaultChecked={userItem.is_active} />
-        <span>Usuario ativo</span>
+        <span>Usuário ativo</span>
       </label>
 
       <button type="submit" className="justify-self-start rounded-lg border-0 bg-[#1c6d4e] px-[0.75rem] py-[0.55rem] text-white">
-        Salvar alteracoes
+        Salvar alterações
       </button>
     </form>
   );

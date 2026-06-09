@@ -51,7 +51,7 @@ export type PermissionName = (typeof PERMISSIONS)[keyof typeof PERMISSIONS];
 export const ADMIN_NAV_ITEMS = [
   {
     href: "/dashboard/hotels",
-    label: "Hoteis",
+    label: "Hotéis",
     permission: PERMISSIONS.HOTEL_READ
   },
   {
@@ -91,7 +91,7 @@ export const ADMIN_NAV_ITEMS = [
   },
   {
     href: "/dashboard/users",
-    label: "Usuarios",
+    label: "Usuários",
     permission: PERMISSIONS.USER_READ
   },
   {
@@ -101,7 +101,7 @@ export const ADMIN_NAV_ITEMS = [
   },
   {
     href: "/dashboard/permissions",
-    label: "Permissoes",
+    label: "Permissões",
     permission: PERMISSIONS.PERMISSION_READ
   }
 ] as const;

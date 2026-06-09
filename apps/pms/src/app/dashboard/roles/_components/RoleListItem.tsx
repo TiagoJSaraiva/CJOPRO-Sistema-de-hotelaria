@@ -38,7 +38,7 @@ function RoleDataPreview({ roleItem }: { roleItem: AdminRole }) {
       </p>
 
       <div>
-        <strong>Permissoes vinculadas:</strong>
+        <strong>Permissões vinculadas:</strong>
         {roleItem.permissions.length ? (
           <ul className="mb-0 mt-[0.45rem] pl-[1.1rem]">
             {roleItem.permissions.map((permission) => (
@@ -46,7 +46,7 @@ function RoleDataPreview({ roleItem }: { roleItem: AdminRole }) {
             ))}
           </ul>
         ) : (
-          <p className="m-0 mt-[0.35rem] text-[#626c79]">Sem permissoes vinculadas.</p>
+          <p className="m-0 mt-[0.35rem] text-[#626c79]">Sem permissões vinculadas.</p>
         )}
       </div>
     </div>
@@ -89,7 +89,7 @@ function RoleEditForm({ roleItem, hotels, permissions }: { roleItem: AdminRole; 
       <RolePermissionAssignmentsField roleType={roleType} permissions={permissions} defaultPermissions={roleItem.permissions} />
 
       <button type="submit" className="justify-self-start rounded-lg border-0 bg-[#1c6d4e] px-[0.75rem] py-[0.55rem] text-white">
-        Salvar alteracoes
+        Salvar alterações
       </button>
     </form>
   );
@@ -121,9 +121,9 @@ export function RoleListItem({ roleItem, hotels, permissions, canRead, canUpdate
           deleteId={roleItem.id}
           deleteAction={deleteRoleAction}
           editDisabled={isCurrentUserRole}
-          editDisabledTitle="Voce nao pode editar uma role vinculada ao proprio usuario."
+          editDisabledTitle="Você não pode editar uma role vinculada ao próprio usuário."
           deleteDisabled={isCurrentUserRole}
-          deleteDisabledTitle="Voce nao pode apagar uma role vinculada ao proprio usuario."
+          deleteDisabledTitle="Você não pode apagar uma role vinculada ao próprio usuário."
         />
       }
     >

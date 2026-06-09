@@ -25,7 +25,7 @@ function SeasonDataPreview({ season }: { season: AdminSeason }) {
         <p className="m-0 mt-[0.2rem]">{season.name}</p>
       </div>
       <div>
-        <strong>Inicio:</strong>
+        <strong>Início:</strong>
         <p className="m-0 mt-[0.2rem]">{season.start_date}</p>
       </div>
       <div>
@@ -59,7 +59,7 @@ function SeasonEditForm({ season }: { season: AdminSeason }) {
       </div>
 
       <div className="pms-field">
-        <label htmlFor={`season-start-${season.id}`}>Inicio</label>
+        <label htmlFor={`season-start-${season.id}`}>Início</label>
         <input id={`season-start-${season.id}`} name="start_date" type="date" defaultValue={season.start_date} required className="pms-field-input" />
       </div>
 
@@ -74,7 +74,7 @@ function SeasonEditForm({ season }: { season: AdminSeason }) {
       </label>
 
       <button type="submit" className="justify-self-start rounded-lg border-0 bg-[#1c6d4e] px-[0.75rem] py-[0.55rem] text-white">
-        Salvar alteracoes
+        Salvar alterações
       </button>
     </form>
   );
@@ -87,7 +87,7 @@ export function SeasonListItem({ season, canRead, canUpdate, canDelete, isViewin
   return (
     <DashboardEntityListItemFrame
       title={season.name}
-      subtitle={`${season.start_date} ate ${season.end_date} | ${season.is_active ? "ativa" : "inativa"}`}
+      subtitle={`${season.start_date} até ${season.end_date} | ${season.is_active ? "ativa" : "inativa"}`}
       actions={
         <DashboardEntityActionButtons
           canRead={canRead}

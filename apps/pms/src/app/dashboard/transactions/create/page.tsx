@@ -27,7 +27,7 @@ export default async function TransactionsCreatePage({ searchParams }: Transacti
       redirect(fallback);
     }
 
-    return <DashboardAccessDeniedCard title="Painel Financeiro" message="Sem permissao para criar lançamento financeiro." />;
+    return <DashboardAccessDeniedCard title="Painel Financeiro" message="Sem permissão para criar lançamento financeiro." />;
   }
 
   return (
@@ -35,13 +35,13 @@ export default async function TransactionsCreatePage({ searchParams }: Transacti
       title="Painel Financeiro"
       activeTabKey="create"
       tabs={[
-        { key: "create", label: "Lancamento", href: "/dashboard/transactions/create", isVisible: access.canCreate },
+        { key: "create", label: "Lançamento", href: "/dashboard/transactions/create", isVisible: access.canCreate },
         { key: "view", label: "Monitoramento", href: "/dashboard/transactions/view", isVisible: access.canRead }
       ]}
       statusContent={<TransactionStatusMessage status={searchParams?.status} />}
     >
       <DashboardCreateFormCard
-        title="Registrar gasto ou movimentacao"
+        title="Registrar gasto ou movimentação"
         submitLabel="Salvar lançamento"
         action={createTransactionAction}
         resetKey={searchParams?.r}
@@ -55,7 +55,7 @@ export default async function TransactionsCreatePage({ searchParams }: Transacti
         </FormField>
 
         <FormField label="Categoria" htmlFor="create-transaction-category">
-          <input id="create-transaction-category" name="category" required placeholder="Ex.: Manutencao, lavanderia" className="pms-field-input" />
+          <input id="create-transaction-category" name="category" required placeholder="Ex.: Manutenção, lavanderia" className="pms-field-input" />
         </FormField>
 
         <FormField label="Fornecedor ou favorecido" htmlFor="create-transaction-counterparty">
@@ -63,7 +63,7 @@ export default async function TransactionsCreatePage({ searchParams }: Transacti
         </FormField>
 
         <FormField label="Centro de custo" htmlFor="create-transaction-cost-center">
-          <input id="create-transaction-cost-center" name="cost_center" placeholder="Ex.: Operacao, Governanca" className="pms-field-input" />
+          <input id="create-transaction-cost-center" name="cost_center" placeholder="Ex.: Operação, Governança" className="pms-field-input" />
         </FormField>
 
         <FormField label="Valor" htmlFor="create-transaction-amount">
@@ -96,7 +96,7 @@ export default async function TransactionsCreatePage({ searchParams }: Transacti
           <input id="create-transaction-payment-method" name="payment_method" placeholder="PIX, cartao, dinheiro" className="pms-field-input" />
         </FormField>
 
-        <FormField label="Documento/referencia" htmlFor="create-transaction-reference-code">
+        <FormField label="Documento/referência" htmlFor="create-transaction-reference-code">
           <input id="create-transaction-reference-code" name="reference_code" placeholder="NF, recibo, pedido interno" className="pms-field-input" />
         </FormField>
 
@@ -108,8 +108,8 @@ export default async function TransactionsCreatePage({ searchParams }: Transacti
           <input id="create-transaction-stay-id" name="stay_id" placeholder="UUID da estadia, se houver" className="pms-field-input" />
         </FormField>
 
-        <FormField label="Descricao" htmlFor="create-transaction-description" fullWidth>
-          <input id="create-transaction-description" name="description" placeholder="Observacoes operacionais, aprovador ou contexto" className="pms-field-input" />
+        <FormField label="Descrição" htmlFor="create-transaction-description" fullWidth>
+          <input id="create-transaction-description" name="description" placeholder="Observações operacionais, aprovador ou contexto" className="pms-field-input" />
         </FormField>
       </DashboardCreateFormCard>
     </DashboardEntityPageShell>

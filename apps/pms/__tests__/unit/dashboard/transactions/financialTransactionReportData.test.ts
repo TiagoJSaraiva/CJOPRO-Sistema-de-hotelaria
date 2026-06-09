@@ -51,11 +51,11 @@ describe("financialTransactionReportData", () => {
 
     expect(report.fileName).toBe("relatorio-financeiro-hotel-demo-2026-06-09-recorte-filtrado.pdf");
     expect(report.scopeLabel).toBe("Recorte filtrado");
-    expect(report.transactionCountLabel).toBe("1 de 2 lancamento(s)");
+    expect(report.transactionCountLabel).toBe("1 de 2 lançamento(s)");
     expect(report.summaryRows).toContainEqual(expect.objectContaining({ label: "Resultado realizado" }));
     expect(report.tableRows).toHaveLength(1);
     expect(report.tableRows[0]).toEqual(
-      expect.arrayContaining(["11/05/2026", "Receita", "Concluida", "Hospedagem", "Ana Paula", "Recepcao", "RES-1"])
+      expect.arrayContaining(["11/05/2026", "Receita", "Concluída", "Hospedagem", "Ana Paula", "Recepcao", "RES-1"])
     );
     expect(report.tableRows[0]?.[7]).toContain("1.000,00");
     expect(report.tableRows[0]?.[7]).toMatch(/^\+/);
@@ -74,7 +74,7 @@ describe("financialTransactionReportData", () => {
 
     expect(report.fileName).toBe("relatorio-financeiro-hotel-demo-2026-06-09-todas-do-hotel.pdf");
     expect(report.scopeLabel).toBe("Todas do hotel");
-    expect(report.transactionCountLabel).toBe("2 lancamento(s)");
+    expect(report.transactionCountLabel).toBe("2 lançamento(s)");
     expect(report.categoryRows).toContainEqual(
       expect.objectContaining({
         category: "Manutencao",

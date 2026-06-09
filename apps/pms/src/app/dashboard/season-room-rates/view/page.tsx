@@ -26,7 +26,7 @@ export default async function SeasonRoomRatesViewPage({ searchParams }: SeasonRo
       redirect(fallback);
     }
 
-    return <DashboardAccessDeniedCard title="Tarifas por Temporada" message="Sem permissao para visualizar tarifas de temporada." />;
+    return <DashboardAccessDeniedCard title="Tarifas por Temporada" message="Sem permissão para visualizar tarifas de temporada." />;
   }
 
   const items = await listSeasonRoomRates();

@@ -65,7 +65,7 @@ describe("lib/auth - loginWithCredentials", () => {
     vi.stubGlobal("fetch", vi.fn().mockRejectedValue(new Error("offline")));
 
     await expect(loginWithCredentials("admin@hotel.com", "secret")).rejects.toThrow(
-      "Servico de autenticacao indisponivel no momento."
+      "Serviço de autenticação indisponível no momento."
     );
   });
 });

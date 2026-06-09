@@ -51,7 +51,7 @@ export function SeasonRoomRatesViewFilterableSection({ items, seasons, canRead, 
       onCloseFilters={closeFilters}
       onApplyFilters={applyFilters}
       onClearFilters={clearFilters}
-      emptyMessage="Nenhuma tarifa por temporada cadastrada ate o momento."
+      emptyMessage="Nenhuma tarifa por temporada cadastrada até o momento."
       filteredEmptyMessage="Nenhuma tarifa por temporada corresponde aos filtros aplicados."
       getItemKey={(item) => item.id}
       renderItem={(item) => (

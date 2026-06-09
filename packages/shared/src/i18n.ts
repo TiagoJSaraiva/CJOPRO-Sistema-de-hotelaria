@@ -46,7 +46,7 @@ const TRANSACTION_TYPE_LABELS: Record<TransactionType, string> = {
 
 const TRANSACTION_STATUS_LABELS: Record<TransactionStatus, string> = {
   PENDING: "Pendente",
-  COMPLETED: "Concluida",
+  COMPLETED: "Concluída",
   FAILED: "Falhou",
   CANCELLED: "Cancelada",
   REFUNDED: "Reembolsada",

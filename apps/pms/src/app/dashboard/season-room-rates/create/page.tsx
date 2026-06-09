@@ -28,7 +28,7 @@ export default async function SeasonRoomRatesCreatePage({ searchParams }: Season
       redirect(fallback);
     }
 
-    return <DashboardAccessDeniedCard title="Tarifas por Temporada" message="Sem permissao para criar tarifa de temporada." />;
+    return <DashboardAccessDeniedCard title="Tarifas por Temporada" message="Sem permissão para criar tarifa de temporada." />;
   }
 
   const seasons = await listSeasons();

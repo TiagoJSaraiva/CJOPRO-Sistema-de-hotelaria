@@ -51,7 +51,7 @@ export function FinancialTransactionReportMenu({
         referenceDate
       });
     } catch {
-      setErrorMessage("Nao foi possivel gerar o relatorio.");
+      setErrorMessage("Não foi possível gerar o relatório.");
     } finally {
       setGeneratingScope(null);
     }
@@ -64,17 +64,17 @@ export function FinancialTransactionReportMenu({
         disabled={isDisabled}
         aria-haspopup="menu"
         aria-expanded={isOpen}
-        title={!hasActiveHotel ? "Selecione um hotel ativo para gerar relatorio." : undefined}
+        title={!hasActiveHotel ? "Selecione um hotel ativo para gerar relatório." : undefined}
         onClick={() => setIsOpen((current) => !current)}
         className={`${menuButtonClassName} ${isDisabled ? "cursor-not-allowed opacity-60" : ""}`}
       >
-        {generatingScope ? `Gerando ${getScopeLabel(generatingScope)}...` : "Gerar relatorio"}
+        {generatingScope ? `Gerando ${getScopeLabel(generatingScope)}...` : "Gerar relatório"}
       </button>
 
       {isOpen ? (
         <div
           role="menu"
-          aria-label="Opcoes de relatorio financeiro"
+          aria-label="Opções de relatório financeiro"
           className="absolute right-0 z-20 mt-2 grid min-w-[210px] overflow-hidden rounded-lg border border-[#d9dfe7] bg-white p-1 shadow-lg"
         >
           <button

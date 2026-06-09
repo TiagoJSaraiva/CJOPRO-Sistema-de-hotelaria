@@ -46,7 +46,7 @@ export function RoomsViewFilterableSection({ rooms, canRead, canUpdate, canDelet
       onCloseFilters={closeFilters}
       onApplyFilters={applyFilters}
       onClearFilters={clearFilters}
-      emptyMessage="Nenhum quarto cadastrado ate o momento."
+      emptyMessage="Nenhum quarto cadastrado até o momento."
       filteredEmptyMessage="Nenhum quarto corresponde aos filtros aplicados."
       getItemKey={(room) => room.id}
       renderItem={(room) => (

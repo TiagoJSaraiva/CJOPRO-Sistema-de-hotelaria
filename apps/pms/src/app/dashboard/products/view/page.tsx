@@ -26,7 +26,7 @@ export default async function ProductsViewPage({ searchParams }: ProductsViewPag
       redirect(fallback);
     }
 
-    return <DashboardAccessDeniedCard title="Produtos" message="Sem permissao para visualizar produtos." />;
+    return <DashboardAccessDeniedCard title="Produtos" message="Sem permissão para visualizar produtos." />;
   }
 
   const products = await listProducts();

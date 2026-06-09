@@ -34,7 +34,7 @@ export async function loginWithCredentials(email: string, password: string): Pro
       body: JSON.stringify(loginBody)
     });
   } catch {
-    throw new Error("Servico de autenticacao indisponivel no momento.");
+    throw new Error("Serviço de autenticação indisponível no momento.");
   }
 
   const payload = (await response.json().catch(() => ({}))) as Partial<LoginResult> & Partial<AuthErrorResponse>;

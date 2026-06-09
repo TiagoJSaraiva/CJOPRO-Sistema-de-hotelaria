@@ -32,7 +32,7 @@ function SeasonRoomRateDataPreview({ item, seasons }: { item: AdminSeasonRoomRat
         <p className="m-0 mt-[0.2rem]">{item.room_type}</p>
       </div>
       <div>
-        <strong>Diaria:</strong>
+        <strong>Diária:</strong>
         <p className="m-0 mt-[0.2rem]">R$ {item.daily_rate.toFixed(2)}</p>
       </div>
       <div>
@@ -63,12 +63,12 @@ function SeasonRoomRateEditForm({ item, seasons }: { item: AdminSeasonRoomRate; 
       </div>
 
       <div className="pms-field">
-        <label htmlFor={`season-room-rate-daily-rate-${item.id}`}>Diaria</label>
+        <label htmlFor={`season-room-rate-daily-rate-${item.id}`}>Diária</label>
         <input id={`season-room-rate-daily-rate-${item.id}`} name="daily_rate" type="number" min={0} step="0.01" defaultValue={item.daily_rate} required className="pms-field-input" />
       </div>
 
       <button type="submit" className="justify-self-start rounded-lg border-0 bg-[#1c6d4e] px-[0.75rem] py-[0.55rem] text-white">
-        Salvar alteracoes
+        Salvar alterações
       </button>
     </form>
   );

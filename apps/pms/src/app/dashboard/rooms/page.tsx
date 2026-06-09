@@ -19,7 +19,7 @@ export default async function RoomsPage({ searchParams }: RoomsPageProps) {
     return (
       <section className="pms-surface-card">
         <h1 className="pms-page-title">Quartos</h1>
-        <p>Sem permissao para visualizar este modulo.</p>
+        <p>Sem permissão para visualizar este módulo.</p>
       </section>
     );
   }

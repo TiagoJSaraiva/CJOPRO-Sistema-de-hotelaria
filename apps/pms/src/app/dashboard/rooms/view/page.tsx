@@ -26,7 +26,7 @@ export default async function RoomsViewPage({ searchParams }: RoomsViewPageProps
       redirect(fallback);
     }
 
-    return <DashboardAccessDeniedCard title="Quartos" message="Sem permissao para visualizar quartos." />;
+    return <DashboardAccessDeniedCard title="Quartos" message="Sem permissão para visualizar quartos." />;
   }
 
   const rooms = await listRooms();

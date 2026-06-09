@@ -50,7 +50,7 @@ export function CustomersViewFilterableSection({ customers, canRead, canUpdate, 
       onCloseFilters={closeFilters}
       onApplyFilters={applyFilters}
       onClearFilters={clearFilters}
-      emptyMessage="Nenhum cliente cadastrado ate o momento."
+      emptyMessage="Nenhum cliente cadastrado até o momento."
       filteredEmptyMessage="Nenhum cliente corresponde aos filtros aplicados."
       getItemKey={(customer) => customer.id}
       renderItem={(customer) => (

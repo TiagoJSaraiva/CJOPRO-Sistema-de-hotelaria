@@ -24,16 +24,16 @@ export default async function HotelCreatePage({ searchParams }: HotelCreatePageP
       redirect(fallback);
     }
 
-    return <DashboardAccessDeniedCard title="Hoteis" message="Sem permissao para criar hotel." />;
+    return <DashboardAccessDeniedCard title="Hotéis" message="Sem permissão para criar hotel." />;
   }
 
   return (
     <DashboardEntityPageShell
-      title="Hoteis"
+      title="Hotéis"
       activeTabKey="create"
       tabs={[
         { key: "create", label: "Criar hotel", href: "/dashboard/hotels/create", isVisible: access.canCreate },
-        { key: "view", label: "Ver hoteis", href: "/dashboard/hotels/view", isVisible: access.canRead }
+        { key: "view", label: "Ver hotéis", href: "/dashboard/hotels/view", isVisible: access.canRead }
       ]}
       statusContent={<HotelStatusMessage status={searchParams?.status} />}
     >

@@ -26,7 +26,7 @@ export default async function SeasonsViewPage({ searchParams }: SeasonsViewPageP
       redirect(fallback);
     }
 
-    return <DashboardAccessDeniedCard title="Temporadas" message="Sem permissao para visualizar temporadas." />;
+    return <DashboardAccessDeniedCard title="Temporadas" message="Sem permissão para visualizar temporadas." />;
   }
 
   const seasons = await listSeasons();

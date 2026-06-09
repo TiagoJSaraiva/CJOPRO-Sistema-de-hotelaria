@@ -74,7 +74,7 @@ export function RoleHotelPickerField({
           { id: GENERIC_HOTEL_OPTION_ID, label: "Generica", description: "Pode ser vinculada em qualquer hotel." },
           ...hotels.map((hotel) => ({ id: hotel.id, label: hotel.name }))
         ]}
-        emptyMessage="Nenhum hotel disponivel para selecao."
+        emptyMessage="Nenhum hotel disponível para seleção."
         onSelect={(id) => {
           setSelectedHotelId(id === GENERIC_HOTEL_OPTION_ID ? null : id);
           setIsModalOpen(false);

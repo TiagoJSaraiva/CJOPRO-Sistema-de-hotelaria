@@ -57,15 +57,15 @@ export function PermissionsViewFilterableSection({
       appliedFilterCount={appliedFilterCount}
       totalCount={permissions.length}
       filteredItems={filteredPermissions}
-      itemLabelPlural="permissoes"
-      filtersTitle="Filtros de permissoes"
+      itemLabelPlural="permissões"
+      filtersTitle="Filtros de permissões"
       isModalOpen={isModalOpen}
       onOpenFilters={openFilters}
       onCloseFilters={closeFilters}
       onApplyFilters={applyFilters}
       onClearFilters={clearFilters}
-      emptyMessage="Nenhuma permissao cadastrada ate o momento."
-      filteredEmptyMessage="Nenhuma permissao corresponde aos filtros aplicados."
+      emptyMessage="Nenhuma permissão cadastrada até o momento."
+      filteredEmptyMessage="Nenhuma permissão corresponde aos filtros aplicados."
       getItemKey={(item) => item.id}
       renderItem={(item) => (
         <PermissionListItem
@@ -81,7 +81,7 @@ export function PermissionsViewFilterableSection({
       filters={
         <div className="grid grid-cols-[repeat(auto-fit,minmax(220px,1fr))] gap-[0.75rem]">
           <label className="pms-field">
-            <span>Nome da permissao</span>
+            <span>Nome da permissão</span>
             <input
               value={draftFilters.search}
               onChange={(event) => updateDraftFilter("search", event.target.value)}

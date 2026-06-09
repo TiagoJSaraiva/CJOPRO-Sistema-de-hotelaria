@@ -45,7 +45,7 @@ function PermissionEditForm({ permissionItem }: { permissionItem: AdminPermissio
       </div>
 
       <button type="submit" className="justify-self-start rounded-lg border-0 bg-[#1c6d4e] px-[0.75rem] py-[0.55rem] text-white">
-        Salvar alteracoes
+        Salvar alterações
       </button>
     </form>
   );
@@ -71,9 +71,9 @@ export function PermissionListItem({ permissionItem, canRead, canUpdate, canDele
           deleteId={permissionItem.id}
           deleteAction={deletePermissionAction}
           editDisabled={isCurrentUserPermission}
-          editDisabledTitle="Voce nao pode editar uma permissao vinculada ao proprio usuario."
+          editDisabledTitle="Você não pode editar uma permissão vinculada ao próprio usuário."
           deleteDisabled={isCurrentUserPermission}
-          deleteDisabledTitle="Voce nao pode apagar uma permissao vinculada ao proprio usuario."
+          deleteDisabledTitle="Você não pode apagar uma permissão vinculada ao próprio usuário."
         />
       }
     >

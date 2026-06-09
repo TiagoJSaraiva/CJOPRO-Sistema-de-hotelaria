@@ -68,13 +68,13 @@ export default async function DashboardLayout({ children }: { children: ReactNod
     <main className="min-h-screen bg-[#f5f6f8] p-5">
       <header className="mb-4 flex flex-wrap items-center justify-between gap-4">
         <div className="flex min-w-0 flex-wrap items-center gap-4">
-          <Link href="/dashboard" aria-label="Voltar para inicio" className="inline-flex items-center">
+          <Link href="/dashboard" aria-label="Voltar para início" className="inline-flex items-center">
             <Image src="/img/logo.png" alt="Logo" width={116} height={34} priority className="h-10 w-[116px]" />
           </Link>
 
           <nav className="flex flex-wrap gap-[0.55rem]">
             <Link href="/dashboard" className={navLinkClassName}>
-              Inicio
+              Início
             </Link>
 
             {navItems.map((item) => (

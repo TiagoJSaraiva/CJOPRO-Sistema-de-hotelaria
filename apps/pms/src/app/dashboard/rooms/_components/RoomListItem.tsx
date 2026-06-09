@@ -19,7 +19,7 @@ function RoomDataPreview({ room }: { room: AdminRoom }) {
   return (
     <div className="mt-[0.85rem] grid grid-cols-[repeat(auto-fit,minmax(200px,1fr))] gap-[0.75rem]">
       <div>
-        <strong>Numero:</strong>
+        <strong>Número:</strong>
         <p className="m-0 mt-[0.2rem]">{room.room_number}</p>
       </div>
       <div>
@@ -31,15 +31,15 @@ function RoomDataPreview({ room }: { room: AdminRoom }) {
         <p className="m-0 mt-[0.2rem]">{translateRoomStatus(room.status)}</p>
       </div>
       <div>
-        <strong>Capacidade maxima:</strong>
+        <strong>Capacidade máxima:</strong>
         <p className="m-0 mt-[0.2rem]">{room.max_occupancy}</p>
       </div>
       <div>
-        <strong>Diaria base:</strong>
+        <strong>Diária base:</strong>
         <p className="m-0 mt-[0.2rem]">R$ {room.base_daily_rate.toFixed(2)}</p>
       </div>
       <div>
-        <strong>Observacoes:</strong>
+        <strong>Observações:</strong>
         <p className="m-0 mt-[0.2rem]">{room.notes || "-"}</p>
       </div>
     </div>
@@ -52,7 +52,7 @@ function RoomEditForm({ room }: { room: AdminRoom }) {
       <input type="hidden" name="id" value={room.id} />
 
       <div className="pms-field">
-        <label htmlFor={`room-number-${room.id}`}>Numero</label>
+        <label htmlFor={`room-number-${room.id}`}>Número</label>
         <input id={`room-number-${room.id}`} name="room_number" defaultValue={room.room_number} required className="pms-field-input" />
       </div>
 
@@ -62,12 +62,12 @@ function RoomEditForm({ room }: { room: AdminRoom }) {
       </div>
 
       <div className="pms-field">
-        <label htmlFor={`room-max-occupancy-${room.id}`}>Capacidade maxima</label>
+        <label htmlFor={`room-max-occupancy-${room.id}`}>Capacidade máxima</label>
         <input id={`room-max-occupancy-${room.id}`} name="max_occupancy" type="number" min={1} defaultValue={room.max_occupancy} required className="pms-field-input" />
       </div>
 
       <div className="pms-field">
-        <label htmlFor={`room-base-daily-rate-${room.id}`}>Diaria base</label>
+        <label htmlFor={`room-base-daily-rate-${room.id}`}>Diária base</label>
         <input id={`room-base-daily-rate-${room.id}`} name="base_daily_rate" type="number" min={0} step="0.01" defaultValue={room.base_daily_rate} required className="pms-field-input" />
       </div>
 
@@ -82,12 +82,12 @@ function RoomEditForm({ room }: { room: AdminRoom }) {
       </div>
 
       <div className="pms-field">
-        <label htmlFor={`room-notes-${room.id}`}>Observacoes</label>
+        <label htmlFor={`room-notes-${room.id}`}>Observações</label>
         <input id={`room-notes-${room.id}`} name="notes" defaultValue={room.notes || ""} className="pms-field-input" />
       </div>
 
       <button type="submit" className="justify-self-start rounded-lg border-0 bg-[#1c6d4e] px-[0.75rem] py-[0.55rem] text-white">
-        Salvar alteracoes
+        Salvar alterações
       </button>
     </form>
   );

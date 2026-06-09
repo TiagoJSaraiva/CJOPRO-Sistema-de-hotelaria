@@ -251,7 +251,7 @@ export function TransactionsViewFilterableSection({
             ))
           ) : (
             <article className="pms-empty-state">
-              {appliedFilterCount ? "Nenhum lançamento corresponde aos filtros aplicados." : "Nenhum lançamento financeiro cadastrado ate o momento."}
+              {appliedFilterCount ? "Nenhum lançamento corresponde aos filtros aplicados." : "Nenhum lançamento financeiro cadastrado até o momento."}
             </article>
           )}
         </div>
@@ -269,7 +269,7 @@ export function TransactionsViewFilterableSection({
             <input
               value={draftFilters.search}
               onChange={(event) => updateDraftFilter("search", event.target.value)}
-              placeholder="Categoria, fornecedor, descricao ou referencia"
+              placeholder="Categoria, fornecedor, descrição ou referência"
               className={viewFiltersFieldClassName}
             />
           </label>

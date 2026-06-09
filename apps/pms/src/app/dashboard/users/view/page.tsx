@@ -26,7 +26,7 @@ export default async function UsersViewPage({ searchParams }: UsersViewPageProps
       redirect(fallback);
     }
 
-    return <DashboardAccessDeniedCard title="Usuarios" message="Sem permissao para visualizar usuarios." />;
+    return <DashboardAccessDeniedCard title="Usuários" message="Sem permissão para visualizar usuários." />;
   }
 
   const [users, referenceData] = await Promise.all([
@@ -39,11 +39,11 @@ export default async function UsersViewPage({ searchParams }: UsersViewPageProps
 
   return (
     <DashboardEntityPageShell
-      title="Usuarios"
+      title="Usuários"
       activeTabKey="view"
       tabs={[
-        { key: "create", label: "Criar usuario", href: "/dashboard/users/create", isVisible: access.canCreate },
-        { key: "view", label: "Ver usuarios", href: "/dashboard/users/view", isVisible: access.canRead }
+        { key: "create", label: "Criar usuário", href: "/dashboard/users/create", isVisible: access.canCreate },
+        { key: "view", label: "Ver usuários", href: "/dashboard/users/view", isVisible: access.canRead }
       ]}
       statusContent={<UserStatusMessage status={searchParams?.status} />}
     >

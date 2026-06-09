@@ -26,7 +26,7 @@ export default async function CustomersViewPage({ searchParams }: CustomersViewP
       redirect(fallback);
     }
 
-    return <DashboardAccessDeniedCard title="Clientes" message="Sem permissao para visualizar clientes." />;
+    return <DashboardAccessDeniedCard title="Clientes" message="Sem permissão para visualizar clientes." />;
   }
 
   const customers = await listCustomers();

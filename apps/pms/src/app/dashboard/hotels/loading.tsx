@@ -3,7 +3,7 @@ import { AdaptiveLoadingFallback } from "../../_components/AdaptiveLoadingFallba
 export default function HotelsLoading() {
   return (
     <section className="pms-surface-card">
-      <AdaptiveLoadingFallback minHeight="24vh" label="Carregando hoteis..." />
+      <AdaptiveLoadingFallback minHeight="24vh" label="Carregando hotéis..." />
     </section>
   );
 }

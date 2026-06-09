@@ -24,16 +24,16 @@ export default async function PermissionsCreatePage({ searchParams }: Permission
       redirect(fallback);
     }
 
-    return <DashboardAccessDeniedCard title="Permissoes" message="Sem permissao para criar permissao." />;
+    return <DashboardAccessDeniedCard title="Permissões" message="Sem permissão para criar permissão." />;
   }
 
   return (
     <DashboardEntityPageShell
-      title="Permissoes"
+      title="Permissões"
       activeTabKey="create"
       tabs={[
-        { key: "create", label: "Criar permissao", href: "/dashboard/permissions/create", isVisible: access.canCreate },
-        { key: "view", label: "Ver permissoes", href: "/dashboard/permissions/view", isVisible: access.canRead }
+        { key: "create", label: "Criar permissão", href: "/dashboard/permissions/create", isVisible: access.canCreate },
+        { key: "view", label: "Ver permissões", href: "/dashboard/permissions/view", isVisible: access.canRead }
       ]}
       statusContent={<PermissionStatusMessage status={searchParams?.status} />}
     >

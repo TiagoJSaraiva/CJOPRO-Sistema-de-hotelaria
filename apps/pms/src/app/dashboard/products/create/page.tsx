@@ -26,7 +26,7 @@ export default async function ProductsCreatePage({ searchParams }: ProductsCreat
       redirect(fallback);
     }
 
-    return <DashboardAccessDeniedCard title="Produtos" message="Sem permissao para criar produto." />;
+    return <DashboardAccessDeniedCard title="Produtos" message="Sem permissão para criar produto." />;
   }
 
   return (
@@ -48,7 +48,7 @@ export default async function ProductsCreatePage({ searchParams }: ProductsCreat
           <input id="create-product-category" name="category" className="pms-field-input" />
         </FormField>
 
-        <FormField label="Preco unitario" htmlFor="create-product-unit-price">
+        <FormField label="Preço unitário" htmlFor="create-product-unit-price">
           <input id="create-product-unit-price" name="unit_price" type="number" min={0} step="0.01" required className="pms-field-input" />
         </FormField>
 

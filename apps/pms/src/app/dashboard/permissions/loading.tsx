@@ -3,7 +3,7 @@ import { AdaptiveLoadingFallback } from "../../_components/AdaptiveLoadingFallba
 export default function PermissionsLoading() {
   return (
     <section className="pms-surface-card">
-      <AdaptiveLoadingFallback minHeight="24vh" label="Carregando permissoes..." />
+      <AdaptiveLoadingFallback minHeight="24vh" label="Carregando permissões..." />
     </section>
   );
 }

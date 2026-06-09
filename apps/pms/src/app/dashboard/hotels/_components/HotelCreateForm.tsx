@@ -17,7 +17,7 @@ export function HotelCreateForm({ formKey }: HotelCreateFormProps) {
           <input id="create-name" name="name" minLength={2} required className="pms-field-input" />
         </FormField>
 
-        <FormField label="Razao Social" htmlFor="create-legal-name">
+        <FormField label="Razão Social" htmlFor="create-legal-name">
           <input id="create-legal-name" name="legal_name" minLength={3} required className="pms-field-input" />
         </FormField>
 
@@ -27,7 +27,7 @@ export function HotelCreateForm({ formKey }: HotelCreateFormProps) {
             name="tax_id"
             inputMode="numeric"
             //pattern="[0-9./\-]{11,18}"
-            title="Informe um CNPJ/Tax ID valido."
+            title="Informe um CNPJ/Tax ID válido."
             required
             className="pms-field-input"
           />
@@ -38,7 +38,7 @@ export function HotelCreateForm({ formKey }: HotelCreateFormProps) {
             id="create-slug"
             name="slug"
             //pattern="[a-z0-9\-]+"
-            title="Use apenas letras minusculas, numeros e hifen."
+            title="Use apenas letras minúsculas, números e hífen."
             required
             className="pms-field-input"
           />
@@ -54,17 +54,17 @@ export function HotelCreateForm({ formKey }: HotelCreateFormProps) {
             name="phone"
             inputMode="tel"
             //pattern="[0-9 ()\+\-]{8,25}"
-            title="Telefone deve conter apenas numeros e simbolos de telefone."
+            title="Telefone deve conter apenas números e símbolos de telefone."
             required
             className="pms-field-input"
           />
         </FormField>
 
-        <FormField label="Endereco (logradouro)" htmlFor="create-address-line">
+        <FormField label="Endereço (logradouro)" htmlFor="create-address-line">
           <input id="create-address-line" name="address_line" minLength={3} required className="pms-field-input" />
         </FormField>
 
-        <FormField label="Numero" htmlFor="create-address-number">
+        <FormField label="Número" htmlFor="create-address-number">
           <input id="create-address-number" name="address_number" minLength={1} required className="pms-field-input" />
         </FormField>
 
@@ -97,7 +97,7 @@ export function HotelCreateForm({ formKey }: HotelCreateFormProps) {
           />
         </FormField>
 
-        <FormField label="Check-in inicio (HH:mm)" htmlFor="create-checkin-time-start">
+        <FormField label="Check-in início (HH:mm)" htmlFor="create-checkin-time-start">
           <input id="create-checkin-time-start" name="checkin_time_start" placeholder="14:00" className="pms-field-input" />
         </FormField>
 
@@ -105,7 +105,7 @@ export function HotelCreateForm({ formKey }: HotelCreateFormProps) {
           <input id="create-checkin-time-limit" name="checkin_time_limit" placeholder="23:00" className="pms-field-input" />
         </FormField>
 
-        <FormField label="Checkout inicio (HH:mm)" htmlFor="create-checkout-time-start">
+        <FormField label="Checkout início (HH:mm)" htmlFor="create-checkout-time-start">
           <input id="create-checkout-time-start" name="checkout_time_start" placeholder="06:00" className="pms-field-input" />
         </FormField>
 

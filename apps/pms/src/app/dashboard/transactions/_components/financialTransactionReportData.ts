@@ -115,10 +115,10 @@ function getScopeFilePart(scope: FinancialTransactionReportScope): string {
 
 function buildTransactionCountLabel(scope: FinancialTransactionReportScope, count: number, total: number): string {
   if (scope === "filtered" && total !== count) {
-    return `${count} de ${total} lancamento(s)`;
+    return `${count} de ${total} lançamento(s)`;
   }
 
-  return `${count} lancamento(s)`;
+  return `${count} lançamento(s)`;
 }
 
 function buildTableRows(transactions: AdminFinancialTransaction[]): string[][] {
@@ -146,7 +146,7 @@ export function buildFinancialTransactionReportData(input: FinancialTransactionR
   const fileName = `relatorio-financeiro-${safeHotelName}-${toDateKey(input.generatedAt)}-${getScopeFilePart(input.scope)}.pdf`;
 
   return {
-    title: "Relatorio financeiro",
+    title: "Relatório financeiro",
     fileName,
     scopeLabel,
     hotelLabel: input.hotelLabel,

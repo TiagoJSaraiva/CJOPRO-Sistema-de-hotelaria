@@ -73,7 +73,7 @@ const STATUS_META: Record<string, StatusMeta> = {
     toneClassName: "border-[#f2a2a2] bg-[#fff2f2] text-[#a12b2b]"
   },
   maintenance: {
-    label: "Manutencao",
+    label: "Manutenção",
     color: "#ef4444",
     toneClassName: "border-[#f2a2a2] bg-[#fff2f2] text-[#a12b2b]"
   }
@@ -377,7 +377,7 @@ export function ReservationsCalendarBoard({ data, startDate, customers }: Reserv
     });
     const dataResponse = await response.json();
     if (!response.ok) {
-      throw new Error(String(dataResponse?.message || "Falha na operacao."));
+      throw new Error(String(dataResponse?.message || "Falha na operação."));
     }
     return dataResponse as T;
   }
@@ -389,7 +389,7 @@ export function ReservationsCalendarBoard({ data, startDate, customers }: Reserv
     });
     const dataResponse = await response.json();
     if (!response.ok) {
-      throw new Error(String(dataResponse?.message || "Falha na operacao."));
+      throw new Error(String(dataResponse?.message || "Falha na operação."));
     }
     return dataResponse as T;
   }
@@ -489,7 +489,7 @@ export function ReservationsCalendarBoard({ data, startDate, customers }: Reserv
       setPanelData(panel);
       router.refresh();
     } catch (requestError) {
-      setError(requestError instanceof Error ? requestError.message : "Falha ao executar acao operacional.");
+      setError(requestError instanceof Error ? requestError.message : "Falha ao executar ação operacional.");
     } finally {
       setIsPending(false);
     }
@@ -523,7 +523,7 @@ export function ReservationsCalendarBoard({ data, startDate, customers }: Reserv
         <MetricCard
           label="Ocupação do recorte"
           value={formatPercent(calendarSummary.occupancyRate)}
-          detail={`${calendarSummary.occupiedRoomDays} de ${calendarSummary.totalRoomDays} diarias mapeadas`}
+          detail={`${calendarSummary.occupiedRoomDays} de ${calendarSummary.totalRoomDays} diárias mapeadas`}
           tone={calendarSummary.occupancyRate > 75 ? "good" : calendarSummary.occupancyRate > 45 ? "warning" : "neutral"}
         />
         <MetricCard
@@ -544,13 +544,13 @@ export function ReservationsCalendarBoard({ data, startDate, customers }: Reserv
         <div className="flex flex-wrap items-start justify-between gap-3">
           <div>
             <h2 className="m-0 text-[1rem] font-semibold text-[#121926]">Mapa de disponibilidade</h2>
-            <p className="mb-0 mt-[0.25rem] text-[0.88rem] text-[#697586]">Selecione celulas livres para montar uma reserva ou abra uma estadia existente.</p>
+            <p className="mb-0 mt-[0.25rem] text-[0.88rem] text-[#697586]">Selecione células livres para montar uma reserva ou abra uma estadia existente.</p>
           </div>
 
           <div className="flex flex-wrap items-center gap-2">
             <Link
               href={prevHref}
-              aria-label="Periodo anterior"
+              aria-label="Período anterior"
               className="inline-flex h-9 w-9 items-center justify-center rounded-lg border border-[#d2d6db] bg-white text-[#344054] no-underline"
             >
               <ChevronIcon direction="left" />
@@ -558,7 +558,7 @@ export function ReservationsCalendarBoard({ data, startDate, customers }: Reserv
             <span className="rounded-lg border border-[#d9dfe7] bg-[#f8fafc] px-3 py-[0.55rem] text-[0.9rem] font-semibold text-[#202939]">{rangeLabel}</span>
             <Link
               href={nextHref}
-              aria-label="Proximo periodo"
+              aria-label="Próximo período"
               className="inline-flex h-9 w-9 items-center justify-center rounded-lg border border-[#d2d6db] bg-white text-[#344054] no-underline"
             >
               <ChevronIcon direction="right" />
@@ -577,7 +577,7 @@ export function ReservationsCalendarBoard({ data, startDate, customers }: Reserv
       </section>
 
       <p className="pms-status-muted">
-        Exibindo {data.rooms.length} quarto(s), {data.stays.length} estadia(s) e {data.blocks.length} bloqueio(s) no periodo.
+        Exibindo {data.rooms.length} quarto(s), {data.stays.length} estadia(s) e {data.blocks.length} bloqueio(s) no período.
       </p>
 
       <section className="grid gap-4 xl:grid-cols-[minmax(0,1fr)_360px]">
@@ -666,7 +666,7 @@ export function ReservationsCalendarBoard({ data, startDate, customers }: Reserv
                         <button
                           key={block.stay.id}
                           type="button"
-                          aria-label={`Abrir reserva ${block.stay.reservation_code || "sem codigo"} no quarto ${room.room_number}`}
+                          aria-label={`Abrir reserva ${block.stay.reservation_code || "sem código"} no quarto ${room.room_number}`}
                           className="pointer-events-auto absolute cursor-pointer rounded-md border border-white/70 text-left text-[11px] font-semibold text-white shadow-[0_6px_14px_rgba(15,23,42,0.12)] focus:outline-none focus:ring-2 focus:ring-[#0f766e] focus:ring-offset-1"
                           style={{
                             left: block.left,
@@ -680,7 +680,7 @@ export function ReservationsCalendarBoard({ data, startDate, customers }: Reserv
                             setSelectedStayId(block.stay.id);
                           }}
                         >
-                          <span className="block truncate px-2 py-1">{block.stay.reservation_code || "Sem codigo"}</span>
+                          <span className="block truncate px-2 py-1">{block.stay.reservation_code || "Sem código"}</span>
                         </button>
                       ))}
                     </div>
@@ -700,7 +700,7 @@ export function ReservationsCalendarBoard({ data, startDate, customers }: Reserv
               </p>
             </div>
             <span className="rounded-full border border-[#e4e7ec] bg-[#f8fafc] px-[0.55rem] py-[0.2rem] text-[0.76rem] font-semibold text-[#52606d]">
-              {selectedStay ? "Selecionada" : selectedCells.size ? "Em selecao" : "Livre"}
+              {selectedStay ? "Selecionada" : selectedCells.size ? "Em seleção" : "Livre"}
             </span>
           </header>
 
@@ -719,7 +719,7 @@ export function ReservationsCalendarBoard({ data, startDate, customers }: Reserv
                       className="cursor-pointer rounded-lg border border-[#d9dfe7] bg-white px-3 py-2 text-left hover:bg-[#f8fafc]"
                       onClick={() => setSelectedStayId(stay.id)}
                     >
-                      <strong className="block text-[0.9rem] text-[#202939]">{stay.reservation_code || "Sem codigo"}</strong>
+                      <strong className="block text-[0.9rem] text-[#202939]">{stay.reservation_code || "Sem código"}</strong>
                       <span className="mt-[0.15rem] block text-[0.78rem] text-[#697586]">{statusLabel(stay.stay_status)}</span>
                     </button>
                   );
@@ -735,12 +735,12 @@ export function ReservationsCalendarBoard({ data, startDate, customers }: Reserv
                 <>
                   <PanelSection title="Dados da estadia">
                     <div className="flex flex-wrap items-center gap-2">
-                      <strong className="text-[1rem] text-[#121926]">{panelData.stay.reservation_code || "Sem codigo"}</strong>
+                      <strong className="text-[1rem] text-[#121926]">{panelData.stay.reservation_code || "Sem código"}</strong>
                       <StatusPill status={panelData.stay.stay_status} />
                     </div>
 
                     <div className="grid grid-cols-2 gap-3">
-                      <DetailItem label="Titular" value={panelData.stay.customer_name || "Nao informado"} />
+                      <DetailItem label="Titular" value={panelData.stay.customer_name || "Não informado"} />
                       <DetailItem label="Quarto" value={`${panelData.stay.room_number} - ${panelData.stay.room_type}`} />
                       <DetailItem label="Check-in previsto" value={formatDateDisplay(panelData.stay.checkin_date_expected)} />
                       <DetailItem label="Check-out previsto" value={formatDateDisplay(panelData.stay.checkout_date_expected)} />
@@ -796,7 +796,7 @@ export function ReservationsCalendarBoard({ data, startDate, customers }: Reserv
                       </select>
                     </label>
                     <label className="pms-field">
-                      <span>Observacao</span>
+                      <span>Observação</span>
                       <input value={paymentNote} onChange={(event) => setPaymentNote(event.target.value)} placeholder="Opcional" className="pms-field-input w-full" />
                     </label>
                     <button type="button" onClick={handleAddPayment} disabled={isPending || !paymentAmount} className={primaryButtonClassName}>
@@ -804,7 +804,7 @@ export function ReservationsCalendarBoard({ data, startDate, customers }: Reserv
                     </button>
                   </PanelSection>
 
-                  <PanelSection title="Acoes operacionais">
+                  <PanelSection title="Ações operacionais">
                     <div className="grid grid-cols-2 gap-2">
                       <button
                         type="button"
@@ -864,11 +864,11 @@ export function ReservationsCalendarBoard({ data, startDate, customers }: Reserv
               ) : (
                 <PanelSection title="Dados da reserva">
                   <div className="flex flex-wrap items-center gap-2">
-                    <strong className="text-[1rem] text-[#121926]">{selectedStay.reservation_code || "Sem codigo"}</strong>
+                    <strong className="text-[1rem] text-[#121926]">{selectedStay.reservation_code || "Sem código"}</strong>
                     <StatusPill status={selectedStay.stay_status} />
                   </div>
                   <div className="grid grid-cols-2 gap-3">
-                    <DetailItem label="Titular" value={selectedStay.customer_name || "Nao informado"} />
+                    <DetailItem label="Titular" value={selectedStay.customer_name || "Não informado"} />
                     <DetailItem label="Check-in" value={formatDateDisplay(selectedStay.checkin_date_expected)} />
                     <DetailItem label="Check-out" value={formatDateDisplay(selectedStay.checkout_date_expected)} />
                     <DetailItem label="Pagamento" value={paymentStatusLabel(selectedStay.stay_payment_status)} />
@@ -880,9 +880,9 @@ export function ReservationsCalendarBoard({ data, startDate, customers }: Reserv
 
           {!selectedStay && !candidateStayIds.length ? (
             <div className="grid gap-4 text-sm">
-              <PanelSection title="Nova reserva" description="Selecione uma ou mais celulas livres no mapa para habilitar a simulação.">
+              <PanelSection title="Nova reserva" description="Selecione uma ou mais células livres no mapa para habilitar a simulação.">
                 <div className="grid grid-cols-2 gap-2">
-                  <PaymentSummaryCard label="Celulas" value={String(selectedCells.size)} detail="Selecionadas" />
+                  <PaymentSummaryCard label="Células" value={String(selectedCells.size)} detail="Selecionadas" />
                   <PaymentSummaryCard label="Quartos" value={String(roomsCount)} detail="No recorte" />
                 </div>
                 <p className="m-0 rounded-lg border border-[#b7d8ff] bg-[#eff6ff] p-3 text-[0.82rem] text-[#1e3a8a]">
@@ -901,7 +901,7 @@ export function ReservationsCalendarBoard({ data, startDate, customers }: Reserv
                   </select>
                 </label>
                 <label className="pms-field">
-                  <span>Observacoes</span>
+                  <span>Observações</span>
                   <textarea value={notes} onChange={(event) => setNotes(event.target.value)} rows={3} className="pms-field-input w-full resize-y" />
                 </label>
               </PanelSection>
@@ -946,7 +946,7 @@ export function ReservationsCalendarBoard({ data, startDate, customers }: Reserv
                 <PanelSection title="Resultado da simulação">
                   <div className="grid grid-cols-3 gap-2">
                     <PaymentSummaryCard label="Total" value={formatMoney(simulation.total_price)} detail="Previsto" tone="good" />
-                    <PaymentSummaryCard label="Diarias" value={String(simulation.nights_count)} detail="Calculadas" />
+                    <PaymentSummaryCard label="Diárias" value={String(simulation.nights_count)} detail="Calculadas" />
                     <PaymentSummaryCard label="Quartos" value={String(simulation.rooms_count)} detail="Selecionados" />
                   </div>
                 </PanelSection>

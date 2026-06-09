@@ -45,7 +45,7 @@ export function listActiveHotelOptions(user: Pick<AuthUser, "roleAssignments">):
   const options: ActiveHotelOption[] = [];
 
   if (canAccessGlobalScope(user)) {
-    options.push({ hotelId: null, label: "Sistema (todos os hoteis)" });
+    options.push({ hotelId: null, label: "Sistema (todos os hotéis)" });
   }
 
   for (const hotel of listAccessibleHotels(user)) {

@@ -12,7 +12,7 @@ type UserCreateFormProps = {
 export function UserCreateForm({ formKey, hotels, roles }: UserCreateFormProps) {
   return (
     <article className="pms-surface-card">
-      <h3 className="mt-0">Criar usuario</h3>
+      <h3 className="mt-0">Criar usuário</h3>
 
       <form key={formKey} action={createUserAction} className="grid gap-[0.7rem] md:grid-cols-2">
         <FormField label="Nome" htmlFor="create-user-name">
@@ -43,7 +43,7 @@ export function UserCreateForm({ formKey, hotels, roles }: UserCreateFormProps) 
         <UserRoleAssignmentsField hotels={hotels} roles={roles} />
 
         <button type="submit" className="justify-self-start rounded-lg border-0 bg-[#0f6d5f] px-[0.8rem] py-[0.6rem] text-white md:col-span-2">
-          Criar usuario
+          Criar usuário
         </button>
       </form>
     </article>

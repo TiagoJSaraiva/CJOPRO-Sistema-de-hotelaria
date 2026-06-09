@@ -81,7 +81,7 @@ describe("validation", () => {
 
     expect(result.isValid).toBe(false);
     expect(result.normalizedTaxId).toBe("11111111111111");
-    expect(result.message).toBe("CNPJ invalido para o pais informado.");
+    expect(result.message).toBe("CNPJ inválido para o país informado.");
   });
 
   it("aceita tax id livre para paises fora de BR", () => {

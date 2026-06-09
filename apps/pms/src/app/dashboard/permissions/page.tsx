@@ -17,8 +17,8 @@ export default async function PermissionsPage({ searchParams }: PermissionsPageP
   if (!targetRoute) {
     return (
       <section className="pms-surface-card">
-        <h1 className="pms-page-title">Permissoes</h1>
-        <p>Sem permissao para visualizar este modulo.</p>
+        <h1 className="pms-page-title">Permissões</h1>
+        <p>Sem permissão para visualizar este módulo.</p>
       </section>
     );
   }

@@ -46,7 +46,7 @@ function CustomerDataPreview({ customer }: { customer: AdminCustomer }) {
         <p className="m-0 mt-[0.2rem]">{customer.nationality || "-"}</p>
       </div>
       <div>
-        <strong>Observacoes:</strong>
+        <strong>Observações:</strong>
         <p className="m-0 mt-[0.2rem]">{customer.notes || "-"}</p>
       </div>
     </div>
@@ -64,7 +64,7 @@ function CustomerEditForm({ customer }: { customer: AdminCustomer }) {
       </div>
 
       <div className="pms-field">
-        <label htmlFor={`customer-document-number-${customer.id}`}>Numero do documento</label>
+        <label htmlFor={`customer-document-number-${customer.id}`}>Número do documento</label>
         <input id={`customer-document-number-${customer.id}`} name="document_number" defaultValue={customer.document_number} required className="pms-field-input" />
       </div>
 
@@ -99,12 +99,12 @@ function CustomerEditForm({ customer }: { customer: AdminCustomer }) {
       </div>
 
       <div className="pms-field">
-        <label htmlFor={`customer-notes-${customer.id}`}>Observacoes</label>
+        <label htmlFor={`customer-notes-${customer.id}`}>Observações</label>
         <input id={`customer-notes-${customer.id}`} name="notes" defaultValue={customer.notes || ""} className="pms-field-input" />
       </div>
 
       <button type="submit" className="justify-self-start rounded-lg border-0 bg-[#1c6d4e] px-[0.75rem] py-[0.55rem] text-white">
-        Salvar alteracoes
+        Salvar alterações
       </button>
     </form>
   );

@@ -21,7 +21,7 @@ function HotelDataPreview({ hotel }: { hotel: AdminHotel }) {
   return (
     <div className="mt-[0.9rem] grid grid-cols-[repeat(auto-fit,minmax(200px,1fr))] gap-[0.75rem]">
       <div>
-        <strong>Razao social:</strong>
+        <strong>Razão social:</strong>
         <p className="m-0 mt-[0.2rem]">{hotel.legal_name || "-"}</p>
       </div>
       <div>
@@ -45,7 +45,7 @@ function HotelDataPreview({ hotel }: { hotel: AdminHotel }) {
         <p className="m-0 mt-[0.2rem]">{hotel.state || "-"}</p>
       </div>
       <div>
-        <strong>Pais:</strong>
+        <strong>País:</strong>
         <p className="m-0 mt-[0.2rem]">{hotel.country || "-"}</p>
       </div>
       <div>
@@ -55,13 +55,13 @@ function HotelDataPreview({ hotel }: { hotel: AdminHotel }) {
       <div>
         <strong>Janela check-in:</strong>
         <p className="m-0 mt-[0.2rem]">
-          {hotel.checkin_time_start || "-"} ate {hotel.checkin_time_limit || "-"}
+          {hotel.checkin_time_start || "-"} até {hotel.checkin_time_limit || "-"}
         </p>
       </div>
       <div>
         <strong>Janela checkout:</strong>
         <p className="m-0 mt-[0.2rem]">
-          {hotel.checkout_time_start || "-"} ate {hotel.checkout_time_limit || "-"}
+          {hotel.checkout_time_start || "-"} até {hotel.checkout_time_limit || "-"}
         </p>
       </div>
       <div>
@@ -120,7 +120,7 @@ function HotelEditForm({ hotel }: { hotel: AdminHotel }) {
       </div>
 
       <div className="pms-field">
-        <label htmlFor={`checkin-start-${hotel.id}`}>Check-in inicio (HH:mm)</label>
+        <label htmlFor={`checkin-start-${hotel.id}`}>Check-in início (HH:mm)</label>
         <input id={`checkin-start-${hotel.id}`} name="checkin_time_start" defaultValue={hotel.checkin_time_start || ""} className="pms-field-input" />
       </div>
 
@@ -130,7 +130,7 @@ function HotelEditForm({ hotel }: { hotel: AdminHotel }) {
       </div>
 
       <div className="pms-field">
-        <label htmlFor={`checkout-start-${hotel.id}`}>Checkout inicio (HH:mm)</label>
+        <label htmlFor={`checkout-start-${hotel.id}`}>Checkout início (HH:mm)</label>
         <input id={`checkout-start-${hotel.id}`} name="checkout_time_start" defaultValue={hotel.checkout_time_start || ""} className="pms-field-input" />
       </div>
 
@@ -145,7 +145,7 @@ function HotelEditForm({ hotel }: { hotel: AdminHotel }) {
       </label>
 
       <button type="submit" className="justify-self-start rounded-lg border-0 bg-[#1c6d4e] px-[0.75rem] py-[0.55rem] text-white">
-        Salvar alteracoes
+        Salvar alterações
       </button>
     </form>
   );

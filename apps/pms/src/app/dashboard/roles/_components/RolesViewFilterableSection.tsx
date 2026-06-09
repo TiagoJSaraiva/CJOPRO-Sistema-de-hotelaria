@@ -60,7 +60,7 @@ export function RolesViewFilterableSection({
       onCloseFilters={closeFilters}
       onApplyFilters={applyFilters}
       onClearFilters={clearFilters}
-      emptyMessage="Nenhuma role cadastrada ate o momento."
+      emptyMessage="Nenhuma role cadastrada até o momento."
       filteredEmptyMessage="Nenhuma role corresponde aos filtros aplicados."
       getItemKey={(item) => item.id}
       renderItem={(item) => (
@@ -114,7 +114,7 @@ export function RolesViewFilterableSection({
           </label>
 
           <label className="pms-field">
-            <span>Permissao vinculada</span>
+            <span>Permissão vinculada</span>
             <select value={draftFilters.permissionId} onChange={(event) => updateDraftFilter("permissionId", event.target.value)} className={viewFiltersFieldClassName}>
               <option value="">Todas</option>
               {permissions.map((permission) => (

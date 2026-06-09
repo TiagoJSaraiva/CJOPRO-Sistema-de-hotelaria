@@ -27,7 +27,7 @@ export default async function RoomsCreatePage({ searchParams }: RoomsCreatePageP
       redirect(fallback);
     }
 
-    return <DashboardAccessDeniedCard title="Quartos" message="Sem permissao para criar quarto." />;
+    return <DashboardAccessDeniedCard title="Quartos" message="Sem permissão para criar quarto." />;
   }
 
   return (
@@ -41,7 +41,7 @@ export default async function RoomsCreatePage({ searchParams }: RoomsCreatePageP
       statusContent={<RoomStatusMessage status={searchParams?.status} />}
     >
       <DashboardCreateFormCard title="Criar quarto" submitLabel="Criar quarto" action={createRoomAction} resetKey={searchParams?.r}>
-        <FormField label="Numero" htmlFor="create-room-number">
+        <FormField label="Número" htmlFor="create-room-number">
           <input id="create-room-number" name="room_number" required className="pms-field-input" />
         </FormField>
 
@@ -53,7 +53,7 @@ export default async function RoomsCreatePage({ searchParams }: RoomsCreatePageP
           <input id="create-room-capacity" name="max_occupancy" type="number" min={1} required className="pms-field-input" />
         </FormField>
 
-        <FormField label="Diaria base" htmlFor="create-room-base-daily-rate">
+        <FormField label="Diária base" htmlFor="create-room-base-daily-rate">
           <input id="create-room-base-daily-rate" name="base_daily_rate" type="number" min={0} step="0.01" required className="pms-field-input" />
         </FormField>
 
@@ -66,7 +66,7 @@ export default async function RoomsCreatePage({ searchParams }: RoomsCreatePageP
           </select>
         </FormField>
 
-        <FormField label="Observacoes" htmlFor="create-room-notes" fullWidth>
+        <FormField label="Observações" htmlFor="create-room-notes" fullWidth>
           <input id="create-room-notes" name="notes" className="pms-field-input" />
         </FormField>
       </DashboardCreateFormCard>

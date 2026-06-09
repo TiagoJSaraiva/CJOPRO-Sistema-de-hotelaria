@@ -1,17 +1,17 @@
 import { DashboardStatusMessage } from "../../_components/DashboardStatusMessage";
 
 const statusMessages: Record<string, string> = {
-  created: "Usuario criado com sucesso.",
-  updated: "Usuario atualizado com sucesso.",
-  deleted: "Usuario excluido com sucesso.",
-  delete_conflict: "Usuario nao pode ser excluido enquanto possuir dependencias ativas.",
-  forbidden: "Voce nao tem permissao para esta operacao.",
-  create_missing_fields: "Preencha os campos obrigatorios de criacao.",
-  update_missing_fields: "Preencha id, nome e email para atualizar usuario.",
-  delete_missing_id: "Nao foi possivel identificar o usuario para exclusao.",
-  create_error: "Falha ao criar usuario.",
-  update_error: "Falha ao atualizar usuario.",
-  delete_error: "Falha ao excluir usuario."
+  created: "Usuário criado com sucesso.",
+  updated: "Usuário atualizado com sucesso.",
+  deleted: "Usuário excluído com sucesso.",
+  delete_conflict: "Usuário não pode ser excluído enquanto possuir dependências ativas.",
+  forbidden: "Você não tem permissão para esta operação.",
+  create_missing_fields: "Preencha os campos obrigatórios de criação.",
+  update_missing_fields: "Preencha id, nome e email para atualizar usuário.",
+  delete_missing_id: "Não foi possível identificar o usuário para exclusão.",
+  create_error: "Falha ao criar usuário.",
+  update_error: "Falha ao atualizar usuário.",
+  delete_error: "Falha ao excluir usuário."
 };
 
 type UserStatusMessageProps = {

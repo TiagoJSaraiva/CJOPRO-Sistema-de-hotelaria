@@ -19,7 +19,7 @@ export default async function SeasonsPage({ searchParams }: SeasonsPageProps) {
     return (
       <section className="pms-surface-card">
         <h1 className="pms-page-title">Temporadas</h1>
-        <p>Sem permissao para visualizar este modulo.</p>
+        <p>Sem permissão para visualizar este módulo.</p>
       </section>
     );
   }

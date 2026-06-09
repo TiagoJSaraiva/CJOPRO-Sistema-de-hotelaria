@@ -26,7 +26,7 @@ export default async function PermissionsViewPage({ searchParams }: PermissionsV
       redirect(fallback);
     }
 
-    return <DashboardAccessDeniedCard title="Permissoes" message="Sem permissao para visualizar permissoes." />;
+    return <DashboardAccessDeniedCard title="Permissões" message="Sem permissão para visualizar permissões." />;
   }
 
   const activePermissionId = String(searchParams?.permissionId || "").trim();
@@ -36,11 +36,11 @@ export default async function PermissionsViewPage({ searchParams }: PermissionsV
 
   return (
     <DashboardEntityPageShell
-      title="Permissoes"
+      title="Permissões"
       activeTabKey="view"
       tabs={[
-        { key: "create", label: "Criar permissao", href: "/dashboard/permissions/create", isVisible: access.canCreate },
-        { key: "view", label: "Ver permissoes", href: "/dashboard/permissions/view", isVisible: access.canRead }
+        { key: "create", label: "Criar permissão", href: "/dashboard/permissions/create", isVisible: access.canCreate },
+        { key: "view", label: "Ver permissões", href: "/dashboard/permissions/view", isVisible: access.canRead }
       ]}
       statusContent={<PermissionStatusMessage status={searchParams?.status} />}
     >

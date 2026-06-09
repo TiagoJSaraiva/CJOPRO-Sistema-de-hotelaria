@@ -1,17 +1,17 @@
 import { DashboardStatusMessage } from "../../_components/DashboardStatusMessage";
 
 const statusMessages: Record<string, string> = {
-  created: "Permissao criada com sucesso.",
-  updated: "Permissao atualizada com sucesso.",
-  deleted: "Permissao excluida com sucesso.",
-  delete_conflict: "Permissao nao pode ser excluida enquanto possuir dependencias ativas.",
-  forbidden: "Voce nao tem permissao para esta operacao.",
-  create_missing_fields: "Preencha o nome da permissao.",
-  update_missing_fields: "Preencha id e nome para atualizar permissao.",
-  delete_missing_id: "Nao foi possivel identificar a permissao para exclusao.",
-  create_error: "Falha ao criar permissao.",
-  update_error: "Falha ao atualizar permissao.",
-  delete_error: "Falha ao excluir permissao."
+  created: "Permissão criada com sucesso.",
+  updated: "Permissão atualizada com sucesso.",
+  deleted: "Permissão excluída com sucesso.",
+  delete_conflict: "Permissão não pode ser excluída enquanto possuir dependências ativas.",
+  forbidden: "Você não tem permissão para esta operação.",
+  create_missing_fields: "Preencha o nome da permissão.",
+  update_missing_fields: "Preencha id e nome para atualizar permissão.",
+  delete_missing_id: "Não foi possível identificar a permissão para exclusão.",
+  create_error: "Falha ao criar permissão.",
+  update_error: "Falha ao atualizar permissão.",
+  delete_error: "Falha ao excluir permissão."
 };
 
 type PermissionStatusMessageProps = {

@@ -25,18 +25,18 @@ export default async function UsersCreatePage({ searchParams }: UsersCreatePageP
       redirect(fallback);
     }
 
-    return <DashboardAccessDeniedCard title="Usuarios" message="Sem permissao para criar usuario." />;
+    return <DashboardAccessDeniedCard title="Usuários" message="Sem permissão para criar usuário." />;
   }
 
   const referenceData = await getUsersReferenceData().catch(() => ({ hotels: [], roles: [] }));
 
   return (
     <DashboardEntityPageShell
-      title="Usuarios"
+      title="Usuários"
       activeTabKey="create"
       tabs={[
-        { key: "create", label: "Criar usuario", href: "/dashboard/users/create", isVisible: access.canCreate },
-        { key: "view", label: "Ver usuarios", href: "/dashboard/users/view", isVisible: access.canRead }
+        { key: "create", label: "Criar usuário", href: "/dashboard/users/create", isVisible: access.canCreate },
+        { key: "view", label: "Ver usuários", href: "/dashboard/users/view", isVisible: access.canRead }
       ]}
       statusContent={<UserStatusMessage status={searchParams?.status} />}
     >

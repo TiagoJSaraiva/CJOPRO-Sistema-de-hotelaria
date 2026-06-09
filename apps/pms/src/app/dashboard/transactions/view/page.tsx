@@ -19,7 +19,7 @@ type TransactionsViewPageProps = {
 
 function resolveActiveHotelLabel(user: Pick<AuthUser, "roleAssignments"> | null, activeHotelId: string | null): string {
   if (!activeHotelId) {
-    return "Sistema (todos os hoteis)";
+    return "Sistema (todos os hotéis)";
   }
 
   const assignment = (user?.roleAssignments || []).find((item) => item.hotelId === activeHotelId);
@@ -37,7 +37,7 @@ export default async function TransactionsViewPage({ searchParams }: Transaction
       redirect(fallback);
     }
 
-    return <DashboardAccessDeniedCard title="Painel Financeiro" message="Sem permissao para visualizar lançamentos financeiros." />;
+    return <DashboardAccessDeniedCard title="Painel Financeiro" message="Sem permissão para visualizar lançamentos financeiros." />;
   }
 
   const transactions = await listFinancialTransactions();
@@ -52,7 +52,7 @@ export default async function TransactionsViewPage({ searchParams }: Transaction
       title="Painel Financeiro"
       activeTabKey="view"
       tabs={[
-        { key: "create", label: "Lancamento", href: "/dashboard/transactions/create", isVisible: access.canCreate },
+        { key: "create", label: "Lançamento", href: "/dashboard/transactions/create", isVisible: access.canCreate },
         { key: "view", label: "Monitoramento", href: "/dashboard/transactions/view", isVisible: access.canRead }
       ]}
       statusContent={<TransactionStatusMessage status={searchParams?.status} />}
@@ -67,7 +67,7 @@ export default async function TransactionsViewPage({ searchParams }: Transaction
         mode={mode}
         reportContext={{
           hotelLabel,
-          generatedBy: user?.name || "Usuario autenticado",
+          generatedBy: user?.name || "Usuário autenticado",
           hasActiveHotel: Boolean(activeHotelId)
         }}
       />

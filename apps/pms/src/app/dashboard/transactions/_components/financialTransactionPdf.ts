@@ -5,7 +5,7 @@ import {
   type FinancialTransactionReportInput
 } from "./financialTransactionReportData";
 
-const TABLE_HEAD = [["Data", "Tipo", "Status", "Categoria", "Contraparte", "Centro de custo", "Referencia", "Valor"]];
+const TABLE_HEAD = [["Data", "Tipo", "Status", "Categoria", "Contraparte", "Centro de custo", "Referência", "Valor"]];
 
 function drawSummaryGrid(
   doc: {
@@ -58,7 +58,7 @@ function drawFooter(doc: {
     doc.setFont("helvetica", "normal");
     doc.setFontSize(8);
     doc.setTextColor(105, 117, 134);
-    doc.text(`Pagina ${pageNumber}/${pageCount}`, pageWidth - 12, pageHeight - 8, { align: "right" });
+    doc.text(`Página ${pageNumber}/${pageCount}`, pageWidth - 12, pageHeight - 8, { align: "right" });
   }
 }
 
@@ -113,14 +113,14 @@ export async function generateFinancialTransactionsPdf(input: FinancialTransacti
   doc.setFont("helvetica", "bold");
   doc.setFontSize(10);
   doc.setTextColor(18, 25, 38);
-  doc.text("Lancamentos financeiros", 12, transactionsStartY);
+  doc.text("Lançamentos financeiros", 12, transactionsStartY);
 
   const transactionOptions: UserOptions = {
     startY: transactionsStartY + 4,
     margin: { left: 12, right: 12, bottom: 16 },
     theme: "striped",
     head: TABLE_HEAD,
-    body: report.tableRows.length ? report.tableRows : [["-", "-", "-", "Sem lancamentos para este escopo.", "-", "-", "-", "-"]],
+    body: report.tableRows.length ? report.tableRows : [["-", "-", "-", "Sem lançamentos para este escopo.", "-", "-", "-", "-"]],
     styles: { font: "helvetica", fontSize: 7, cellPadding: 1.8, overflow: "linebreak", valign: "middle" },
     headStyles: { fillColor: [27, 122, 108], textColor: 255, fontStyle: "bold" },
     alternateRowStyles: { fillColor: [248, 250, 252] },

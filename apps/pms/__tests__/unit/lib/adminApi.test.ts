@@ -82,7 +82,7 @@ describe("lib/adminApi", () => {
         timezone: "America/Sao_Paulo",
         currency: "BRL"
       })
-    ).rejects.toThrow("Sessao invalida. Faca login novamente.");
+    ).rejects.toThrow("Sessão inválida. Faça login novamente.");
   });
 
   it("createHotel propaga mensagem de erro do backend", async () => {

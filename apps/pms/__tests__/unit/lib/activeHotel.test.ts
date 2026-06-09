@@ -42,7 +42,7 @@ describe("lib/activeHotel", () => {
     ]);
 
     expect(listActiveHotelOptions(user)).toEqual([
-      { hotelId: null, label: "Sistema (todos os hoteis)" },
+      { hotelId: null, label: "Sistema (todos os hotéis)" },
       { hotelId: "h1", label: "Alpha Hotel" }
     ]);
   });

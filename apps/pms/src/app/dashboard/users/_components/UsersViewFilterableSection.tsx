@@ -58,15 +58,15 @@ export function UsersViewFilterableSection({
       appliedFilterCount={appliedFilterCount}
       totalCount={users.length}
       filteredItems={filteredUsers}
-      itemLabelPlural="usuarios"
-      filtersTitle="Filtros de usuarios"
+      itemLabelPlural="usuários"
+      filtersTitle="Filtros de usuários"
       isModalOpen={isModalOpen}
       onOpenFilters={openFilters}
       onCloseFilters={closeFilters}
       onApplyFilters={applyFilters}
       onClearFilters={clearFilters}
-      emptyMessage="Nenhum usuario cadastrado ate o momento."
-      filteredEmptyMessage="Nenhum usuario corresponde aos filtros aplicados."
+      emptyMessage="Nenhum usuário cadastrado até o momento."
+      filteredEmptyMessage="Nenhum usuário corresponde aos filtros aplicados."
       getItemKey={(item) => item.id}
       renderItem={(item) => (
         <UserListItem
@@ -136,7 +136,7 @@ export function UsersViewFilterableSection({
           </label>
 
           <label className="pms-field">
-            <span>Criado ate</span>
+            <span>Criado até</span>
             <input type="date" value={draftFilters.createdTo} onChange={(event) => updateDraftFilter("createdTo", event.target.value)} className={viewFiltersFieldClassName} />
           </label>
         </div>

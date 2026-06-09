@@ -179,7 +179,7 @@ export function UserRoleAssignmentsField({ roles, hotels, defaultAssignments, in
         <RelationListEditor
           title="Papeis"
           addLabel="Adicionar papel"
-          emptyMessage="Nenhum papel vinculado ao usuario."
+          emptyMessage="Nenhum papel vinculado ao usuário."
           items={assignmentRows}
           onAdd={handleAddClick}
           onRemove={(assignmentKey) =>
@@ -197,7 +197,7 @@ export function UserRoleAssignmentsField({ roles, hotels, defaultAssignments, in
           { id: SYSTEM_CONTEXT_OPTION_ID, label: "Sistema", description: "Atribuir roles de sistema." },
           ...hotels.map((hotel) => ({ id: hotel.id, label: hotel.name, description: "Atribuir roles de hotel." }))
         ]}
-        emptyMessage="Nenhum contexto disponivel para selecao."
+        emptyMessage="Nenhum contexto disponível para seleção."
         onSelect={handleContextSelect}
         onClose={() => setIsContextModalOpen(false)}
       />
@@ -210,7 +210,7 @@ export function UserRoleAssignmentsField({ roles, hotels, defaultAssignments, in
           label: role.name,
           description: formatRoleOptionLabel(role, selectedContextLabel)
         }))}
-        emptyMessage="Nao existem papeis disponiveis para o contexto selecionado."
+        emptyMessage="Não existem papéis disponíveis para o contexto selecionado."
         onSelect={handleRoleSelect}
         onClose={() => {
           setIsRoleModalOpen(false);

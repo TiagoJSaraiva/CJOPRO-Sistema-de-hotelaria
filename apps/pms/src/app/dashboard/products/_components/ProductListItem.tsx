@@ -29,7 +29,7 @@ function ProductDataPreview({ product }: { product: AdminProduct }) {
         <p className="m-0 mt-[0.2rem]">{product.category || "-"}</p>
       </div>
       <div>
-        <strong>Preco unitario:</strong>
+        <strong>Preço unitário:</strong>
         <p className="m-0 mt-[0.2rem]">R$ {product.unit_price.toFixed(2)}</p>
       </div>
       <div>
@@ -64,7 +64,7 @@ function ProductEditForm({ product }: { product: AdminProduct }) {
       </div>
 
       <div className="pms-field">
-        <label htmlFor={`product-price-${product.id}`}>Preco unitario</label>
+        <label htmlFor={`product-price-${product.id}`}>Preço unitário</label>
         <input id={`product-price-${product.id}`} name="unit_price" type="number" min={0} step="0.01" defaultValue={product.unit_price} required className="pms-field-input" />
       </div>
 
@@ -77,7 +77,7 @@ function ProductEditForm({ product }: { product: AdminProduct }) {
       </div>
 
       <button type="submit" className="justify-self-start rounded-lg border-0 bg-[#1c6d4e] px-[0.75rem] py-[0.55rem] text-white">
-        Salvar alteracoes
+        Salvar alterações
       </button>
     </form>
   );

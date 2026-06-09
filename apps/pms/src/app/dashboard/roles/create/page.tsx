@@ -25,7 +25,7 @@ export default async function RolesCreatePage({ searchParams }: RolesCreatePageP
       redirect(fallback);
     }
 
-    return <DashboardAccessDeniedCard title="Roles" message="Sem permissao para criar role." />;
+    return <DashboardAccessDeniedCard title="Roles" message="Sem permissão para criar role." />;
   }
 
   const referenceData = await getRolesReferenceData().catch(() => ({ hotels: [], permissions: [] }));

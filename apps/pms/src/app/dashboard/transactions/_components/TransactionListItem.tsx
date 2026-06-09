@@ -89,7 +89,7 @@ function TransactionDataPreview({ transaction }: { transaction: AdminFinancialTr
         <DetailItem label="Fornecedor/favorecido" value={transaction.counterparty || "-"} />
         <DetailItem label="Centro de custo" value={transaction.cost_center || "-"} />
         <DetailItem label="Metodo" value={transaction.payment_method || "-"} />
-        <DetailItem label="Referencia" value={transaction.reference_code || "-"} />
+        <DetailItem label="Referência" value={transaction.reference_code || "-"} />
         <DetailItem label="Reserva" value={transaction.reservation_id || "-"} />
         <DetailItem label="Estadia" value={transaction.stay_id || "-"} />
         <DetailItem label="Criado em" value={formatDateTime(transaction.created_at)} />
@@ -97,7 +97,7 @@ function TransactionDataPreview({ transaction }: { transaction: AdminFinancialTr
       </div>
 
       <div className="rounded-lg border border-[#e4e7ec] bg-[#f8fafc] p-3 text-[0.93rem] text-[#364152]">
-        {transaction.description || "Sem descricao operacional cadastrada."}
+        {transaction.description || "Sem descrição operacional cadastrada."}
       </div>
     </div>
   );
@@ -170,7 +170,7 @@ function TransactionEditForm({ transaction }: { transaction: AdminFinancialTrans
         </label>
 
         <label className="pms-field">
-          <span>Referencia</span>
+          <span>Referência</span>
           <input name="reference_code" defaultValue={transaction.reference_code || ""} className="pms-field-input" />
         </label>
 
@@ -185,7 +185,7 @@ function TransactionEditForm({ transaction }: { transaction: AdminFinancialTrans
         </label>
 
         <label className="pms-field lg:col-span-4">
-          <span>Descricao</span>
+          <span>Descrição</span>
           <textarea name="description" defaultValue={transaction.description || ""} rows={3} className="pms-field-input resize-y" />
         </label>
       </div>

@@ -106,7 +106,7 @@ async function requestAdmin<T>(
   const token = getSessionToken();
 
   if (!token) {
-    throw new Error("Sessao invalida. Faca login novamente.");
+    throw new Error("Sessão inválida. Faça login novamente.");
   }
 
   const hasBody = body !== undefined;
@@ -141,7 +141,7 @@ async function requestAdmin<T>(
       requestBody: hasBody ? body : undefined,
       backendUrl: getBackendUrl()
     });
-    const error = new Error(payload.message || "Falha na operacao administrativa.") as Error & {
+    const error = new Error(payload.message || "Falha na operação administrativa.") as Error & {
       statusCode?: number;
       details?: string;
     };
@@ -162,7 +162,7 @@ async function getAdminData<T>(path: string): Promise<T> {
   const token = getSessionToken();
 
   if (!token) {
-    throw new Error("Sessao invalida. Faca login novamente.");
+    throw new Error("Sessão inválida. Faça login novamente.");
   }
 
   const activeHotelHeaderValue = getActiveHotelHeaderValue();

@@ -13,12 +13,12 @@ export const AUTH_ERROR_CODE = {
 export type AuthErrorCode = (typeof AUTH_ERROR_CODE)[keyof typeof AUTH_ERROR_CODE];
 
 export const AUTH_ERROR_MESSAGE: Record<AuthErrorCode, string> = {
-  [AUTH_ERROR_CODE.MISSING_FIELDS]: "Email e senha sao obrigatorios.",
-  [AUTH_ERROR_CODE.INVALID_CREDENTIALS]: "Credenciais invalidas.",
-  [AUTH_ERROR_CODE.ACCOUNT_LOCKED]: "Conta temporariamente bloqueada por tentativas de login invalidas.",
+  [AUTH_ERROR_CODE.MISSING_FIELDS]: "Email e senha são obrigatórios.",
+  [AUTH_ERROR_CODE.INVALID_CREDENTIALS]: "Credenciais inválidas.",
+  [AUTH_ERROR_CODE.ACCOUNT_LOCKED]: "Conta temporariamente bloqueada por tentativas de login inválidas.",
   [AUTH_ERROR_CODE.TOKEN_MISSING]: "Token ausente.",
-  [AUTH_ERROR_CODE.TOKEN_INVALID_OR_EXPIRED]: "Token invalido ou expirado.",
-  [AUTH_ERROR_CODE.FORBIDDEN]: "Sem permissao para executar esta operacao.",
+  [AUTH_ERROR_CODE.TOKEN_INVALID_OR_EXPIRED]: "Token inválido ou expirado.",
+  [AUTH_ERROR_CODE.FORBIDDEN]: "Sem permissão para executar esta operação.",
   [AUTH_ERROR_CODE.UNKNOWN]: "Falha ao autenticar."
 };
 

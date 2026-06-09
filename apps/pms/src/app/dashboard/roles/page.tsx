@@ -18,7 +18,7 @@ export default async function RolesPage({ searchParams }: RolesPageProps) {
     return (
       <section className="pms-surface-card">
         <h1 className="pms-page-title">Roles</h1>
-        <p>Sem permissao para visualizar este modulo.</p>
+        <p>Sem permissão para visualizar este módulo.</p>
       </section>
     );
   }

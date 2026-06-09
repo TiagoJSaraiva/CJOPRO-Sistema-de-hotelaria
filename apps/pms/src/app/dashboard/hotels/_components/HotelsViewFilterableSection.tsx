@@ -39,14 +39,14 @@ export function HotelsViewFilterableSection({ hotels, canRead, canUpdate, canDel
       appliedFilterCount={appliedFilterCount}
       totalCount={hotels.length}
       filteredItems={filteredHotels}
-      itemLabelPlural="hoteis"
-      filtersTitle="Filtros de hoteis"
+      itemLabelPlural="hotéis"
+      filtersTitle="Filtros de hotéis"
       isModalOpen={isModalOpen}
       onOpenFilters={openFilters}
       onCloseFilters={closeFilters}
       onApplyFilters={applyFilters}
       onClearFilters={clearFilters}
-      emptyMessage="Nenhum hotel cadastrado ate o momento."
+      emptyMessage="Nenhum hotel cadastrado até o momento."
       filteredEmptyMessage="Nenhum hotel corresponde aos filtros aplicados."
       getItemKey={(hotel) => hotel.id}
       renderItem={(hotel) => (
@@ -86,7 +86,7 @@ export function HotelsViewFilterableSection({ hotels, canRead, canUpdate, canDel
 
           <label className="pms-field">
             <span>Cidade</span>
-            <input value={draftFilters.city} onChange={(event) => updateDraftFilter("city", event.target.value)} placeholder="Ex.: Sao Paulo" className={viewFiltersFieldClassName} />
+            <input value={draftFilters.city} onChange={(event) => updateDraftFilter("city", event.target.value)} placeholder="Ex.: São Paulo" className={viewFiltersFieldClassName} />
           </label>
 
           <label className="pms-field">
@@ -95,7 +95,7 @@ export function HotelsViewFilterableSection({ hotels, canRead, canUpdate, canDel
           </label>
 
           <label className="pms-field">
-            <span>Pais</span>
+            <span>País</span>
             <input value={draftFilters.country} onChange={(event) => updateDraftFilter("country", event.target.value)} placeholder="Ex.: BR" className={viewFiltersFieldClassName} />
           </label>
         </div>

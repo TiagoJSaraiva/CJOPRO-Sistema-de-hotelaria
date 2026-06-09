@@ -26,7 +26,7 @@ export default async function HotelViewPage({ searchParams }: HotelViewPageProps
       redirect(fallback);
     }
 
-    return <DashboardAccessDeniedCard title="Hoteis" message="Sem permissao para visualizar hoteis." />;
+    return <DashboardAccessDeniedCard title="Hotéis" message="Sem permissão para visualizar hotéis." />;
   }
 
   const activeHotelId = String(searchParams?.hotelId || "").trim();
@@ -35,11 +35,11 @@ export default async function HotelViewPage({ searchParams }: HotelViewPageProps
 
   return (
     <DashboardEntityPageShell
-      title="Hoteis"
+      title="Hotéis"
       activeTabKey="view"
       tabs={[
         { key: "create", label: "Criar hotel", href: "/dashboard/hotels/create", isVisible: access.canCreate },
-        { key: "view", label: "Ver hoteis", href: "/dashboard/hotels/view", isVisible: access.canRead }
+        { key: "view", label: "Ver hotéis", href: "/dashboard/hotels/view", isVisible: access.canRead }
       ]}
       statusContent={<HotelStatusMessage status={searchParams?.status} />}
     >

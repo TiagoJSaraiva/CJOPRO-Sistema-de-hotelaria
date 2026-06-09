@@ -31,11 +31,11 @@ test.describe("PMS route visual consistency", () => {
     await expect(page.getByTestId("reservation-summary-metrics")).toContainText("Receita prevista");
     await expect(page.getByTestId("reservation-calendar-grid")).toBeVisible();
     await expect(page.getByTestId("reservation-side-panel")).toContainText("Painel operacional");
-    await expect(page.getByRole("link", { name: "Periodo anterior" })).toBeVisible();
-    await expect(page.getByRole("link", { name: "Proximo periodo" })).toBeVisible();
+    await expect(page.getByRole("link", { name: "Período anterior" })).toBeVisible();
+    await expect(page.getByRole("link", { name: "Próximo período" })).toBeVisible();
 
     await page.getByLabel("Selecionar 102 em 12/05/2026").click();
-    await expect(page.getByTestId("reservation-side-panel")).toContainText("Em selecao");
+    await expect(page.getByTestId("reservation-side-panel")).toContainText("Em seleção");
     await expect(page.getByRole("button", { name: "Simular" })).toBeEnabled();
 
     await page.getByRole("button", { name: "Simular" }).click();
@@ -58,22 +58,22 @@ test.describe("PMS route visual consistency", () => {
     await expect(page.getByRole("heading", { name: "Painel Financeiro" })).toBeVisible();
     await expect(page.getByText("Resultado realizado")).toBeVisible();
     await expect(page.getByText("Gastos pendentes")).toBeVisible();
-    await expect(page.getByRole("button", { name: "Gerar relatorio" })).toBeVisible();
+    await expect(page.getByRole("button", { name: "Gerar relatório" })).toBeVisible();
     await expect(page.getByRole("link", { name: "Novo lançamento" })).toBeVisible();
-    await expect(page.getByRole("heading", { name: "Energia eletrica" })).toBeVisible();
+    await expect(page.getByRole("heading", { name: "Energia elétrica" })).toBeVisible();
 
-    await page.getByRole("button", { name: "Gerar relatorio" }).click();
-    await expect(page.getByRole("menu", { name: "Opcoes de relatorio financeiro" })).toBeVisible();
+    await page.getByRole("button", { name: "Gerar relatório" }).click();
+    await expect(page.getByRole("menu", { name: "Opções de relatório financeiro" })).toBeVisible();
     await expect(page.getByRole("menuitem", { name: "Recorte filtrado" })).toBeVisible();
     await expect(page.getByRole("menuitem", { name: "Todas do hotel" })).toBeVisible();
-    await page.getByRole("button", { name: "Gerar relatorio" }).click();
+    await page.getByRole("button", { name: "Gerar relatório" }).click();
 
     await page.getByRole("button", { name: "Filtrar dados" }).click();
     await expect(page.getByRole("dialog", { name: "Filtros financeiros" })).toBeVisible();
-    await page.getByPlaceholder("Categoria, fornecedor, descricao ou referencia").fill("Energia");
+    await page.getByPlaceholder("Categoria, fornecedor, descrição ou referência").fill("Energia");
     await page.getByRole("button", { name: "Aplicar filtros" }).click();
 
-    await expect(page.getByRole("heading", { name: "Energia eletrica" })).toBeVisible();
+    await expect(page.getByRole("heading", { name: "Energia elétrica" })).toBeVisible();
     await expect(page.getByRole("heading", { name: "Hospedagem" })).toBeHidden();
     await expect(page.getByText("Exibindo 1 de 3 lançamentos financeiros.")).toBeVisible();
 
