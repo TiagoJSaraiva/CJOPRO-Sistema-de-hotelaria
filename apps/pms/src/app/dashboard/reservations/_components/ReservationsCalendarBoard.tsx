@@ -220,9 +220,6 @@ export function ReservationsCalendarBoard({ data, startDate, customers }: Reserv
   const calendarSummary = useMemo(() => {
     const totalRoomDays = Math.max(data.rooms.length * data.days.length, 1);
     const occupiedRoomDays = Array.from(occupiedCellsBySide.values()).filter((cell) => cell.left || cell.right).length;
-    const projectedRevenue = data.stays.reduce((sum, stay) => sum + Number(stay.total_price_estimated || 0), 0);
-    const paidRevenue = data.stays.reduce((sum, stay) => sum + Number(stay.total_paid || 0), 0);
-    const openBalance = Math.max(projectedRevenue - paidRevenue, 0);
     const activeStays = data.stays.filter((stay) => {
       const status = stay.stay_status || "pending";
       return status !== "checked_out" && status !== "canceled" && status !== "no_show";
@@ -232,8 +229,6 @@ export function ReservationsCalendarBoard({ data, startDate, customers }: Reserv
       occupancyRate: (occupiedRoomDays / totalRoomDays) * 100,
       occupiedRoomDays,
       totalRoomDays,
-      projectedRevenue,
-      openBalance,
       activeStays
     };
   }, [data.rooms.length, data.days.length, data.stays, occupiedCellsBySide]);
@@ -388,18 +383,12 @@ export function ReservationsCalendarBoard({ data, startDate, customers }: Reserv
 
   return (
     <section className="grid gap-4" data-testid="reservations-calendar-board">
-      <section className="grid grid-cols-1 gap-3 md:grid-cols-2 xl:grid-cols-4" data-testid="reservation-summary-metrics">
+      <section className="grid grid-cols-1 gap-3 md:grid-cols-2 xl:grid-cols-3" data-testid="reservation-summary-metrics">
         <MetricCard
           label="Ocupação do recorte"
           value={formatPercent(calendarSummary.occupancyRate)}
           detail={`${calendarSummary.occupiedRoomDays} de ${calendarSummary.totalRoomDays} diárias mapeadas`}
           tone={calendarSummary.occupancyRate > 75 ? "good" : calendarSummary.occupancyRate > 45 ? "warning" : "neutral"}
-        />
-        <MetricCard
-          label="Receita prevista"
-          value={formatMoney(calendarSummary.projectedRevenue)}
-          detail={`${formatMoney(calendarSummary.openBalance)} em aberto`}
-          tone={calendarSummary.projectedRevenue ? "good" : "neutral"}
         />
         <MetricCard
           label="Estadias ativas"
