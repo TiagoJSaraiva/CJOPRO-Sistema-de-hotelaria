@@ -58,8 +58,15 @@ test.describe("PMS route visual consistency", () => {
     await expect(page.getByRole("heading", { name: "Painel Financeiro" })).toBeVisible();
     await expect(page.getByText("Resultado realizado")).toBeVisible();
     await expect(page.getByText("Gastos pendentes")).toBeVisible();
+    await expect(page.getByRole("button", { name: "Gerar relatorio" })).toBeVisible();
     await expect(page.getByRole("link", { name: "Novo lançamento" })).toBeVisible();
     await expect(page.getByRole("heading", { name: "Energia eletrica" })).toBeVisible();
+
+    await page.getByRole("button", { name: "Gerar relatorio" }).click();
+    await expect(page.getByRole("menu", { name: "Opcoes de relatorio financeiro" })).toBeVisible();
+    await expect(page.getByRole("menuitem", { name: "Recorte filtrado" })).toBeVisible();
+    await expect(page.getByRole("menuitem", { name: "Todas do hotel" })).toBeVisible();
+    await page.getByRole("button", { name: "Gerar relatorio" }).click();
 
     await page.getByRole("button", { name: "Filtrar dados" }).click();
     await expect(page.getByRole("dialog", { name: "Filtros financeiros" })).toBeVisible();

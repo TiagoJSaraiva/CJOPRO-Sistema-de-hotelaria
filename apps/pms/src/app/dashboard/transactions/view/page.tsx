@@ -2,10 +2,12 @@ import { redirect } from "next/navigation";
 import { DashboardAccessDeniedCard } from "../../_components/DashboardAccessDeniedCard";
 import { DashboardEntityPageShell } from "../../_components/DashboardEntityPageShell";
 import { listFinancialTransactions } from "../../../../lib/adminApi";
+import { getActiveHotelCookieValue, resolveActiveHotelForUser } from "../../../../lib/activeHotel";
 import { getUserFromSession } from "../../../../lib/auth";
 import { getTransactionsAccess, getTransactionsDefaultRoute } from "../access";
 import { TransactionsViewFilterableSection } from "../_components/TransactionsViewFilterableSection";
 import { TransactionStatusMessage } from "../_components/TransactionStatusMessage";
+import type { AuthUser } from "@hotel/shared";
 
 type TransactionsViewPageProps = {
   searchParams?: {
@@ -14,6 +16,15 @@ type TransactionsViewPageProps = {
     mode?: string;
   };
 };
+
+function resolveActiveHotelLabel(user: Pick<AuthUser, "roleAssignments"> | null, activeHotelId: string | null): string {
+  if (!activeHotelId) {
+    return "Sistema (todos os hoteis)";
+  }
+
+  const assignment = (user?.roleAssignments || []).find((item) => item.hotelId === activeHotelId);
+  return assignment?.hotelName || "Hotel selecionado";
+}
 
 export default async function TransactionsViewPage({ searchParams }: TransactionsViewPageProps) {
   const user = await getUserFromSession();
@@ -30,6 +41,9 @@ export default async function TransactionsViewPage({ searchParams }: Transaction
   }
 
   const transactions = await listFinancialTransactions();
+  const preferredHotelId = getActiveHotelCookieValue();
+  const activeHotelId = user ? resolveActiveHotelForUser(user, preferredHotelId) : null;
+  const hotelLabel = resolveActiveHotelLabel(user, activeHotelId);
   const activeTransactionId = String(searchParams?.transactionId || "").trim();
   const mode = searchParams?.mode === "edit" ? "edit" : "view";
 
@@ -51,6 +65,11 @@ export default async function TransactionsViewPage({ searchParams }: Transaction
         canDelete={access.canDelete}
         activeTransactionId={activeTransactionId}
         mode={mode}
+        reportContext={{
+          hotelLabel,
+          generatedBy: user?.name || "Usuario autenticado",
+          hasActiveHotel: Boolean(activeHotelId)
+        }}
       />
     </DashboardEntityPageShell>
   );

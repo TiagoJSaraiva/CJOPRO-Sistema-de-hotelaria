@@ -10,6 +10,7 @@ import {
   countAppliedTransactionFilters,
   type TransactionViewFilters
 } from "./transactionViewFilters";
+import { FinancialTransactionReportMenu } from "./FinancialTransactionReportMenu";
 import { buildFinancialTransactionInsights } from "./financialTransactionInsights";
 import { TransactionListItem } from "./TransactionListItem";
 import { PermissionTabs } from "../../_components/PermissionTabs";
@@ -26,6 +27,11 @@ type TransactionsViewFilterableSectionProps = {
   canDelete: boolean;
   activeTransactionId: string;
   mode: "view" | "edit";
+  reportContext: {
+    hotelLabel: string;
+    generatedBy: string;
+    hasActiveHotel: boolean;
+  };
 };
 
 function formatMoney(amount: number, currency = "BRL"): string {
@@ -151,7 +157,8 @@ export function TransactionsViewFilterableSection({
   canUpdate,
   canDelete,
   activeTransactionId,
-  mode
+  mode,
+  reportContext
 }: TransactionsViewFilterableSectionProps) {
   const referenceDate = useMemo(() => new Date(), []);
   const tabsContext = useDashboardEntityTabs();
@@ -208,6 +215,14 @@ export function TransactionsViewFilterableSection({
       <ViewFiltersActionsBar appliedFilterCount={appliedFilterCount} onOpen={openFilters} onClear={clearFilters}>
         <div className="flex flex-wrap items-center gap-3">
           <div className="min-w-[220px] flex-1">{viewTabs}</div>
+          <FinancialTransactionReportMenu
+            allTransactions={transactions}
+            filteredTransactions={filteredTransactions}
+            hotelLabel={reportContext.hotelLabel}
+            generatedBy={reportContext.generatedBy}
+            hasActiveHotel={reportContext.hasActiveHotel}
+            referenceDate={referenceDate}
+          />
           {canCreate ? (
             <Link href="/dashboard/transactions/create" className="rounded-lg border border-[#14564c] bg-[#1b7a6c] px-[0.75rem] py-[0.5rem] font-semibold text-white no-underline">
               Novo lançamento
