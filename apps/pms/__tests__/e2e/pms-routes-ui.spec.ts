@@ -55,10 +55,10 @@ test.describe("PMS route visual consistency", () => {
 
     await page.goto("/dashboard/transactions/view");
 
-    await expect(page.getByRole("heading", { name: "Gastos e transacoes" })).toBeVisible();
+    await expect(page.getByRole("heading", { name: "Painel Financeiro" })).toBeVisible();
     await expect(page.getByText("Resultado realizado")).toBeVisible();
     await expect(page.getByText("Gastos pendentes")).toBeVisible();
-    await expect(page.getByRole("link", { name: "Novo lancamento" })).toBeVisible();
+    await expect(page.getByRole("link", { name: "Novo lançamento" })).toBeVisible();
     await expect(page.getByRole("heading", { name: "Energia eletrica" })).toBeVisible();
 
     await page.getByRole("button", { name: "Filtrar dados" }).click();
@@ -68,7 +68,7 @@ test.describe("PMS route visual consistency", () => {
 
     await expect(page.getByRole("heading", { name: "Energia eletrica" })).toBeVisible();
     await expect(page.getByRole("heading", { name: "Hospedagem" })).toBeHidden();
-    await expect(page.getByText("Exibindo 1 de 3 lancamentos financeiros.")).toBeVisible();
+    await expect(page.getByText("Exibindo 1 de 3 lançamentos financeiros.")).toBeVisible();
 
     await page.screenshot({ path: testInfo.outputPath("transactions-route.png"), fullPage: false });
   });

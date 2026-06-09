@@ -27,12 +27,12 @@ export default async function TransactionsCreatePage({ searchParams }: Transacti
       redirect(fallback);
     }
 
-    return <DashboardAccessDeniedCard title="Gastos e transacoes" message="Sem permissao para criar lancamento financeiro." />;
+    return <DashboardAccessDeniedCard title="Painel Financeiro" message="Sem permissao para criar lançamento financeiro." />;
   }
 
   return (
     <DashboardEntityPageShell
-      title="Gastos e transacoes"
+      title="Painel Financeiro"
       activeTabKey="create"
       tabs={[
         { key: "create", label: "Lancamento", href: "/dashboard/transactions/create", isVisible: access.canCreate },
@@ -42,7 +42,7 @@ export default async function TransactionsCreatePage({ searchParams }: Transacti
     >
       <DashboardCreateFormCard
         title="Registrar gasto ou movimentacao"
-        submitLabel="Salvar lancamento"
+        submitLabel="Salvar lançamento"
         action={createTransactionAction}
         resetKey={searchParams?.r}
       >

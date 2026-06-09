@@ -49,7 +49,7 @@ Pacotes com configuracao inicial ativa:
 
 No desenvolvimento local, configure em `apps/backend-service/.env.local` (arquivo ignorado por git):
 
-- `AUTH_SESSION_SECRET`: obrigatoria, minimo 32 caracteres.
+- `AUTH_SESSION_SECRET`: obrigatoria, mínimo 32 caracteres.
 - `ALLOWED_ORIGINS`: lista separada por virgula para CORS (por padrao localhost das aplicacoes).
 
 Exemplo:

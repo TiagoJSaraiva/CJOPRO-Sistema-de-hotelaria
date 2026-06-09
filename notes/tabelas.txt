@@ -73,7 +73,7 @@ RESERVATION_CUSTOMERS
 - updated_at
 
 PRODUCTS
-(voce marcou para depois, mas ja deixo o minimo aqui)
+(voce marcou para depois, mas ja deixo o mínimo aqui)
 - id
 - hotel_id (fk -> hotels.id, not null)
 - name (not null)

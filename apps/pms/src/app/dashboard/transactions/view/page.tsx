@@ -26,7 +26,7 @@ export default async function TransactionsViewPage({ searchParams }: Transaction
       redirect(fallback);
     }
 
-    return <DashboardAccessDeniedCard title="Gastos e transacoes" message="Sem permissao para visualizar lancamentos financeiros." />;
+    return <DashboardAccessDeniedCard title="Painel Financeiro" message="Sem permissao para visualizar lançamentos financeiros." />;
   }
 
   const transactions = await listFinancialTransactions();
@@ -35,7 +35,7 @@ export default async function TransactionsViewPage({ searchParams }: Transaction
 
   return (
     <DashboardEntityPageShell
-      title="Gastos e transacoes"
+      title="Painel Financeiro"
       activeTabKey="view"
       tabs={[
         { key: "create", label: "Lancamento", href: "/dashboard/transactions/create", isVisible: access.canCreate },

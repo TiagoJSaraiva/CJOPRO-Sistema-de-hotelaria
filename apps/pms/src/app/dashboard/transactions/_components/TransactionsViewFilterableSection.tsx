@@ -83,7 +83,7 @@ function ExpenseCategoriesPanel({ transactions, referenceDate }: { transactions:
     <aside className="grid gap-4 rounded-lg border border-[#d9dfe7] bg-white p-4">
       <div>
         <h3 className="m-0 text-[1rem] text-[#121926]">Categorias de gasto</h3>
-        <p className="mb-0 mt-[0.25rem] text-[0.86rem] text-[#697586]">Participacao das principais despesas no recorte atual.</p>
+        <p className="mb-0 mt-[0.25rem] text-[0.86rem] text-[#697586]">Participação das principais despesas no recorte atual.</p>
       </div>
 
       <div className="grid gap-3">
@@ -97,7 +97,7 @@ function ExpenseCategoriesPanel({ transactions, referenceDate }: { transactions:
               <div className="h-2 overflow-hidden rounded-full bg-[#eef2f6]">
                 <div className="h-full rounded-full bg-[#1b7a6c]" style={{ width: `${Math.max(category.share, 4)}%` }} />
               </div>
-              <span className="text-[0.78rem] text-[#697586]">{category.share}% em {category.count} lancamento(s)</span>
+              <span className="text-[0.78rem] text-[#697586]">{category.share}% em {category.count} lançamento(s)</span>
             </div>
           ))
         ) : (
@@ -188,7 +188,7 @@ export function TransactionsViewFilterableSection({
         <MetricCard
           label="Gastos pendentes"
           value={formatMoney(insights.pendingExpenses)}
-          detail={`${insights.pendingCount} lancamento(s) aguardando baixa`}
+          detail={`${insights.pendingCount} lançamento(s) aguardando baixa`}
           tone={insights.pendingExpenses > 0 ? "warning" : "neutral"}
         />
         <MetricCard
@@ -198,7 +198,7 @@ export function TransactionsViewFilterableSection({
           tone={insights.overdueExpenses > 0 ? "danger" : "good"}
         />
         <MetricCard
-          label="Proximos 7 dias"
+          label="Próximos 7 dias"
           value={formatMoney(insights.dueSoonExpenses)}
           detail={`Ticket medio de gasto: ${formatMoney(insights.averageExpense)}`}
           tone="neutral"
@@ -210,14 +210,14 @@ export function TransactionsViewFilterableSection({
           <div className="min-w-[220px] flex-1">{viewTabs}</div>
           {canCreate ? (
             <Link href="/dashboard/transactions/create" className="rounded-lg border border-[#14564c] bg-[#1b7a6c] px-[0.75rem] py-[0.5rem] font-semibold text-white no-underline">
-              Novo lancamento
+              Novo lançamento
             </Link>
           ) : null}
         </div>
       </ViewFiltersActionsBar>
 
       <p className="pms-status-muted">
-        Exibindo {filteredTransactions.length} de {transactions.length} lancamentos financeiros.
+        Exibindo {filteredTransactions.length} de {transactions.length} lançamentos financeiros.
       </p>
 
       <section className="grid gap-4 xl:grid-cols-[minmax(0,1fr)_360px]">
@@ -236,7 +236,7 @@ export function TransactionsViewFilterableSection({
             ))
           ) : (
             <article className="pms-empty-state">
-              {appliedFilterCount ? "Nenhum lancamento corresponde aos filtros aplicados." : "Nenhum lancamento financeiro cadastrado ate o momento."}
+              {appliedFilterCount ? "Nenhum lançamento corresponde aos filtros aplicados." : "Nenhum lançamento financeiro cadastrado ate o momento."}
             </article>
           )}
         </div>
@@ -290,7 +290,7 @@ export function TransactionsViewFilterableSection({
           </label>
 
           <label className="pms-field">
-            <span>Situacao</span>
+            <span>Situação</span>
             <select
               value={draftFilters.settlement}
               onChange={(event) => updateDraftFilter("settlement", event.target.value as TransactionViewFilters["settlement"])}
@@ -343,7 +343,7 @@ export function TransactionsViewFilterableSection({
           </label>
 
           <label className="pms-field">
-            <span>Valor minimo</span>
+            <span>Valor mínimo</span>
             <input
               type="number"
               min={0}
@@ -355,7 +355,7 @@ export function TransactionsViewFilterableSection({
           </label>
 
           <label className="pms-field">
-            <span>Valor maximo</span>
+            <span>Valor máximo</span>
             <input
               type="number"
               min={0}

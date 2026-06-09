@@ -303,7 +303,7 @@ async function computeBooking(
     return {
       ok: false,
       statusCode: 400,
-      message: "Cada sequencia selecionada deve ter no minimo 1 diaria."
+      message: "Cada sequencia selecionada deve ter no mínimo 1 diaria."
     };
   }
   return {

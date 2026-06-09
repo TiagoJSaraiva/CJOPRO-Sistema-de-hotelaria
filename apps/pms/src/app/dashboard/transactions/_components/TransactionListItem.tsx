@@ -191,7 +191,7 @@ function TransactionEditForm({ transaction }: { transaction: AdminFinancialTrans
       </div>
 
       <button type="submit" className="justify-self-start rounded-lg border border-[#14564c] bg-[#1b7a6c] px-[0.85rem] py-[0.6rem] font-semibold text-white">
-        Salvar lancamento
+        Salvar lançamento
       </button>
     </form>
   );
