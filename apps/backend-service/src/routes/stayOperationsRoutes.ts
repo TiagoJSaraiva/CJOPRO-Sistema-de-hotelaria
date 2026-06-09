@@ -63,6 +63,10 @@ type StayPaymentRow = {
   status: "PENDING" | "COMPLETED" | "FAILED" | "CANCELLED" | "REFUNDED";
 };
 
+type CheckoutCandidateQuery = {
+  room_number?: string;
+};
+
 function toIsoDate(value: string): string {
   return new Date(value).toISOString().slice(0, 10);
 }
@@ -298,6 +302,73 @@ async function loadStayPanel(activeHotelId: string, stayId: string): Promise<Adm
 }
 
 export function registerStayOperationsRoutes(app: FastifyInstance): void {
+  app.get<{ Querystring: CheckoutCandidateQuery }>("/admin/stays/checkout-candidate", async (request, reply) => {
+    const auth = ensureAuthorizedWithScope(request, reply, PERMISSIONS.RESERVATIONS_CALENDAR_ACCESS);
+    if (!auth) return;
+    const activeHotelId = requireActiveHotelId(reply, auth.activeHotelId);
+    if (!activeHotelId) return;
+
+    const roomNumber = normalizeOptionalText(request.query.room_number);
+    if (!roomNumber) {
+      return reply.status(400).send(adminError(ADMIN_ERROR_CODE.VALIDATION, "Numero do quarto obrigatorio."));
+    }
+
+    const supabase = createServerClient();
+    const roomsResult = await supabase
+      .from("rooms")
+      .select("id")
+      .eq("hotel_id", activeHotelId)
+      .eq("room_number", roomNumber)
+      .limit(2);
+
+    if (roomsResult.error) {
+      request.log.error(roomsResult.error);
+      return reply.status(500).send(adminError(ADMIN_ERROR_CODE.INTERNAL, "Falha ao localizar quarto para checkout."));
+    }
+
+    const rooms = (roomsResult.data || []) as Array<{ id: string }>;
+    if (!rooms.length) {
+      return reply.status(404).send(adminError(ADMIN_ERROR_CODE.NOT_FOUND, "Quarto nao encontrado para o hotel ativo."));
+    }
+    if (rooms.length > 1) {
+      return reply.status(409).send(adminError(ADMIN_ERROR_CODE.CONFLICT, "Mais de um quarto encontrado com este numero no hotel ativo."));
+    }
+
+    const staysResult = await supabase
+      .from("stays")
+      .select("id")
+      .eq("room_id", String(rooms[0]!.id))
+      .eq("stay_status", "checked_in")
+      .order("checkout_date_expected", { ascending: true })
+      .limit(2);
+
+    if (staysResult.error) {
+      request.log.error(staysResult.error);
+      return reply.status(500).send(adminError(ADMIN_ERROR_CODE.INTERNAL, "Falha ao localizar estadia para checkout."));
+    }
+
+    const stays = (staysResult.data || []) as Array<{ id: string }>;
+    if (!stays.length) {
+      return reply.status(404).send(adminError(ADMIN_ERROR_CODE.NOT_FOUND, "Nenhuma estadia em check-in encontrada para este quarto."));
+    }
+    if (stays.length > 1) {
+      return reply
+        .status(409)
+        .send(adminError(ADMIN_ERROR_CODE.CONFLICT, "Mais de uma estadia em check-in encontrada para este quarto. Use o calendario de reservas."));
+    }
+
+    const panel = await loadStayPanel(activeHotelId, String(stays[0]!.id)).catch((error) => {
+      request.log.error(error);
+      return null;
+    });
+
+    if (!panel) {
+      return reply.status(404).send(adminError(ADMIN_ERROR_CODE.NOT_FOUND, "Estadia nao encontrada para o hotel ativo."));
+    }
+
+    return reply.send({ item: panel });
+  });
+
   app.get<{ Params: HotelIdParams }>("/admin/stays/:id/panel", async (request, reply) => {
     const auth = ensureAuthorizedWithScope(request, reply, PERMISSIONS.RESERVATIONS_CALENDAR_ACCESS);
     if (!auth) return;

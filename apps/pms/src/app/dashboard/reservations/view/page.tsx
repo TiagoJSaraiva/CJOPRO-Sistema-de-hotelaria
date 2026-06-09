@@ -39,8 +39,11 @@ export default async function ReservationsCalendarViewPage({ searchParams }: Res
   return (
     <DashboardEntityPageShell
       title="Calendário de Reservas"
-      activeTabKey="view"
-      tabs={[{ key: "view", label: "Visualização", href: "/dashboard/reservations/view", isVisible: access.canAccess }]}
+      activeTabKey="calendar"
+      tabs={[
+        { key: "calendar", label: "Calendario", href: "/dashboard/reservations/view", isVisible: access.canAccess },
+        { key: "checkout", label: "Checkout", href: "/dashboard/reservations/checkout", isVisible: access.canAccess }
+      ]}
     >
       <ReservationsCalendarBoard data={data} startDate={startDate} customers={customers} />
     </DashboardEntityPageShell>

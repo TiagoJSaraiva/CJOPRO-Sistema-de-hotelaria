@@ -50,6 +50,30 @@ test.describe("PMS route visual consistency", () => {
     await page.screenshot({ path: testInfo.outputPath("reservations-route.png"), fullPage: false });
   });
 
+  test("reservations checkout route finds checked-in stay by room and completes checkout", async ({ page, context, baseURL }, testInfo) => {
+    await authenticate(context, baseURL || "http://127.0.0.1:3001");
+
+    await page.goto("/dashboard/reservations/checkout");
+
+    await expect(page.getByRole("heading", { name: "Checkout rapido" })).toBeVisible();
+    await page.getByLabel("Numero do quarto").fill("102");
+    await page.getByRole("button", { name: "Buscar" }).click();
+
+    await expect(page.getByTestId("checkout-by-room-workflow")).toContainText("Bruno Lima");
+    await expect(page.getByTestId("checkout-by-room-workflow")).toContainText("RES-1002");
+    await expect(page.getByLabel("Valor")).toHaveValue("360.00");
+
+    await page.getByRole("button", { name: "Registrar pagamento" }).click();
+    await expect(page.getByTestId("checkout-by-room-workflow")).toContainText("Pagamento registrado.");
+    await expect(page.getByLabel("Valor")).toHaveValue("");
+
+    await page.getByRole("button", { name: "Confirmar checkout" }).click();
+    await expect(page.getByTestId("checkout-by-room-workflow")).toContainText("Checkout confirmado para o quarto 102.");
+    await expect(page.getByTestId("checkout-by-room-workflow")).toContainText("Checked-out");
+
+    await page.screenshot({ path: testInfo.outputPath("reservations-checkout-route.png"), fullPage: false });
+  });
+
   test("transactions route keeps its reference visual and filter interaction", async ({ page, context, baseURL }, testInfo) => {
     await authenticate(context, baseURL || "http://127.0.0.1:3001");
 

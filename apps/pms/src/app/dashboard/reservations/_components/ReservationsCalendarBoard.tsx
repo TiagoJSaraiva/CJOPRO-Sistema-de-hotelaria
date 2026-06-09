@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { useEffect, useMemo, useState, type ReactNode } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
 import type {
   AdminCustomer,
@@ -9,12 +9,25 @@ import type {
   AdminReservationCalendarBookingCreateResponse,
   AdminReservationCalendarResponse,
   AdminStayOperationalPanelResponse,
-  ReservationSource,
-  ReservationStatus
+  ReservationSource
 } from "@hotel/shared";
 import { translateReservationSource } from "@hotel/shared";
 import { addDaysIso, CALENDAR_WINDOW_DAYS, formatDateRangeLabel } from "./calendarUtils";
 import { computeStayBlockLayout } from "./stayBlockLayout";
+import {
+  DEFAULT_STATUS_META,
+  DetailItem,
+  PanelSection,
+  PaymentSummaryCard,
+  STATUS_META,
+  StatusPill,
+  formatDateDisplay,
+  formatMoney,
+  formatPercent,
+  paymentMethodLabel,
+  paymentStatusLabel,
+  statusLabel
+} from "./OperationalPanelPrimitives";
 
 type ReservationsCalendarBoardProps = {
   data: AdminReservationCalendarResponse;
@@ -28,57 +41,6 @@ const LEFT_PANEL_WIDTH = 200;
 const BLOCK_HEIGHT = 30;
 const BLOCK_VERTICAL_GAP = Math.max(0, (ROW_HEIGHT - BLOCK_HEIGHT) / 2);
 
-type StatusMeta = {
-  label: string;
-  color: string;
-  toneClassName: string;
-};
-
-const DEFAULT_STATUS_META: StatusMeta = {
-  label: "Pendente",
-  color: "#f59e0b",
-  toneClassName: "border-[#f5c56e] bg-[#fff8e8] text-[#8a5a00]"
-};
-
-const STATUS_META: Record<string, StatusMeta> = {
-  pending: DEFAULT_STATUS_META,
-  confirmed: {
-    label: "Confirmada",
-    color: "#16a34a",
-    toneClassName: "border-[#93d6b5] bg-[#effaf4] text-[#176c43]"
-  },
-  checked_in: {
-    label: "Checked-in",
-    color: "#2563eb",
-    toneClassName: "border-[#9cc9ff] bg-[#eef6ff] text-[#1b5fa7]"
-  },
-  checked_out: {
-    label: "Checked-out",
-    color: "#0f766e",
-    toneClassName: "border-[#99d8d1] bg-[#edfafa] text-[#0a5f58]"
-  },
-  canceled: {
-    label: "Cancelada",
-    color: "#f97316",
-    toneClassName: "border-[#fdba74] bg-[#fff7ed] text-[#9a4b00]"
-  },
-  no_show: {
-    label: "No-show",
-    color: "#94a3b8",
-    toneClassName: "border-[#d2d6db] bg-[#f4f6f8] text-[#52606d]"
-  },
-  blocked: {
-    label: "Bloqueada",
-    color: "#ef4444",
-    toneClassName: "border-[#f2a2a2] bg-[#fff2f2] text-[#a12b2b]"
-  },
-  maintenance: {
-    label: "Manutenção",
-    color: "#ef4444",
-    toneClassName: "border-[#f2a2a2] bg-[#fff2f2] text-[#a12b2b]"
-  }
-};
-
 const LEGEND_ITEMS: Array<{ key: string; label: string }> = [
   { key: "confirmed", label: "Confirmada" },
   { key: "checked_in", label: "Checked-in" },
@@ -87,13 +49,6 @@ const LEGEND_ITEMS: Array<{ key: string; label: string }> = [
   { key: "canceled", label: "Cancelada" },
   { key: "blocked", label: "Bloqueada" }
 ];
-
-const PAYMENT_STATUS_LABELS: Record<string, string> = {
-  pending: "Pendente",
-  partial: "Parcial",
-  paid: "Pago",
-  refunded: "Estornado"
-};
 
 const secondaryButtonClassName =
   "cursor-pointer rounded-lg border border-[#d2d6db] bg-white px-[0.75rem] py-[0.5rem] font-semibold text-[#344054] disabled:cursor-not-allowed disabled:bg-[#eef2f6] disabled:text-[#98a2b3]";
@@ -108,49 +63,6 @@ type CellOccupancy = {
   right: boolean;
 };
 
-function statusLabel(status: ReservationStatus | null): string {
-  if (!status) return "N/A";
-  return STATUS_META[status]?.label || status.replaceAll("_", " ");
-}
-
-function paymentStatusLabel(status: string): string {
-  return PAYMENT_STATUS_LABELS[status] || status;
-}
-
-function paymentMethodLabel(method: string): string {
-  if (method === "cash") return "Dinheiro";
-  if (method === "card") return "Cartao";
-  if (method === "credit_card") return "Cartao de credito";
-  if (method === "debit_card") return "Cartao de debito";
-  if (method === "pix") return "Pix";
-  if (method === "bank_transfer") return "Transferencia bancaria";
-  return method;
-}
-
-function formatMoney(amount: number, currency = "BRL"): string {
-  try {
-    return new Intl.NumberFormat("pt-BR", {
-      style: "currency",
-      currency
-    }).format(amount);
-  } catch {
-    return `${currency} ${amount.toFixed(2)}`;
-  }
-}
-
-function formatDateDisplay(value: string | null | undefined): string {
-  if (!value) return "-";
-  const [year, month, day] = value.slice(0, 10).split("-");
-  if (year && month && day) {
-    return `${day}/${month}/${year}`;
-  }
-  return value;
-}
-
-function formatPercent(value: number): string {
-  return `${Math.round(value)}%`;
-}
-
 function ChevronIcon({ direction }: { direction: "left" | "right" }) {
   const path = direction === "left" ? "M15 18l-6-6 6-6" : "M9 6l6 6-6 6";
 
@@ -159,12 +71,6 @@ function ChevronIcon({ direction }: { direction: "left" | "right" }) {
       <path d={path} stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
     </svg>
   );
-}
-
-function StatusPill({ status }: { status: ReservationStatus | string | null }) {
-  const meta = STATUS_META[status || "pending"] ?? DEFAULT_STATUS_META;
-
-  return <span className={`rounded-full border px-[0.55rem] py-[0.2rem] text-[0.76rem] font-semibold ${meta.toneClassName}`}>{meta.label}</span>;
 }
 
 function MetricCard({
@@ -191,43 +97,6 @@ function MetricCard({
       <strong className="mt-2 block text-[1.45rem] leading-tight">{value}</strong>
       <p className="mb-0 mt-2 text-[0.86rem] text-[#52606d]">{detail}</p>
     </article>
-  );
-}
-
-function DetailItem({ label, value }: { label: string; value: string }) {
-  return (
-    <div className="min-w-0">
-      <span className="block text-[0.72rem] font-semibold uppercase tracking-[0.04em] text-[#697586]">{label}</span>
-      <strong className="mt-[0.2rem] block truncate text-[0.92rem] font-semibold text-[#202939]">{value}</strong>
-    </div>
-  );
-}
-
-function PanelSection({ title, description, children }: { title: string; description?: string; children: ReactNode }) {
-  return (
-    <section className="grid gap-3 rounded-lg border border-[#e4e7ec] bg-white p-3">
-      <div>
-        <h4 className="m-0 text-[0.95rem] font-semibold text-[#121926]">{title}</h4>
-        {description ? <p className="mb-0 mt-[0.25rem] text-[0.82rem] text-[#697586]">{description}</p> : null}
-      </div>
-      {children}
-    </section>
-  );
-}
-
-function PaymentSummaryCard({ label, value, detail, tone = "neutral" }: { label: string; value: string; detail: string; tone?: "neutral" | "good" | "danger" }) {
-  const toneClassName = {
-    neutral: "border-[#e4e7ec] bg-[#f8fafc] text-[#202939]",
-    good: "border-[#b6e4cb] bg-[#f1fbf5] text-[#176c43]",
-    danger: "border-[#f3b2b2] bg-[#fff5f5] text-[#b42318]"
-  }[tone];
-
-  return (
-    <div className={`rounded-lg border p-3 ${toneClassName}`}>
-      <span className="block text-[0.72rem] font-semibold uppercase tracking-[0.04em] text-[#697586]">{label}</span>
-      <strong className="mt-[0.2rem] block text-[0.98rem]">{value}</strong>
-      <span className="mt-[0.15rem] block text-[0.78rem] text-[#697586]">{detail}</span>
-    </div>
   );
 }
 
@@ -519,12 +388,18 @@ export function ReservationsCalendarBoard({ data, startDate, customers }: Reserv
 
   return (
     <section className="grid gap-4" data-testid="reservations-calendar-board">
-      <section className="grid grid-cols-1 gap-3 md:grid-cols-2 xl:grid-cols-3" data-testid="reservation-summary-metrics">
+      <section className="grid grid-cols-1 gap-3 md:grid-cols-2 xl:grid-cols-4" data-testid="reservation-summary-metrics">
         <MetricCard
           label="Ocupação do recorte"
           value={formatPercent(calendarSummary.occupancyRate)}
           detail={`${calendarSummary.occupiedRoomDays} de ${calendarSummary.totalRoomDays} diárias mapeadas`}
           tone={calendarSummary.occupancyRate > 75 ? "good" : calendarSummary.occupancyRate > 45 ? "warning" : "neutral"}
+        />
+        <MetricCard
+          label="Receita prevista"
+          value={formatMoney(calendarSummary.projectedRevenue)}
+          detail={`${formatMoney(calendarSummary.openBalance)} em aberto`}
+          tone={calendarSummary.projectedRevenue ? "good" : "neutral"}
         />
         <MetricCard
           label="Estadias ativas"

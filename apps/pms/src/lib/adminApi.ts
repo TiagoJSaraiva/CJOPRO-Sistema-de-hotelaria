@@ -362,6 +362,14 @@ export async function getStayOperationalPanel(stayId: string): Promise<AdminStay
   return response.item;
 }
 
+export async function getStayCheckoutCandidateByRoomNumber(roomNumber: string): Promise<AdminStayOperationalPanelResponse> {
+  const query = new URLSearchParams({
+    room_number: roomNumber
+  });
+  const response = await getAdminData<AdminItemResponse<AdminStayOperationalPanelResponse>>(`/admin/stays/checkout-candidate?${query.toString()}`);
+  return response.item;
+}
+
 export function createStayPayment(
   stayId: string,
   payload: AdminStayPaymentCreateInput

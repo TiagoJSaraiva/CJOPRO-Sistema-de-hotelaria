@@ -195,8 +195,8 @@ function buildCalendar(url) {
         reservation_code: "RES-1002",
         stay_status: "checked_in",
         total_price_estimated: 960,
-        total_paid: 960,
-        stay_payment_status: "paid",
+        total_paid: 600,
+        stay_payment_status: "partial",
         customer_name: "Bruno Lima",
         checkin_date_expected: stayTwoStart,
         checkout_date_expected: stayTwoEnd,
@@ -220,10 +220,11 @@ function buildCalendar(url) {
   };
 }
 
-function buildPanel(stayId) {
+function buildPanel(stayId, options = {}) {
   const isSecondStay = stayId === "stay-2";
   const total = isSecondStay ? 960 : 1280;
-  const paid = isSecondStay ? 960 : 640;
+  const paid = options.paid ?? (isSecondStay ? 600 : 640);
+  const stayStatus = options.status || (isSecondStay ? "checked_in" : "confirmed");
 
   return {
     stay: {
@@ -234,11 +235,11 @@ function buildPanel(stayId) {
       room_number: isSecondStay ? "102" : "101",
       room_type: isSecondStay ? "Standard" : "Suite Luxo",
       customer_name: isSecondStay ? "Bruno Lima" : "Ana Paula Ribeiro",
-      stay_status: isSecondStay ? "checked_in" : "confirmed",
+      stay_status: stayStatus,
       checkin_date_expected: isSecondStay ? "2026-05-15" : "2026-05-13",
       checkout_date_expected: isSecondStay ? "2026-05-18" : "2026-05-16",
       checkin_date_actual: isSecondStay ? "2026-05-15T14:30:00.000Z" : null,
-      checkout_date_actual: null,
+      checkout_date_actual: stayStatus === "checked_out" ? "2026-05-18T11:20:00.000Z" : null,
       total_price_estimated: total,
       total_paid: paid,
       stay_payment_status: paid >= total ? "paid" : "partial"
@@ -259,27 +260,29 @@ function buildPanel(stayId) {
       checkout_time_limit: "12:00"
     },
     eligibility: {
-      can_checkin: !isSecondStay,
+      can_checkin: !isSecondStay && stayStatus === "confirmed",
       checkin_block_reason: isSecondStay ? "Estadia ja em check-in." : null,
-      can_checkout: isSecondStay,
-      checkout_block_reason: isSecondStay ? null : "Check-in ainda nao realizado.",
-      can_no_show: !isSecondStay,
+      can_checkout: isSecondStay && stayStatus === "checked_in",
+      checkout_block_reason: isSecondStay && stayStatus === "checked_in" ? null : "A estadia precisa estar em checked_in para checkout.",
+      can_no_show: !isSecondStay && stayStatus === "confirmed",
       no_show_block_reason: null,
-      can_cancel: true,
-      cancel_block_reason: null
+      can_cancel: stayStatus === "confirmed",
+      cancel_block_reason: stayStatus === "confirmed" ? null : "Cancelamento permitido apenas para estadia confirmada."
     },
-    payments: [
-      {
-        id: "payment-1",
-        stay_id: stayId,
-        amount: paid,
-        method: isSecondStay ? "pix" : "card",
-        note: null,
-        paid_at: "2026-05-12T12:00:00.000Z",
-        created_at: "2026-05-12T12:00:00.000Z",
-        created_by: "user-e2e"
-      }
-    ]
+    payments: paid > 0
+      ? [
+          {
+            id: "payment-1",
+            stay_id: stayId,
+            amount: paid,
+            method: isSecondStay ? "pix" : "card",
+            note: null,
+            paid_at: "2026-05-12T12:00:00.000Z",
+            created_at: "2026-05-12T12:00:00.000Z",
+            created_by: "user-e2e"
+          }
+        ]
+      : []
   };
 }
 
@@ -334,6 +337,16 @@ const server = http.createServer(async (request, response) => {
     return;
   }
 
+  if (method === "GET" && url.pathname === "/admin/stays/checkout-candidate") {
+    const roomNumber = (url.searchParams.get("room_number") || "").trim();
+    if (roomNumber === "102") {
+      sendJson(response, 200, { item: buildPanel("stay-2") });
+      return;
+    }
+    sendJson(response, 404, { code: "ADMIN_NOT_FOUND", message: "Nenhuma estadia em check-in encontrada para este quarto." });
+    return;
+  }
+
   if (method === "POST" && url.pathname === "/admin/reservations/calendar/booking/simulate") {
     const body = await parseBody(request);
     const selectedCount = Array.isArray(body.selected_cells) ? body.selected_cells.length : 0;
@@ -379,7 +392,18 @@ const server = http.createServer(async (request, response) => {
   const stayActionMatch = url.pathname.match(/^\/admin\/stays\/([^/]+)\/(payments|checkin|checkout|no-show|cancel)$/);
   if (method === "POST" && stayActionMatch) {
     await parseBody(request);
-    sendJson(response, 200, { item: buildPanel(stayActionMatch[1]) });
+    const stayId = stayActionMatch[1];
+    const action = stayActionMatch[2];
+    const total = stayId === "stay-2" ? 960 : 1280;
+    if (action === "payments") {
+      sendJson(response, 200, { item: buildPanel(stayId, { paid: total }) });
+      return;
+    }
+    if (action === "checkout") {
+      sendJson(response, 200, { item: buildPanel(stayId, { paid: total, status: "checked_out" }) });
+      return;
+    }
+    sendJson(response, 200, { item: buildPanel(stayId) });
     return;
   }
 

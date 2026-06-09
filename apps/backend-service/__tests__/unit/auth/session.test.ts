@@ -78,7 +78,7 @@ describe("auth/session", () => {
 
     expect(error).toEqual({
       code: "AUTH_FORBIDDEN",
-      message: "Sem permissao para executar esta operacao."
+      message: "Sem permissão para executar esta operação."
     });
   });
 });
