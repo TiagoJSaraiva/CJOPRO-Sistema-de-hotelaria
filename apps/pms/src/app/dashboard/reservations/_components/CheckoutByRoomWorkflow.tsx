@@ -165,7 +165,7 @@ export function CheckoutByRoomWorkflow() {
       <section className="rounded-lg border border-[#d9dfe7] bg-white p-4 shadow-[0_1px_2px_rgba(16,24,40,0.04)]">
         <div className="flex flex-wrap items-start justify-between gap-3">
           <div>
-            <h2 className="m-0 text-[1.05rem] font-semibold text-[#121926]">Checkout rapido</h2>
+            <h2 className="m-0 text-[1.05rem] font-semibold text-[#121926]">Checkout</h2>
             <p className="mb-0 mt-[0.25rem] text-[0.86rem] text-[#697586]">Localizar estadia em check-in por quarto.</p>
           </div>
           <span className="rounded-full border border-[#e4e7ec] bg-[#f8fafc] px-[0.6rem] py-[0.25rem] text-[0.78rem] font-semibold text-[#52606d]">
