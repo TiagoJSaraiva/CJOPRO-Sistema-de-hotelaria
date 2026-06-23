@@ -1,0 +1,13 @@
+2. Fundamentação Teórica
+
+2.1 Sistemas de Gestão Hoteleira
+2.2 Property Management System (PMS)
+2.3 Sistemas Web
+2.4 Arquitetura Cliente-Servidor
+2.5 APIs e Comunicação entre Sistemas
+2.6 Banco de Dados Relacional e PostgreSQL
+2.7 Computação em Nuvem e DBaaS
+2.8 Metodologias Ágeis
+2.9 UML na Modelagem de Sistemas
+2.10 Testes de Software
+2.11 Controle de Versão

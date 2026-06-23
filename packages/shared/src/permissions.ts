@@ -71,7 +71,7 @@ export const ADMIN_NAV_ITEMS = [
   },
   {
     href: "/dashboard/transactions",
-    label: "Gastos",
+    label: "Painel financeiro",
     permission: PERMISSIONS.TRANSACTION_READ
   },
   {
