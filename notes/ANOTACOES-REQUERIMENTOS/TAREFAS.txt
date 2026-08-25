@@ -1,0 +1,15 @@
+Fluxos para implementar:
+
+- manutenção e danos de estadias. Pensar todo o fluxo de como camareiras registram danos, e como registrar no detalhe manutenção. Manutenção de quarto e manutenção geral.
+- fluxo de aquisição de produtos dentro da estadia: terceirizado ou integrado ao hotel. Como pagamento funciona: Na hora ou No check out? Se for no check out, como é anotado? Se o serviço for terceirizado, como é feito o contrato: aluguel fixo, taxa no lucro, etc...
+- fluxo de refeições: Oque é incluso, cobrado a parte, diferenças de refeições inclusas com base no tipo de reserva, monitoramento de clientes em relação a consumo de refeições, etc.
+- Fluxo de day use e passante: Registrar clientes nesses casos e monitoramento de uso dos direitos deles. Registrar privilégios de day use e passante de forma configurável.
+- Politicas relacionadas a reserva: reagendar, cancelar, estorno, etc. Planejar forma ideal de lidar com no-show, cancelado, etc.
+- Serviços extra prestados: passeio, playground, etc. Criar sistema altamente configurável por dentro da interface de sistema extra prestados, para que os próprios funcionários possam registrar esses serviços.
+
+
+
+Outras tarefas:
+- Manual de usuário detalhado
+- Concluir a documentação.
+- Ajustar várias interfaces que estão tremendamente feias
