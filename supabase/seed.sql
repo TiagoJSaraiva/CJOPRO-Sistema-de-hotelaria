@@ -1,0 +1,2 @@
+-- Dados locais reproduziveis devem ser adicionados aqui.
+-- Nao inclua dados pessoais, credenciais ou dumps do ambiente hospedado.
