@@ -28,7 +28,8 @@ test.describe("PMS route visual consistency", () => {
     await expect(page).toHaveTitle(/PMS/);
     await expect(page.getByRole("heading", { name: "Calendário de Reservas" })).toBeVisible();
     await expect(page.getByTestId("reservation-summary-metrics")).toContainText("Ocupação do recorte");
-    await expect(page.getByTestId("reservation-summary-metrics")).toContainText("Receita prevista");
+    await expect(page.getByTestId("reservation-summary-metrics")).toContainText("Estadias ativas");
+    await expect(page.getByTestId("reservation-summary-metrics")).toContainText("Bloqueios");
     await expect(page.getByTestId("reservation-calendar-grid")).toBeVisible();
     await expect(page.getByTestId("reservation-side-panel")).toContainText("Painel operacional");
     await expect(page.getByRole("link", { name: "Período anterior" })).toBeVisible();
@@ -55,7 +56,7 @@ test.describe("PMS route visual consistency", () => {
 
     await page.goto("/dashboard/reservations/checkout");
 
-    await expect(page.getByRole("heading", { name: "Checkout rapido" })).toBeVisible();
+    await expect(page.getByRole("heading", { level: 2, name: "Checkout", exact: true })).toBeVisible();
     await page.getByLabel("Numero do quarto").fill("102");
     await page.getByRole("button", { name: "Buscar" }).click();
 

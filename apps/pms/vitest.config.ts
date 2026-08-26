@@ -16,6 +16,7 @@ export default defineConfig({
   test: {
     environment: "node",
     globals: true,
+    maxWorkers: 2,
     setupFiles: ["./__tests__/setup.ts"],
     include: ["__tests__/**/*.test.ts", "__tests__/**/*.test.tsx"],
     coverage: {

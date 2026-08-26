@@ -1,6 +1,6 @@
 import Fastify from "fastify";
 import { afterEach, describe, expect, it, vi } from "vitest";
-import { PERMISSIONS, type SessionPayload } from "@hotel/shared";
+import { PERMISSIONS, type AdminHotel, type SessionPayload } from "@hotel/shared";
 import { signToken } from "../../../src/auth/session";
 import { registerHotelRoutes } from "../../../src/routes/hotelRoutes";
 import type { HotelsRepository } from "../../../src/repositories/hotelsRepository";
@@ -73,6 +73,70 @@ describe("routes/hotels with injected repository", () => {
       ]
     });
     expect(repository.listHotels).toHaveBeenCalledTimes(1);
+  });
+
+  it("cria hotel com CNPJ normalizado usando repository injetado", async () => {
+    const createdHotel: AdminHotel = {
+      id: "hotel-1",
+      name: "Hotel Centro",
+      legal_name: "Hotel Centro LTDA",
+      tax_id: "04252011000110",
+      slug: "hotel-centro-valid",
+      email: "contato@hotel.com",
+      phone: "11999999999",
+      address_line: "Rua Central",
+      address_number: "100",
+      address_complement: null,
+      district: "Centro",
+      city: "Sao Paulo",
+      state: "SP",
+      country: "BR",
+      zip_code: "01001-000",
+      timezone: "America/Sao_Paulo",
+      currency: "BRL",
+      is_active: true
+    };
+    const repository: HotelsRepository = {
+      listHotels: vi.fn(async () => []),
+      createHotel: vi.fn(async () => ({ result: "ok", item: createdHotel })),
+      updateHotel: vi.fn(async () => ({ result: "ok", item: createdHotel })),
+      deleteHotel: vi.fn(async () => "ok")
+    };
+    const app = await createHotelsTestApp(repository);
+
+    const response = await app.inject({
+      method: "POST",
+      url: "/admin/hotels",
+      headers: {
+        authorization: `Bearer ${createToken([PERMISSIONS.HOTEL_CREATE])}`
+      },
+      payload: {
+        name: "Hotel Centro",
+        legal_name: "Hotel Centro LTDA",
+        tax_id: "04.252.011/0001-10",
+        slug: "hotel-centro-valid",
+        email: "contato@hotel.com",
+        phone: "11999999999",
+        address_line: "Rua Central",
+        address_number: "100",
+        district: "Centro",
+        city: "Sao Paulo",
+        state: "SP",
+        country: "BR",
+        zip_code: "01001-000"
+      }
+    });
+
+    expect(response.statusCode).toBe(201);
+    expect(repository.createHotel).toHaveBeenCalledWith(
+      expect.objectContaining({
+        tax_id: "04252011000110",
+        country: "BR",
+        timezone: "America/Sao_Paulo",
+        currency: "BRL"
+      })
+    );
+    expect(response.json().item.tax_id).toBe("04252011000110");
   });
 
   it("retorna 409 quando repository sinaliza conflito de slug no cadastro", async () => {

@@ -23,7 +23,7 @@ export default defineConfig({
     {
       command: "node __tests__/e2e/mockBackend.mjs",
       url: `${mockBackendURL}/health`,
-      reuseExistingServer: !process.env.CI,
+      reuseExistingServer: false,
       timeout: 30_000,
       env: {
         PMS_E2E_BACKEND_PORT: String(mockBackendPort)
@@ -32,7 +32,7 @@ export default defineConfig({
     {
       command: "pnpm dev",
       url: `${baseURL}/login`,
-      reuseExistingServer: !process.env.CI,
+      reuseExistingServer: false,
       timeout: 120_000,
       env: {
         BACKEND_SERVICE_URL: mockBackendURL

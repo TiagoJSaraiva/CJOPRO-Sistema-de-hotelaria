@@ -1,6 +1,6 @@
 import { afterAll, beforeAll, describe, expect, it } from "vitest";
 import type { FastifyInstance } from "fastify";
-import { AUTH_ERROR_CODE, PERMISSIONS, type SessionPayload } from "@hotel/shared";
+import { AUTH_ERROR_CODE, AUTH_ERROR_MESSAGE, PERMISSIONS, type SessionPayload } from "@hotel/shared";
 import { createApp } from "../../../src/app";
 import { signToken } from "../../../src/auth/session";
 
@@ -43,7 +43,7 @@ describe("routes/hotels", () => {
     expect(response.statusCode).toBe(401);
     expect(response.json()).toEqual({
       code: AUTH_ERROR_CODE.TOKEN_INVALID_OR_EXPIRED,
-      message: "Token invalido ou expirado."
+      message: AUTH_ERROR_MESSAGE[AUTH_ERROR_CODE.TOKEN_INVALID_OR_EXPIRED]
     });
   });
 
@@ -64,7 +64,7 @@ describe("routes/hotels", () => {
     expect(response.statusCode).toBe(403);
     expect(response.json()).toEqual({
       code: AUTH_ERROR_CODE.FORBIDDEN,
-      message: "Sem permissao para executar esta operacao."
+      message: AUTH_ERROR_MESSAGE[AUTH_ERROR_CODE.FORBIDDEN]
     });
   });
 
@@ -154,37 +154,6 @@ describe("routes/hotels", () => {
 
     expect(response.statusCode).toBe(400);
     expect(response.json().code).toBe("ADMIN_VALIDATION_ERROR");
-    expect(response.json().message).toContain("CNPJ invalido");
-  });
-
-  it("cria hotel com sucesso quando CNPJ valido e enviado para pais BR", async () => {
-    const token = createToken([PERMISSIONS.HOTEL_CREATE]);
-
-    const response = await app.inject({
-      method: "POST",
-      url: "/admin/hotels",
-      headers: {
-        authorization: `Bearer ${token}`
-      },
-      payload: {
-        name: "Hotel Centro",
-        legal_name: "Hotel Centro LTDA",
-        tax_id: "04.252.011/0001-10", // CNPJ válido
-        slug: "hotel-centro-valid",
-        email: "contato@hotel.com",
-        phone: "11999999999",
-        address_line: "Rua Central",
-        address_number: "100",
-        district: "Centro",
-        city: "Sao Paulo",
-        state: "SP",
-        country: "BR",
-        zip_code: "01001-000"
-      }
-    });
-
-    expect(response.statusCode).toBe(201);
-    expect(response.json().item).toBeDefined();
-    expect(response.json().item.tax_id).toBe("04252011000110"); // normalizado
+    expect(response.json().message).toBe("CNPJ inválido para o país informado.");
   });
 });

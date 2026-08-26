@@ -5,7 +5,7 @@ vi.mock("../../../src/common/supabaseServer", () => ({
   createServerClient: vi.fn()
 }));
 
-import { ACTIVE_HOTEL_HEADER_NAME, AUTH_ERROR_CODE, PERMISSIONS, type SessionPayload } from "@hotel/shared";
+import { ACTIVE_HOTEL_HEADER_NAME, AUTH_ERROR_CODE, AUTH_ERROR_MESSAGE, PERMISSIONS, type SessionPayload } from "@hotel/shared";
 import { createServerClient } from "../../../src/common/supabaseServer";
 import { createApp } from "../../../src/app";
 import { hashTemporaryPassword, signToken, verifyToken } from "../../../src/auth/session";
@@ -75,7 +75,7 @@ describe("routes/auth", () => {
     expect(response.statusCode).toBe(400);
     expect(response.json()).toEqual({
       code: AUTH_ERROR_CODE.MISSING_FIELDS,
-      message: "Email e senha sao obrigatorios."
+      message: AUTH_ERROR_MESSAGE[AUTH_ERROR_CODE.MISSING_FIELDS]
     });
   });
 
@@ -99,7 +99,7 @@ describe("routes/auth", () => {
     expect(response.statusCode).toBe(401);
     expect(response.json()).toEqual({
       code: AUTH_ERROR_CODE.INVALID_CREDENTIALS,
-      message: "Credenciais invalidas."
+      message: AUTH_ERROR_MESSAGE[AUTH_ERROR_CODE.INVALID_CREDENTIALS]
     });
   });
 
@@ -258,7 +258,7 @@ describe("routes/auth", () => {
     expect(response.statusCode).toBe(429);
     expect(response.json()).toMatchObject({
       code: AUTH_ERROR_CODE.ACCOUNT_LOCKED,
-      message: "Conta temporariamente bloqueada por tentativas de login invalidas."
+      message: AUTH_ERROR_MESSAGE[AUTH_ERROR_CODE.ACCOUNT_LOCKED]
     });
   });
 
@@ -271,7 +271,7 @@ describe("routes/auth", () => {
     expect(response.statusCode).toBe(401);
     expect(response.json()).toEqual({
       code: AUTH_ERROR_CODE.TOKEN_INVALID_OR_EXPIRED,
-      message: "Token invalido ou expirado."
+      message: AUTH_ERROR_MESSAGE[AUTH_ERROR_CODE.TOKEN_INVALID_OR_EXPIRED]
     });
   });
 

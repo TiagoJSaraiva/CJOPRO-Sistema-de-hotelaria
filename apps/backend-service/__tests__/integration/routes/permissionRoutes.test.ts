@@ -1,6 +1,6 @@
 import { afterAll, beforeAll, describe, expect, it } from "vitest";
 import type { FastifyInstance } from "fastify";
-import { AUTH_ERROR_CODE, PERMISSIONS, type SessionPayload } from "@hotel/shared";
+import { AUTH_ERROR_CODE, AUTH_ERROR_MESSAGE, PERMISSIONS, type SessionPayload } from "@hotel/shared";
 import { createApp } from "../../../src/app";
 import { signToken } from "../../../src/auth/session";
 
@@ -43,7 +43,7 @@ describe("routes/permissions", () => {
     expect(response.statusCode).toBe(401);
     expect(response.json()).toEqual({
       code: AUTH_ERROR_CODE.TOKEN_INVALID_OR_EXPIRED,
-      message: "Token invalido ou expirado."
+      message: AUTH_ERROR_MESSAGE[AUTH_ERROR_CODE.TOKEN_INVALID_OR_EXPIRED]
     });
   });
 
@@ -64,7 +64,7 @@ describe("routes/permissions", () => {
     expect(response.statusCode).toBe(403);
     expect(response.json()).toEqual({
       code: AUTH_ERROR_CODE.FORBIDDEN,
-      message: "Sem permissao para executar esta operacao."
+      message: AUTH_ERROR_MESSAGE[AUTH_ERROR_CODE.FORBIDDEN]
     });
   });
 
