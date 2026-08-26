@@ -3,10 +3,38 @@
 ## Modulos
 
 - apps/pms: interface do sistema.
-- apps/site: site institucional.
 - apps/backend-service: backend.
 - apps/booking-engine-service: microsserviço que simula motor de reservas.
 - packages/shared: codigo compartilhado entre os modulos.
+
+## Ambiente de desenvolvimento
+
+Versoes obrigatorias:
+
+- Node.js `22.23.2`.
+- pnpm `9.12.3`.
+
+No Windows com NVM e Corepack:
+
+```powershell
+nvm install 22.23.2
+nvm use 22.23.2
+corepack enable
+corepack prepare pnpm@9.12.3 --activate
+pnpm bootstrap
+```
+
+Comandos de reproducibilidade e validacao:
+
+- `pnpm bootstrap`: instala exatamente o lockfile e valida o ambiente.
+- `pnpm run doctor`: diagnostica versoes, workspace, lockfile e CLIs essenciais.
+- `pnpm run doctor -- --json`: retorna o mesmo diagnostico em formato estruturado.
+- `pnpm check`: executa lint, typecheck e build; deve ser a validacao rapida antes de um commit.
+- `pnpm check:full`: acrescenta testes Vitest e E2E à validacao rapida, executa todas as fases e agrega as falhas no final.
+
+Use `pnpm run doctor` com o `run` explicito: `pnpm doctor` e um comando interno do pnpm 9 e nao executa o diagnostico deste projeto.
+
+O projeto rejeita instalacoes com uma versao diferente do Node declarada no `package.json`.
 
 ## Testes
 

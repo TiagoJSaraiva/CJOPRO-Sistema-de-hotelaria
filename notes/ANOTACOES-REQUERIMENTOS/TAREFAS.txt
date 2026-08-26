@@ -8,8 +8,13 @@ Fluxos para implementar:
 - Serviços extra prestados: passeio, playground, etc. Criar sistema altamente configurável por dentro da interface de sistema extra prestados, para que os próprios funcionários possam registrar esses serviços.
 
 
-
 Outras tarefas:
 - Manual de usuário detalhado
 - Concluir a documentação.
 - Ajustar várias interfaces que estão tremendamente feias
+
+////
+
+planos
+
+Planeje a implementação do fluxo de registro de danos e manutenção: modelagem SQL, endpoints do backend, interface PMS e testes. Um dano deve poder bloquear um quarto, gerar uma despesa opcional e manter histórico até a conclusão da manutenção.

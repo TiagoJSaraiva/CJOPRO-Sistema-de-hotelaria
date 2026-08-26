@@ -3,11 +3,20 @@
   "private": true,
   "version": "0.1.0",
   "packageManager": "pnpm@9.12.3",
+  "engines": {
+    "node": "22.23.2",
+    "pnpm": "9.12.3"
+  },
   "scripts": {
+    "bootstrap": "pnpm install --frozen-lockfile && pnpm run doctor",
+    "doctor": "node scripts/doctor.mjs",
+    "check": "pnpm lint && pnpm typecheck && pnpm build",
+    "check:full": "node scripts/check-full.mjs",
     "dev": "turbo run dev --parallel",
     "build": "turbo run build",
     "typecheck": "turbo run typecheck",
-    "lint": "turbo run lint",
+    "lint": "pnpm lint:scripts && turbo run lint",
+    "lint:scripts": "node --check scripts/doctor.mjs && node --check scripts/check-full.mjs",
     "clean": "turbo run clean",
     "test": "turbo run test",
     "test:unit": "turbo run test:unit",

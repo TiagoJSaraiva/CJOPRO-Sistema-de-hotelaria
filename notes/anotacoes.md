@@ -8,5 +8,3 @@ UUID (pk)
 nome
 created_at()
 telefone
-
-
