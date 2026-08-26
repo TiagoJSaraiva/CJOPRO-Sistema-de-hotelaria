@@ -1,5 +1,7 @@
 # Sistema de Hotelaria para disciplina Projeto Integrador do CJOIFSP
 
+[![CI](https://github.com/TiagoJSaraiva/CJOPRO-Sistema-de-hotelaria/actions/workflows/ci.yml/badge.svg)](https://github.com/TiagoJSaraiva/CJOPRO-Sistema-de-hotelaria/actions/workflows/ci.yml)
+
 ## Modulos
 
 - apps/pms: interface do sistema.
@@ -35,6 +37,19 @@ Comandos de reproducibilidade e validacao:
 Use `pnpm run doctor` com o `run` explicito: `pnpm doctor` e um comando interno do pnpm 9 e nao executa o diagnostico deste projeto.
 
 O projeto rejeita instalacoes com uma versao diferente do Node declarada no `package.json`.
+
+`.nvmrc`, os campos `packageManager` e `engines` do `package.json` e o `pnpm-lock.yaml` sao as fontes de verdade das versoes usadas localmente e no CI.
+
+## Integracao continua
+
+O GitHub Actions executa o workflow `CI` em pull requests e pushes para `main`, alem de permitir execucao manual. O pipeline usa Node.js `22.23.2`, pnpm `9.12.3`, Ubuntu 24.04 e instalacao congelada pelo lockfile.
+
+Os dois jobs sao independentes:
+
+- `Quality and Vitest`: executa `pnpm bootstrap`, `pnpm check` e `pnpm test`.
+- `Playwright E2E`: instala somente o Chromium e executa `pnpm test:e2e` com backend mockado; em caso de falha, preserva traces e screenshots por sete dias.
+
+Nenhum job depende de secrets, banco ou Supabase. Antes de enviar uma alteracao, use `pnpm check:full` como equivalente local dos dois jobs.
 
 ## Testes
 
