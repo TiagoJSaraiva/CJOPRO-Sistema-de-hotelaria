@@ -3,16 +3,17 @@ import { getUserFromSession } from "../../../lib/auth";
 import { getPermissionsAccess, getPermissionsDefaultRoute } from "./access";
 
 type PermissionsPageProps = {
-  searchParams?: {
+  searchParams?: Promise<{
     status?: string;
-  };
+  }>;
 };
 
 export default async function PermissionsPage({ searchParams }: PermissionsPageProps) {
+  const resolvedSearchParams = await searchParams;
   const user = await getUserFromSession();
   const access = getPermissionsAccess(user);
   const targetRoute = getPermissionsDefaultRoute(access);
-  const statusQuery = searchParams?.status ? `?status=${encodeURIComponent(searchParams.status)}` : "";
+  const statusQuery = resolvedSearchParams?.status ? `?status=${encodeURIComponent(resolvedSearchParams.status)}` : "";
 
   if (!targetRoute) {
     return (

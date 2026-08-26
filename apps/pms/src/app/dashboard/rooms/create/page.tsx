@@ -10,13 +10,14 @@ import { getRoomsAccess, getRoomsDefaultRoute } from "../access";
 import { RoomStatusMessage } from "../_components/RoomStatusMessage";
 
 type RoomsCreatePageProps = {
-  searchParams?: {
+  searchParams?: Promise<{
     status?: string;
     r?: string;
-  };
+  }>;
 };
 
 export default async function RoomsCreatePage({ searchParams }: RoomsCreatePageProps) {
+  const resolvedSearchParams = await searchParams;
   const user = await getUserFromSession();
   const access = getRoomsAccess(user);
 
@@ -38,9 +39,9 @@ export default async function RoomsCreatePage({ searchParams }: RoomsCreatePageP
         { key: "create", label: "Criar quarto", href: "/dashboard/rooms/create", isVisible: access.canCreate },
         { key: "view", label: "Ver quartos", href: "/dashboard/rooms/view", isVisible: access.canRead }
       ]}
-      statusContent={<RoomStatusMessage status={searchParams?.status} />}
+      statusContent={<RoomStatusMessage status={resolvedSearchParams?.status} />}
     >
-      <DashboardCreateFormCard title="Criar quarto" submitLabel="Criar quarto" action={createRoomAction} resetKey={searchParams?.r}>
+      <DashboardCreateFormCard title="Criar quarto" submitLabel="Criar quarto" action={createRoomAction} resetKey={resolvedSearchParams?.r}>
         <FormField label="Número" htmlFor="create-room-number">
           <input id="create-room-number" name="room_number" required className="pms-field-input" />
         </FormField>

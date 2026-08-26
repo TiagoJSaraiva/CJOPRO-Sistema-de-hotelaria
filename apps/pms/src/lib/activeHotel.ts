@@ -73,8 +73,9 @@ export function encodeActiveHotelCookie(hotelId: string | null): string {
   return hotelId ? hotelId : ACTIVE_HOTEL_GLOBAL_VALUE;
 }
 
-export function getActiveHotelCookieValue(): string | null | undefined {
-  const value = cookies().get(ACTIVE_HOTEL_COOKIE_NAME)?.value;
+export async function getActiveHotelCookieValue(): Promise<string | null | undefined> {
+  const cookieStore = await cookies();
+  const value = cookieStore.get(ACTIVE_HOTEL_COOKIE_NAME)?.value;
   return decodeActiveHotelCookie(value);
 }
 
@@ -114,8 +115,9 @@ export function resolveActiveHotelForUser(
   return firstHotel ? firstHotel.id : null;
 }
 
-export function saveActiveHotelCookie(hotelId: string | null): void {
-  cookies().set(ACTIVE_HOTEL_COOKIE_NAME, encodeActiveHotelCookie(hotelId), {
+export async function saveActiveHotelCookie(hotelId: string | null): Promise<void> {
+  const cookieStore = await cookies();
+  cookieStore.set(ACTIVE_HOTEL_COOKIE_NAME, encodeActiveHotelCookie(hotelId), {
     httpOnly: true,
     sameSite: "lax",
     secure: process.env.NODE_ENV === "production",
@@ -124,8 +126,9 @@ export function saveActiveHotelCookie(hotelId: string | null): void {
   });
 }
 
-export function clearActiveHotelCookie(): void {
-  cookies().delete(ACTIVE_HOTEL_COOKIE_NAME);
+export async function clearActiveHotelCookie(): Promise<void> {
+  const cookieStore = await cookies();
+  cookieStore.delete(ACTIVE_HOTEL_COOKIE_NAME);
 }
 
 export { ACTIVE_HOTEL_COOKIE_NAME };

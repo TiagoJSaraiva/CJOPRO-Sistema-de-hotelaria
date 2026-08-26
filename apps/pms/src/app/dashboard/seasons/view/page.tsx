@@ -8,14 +8,15 @@ import { SeasonsViewFilterableSection } from "../_components/SeasonsViewFilterab
 import { SeasonStatusMessage } from "../_components/SeasonStatusMessage";
 
 type SeasonsViewPageProps = {
-  searchParams?: {
+  searchParams?: Promise<{
     status?: string;
     seasonId?: string;
     mode?: string;
-  };
+  }>;
 };
 
 export default async function SeasonsViewPage({ searchParams }: SeasonsViewPageProps) {
+  const resolvedSearchParams = await searchParams;
   const user = await getUserFromSession();
   const access = getSeasonsAccess(user);
 
@@ -30,8 +31,8 @@ export default async function SeasonsViewPage({ searchParams }: SeasonsViewPageP
   }
 
   const seasons = await listSeasons();
-  const activeSeasonId = String(searchParams?.seasonId || "").trim();
-  const mode = searchParams?.mode === "edit" ? "edit" : "view";
+  const activeSeasonId = String(resolvedSearchParams?.seasonId || "").trim();
+  const mode = resolvedSearchParams?.mode === "edit" ? "edit" : "view";
 
   return (
     <DashboardEntityPageShell
@@ -41,7 +42,7 @@ export default async function SeasonsViewPage({ searchParams }: SeasonsViewPageP
         { key: "create", label: "Criar temporada", href: "/dashboard/seasons/create", isVisible: access.canCreate },
         { key: "view", label: "Ver temporadas", href: "/dashboard/seasons/view", isVisible: access.canRead }
       ]}
-      statusContent={<SeasonStatusMessage status={searchParams?.status} />}
+      statusContent={<SeasonStatusMessage status={resolvedSearchParams?.status} />}
     >
       <SeasonsViewFilterableSection
         seasons={seasons}

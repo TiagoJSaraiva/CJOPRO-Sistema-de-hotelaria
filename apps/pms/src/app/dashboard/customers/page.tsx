@@ -3,17 +3,18 @@ import { getUserFromSession } from "../../../lib/auth";
 import { getCustomersAccess, getCustomersDefaultRoute } from "./access";
 
 type CustomersPageProps = {
-  searchParams?: {
+  searchParams?: Promise<{
     status?: string;
     r?: string;
-  };
+  }>;
 };
 
 export default async function CustomersPage({ searchParams }: CustomersPageProps) {
+  const resolvedSearchParams = await searchParams;
   const user = await getUserFromSession();
   const access = getCustomersAccess(user);
   const targetRoute = getCustomersDefaultRoute(access);
-  const statusQuery = searchParams?.status ? `?status=${encodeURIComponent(searchParams.status)}` : "";
+  const statusQuery = resolvedSearchParams?.status ? `?status=${encodeURIComponent(resolvedSearchParams.status)}` : "";
 
   if (!targetRoute) {
     return (

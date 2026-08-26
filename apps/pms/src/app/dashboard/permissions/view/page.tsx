@@ -8,14 +8,15 @@ import { PermissionStatusMessage } from "../_components/PermissionStatusMessage"
 import { PermissionsViewFilterableSection } from "../_components/PermissionsViewFilterableSection";
 
 type PermissionsViewPageProps = {
-  searchParams?: {
+  searchParams?: Promise<{
     status?: string;
     permissionId?: string;
     mode?: string;
-  };
+  }>;
 };
 
 export default async function PermissionsViewPage({ searchParams }: PermissionsViewPageProps) {
+  const resolvedSearchParams = await searchParams;
   const user = await getUserFromSession();
   const access = getPermissionsAccess(user);
 
@@ -29,8 +30,8 @@ export default async function PermissionsViewPage({ searchParams }: PermissionsV
     return <DashboardAccessDeniedCard title="Permissões" message="Sem permissão para visualizar permissões." />;
   }
 
-  const activePermissionId = String(searchParams?.permissionId || "").trim();
-  const mode = searchParams?.mode === "edit" ? "edit" : "view";
+  const activePermissionId = String(resolvedSearchParams?.permissionId || "").trim();
+  const mode = resolvedSearchParams?.mode === "edit" ? "edit" : "view";
   const permissions = await listPermissions();
   const currentUserPermissionNames = Array.from(new Set(user?.permissions || []));
 
@@ -42,7 +43,7 @@ export default async function PermissionsViewPage({ searchParams }: PermissionsV
         { key: "create", label: "Criar permissão", href: "/dashboard/permissions/create", isVisible: access.canCreate },
         { key: "view", label: "Ver permissões", href: "/dashboard/permissions/view", isVisible: access.canRead }
       ]}
-      statusContent={<PermissionStatusMessage status={searchParams?.status} />}
+      statusContent={<PermissionStatusMessage status={resolvedSearchParams?.status} />}
     >
       <PermissionsViewFilterableSection
         permissions={permissions}

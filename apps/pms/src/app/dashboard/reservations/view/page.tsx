@@ -8,9 +8,9 @@ import { ReservationsCalendarBoard } from "../_components/ReservationsCalendarBo
 import { CALENDAR_WINDOW_DAYS } from "../_components/calendarUtils";
 
 type ReservationsCalendarViewPageProps = {
-  searchParams?: {
+  searchParams?: Promise<{
     start_date?: string;
-  };
+  }>;
 };
 
 function resolveStartDate(rawValue: string | undefined): string {
@@ -22,6 +22,7 @@ function resolveStartDate(rawValue: string | undefined): string {
 }
 
 export default async function ReservationsCalendarViewPage({ searchParams }: ReservationsCalendarViewPageProps) {
+  const resolvedSearchParams = await searchParams;
   const user = await getUserFromSession();
   const access = getReservationsCalendarAccess(user);
 
@@ -33,7 +34,7 @@ export default async function ReservationsCalendarViewPage({ searchParams }: Res
     return <DashboardAccessDeniedCard title="Calendário de Reservas" message="Sem permissão para visualizar o calendário de reservas." />;
   }
 
-  const startDate = resolveStartDate(searchParams?.start_date);
+  const startDate = resolveStartDate(resolvedSearchParams?.start_date);
   const [data, customers] = await Promise.all([getReservationsCalendar(startDate, CALENDAR_WINDOW_DAYS), listCustomers()]);
 
   return (

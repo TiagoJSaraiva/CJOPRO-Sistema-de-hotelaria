@@ -10,13 +10,14 @@ import { TransactionStatusMessage } from "../_components/TransactionStatusMessag
 import { translateTransactionStatus, translateTransactionType } from "@hotel/shared";
 
 type TransactionsCreatePageProps = {
-  searchParams?: {
+  searchParams?: Promise<{
     status?: string;
     r?: string;
-  };
+  }>;
 };
 
 export default async function TransactionsCreatePage({ searchParams }: TransactionsCreatePageProps) {
+  const resolvedSearchParams = await searchParams;
   const user = await getUserFromSession();
   const access = getTransactionsAccess(user);
 
@@ -38,13 +39,13 @@ export default async function TransactionsCreatePage({ searchParams }: Transacti
         { key: "create", label: "Lançamento", href: "/dashboard/transactions/create", isVisible: access.canCreate },
         { key: "view", label: "Monitoramento", href: "/dashboard/transactions/view", isVisible: access.canRead }
       ]}
-      statusContent={<TransactionStatusMessage status={searchParams?.status} />}
+      statusContent={<TransactionStatusMessage status={resolvedSearchParams?.status} />}
     >
       <DashboardCreateFormCard
         title="Registrar gasto ou movimentação"
         submitLabel="Salvar lançamento"
         action={createTransactionAction}
-        resetKey={searchParams?.r}
+        resetKey={resolvedSearchParams?.r}
       >
         <FormField label="Tipo" htmlFor="create-transaction-type">
           <select id="create-transaction-type" name="type" defaultValue="EXPENSE" className="pms-field-input">

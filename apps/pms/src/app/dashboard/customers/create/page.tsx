@@ -9,14 +9,15 @@ import { getCustomersAccess, getCustomersDefaultRoute } from "../access";
 import { CustomerStatusMessage } from "../_components/CustomerStatusMessage";
 
 type CustomersCreatePageProps = {
-  searchParams?: {
+  searchParams?: Promise<{
     status?: string;
     detail?: string;
     r?: string;
-  };
+  }>;
 };
 
 export default async function CustomersCreatePage({ searchParams }: CustomersCreatePageProps) {
+  const resolvedSearchParams = await searchParams;
   const user = await getUserFromSession();
   const access = getCustomersAccess(user);
 
@@ -38,9 +39,9 @@ export default async function CustomersCreatePage({ searchParams }: CustomersCre
         { key: "create", label: "Criar cliente", href: "/dashboard/customers/create", isVisible: access.canCreate },
         { key: "view", label: "Ver clientes", href: "/dashboard/customers/view", isVisible: access.canRead }
       ]}
-      statusContent={<CustomerStatusMessage status={searchParams?.status} detail={searchParams?.detail} />}
+      statusContent={<CustomerStatusMessage status={resolvedSearchParams?.status} detail={resolvedSearchParams?.detail} />}
     >
-      <DashboardCreateFormCard title="Criar cliente" submitLabel="Criar cliente" action={createCustomerAction} resetKey={searchParams?.r}>
+      <DashboardCreateFormCard title="Criar cliente" submitLabel="Criar cliente" action={createCustomerAction} resetKey={resolvedSearchParams?.r}>
         <FormField label="Nome completo" htmlFor="create-customer-full-name">
           <input id="create-customer-full-name" name="full_name" required className="pms-field-input" />
         </FormField>

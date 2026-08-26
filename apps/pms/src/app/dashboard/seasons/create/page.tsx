@@ -9,13 +9,14 @@ import { getSeasonsAccess, getSeasonsDefaultRoute } from "../access";
 import { SeasonStatusMessage } from "../_components/SeasonStatusMessage";
 
 type SeasonsCreatePageProps = {
-  searchParams?: {
+  searchParams?: Promise<{
     status?: string;
     r?: string;
-  };
+  }>;
 };
 
 export default async function SeasonsCreatePage({ searchParams }: SeasonsCreatePageProps) {
+  const resolvedSearchParams = await searchParams;
   const user = await getUserFromSession();
   const access = getSeasonsAccess(user);
 
@@ -37,9 +38,9 @@ export default async function SeasonsCreatePage({ searchParams }: SeasonsCreateP
         { key: "create", label: "Criar temporada", href: "/dashboard/seasons/create", isVisible: access.canCreate },
         { key: "view", label: "Ver temporadas", href: "/dashboard/seasons/view", isVisible: access.canRead }
       ]}
-      statusContent={<SeasonStatusMessage status={searchParams?.status} />}
+      statusContent={<SeasonStatusMessage status={resolvedSearchParams?.status} />}
     >
-      <DashboardCreateFormCard title="Criar temporada" submitLabel="Criar temporada" action={createSeasonAction} resetKey={searchParams?.r}>
+      <DashboardCreateFormCard title="Criar temporada" submitLabel="Criar temporada" action={createSeasonAction} resetKey={resolvedSearchParams?.r}>
         <FormField label="Nome" htmlFor="create-season-name">
           <input id="create-season-name" name="name" required className="pms-field-input" />
         </FormField>

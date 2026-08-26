@@ -3,17 +3,18 @@ import { getUserFromSession } from "../../../lib/auth";
 import { getProductsAccess, getProductsDefaultRoute } from "./access";
 
 type ProductsPageProps = {
-  searchParams?: {
+  searchParams?: Promise<{
     status?: string;
     r?: string;
-  };
+  }>;
 };
 
 export default async function ProductsPage({ searchParams }: ProductsPageProps) {
+  const resolvedSearchParams = await searchParams;
   const user = await getUserFromSession();
   const access = getProductsAccess(user);
   const targetRoute = getProductsDefaultRoute(access);
-  const statusQuery = searchParams?.status ? `?status=${encodeURIComponent(searchParams.status)}` : "";
+  const statusQuery = resolvedSearchParams?.status ? `?status=${encodeURIComponent(resolvedSearchParams.status)}` : "";
 
   if (!targetRoute) {
     return (

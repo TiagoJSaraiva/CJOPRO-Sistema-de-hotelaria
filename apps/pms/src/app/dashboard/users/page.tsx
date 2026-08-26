@@ -3,16 +3,17 @@ import { getUserFromSession } from "../../../lib/auth";
 import { getUsersAccess, getUsersDefaultRoute } from "./access";
 
 type UsersPageProps = {
-  searchParams?: {
+  searchParams?: Promise<{
     status?: string;
-  };
+  }>;
 };
 
 export default async function UsersPage({ searchParams }: UsersPageProps) {
+  const resolvedSearchParams = await searchParams;
   const user = await getUserFromSession();
   const access = getUsersAccess(user);
   const targetRoute = getUsersDefaultRoute(access);
-  const statusQuery = searchParams?.status ? `?status=${encodeURIComponent(searchParams.status)}` : "";
+  const statusQuery = resolvedSearchParams?.status ? `?status=${encodeURIComponent(resolvedSearchParams.status)}` : "";
 
   if (!targetRoute) {
     return (

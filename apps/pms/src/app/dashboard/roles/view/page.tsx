@@ -8,15 +8,16 @@ import { RoleStatusMessage } from "../_components/RoleStatusMessage";
 import { RolesViewFilterableSection } from "../_components/RolesViewFilterableSection";
 
 type RolesViewPageProps = {
-  searchParams?: {
+  searchParams?: Promise<{
     status?: string;
     detail?: string;
     roleId?: string;
     mode?: string;
-  };
+  }>;
 };
 
 export default async function RolesViewPage({ searchParams }: RolesViewPageProps) {
+  const resolvedSearchParams = await searchParams;
   const user = await getUserFromSession();
   const access = getRolesAccess(user);
 
@@ -35,8 +36,8 @@ export default async function RolesViewPage({ searchParams }: RolesViewPageProps
     getRolesReferenceData().catch(() => ({ hotels: [], permissions: [] }))
   ]);
 
-  const activeRoleId = String(searchParams?.roleId || "").trim();
-  const mode = searchParams?.mode === "edit" ? "edit" : "view";
+  const activeRoleId = String(resolvedSearchParams?.roleId || "").trim();
+  const mode = resolvedSearchParams?.mode === "edit" ? "edit" : "view";
   const currentUserRoleIds = Array.from(new Set((user?.roleAssignments || []).map((assignment) => assignment.roleId).filter(Boolean)));
 
   return (
@@ -47,7 +48,7 @@ export default async function RolesViewPage({ searchParams }: RolesViewPageProps
         { key: "create", label: "Criar role", href: "/dashboard/roles/create", isVisible: access.canCreate },
         { key: "view", label: "Ver roles", href: "/dashboard/roles/view", isVisible: access.canRead }
       ]}
-      statusContent={<RoleStatusMessage status={searchParams?.status} detail={searchParams?.detail} />}
+      statusContent={<RoleStatusMessage status={resolvedSearchParams?.status} detail={resolvedSearchParams?.detail} />}
     >
       <RolesViewFilterableSection
         roles={roles}

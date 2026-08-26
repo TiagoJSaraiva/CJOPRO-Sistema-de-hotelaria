@@ -8,13 +8,14 @@ import { UserCreateForm } from "../_components/UserCreateForm";
 import { UserStatusMessage } from "../_components/UserStatusMessage";
 
 type UsersCreatePageProps = {
-  searchParams?: {
+  searchParams?: Promise<{
     status?: string;
     r?: string;
-  };
+  }>;
 };
 
 export default async function UsersCreatePage({ searchParams }: UsersCreatePageProps) {
+  const resolvedSearchParams = await searchParams;
   const user = await getUserFromSession();
   const access = getUsersAccess(user);
 
@@ -38,9 +39,9 @@ export default async function UsersCreatePage({ searchParams }: UsersCreatePageP
         { key: "create", label: "Criar usuário", href: "/dashboard/users/create", isVisible: access.canCreate },
         { key: "view", label: "Ver usuários", href: "/dashboard/users/view", isVisible: access.canRead }
       ]}
-      statusContent={<UserStatusMessage status={searchParams?.status} />}
+      statusContent={<UserStatusMessage status={resolvedSearchParams?.status} />}
     >
-      <UserCreateForm formKey={searchParams?.r} hotels={referenceData.hotels} roles={referenceData.roles} />
+      <UserCreateForm formKey={resolvedSearchParams?.r} hotels={referenceData.hotels} roles={referenceData.roles} />
     </DashboardEntityPageShell>
   );
 }

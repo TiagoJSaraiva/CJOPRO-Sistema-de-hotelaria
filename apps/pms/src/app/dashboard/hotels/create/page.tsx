@@ -7,13 +7,14 @@ import { HotelCreateForm } from "../_components/HotelCreateForm";
 import { HotelStatusMessage } from "../_components/HotelStatusMessage";
 
 type HotelCreatePageProps = {
-  searchParams?: {
+  searchParams?: Promise<{
     status?: string;
     r?: string;
-  };
+  }>;
 };
 
 export default async function HotelCreatePage({ searchParams }: HotelCreatePageProps) {
+  const resolvedSearchParams = await searchParams;
   const user = await getUserFromSession();
   const access = getHotelAccess(user);
 
@@ -35,9 +36,9 @@ export default async function HotelCreatePage({ searchParams }: HotelCreatePageP
         { key: "create", label: "Criar hotel", href: "/dashboard/hotels/create", isVisible: access.canCreate },
         { key: "view", label: "Ver hotéis", href: "/dashboard/hotels/view", isVisible: access.canRead }
       ]}
-      statusContent={<HotelStatusMessage status={searchParams?.status} />}
+      statusContent={<HotelStatusMessage status={resolvedSearchParams?.status} />}
     >
-      <HotelCreateForm formKey={searchParams?.r} />
+      <HotelCreateForm formKey={resolvedSearchParams?.r} />
     </DashboardEntityPageShell>
   );
 }

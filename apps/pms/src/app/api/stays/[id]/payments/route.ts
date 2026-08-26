@@ -2,15 +2,16 @@ import { NextResponse } from "next/server";
 import { createStayPayment } from "../../../../../lib/adminApi";
 
 type Params = {
-  params: {
+  params: Promise<{
     id: string;
-  };
+  }>;
 };
 
 export async function POST(request: Request, { params }: Params) {
   try {
+    const { id } = await params;
     const payload = await request.json();
-    const item = await createStayPayment(params.id, payload);
+    const item = await createStayPayment(id, payload);
     return NextResponse.json(item);
   } catch (error) {
     const parsedError = error as Error & { statusCode?: number; details?: string };
@@ -20,4 +21,3 @@ export async function POST(request: Request, { params }: Params) {
     );
   }
 }
-

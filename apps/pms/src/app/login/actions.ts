@@ -15,10 +15,10 @@ export async function loginAction(formData: FormData): Promise<void> {
 
   try {
     const result = await loginWithCredentials(email, password);
-    saveSessionCookie(result.token, result.expiresIn);
-    const preferredHotelId = getActiveHotelCookieValue();
+    await saveSessionCookie(result.token, result.expiresIn);
+    const preferredHotelId = await getActiveHotelCookieValue();
     const resolvedActiveHotelId = resolveActiveHotelForUser(result.user, preferredHotelId);
-    saveActiveHotelCookie(resolvedActiveHotelId);
+    await saveActiveHotelCookie(resolvedActiveHotelId);
   } catch {
     redirect(`/login?error=${LOGIN_PAGE_ERROR_PARAM.INVALID_CREDENTIALS}`);
   }

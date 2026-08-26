@@ -52,14 +52,15 @@ export async function loginWithCredentials(email: string, password: string): Pro
 }
 
 export async function getUserFromSession(): Promise<AuthUser | null> {
-  const token = cookies().get(SESSION_COOKIE_NAME)?.value;
+  const cookieStore = await cookies();
+  const token = cookieStore.get(SESSION_COOKIE_NAME)?.value;
 
   if (!token) {
     return null;
   }
 
   let response: Response;
-  const activeHotelId = getActiveHotelCookieValue();
+  const activeHotelId = await getActiveHotelCookieValue();
   const headers: Record<string, string> = {
     Authorization: `Bearer ${token}`
   };
@@ -87,8 +88,9 @@ export async function getUserFromSession(): Promise<AuthUser | null> {
   return payload.user || null;
 }
 
-export function saveSessionCookie(token: string, expiresInSeconds: number): void {
-  cookies().set(SESSION_COOKIE_NAME, token, {
+export async function saveSessionCookie(token: string, expiresInSeconds: number): Promise<void> {
+  const cookieStore = await cookies();
+  cookieStore.set(SESSION_COOKIE_NAME, token, {
     httpOnly: true,
     sameSite: "lax",
     secure: process.env.NODE_ENV === "production",
@@ -97,6 +99,7 @@ export function saveSessionCookie(token: string, expiresInSeconds: number): void
   });
 }
 
-export function clearSessionCookie(): void {
-  cookies().delete(SESSION_COOKIE_NAME);
+export async function clearSessionCookie(): Promise<void> {
+  const cookieStore = await cookies();
+  cookieStore.delete(SESSION_COOKIE_NAME);
 }

@@ -89,7 +89,7 @@ describe("lib/auth - getUserFromSession", () => {
       return undefined;
     });
 
-    vi.mocked(cookies).mockReturnValue({ get: getMock } as any);
+    vi.mocked(cookies).mockResolvedValue({ get: getMock } as unknown as Awaited<ReturnType<typeof cookies>>);
 
     const fetchMock = vi.fn().mockResolvedValue(
       new Response(
@@ -135,7 +135,7 @@ describe("lib/auth - getUserFromSession", () => {
       return undefined;
     });
 
-    vi.mocked(cookies).mockReturnValue({ get: getMock } as any);
+    vi.mocked(cookies).mockResolvedValue({ get: getMock } as unknown as Awaited<ReturnType<typeof cookies>>);
 
     const fetchMock = vi.fn().mockResolvedValue(
       new Response(JSON.stringify({ user: null }), {

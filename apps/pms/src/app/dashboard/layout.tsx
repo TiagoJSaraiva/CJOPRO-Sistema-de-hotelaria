@@ -60,7 +60,7 @@ export default async function DashboardLayout({ children }: { children: ReactNod
   const navItems = ADMIN_NAV_ITEMS.filter((item) => moduleEntryAccess[item.href]);
   const userDisplayName = formatUserDisplayName(user.name);
   const activeHotelOptions = listActiveHotelOptions(user);
-  const preferredHotelId = getActiveHotelCookieValue();
+  const preferredHotelId = await getActiveHotelCookieValue();
   const activeHotelId = resolveActiveHotelForUser(user, preferredHotelId);
   const navLinkClassName = "rounded-lg border border-[#d2d2d2] bg-white px-[0.7rem] py-[0.45rem] font-medium leading-none text-[#232323] no-underline";
 

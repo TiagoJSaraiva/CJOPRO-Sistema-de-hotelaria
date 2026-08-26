@@ -9,13 +9,14 @@ import { getProductsAccess, getProductsDefaultRoute } from "../access";
 import { ProductStatusMessage } from "../_components/ProductStatusMessage";
 
 type ProductsCreatePageProps = {
-  searchParams?: {
+  searchParams?: Promise<{
     status?: string;
     r?: string;
-  };
+  }>;
 };
 
 export default async function ProductsCreatePage({ searchParams }: ProductsCreatePageProps) {
+  const resolvedSearchParams = await searchParams;
   const user = await getUserFromSession();
   const access = getProductsAccess(user);
 
@@ -37,9 +38,9 @@ export default async function ProductsCreatePage({ searchParams }: ProductsCreat
         { key: "create", label: "Criar produto", href: "/dashboard/products/create", isVisible: access.canCreate },
         { key: "view", label: "Ver produtos", href: "/dashboard/products/view", isVisible: access.canRead }
       ]}
-      statusContent={<ProductStatusMessage status={searchParams?.status} />}
+      statusContent={<ProductStatusMessage status={resolvedSearchParams?.status} />}
     >
-      <DashboardCreateFormCard title="Criar produto" submitLabel="Criar produto" action={createProductAction} resetKey={searchParams?.r}>
+      <DashboardCreateFormCard title="Criar produto" submitLabel="Criar produto" action={createProductAction} resetKey={resolvedSearchParams?.r}>
         <FormField label="Nome" htmlFor="create-product-name">
           <input id="create-product-name" name="name" required className="pms-field-input" />
         </FormField>

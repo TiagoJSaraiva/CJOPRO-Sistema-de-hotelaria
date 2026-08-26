@@ -54,12 +54,13 @@ function getBackendUrl(): string {
   return process.env.BACKEND_SERVICE_URL || DEFAULT_BACKEND_URL;
 }
 
-function getSessionToken(): string | null {
-  return cookies().get(SESSION_COOKIE_NAME)?.value ?? null;
+async function getSessionToken(): Promise<string | null> {
+  const cookieStore = await cookies();
+  return cookieStore.get(SESSION_COOKIE_NAME)?.value ?? null;
 }
 
-function getActiveHotelHeaderValue(): string | null {
-  const preferredHotelId = getActiveHotelCookieValue();
+async function getActiveHotelHeaderValue(): Promise<string | null> {
+  const preferredHotelId = await getActiveHotelCookieValue();
 
   if (preferredHotelId === undefined) {
     return null;
@@ -69,13 +70,13 @@ function getActiveHotelHeaderValue(): string | null {
 }
 
 async function getAdminList<T>(path: string): Promise<T[]> {
-  const token = getSessionToken();
+  const token = await getSessionToken();
 
   if (!token) {
     return [];
   }
 
-  const activeHotelHeaderValue = getActiveHotelHeaderValue();
+  const activeHotelHeaderValue = await getActiveHotelHeaderValue();
   const headers: Record<string, string> = {
     Authorization: `Bearer ${token}`
   };
@@ -103,14 +104,14 @@ async function requestAdmin<T>(
   method: "POST" | "PUT" | "DELETE",
   body?: unknown
 ): Promise<T | null> {
-  const token = getSessionToken();
+  const token = await getSessionToken();
 
   if (!token) {
     throw new Error("Sessão inválida. Faça login novamente.");
   }
 
   const hasBody = body !== undefined;
-  const activeHotelHeaderValue = getActiveHotelHeaderValue();
+  const activeHotelHeaderValue = await getActiveHotelHeaderValue();
   const headers: Record<string, string> = {
     Authorization: `Bearer ${token}`
   };
@@ -159,13 +160,13 @@ async function requestAdmin<T>(
 }
 
 async function getAdminData<T>(path: string): Promise<T> {
-  const token = getSessionToken();
+  const token = await getSessionToken();
 
   if (!token) {
     throw new Error("Sessão inválida. Faça login novamente.");
   }
 
-  const activeHotelHeaderValue = getActiveHotelHeaderValue();
+  const activeHotelHeaderValue = await getActiveHotelHeaderValue();
   const headers: Record<string, string> = {
     Authorization: `Bearer ${token}`
   };

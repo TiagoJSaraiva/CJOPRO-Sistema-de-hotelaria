@@ -8,14 +8,15 @@ import { UserStatusMessage } from "../_components/UserStatusMessage";
 import { UsersViewFilterableSection } from "../_components/UsersViewFilterableSection";
 
 type UsersViewPageProps = {
-  searchParams?: {
+  searchParams?: Promise<{
     status?: string;
     userId?: string;
     mode?: string;
-  };
+  }>;
 };
 
 export default async function UsersViewPage({ searchParams }: UsersViewPageProps) {
+  const resolvedSearchParams = await searchParams;
   const user = await getUserFromSession();
   const access = getUsersAccess(user);
 
@@ -34,8 +35,8 @@ export default async function UsersViewPage({ searchParams }: UsersViewPageProps
     getUsersReferenceData().catch(() => ({ hotels: [], roles: [] }))
   ]);
 
-  const activeUserId = String(searchParams?.userId || "").trim();
-  const mode = searchParams?.mode === "edit" ? "edit" : "view";
+  const activeUserId = String(resolvedSearchParams?.userId || "").trim();
+  const mode = resolvedSearchParams?.mode === "edit" ? "edit" : "view";
 
   return (
     <DashboardEntityPageShell
@@ -45,7 +46,7 @@ export default async function UsersViewPage({ searchParams }: UsersViewPageProps
         { key: "create", label: "Criar usuário", href: "/dashboard/users/create", isVisible: access.canCreate },
         { key: "view", label: "Ver usuários", href: "/dashboard/users/view", isVisible: access.canRead }
       ]}
-      statusContent={<UserStatusMessage status={searchParams?.status} />}
+      statusContent={<UserStatusMessage status={resolvedSearchParams?.status} />}
     >
       <UsersViewFilterableSection
         users={users}

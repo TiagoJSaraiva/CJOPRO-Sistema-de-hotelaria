@@ -16,21 +16,21 @@ export async function setActiveHotelAction(formData: FormData): Promise<void> {
   const user = await getUserFromSession();
 
   if (!user) {
-    clearActiveHotelCookie();
+    await clearActiveHotelCookie();
     return;
   }
 
   const requestedHotelId = decodeActiveHotelCookie(String(formData.get("hotelId") || ""));
   const preferredHotelId = userCanAccessHotel(user, requestedHotelId ?? null)
     ? requestedHotelId ?? null
-    : getActiveHotelCookieValue();
+    : await getActiveHotelCookieValue();
 
   const resolvedActiveHotelId = resolveActiveHotelForUser(user, preferredHotelId);
-  saveActiveHotelCookie(resolvedActiveHotelId);
+  await saveActiveHotelCookie(resolvedActiveHotelId);
 }
 
 export async function logoutAction(): Promise<void> {
-  clearActiveHotelCookie();
-  clearSessionCookie();
+  await clearActiveHotelCookie();
+  await clearSessionCookie();
   redirect("/login");
 }

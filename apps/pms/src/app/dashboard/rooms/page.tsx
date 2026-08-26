@@ -3,17 +3,18 @@ import { getUserFromSession } from "../../../lib/auth";
 import { getRoomsAccess, getRoomsDefaultRoute } from "./access";
 
 type RoomsPageProps = {
-  searchParams?: {
+  searchParams?: Promise<{
     status?: string;
     r?: string;
-  };
+  }>;
 };
 
 export default async function RoomsPage({ searchParams }: RoomsPageProps) {
+  const resolvedSearchParams = await searchParams;
   const user = await getUserFromSession();
   const access = getRoomsAccess(user);
   const targetRoute = getRoomsDefaultRoute(access);
-  const statusQuery = searchParams?.status ? `?status=${encodeURIComponent(searchParams.status)}` : "";
+  const statusQuery = resolvedSearchParams?.status ? `?status=${encodeURIComponent(resolvedSearchParams.status)}` : "";
 
   if (!targetRoute) {
     return (

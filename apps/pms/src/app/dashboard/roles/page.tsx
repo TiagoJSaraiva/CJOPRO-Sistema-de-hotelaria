@@ -3,16 +3,17 @@ import { getUserFromSession } from "../../../lib/auth";
 import { getRolesAccess, getRolesDefaultRoute } from "./access";
 
 type RolesPageProps = {
-  searchParams?: {
+  searchParams?: Promise<{
     status?: string;
-  };
+  }>;
 };
 
 export default async function RolesPage({ searchParams }: RolesPageProps) {
+  const resolvedSearchParams = await searchParams;
   const user = await getUserFromSession();
   const access = getRolesAccess(user);
   const targetRoute = getRolesDefaultRoute(access);
-  const statusQuery = searchParams?.status ? `?status=${encodeURIComponent(searchParams.status)}` : "";
+  const statusQuery = resolvedSearchParams?.status ? `?status=${encodeURIComponent(resolvedSearchParams.status)}` : "";
 
   if (!targetRoute) {
     return (

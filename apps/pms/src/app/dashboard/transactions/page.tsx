@@ -3,17 +3,18 @@ import { getUserFromSession } from "../../../lib/auth";
 import { getTransactionsAccess, getTransactionsDefaultRoute } from "./access";
 
 type TransactionsPageProps = {
-  searchParams?: {
+  searchParams?: Promise<{
     status?: string;
     r?: string;
-  };
+  }>;
 };
 
 export default async function TransactionsPage({ searchParams }: TransactionsPageProps) {
+  const resolvedSearchParams = await searchParams;
   const user = await getUserFromSession();
   const access = getTransactionsAccess(user);
   const targetRoute = getTransactionsDefaultRoute(access);
-  const statusQuery = searchParams?.status ? `?status=${encodeURIComponent(searchParams.status)}` : "";
+  const statusQuery = resolvedSearchParams?.status ? `?status=${encodeURIComponent(resolvedSearchParams.status)}` : "";
 
   if (!targetRoute) {
     return (

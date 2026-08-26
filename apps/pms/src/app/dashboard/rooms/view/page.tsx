@@ -8,14 +8,15 @@ import { RoomsViewFilterableSection } from "../_components/RoomsViewFilterableSe
 import { RoomStatusMessage } from "../_components/RoomStatusMessage";
 
 type RoomsViewPageProps = {
-  searchParams?: {
+  searchParams?: Promise<{
     status?: string;
     roomId?: string;
     mode?: string;
-  };
+  }>;
 };
 
 export default async function RoomsViewPage({ searchParams }: RoomsViewPageProps) {
+  const resolvedSearchParams = await searchParams;
   const user = await getUserFromSession();
   const access = getRoomsAccess(user);
 
@@ -30,8 +31,8 @@ export default async function RoomsViewPage({ searchParams }: RoomsViewPageProps
   }
 
   const rooms = await listRooms();
-  const activeRoomId = String(searchParams?.roomId || "").trim();
-  const mode = searchParams?.mode === "edit" ? "edit" : "view";
+  const activeRoomId = String(resolvedSearchParams?.roomId || "").trim();
+  const mode = resolvedSearchParams?.mode === "edit" ? "edit" : "view";
 
   return (
     <DashboardEntityPageShell
@@ -41,7 +42,7 @@ export default async function RoomsViewPage({ searchParams }: RoomsViewPageProps
         { key: "create", label: "Criar quarto", href: "/dashboard/rooms/create", isVisible: access.canCreate },
         { key: "view", label: "Ver quartos", href: "/dashboard/rooms/view", isVisible: access.canRead }
       ]}
-      statusContent={<RoomStatusMessage status={searchParams?.status} />}
+      statusContent={<RoomStatusMessage status={resolvedSearchParams?.status} />}
     >
       <RoomsViewFilterableSection
         rooms={rooms}

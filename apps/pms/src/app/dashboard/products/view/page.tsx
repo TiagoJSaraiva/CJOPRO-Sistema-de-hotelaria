@@ -8,14 +8,15 @@ import { ProductsViewFilterableSection } from "../_components/ProductsViewFilter
 import { ProductStatusMessage } from "../_components/ProductStatusMessage";
 
 type ProductsViewPageProps = {
-  searchParams?: {
+  searchParams?: Promise<{
     status?: string;
     productId?: string;
     mode?: string;
-  };
+  }>;
 };
 
 export default async function ProductsViewPage({ searchParams }: ProductsViewPageProps) {
+  const resolvedSearchParams = await searchParams;
   const user = await getUserFromSession();
   const access = getProductsAccess(user);
 
@@ -30,8 +31,8 @@ export default async function ProductsViewPage({ searchParams }: ProductsViewPag
   }
 
   const products = await listProducts();
-  const activeProductId = String(searchParams?.productId || "").trim();
-  const mode = searchParams?.mode === "edit" ? "edit" : "view";
+  const activeProductId = String(resolvedSearchParams?.productId || "").trim();
+  const mode = resolvedSearchParams?.mode === "edit" ? "edit" : "view";
 
   return (
     <DashboardEntityPageShell
@@ -41,7 +42,7 @@ export default async function ProductsViewPage({ searchParams }: ProductsViewPag
         { key: "create", label: "Criar produto", href: "/dashboard/products/create", isVisible: access.canCreate },
         { key: "view", label: "Ver produtos", href: "/dashboard/products/view", isVisible: access.canRead }
       ]}
-      statusContent={<ProductStatusMessage status={searchParams?.status} />}
+      statusContent={<ProductStatusMessage status={resolvedSearchParams?.status} />}
     >
       <ProductsViewFilterableSection
         products={products}

@@ -12,3 +12,31 @@ updates:
       github-actions:
         patterns:
           - "*"
+
+  - package-ecosystem: npm
+    directory: /
+    schedule:
+      interval: weekly
+      day: monday
+      time: "10:00"
+      timezone: America/Sao_Paulo
+    cooldown:
+      default-days: 7
+    open-pull-requests-limit: 5
+    versioning-strategy: increase
+    commit-message:
+      prefix: deps
+      include: scope
+    groups:
+      production-minor-patch:
+        applies-to: version-updates
+        dependency-type: production
+        update-types:
+          - minor
+          - patch
+      development-minor-patch:
+        applies-to: version-updates
+        dependency-type: development
+        update-types:
+          - minor
+          - patch

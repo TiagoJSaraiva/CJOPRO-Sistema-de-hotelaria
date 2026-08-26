@@ -8,14 +8,15 @@ import { CustomersViewFilterableSection } from "../_components/CustomersViewFilt
 import { CustomerStatusMessage } from "../_components/CustomerStatusMessage";
 
 type CustomersViewPageProps = {
-  searchParams?: {
+  searchParams?: Promise<{
     status?: string;
     customerId?: string;
     mode?: string;
-  };
+  }>;
 };
 
 export default async function CustomersViewPage({ searchParams }: CustomersViewPageProps) {
+  const resolvedSearchParams = await searchParams;
   const user = await getUserFromSession();
   const access = getCustomersAccess(user);
 
@@ -30,8 +31,8 @@ export default async function CustomersViewPage({ searchParams }: CustomersViewP
   }
 
   const customers = await listCustomers();
-  const activeCustomerId = String(searchParams?.customerId || "").trim();
-  const mode = searchParams?.mode === "edit" ? "edit" : "view";
+  const activeCustomerId = String(resolvedSearchParams?.customerId || "").trim();
+  const mode = resolvedSearchParams?.mode === "edit" ? "edit" : "view";
 
   return (
     <DashboardEntityPageShell
@@ -41,7 +42,7 @@ export default async function CustomersViewPage({ searchParams }: CustomersViewP
         { key: "create", label: "Criar cliente", href: "/dashboard/customers/create", isVisible: access.canCreate },
         { key: "view", label: "Ver clientes", href: "/dashboard/customers/view", isVisible: access.canRead }
       ]}
-      statusContent={<CustomerStatusMessage status={searchParams?.status} />}
+      statusContent={<CustomerStatusMessage status={resolvedSearchParams?.status} />}
     >
       <CustomersViewFilterableSection
         customers={customers}

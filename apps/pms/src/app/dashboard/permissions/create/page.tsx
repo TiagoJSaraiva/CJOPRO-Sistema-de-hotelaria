@@ -7,13 +7,14 @@ import { PermissionCreateForm } from "../_components/PermissionCreateForm";
 import { PermissionStatusMessage } from "../_components/PermissionStatusMessage";
 
 type PermissionsCreatePageProps = {
-  searchParams?: {
+  searchParams?: Promise<{
     status?: string;
     r?: string;
-  };
+  }>;
 };
 
 export default async function PermissionsCreatePage({ searchParams }: PermissionsCreatePageProps) {
+  const resolvedSearchParams = await searchParams;
   const user = await getUserFromSession();
   const access = getPermissionsAccess(user);
 
@@ -35,9 +36,9 @@ export default async function PermissionsCreatePage({ searchParams }: Permission
         { key: "create", label: "Criar permissão", href: "/dashboard/permissions/create", isVisible: access.canCreate },
         { key: "view", label: "Ver permissões", href: "/dashboard/permissions/view", isVisible: access.canRead }
       ]}
-      statusContent={<PermissionStatusMessage status={searchParams?.status} />}
+      statusContent={<PermissionStatusMessage status={resolvedSearchParams?.status} />}
     >
-      <PermissionCreateForm formKey={searchParams?.r} />
+      <PermissionCreateForm formKey={resolvedSearchParams?.r} />
     </DashboardEntityPageShell>
   );
 }

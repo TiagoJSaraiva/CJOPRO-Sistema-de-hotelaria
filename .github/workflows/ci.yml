@@ -50,6 +50,9 @@ jobs:
       - name: Bootstrap workspace
         run: pnpm bootstrap
 
+      - name: Audit dependencies
+        run: pnpm security:audit
+
       - name: Lint, typecheck and build
         run: pnpm check
 

@@ -11,11 +11,14 @@ import type { FinancialTransactionReportInput } from "../../../../src/app/dashbo
 const generatePdfMock = vi.hoisted(() => vi.fn(() => Promise.resolve()));
 
 vi.mock("next/link", () => ({
-  default: ({ href, children, ...props }: { href: string; children: ReactNode }) => (
-    <a href={href} {...props}>
-      {children}
-    </a>
-  )
+  default: ({ href, children, scroll, ...props }: { href: string; children: ReactNode; scroll?: boolean }) => {
+    void scroll;
+    return (
+      <a href={href} {...props}>
+        {children}
+      </a>
+    );
+  }
 }));
 
 vi.mock("../../../../src/app/dashboard/transactions/actions", () => ({

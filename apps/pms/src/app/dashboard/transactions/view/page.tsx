@@ -10,11 +10,11 @@ import { TransactionStatusMessage } from "../_components/TransactionStatusMessag
 import type { AuthUser } from "@hotel/shared";
 
 type TransactionsViewPageProps = {
-  searchParams?: {
+  searchParams?: Promise<{
     status?: string;
     transactionId?: string;
     mode?: string;
-  };
+  }>;
 };
 
 function resolveActiveHotelLabel(user: Pick<AuthUser, "roleAssignments"> | null, activeHotelId: string | null): string {
@@ -27,6 +27,7 @@ function resolveActiveHotelLabel(user: Pick<AuthUser, "roleAssignments"> | null,
 }
 
 export default async function TransactionsViewPage({ searchParams }: TransactionsViewPageProps) {
+  const resolvedSearchParams = await searchParams;
   const user = await getUserFromSession();
   const access = getTransactionsAccess(user);
 
@@ -41,11 +42,11 @@ export default async function TransactionsViewPage({ searchParams }: Transaction
   }
 
   const transactions = await listFinancialTransactions();
-  const preferredHotelId = getActiveHotelCookieValue();
+  const preferredHotelId = await getActiveHotelCookieValue();
   const activeHotelId = user ? resolveActiveHotelForUser(user, preferredHotelId) : null;
   const hotelLabel = resolveActiveHotelLabel(user, activeHotelId);
-  const activeTransactionId = String(searchParams?.transactionId || "").trim();
-  const mode = searchParams?.mode === "edit" ? "edit" : "view";
+  const activeTransactionId = String(resolvedSearchParams?.transactionId || "").trim();
+  const mode = resolvedSearchParams?.mode === "edit" ? "edit" : "view";
 
   return (
     <DashboardEntityPageShell
@@ -55,7 +56,7 @@ export default async function TransactionsViewPage({ searchParams }: Transaction
         { key: "create", label: "Lançamento", href: "/dashboard/transactions/create", isVisible: access.canCreate },
         { key: "view", label: "Monitoramento", href: "/dashboard/transactions/view", isVisible: access.canRead }
       ]}
-      statusContent={<TransactionStatusMessage status={searchParams?.status} />}
+      statusContent={<TransactionStatusMessage status={resolvedSearchParams?.status} />}
     >
       <TransactionsViewFilterableSection
         transactions={transactions}

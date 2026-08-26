@@ -8,14 +8,15 @@ import { SeasonRoomRatesViewFilterableSection } from "../_components/SeasonRoomR
 import { SeasonRoomRateStatusMessage } from "../_components/SeasonRoomRateStatusMessage";
 
 type SeasonRoomRatesViewPageProps = {
-  searchParams?: {
+  searchParams?: Promise<{
     status?: string;
     seasonRoomRateId?: string;
     mode?: string;
-  };
+  }>;
 };
 
 export default async function SeasonRoomRatesViewPage({ searchParams }: SeasonRoomRatesViewPageProps) {
+  const resolvedSearchParams = await searchParams;
   const user = await getUserFromSession();
   const access = getSeasonRoomRatesAccess(user);
 
@@ -31,8 +32,8 @@ export default async function SeasonRoomRatesViewPage({ searchParams }: SeasonRo
 
   const items = await listSeasonRoomRates();
   const seasons = await listSeasons();
-  const activeSeasonRoomRateId = String(searchParams?.seasonRoomRateId || "").trim();
-  const mode = searchParams?.mode === "edit" ? "edit" : "view";
+  const activeSeasonRoomRateId = String(resolvedSearchParams?.seasonRoomRateId || "").trim();
+  const mode = resolvedSearchParams?.mode === "edit" ? "edit" : "view";
 
   return (
     <DashboardEntityPageShell
@@ -52,7 +53,7 @@ export default async function SeasonRoomRatesViewPage({ searchParams }: SeasonRo
           isVisible: access.canRead
         }
       ]}
-      statusContent={<SeasonRoomRateStatusMessage status={searchParams?.status} />}
+      statusContent={<SeasonRoomRateStatusMessage status={resolvedSearchParams?.status} />}
     >
       <SeasonRoomRatesViewFilterableSection
         items={items}

@@ -31,8 +31,12 @@ Comandos de reproducibilidade e validacao:
 - `pnpm bootstrap`: instala exatamente o lockfile e valida o ambiente.
 - `pnpm run doctor`: diagnostica versoes, workspace, lockfile e CLIs essenciais.
 - `pnpm run doctor -- --json`: retorna o mesmo diagnostico em formato estruturado.
+- `pnpm security:audit`: bloqueia vulnerabilidades de severidade alta ou critica na arvore completa.
+- `pnpm deps:outdated`: mostra atualizacoes disponiveis em todos os workspaces.
+- `pnpm deps:outdated:json`: retorna as atualizacoes disponiveis em formato estruturado.
 - `pnpm check`: executa lint, typecheck e build; deve ser a validacao rapida antes de um commit.
 - `pnpm check:full`: acrescenta testes Vitest e E2E à validacao rapida, executa todas as fases e agrega as falhas no final.
+- `pnpm check:ci`: executa a auditoria de seguranca antes da mesma validacao funcional de `check:full`.
 
 Use `pnpm run doctor` com o `run` explicito: `pnpm doctor` e um comando interno do pnpm 9 e nao executa o diagnostico deste projeto.
 
@@ -49,7 +53,23 @@ Os dois jobs sao independentes:
 - `Quality and Vitest`: executa `pnpm bootstrap`, `pnpm check` e `pnpm test`.
 - `Playwright E2E`: instala somente o Chromium e executa `pnpm test:e2e` com backend mockado; em caso de falha, preserva traces e screenshots por sete dias.
 
-Nenhum job depende de secrets, banco ou Supabase. Antes de enviar uma alteracao, use `pnpm check:full` como equivalente local dos dois jobs.
+Nenhum job depende de secrets, banco ou Supabase. Antes de enviar uma alteracao, use `pnpm check:ci` como equivalente local completo dos dois jobs. `pnpm check:full` permanece util quando a auditoria online nao for necessaria.
+
+## Politica de dependencias e seguranca
+
+As versoes de runtime e ferramentas sao declaradas nos manifests dos workspaces e resolvidas exclusivamente pelo `pnpm-lock.yaml`. Instalacoes reproduziveis devem usar `pnpm bootstrap` ou `pnpm install --frozen-lockfile`; o projeto tambem rejeita peers incompativeis.
+
+A auditoria bloqueia vulnerabilidades altas e criticas. Achados moderados e baixos devem ser avaliados e documentados, mas podem aguardar correcao upstream quando nao houver atualizacao compativel. Nao use `audit.ignore` nem suprima GHSAs.
+
+O Dependabot verifica dependencias npm semanalmente. Atualizacoes patch e minor de producao e desenvolvimento sao agrupadas separadamente; majors permanecem em pull requests individuais e nunca recebem merge automatico. Permanecem deliberadamente adiadas as migracoes para Next 16, ESLint 10, Tailwind 4, TypeScript 7, jsdom 30, dotenv 17 e `@fastify/cors` 11.
+
+Overrides em `pnpm.overrides` sao permitidos apenas para corrigir uma dependencia transitiva vulneravel dentro da mesma major e devem conter o intervalo vulneravel no seletor. Ao revisar um override:
+
+1. confirme o advisory e a primeira versao corrigida com `pnpm security:audit`;
+2. tente primeiro atualizar normalmente a dependencia que introduz o pacote;
+3. restrinja o seletor ao intervalo vulneravel e regenere o lockfile;
+4. execute `pnpm install --frozen-lockfile`, `pnpm security:audit` e `pnpm check:full`;
+5. remova o override assim que a dependencia de origem passar a resolver uma versao segura.
 
 ## Testes
 

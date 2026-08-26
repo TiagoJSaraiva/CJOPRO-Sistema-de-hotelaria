@@ -11,13 +11,14 @@ import { SeasonRoomRateStatusMessage } from "../_components/SeasonRoomRateStatus
 import { SeasonRoomSelect } from "../_components/SeasonRoomSelect";
 
 type SeasonRoomRatesCreatePageProps = {
-  searchParams?: {
+  searchParams?: Promise<{
     status?: string;
     r?: string;
-  };
+  }>;
 };
 
 export default async function SeasonRoomRatesCreatePage({ searchParams }: SeasonRoomRatesCreatePageProps) {
+  const resolvedSearchParams = await searchParams;
   const user = await getUserFromSession();
   const access = getSeasonRoomRatesAccess(user);
 
@@ -51,9 +52,9 @@ export default async function SeasonRoomRatesCreatePage({ searchParams }: Season
           isVisible: access.canRead
         }
       ]}
-      statusContent={<SeasonRoomRateStatusMessage status={searchParams?.status} />}
+      statusContent={<SeasonRoomRateStatusMessage status={resolvedSearchParams?.status} />}
     >
-      <DashboardCreateFormCard title="Criar tarifa" submitLabel="Criar tarifa" action={createSeasonRoomRateAction} resetKey={searchParams?.r}>
+      <DashboardCreateFormCard title="Criar tarifa" submitLabel="Criar tarifa" action={createSeasonRoomRateAction} resetKey={resolvedSearchParams?.r}>
         <FormField label="Temporada" htmlFor="create-season-rate-season-id">
           <SeasonRoomSelect id="create-season-rate-season-id" name="season_id" seasons={seasons} required />
         </FormField>

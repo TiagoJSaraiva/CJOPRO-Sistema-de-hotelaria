@@ -3,17 +3,18 @@ import { getUserFromSession } from "../../../lib/auth";
 import { getSeasonRoomRatesAccess, getSeasonRoomRatesDefaultRoute } from "./access";
 
 type SeasonRoomRatesPageProps = {
-  searchParams?: {
+  searchParams?: Promise<{
     status?: string;
     r?: string;
-  };
+  }>;
 };
 
 export default async function SeasonRoomRatesPage({ searchParams }: SeasonRoomRatesPageProps) {
+  const resolvedSearchParams = await searchParams;
   const user = await getUserFromSession();
   const access = getSeasonRoomRatesAccess(user);
   const targetRoute = getSeasonRoomRatesDefaultRoute(access);
-  const statusQuery = searchParams?.status ? `?status=${encodeURIComponent(searchParams.status)}` : "";
+  const statusQuery = resolvedSearchParams?.status ? `?status=${encodeURIComponent(resolvedSearchParams.status)}` : "";
 
   if (!targetRoute) {
     return (

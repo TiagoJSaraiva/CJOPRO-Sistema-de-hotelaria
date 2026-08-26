@@ -8,13 +8,14 @@ import { RoleCreateForm } from "../_components/RoleCreateForm";
 import { RoleStatusMessage } from "../_components/RoleStatusMessage";
 
 type RolesCreatePageProps = {
-  searchParams?: {
+  searchParams?: Promise<{
     status?: string;
     r?: string;
-  };
+  }>;
 };
 
 export default async function RolesCreatePage({ searchParams }: RolesCreatePageProps) {
+  const resolvedSearchParams = await searchParams;
   const user = await getUserFromSession();
   const access = getRolesAccess(user);
 
@@ -38,9 +39,9 @@ export default async function RolesCreatePage({ searchParams }: RolesCreatePageP
         { key: "create", label: "Criar role", href: "/dashboard/roles/create", isVisible: access.canCreate },
         { key: "view", label: "Ver roles", href: "/dashboard/roles/view", isVisible: access.canRead }
       ]}
-      statusContent={<RoleStatusMessage status={searchParams?.status} />}
+      statusContent={<RoleStatusMessage status={resolvedSearchParams?.status} />}
     >
-      <RoleCreateForm formKey={searchParams?.r} hotels={referenceData.hotels} permissions={referenceData.permissions} />
+      <RoleCreateForm formKey={resolvedSearchParams?.r} hotels={referenceData.hotels} permissions={referenceData.permissions} />
     </DashboardEntityPageShell>
   );
 }

@@ -3,16 +3,17 @@ import { getUserFromSession } from "../../../lib/auth";
 import { getHotelAccess, getHotelDefaultRoute } from "./access";
 
 type HotelsPageProps = {
-  searchParams?: {
+  searchParams?: Promise<{
     status?: string;
-  };
+  }>;
 };
 
 export default async function HotelsPage({ searchParams }: HotelsPageProps) {
+  const resolvedSearchParams = await searchParams;
   const user = await getUserFromSession();
   const access = getHotelAccess(user);
   const targetRoute = getHotelDefaultRoute(access);
-  const statusQuery = searchParams?.status ? `?status=${encodeURIComponent(searchParams.status)}` : "";
+  const statusQuery = resolvedSearchParams?.status ? `?status=${encodeURIComponent(resolvedSearchParams.status)}` : "";
 
   if (!targetRoute) {
     return (
