@@ -5,7 +5,7 @@ import { existsSync } from "node:fs";
 
 const PHASES = [
   { name: "check", script: "check" },
-  { name: "testes Vitest", script: "test" },
+  { name: "testes Vitest e cobertura", script: "test:coverage" },
   { name: "testes E2E", script: "test:e2e" }
 ];
 

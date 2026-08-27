@@ -9,8 +9,18 @@ export default defineConfig({
     include: ["__tests__/**/*.test.ts"],
     coverage: {
       provider: "v8",
-      reporter: ["text", "html"],
-      reportsDirectory: "./coverage"
+      include: ["src/**/*.ts"],
+      reporter: ["text-summary", "html", "lcov", "json-summary"],
+      reportsDirectory: "./coverage",
+      reportOnFailure: true,
+      thresholds: {
+        autoUpdate: false,
+        perFile: false,
+        statements: 81,
+        branches: 75,
+        functions: 87,
+        lines: 81
+      }
     }
   }
 });

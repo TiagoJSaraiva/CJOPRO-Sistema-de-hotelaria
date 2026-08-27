@@ -16,8 +16,19 @@ export default defineConfig({
     exclude: ["__tests__/database/**"],
     coverage: {
       provider: "v8",
-      reporter: ["text", "html"],
-      reportsDirectory: "./coverage"
+      include: ["src/**/*.ts"],
+      exclude: ["src/index.ts"],
+      reporter: ["text-summary", "html", "lcov", "json-summary"],
+      reportsDirectory: "./coverage",
+      reportOnFailure: true,
+      thresholds: {
+        autoUpdate: false,
+        perFile: false,
+        statements: 27,
+        branches: 23,
+        functions: 36,
+        lines: 28
+      }
     }
   }
 });

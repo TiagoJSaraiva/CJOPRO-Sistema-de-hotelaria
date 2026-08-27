@@ -12,7 +12,7 @@
     "test": "vitest run --passWithNoTests",
     "test:unit": "vitest run __tests__/unit --passWithNoTests",
     "test:integration": "vitest run __tests__/integration --passWithNoTests",
-    "test:coverage": "vitest run --coverage --passWithNoTests",
+    "test:coverage": "vitest run --coverage --passWithNoTests --reporter=default --reporter=junit --outputFile.junit=coverage/junit.xml",
     "test:watch": "vitest --watch --passWithNoTests",
     "test:e2e": "playwright test"
   },

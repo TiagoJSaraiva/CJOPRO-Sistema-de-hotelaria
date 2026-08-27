@@ -35,7 +35,7 @@ Comandos de reproducibilidade e validacao:
 - `pnpm deps:outdated`: mostra atualizacoes disponiveis em todos os workspaces.
 - `pnpm deps:outdated:json`: retorna as atualizacoes disponiveis em formato estruturado.
 - `pnpm check`: executa lint, typecheck e build; deve ser a validacao rapida antes de um commit.
-- `pnpm check:full`: acrescenta testes Vitest e E2E à validacao rapida, executa todas as fases e agrega as falhas no final.
+- `pnpm check:full`: acrescenta testes Vitest com cobertura e E2E à validacao rapida, executa todas as fases e agrega as falhas no final.
 - `pnpm check:ci`: executa a auditoria de seguranca antes da mesma validacao funcional de `check:full`.
 
 Use `pnpm run doctor` com o `run` explicito: `pnpm doctor` e um comando interno do pnpm 9 e nao executa o diagnostico deste projeto.
@@ -50,7 +50,7 @@ O GitHub Actions executa o workflow `CI` em pull requests e pushes para `main`, 
 
 Os tres jobs sao independentes:
 
-- `Quality and Vitest`: executa `pnpm bootstrap`, `pnpm check` e `pnpm test`.
+- `Quality and Vitest`: executa `pnpm bootstrap`, `pnpm check` e `pnpm test:coverage`; publica o resumo na execucao e preserva HTML, LCOV, JSON e JUnit por sete dias.
 - `Playwright E2E`: instala somente o Chromium e executa `pnpm test:e2e` com backend mockado; em caso de falha, preserva traces e screenshots por sete dias.
 - `Database integration`: recria migrations e seed no Supabase local e executa pgTAP e a integracao HTTP real.
 
@@ -86,16 +86,19 @@ Comandos principais (na raiz):
 - `pnpm test`: executa todos os testes configurados no monorepo.
 - `pnpm test:unit`: executa somente testes unitarios.
 - `pnpm test:integration`: executa somente testes de integracao.
-- `pnpm test:coverage`: gera cobertura por pacote.
+- `pnpm test:coverage`: executa os 253 testes com cobertura, aplica os limiares por workspace e consolida os relatorios.
+- `pnpm coverage:report`: reconstrói o resumo consolidado usando relatorios JSON existentes, sem executar testes.
 - `pnpm test:watch`: modo watch para desenvolvimento.
 - `pnpm test:e2e`: executa E2E do PMS.
 - `pnpm test:db`: recria o Supabase local e executa pgTAP e a integracao HTTP real do backend.
 
 Cobertura de testes:
 
-- Cobertura e o percentual do codigo executado pelos testes (statements, branches, funcoes e linhas).
-- Cobertura alta em fluxos criticos reduz regressao silenciosa durante refatoracao.
-- O comando `pnpm test:coverage` gera relatorios por pacote.
+- A coleta inclui explicitamente todo o codigo TypeScript elegivel, inclusive arquivos que nenhum teste importa. Somente os bootstraps `src/index.ts` dos dois servicos sao excluidos por iniciarem processos.
+- E2E e testes reais de banco permanecem validacoes funcionais separadas e nao alimentam essa metrica.
+- Os pisos atuais de statements/branches/functions/lines sao: backend `27/23/36/28`, PMS `37/33/29/37`, shared `81/75/87/81` e booking engine `100/100/100/100`.
+- Cada workspace gera `coverage/index.html`, `lcov.info`, `coverage-summary.json` e `junit.xml`. O total ponderado fica em `coverage/summary.md`.
+- O CI falha se um workspace cair abaixo de qualquer piso e envia os relatorios mesmo em falhas. Nao reduza um limiar para acomodar uma regressao; aumentos devem acompanhar novos testes e permanecer deliberados no diff.
 
 Convencao por feature:
 
@@ -107,6 +110,7 @@ Convencao por feature:
 Pacotes com configuracao inicial ativa:
 
 - `apps/backend-service`
+- `apps/booking-engine-service`
 - `apps/pms`
 - `packages/shared`
 
