@@ -48,12 +48,13 @@ O projeto rejeita instalacoes com uma versao diferente do Node declarada no `pac
 
 O GitHub Actions executa o workflow `CI` em pull requests e pushes para `main`, alem de permitir execucao manual. O pipeline usa Node.js `22.23.2`, pnpm `9.12.3`, Ubuntu 24.04 e instalacao congelada pelo lockfile.
 
-Os dois jobs sao independentes:
+Os tres jobs sao independentes:
 
 - `Quality and Vitest`: executa `pnpm bootstrap`, `pnpm check` e `pnpm test`.
 - `Playwright E2E`: instala somente o Chromium e executa `pnpm test:e2e` com backend mockado; em caso de falha, preserva traces e screenshots por sete dias.
+- `Database integration`: recria migrations e seed no Supabase local e executa pgTAP e a integracao HTTP real.
 
-Nenhum job depende de secrets, banco ou Supabase. Antes de enviar uma alteracao, use `pnpm check:ci` como equivalente local completo dos dois jobs. `pnpm check:full` permanece util quando a auditoria online nao for necessaria.
+Nenhum job usa secrets, banco hospedado ou projeto Supabase vinculado. Antes de enviar uma alteracao, use `pnpm check:ci && pnpm test:db` como equivalente local completo dos tres jobs. `pnpm check:full` permanece util quando a auditoria online nao for necessaria.
 
 ## Politica de dependencias e seguranca
 
@@ -88,6 +89,7 @@ Comandos principais (na raiz):
 - `pnpm test:coverage`: gera cobertura por pacote.
 - `pnpm test:watch`: modo watch para desenvolvimento.
 - `pnpm test:e2e`: executa E2E do PMS.
+- `pnpm test:db`: recria o Supabase local e executa pgTAP e a integracao HTTP real do backend.
 
 Cobertura de testes:
 
@@ -108,16 +110,52 @@ Pacotes com configuracao inicial ativa:
 - `apps/pms`
 - `packages/shared`
 
+## Banco local reproduzivel
+
+Pre-requisitos adicionais:
+
+- Docker Desktop com o engine em execucao.
+- Supabase CLI `2.115.0`, instalada como dependencia do workspace.
+
+Comandos publicos:
+
+- `pnpm db:start`: inicia o Supabase local de desenvolvimento.
+- `pnpm db:status`: confirma a URL local sem imprimir chaves.
+- `pnpm db:reset`: recria exclusivamente o banco local a partir das migrations e do seed; todos os dados locais sao descartados.
+- `pnpm db:stop`: interrompe os containers preservando os volumes locais.
+- `pnpm test:db`: inicia apenas PostgreSQL, PostgREST e Kong quando necessario, faz reset, executa pgTAP e Vitest/Fastify e encerra somente a instancia que ele proprio iniciou.
+
+O seed cria dois hoteis sinteticos, quartos, clientes, produtos, tarifas, reservas, estadias, pagamentos e bloqueios. As contas locais usam a senha `Hotelaria123!`:
+
+- `admin@hotelaria.local`: administrador global.
+- `gerente.aurora@hotelaria.local`: acesso exclusivo ao Hotel Aurora.
+- `gerente.horizonte@hotelaria.local`: acesso exclusivo ao Hotel Horizonte.
+
+Copie os arquivos `.env.example` de cada aplicacao para o arquivo local correspondente. Para desenvolvimento manual do backend, obtenha a chave exclusivamente local com `pnpm exec supabase status`; nunca versione ou compartilhe essa chave. O orquestrador de testes carrega a credencial apenas em memoria, recusa URLs fora de `localhost`/`127.0.0.1:54321` e nunca usa `--linked`.
+
+As verificacoes rapidas continuam independentes do Docker. O equivalente local dos tres jobs do CI e:
+
+```powershell
+pnpm check:ci
+pnpm test:db
+```
+
+Se o ambiente falhar, confirme `docker info`, libere as portas `54321` e `54322` e execute `pnpm db:stop` seguido de `pnpm db:start`.
+
 ## Backend service: ambiente e seguranca
 
 No desenvolvimento local, configure em `apps/backend-service/.env.local` (arquivo ignorado por git):
 
+- `SUPABASE_URL`: URL da API local, normalmente `http://127.0.0.1:54321`.
+- `SUPABASE_SECRET_KEY`: chave administrativa exibida apenas pelo Supabase CLI local.
 - `AUTH_SESSION_SECRET`: obrigatoria, mínimo 32 caracteres.
 - `ALLOWED_ORIGINS`: lista separada por virgula para CORS (por padrao localhost das aplicacoes).
 
 Exemplo:
 
 ```env
+SUPABASE_URL=http://127.0.0.1:54321
+SUPABASE_SECRET_KEY=cole-a-chave-local-sem-versionar
 AUTH_SESSION_SECRET=dev-backend-auth-session-secret-please-change-before-production
 ALLOWED_ORIGINS=http://localhost:3000,http://localhost:3001,http://localhost:3333,http://localhost:3334
 ```

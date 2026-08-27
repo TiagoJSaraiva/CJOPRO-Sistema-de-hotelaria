@@ -40,6 +40,24 @@ Para interromper os serviços locais preservando seus dados:
 pnpm exec supabase stop
 ```
 
+### Comandos automatizados do projeto
+
+Os atalhos da raiz aplicam as mesmas regras com guardas adicionais:
+
+```powershell
+pnpm db:start
+pnpm db:status
+pnpm db:reset
+pnpm db:stop
+pnpm test:db
+```
+
+`pnpm db:reset` sempre usa `db reset --local` e é destrutivo somente para os dados locais. `pnpm test:db` inicia o ambiente quando necessário, executa reset, pgTAP e a suíte HTTP real, e encerra apenas os containers iniciados por ele. Uma instância que já estava ativa é preservada.
+
+Durante o teste automatizado são usados somente PostgreSQL, PostgREST e Kong. A URL é validada contra `http://localhost:54321` ou `http://127.0.0.1:54321`; qualquer host, protocolo ou porta diferente faz o comando falhar antes de expor a aplicação ao banco. A credencial administrativa local permanece apenas na memória do processo e nunca é impressa ou escrita em `.env`.
+
+Os testes pgTAP ficam em `supabase/tests/database/`. A suíte Vitest de banco usa configuração separada no backend e não faz parte de `pnpm test`, `pnpm check:full` ou `pnpm check:ci`, mantendo as verificações normais independentes do Docker.
+
 ## Mudança normal de schema
 
 1. Atualize a branch e verifique se não há migrations novas de outra mudança.
@@ -131,6 +149,8 @@ do usuário na tarefa atual. Também não deve executar `db reset --linked`.
 - Correções pontuais em dados hospedados exigem script revisável, backup e
   autorização específica. Não devem ser feitas silenciosamente pelo Dashboard.
 
+O seed atual usa UUIDs estáveis, contas no domínio reservado `.local` e datas operacionais relativas a `current_date`. A senha `Hotelaria123!` serve exclusivamente para as três contas sintéticas documentadas no README e nunca deve ser reutilizada fora do Supabase local.
+
 ## Drift e alterações emergenciais no remoto
 
 Se o banco hospedado tiver sido alterado fora das migrations, pare novas
@@ -159,4 +179,3 @@ banco remoto.
 - Em DDL destrutivo (`DROP`, redução de tipo, remoção de coluna ou constraint),
   apresentar impacto, estratégia de migração dos dados e rollback antes de
   qualquer publicação.
-

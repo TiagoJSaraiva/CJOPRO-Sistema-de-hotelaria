@@ -10,14 +10,13 @@ export default defineConfig({
   test: {
     environment: "node",
     globals: true,
-    maxWorkers: 2,
+    include: ["__tests__/database/**/*.test.ts"],
     setupFiles: ["./__tests__/setup.ts"],
-    include: ["__tests__/**/*.test.ts"],
-    exclude: ["__tests__/database/**"],
-    coverage: {
-      provider: "v8",
-      reporter: ["text", "html"],
-      reportsDirectory: "./coverage"
+    maxWorkers: 1,
+    minWorkers: 1,
+    fileParallelism: false,
+    sequence: {
+      concurrent: false
     }
   }
 });
