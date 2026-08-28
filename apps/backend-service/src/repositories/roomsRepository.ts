@@ -1,4 +1,4 @@
-import type { AdminRoom } from "@hotel/shared";
+import type { AdminRoom, TablesInsert, TablesUpdate } from "@hotel/shared";
 import { applyHotelContextFilter } from "../common/hotelContextFilter";
 import { createServerClient } from "../common/supabaseServer";
 import { isSupabaseConflictError, isSupabaseForeignKeyError, isSupabaseNotFoundError } from "./supabaseError";
@@ -6,11 +6,13 @@ import { isSupabaseConflictError, isSupabaseForeignKeyError, isSupabaseNotFoundE
 const ROOM_SELECT_FIELDS = "id,hotel_id,room_number,room_type,max_occupancy,base_daily_rate,status,notes,created_at,updated_at";
 
 export type RoomWriteResult = "ok" | "conflict" | "not-found";
+type RoomCreate = Omit<TablesInsert<"rooms">, "hotel_id">;
+type RoomUpdate = Omit<TablesUpdate<"rooms">, "hotel_id">;
 
 export interface RoomsRepository {
   listRooms(activeHotelId: string): Promise<AdminRoom[]>;
-  createRoom(activeHotelId: string, payload: Record<string, unknown>): Promise<{ result: RoomWriteResult; item?: AdminRoom }>;
-  updateRoom(id: string, activeHotelId: string, payload: Record<string, unknown>): Promise<{ result: RoomWriteResult; item?: AdminRoom }>;
+  createRoom(activeHotelId: string, payload: RoomCreate): Promise<{ result: RoomWriteResult; item?: AdminRoom }>;
+  updateRoom(id: string, activeHotelId: string, payload: RoomUpdate): Promise<{ result: RoomWriteResult; item?: AdminRoom }>;
   deleteRoom(id: string, activeHotelId: string): Promise<RoomWriteResult>;
 }
 
@@ -25,10 +27,10 @@ class SupabaseRoomsRepository implements RoomsRepository {
       throw error;
     }
 
-    return (data || []) as AdminRoom[];
+    return data || [];
   }
 
-  async createRoom(activeHotelId: string, payload: Record<string, unknown>): Promise<{ result: RoomWriteResult; item?: AdminRoom }> {
+  async createRoom(activeHotelId: string, payload: RoomCreate): Promise<{ result: RoomWriteResult; item?: AdminRoom }> {
     const supabase = createServerClient();
     const { data, error } = await supabase
       .from("rooms")
@@ -44,10 +46,10 @@ class SupabaseRoomsRepository implements RoomsRepository {
       throw error;
     }
 
-    return { result: "ok", item: data as AdminRoom };
+    return { result: "ok", item: data };
   }
 
-  async updateRoom(id: string, activeHotelId: string, payload: Record<string, unknown>): Promise<{ result: RoomWriteResult; item?: AdminRoom }> {
+  async updateRoom(id: string, activeHotelId: string, payload: RoomUpdate): Promise<{ result: RoomWriteResult; item?: AdminRoom }> {
     const supabase = createServerClient();
     let query = supabase.from("rooms").update(payload).eq("id", id);
     query = applyHotelContextFilter(query, activeHotelId);
@@ -65,7 +67,7 @@ class SupabaseRoomsRepository implements RoomsRepository {
       throw error;
     }
 
-    return { result: "ok", item: data as AdminRoom };
+    return { result: "ok", item: data };
   }
 
   async deleteRoom(id: string, activeHotelId: string): Promise<RoomWriteResult> {

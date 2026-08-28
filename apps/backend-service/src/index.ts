@@ -6,7 +6,7 @@ dotenv.config();
 dotenv.config({ path: ".env.local", override: true });
 
 const port = Number(process.env.PORT || 3334);
-const app = createApp();
+const app = createApp({ documentation: process.env.NODE_ENV === "development" ? "ui" : "disabled" });
 
 function validateRuntimeConfig(): void {
   getRequiredSessionSecret();

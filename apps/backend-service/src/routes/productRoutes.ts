@@ -1,5 +1,5 @@
 import type { FastifyInstance } from "fastify";
-import { ADMIN_ERROR_CODE, PERMISSIONS, type AdminProductCreateInput, type AdminProductUpdateInput, type HotelIdParams } from "@hotel/shared";
+import { ADMIN_ERROR_CODE, PERMISSIONS, type AdminProductCreateInput, type AdminProductUpdateInput, type HotelIdParams, type TablesUpdate } from "@hotel/shared";
 import { ensureAuthorizedWithScope } from "../auth/authorization";
 import { adminError } from "../common/adminError";
 import { normalizeOptionalText } from "../common/text";
@@ -46,7 +46,7 @@ export function registerProductRoutes(app: FastifyInstance, repository: Products
         name,
         category: normalizeOptionalText(request.body?.category),
         unit_price: unitPrice,
-        status: normalizeOptionalText(request.body?.status) || "active"
+        status: request.body?.status || "active"
       })
       .catch((error) => {
         request.log.error(error);
@@ -70,10 +70,10 @@ export function registerProductRoutes(app: FastifyInstance, repository: Products
     const id = normalizeOptionalText(request.params.id);
     if (!id) return reply.status(400).send(adminError(ADMIN_ERROR_CODE.VALIDATION, "Id do produto e obrigatorio para atualizacao."));
 
-    const payload: Record<string, unknown> = {};
-    if (request.body?.name !== undefined) payload.name = normalizeOptionalText(request.body.name);
+    const payload: TablesUpdate<"products"> = {};
+    if (request.body?.name !== undefined) payload.name = normalizeOptionalText(request.body.name) || "";
     if (request.body?.category !== undefined) payload.category = normalizeOptionalText(request.body.category);
-    if (request.body?.status !== undefined) payload.status = normalizeOptionalText(request.body.status);
+    if (request.body?.status !== undefined) payload.status = request.body.status;
     if (request.body?.unit_price !== undefined) payload.unit_price = Number(request.body.unit_price);
 
     if (!Object.keys(payload).length) return reply.status(400).send(adminError(ADMIN_ERROR_CODE.VALIDATION, "Nenhum campo informado para atualizacao."));

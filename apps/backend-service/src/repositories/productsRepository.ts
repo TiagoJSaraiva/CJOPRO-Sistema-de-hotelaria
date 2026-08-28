@@ -1,4 +1,4 @@
-import type { AdminProduct } from "@hotel/shared";
+import type { AdminProduct, TablesInsert, TablesUpdate } from "@hotel/shared";
 import { applyHotelContextFilter } from "../common/hotelContextFilter";
 import { createServerClient } from "../common/supabaseServer";
 import { isSupabaseConflictError, isSupabaseForeignKeyError, isSupabaseNotFoundError } from "./supabaseError";
@@ -6,11 +6,13 @@ import { isSupabaseConflictError, isSupabaseForeignKeyError, isSupabaseNotFoundE
 const PRODUCT_SELECT_FIELDS = "id,hotel_id,name,category,unit_price,status,created_at,updated_at";
 
 export type ProductWriteResult = "ok" | "conflict" | "not-found";
+type ProductCreate = Omit<TablesInsert<"products">, "hotel_id">;
+type ProductUpdate = Omit<TablesUpdate<"products">, "hotel_id">;
 
 export interface ProductsRepository {
   listProducts(activeHotelId: string): Promise<AdminProduct[]>;
-  createProduct(activeHotelId: string, payload: Record<string, unknown>): Promise<{ result: ProductWriteResult; item?: AdminProduct }>;
-  updateProduct(id: string, activeHotelId: string, payload: Record<string, unknown>): Promise<{ result: ProductWriteResult; item?: AdminProduct }>;
+  createProduct(activeHotelId: string, payload: ProductCreate): Promise<{ result: ProductWriteResult; item?: AdminProduct }>;
+  updateProduct(id: string, activeHotelId: string, payload: ProductUpdate): Promise<{ result: ProductWriteResult; item?: AdminProduct }>;
   deleteProduct(id: string, activeHotelId: string): Promise<ProductWriteResult>;
 }
 
@@ -25,10 +27,10 @@ class SupabaseProductsRepository implements ProductsRepository {
       throw error;
     }
 
-    return (data || []) as AdminProduct[];
+    return data || [];
   }
 
-  async createProduct(activeHotelId: string, payload: Record<string, unknown>): Promise<{ result: ProductWriteResult; item?: AdminProduct }> {
+  async createProduct(activeHotelId: string, payload: ProductCreate): Promise<{ result: ProductWriteResult; item?: AdminProduct }> {
     const supabase = createServerClient();
     const { data, error } = await supabase
       .from("products")
@@ -44,10 +46,10 @@ class SupabaseProductsRepository implements ProductsRepository {
       throw error;
     }
 
-    return { result: "ok", item: data as AdminProduct };
+    return { result: "ok", item: data };
   }
 
-  async updateProduct(id: string, activeHotelId: string, payload: Record<string, unknown>): Promise<{ result: ProductWriteResult; item?: AdminProduct }> {
+  async updateProduct(id: string, activeHotelId: string, payload: ProductUpdate): Promise<{ result: ProductWriteResult; item?: AdminProduct }> {
     const supabase = createServerClient();
     let query = supabase.from("products").update(payload).eq("id", id);
     query = applyHotelContextFilter(query, activeHotelId);
@@ -65,7 +67,7 @@ class SupabaseProductsRepository implements ProductsRepository {
       throw error;
     }
 
-    return { result: "ok", item: data as AdminProduct };
+    return { result: "ok", item: data };
   }
 
   async deleteProduct(id: string, activeHotelId: string): Promise<ProductWriteResult> {

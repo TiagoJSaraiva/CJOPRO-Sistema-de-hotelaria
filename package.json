@@ -28,7 +28,7 @@
     "deps:outdated": "pnpm outdated -r",
     "deps:outdated:json": "pnpm outdated -r --format json",
     "security:audit": "pnpm audit --audit-level high",
-    "check": "pnpm lint && pnpm typecheck && pnpm build",
+    "check": "pnpm api:openapi:check && pnpm lint && pnpm typecheck && pnpm build",
     "check:full": "node scripts/check-full.mjs",
     "check:ci": "pnpm security:audit && pnpm check:full",
     "dev": "turbo run dev --parallel",
@@ -44,10 +44,14 @@
     "coverage:report": "node scripts/coverage.mjs --report-only",
     "test:watch": "turbo run test:watch --parallel",
     "test:e2e": "turbo run test:e2e --filter=@hotel/pms",
+    "api:openapi": "pnpm --filter @hotel/backend-service openapi:generate",
+    "api:openapi:check": "pnpm --filter @hotel/backend-service openapi:check",
     "db:start": "node scripts/database.mjs start",
     "db:status": "node scripts/database.mjs status",
     "db:reset": "node scripts/database.mjs reset",
     "db:stop": "node scripts/database.mjs stop",
+    "db:types": "node scripts/database.mjs types",
+    "db:types:check": "node scripts/database.mjs types-check",
     "test:db": "node scripts/database.mjs test"
   },
   "devDependencies": {

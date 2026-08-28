@@ -1,4 +1,4 @@
-import type { AdminFinancialTransaction } from "@hotel/shared";
+import type { AdminFinancialTransaction, TablesInsert, TablesUpdate } from "@hotel/shared";
 import { applyHotelContextFilter } from "../common/hotelContextFilter";
 import { createServerClient } from "../common/supabaseServer";
 import { isSupabaseConflictError, isSupabaseForeignKeyError, isSupabaseNotFoundError } from "./supabaseError";
@@ -7,11 +7,13 @@ const TRANSACTION_SELECT_FIELDS =
   "id,hotel_id,type,category,amount,currency,description,status,stay_id,reservation_id,payment_method,paid_at,due_date,counterparty,cost_center,reference_code,created_by,created_at,updated_at";
 
 export type FinancialTransactionWriteResult = "ok" | "conflict" | "not-found";
+type FinancialTransactionCreate = Omit<TablesInsert<"financial_transactions">, "hotel_id">;
+type FinancialTransactionUpdate = Omit<TablesUpdate<"financial_transactions">, "hotel_id">;
 
 export interface FinancialTransactionsRepository {
   listFinancialTransactions(activeHotelId: string): Promise<AdminFinancialTransaction[]>;
-  createFinancialTransaction(activeHotelId: string, payload: Record<string, unknown>): Promise<{ result: FinancialTransactionWriteResult; item?: AdminFinancialTransaction }>;
-  updateFinancialTransaction(id: string, activeHotelId: string, payload: Record<string, unknown>): Promise<{ result: FinancialTransactionWriteResult; item?: AdminFinancialTransaction }>;
+  createFinancialTransaction(activeHotelId: string, payload: FinancialTransactionCreate): Promise<{ result: FinancialTransactionWriteResult; item?: AdminFinancialTransaction }>;
+  updateFinancialTransaction(id: string, activeHotelId: string, payload: FinancialTransactionUpdate): Promise<{ result: FinancialTransactionWriteResult; item?: AdminFinancialTransaction }>;
   deleteFinancialTransaction(id: string, activeHotelId: string): Promise<FinancialTransactionWriteResult>;
 }
 
@@ -26,12 +28,12 @@ class SupabaseFinancialTransactionsRepository implements FinancialTransactionsRe
       throw error;
     }
 
-    return (data || []) as AdminFinancialTransaction[];
+    return data || [];
   }
 
   async createFinancialTransaction(
     activeHotelId: string,
-    payload: Record<string, unknown>
+    payload: FinancialTransactionCreate
   ): Promise<{ result: FinancialTransactionWriteResult; item?: AdminFinancialTransaction }> {
     const supabase = createServerClient();
     const { data, error } = await supabase
@@ -48,13 +50,13 @@ class SupabaseFinancialTransactionsRepository implements FinancialTransactionsRe
       throw error;
     }
 
-    return { result: "ok", item: data as AdminFinancialTransaction };
+    return { result: "ok", item: data };
   }
 
   async updateFinancialTransaction(
     id: string,
     activeHotelId: string,
-    payload: Record<string, unknown>
+    payload: FinancialTransactionUpdate
   ): Promise<{ result: FinancialTransactionWriteResult; item?: AdminFinancialTransaction }> {
     const supabase = createServerClient();
     let query = supabase.from("financial_transactions").update(payload).eq("id", id);
@@ -73,7 +75,7 @@ class SupabaseFinancialTransactionsRepository implements FinancialTransactionsRe
       throw error;
     }
 
-    return { result: "ok", item: data as AdminFinancialTransaction };
+    return { result: "ok", item: data };
   }
 
   async deleteFinancialTransaction(id: string, activeHotelId: string): Promise<FinancialTransactionWriteResult> {

@@ -1,4 +1,5 @@
-import { createClient } from "@supabase/supabase-js";
+import { createClient, type SupabaseClient } from "@supabase/supabase-js";
+import type { Database } from "@hotel/shared";
 
 function getRequiredEnvVar(name: "SUPABASE_URL"): string {
   const value = process.env[name];
@@ -23,6 +24,6 @@ function getRequiredSupabaseAdminKey(): string {
 }
 
 // Uso apenas no backend-service, com chave administrativa.
-export const createServerClient = () => {
-  return createClient(getRequiredEnvVar("SUPABASE_URL"), getRequiredSupabaseAdminKey());
+export const createServerClient = (): SupabaseClient<Database> => {
+  return createClient<Database>(getRequiredEnvVar("SUPABASE_URL"), getRequiredSupabaseAdminKey());
 };

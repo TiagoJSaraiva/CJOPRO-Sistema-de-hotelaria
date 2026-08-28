@@ -1,5 +1,5 @@
 import type { FastifyInstance } from "fastify";
-import { ADMIN_ERROR_CODE, PERMISSIONS, type AdminRoomCreateInput, type AdminRoomUpdateInput, type HotelIdParams } from "@hotel/shared";
+import { ADMIN_ERROR_CODE, PERMISSIONS, type AdminRoomCreateInput, type AdminRoomUpdateInput, type HotelIdParams, type TablesUpdate } from "@hotel/shared";
 import { ensureAuthorizedWithScope } from "../auth/authorization";
 import { adminError } from "../common/adminError";
 import { normalizeOptionalText } from "../common/text";
@@ -40,8 +40,6 @@ export function registerRoomRoutes(app: FastifyInstance, repository: RoomsReposi
     const roomType = normalizeOptionalText(request.body?.room_type);
     const maxOccupancy = Number(request.body?.max_occupancy);
     const baseDailyRate = Number(request.body?.base_daily_rate);
-    const status = normalizeOptionalText(request.body?.status);
-
     if (!roomNumber || !roomType || !Number.isFinite(maxOccupancy) || maxOccupancy <= 0 || !Number.isFinite(baseDailyRate) || baseDailyRate < 0) {
       return reply.status(400).send(adminError(ADMIN_ERROR_CODE.VALIDATION, "Dados invalidos para criar quarto."));
     }
@@ -52,7 +50,7 @@ export function registerRoomRoutes(app: FastifyInstance, repository: RoomsReposi
         room_type: roomType,
         max_occupancy: maxOccupancy,
         base_daily_rate: baseDailyRate,
-        status: status || "available",
+        status: request.body?.status || "available",
         notes: normalizeOptionalText(request.body?.notes)
       })
       .catch((error) => {
@@ -88,12 +86,12 @@ export function registerRoomRoutes(app: FastifyInstance, repository: RoomsReposi
       return reply.status(400).send(adminError(ADMIN_ERROR_CODE.VALIDATION, "Id do quarto e obrigatorio para atualizacao."));
     }
 
-    const payload: Record<string, unknown> = {};
+    const payload: TablesUpdate<"rooms"> = {};
 
-    if (request.body?.room_number !== undefined) payload.room_number = normalizeOptionalText(request.body.room_number);
-    if (request.body?.room_type !== undefined) payload.room_type = normalizeOptionalText(request.body.room_type);
+    if (request.body?.room_number !== undefined) payload.room_number = normalizeOptionalText(request.body.room_number) || "";
+    if (request.body?.room_type !== undefined) payload.room_type = normalizeOptionalText(request.body.room_type) || "";
     if (request.body?.notes !== undefined) payload.notes = normalizeOptionalText(request.body.notes);
-    if (request.body?.status !== undefined) payload.status = normalizeOptionalText(request.body.status);
+    if (request.body?.status !== undefined) payload.status = request.body.status;
 
     if (request.body?.max_occupancy !== undefined) {
       const maxOccupancy = Number(request.body.max_occupancy);

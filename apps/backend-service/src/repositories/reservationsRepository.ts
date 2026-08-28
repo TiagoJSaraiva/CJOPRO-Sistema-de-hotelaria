@@ -1,4 +1,4 @@
-import type { AdminReservation } from "@hotel/shared";
+import type { AdminReservation, TablesInsert, TablesUpdate } from "@hotel/shared";
 import { applyHotelContextFilter } from "../common/hotelContextFilter";
 import { createServerClient } from "../common/supabaseServer";
 import { isSupabaseConflictError, isSupabaseForeignKeyError, isSupabaseNotFoundError } from "./supabaseError";
@@ -7,11 +7,13 @@ const RESERVATION_SELECT_FIELDS =
   "id,hotel_id,booking_customer_id,reservation_code,guest_count,reservation_source,estimated_total_price,final_total_price,notes,created_at,updated_at";
 
 export type ReservationWriteResult = "ok" | "conflict" | "not-found";
+type ReservationCreate = Omit<TablesInsert<"reservations">, "hotel_id">;
+type ReservationUpdate = Omit<TablesUpdate<"reservations">, "hotel_id">;
 
 export interface ReservationsRepository {
   listReservations(activeHotelId: string): Promise<AdminReservation[]>;
-  createReservation(activeHotelId: string, payload: Record<string, unknown>): Promise<{ result: ReservationWriteResult; item?: AdminReservation }>;
-  updateReservation(id: string, activeHotelId: string, payload: Record<string, unknown>): Promise<{ result: ReservationWriteResult; item?: AdminReservation }>;
+  createReservation(activeHotelId: string, payload: ReservationCreate): Promise<{ result: ReservationWriteResult; item?: AdminReservation }>;
+  updateReservation(id: string, activeHotelId: string, payload: ReservationUpdate): Promise<{ result: ReservationWriteResult; item?: AdminReservation }>;
   deleteReservation(id: string, activeHotelId: string): Promise<ReservationWriteResult>;
 }
 
@@ -26,10 +28,10 @@ class SupabaseReservationsRepository implements ReservationsRepository {
       throw error;
     }
 
-    return (data || []) as AdminReservation[];
+    return data || [];
   }
 
-  async createReservation(activeHotelId: string, payload: Record<string, unknown>): Promise<{ result: ReservationWriteResult; item?: AdminReservation }> {
+  async createReservation(activeHotelId: string, payload: ReservationCreate): Promise<{ result: ReservationWriteResult; item?: AdminReservation }> {
     const supabase = createServerClient();
     const { data, error } = await supabase
       .from("reservations")
@@ -45,13 +47,13 @@ class SupabaseReservationsRepository implements ReservationsRepository {
       throw error;
     }
 
-    return { result: "ok", item: data as AdminReservation };
+    return { result: "ok", item: data };
   }
 
   async updateReservation(
     id: string,
     activeHotelId: string,
-    payload: Record<string, unknown>
+    payload: ReservationUpdate
   ): Promise<{ result: ReservationWriteResult; item?: AdminReservation }> {
     const supabase = createServerClient();
     let query = supabase.from("reservations").update(payload).eq("id", id);
@@ -70,7 +72,7 @@ class SupabaseReservationsRepository implements ReservationsRepository {
       throw error;
     }
 
-    return { result: "ok", item: data as AdminReservation };
+    return { result: "ok", item: data };
   }
 
   async deleteReservation(id: string, activeHotelId: string): Promise<ReservationWriteResult> {

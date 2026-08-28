@@ -7,7 +7,8 @@ import {
   normalizeEmail,
   type AdminUserCreateInput,
   type AdminUserUpdateInput,
-  type HotelIdParams
+  type HotelIdParams,
+  type TablesUpdate
 } from "@hotel/shared";
 import { mapAdminUser, mapRoleOption, normalizeRoleAssignments } from "../admin/mappers";
 import { ensureAuthorizedAny, ensureAuthorizedWithScope } from "../auth/authorization";
@@ -232,7 +233,7 @@ export function registerUserRoutes(app: FastifyInstance, repository: UsersReposi
       return reply.status(404).send(adminError(ADMIN_ERROR_CODE.NOT_FOUND, "Usuario nao encontrado ou nao tem acesso neste contexto."));
     }
 
-    const payload: Record<string, unknown> = {};
+    const payload: TablesUpdate<"users"> = {};
 
     if (request.body?.name !== undefined) {
       const parsedName = normalizeOptionalText(request.body.name);

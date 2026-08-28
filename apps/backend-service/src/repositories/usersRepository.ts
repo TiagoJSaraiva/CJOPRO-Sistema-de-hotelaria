@@ -1,19 +1,27 @@
+import type { Json, TablesUpdate } from "@hotel/shared";
+import type { QueryData } from "@supabase/supabase-js";
 import { createServerClient } from "../common/supabaseServer";
 import { isSupabaseConflictError, isSupabaseForeignKeyError, isSupabaseNotFoundError } from "./supabaseError";
 
 export type UserWriteResult = "ok" | "conflict" | "not-found";
+type UserUpdate = TablesUpdate<"users">;
 
-export type UserRoleLookupRow = {
-  id: string;
-  name: string;
+const selectReferenceRoles = (supabase: ReturnType<typeof createServerClient>) =>
+  supabase.from("roles").select("id,name,role_type,hotel_id,hotels(name)");
+const selectUsersWithRelations = (supabase: ReturnType<typeof createServerClient>) =>
+  supabase
+    .from("users")
+    .select("id,name,email,is_active,last_login_at,created_at,user_roles(role_id,hotel_id,hotels(name),roles(id,name,role_type,hotel_id,hotels(name)))");
+
+type InferredUserRoleLookupRow = QueryData<ReturnType<typeof selectReferenceRoles>>[number];
+type InferredUserWithRelationsRow = QueryData<ReturnType<typeof selectUsersWithRelations>>[number];
+type InferredUserRoleRelationRow = NonNullable<InferredUserWithRelationsRow["user_roles"]>[number];
+
+export type UserRoleLookupRow = Omit<InferredUserRoleLookupRow, "role_type"> & {
   role_type: "SYSTEM_ROLE" | "HOTEL_ROLE";
-  hotel_id: string | null;
-  hotels?: { name: string | null } | Array<{ name: string | null }> | null;
 };
 
-export type UserRoleRelationRow = {
-  role_id?: string | null;
-  hotels?: { name: string | null } | Array<{ name: string | null }> | null;
+export type UserRoleRelationRow = Omit<InferredUserRoleRelationRow, "roles"> & {
   roles?:
     | {
         id?: string | null;
@@ -32,13 +40,8 @@ export type UserRoleRelationRow = {
     | null;
 };
 
-export type UserWithRelationsRow = {
-  id: string;
-  name: string;
-  email: string;
+export type UserWithRelationsRow = Omit<InferredUserWithRelationsRow, "is_active" | "user_roles"> & {
   is_active: boolean;
-  last_login_at: string | null;
-  created_at: string | null;
   user_roles?: UserRoleRelationRow[] | null;
 };
 
@@ -93,10 +96,10 @@ export interface UsersRepository {
   getUserWithRelationsById(id: string, activeHotelId: string | null): Promise<UserWithRelationsRow | null>;
   updateUserWithRoles(
     id: string,
-    payload: Record<string, unknown>,
+    payload: UserUpdate,
     roleAssignments?: Array<{ role_id: string; hotel_id: string | null }>
   ): Promise<UserWriteResult>;
-  updateUser(id: string, payload: Record<string, unknown>): Promise<UserWriteResult>;
+  updateUser(id: string, payload: UserUpdate): Promise<UserWriteResult>;
   userExists(id: string): Promise<boolean>;
   clearUserRoles(userId: string): Promise<void>;
   deleteUser(id: string): Promise<UserWriteResult>;
@@ -142,7 +145,7 @@ class SupabaseUsersRepository implements UsersRepository {
 
   private async updateUserWithRolesFallback(
     id: string,
-    payload: Record<string, unknown>,
+    payload: UserUpdate,
     roleAssignments?: Array<{ role_id: string; hotel_id: string | null }>
   ): Promise<UserWriteResult> {
     if (Object.keys(payload).length) {
@@ -196,7 +199,7 @@ class SupabaseUsersRepository implements UsersRepository {
 
   async listReferenceRoles(): Promise<UserRoleLookupRow[]> {
     const supabase = createServerClient();
-    const { data, error } = await supabase.from("roles").select("id,name,role_type,hotel_id,hotels(name)").order("name", { ascending: true });
+    const { data, error } = await selectReferenceRoles(supabase).order("name", { ascending: true });
 
     if (error) {
       throw error;
@@ -207,9 +210,7 @@ class SupabaseUsersRepository implements UsersRepository {
 
   async listUsersWithRelations(activeHotelId: string | null): Promise<UserWithRelationsRow[]> {
     const supabase = createServerClient();
-    let query = supabase
-      .from("users")
-      .select("id,name,email,is_active,last_login_at,created_at,user_roles(role_id,hotel_id,hotels(name),roles(id,name,role_type,hotel_id,hotels(name)))");
+    let query = selectUsersWithRelations(supabase);
 
     if (activeHotelId !== null) {
       query = query.filter("user_roles.hotel_id", "eq", activeHotelId);
@@ -226,7 +227,7 @@ class SupabaseUsersRepository implements UsersRepository {
 
   async findRolesByIds(roleIds: string[]): Promise<UserRoleLookupRow[]> {
     const supabase = createServerClient();
-    const { data, error } = await supabase.from("roles").select("id,name,role_type,hotel_id,hotels(name)").in("id", roleIds);
+    const { data, error } = await selectReferenceRoles(supabase).in("id", roleIds);
 
     if (error) {
       throw error;
@@ -295,9 +296,7 @@ class SupabaseUsersRepository implements UsersRepository {
 
   async getUserWithRelationsById(id: string, activeHotelId: string | null): Promise<UserWithRelationsRow | null> {
     const supabase = createServerClient();
-    let query = supabase
-      .from("users")
-      .select("id,name,email,is_active,last_login_at,created_at,user_roles(role_id,hotel_id,hotels(name),roles(id,name,role_type,hotel_id,hotels(name)))");
+    let query = selectUsersWithRelations(supabase);
 
     if (activeHotelId !== null) {
       query = query.filter("user_roles.hotel_id", "eq", activeHotelId);
@@ -318,14 +317,14 @@ class SupabaseUsersRepository implements UsersRepository {
 
   async updateUserWithRoles(
     id: string,
-    payload: Record<string, unknown>,
+    payload: UserUpdate,
     roleAssignments?: Array<{ role_id: string; hotel_id: string | null }>
   ): Promise<UserWriteResult> {
     const supabase = createServerClient();
     const { data, error } = await supabase.rpc("update_user_with_roles", {
       p_id: id,
-      p_payload: payload,
-      p_role_assignments: roleAssignments ?? null,
+      p_payload: payload as Json,
+      p_role_assignments: roleAssignments ?? [],
       p_should_replace_roles: roleAssignments !== undefined
     });
 
@@ -354,7 +353,7 @@ class SupabaseUsersRepository implements UsersRepository {
     return this.updateUserWithRolesFallback(id, payload, roleAssignments);
   }
 
-  async updateUser(id: string, payload: Record<string, unknown>): Promise<UserWriteResult> {
+  async updateUser(id: string, payload: UserUpdate): Promise<UserWriteResult> {
     const supabase = createServerClient();
     const { error } = await supabase.from("users").update(payload).eq("id", id);
 

@@ -82,7 +82,9 @@ describe("routes/roles", () => {
       },
       payload: {
         name: "",
-        role_type: "SYSTEM_ROLE"
+        role_type: "SYSTEM_ROLE",
+        hotel_id: null,
+        permission_ids: []
       }
     });
 

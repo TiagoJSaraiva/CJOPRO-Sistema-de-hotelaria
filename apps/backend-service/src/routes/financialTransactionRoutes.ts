@@ -6,7 +6,8 @@ import {
   type AdminFinancialTransactionUpdateInput,
   type TransactionStatus,
   type TransactionType,
-  type HotelIdParams
+  type HotelIdParams,
+  type TablesUpdate
 } from "@hotel/shared";
 import { ensureAuthorizedWithScope } from "../auth/authorization";
 import { adminError } from "../common/adminError";
@@ -171,7 +172,7 @@ export function registerFinancialTransactionRoutes(
     const id = normalizeOptionalText(request.params.id);
     if (!id) return reply.status(400).send(adminError(ADMIN_ERROR_CODE.VALIDATION, "Id da transacao e obrigatorio para atualizacao."));
 
-    const payload: Record<string, unknown> = {};
+    const payload: TablesUpdate<"financial_transactions"> = {};
 
     if (request.body?.type !== undefined) {
       const type = normalizeOptionalText(request.body.type) as TransactionType | null;

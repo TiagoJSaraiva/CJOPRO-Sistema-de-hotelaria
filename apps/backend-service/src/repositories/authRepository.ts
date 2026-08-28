@@ -1,5 +1,15 @@
+import type { QueryData } from "@supabase/supabase-js";
 import { createServerClient } from "../common/supabaseServer";
 import { isSupabaseNotFoundError } from "./supabaseError";
+
+const selectAuthUsers = (supabase: ReturnType<typeof createServerClient>) =>
+  supabase
+    .from("users")
+    .select(
+      "id,name,email,is_active,password_hash,failed_attempts,locked_until,user_roles(hotel_id,hotels(name),roles(id,name,role_type,hotel_id,hotels(name),role_permissions(permissions(name))))"
+    );
+
+type InferredAuthUserRow = QueryData<ReturnType<typeof selectAuthUsers>>[number];
 
 export type AuthUserRolePermissionRow = {
   permissions?: { name?: string | null } | Array<{ name?: string | null }> | null;
@@ -20,14 +30,8 @@ export type AuthUserRoleAssignmentRow = {
   roles?: AuthUserRoleRow | AuthUserRoleRow[] | null;
 };
 
-export type AuthUserRow = {
-  id: string;
-  name: string;
-  email: string;
+export type AuthUserRow = Omit<InferredAuthUserRow, "is_active" | "user_roles"> & {
   is_active: boolean;
-  password_hash: string | null;
-  failed_attempts: number | null;
-  locked_until: string | null;
   user_roles?: AuthUserRoleAssignmentRow[];
 };
 
@@ -41,13 +45,7 @@ export interface AuthRepository {
 class SupabaseAuthRepository implements AuthRepository {
   async findUserByEmail(email: string): Promise<AuthUserRow | null> {
     const supabase = createServerClient();
-    const { data, error } = await supabase
-      .from("users")
-      .select(
-        "id,name,email,is_active,password_hash,failed_attempts,locked_until,user_roles(hotel_id,hotels(name),roles(id,name,role_type,hotel_id,hotels(name),role_permissions(permissions(name))))"
-      )
-      .eq("email", email)
-      .single();
+    const { data, error } = await selectAuthUsers(supabase).eq("email", email).single();
 
     if (error) {
       if (isSupabaseNotFoundError(error)) {
@@ -57,7 +55,8 @@ class SupabaseAuthRepository implements AuthRepository {
       throw error;
     }
 
-    return data;
+    // PostgREST infers constrained text columns in nested joins as `string`.
+    return { ...data, is_active: data.is_active ?? false } as AuthUserRow;
   }
 
   async markSuccessfulLogin(userId: string): Promise<void> {

@@ -1,5 +1,5 @@
 import type { FastifyInstance } from "fastify";
-import { ADMIN_ERROR_CODE, PERMISSIONS, type AdminCustomerCreateInput, type AdminCustomerUpdateInput, type HotelIdParams } from "@hotel/shared";
+import { ADMIN_ERROR_CODE, PERMISSIONS, type AdminCustomerCreateInput, type AdminCustomerUpdateInput, type HotelIdParams, type TablesUpdate } from "@hotel/shared";
 import { ensureAuthorizedWithScope } from "../auth/authorization";
 import { adminError } from "../common/adminError";
 import { normalizeOptionalText } from "../common/text";
@@ -125,14 +125,14 @@ export function registerCustomerRoutes(app: FastifyInstance, repository: Custome
     const id = normalizeOptionalText(request.params.id);
     if (!id) return reply.status(400).send(adminError(ADMIN_ERROR_CODE.VALIDATION, "Id do cliente e obrigatorio para atualizacao."));
 
-    const payload: Record<string, unknown> = {};
-    if (request.body?.full_name !== undefined) payload.full_name = normalizeOptionalText(request.body.full_name);
-    if (request.body?.document_number !== undefined) payload.document_number = normalizeOptionalText(request.body.document_number);
-    if (request.body?.document_type !== undefined) payload.document_type = normalizeOptionalText(request.body.document_type);
+    const payload: TablesUpdate<"customers"> = {};
+    if (request.body?.full_name !== undefined) payload.full_name = normalizeOptionalText(request.body.full_name) || "";
+    if (request.body?.document_number !== undefined) payload.document_number = normalizeOptionalText(request.body.document_number) || "";
+    if (request.body?.document_type !== undefined) payload.document_type = normalizeOptionalText(request.body.document_type) || "";
     if (request.body?.email !== undefined) payload.email = normalizeOptionalText(request.body.email);
     if (request.body?.mobile_phone !== undefined) payload.mobile_phone = normalizeOptionalText(request.body.mobile_phone);
     if (request.body?.phone !== undefined) payload.phone = normalizeOptionalText(request.body.phone);
-    if (request.body?.birth_date !== undefined) payload.birth_date = normalizeOptionalText(request.body.birth_date);
+    if (request.body?.birth_date !== undefined) payload.birth_date = normalizeOptionalText(request.body.birth_date) || "";
     if (request.body?.nationality !== undefined) payload.nationality = normalizeOptionalText(request.body.nationality);
     if (request.body?.notes !== undefined) payload.notes = normalizeOptionalText(request.body.notes);
 

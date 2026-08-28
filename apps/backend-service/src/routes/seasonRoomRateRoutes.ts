@@ -4,7 +4,8 @@ import {
   PERMISSIONS,
   type AdminSeasonRoomRateCreateInput,
   type AdminSeasonRoomRateUpdateInput,
-  type HotelIdParams
+  type HotelIdParams,
+  type TablesUpdate
 } from "@hotel/shared";
 import { ensureAuthorizedWithScope } from "../auth/authorization";
 import { adminError } from "../common/adminError";
@@ -94,9 +95,9 @@ export function registerSeasonRoomRateRoutes(
     const id = normalizeOptionalText(request.params.id);
     if (!id) return reply.status(400).send(adminError(ADMIN_ERROR_CODE.VALIDATION, "Id da tarifa por temporada e obrigatorio para atualizacao."));
 
-    const payload: Record<string, unknown> = {};
-    if (request.body?.season_id !== undefined) payload.season_id = normalizeOptionalText(request.body.season_id);
-    if (request.body?.room_type !== undefined) payload.room_type = normalizeOptionalText(request.body.room_type);
+    const payload: TablesUpdate<"season_room_rates"> = {};
+    if (request.body?.season_id !== undefined) payload.season_id = normalizeOptionalText(request.body.season_id) || "";
+    if (request.body?.room_type !== undefined) payload.room_type = normalizeOptionalText(request.body.room_type) || "";
     if (request.body?.daily_rate !== undefined) payload.daily_rate = Number(request.body.daily_rate);
 
     if (!Object.keys(payload).length) return reply.status(400).send(adminError(ADMIN_ERROR_CODE.VALIDATION, "Nenhum campo informado para atualizacao."));

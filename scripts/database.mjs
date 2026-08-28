@@ -1,11 +1,12 @@
 #!/usr/bin/env node
 
 import { spawnSync } from "node:child_process";
-import { existsSync } from "node:fs";
+import { existsSync, readFileSync, writeFileSync } from "node:fs";
 import { dirname, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
 
 const ROOT_DIRECTORY = resolve(dirname(fileURLToPath(import.meta.url)), "..");
+const DATABASE_TYPES_PATH = resolve(ROOT_DIRECTORY, "packages/shared/src/database.types.ts");
 const LOCAL_API_PORT = "54321";
 const TEST_EXCLUDES = [
   "gotrue",
@@ -181,6 +182,69 @@ function showStatus() {
   process.stdout.write(`Supabase local ativo em ${apiUrl}. Credenciais ocultadas.\n`);
 }
 
+function generateDatabaseTypes({ check = false } = {}) {
+  const result = runSupabase(
+    ["gen", "types", "typescript", "--local", "--schema", "public"],
+    { capture: true }
+  );
+
+  if (result.status !== 0) {
+    fail(
+      "Falha ao gerar tipos TypeScript do Supabase local.",
+      "Confirme as migrations com pnpm db:reset e execute pnpm db:types novamente."
+    );
+  }
+
+  const generated = String(result.stdout || "").replace(/\r\n/g, "\n").trimEnd() + "\n";
+  if (!generated.includes("export type Json") || !generated.includes("public:")) {
+    fail(
+      "O Supabase CLI retornou tipos incompletos para o schema public.",
+      "Confirme a versao fixada do Supabase CLI e execute pnpm db:types novamente."
+    );
+  }
+
+  if (check) {
+    if (!existsSync(DATABASE_TYPES_PATH)) {
+      fail("Os tipos Supabase versionados nao existem.", "Execute pnpm db:types e versione o arquivo gerado.");
+    }
+
+    const current = readFileSync(DATABASE_TYPES_PATH, "utf8").replace(/\r\n/g, "\n");
+    if (current !== generated) {
+      fail(
+        "Os tipos Supabase versionados estao desatualizados em relacao as migrations locais.",
+        "Execute pnpm db:types, revise o diff e versione packages/shared/src/database.types.ts."
+      );
+    }
+
+    process.stdout.write("Tipos Supabase conferem com o schema public local.\n");
+    return;
+  }
+
+  writeFileSync(DATABASE_TYPES_PATH, generated, "utf8");
+  process.stdout.write("Tipos Supabase atualizados a partir do schema public local.\n");
+}
+
+function runDatabaseTypeGeneration({ check = false } = {}) {
+  validatePrerequisites();
+  const wasRunning = Boolean(readLocalStatus());
+  let startedHere = false;
+
+  try {
+    if (!wasRunning) {
+      startedHere = startLocal({ minimal: true });
+    } else {
+      process.stdout.write("Usando a instancia Supabase local que ja estava ativa.\n");
+    }
+
+    resetLocal();
+    generateDatabaseTypes({ check });
+  } finally {
+    if (startedHere) {
+      stopLocal();
+    }
+  }
+}
+
 function runDatabaseTests() {
   validatePrerequisites();
   const wasRunning = Boolean(readLocalStatus());
@@ -194,6 +258,7 @@ function runDatabaseTests() {
     }
 
     resetLocal();
+    generateDatabaseTypes({ check: true });
     const { apiUrl, serviceRoleKey } = getLocalCredentials({ allowDerivedKey: true });
     const testEnv = {
       ...process.env,
@@ -240,12 +305,18 @@ function main() {
     case "test":
       runDatabaseTests();
       break;
+    case "types":
+      runDatabaseTypeGeneration();
+      break;
+    case "types-check":
+      runDatabaseTypeGeneration({ check: true });
+      break;
     case "validate-url":
       assertLocalApiUrl(String(argument || ""));
       process.stdout.write("URL local valida.\n");
       break;
     default:
-      fail("Comando de banco desconhecido.", "Use start, status, reset, stop ou test.");
+      fail("Comando de banco desconhecido.", "Use start, status, reset, stop, types, types-check ou test.");
   }
 }
 

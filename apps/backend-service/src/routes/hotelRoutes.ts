@@ -18,7 +18,8 @@ import {
   validateTaxIdByCountry,
   type AdminHotelCreateInput,
   type AdminHotelUpdateInput,
-  type HotelIdParams
+  type HotelIdParams,
+  type TablesUpdate
 } from "@hotel/shared";
 import { ensureAuthorizedSystem } from "../auth/authorization";
 import { adminError, ADMIN_ERROR_CODE } from "../common/adminError";
@@ -199,7 +200,7 @@ export function registerHotelRoutes(app: FastifyInstance, repository: HotelsRepo
       return reply.status(400).send(adminError(ADMIN_ERROR_CODE.VALIDATION, "Id do hotel e obrigatorio para atualizacao."));
     }
 
-    const payload: Record<string, unknown> = {};
+    const payload: TablesUpdate<"hotels"> = {};
 
     if (request.body?.name !== undefined) {
       const parsedName = request.body.name.trim();
@@ -264,11 +265,11 @@ export function registerHotelRoutes(app: FastifyInstance, repository: HotelsRepo
     }
 
     if (request.body?.address_line !== undefined) {
-      payload.address_line = normalizeOptionalText(request.body.address_line);
+      payload.address_line = normalizeOptionalText(request.body.address_line) || "";
     }
 
     if (request.body?.address_number !== undefined) {
-      payload.address_number = normalizeOptionalText(request.body.address_number);
+      payload.address_number = normalizeOptionalText(request.body.address_number) || "";
     }
 
     if (request.body?.address_complement !== undefined) {
@@ -276,15 +277,15 @@ export function registerHotelRoutes(app: FastifyInstance, repository: HotelsRepo
     }
 
     if (request.body?.district !== undefined) {
-      payload.district = normalizeOptionalText(request.body.district);
+      payload.district = normalizeOptionalText(request.body.district) || "";
     }
 
     if (request.body?.city !== undefined) {
-      payload.city = normalizeOptionalText(request.body.city);
+      payload.city = normalizeOptionalText(request.body.city) || "";
     }
 
     if (request.body?.state !== undefined) {
-      payload.state = normalizeOptionalText(request.body.state);
+      payload.state = normalizeOptionalText(request.body.state) || "";
     }
 
     if (request.body?.country !== undefined) {

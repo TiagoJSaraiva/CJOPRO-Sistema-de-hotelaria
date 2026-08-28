@@ -7,7 +7,8 @@ import {
   type AdminRoleCreateInput,
   type AdminRoleType,
   type AdminRoleUpdateInput,
-  type HotelIdParams
+  type HotelIdParams,
+  type TablesUpdate
 } from "@hotel/shared";
 import { mapAdminRole, normalizePermissionIds } from "../admin/mappers";
 import { ensureAuthorizedSystem, ensureAuthorizedAnySystem } from "../auth/authorization";
@@ -176,7 +177,7 @@ export function registerRoleRoutes(app: FastifyInstance, repository: RolesReposi
         .send(adminError(ADMIN_ERROR_CODE.SELF_ACTION_FORBIDDEN, "Nao e permitido atualizar uma role vinculada ao proprio usuario."));
     }
 
-    const payload: Record<string, unknown> = {};
+    const payload: TablesUpdate<"roles"> = {};
 
     if (request.body?.name !== undefined) {
       const parsedName = normalizeOptionalText(request.body.name);
@@ -218,7 +219,7 @@ export function registerRoleRoutes(app: FastifyInstance, repository: RolesReposi
       return reply.status(404).send(adminError(ADMIN_ERROR_CODE.NOT_FOUND, "Role nao encontrada."));
     }
 
-    const effectiveRoleType = (payload.role_type as AdminRoleType | undefined) || currentRole.role_type || ADMIN_ROLE_TYPES.SYSTEM;
+    const effectiveRoleType = parseRoleType(payload.role_type) || currentRole.role_type || ADMIN_ROLE_TYPES.SYSTEM;
     const effectiveHotelId =
       request.body?.hotel_id !== undefined
         ? (payload.hotel_id as string | null | undefined) || null

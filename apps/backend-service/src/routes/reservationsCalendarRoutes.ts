@@ -401,10 +401,10 @@ export function registerReservationsCalendarRoutes(
     } else if (bookingCustomer.mode === "create_inline") {
       const customersRepository = createCustomersRepository();
       const createCustomerResult = await customersRepository.createCustomer(activeHotelId, {
-        full_name: normalizeOptionalText(bookingCustomer.full_name),
-        document_number: normalizeOptionalText(bookingCustomer.document_number),
-        document_type: normalizeOptionalText(bookingCustomer.document_type),
-        birth_date: normalizeOptionalText(bookingCustomer.birth_date),
+        full_name: normalizeOptionalText(bookingCustomer.full_name) || "",
+        document_number: normalizeOptionalText(bookingCustomer.document_number) || "",
+        document_type: normalizeOptionalText(bookingCustomer.document_type) || "",
+        birth_date: normalizeOptionalText(bookingCustomer.birth_date) || "",
         email: normalizeOptionalText(bookingCustomer.email),
         mobile_phone: normalizeOptionalText(bookingCustomer.mobile_phone),
         phone: normalizeOptionalText(bookingCustomer.phone),
@@ -437,7 +437,7 @@ export function registerReservationsCalendarRoutes(
       booking_customer_id: bookingCustomerId,
       reservation_code: reservationCode,
       guest_count: computed.data.rooms_count,
-      reservation_source: normalizeOptionalText(payload.reservation_source),
+      reservation_source: payload.reservation_source ?? null,
       estimated_total_price: computed.data.total_price,
       final_total_price: computed.data.total_price,
       notes: normalizeOptionalText(payload.notes)

@@ -8,6 +8,8 @@ import {
   normalizePermissionIds,
   normalizeRoleAssignments
 } from "../../../src/admin/mappers";
+import { adminError } from "../../../src/common/adminError";
+import { applyHotelContextFilter } from "../../../src/common/hotelContextFilter";
 
 describe("admin/mappers", () => {
   it("mapAuthUserFromDb agrega roles, permissoes validas e role assignments", () => {
@@ -205,5 +207,23 @@ describe("admin/mappers", () => {
       hotel_name: "Hotel Central",
       permissions: [{ id: "perm-1", name: "user_read", type: "HOTEL_PERMISSION" }]
     });
+
+    expect(adminError("ADMIN_CONFLICT", "Conflito", "constraint_x")).toEqual({
+      code: "ADMIN_CONFLICT",
+      message: "Conflito",
+      details: "constraint_x"
+    });
+
+    const calls: Array<[string, string]> = [];
+    const query = {
+      eq(column: string, value: string) {
+        calls.push([column, value]);
+        return query;
+      }
+    };
+    expect(applyHotelContextFilter(query, null)).toBe(query);
+    expect(applyHotelContextFilter(query, "hotel-1")).toBe(query);
+    expect(applyHotelContextFilter(query, "hotel-2", "rooms.hotel_id")).toBe(query);
+    expect(calls).toEqual([["hotel_id", "hotel-1"], ["rooms.hotel_id", "hotel-2"]]);
   });
 });

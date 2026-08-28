@@ -1,4 +1,5 @@
 import { createClient, type SupabaseClient } from "@supabase/supabase-js";
+import type { Database } from "@hotel/shared";
 import type { FastifyInstance } from "fastify";
 import { afterAll, beforeAll, describe, expect, it } from "vitest";
 import { assertLocalApiUrl } from "../../../../scripts/database.mjs";
@@ -19,7 +20,7 @@ function addDays(date: string, days: number): string {
 
 describe.sequential("Supabase local com Fastify real", () => {
   let app: FastifyInstance;
-  let supabase: SupabaseClient;
+  let supabase: SupabaseClient<Database>;
   let adminToken: string;
   let managerAToken: string;
   let managerBToken: string;
@@ -53,7 +54,7 @@ describe.sequential("Supabase local com Fastify real", () => {
     const serviceRoleKey = String(process.env.SUPABASE_SECRET_KEY || "");
     expect(serviceRoleKey).not.toBe("");
 
-    supabase = createClient(apiUrl, serviceRoleKey, {
+    supabase = createClient<Database>(apiUrl, serviceRoleKey, {
       auth: { persistSession: false, autoRefreshToken: false }
     });
 

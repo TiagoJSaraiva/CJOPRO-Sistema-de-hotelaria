@@ -57,7 +57,22 @@ describe("routes/hotels", () => {
         authorization: `Bearer ${token}`
       },
       payload: {
-        name: "Hotel Centro"
+        name: "Hotel Centro",
+        legal_name: "Hotel Centro LTDA",
+        tax_id: "04.252.011/0001-10",
+        slug: "hotel-centro",
+        email: "contato@hotel.com",
+        phone: "11999999999",
+        address_line: "Rua Central",
+        address_number: "100",
+        address_complement: null,
+        district: "Centro",
+        city: "Sao Paulo",
+        state: "SP",
+        country: "BR",
+        zip_code: "01001-000",
+        timezone: null,
+        currency: null
       }
     });
 
@@ -85,7 +100,7 @@ describe("routes/hotels", () => {
     expect(response.statusCode).toBe(400);
     expect(response.json()).toEqual({
       code: "ADMIN_VALIDATION_ERROR",
-      message: "Campos obrigatorios ausentes no cadastro inicial do hotel."
+      message: "Dados inválidos para a requisição."
     });
   });
 
@@ -144,11 +159,14 @@ describe("routes/hotels", () => {
         phone: "11999999999",
         address_line: "Rua Central",
         address_number: "100",
+        address_complement: null,
         district: "Centro",
         city: "Sao Paulo",
         state: "SP",
         country: "BR",
-        zip_code: "01001-000"
+        zip_code: "01001-000",
+        timezone: null,
+        currency: null
       }
     });
 

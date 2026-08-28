@@ -1,14 +1,20 @@
+import type { Json, TablesUpdate } from "@hotel/shared";
+import type { QueryData } from "@supabase/supabase-js";
 import { createServerClient } from "../common/supabaseServer";
 import { isSupabaseConflictError, isSupabaseForeignKeyError, isSupabaseNotFoundError } from "./supabaseError";
 
 export type RoleWriteResult = "ok" | "conflict" | "not-found";
+type RoleUpdate = TablesUpdate<"roles">;
 
-export type RoleWithRelationsRow = {
-  id: string;
-  name: string;
+const selectRolesWithRelations = (supabase: ReturnType<typeof createServerClient>) =>
+  supabase
+    .from("roles")
+    .select("id,name,role_type,hotel_id,hotels(name),role_permissions(permission_id,permissions(id,name,type))");
+
+type InferredRoleWithRelationsRow = QueryData<ReturnType<typeof selectRolesWithRelations>>[number];
+
+export type RoleWithRelationsRow = Omit<InferredRoleWithRelationsRow, "role_type" | "role_permissions"> & {
   role_type: "SYSTEM_ROLE" | "HOTEL_ROLE";
-  hotel_id: string | null;
-  hotels?: { name: string | null } | Array<{ name: string | null }> | null;
   role_permissions?:
     | Array<{
         permission_id?: string | null;
@@ -82,8 +88,8 @@ export interface RolesRepository {
   createRole(payload: { name: string; role_type: "SYSTEM_ROLE" | "HOTEL_ROLE"; hotel_id: string | null }): Promise<{ result: RoleWriteResult; id?: string }>;
   assignRolePermissions(items: Array<{ role_id: string; permission_id: string }>): Promise<void>;
   getRoleWithRelationsById(id: string): Promise<RoleWithRelationsRow | null>;
-  updateRoleWithPermissions(id: string, payload: Record<string, unknown>, permissionIds?: string[]): Promise<RoleWriteResult>;
-  updateRole(id: string, payload: Record<string, unknown>): Promise<RoleWriteResult>;
+  updateRoleWithPermissions(id: string, payload: RoleUpdate, permissionIds?: string[]): Promise<RoleWriteResult>;
+  updateRole(id: string, payload: RoleUpdate): Promise<RoleWriteResult>;
   roleExists(id: string): Promise<boolean>;
   clearRolePermissions(roleId: string): Promise<void>;
   deleteRole(id: string): Promise<RoleWriteResult>;
@@ -131,7 +137,7 @@ class SupabaseRolesRepository implements RolesRepository {
 
   private async updateRoleWithPermissionsFallback(
     id: string,
-    payload: Record<string, unknown>,
+    payload: RoleUpdate,
     permissionIds?: string[]
   ): Promise<RoleWriteResult> {
     if (Object.keys(payload).length) {
@@ -200,10 +206,7 @@ class SupabaseRolesRepository implements RolesRepository {
 
   async listRolesWithRelations(): Promise<RoleWithRelationsRow[]> {
     const supabase = createServerClient();
-    const { data, error } = await supabase
-      .from("roles")
-      .select("id,name,role_type,hotel_id,hotels(name),role_permissions(permission_id,permissions(id,name,type))")
-      .order("name", { ascending: true });
+    const { data, error } = await selectRolesWithRelations(supabase).order("name", { ascending: true });
 
     if (error) {
       throw error;
@@ -246,7 +249,7 @@ class SupabaseRolesRepository implements RolesRepository {
     const { data, error } = await supabase.rpc("create_role_with_permissions", {
       p_name: payload.name,
       p_role_type: payload.role_type,
-      p_hotel_id: payload.hotel_id,
+      p_hotel_id: payload.hotel_id as string,
       p_permission_ids: permissionIds
     });
 
@@ -316,14 +319,14 @@ class SupabaseRolesRepository implements RolesRepository {
 
   async updateRoleWithPermissions(
     id: string,
-    payload: Record<string, unknown>,
+    payload: RoleUpdate,
     permissionIds?: string[]
   ): Promise<RoleWriteResult> {
     const supabase = createServerClient();
     const { data, error } = await supabase.rpc("update_role_with_permissions", {
       p_id: id,
-      p_payload: payload,
-      p_permission_ids: permissionIds ?? null,
+      p_payload: payload as Json,
+      p_permission_ids: permissionIds ?? [],
       p_should_replace_permissions: permissionIds !== undefined
     });
 
@@ -352,7 +355,7 @@ class SupabaseRolesRepository implements RolesRepository {
     return this.updateRoleWithPermissionsFallback(id, payload, permissionIds);
   }
 
-  async updateRole(id: string, payload: Record<string, unknown>): Promise<RoleWriteResult> {
+  async updateRole(id: string, payload: RoleUpdate): Promise<RoleWriteResult> {
     const supabase = createServerClient();
     const { error } = await supabase.from("roles").update(payload).eq("id", id);
 

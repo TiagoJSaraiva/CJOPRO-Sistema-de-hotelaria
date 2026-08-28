@@ -49,10 +49,12 @@ pnpm db:start
 pnpm db:status
 pnpm db:reset
 pnpm db:stop
+pnpm db:types
+pnpm db:types:check
 pnpm test:db
 ```
 
-`pnpm db:reset` sempre usa `db reset --local` e é destrutivo somente para os dados locais. `pnpm test:db` inicia o ambiente quando necessário, executa reset, pgTAP e a suíte HTTP real, e encerra apenas os containers iniciados por ele. Uma instância que já estava ativa é preservada.
+`pnpm db:reset` sempre usa `db reset --local` e é destrutivo somente para os dados locais. `pnpm db:types` usa o mesmo reset local para gerar o schema `public` em `packages/shared/src/database.types.ts`; `db:types:check` compara em memória sem sobrescrever o arquivo. `pnpm test:db` inicia o ambiente quando necessário, executa reset, confere o drift dos tipos, roda pgTAP e a suíte HTTP real, e encerra apenas os containers iniciados por ele. Uma instância que já estava ativa é preservada.
 
 Durante o teste automatizado são usados somente PostgreSQL, PostgREST e Kong. A URL é validada contra `http://localhost:54321` ou `http://127.0.0.1:54321`; qualquer host, protocolo ou porta diferente faz o comando falhar antes de expor a aplicação ao banco. A credencial administrativa local permanece apenas na memória do processo e nunca é impressa ou escrita em `.env`.
 
@@ -79,20 +81,26 @@ Os testes pgTAP ficam em `supabase/tests/database/`. A suíte Vitest de banco us
 
    `db reset --local` é destrutivo apenas para os dados locais. Seu sucesso é a
    principal prova de que o banco pode ser reconstruído do zero.
-6. Execute as verificações da aplicação afetadas pela mudança:
+6. Regenere os tipos Supabase versionados e adapte os acessos que deixarem de compilar:
+
+   ```powershell
+   pnpm db:types
+   ```
+
+7. Execute as verificações da aplicação afetadas pela mudança:
 
    ```powershell
    pnpm typecheck
    pnpm test
    ```
 
-7. Revise o SQL e o diff antes de fazer commit:
+8. Revise o SQL, os tipos gerados e o diff antes de fazer commit:
 
    ```powershell
-   git diff -- supabase/migrations supabase/seed.sql
+   git diff -- supabase/migrations supabase/seed.sql packages/shared/src/database.types.ts
    ```
 
-8. Inclua a migration no mesmo commit das adaptações de backend, tipos e testes
+9. Inclua a migration no mesmo commit das adaptações de backend, tipos e testes
    que dependem dela.
 
 ## Prototipação visual ou via SQL local

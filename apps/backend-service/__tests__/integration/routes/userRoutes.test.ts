@@ -59,7 +59,8 @@ describe("routes/users", () => {
       payload: {
         name: "Operador",
         email: "op@hotel.com",
-        password_hash: "tmp123"
+        password_hash: "tmp123",
+        role_assignments: []
       }
     });
 
@@ -87,7 +88,7 @@ describe("routes/users", () => {
     expect(response.statusCode).toBe(400);
     expect(response.json()).toEqual({
       code: "ADMIN_VALIDATION_ERROR",
-      message: "Nome, email e senha temporaria sao obrigatorios."
+      message: "Dados inválidos para a requisição."
     });
   });
 });

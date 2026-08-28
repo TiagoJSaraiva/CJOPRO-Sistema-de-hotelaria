@@ -57,7 +57,8 @@ describe("routes/permissions", () => {
         authorization: `Bearer ${token}`
       },
       payload: {
-        name: "hotel_manage"
+        name: "hotel_manage",
+        type: "SYSTEM_PERMISSION"
       }
     });
 
@@ -78,7 +79,8 @@ describe("routes/permissions", () => {
         authorization: `Bearer ${token}`
       },
       payload: {
-        name: ""
+        name: "",
+        type: "SYSTEM_PERMISSION"
       }
     });
 

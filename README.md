@@ -34,7 +34,7 @@ Comandos de reproducibilidade e validacao:
 - `pnpm security:audit`: bloqueia vulnerabilidades de severidade alta ou critica na arvore completa.
 - `pnpm deps:outdated`: mostra atualizacoes disponiveis em todos os workspaces.
 - `pnpm deps:outdated:json`: retorna as atualizacoes disponiveis em formato estruturado.
-- `pnpm check`: executa lint, typecheck e build; deve ser a validacao rapida antes de um commit.
+- `pnpm check`: verifica drift do OpenAPI e executa lint, typecheck e build; deve ser a validacao rapida antes de um commit.
 - `pnpm check:full`: acrescenta testes Vitest com cobertura e E2E à validacao rapida, executa todas as fases e agrega as falhas no final.
 - `pnpm check:ci`: executa a auditoria de seguranca antes da mesma validacao funcional de `check:full`.
 
@@ -128,6 +128,10 @@ Comandos publicos:
 - `pnpm db:reset`: recria exclusivamente o banco local a partir das migrations e do seed; todos os dados locais sao descartados.
 - `pnpm db:stop`: interrompe os containers preservando os volumes locais.
 - `pnpm test:db`: inicia apenas PostgreSQL, PostgREST e Kong quando necessario, faz reset, executa pgTAP e Vitest/Fastify e encerra somente a instancia que ele proprio iniciou.
+- `pnpm db:types`: faz reset exclusivamente local, gera `packages/shared/src/database.types.ts` e substitui o artefato somente após sucesso.
+- `pnpm db:types:check`: repete a geração local em memória e falha quando os tipos versionados estão desatualizados.
+
+`pnpm test:db` também bloqueia drift dos tipos após o mesmo reset. A geração usa somente o schema `public`, preserva uma instância que já estava ativa, recusa URLs remotas e nunca usa `--linked`.
 
 O seed cria dois hoteis sinteticos, quartos, clientes, produtos, tarifas, reservas, estadias, pagamentos e bloqueios. As contas locais usam a senha `Hotelaria123!`:
 
@@ -168,5 +172,19 @@ Observacoes:
 
 - O backend falha no boot se `AUTH_SESSION_SECRET` nao estiver configurada corretamente.
 - Login com 10 falhas consecutivas por usuario ativa bloqueio temporario de 2 minutos.
+
+## Contratos tipados da API
+
+Os artefatos `packages/shared/src/database.types.ts` e `docs/openapi.json` são versionados e revisáveis. O primeiro representa o schema `public` reconstruído pelas migrations; o segundo formaliza as 55 operações HTTP em OpenAPI 3.0.3. Não edite esses arquivos manualmente.
+
+Comandos públicos:
+
+- `pnpm api:openapi`: valida e atualiza deterministicamente `docs/openapi.json`.
+- `pnpm api:openapi:check`: valida estrutura, quantidade de operações, `operationId` e drift sem escrever; faz parte de `pnpm check`.
+- `pnpm db:types` e `pnpm db:types:check`: geram ou conferem os tipos Supabase contra o banco exclusivamente local.
+
+Em desenvolvimento (`NODE_ENV=development`), o backend expõe Swagger UI em `/docs` e o JSON em `/docs/json`. Essas rotas não são registradas em produção nem no modo padrão de testes.
+
+Após criar uma migration, execute `pnpm db:types`, adapte os acessos tipados e então rode `pnpm test:db`. Após alterar uma rota ou schema TypeBox de `@hotel/shared/api-contract`, execute `pnpm api:openapi` e revise o diff antes de `pnpm check`.
 
 

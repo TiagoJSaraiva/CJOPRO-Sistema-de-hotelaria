@@ -1,5 +1,5 @@
 import type { FastifyInstance } from "fastify";
-import { ADMIN_ERROR_CODE, PERMISSIONS, type AdminSeasonCreateInput, type AdminSeasonUpdateInput, type HotelIdParams } from "@hotel/shared";
+import { ADMIN_ERROR_CODE, PERMISSIONS, type AdminSeasonCreateInput, type AdminSeasonUpdateInput, type HotelIdParams, type TablesUpdate } from "@hotel/shared";
 import { ensureAuthorizedWithScope } from "../auth/authorization";
 import { adminError } from "../common/adminError";
 import { normalizeOptionalText } from "../common/text";
@@ -71,10 +71,10 @@ export function registerSeasonRoutes(app: FastifyInstance, repository: SeasonsRe
     const id = normalizeOptionalText(request.params.id);
     if (!id) return reply.status(400).send(adminError(ADMIN_ERROR_CODE.VALIDATION, "Id da temporada e obrigatorio para atualizacao."));
 
-    const payload: Record<string, unknown> = {};
-    if (request.body?.name !== undefined) payload.name = normalizeOptionalText(request.body.name);
-    if (request.body?.start_date !== undefined) payload.start_date = normalizeOptionalText(request.body.start_date);
-    if (request.body?.end_date !== undefined) payload.end_date = normalizeOptionalText(request.body.end_date);
+    const payload: TablesUpdate<"seasons"> = {};
+    if (request.body?.name !== undefined) payload.name = normalizeOptionalText(request.body.name) || "";
+    if (request.body?.start_date !== undefined) payload.start_date = normalizeOptionalText(request.body.start_date) || "";
+    if (request.body?.end_date !== undefined) payload.end_date = normalizeOptionalText(request.body.end_date) || "";
     if (request.body?.is_active !== undefined) payload.is_active = !!request.body.is_active;
 
     if (!Object.keys(payload).length) return reply.status(400).send(adminError(ADMIN_ERROR_CODE.VALIDATION, "Nenhum campo informado para atualizacao."));
