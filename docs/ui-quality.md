@@ -1,5 +1,8 @@
 # Qualidade visual e acessibilidade do PMS
 
+Volte ao [índice técnico](README.md). A relação desta suíte com as demais gates
+está na [estratégia de testes](testing-strategy.md).
+
 ## Escopo automatizado
 
 O Chromium valida quatro superfícies em desktop (1440 × 960) e no viewport Pixel 5: login, calendário com painel de reserva aberto, checkout concluído e financeiro filtrado. O backend mockado e o relógio fixo tornam os dados, datas e estados reproduzíveis sem banco ou Supabase.

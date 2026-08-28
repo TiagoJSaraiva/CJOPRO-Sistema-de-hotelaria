@@ -2,6 +2,9 @@
 
 Os diagramas abaixo são texto Mermaid versionado. Eles descrevem os limites atuais do sistema e devem mudar no mesmo pull request que alterar uma relação representada.
 
+Volte ao [índice técnico](README.md) ou consulte o
+[guia de desenvolvimento](development-guide.md) para executar os componentes.
+
 ## Contexto e componentes
 
 ```mermaid

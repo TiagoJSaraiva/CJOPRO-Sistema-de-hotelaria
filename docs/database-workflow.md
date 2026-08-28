@@ -1,5 +1,8 @@
 # Workflow do banco de dados
 
+Volte ao [índice técnico](README.md). Para selecionar as validações, consulte a
+[estratégia de testes](testing-strategy.md).
+
 ## Decisão arquitetural
 
 O schema versionado em `supabase/migrations/` é a fonte de verdade do banco de
