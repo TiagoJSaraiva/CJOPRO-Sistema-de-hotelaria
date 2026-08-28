@@ -75,7 +75,7 @@ function MetricCard({
 
   return (
     <article className={`rounded-lg border p-4 shadow-[0_1px_2px_rgba(16,24,40,0.04)] ${toneClassName}`}>
-      <span className="block text-[0.76rem] font-semibold uppercase tracking-[0.05em] text-[#697586]">{label}</span>
+      <span className="block text-[0.76rem] font-semibold uppercase tracking-[0.05em] text-[#52606d]">{label}</span>
       <strong className="mt-2 block text-[1.45rem] leading-tight">{value}</strong>
       <p className="mb-0 mt-2 text-[0.86rem] text-[#52606d]">{detail}</p>
     </article>
@@ -89,7 +89,7 @@ function ExpenseCategoriesPanel({ transactions, referenceDate }: { transactions:
     <aside className="grid gap-4 rounded-lg border border-[#d9dfe7] bg-white p-4">
       <div>
         <h3 className="m-0 text-[1rem] text-[#121926]">Categorias de gasto</h3>
-        <p className="mb-0 mt-[0.25rem] text-[0.86rem] text-[#697586]">Participação das principais despesas no recorte atual.</p>
+        <p className="mb-0 mt-[0.25rem] text-[0.86rem] text-[#52606d]">Participação das principais despesas no recorte atual.</p>
       </div>
 
       <div className="grid gap-3">
@@ -103,11 +103,11 @@ function ExpenseCategoriesPanel({ transactions, referenceDate }: { transactions:
               <div className="h-2 overflow-hidden rounded-full bg-[#eef2f6]">
                 <div className="h-full rounded-full bg-[#1b7a6c]" style={{ width: `${Math.max(category.share, 4)}%` }} />
               </div>
-              <span className="text-[0.78rem] text-[#697586]">{category.share}% em {category.count} lançamento(s)</span>
+              <span className="text-[0.78rem] text-[#52606d]">{category.share}% em {category.count} lançamento(s)</span>
             </div>
           ))
         ) : (
-          <p className="m-0 rounded-lg border border-dashed border-[#d9dfe7] p-3 text-[0.9rem] text-[#697586]">
+          <p className="m-0 rounded-lg border border-dashed border-[#d9dfe7] p-3 text-[0.9rem] text-[#52606d]">
             Sem despesas para consolidar neste recorte.
           </p>
         )}
@@ -123,7 +123,7 @@ function UpcomingExpensesPanel({ transactions, referenceDate }: { transactions: 
     <aside className="grid gap-4 rounded-lg border border-[#d9dfe7] bg-white p-4">
       <div>
         <h3 className="m-0 text-[1rem] text-[#121926]">Agenda de vencimentos</h3>
-        <p className="mb-0 mt-[0.25rem] text-[0.86rem] text-[#697586]">Proximas despesas pendentes para acompanhamento.</p>
+        <p className="mb-0 mt-[0.25rem] text-[0.86rem] text-[#52606d]">Proximas despesas pendentes para acompanhamento.</p>
       </div>
 
       <div className="grid gap-2">
@@ -133,15 +133,15 @@ function UpcomingExpensesPanel({ transactions, referenceDate }: { transactions: 
               <div className="flex items-start justify-between gap-3">
                 <div className="min-w-0">
                   <strong className="block truncate text-[0.9rem] text-[#202939]">{transaction.category}</strong>
-                  <span className="block truncate text-[0.8rem] text-[#697586]">{transaction.counterparty || transaction.cost_center || "Sem fornecedor"}</span>
+                  <span className="block truncate text-[0.8rem] text-[#52606d]">{transaction.counterparty || transaction.cost_center || "Sem fornecedor"}</span>
                 </div>
                 <span className="whitespace-nowrap text-[0.88rem] font-semibold text-[#b42318]">{formatMoney(transaction.amount, transaction.currency)}</span>
               </div>
-              <span className="mt-2 block text-[0.78rem] text-[#697586]">{formatDate(transaction.due_date)}</span>
+              <span className="mt-2 block text-[0.78rem] text-[#52606d]">{formatDate(transaction.due_date)}</span>
             </div>
           ))
         ) : (
-          <p className="m-0 rounded-lg border border-dashed border-[#d9dfe7] p-3 text-[0.9rem] text-[#697586]">
+          <p className="m-0 rounded-lg border border-dashed border-[#d9dfe7] p-3 text-[0.9rem] text-[#52606d]">
             Nenhuma despesa pendente cadastrada.
           </p>
         )}

@@ -42,6 +42,14 @@
       "cache": false,
       "outputs": ["playwright-report/**"]
     },
+    "test:visual": {
+      "dependsOn": ["build"],
+      "cache": false
+    },
+    "test:a11y": {
+      "dependsOn": ["build"],
+      "cache": false
+    },
     "clean": {
       "cache": false
     }

@@ -166,7 +166,7 @@ export function CheckoutByRoomWorkflow() {
         <div className="flex flex-wrap items-start justify-between gap-3">
           <div>
             <h2 className="m-0 text-[1.05rem] font-semibold text-[#121926]">Checkout</h2>
-            <p className="mb-0 mt-[0.25rem] text-[0.86rem] text-[#697586]">Localizar estadia em check-in por quarto.</p>
+            <p className="mb-0 mt-[0.25rem] text-[0.86rem] text-[#52606d]">Localizar estadia em check-in por quarto.</p>
           </div>
           <span className="rounded-full border border-[#e4e7ec] bg-[#f8fafc] px-[0.6rem] py-[0.25rem] text-[0.78rem] font-semibold text-[#52606d]">
             {panelData ? panelData.stay.room_number : "Aguardando busca"}
@@ -258,7 +258,7 @@ export function CheckoutByRoomWorkflow() {
                     <div key={payment.id} className="flex items-center justify-between gap-3 border-b border-[#eef2f6] px-3 py-2 last:border-b-0">
                       <div className="min-w-0">
                         <strong className="block text-[0.82rem] text-[#202939]">{paymentMethodLabel(payment.method)}</strong>
-                        <span className="block text-[0.75rem] text-[#697586]">{formatDateDisplay(payment.paid_at)}</span>
+                        <span className="block text-[0.75rem] text-[#52606d]">{formatDateDisplay(payment.paid_at)}</span>
                       </div>
                       <span className="whitespace-nowrap text-[0.82rem] font-semibold text-[#176c43]">{formatMoney(payment.amount)}</span>
                     </div>

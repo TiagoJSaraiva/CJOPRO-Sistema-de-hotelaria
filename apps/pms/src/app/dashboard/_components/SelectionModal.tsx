@@ -1,5 +1,8 @@
 "use client";
 
+import { useId } from "react";
+import { useModalFocus } from "./useModalFocus";
+
 type SelectionModalItem = {
   id: string;
   label: string;
@@ -19,15 +22,25 @@ const overlayClassName = "fixed inset-0 z-[1000] grid place-items-center bg-[rgb
 const panelClassName = "grid max-h-[75vh] w-full max-w-[620px] gap-[0.75rem] overflow-auto rounded-xl border border-[#d9dfe7] bg-white p-4";
 
 export function SelectionModal({ open, title, items, emptyMessage, onSelect, onClose }: SelectionModalProps) {
+  const titleId = useId();
+  const dialogRef = useModalFocus<HTMLDivElement>(open, onClose);
+
   if (!open) {
     return null;
   }
 
   return (
-    <div className={overlayClassName} role="dialog" aria-modal="true" aria-label={title}>
+    <div
+      ref={dialogRef}
+      className={overlayClassName}
+      role="dialog"
+      aria-modal="true"
+      aria-labelledby={titleId}
+      tabIndex={-1}
+    >
       <section className={panelClassName}>
         <header className="flex items-center justify-between gap-3">
-          <h3 className="m-0">{title}</h3>
+          <h3 id={titleId} className="m-0">{title}</h3>
           <button
             type="button"
             onClick={onClose}

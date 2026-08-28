@@ -38,8 +38,8 @@ type ReservationsCalendarBoardProps = {
 const CELL_WIDTH = 44;
 const ROW_HEIGHT = 58;
 const LEFT_PANEL_WIDTH = 200;
-const BLOCK_HEIGHT = 30;
-const BLOCK_VERTICAL_GAP = Math.max(0, (ROW_HEIGHT - BLOCK_HEIGHT) / 2);
+const BLOCK_HEIGHT = 24;
+const BLOCK_VERTICAL_GAP = 0;
 
 const LEGEND_ITEMS: Array<{ key: string; label: string }> = [
   { key: "confirmed", label: "Confirmada" },
@@ -93,7 +93,7 @@ function MetricCard({
 
   return (
     <article className={`rounded-lg border p-4 shadow-[0_1px_2px_rgba(16,24,40,0.04)] ${toneClassName}`}>
-      <span className="block text-[0.76rem] font-semibold uppercase tracking-[0.05em] text-[#697586]">{label}</span>
+      <span className="block text-[0.76rem] font-semibold uppercase tracking-[0.05em] text-[#52606d]">{label}</span>
       <strong className="mt-2 block text-[1.45rem] leading-tight">{value}</strong>
       <p className="mb-0 mt-2 text-[0.86rem] text-[#52606d]">{detail}</p>
     </article>
@@ -408,7 +408,7 @@ export function ReservationsCalendarBoard({ data, startDate, customers }: Reserv
         <div className="flex flex-wrap items-start justify-between gap-3">
           <div>
             <h2 className="m-0 text-[1rem] font-semibold text-[#121926]">Mapa de disponibilidade</h2>
-            <p className="mb-0 mt-[0.25rem] text-[0.88rem] text-[#697586]">Selecione células livres para montar uma reserva ou abra uma estadia existente.</p>
+            <p className="mb-0 mt-[0.25rem] text-[0.88rem] text-[#52606d]">Selecione células livres para montar uma reserva ou abra uma estadia existente.</p>
           </div>
 
           <div className="flex flex-wrap items-center gap-2">
@@ -452,7 +452,7 @@ export function ReservationsCalendarBoard({ data, startDate, customers }: Reserv
                 className="sticky top-0 z-20 grid border-b border-[#d9dfe7] bg-[#f8fafc]"
                 style={{ gridTemplateColumns: `${LEFT_PANEL_WIDTH}px repeat(${data.days.length}, ${CELL_WIDTH}px)` }}
               >
-                <div className="sticky left-0 z-30 bg-[#f8fafc] px-3 py-2 text-[0.78rem] font-semibold uppercase tracking-[0.04em] text-[#697586]">Quarto</div>
+                <div className="sticky left-0 z-30 bg-[#f8fafc] px-3 py-2 text-[0.78rem] font-semibold uppercase tracking-[0.04em] text-[#52606d]">Quarto</div>
                 {data.days.map((day) => (
                   <div key={day.date} className="border-l border-[#e4e7ec] px-1 py-1 text-center text-[0.72rem] font-semibold text-[#52606d]">
                     <div className="text-[#202939]">{String(day.day_number).padStart(2, "0")}</div>
@@ -470,7 +470,7 @@ export function ReservationsCalendarBoard({ data, startDate, customers }: Reserv
                   >
                     <div className="sticky left-0 z-10 border-r border-[#e4e7ec] bg-white px-3 py-2">
                       <p className="m-0 truncate text-[0.85rem] font-semibold text-[#202939]">{room.room_type.toUpperCase()}</p>
-                      <p className="m-0 truncate text-[0.78rem] text-[#697586]">
+                      <p className="m-0 truncate text-[0.78rem] text-[#52606d]">
                         {room.room_number} | {room.max_occupancy} hospedes
                       </p>
                     </div>
@@ -485,6 +485,7 @@ export function ReservationsCalendarBoard({ data, startDate, customers }: Reserv
                         <button
                           key={`${room.room_id}-${day.date}`}
                           type="button"
+                          disabled={occupied.left && occupied.right}
                           aria-label={hasAnyOccupiedSide ? `Abrir ou selecionar ${cellLabel}` : `Selecionar ${cellLabel}`}
                           title={hasAnyOccupiedSide ? `Abrir ou selecionar ${cellLabel}` : `Selecionar ${cellLabel}`}
                           className="border-l border-[#eef2f6] bg-white transition-colors hover:bg-[#f0fdfa] focus:outline-none focus:ring-2 focus:ring-inset focus:ring-[#0f766e]"
@@ -559,7 +560,7 @@ export function ReservationsCalendarBoard({ data, startDate, customers }: Reserv
           <header className="flex flex-wrap items-start justify-between gap-3">
             <div>
               <h3 className="m-0 text-[1rem] font-semibold text-[#121926]">Painel operacional</h3>
-              <p className="mb-0 mt-[0.25rem] text-[0.84rem] text-[#697586]">
+              <p className="mb-0 mt-[0.25rem] text-[0.84rem] text-[#52606d]">
                 {selectedStay ? "Acompanhe a estadia selecionada." : "Monte uma nova reserva a partir do mapa."}
               </p>
             </div>
@@ -584,7 +585,7 @@ export function ReservationsCalendarBoard({ data, startDate, customers }: Reserv
                       onClick={() => setSelectedStayId(stay.id)}
                     >
                       <strong className="block text-[0.9rem] text-[#202939]">{stay.reservation_code || "Sem código"}</strong>
-                      <span className="mt-[0.15rem] block text-[0.78rem] text-[#697586]">{statusLabel(stay.stay_status)}</span>
+                      <span className="mt-[0.15rem] block text-[0.78rem] text-[#52606d]">{statusLabel(stay.stay_status)}</span>
                     </button>
                   );
                 })}
@@ -716,7 +717,7 @@ export function ReservationsCalendarBoard({ data, startDate, customers }: Reserv
                           <div key={payment.id} className="flex items-center justify-between gap-3 border-b border-[#eef2f6] px-3 py-2 last:border-b-0">
                             <div className="min-w-0">
                               <strong className="block text-[0.82rem] text-[#202939]">{paymentMethodLabel(payment.method)}</strong>
-                              <span className="block text-[0.75rem] text-[#697586]">{formatDateDisplay(payment.paid_at)}</span>
+                              <span className="block text-[0.75rem] text-[#52606d]">{formatDateDisplay(payment.paid_at)}</span>
                             </div>
                             <span className="whitespace-nowrap text-[0.82rem] font-semibold text-[#176c43]">{formatMoney(payment.amount)}</span>
                           </div>

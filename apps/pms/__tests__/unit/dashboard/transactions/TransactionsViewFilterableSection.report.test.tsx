@@ -131,4 +131,27 @@ describe("TransactionsViewFilterableSection report menu", () => {
     expect(allCall.scope).toBe("all");
     expect(allCall.transactions.map((transaction: AdminFinancialTransaction) => transaction.id)).toEqual(["transaction-1", "transaction-2"]);
   });
+
+  it("opera o menu por teclado e devolve o foco ao acionador", async () => {
+    const user = userEvent.setup();
+    renderTransactionsSection();
+
+    const trigger = screen.getByRole("button", { name: "Gerar relatório" });
+    trigger.focus();
+    await user.keyboard("{ArrowDown}");
+
+    const filteredItem = screen.getByRole("menuitem", { name: "Recorte filtrado" });
+    const allItem = screen.getByRole("menuitem", { name: "Todas do hotel" });
+    expect(document.activeElement).toBe(filteredItem);
+
+    await user.keyboard("{ArrowDown}");
+    expect(document.activeElement).toBe(allItem);
+
+    await user.keyboard("{ArrowUp}");
+    expect(document.activeElement).toBe(filteredItem);
+
+    await user.keyboard("{Escape}");
+    expect(screen.queryByRole("menu", { name: "Opções de relatório financeiro" })).toBeNull();
+    expect(document.activeElement).toBe(trigger);
+  });
 });

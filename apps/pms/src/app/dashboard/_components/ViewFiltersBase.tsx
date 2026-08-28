@@ -1,6 +1,7 @@
 "use client";
 
-import type { ReactNode } from "react";
+import { useId, type ReactNode } from "react";
+import { useModalFocus } from "./useModalFocus";
 
 type ViewFiltersActionsBarProps = {
   appliedFilterCount: number;
@@ -52,15 +53,25 @@ export function ViewFiltersActionsBar({ appliedFilterCount, onOpen, onClear, chi
 }
 
 export function ViewFiltersModal({ title, open, onClose, onApply, onClear, children }: ViewFiltersModalProps) {
+  const titleId = useId();
+  const dialogRef = useModalFocus<HTMLDivElement>(open, onClose);
+
   if (!open) {
     return null;
   }
 
   return (
-    <div className={overlayClassName} role="dialog" aria-modal="true" aria-label={title}>
+    <div
+      ref={dialogRef}
+      className={overlayClassName}
+      role="dialog"
+      aria-modal="true"
+      aria-labelledby={titleId}
+      tabIndex={-1}
+    >
       <section className={panelClassName}>
         <header className="flex flex-wrap items-center justify-between gap-3">
-          <h3 className="m-0">{title}</h3>
+          <h3 id={titleId} className="m-0">{title}</h3>
 
           <button
             type="button"

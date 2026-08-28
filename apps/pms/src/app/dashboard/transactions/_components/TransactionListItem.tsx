@@ -76,7 +76,7 @@ function getSignedAmountLabel(transaction: AdminFinancialTransaction): string {
 function DetailItem({ label, value }: { label: string; value: string }) {
   return (
     <div className="min-w-0">
-      <span className="block text-[0.72rem] font-semibold uppercase tracking-[0.04em] text-[#697586]">{label}</span>
+      <span className="block text-[0.72rem] font-semibold uppercase tracking-[0.04em] text-[#52606d]">{label}</span>
       <strong className="mt-[0.2rem] block truncate text-[0.92rem] font-semibold text-[#202939]">{value}</strong>
     </div>
   );
@@ -227,14 +227,14 @@ export function TransactionListItem({ transaction, canRead, canUpdate, canDelete
         </div>
 
         <div>
-          <span className="block text-[0.72rem] font-semibold uppercase tracking-[0.04em] text-[#697586]">Valor</span>
+          <span className="block text-[0.72rem] font-semibold uppercase tracking-[0.04em] text-[#52606d]">Valor</span>
           <strong className={`mt-[0.2rem] block text-[1rem] ${transaction.type === "INCOME" ? "text-[#157347]" : "text-[#b42318]"}`}>
             {getSignedAmountLabel(transaction)}
           </strong>
         </div>
 
         <div>
-          <span className="block text-[0.72rem] font-semibold uppercase tracking-[0.04em] text-[#697586]">Vencimento</span>
+          <span className="block text-[0.72rem] font-semibold uppercase tracking-[0.04em] text-[#52606d]">Vencimento</span>
           <strong className="mt-[0.2rem] block text-[0.95rem] text-[#202939]">{formatDate(transaction.due_date)}</strong>
         </div>
 

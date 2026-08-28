@@ -8,15 +8,29 @@ const mockBackendURL = `http://127.0.0.1:${mockBackendPort}`;
 export default defineConfig({
   testDir: "./__tests__/e2e",
   timeout: 45_000,
+  updateSnapshots: "none",
+  snapshotPathTemplate: "{testDir}/__screenshots__/{platform}/{projectName}/{arg}{ext}",
   expect: {
-    timeout: 10_000
+    timeout: 10_000,
+    toHaveScreenshot: {
+      animations: "disabled",
+      caret: "hide",
+      scale: "css",
+      maxDiffPixelRatio: 0.001
+    }
   },
   fullyParallel: false,
   workers: process.env.CI ? 1 : undefined,
-  reporter: [["list"]],
+  reporter: [
+    ["list"],
+    ["html", { outputFolder: "../../node_modules/.cache/pms-playwright-report", open: "never" }]
+  ],
   outputDir: "../../node_modules/.cache/pms-playwright-results",
   use: {
     baseURL,
+    locale: "pt-BR",
+    timezoneId: "America/Sao_Paulo",
+    colorScheme: "light",
     trace: "retain-on-failure",
     screenshot: "only-on-failure"
   },

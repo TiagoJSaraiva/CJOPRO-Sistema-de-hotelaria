@@ -51,7 +51,7 @@ O GitHub Actions executa o workflow `CI` em pull requests e pushes para `main`, 
 Os tres jobs sao independentes:
 
 - `Quality and Vitest`: executa `pnpm bootstrap`, `pnpm check` e `pnpm test:coverage`; publica o resumo na execucao e preserva HTML, LCOV, JSON e JUnit por sete dias.
-- `Playwright E2E`: instala somente o Chromium e executa `pnpm test:e2e` com backend mockado; em caso de falha, preserva traces e screenshots por sete dias.
+- `Playwright E2E, visual and accessibility`: instala somente o Chromium e executa os fluxos funcionais, snapshots e auditorias axe com backend mockado; em caso de falha, preserva traces, imagens esperada/atual/diff, relatório HTML e JSONs axe por sete dias.
 - `Database integration`: recria migrations e seed no Supabase local e executa pgTAP e a integracao HTTP real.
 
 Nenhum job usa secrets, banco hospedado ou projeto Supabase vinculado. Antes de enviar uma alteracao, use `pnpm check:ci && pnpm test:db` como equivalente local completo dos tres jobs. `pnpm check:full` permanece util quando a auditoria online nao for necessaria.
@@ -90,7 +90,12 @@ Comandos principais (na raiz):
 - `pnpm coverage:report`: reconstrói o resumo consolidado usando relatorios JSON existentes, sem executar testes.
 - `pnpm test:watch`: modo watch para desenvolvimento.
 - `pnpm test:e2e`: executa E2E do PMS.
+- `pnpm test:visual`: compara as quatro superfícies representativas em desktop e mobile com os baselines da plataforma atual.
+- `pnpm test:a11y`: audita essas superfícies e seus estados interativos contra as tags WCAG 2.2 AA configuradas.
+- `pnpm test:visual:update`: atualiza somente baselines alterados da plataforma atual, após revisão visual deliberada.
 - `pnpm test:db`: recria o Supabase local e executa pgTAP e a integracao HTTP real do backend.
+
+Os baselines visuais de Windows e Linux são versionados separadamente e nunca são atualizados pelo CI. Qualquer alteração deve ser revisada com as imagens esperada, atual e diff antes de executar o comando de atualização. Consulte [qualidade visual e acessibilidade](docs/ui-quality.md) para a política completa e o checklist manual.
 
 Cobertura de testes:
 
@@ -186,5 +191,9 @@ Comandos públicos:
 Em desenvolvimento (`NODE_ENV=development`), o backend expõe Swagger UI em `/docs` e o JSON em `/docs/json`. Essas rotas não são registradas em produção nem no modo padrão de testes.
 
 Após criar uma migration, execute `pnpm db:types`, adapte os acessos tipados e então rode `pnpm test:db`. Após alterar uma rota ou schema TypeBox de `@hotel/shared/api-contract`, execute `pnpm api:openapi` e revise o diff antes de `pnpm check`.
+
+## Arquitetura
+
+Os diagramas revisáveis de contexto, autenticação e pipeline de qualidade estão em [arquitetura e fluxos do sistema](docs/architecture.md). Atualize o diagrama correspondente no mesmo pull request que alterar componentes, limites de confiança ou validações do CI.
 
 

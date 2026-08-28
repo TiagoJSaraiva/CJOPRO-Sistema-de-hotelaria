@@ -1,4 +1,8 @@
-import { expect, test, type BrowserContext } from "@playwright/test";
+import type { BrowserContext, Page } from "@playwright/test";
+import { expect, test } from "./axe-test";
+
+const REFERENCE_TIME = new Date("2026-05-12T15:00:00.000Z");
+const TEST_TAGS = ["@visual", "@a11y"];
 
 async function authenticate(context: BrowserContext, baseURL: string) {
   await context.addCookies([
@@ -19,10 +23,37 @@ async function authenticate(context: BrowserContext, baseURL: string) {
   ]);
 }
 
-test.describe("PMS route visual consistency", () => {
-  test("reservations route exposes the same management-dashboard patterns as transactions", async ({ page, context, baseURL }, testInfo) => {
-    await authenticate(context, baseURL || "http://127.0.0.1:3001");
+async function preparePage(page: Page) {
+  await page.clock.setFixedTime(REFERENCE_TIME);
+  await page.emulateMedia({ colorScheme: "light", reducedMotion: "reduce" });
+}
 
+async function stabilizeVisualState(page: Page) {
+  await page.addStyleTag({ content: "* { cursor: none !important; }" });
+  await page.evaluate(() => document.fonts.ready);
+}
+
+test.describe("PMS UI quality", () => {
+  test("login", { tag: TEST_TAGS }, async ({ page, auditAccessibility }) => {
+    await preparePage(page);
+    await page.goto("/login");
+
+    await expect(page.getByRole("heading", { name: "Login do PMS" })).toBeVisible();
+    await page.keyboard.press("Tab");
+    await expect(page.getByLabel("Email")).toBeFocused();
+    await page.keyboard.press("Tab");
+    await expect(page.getByLabel("Senha")).toBeFocused();
+    await page.keyboard.press("Tab");
+    await expect(page.getByRole("button", { name: "Entrar" })).toBeFocused();
+
+    await auditAccessibility("login");
+    await stabilizeVisualState(page);
+    await expect(page).toHaveScreenshot("login.png");
+  });
+
+  test("calendário com painel de reserva aberto", { tag: TEST_TAGS }, async ({ page, context, baseURL, auditAccessibility }) => {
+    await preparePage(page);
+    await authenticate(context, baseURL || "http://127.0.0.1:3001");
     await page.goto("/dashboard/reservations/view?start_date=2026-05-12");
 
     await expect(page).toHaveTitle(/PMS/);
@@ -32,13 +63,9 @@ test.describe("PMS route visual consistency", () => {
     await expect(page.getByTestId("reservation-summary-metrics")).toContainText("Bloqueios");
     await expect(page.getByTestId("reservation-calendar-grid")).toBeVisible();
     await expect(page.getByTestId("reservation-side-panel")).toContainText("Painel operacional");
-    await expect(page.getByRole("link", { name: "Período anterior" })).toBeVisible();
-    await expect(page.getByRole("link", { name: "Próximo período" })).toBeVisible();
 
     await page.getByLabel("Selecionar 102 em 12/05/2026").click();
     await expect(page.getByTestId("reservation-side-panel")).toContainText("Em seleção");
-    await expect(page.getByRole("button", { name: "Simular" })).toBeEnabled();
-
     await page.getByRole("button", { name: "Simular" }).click();
     await expect(page.getByTestId("reservation-side-panel")).toContainText("Resultado da simulação");
     await expect(page.getByTestId("reservation-side-panel")).toContainText("R$ 180,00");
@@ -48,12 +75,14 @@ test.describe("PMS route visual consistency", () => {
     await expect(page.getByTestId("reservation-side-panel")).toContainText("Ana Paula Ribeiro");
     await expect(page.getByRole("button", { name: "Registrar pagamento" })).toBeDisabled();
 
-    await page.screenshot({ path: testInfo.outputPath("reservations-route.png"), fullPage: false });
+    await auditAccessibility("calendario-painel-reserva");
+    await stabilizeVisualState(page);
+    await expect(page).toHaveScreenshot("reservations-calendar.png");
   });
 
-  test("reservations checkout route finds checked-in stay by room and completes checkout", async ({ page, context, baseURL }, testInfo) => {
+  test("checkout concluído", { tag: TEST_TAGS }, async ({ page, context, baseURL, auditAccessibility }) => {
+    await preparePage(page);
     await authenticate(context, baseURL || "http://127.0.0.1:3001");
-
     await page.goto("/dashboard/reservations/checkout");
 
     await expect(page.getByRole("heading", { level: 2, name: "Checkout", exact: true })).toBeVisible();
@@ -72,36 +101,60 @@ test.describe("PMS route visual consistency", () => {
     await expect(page.getByTestId("checkout-by-room-workflow")).toContainText("Checkout confirmado para o quarto 102.");
     await expect(page.getByTestId("checkout-by-room-workflow")).toContainText("Checked-out");
 
-    await page.screenshot({ path: testInfo.outputPath("reservations-checkout-route.png"), fullPage: false });
+    await auditAccessibility("checkout-concluido");
+    await stabilizeVisualState(page);
+    await expect(page).toHaveScreenshot("reservations-checkout.png");
   });
 
-  test("transactions route keeps its reference visual and filter interaction", async ({ page, context, baseURL }, testInfo) => {
+  test("financeiro após aplicação de filtro", { tag: TEST_TAGS }, async ({ page, context, baseURL, auditAccessibility }) => {
+    await preparePage(page);
     await authenticate(context, baseURL || "http://127.0.0.1:3001");
-
     await page.goto("/dashboard/transactions/view");
 
     await expect(page.getByRole("heading", { name: "Painel Financeiro" })).toBeVisible();
     await expect(page.getByText("Resultado realizado")).toBeVisible();
     await expect(page.getByText("Gastos pendentes")).toBeVisible();
-    await expect(page.getByRole("button", { name: "Gerar relatório" })).toBeVisible();
-    await expect(page.getByRole("link", { name: "Novo lançamento" })).toBeVisible();
-    await expect(page.getByRole("heading", { name: "Energia elétrica" })).toBeVisible();
 
-    await page.getByRole("button", { name: "Gerar relatório" }).click();
-    await expect(page.getByRole("menu", { name: "Opções de relatório financeiro" })).toBeVisible();
-    await expect(page.getByRole("menuitem", { name: "Recorte filtrado" })).toBeVisible();
-    await expect(page.getByRole("menuitem", { name: "Todas do hotel" })).toBeVisible();
-    await page.getByRole("button", { name: "Gerar relatório" }).click();
+    const reportTrigger = page.getByRole("button", { name: "Gerar relatório" });
+    await reportTrigger.focus();
+    await page.keyboard.press("ArrowDown");
+    const filteredReportItem = page.getByRole("menuitem", { name: "Recorte filtrado" });
+    const allReportItem = page.getByRole("menuitem", { name: "Todas do hotel" });
+    await expect(filteredReportItem).toBeFocused();
+    await auditAccessibility("financeiro-menu-relatorios");
+    await page.keyboard.press("ArrowDown");
+    await expect(allReportItem).toBeFocused();
+    await page.keyboard.press("Escape");
+    await expect(reportTrigger).toBeFocused();
+    await expect(page.getByRole("menu", { name: "Opções de relatório financeiro" })).toBeHidden();
 
-    await page.getByRole("button", { name: "Filtrar dados" }).click();
-    await expect(page.getByRole("dialog", { name: "Filtros financeiros" })).toBeVisible();
+    const filterTrigger = page.getByRole("button", { name: "Filtrar dados" });
+    await filterTrigger.focus();
+    await page.keyboard.press("Enter");
+    const dialog = page.getByRole("dialog", { name: "Filtros financeiros" });
+    const closeDialog = page.getByRole("button", { name: "Fechar" });
+    const applyFilters = page.getByRole("button", { name: "Aplicar filtros" });
+    await expect(dialog).toBeVisible();
+    await expect(closeDialog).toBeFocused();
+    await auditAccessibility("financeiro-modal-filtros");
+    await page.keyboard.press("Shift+Tab");
+    await expect(applyFilters).toBeFocused();
+    await page.keyboard.press("Tab");
+    await expect(closeDialog).toBeFocused();
+    await page.keyboard.press("Escape");
+    await expect(dialog).toBeHidden();
+    await expect(filterTrigger).toBeFocused();
+
+    await filterTrigger.click();
     await page.getByPlaceholder("Categoria, fornecedor, descrição ou referência").fill("Energia");
-    await page.getByRole("button", { name: "Aplicar filtros" }).click();
+    await applyFilters.click();
 
     await expect(page.getByRole("heading", { name: "Energia elétrica" })).toBeVisible();
     await expect(page.getByRole("heading", { name: "Hospedagem" })).toBeHidden();
     await expect(page.getByText("Exibindo 1 de 3 lançamentos financeiros.")).toBeVisible();
 
-    await page.screenshot({ path: testInfo.outputPath("transactions-route.png"), fullPage: false });
+    await auditAccessibility("financeiro-filtrado");
+    await stabilizeVisualState(page);
+    await expect(page).toHaveScreenshot("transactions-filtered.png");
   });
 });

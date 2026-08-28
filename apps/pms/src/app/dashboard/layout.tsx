@@ -65,14 +65,20 @@ export default async function DashboardLayout({ children }: { children: ReactNod
   const navLinkClassName = "rounded-lg border border-[#d2d2d2] bg-white px-[0.7rem] py-[0.45rem] font-medium leading-none text-[#232323] no-underline";
 
   return (
-    <main className="min-h-screen bg-[#f5f6f8] p-5">
+    <div className="min-h-screen bg-[#f5f6f8] p-5">
+      <a
+        href="#pms-main-content"
+        className="fixed left-4 top-4 z-[2000] -translate-y-24 rounded-lg bg-[#102a43] px-4 py-3 font-semibold text-white transition-transform focus:translate-y-0"
+      >
+        Pular para o conteúdo
+      </a>
       <header className="mb-4 flex flex-wrap items-center justify-between gap-4">
         <div className="flex min-w-0 flex-wrap items-center gap-4">
           <Link href="/dashboard" aria-label="Voltar para início" className="inline-flex items-center">
-            <Image src="/img/logo.png" alt="Logo" width={116} height={34} priority className="h-10 w-[116px]" />
+            <Image src="/img/logo.png" alt="PMS Hotelaria" width={116} height={34} priority className="h-10 w-[116px]" />
           </Link>
 
-          <nav className="flex flex-wrap gap-[0.55rem]">
+          <nav aria-label="Navegação principal do PMS" className="flex flex-wrap gap-[0.55rem]">
             <Link href="/dashboard" className={navLinkClassName}>
               Início
             </Link>
@@ -100,7 +106,9 @@ export default async function DashboardLayout({ children }: { children: ReactNod
         </div>
       </header>
 
-      {children}
-    </main>
+      <main id="pms-main-content" tabIndex={-1}>
+        {children}
+      </main>
+    </div>
   );
 }

@@ -14,7 +14,10 @@
     "test:integration": "vitest run __tests__/integration --passWithNoTests",
     "test:coverage": "vitest run --coverage --passWithNoTests --reporter=default --reporter=junit --outputFile.junit=coverage/junit.xml",
     "test:watch": "vitest --watch --passWithNoTests",
-    "test:e2e": "playwright test"
+    "test:e2e": "playwright test",
+    "test:visual": "playwright test --grep @visual",
+    "test:a11y": "playwright test --grep @a11y",
+    "test:visual:update": "playwright test --grep @visual --update-snapshots=changed"
   },
   "dependencies": {
     "@hotel/shared": "workspace:*",
@@ -27,6 +30,7 @@
     "react-dom": "19.2.8"
   },
   "devDependencies": {
+    "@axe-core/playwright": "4.13.0",
     "@playwright/test": "^1.62.1",
     "@testing-library/react": "^16.3.2",
     "@testing-library/user-event": "^14.6.6",

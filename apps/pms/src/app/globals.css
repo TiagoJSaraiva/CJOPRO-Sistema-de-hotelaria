@@ -13,6 +13,11 @@ body {
 	box-sizing: border-box;
 }
 
+:where(a, button, input, select, textarea, [tabindex]):focus-visible {
+	outline: 3px solid #0b6e99;
+	outline-offset: 3px;
+}
+
 @layer base {
 	body {
 		@apply text-[#1f2933];
