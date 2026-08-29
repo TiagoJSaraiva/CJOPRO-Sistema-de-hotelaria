@@ -10,6 +10,7 @@ atualizar arquivos acompanhados pelo Git.
 | `pnpm bootstrap` | instala o lockfile congelado e diagnostica o ambiente | runtime fixado | não |
 | `pnpm run doctor` | valida versões, workspaces, lockfile e CLIs | nenhum | não |
 | `pnpm dev` | inicia os workspaces em modo watch | `.env` conforme o serviço | não |
+| `pnpm dev:pms-backend` | compila shared e inicia somente PMS e backend; `Ctrl+C` encerra ambos | configuração do backend; portas `3001` e `3334` livres | não |
 | `pnpm build` | compila todos os workspaces | nenhum | não |
 | `pnpm typecheck` | verifica TypeScript | nenhum | não |
 | `pnpm lint` | valida scripts e código | nenhum | não |
@@ -22,6 +23,9 @@ atualizar arquivos acompanhados pelo Git.
 
 `pnpm run doctor -- --json` e `pnpm docs:check -- --json` fornecem saída
 estruturada. Use `pnpm run doctor`, pois `pnpm doctor` é um comando interno do pnpm 9.
+O comando `pnpm dev:pms-backend` compila `@hotel/shared` apenas na inicialização;
+reinicie-o após mudanças nesse pacote ou use `pnpm dev` para recompilação contínua.
+Ele não gerencia o Supabase e não possui comando separado de parada.
 
 ## Dependências e segurança
 

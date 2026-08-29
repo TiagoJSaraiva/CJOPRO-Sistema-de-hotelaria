@@ -27,12 +27,15 @@ nvm use 22.23.2
 corepack enable
 corepack prepare pnpm@9.12.3 --activate
 pnpm bootstrap
-pnpm dev
+pnpm dev:pms-backend
 ```
 
 O PMS usa a porta `3001`, o booking engine usa `3333`, o backend usa `3334` e
 a API local do Supabase usa `54321`. Copie o `.env.example` de cada aplicação
 para um arquivo local ignorado pelo Git antes de iniciar integrações reais.
+`pnpm dev:pms-backend` prepara o pacote compartilhado e mantém somente PMS e
+backend no terminal; um único `Ctrl+C` encerra ambos. Use `pnpm dev` quando
+precisar de todos os workspaces em modo watch, inclusive o pacote compartilhado.
 
 ## Validação
 

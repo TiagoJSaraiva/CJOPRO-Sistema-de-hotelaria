@@ -41,9 +41,17 @@ chave do Supabase local, segredo de sessão com pelo menos 32 caracteres e orige
 CORS. Obtenha credenciais exclusivamente locais com `pnpm db:status`; não copie
 chaves para código, documentação ou logs.
 
-Inicie todos os workspaces com `pnpm dev` ou execute um isoladamente com, por
-exemplo, `pnpm --filter @hotel/pms dev`. O Swagger do backend fica em `/docs` e
-`/docs/json` somente em desenvolvimento.
+Para trabalhar no fluxo principal, execute `pnpm dev:pms-backend` na raiz. O
+comando valida as configurações do backend e as portas `3001`/`3334`, compila
+`@hotel/shared` uma vez e só anuncia as URLs depois que `/login` e `/health`
+respondem. PMS e backend permanecem vinculados ao terminal; um único `Ctrl+C`
+encerra toda a árvore e libera as duas portas. Ele não inicia nem encerra o
+Supabase.
+
+Use `pnpm dev` quando precisar de todos os workspaces em modo watch, inclusive
+o booking engine e a recompilação contínua de `@hotel/shared`. Para executar um
+serviço isoladamente, use, por exemplo, `pnpm --filter @hotel/pms dev`. O Swagger
+do backend fica em `/docs` e `/docs/json` somente em desenvolvimento.
 
 ## Fluxos comuns
 
@@ -83,6 +91,8 @@ de sua fonte e ser revisado antes do commit.
 
 - Runtime ou CLI ausente: execute `pnpm run doctor` e siga a correção indicada.
 - Instalação divergente: confirme Node/pnpm e rode `pnpm bootstrap`.
+- Porta `3001` ou `3334` ocupada: encerre o processo indicado pelo diagnóstico
+  de `pnpm dev:pms-backend` e execute o comando novamente.
 - Portas `54321` ou `54322` ocupadas: use `pnpm db:status` e, se a instância for do projeto, `pnpm db:stop` antes de `pnpm db:start`.
 - Drift OpenAPI: regenere com `pnpm api:openapi` e revise o contrato.
 - Drift de tipos: execute `pnpm db:types` contra o Supabase exclusivamente local.
