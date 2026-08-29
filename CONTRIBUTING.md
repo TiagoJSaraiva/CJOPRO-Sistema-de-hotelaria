@@ -14,7 +14,9 @@ variáveis e fluxos entre os módulos.
 
 - Faça mudanças pequenas e relacionadas ao objetivo da tarefa.
 - Não atualize dependências ou artefatos gerados incidentalmente.
-- Adicione ou adapte testes no mesmo conjunto da mudança.
+- Em toda `feat` ou `fix`, inclua **Proteção e testes** no planejamento conforme a
+  [política de testes](docs/testing-strategy.md#política-para-novas-features-e-correções).
+- Adicione ou adapte os testes planejados no mesmo conjunto da mudança.
 - Revise `git diff` e `git status --short` antes de concluir.
 - Não faça commit, push, publicação ou alteração remota em nome de outra pessoa sem autorização explícita.
 
@@ -50,7 +52,10 @@ O [guia de testes](docs/testing-strategy.md) explica como selecionar as suítes.
 
 - [ ] O diff contém apenas arquivos relacionados à mudança.
 - [ ] Não há secrets, dados pessoais, dumps, logs ou artefatos temporários.
-- [ ] Testes novos cobrem o comportamento e as falhas relevantes.
+- [ ] O planejamento da `feat` ou `fix` contém a seção **Proteção e testes**.
+- [ ] Testes novos cobrem sucesso, falhas e limites de segurança relevantes.
+- [ ] Código legado descoberto foi caracterizado antes de ser modificado.
+- [ ] A cobertura do workspace foi preservada ou elevada, sem reduzir limiares.
 - [ ] Documentação, contratos, tipos e diagramas afetados foram atualizados.
 - [ ] Baselines visuais alterados foram inspecionados nas imagens expected, actual e diff.
 - [ ] `pnpm check` e as validações proporcionais da tabela passaram.

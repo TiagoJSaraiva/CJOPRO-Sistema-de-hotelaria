@@ -67,6 +67,27 @@ triggers, políticas ou dados, leia integralmente o
   a suíte local de banco deliberadamente separada.
 - Atualize documentação e diagramas no mesmo diff da mudança que representam.
 
+### Proteção obrigatória de features e correções
+
+Todo planejamento de `feat` ou `fix` deve conter uma seção **Proteção e testes**
+antes da execução. Ela deve identificar comportamentos de sucesso e falha,
+camadas afetadas, testes que serão criados ou adaptados, comandos de aceite e
+eventuais contratos, tipos, migrations ou snapshots impactados.
+
+- Código legado sem cobertura deve receber testes de caracterização antes de ser
+  modificado.
+- Todo novo arquivo de produção e toda nova regra de negócio devem ser exercitados
+  por um teste automatizado na camada apropriada.
+- Cubra decisões relevantes, erros, autenticação, autorização e isolamento por
+  hotel; percentual isolado não substitui esses cenários.
+- Limiares de cobertura nunca podem ser reduzidos para acomodar uma mudança. A
+  feature deve preservar ou elevar a cobertura do workspace.
+- Exceções para bootstraps, configuração ou código não executável precisam ser
+  justificadas explicitamente no planejamento e na entrega.
+
+A matriz obrigatória e o conteúdo mínimo da seção estão na
+[política para novas features e correções](docs/testing-strategy.md#política-para-novas-features-e-correções).
+
 Execute validações proporcionais conforme o
 [guia de contribuição](CONTRIBUTING.md). `pnpm check` é a gate mínima normal;
 mudanças visuais, de banco, dependências ou CI exigem as suítes adicionais do
