@@ -203,6 +203,24 @@ export function ReservationsCalendarBoard({ data, startDate, customers }: Reserv
     return grouped;
   }, [data.stays, daysMap]);
 
+  const maintenanceBlocksByRoom = useMemo(() => {
+    const grouped = new Map<string, Array<{ block: AdminReservationCalendarResponse["blocks"][number]; left: number; width: number }>>();
+    const firstDate = data.days[0]?.date;
+    const lastDate = data.days[data.days.length - 1]?.date;
+    if (!firstDate || !lastDate) return grouped;
+    for (const block of data.blocks) {
+      if (!block.maintenance_occurrence_id) continue;
+      const visibleStart = block.start_date < firstDate ? firstDate : block.start_date;
+      const visibleEnd = block.end_date > lastDate ? lastDate : block.end_date;
+      const startIndex = daysMap.get(visibleStart); const endIndex = daysMap.get(visibleEnd);
+      if (startIndex === undefined || endIndex === undefined) continue;
+      const list = grouped.get(block.room_id) || [];
+      list.push({ block, left: startIndex * CELL_WIDTH, width: (endIndex - startIndex + 1) * CELL_WIDTH });
+      grouped.set(block.room_id, list);
+    }
+    return grouped;
+  }, [data.blocks, data.days, daysMap]);
+
   const rangeLabel = formatDateRangeLabel(data.days);
   const prevHref = `/dashboard/reservations/view?start_date=${addDaysIso(startDate, -CALENDAR_WINDOW_DAYS)}`;
   const nextHref = `/dashboard/reservations/view?start_date=${addDaysIso(startDate, CALENDAR_WINDOW_DAYS)}`;
@@ -349,7 +367,17 @@ export function ReservationsCalendarBoard({ data, startDate, customers }: Reserv
     try {
       setError(null);
       setIsPending(true);
-      const panel = await postJson<AdminStayOperationalPanelResponse>(`/api/stays/${selectedStayId}/${action}`, {});
+      let payload: Record<string, unknown> = {};
+      if (action === "checkout" && panelData?.maintenance_acknowledgement_required) {
+        const acknowledged = window.confirm("Esta estadia possui ocorrências de manutenção abertas. Confirma ciência antes de concluir o checkout?");
+        if (!acknowledged) return;
+        payload = {
+          maintenance_acknowledged_occurrence_ids: (panelData.maintenance_occurrences || [])
+            .filter((occurrence) => occurrence.status !== "resolved" && occurrence.status !== "canceled")
+            .map((occurrence) => occurrence.id)
+        };
+      }
+      const panel = await postJson<AdminStayOperationalPanelResponse>(`/api/stays/${selectedStayId}/${action}`, payload);
       setPanelData(panel);
       router.refresh();
     } catch (requestError) {
@@ -549,6 +577,13 @@ export function ReservationsCalendarBoard({ data, startDate, customers }: Reserv
                         </button>
                       ))}
                     </div>
+                    <div className="pointer-events-none absolute left-[200px] right-0 z-10" style={{ top: 28, height: BLOCK_HEIGHT }}>
+                      {(maintenanceBlocksByRoom.get(room.room_id) || []).map(({ block, left, width }) => {
+                        const className = "pointer-events-auto absolute block truncate rounded-md border border-white/70 bg-[#b42318] px-2 py-1 text-left text-[11px] font-semibold text-white no-underline shadow-sm focus:outline-none focus:ring-2 focus:ring-[#0f766e]";
+                        const label = `${block.occurrence_code || block.label || "Bloqueio"}${block.is_overdue ? " · atrasado" : ""}`;
+                        return block.maintenance_occurrence_id ? <Link key={block.id} href={`/dashboard/maintenance/occurrences/${block.maintenance_occurrence_id}`} aria-label={`Abrir ocorrência ${label}`} className={className} style={{ left, width, height: BLOCK_HEIGHT }}>{label}</Link> : <span key={block.id} className={className} style={{ left, width, height: BLOCK_HEIGHT }}>{label}</span>;
+                      })}
+                    </div>
                   </div>
                 ))}
               </div>
@@ -613,6 +648,12 @@ export function ReservationsCalendarBoard({ data, startDate, customers }: Reserv
                       <DetailItem label="Check-out real" value={formatDateDisplay(panelData.stay.checkout_date_actual)} />
                     </div>
                   </PanelSection>
+
+                  {(panelData.maintenance_occurrences || []).length ? (
+                    <PanelSection title="Ocorrências e danos">
+                      <ul className="m-0 grid gap-2 pl-5">{panelData.maintenance_occurrences!.map((occurrence) => <li key={occurrence.id}><Link href={`/dashboard/maintenance/occurrences/${occurrence.id}`} className="font-semibold text-[#0f766e]">{occurrence.code}</Link> · {occurrence.description} · {occurrence.status}</li>)}</ul>
+                    </PanelSection>
+                  ) : null}
 
                   <PanelSection title="Financeiro">
                     <div className="grid grid-cols-2 gap-2">

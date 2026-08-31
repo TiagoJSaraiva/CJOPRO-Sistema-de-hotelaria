@@ -56,6 +56,47 @@ sequenceDiagram
 
 Fontes de verdade: `apps/pms/src/lib/auth.ts`, `apps/pms/src/lib/activeHotel.ts`, `apps/pms/src/lib/adminApi.ts`, middlewares e rotas em `apps/backend-service/src`. Atualize este diagrama quando cookies, headers, autenticação, autorização ou isolamento por hotel mudarem.
 
+## Danos, manutenção e bloqueio operacional
+
+Uma ocorrência descreve o problema e mantém o contexto do quarto, área,
+equipamento e, quando aplicável, da estadia. O trabalho executável fica em uma
+ou mais ordens. Alterações de estado, inspeções, liberações e a ciência no
+checkout usam funções transacionais do PostgreSQL para que estado e auditoria
+sejam persistidos juntos.
+
+```mermaid
+flowchart LR
+  report[Ocorrência relatada] --> triage[Triagem]
+  triage --> orders[Uma ou mais ordens]
+  triage -.-> block[Bloqueio rígido do quarto]
+  orders --> execution[Execução]
+  execution --> inspection{Inspeção exigida?}
+  inspection -->|sim| review[Aprovação por outro usuário]
+  inspection -->|não| liability{Responsabilidade suspeita?}
+  review --> liability
+  liability -->|sim| decision[Confirmação ou descarte]
+  liability -->|não| release[Liberação explícita]
+  decision --> release
+  release --> close[Encerramento]
+  close -->|justificativa| triage
+  report -. vínculo opcional .-> stay[Estadia]
+  stay --> checkout[Checkout com ciência]
+```
+
+O calendário deriva a disponibilidade dos bloqueios ativos: um bloqueio não
+liberado continua rígido depois da previsão e passa a ser mostrado como
+atrasado. `rooms.status` permanece compatível para estados legados, enquanto
+novas interdições de manutenção são criadas somente em `room_blocks`.
+
+Evidências ficam no bucket privado `maintenance-evidence`; o navegador recebe
+apenas URLs assinadas temporárias e nunca credenciais administrativas. O módulo
+não cria transações financeiras, cobranças, despesas ou realocações.
+
+Fontes de verdade: migration `20260831010000_create_maintenance_core.sql`,
+`maintenanceRepository.ts`, `maintenanceRoutes.ts`, os contratos em
+`packages/shared/src/api-contract.ts` e as páginas em
+`apps/pms/src/app/dashboard/maintenance`.
+
 ## Pipeline de qualidade
 
 ```mermaid

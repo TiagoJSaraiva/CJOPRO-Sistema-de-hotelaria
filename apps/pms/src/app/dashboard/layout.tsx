@@ -8,6 +8,7 @@ import { getActiveHotelCookieValue, listActiveHotelOptions, resolveActiveHotelFo
 import { logoutAction, setActiveHotelAction } from "./actions";
 import { ActiveHotelSelector } from "./_components/ActiveHotelSelector";
 import { getRoomsAccess } from "./rooms/access";
+import { getMaintenanceAccess } from "./maintenance/access";
 
 const NAME_CONNECTORS = new Set(["da", "de", "do", "das", "dos", "e"]);
 
@@ -41,6 +42,7 @@ export default async function DashboardLayout({ children }: { children: ReactNod
   }
 
   const roomsAccess = getRoomsAccess(user);
+  const maintenanceAccess = getMaintenanceAccess(user);
 
   const moduleEntryAccess: Record<string, boolean> = {
     "/dashboard/hotels": user.permissions.includes(PERMISSIONS.HOTEL_READ) || user.permissions.includes(PERMISSIONS.HOTEL_CREATE),
@@ -54,7 +56,8 @@ export default async function DashboardLayout({ children }: { children: ReactNod
       user.permissions.includes(PERMISSIONS.SEASON_ROOM_RATE_READ) || user.permissions.includes(PERMISSIONS.SEASON_ROOM_RATE_CREATE),
     "/dashboard/users": user.permissions.includes(PERMISSIONS.USER_READ) || user.permissions.includes(PERMISSIONS.USER_CREATE),
     "/dashboard/roles": user.permissions.includes(PERMISSIONS.ROLE_READ) || user.permissions.includes(PERMISSIONS.ROLE_CREATE),
-    "/dashboard/permissions": user.permissions.includes(PERMISSIONS.PERMISSION_READ) || user.permissions.includes(PERMISSIONS.PERMISSION_CREATE)
+    "/dashboard/permissions": user.permissions.includes(PERMISSIONS.PERMISSION_READ) || user.permissions.includes(PERMISSIONS.PERMISSION_CREATE),
+    "/dashboard/maintenance": maintenanceAccess.canEnter
   };
 
   const navItems = ADMIN_NAV_ITEMS.filter((item) => moduleEntryAccess[item.href]);

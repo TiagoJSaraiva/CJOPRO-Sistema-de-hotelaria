@@ -11,6 +11,17 @@ const permissions = [
   "update_transactions",
   "delete_transactions"
 ];
+const maintenancePermissions = [
+  ...permissions,
+  "create_maintenance_occurrence",
+  "read_maintenance",
+  "triage_maintenance",
+  "execute_maintenance",
+  "manage_maintenance_blocks",
+  "inspect_maintenance",
+  "confirm_damage_liability",
+  "manage_maintenance_catalogs"
+];
 
 const user = {
   id: "user-e2e",
@@ -29,6 +40,11 @@ const user = {
       permissions
     }
   ]
+};
+const maintenanceUser = {
+  ...user,
+  permissions: maintenancePermissions,
+  roleAssignments: user.roleAssignments.map((assignment) => ({ ...assignment, permissions: maintenancePermissions }))
 };
 
 const customers = [
@@ -318,7 +334,7 @@ const server = http.createServer(async (request, response) => {
   }
 
   if (method === "GET" && url.pathname === "/auth/me") {
-    sendJson(response, 200, { user });
+    sendJson(response, 200, { user: request.headers.authorization === "Bearer maintenance-e2e-token" ? maintenanceUser : user });
     return;
   }
 
@@ -329,6 +345,19 @@ const server = http.createServer(async (request, response) => {
 
   if (method === "GET" && url.pathname === "/admin/financial-transactions") {
     sendJson(response, 200, { items: transactions });
+    return;
+  }
+
+  if (method === "GET" && url.pathname === "/admin/maintenance/summary") {
+    sendJson(response, 200, { open: 3, assigned_to_me: 1, unassigned: 1, overdue: 1, awaiting_inspection: 1, blocked_rooms: 1 });
+    return;
+  }
+
+  if (method === "GET" && url.pathname === "/admin/maintenance/occurrences") {
+    sendJson(response, 200, { page: 1, page_size: 20, total: 2, items: [
+      { id: "97000000-0000-4000-8000-000000000001", occurrence_number: 1001, code: "OCO-001001", kind: "damage", priority: "critical", status: "awaiting_inspection", description: "Televisor com a tela danificada", category_id: "category-1", category_name: "Eletrônicos", room_id: "room-102", room_number: "102", location_id: null, location_name: null, stay_id: "stay-2", reported_by: "user-e2e", reporter_name: "Marina Costa", blocking_recommended: true, liability_status: "suspected", active_block: true, open_work_orders: 1, created_at: "2026-05-12T10:00:00.000Z", updated_at: "2026-05-12T11:00:00.000Z" },
+      { id: "97000000-0000-4000-8000-000000000002", occurrence_number: 1002, code: "OCO-001002", kind: "defect", priority: "normal", status: "triaged", description: "Torneira com vazamento", category_id: "category-2", category_name: "Hidráulica", room_id: "room-101", room_number: "101", location_id: null, location_name: null, stay_id: null, reported_by: "user-e2e", reporter_name: "Marina Costa", blocking_recommended: false, liability_status: "not_applicable", active_block: false, open_work_orders: 0, created_at: "2026-05-12T09:00:00.000Z", updated_at: "2026-05-12T09:00:00.000Z" }
+    ] });
     return;
   }
 

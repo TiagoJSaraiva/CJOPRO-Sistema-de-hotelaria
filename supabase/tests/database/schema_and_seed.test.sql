@@ -1,6 +1,6 @@
 begin;
 
-select plan(29);
+select plan(58);
 
 select ok(to_regclass('public.room_blocks') is not null, 'room_blocks exists');
 
@@ -16,7 +16,7 @@ select is(
   (select array_agg(attname order by attnum)::text
    from pg_attribute
    where attrelid = 'public.room_blocks'::regclass and attnum > 0 and not attisdropped),
-  '{id,room_id,status,label,start_date,end_date,created_at,updated_at}',
+  '{id,room_id,status,label,start_date,end_date,created_at,updated_at,hotel_id,maintenance_occurrence_id,created_by,released_at,released_by,release_reason,conflicts_acknowledged_at,conflicts_acknowledged_by,conflicts_acknowledgement}',
   'room_blocks has the expected columns'
 );
 
@@ -29,8 +29,8 @@ select is(
   (select count(*)::integer
    from pg_constraint
    where conrelid = 'public.room_blocks'::regclass and contype = 'f'),
-  1,
-  'room_blocks has one foreign key'
+  6,
+  'room_blocks keeps all scope, audit and maintenance foreign keys'
 );
 
 select ok(
@@ -78,17 +78,121 @@ select is((select count(*)::integer from public.hotels), 2, 'seed has two hotels
 select is((select count(*)::integer from public.rooms), 6, 'seed has six rooms');
 select is((select count(*)::integer from public.customers), 4, 'seed has four customers');
 select is((select count(*)::integer from public.products), 4, 'seed has four products');
-select is((select count(*)::integer from public.permissions), 45, 'seed matches all canonical application permissions');
+select is((select count(*)::integer from public.permissions), 53, 'seed matches all canonical application permissions');
 select is((select count(*)::integer from public.roles), 3, 'seed has one global role and two hotel roles');
 select is((select count(*)::integer from public.users), 3, 'seed has three local users');
 select is((select count(*)::integer from public.reservations), 4, 'seed has four reservations');
 select is((select count(distinct stay_status)::integer from public.stays), 3, 'seed has confirmed, checked-in and checked-out stays');
 select is((select count(*)::integer from public.room_blocks), 2, 'seed has two room blocks');
+select is((select count(*)::integer from public.maintenance_categories), 20, 'every seeded hotel receives the ten default maintenance categories');
+select is((select count(*)::integer from public.maintenance_locations), 2, 'seed has configurable maintenance locations');
+select is((select count(*)::integer from public.maintenance_occurrences), 1, 'seed has one maintenance occurrence');
+select is((select count(*)::integer from public.maintenance_work_orders), 1, 'seed has one maintenance work order');
+
+select ok(
+  to_regclass('public.maintenance_events') is not null
+    and to_regclass('public.maintenance_attachments') is not null
+    and to_regclass('public.maintenance_inspections') is not null,
+  'maintenance audit, evidence and inspection tables exist'
+);
+
+select ok(
+  (select bool_and(relrowsecurity)
+   from pg_class
+   where oid in (
+     'public.maintenance_locations'::regclass,
+     'public.maintenance_categories'::regclass,
+     'public.maintenance_occurrences'::regclass,
+     'public.maintenance_work_orders'::regclass,
+     'public.maintenance_inspections'::regclass,
+     'public.maintenance_events'::regclass,
+     'public.maintenance_attachments'::regclass,
+     'public.maintenance_checkout_acknowledgements'::regclass
+   )),
+  'RLS is enabled on every maintenance table'
+);
+
+select is(
+  (select public from storage.buckets where id = 'maintenance-evidence'),
+  false,
+  'maintenance evidence bucket is private'
+);
+
+select is(
+  (select file_size_limit from storage.buckets where id = 'maintenance-evidence'),
+  10485760::bigint,
+  'maintenance evidence is limited to 10 MB per object'
+);
 
 select throws_ok(
   $$
-    insert into public.room_blocks (room_id, status, label, start_date, end_date)
-    values ('20000000-0000-4000-8000-000000000103', 'blocked', 'Conflito pgTAP', current_date + 2, current_date + 3)
+    insert into public.maintenance_occurrences (
+      hotel_id, occurrence_number, kind, category_id, priority, room_id, location_id,
+      description, discovered_at, reported_by
+    ) values (
+      '10000000-0000-4000-8000-000000000001', 1002, 'damage',
+      (select id from public.maintenance_categories where hotel_id = '10000000-0000-4000-8000-000000000001' limit 1),
+      'normal', '20000000-0000-4000-8000-000000000101',
+      '96000000-0000-4000-8000-000000000001', 'Alvo ambíguo', now(),
+      '60000000-0000-4000-8000-000000000002'
+    )
+  $$,
+  '23514',
+  null,
+  'an occurrence must have exactly one target'
+);
+
+select throws_ok(
+  $$
+    insert into public.maintenance_work_orders (
+      hotel_id, occurrence_id, title, instructions, created_by
+    ) values (
+      '10000000-0000-4000-8000-000000000001',
+      '97000000-0000-4000-8000-000000000001', 'Hotel divergente', 'Não deve ser aceita',
+      '80000000-0000-4000-8000-000000000002'
+    )
+  $$,
+  '23514',
+  null,
+  'work orders cannot cross hotel boundaries'
+);
+
+select lives_ok(
+  $$ select public.transition_maintenance_work_order(
+    '10000000-0000-4000-8000-000000000002',
+    '98000000-0000-4000-8000-000000000001',
+    '80000000-0000-4000-8000-000000000003',
+    'complete', null, null, 'Reparo concluído', 'Falha corrigida'
+  ) $$,
+  'work-order transition persists state and audit in one database operation'
+);
+
+select is(
+  (select status::text from public.maintenance_work_orders where id = '98000000-0000-4000-8000-000000000001'),
+  'awaiting_inspection',
+  'an inspection-required order waits for inspection after completion'
+);
+
+select throws_ok(
+  $$ select public.inspect_maintenance_work_order(
+    '10000000-0000-4000-8000-000000000002',
+    '98000000-0000-4000-8000-000000000001',
+    '80000000-0000-4000-8000-000000000003',
+    'approved', 'Autoinspeção indevida'
+  ) $$,
+  '23514',
+  null,
+  'the executor cannot inspect their own order'
+);
+
+select throws_ok(
+  $$
+    insert into public.room_blocks (hotel_id, room_id, status, label, start_date, end_date)
+    values (
+      '10000000-0000-4000-8000-000000000001',
+      '20000000-0000-4000-8000-000000000103', 'blocked', 'Conflito pgTAP',
+      current_date + 2, current_date + 3
+    )
   $$,
   '23P01',
   null,
@@ -113,13 +217,13 @@ select is(
 
 select is(
   (select count(*)::integer from public.role_permissions where role_id = '70000000-0000-4000-8000-000000000002'),
-  29,
+  37,
   'Aurora manager role has every hotel permission'
 );
 
 select is(
   (select count(*)::integer from public.role_permissions where role_id = '70000000-0000-4000-8000-000000000003'),
-  29,
+  37,
   'Horizonte manager role has every hotel permission'
 );
 
@@ -127,6 +231,60 @@ select ok(
   not exists (select 1 from public.users where email !~ '@hotelaria[.]local$'),
   'all seeded user accounts use the reserved local domain'
 );
+
+select is(
+  (select count(*)::integer from public.permissions where name = any(array[
+    'create_maintenance_occurrence', 'read_maintenance', 'triage_maintenance', 'execute_maintenance',
+    'manage_maintenance_blocks', 'inspect_maintenance', 'confirm_damage_liability', 'manage_maintenance_catalogs'
+  ])),
+  8,
+  'maintenance permissions are provisioned independently'
+);
+
+select ok(
+  exists (
+    select 1
+    from public.room_blocks
+    where maintenance_occurrence_id = '97000000-0000-4000-8000-000000000001'
+      and released_at is null
+  ),
+  'seed links an active room block to its maintenance occurrence'
+);
+
+select lives_ok(
+  $$
+    insert into public.maintenance_occurrences(
+      id, hotel_id, category_id, room_id, kind, priority, description, reported_by, triaged_by, triaged_at
+    ) values (
+      '97100000-0000-4000-8000-000000000001', '10000000-0000-4000-8000-000000000001',
+      (select id from public.maintenance_categories where hotel_id = '10000000-0000-4000-8000-000000000001' limit 1),
+      '20000000-0000-4000-8000-000000000102', 'defect', 'normal', 'Ocorrência para transições pgTAP',
+      '80000000-0000-4000-8000-000000000002', '80000000-0000-4000-8000-000000000002', now()
+    );
+    insert into public.maintenance_work_orders(
+      id, hotel_id, occurrence_id, title, instructions, created_by
+    ) values (
+      '98100000-0000-4000-8000-000000000001', '10000000-0000-4000-8000-000000000001',
+      '97100000-0000-4000-8000-000000000001', 'Ordem de transição', 'Validar todas as mudanças de estado',
+      '80000000-0000-4000-8000-000000000002'
+    );
+  $$,
+  'transition characterization records are created'
+);
+
+select lives_ok($$ select public.transition_maintenance_work_order(p_hotel_id => '10000000-0000-4000-8000-000000000001', p_work_order_id => '98100000-0000-4000-8000-000000000001', p_actor_id => '80000000-0000-4000-8000-000000000002', p_action => 'assign', p_assigned_to => '80000000-0000-4000-8000-000000000002') $$, 'pending order can be assigned');
+select lives_ok($$ select public.transition_maintenance_work_order(p_hotel_id => '10000000-0000-4000-8000-000000000001', p_work_order_id => '98100000-0000-4000-8000-000000000001', p_actor_id => '80000000-0000-4000-8000-000000000002', p_action => 'start') $$, 'assigned order can start');
+select lives_ok($$ select public.transition_maintenance_work_order(p_hotel_id => '10000000-0000-4000-8000-000000000001', p_work_order_id => '98100000-0000-4000-8000-000000000001', p_actor_id => '80000000-0000-4000-8000-000000000002', p_action => 'pause') $$, 'active order can pause');
+select lives_ok($$ select public.transition_maintenance_work_order(p_hotel_id => '10000000-0000-4000-8000-000000000001', p_work_order_id => '98100000-0000-4000-8000-000000000001', p_actor_id => '80000000-0000-4000-8000-000000000002', p_action => 'resume') $$, 'paused order can resume');
+select lives_ok($$ select public.transition_maintenance_work_order(p_hotel_id => '10000000-0000-4000-8000-000000000001', p_work_order_id => '98100000-0000-4000-8000-000000000001', p_actor_id => '80000000-0000-4000-8000-000000000002', p_action => 'wait', p_waiting_reason => 'parts', p_notes => 'Aguardando peça') $$, 'active order can wait with a reason');
+select lives_ok($$ select public.transition_maintenance_work_order(p_hotel_id => '10000000-0000-4000-8000-000000000001', p_work_order_id => '98100000-0000-4000-8000-000000000001', p_actor_id => '80000000-0000-4000-8000-000000000002', p_action => 'resume') $$, 'waiting order can resume');
+select lives_ok($$ select public.transition_maintenance_work_order(p_hotel_id => '10000000-0000-4000-8000-000000000001', p_work_order_id => '98100000-0000-4000-8000-000000000001', p_actor_id => '80000000-0000-4000-8000-000000000002', p_action => 'complete', p_notes => 'Concluída') $$, 'active order can complete');
+select lives_ok($$ select public.transition_maintenance_work_order(p_hotel_id => '10000000-0000-4000-8000-000000000001', p_work_order_id => '98100000-0000-4000-8000-000000000001', p_actor_id => '80000000-0000-4000-8000-000000000002', p_action => 'reopen') $$, 'completed order can reopen');
+select lives_ok($$ select public.transition_maintenance_work_order(p_hotel_id => '10000000-0000-4000-8000-000000000001', p_work_order_id => '98100000-0000-4000-8000-000000000001', p_actor_id => '80000000-0000-4000-8000-000000000002', p_action => 'cancel', p_notes => 'Cancelada no teste') $$, 'active order can cancel');
+select throws_ok($$ select public.transition_maintenance_work_order(p_hotel_id => '10000000-0000-4000-8000-000000000001', p_work_order_id => '98100000-0000-4000-8000-000000000001', p_actor_id => '80000000-0000-4000-8000-000000000002', p_action => 'complete') $$, '23514', null, 'invalid transition is rejected');
+select is((select status::text from public.maintenance_work_orders where id = '98100000-0000-4000-8000-000000000001'), 'canceled', 'invalid transition does not change the persisted state');
+select throws_ok($$ update public.maintenance_events set message = 'alterado' where id = (select id from public.maintenance_events limit 1) $$, '23514', null, 'maintenance timeline cannot be edited');
+select throws_ok($$ delete from public.maintenance_occurrences where id = '97100000-0000-4000-8000-000000000001' $$, '23514', null, 'maintenance records cannot be hard deleted');
 
 select * from finish();
 

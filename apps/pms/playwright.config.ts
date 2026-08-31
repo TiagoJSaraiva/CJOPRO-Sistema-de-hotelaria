@@ -20,7 +20,10 @@ export default defineConfig({
     }
   },
   fullyParallel: false,
-  workers: process.env.CI ? 1 : undefined,
+  // A single shared Next.js development server compiles routes on demand. Keep
+  // the browser projects serialized so two projects cannot race the first
+  // compilation of the same server-rendered route.
+  workers: 1,
   reporter: [
     ["list"],
     ["html", { outputFolder: "../../node_modules/.cache/pms-playwright-report", open: "never" }]

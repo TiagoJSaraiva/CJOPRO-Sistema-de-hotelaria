@@ -1,6 +1,7 @@
 "use client";
 
 import type { AdminRoom } from "@hotel/shared";
+import Link from "next/link";
 import { translateRoomStatus } from "@hotel/shared";
 import { deleteRoomAction, updateRoomAction } from "../actions";
 import { DashboardEntityActionButtons } from "../../_components/DashboardEntityActionButtons";
@@ -29,6 +30,7 @@ function RoomDataPreview({ room }: { room: AdminRoom }) {
       <div>
         <strong>Status:</strong>
         <p className="m-0 mt-[0.2rem]">{translateRoomStatus(room.status)}</p>
+        {room.status === "maintenance" || room.status === "blocked" ? <Link href={`/dashboard/maintenance/view?room_id=${room.id}`} className="mt-1 inline-block font-semibold text-[#0f766e]">Ver manutenção</Link> : null}
       </div>
       <div>
         <strong>Capacidade máxima:</strong>

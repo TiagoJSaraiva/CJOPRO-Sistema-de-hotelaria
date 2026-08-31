@@ -75,6 +75,7 @@ export function CheckoutByRoomWorkflow() {
   const [isPending, setIsPending] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState<string | null>(null);
+  const [maintenanceAcknowledged, setMaintenanceAcknowledged] = useState(false);
 
   const balance = useMemo(() => (panelData ? getStayBalance(panelData) : 0), [panelData]);
 
@@ -82,6 +83,7 @@ export function CheckoutByRoomWorkflow() {
     setPanelData(panel);
     setPaymentAmount(formatPaymentInputValue(getStayBalance(panel)));
     setPaymentNote("");
+    setMaintenanceAcknowledged(false);
   }
 
   async function handleSearch(event: FormEvent<HTMLFormElement>) {
@@ -150,7 +152,11 @@ export function CheckoutByRoomWorkflow() {
       setIsPending(true);
       setError(null);
       setSuccess(null);
-      const panel = await postJson<AdminStayOperationalPanelResponse>(`/api/stays/${panelData.stay.id}/checkout`, {}, "Falha ao executar checkout.");
+      const checkoutPayload = maintenanceAcknowledged ? {
+        maintenance_acknowledged_occurrence_ids: (panelData.maintenance_occurrences || [])
+          .filter((occurrence) => occurrence.status !== "resolved" && occurrence.status !== "canceled").map((occurrence) => occurrence.id)
+      } : {};
+      const panel = await postJson<AdminStayOperationalPanelResponse>(`/api/stays/${panelData.stay.id}/checkout`, checkoutPayload, "Falha ao executar checkout.");
       applyPanel(panel);
       setSuccess(`Checkout confirmado para o quarto ${panel.stay.room_number}.`);
     } catch (requestError) {
@@ -302,6 +308,13 @@ export function CheckoutByRoomWorkflow() {
             </PanelSection>
 
             <PanelSection title="Checkout">
+              {(panelData.maintenance_occurrences || []).length ? (
+                <div className="grid gap-2 rounded-lg border border-[#f5d08a] bg-[#fff9eb] p-3 text-[0.86rem]">
+                  <strong>Ocorrências e danos vinculados</strong>
+                  <ul className="m-0 pl-5">{panelData.maintenance_occurrences!.map((occurrence) => <li key={occurrence.id}>{occurrence.code} · {occurrence.description} · {occurrence.status}</li>)}</ul>
+                  {panelData.maintenance_acknowledgement_required ? <label><input type="checkbox" checked={maintenanceAcknowledged} onChange={(event) => setMaintenanceAcknowledged(event.target.checked)} /> Declaro ciência das ocorrências abertas; o checkout não atribui responsabilidade.</label> : null}
+                </div>
+              ) : null}
               {panelData.eligibility.can_checkout ? (
                 <p className="m-0 rounded-lg border border-[#b6e4cb] bg-[#f1fbf5] p-3 text-[0.86rem] text-[#176c43]">Checkout liberado para esta estadia.</p>
               ) : (
@@ -309,7 +322,7 @@ export function CheckoutByRoomWorkflow() {
                   {panelData.eligibility.checkout_block_reason || "Checkout nao permitido para esta estadia."}
                 </p>
               )}
-              <button type="button" onClick={handleCheckout} disabled={isPending || !panelData.eligibility.can_checkout} className={primaryButtonClassName}>
+              <button type="button" onClick={handleCheckout} disabled={isPending || !panelData.eligibility.can_checkout || Boolean(panelData.maintenance_acknowledgement_required && !maintenanceAcknowledged)} className={primaryButtonClassName}>
                 Confirmar checkout
               </button>
             </PanelSection>

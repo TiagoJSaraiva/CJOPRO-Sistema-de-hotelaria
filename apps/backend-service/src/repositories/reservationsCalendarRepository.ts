@@ -156,15 +156,17 @@ class SupabaseReservationsCalendarRepository implements ReservationsCalendarRepo
     }
 
     let blocks: AdminReservationCalendarRoomBlock[] = [];
+    const today = new Date().toISOString().slice(0, 10);
     const blocksResult = await supabase
       .from("room_blocks")
-      .select("id,room_id,status,label,start_date,end_date")
+      .select("id,room_id,status,label,start_date,end_date,released_at,maintenance_occurrence_id,occurrence:maintenance_occurrence_id(occurrence_number)")
+      .eq("hotel_id", activeHotelId)
       .in("room_id", roomIds)
       .lte("start_date", endDate)
-      .gte("end_date", startDate);
+      .is("released_at", null);
 
     if (!blocksResult.error) {
-      blocks = (blocksResult.data || []).map(
+      blocks = (blocksResult.data || []).filter((item) => String(item.end_date) >= startDate || String(item.end_date) < today).map(
         (item) =>
           ({
             id: String(item.id),
@@ -172,7 +174,12 @@ class SupabaseReservationsCalendarRepository implements ReservationsCalendarRepo
             status: String(item.status || "blocked"),
             label: item.label ? String(item.label) : null,
             start_date: String(item.start_date),
-            end_date: String(item.end_date)
+            end_date: String(item.end_date) < today ? endDate : String(item.end_date),
+            maintenance_occurrence_id: item.maintenance_occurrence_id ? String(item.maintenance_occurrence_id) : null,
+            occurrence_code: item.occurrence && !Array.isArray(item.occurrence) && item.occurrence.occurrence_number
+              ? `OCO-${String(item.occurrence.occurrence_number).padStart(6, "0")}`
+              : null,
+            is_overdue: String(item.end_date) < today
           }) satisfies AdminReservationCalendarRoomBlock
       );
     }

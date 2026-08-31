@@ -21,13 +21,25 @@ class SupabaseRoomsRepository implements RoomsRepository {
     const supabase = createServerClient();
     let query = supabase.from("rooms").select(ROOM_SELECT_FIELDS);
     query = applyHotelContextFilter(query, activeHotelId);
-    const { data, error } = await query.order("created_at", { ascending: false });
+    const [roomsResult, blocksResult] = await Promise.all([
+      query.order("created_at", { ascending: false }),
+      supabase
+        .from("room_blocks")
+        .select("room_id,status")
+        .eq("hotel_id", activeHotelId)
+        .is("released_at", null)
+        .lte("start_date", new Date().toISOString().slice(0, 10))
+    ]);
 
-    if (error) {
-      throw error;
+    if (roomsResult.error || blocksResult.error) {
+      throw roomsResult.error || blocksResult.error;
     }
 
-    return data || [];
+    const effectiveStatuses = new Map((blocksResult.data || []).map((block) => [block.room_id, block.status]));
+    return (roomsResult.data || []).map((room) => ({
+      ...room,
+      status: effectiveStatuses.get(room.id) || room.status
+    }));
   }
 
   async createRoom(activeHotelId: string, payload: RoomCreate): Promise<{ result: RoomWriteResult; item?: AdminRoom }> {

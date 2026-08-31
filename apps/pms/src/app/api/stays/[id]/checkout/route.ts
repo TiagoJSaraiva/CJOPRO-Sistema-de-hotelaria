@@ -7,10 +7,14 @@ type Params = {
   }>;
 };
 
-export async function POST(_request: Request, { params }: Params) {
+export async function POST(request: Request, { params }: Params) {
   try {
     const { id } = await params;
-    const item = await executeStayCheckout(id);
+    const payload = (await request.json().catch(() => ({}))) as {
+      maintenance_acknowledged_occurrence_ids?: string[];
+      maintenance_acknowledgement_note?: string;
+    };
+    const item = await executeStayCheckout(id, payload);
     return NextResponse.json(item);
   } catch (error) {
     const parsedError = error as Error & { statusCode?: number; details?: string };

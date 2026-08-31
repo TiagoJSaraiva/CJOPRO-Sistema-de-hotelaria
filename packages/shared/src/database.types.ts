@@ -253,6 +253,628 @@ export type Database = {
         }
         Relationships: []
       }
+      maintenance_attachments: {
+        Row: {
+          content_type: string
+          created_at: string
+          hotel_id: string
+          id: string
+          occurrence_id: string
+          original_filename: string
+          removal_reason: string | null
+          removed_at: string | null
+          removed_by: string | null
+          size_bytes: number
+          storage_path: string
+          uploaded_by: string
+          work_order_id: string | null
+        }
+        Insert: {
+          content_type: string
+          created_at?: string
+          hotel_id: string
+          id?: string
+          occurrence_id: string
+          original_filename: string
+          removal_reason?: string | null
+          removed_at?: string | null
+          removed_by?: string | null
+          size_bytes: number
+          storage_path: string
+          uploaded_by: string
+          work_order_id?: string | null
+        }
+        Update: {
+          content_type?: string
+          created_at?: string
+          hotel_id?: string
+          id?: string
+          occurrence_id?: string
+          original_filename?: string
+          removal_reason?: string | null
+          removed_at?: string | null
+          removed_by?: string | null
+          size_bytes?: number
+          storage_path?: string
+          uploaded_by?: string
+          work_order_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "maintenance_attachments_hotel_id_fkey"
+            columns: ["hotel_id"]
+            isOneToOne: false
+            referencedRelation: "hotels"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "maintenance_attachments_occurrence_id_fkey"
+            columns: ["occurrence_id"]
+            isOneToOne: false
+            referencedRelation: "maintenance_occurrences"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "maintenance_attachments_removed_by_fkey"
+            columns: ["removed_by"]
+            isOneToOne: false
+            referencedRelation: "users"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "maintenance_attachments_uploaded_by_fkey"
+            columns: ["uploaded_by"]
+            isOneToOne: false
+            referencedRelation: "users"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "maintenance_attachments_work_order_id_fkey"
+            columns: ["work_order_id"]
+            isOneToOne: false
+            referencedRelation: "maintenance_work_orders"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      maintenance_categories: {
+        Row: {
+          created_at: string
+          description: string | null
+          display_order: number
+          hotel_id: string
+          id: string
+          is_active: boolean
+          name: string
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          description?: string | null
+          display_order?: number
+          hotel_id: string
+          id?: string
+          is_active?: boolean
+          name: string
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          description?: string | null
+          display_order?: number
+          hotel_id?: string
+          id?: string
+          is_active?: boolean
+          name?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "maintenance_categories_hotel_id_fkey"
+            columns: ["hotel_id"]
+            isOneToOne: false
+            referencedRelation: "hotels"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      maintenance_checkout_acknowledgements: {
+        Row: {
+          acknowledged_at: string
+          acknowledged_by: string
+          hotel_id: string
+          id: string
+          note: string | null
+          occurrence_id: string
+          stay_id: string
+        }
+        Insert: {
+          acknowledged_at?: string
+          acknowledged_by: string
+          hotel_id: string
+          id?: string
+          note?: string | null
+          occurrence_id: string
+          stay_id: string
+        }
+        Update: {
+          acknowledged_at?: string
+          acknowledged_by?: string
+          hotel_id?: string
+          id?: string
+          note?: string | null
+          occurrence_id?: string
+          stay_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "maintenance_checkout_acknowledgements_acknowledged_by_fkey"
+            columns: ["acknowledged_by"]
+            isOneToOne: false
+            referencedRelation: "users"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "maintenance_checkout_acknowledgements_hotel_id_fkey"
+            columns: ["hotel_id"]
+            isOneToOne: false
+            referencedRelation: "hotels"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "maintenance_checkout_acknowledgements_occurrence_id_fkey"
+            columns: ["occurrence_id"]
+            isOneToOne: false
+            referencedRelation: "maintenance_occurrences"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "maintenance_checkout_acknowledgements_stay_id_fkey"
+            columns: ["stay_id"]
+            isOneToOne: false
+            referencedRelation: "stays"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      maintenance_events: {
+        Row: {
+          actor_id: string
+          created_at: string
+          event_type: string
+          hotel_id: string
+          id: string
+          message: string | null
+          metadata: Json
+          occurrence_id: string
+          work_order_id: string | null
+        }
+        Insert: {
+          actor_id: string
+          created_at?: string
+          event_type: string
+          hotel_id: string
+          id?: string
+          message?: string | null
+          metadata?: Json
+          occurrence_id: string
+          work_order_id?: string | null
+        }
+        Update: {
+          actor_id?: string
+          created_at?: string
+          event_type?: string
+          hotel_id?: string
+          id?: string
+          message?: string | null
+          metadata?: Json
+          occurrence_id?: string
+          work_order_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "maintenance_events_actor_id_fkey"
+            columns: ["actor_id"]
+            isOneToOne: false
+            referencedRelation: "users"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "maintenance_events_hotel_id_fkey"
+            columns: ["hotel_id"]
+            isOneToOne: false
+            referencedRelation: "hotels"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "maintenance_events_occurrence_id_fkey"
+            columns: ["occurrence_id"]
+            isOneToOne: false
+            referencedRelation: "maintenance_occurrences"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "maintenance_events_work_order_id_fkey"
+            columns: ["work_order_id"]
+            isOneToOne: false
+            referencedRelation: "maintenance_work_orders"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      maintenance_inspections: {
+        Row: {
+          created_at: string
+          hotel_id: string
+          id: string
+          inspector_id: string
+          notes: string
+          result: Database["public"]["Enums"]["maintenance_inspection_result"]
+          work_order_id: string
+        }
+        Insert: {
+          created_at?: string
+          hotel_id: string
+          id?: string
+          inspector_id: string
+          notes: string
+          result: Database["public"]["Enums"]["maintenance_inspection_result"]
+          work_order_id: string
+        }
+        Update: {
+          created_at?: string
+          hotel_id?: string
+          id?: string
+          inspector_id?: string
+          notes?: string
+          result?: Database["public"]["Enums"]["maintenance_inspection_result"]
+          work_order_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "maintenance_inspections_hotel_id_fkey"
+            columns: ["hotel_id"]
+            isOneToOne: false
+            referencedRelation: "hotels"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "maintenance_inspections_inspector_id_fkey"
+            columns: ["inspector_id"]
+            isOneToOne: false
+            referencedRelation: "users"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "maintenance_inspections_work_order_id_fkey"
+            columns: ["work_order_id"]
+            isOneToOne: false
+            referencedRelation: "maintenance_work_orders"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      maintenance_locations: {
+        Row: {
+          created_at: string
+          description: string | null
+          display_order: number
+          hotel_id: string
+          id: string
+          is_active: boolean
+          kind: Database["public"]["Enums"]["maintenance_location_kind"]
+          name: string
+          parent_location_id: string | null
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          description?: string | null
+          display_order?: number
+          hotel_id: string
+          id?: string
+          is_active?: boolean
+          kind: Database["public"]["Enums"]["maintenance_location_kind"]
+          name: string
+          parent_location_id?: string | null
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          description?: string | null
+          display_order?: number
+          hotel_id?: string
+          id?: string
+          is_active?: boolean
+          kind?: Database["public"]["Enums"]["maintenance_location_kind"]
+          name?: string
+          parent_location_id?: string | null
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "maintenance_locations_hotel_id_fkey"
+            columns: ["hotel_id"]
+            isOneToOne: false
+            referencedRelation: "hotels"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "maintenance_locations_parent_location_id_fkey"
+            columns: ["parent_location_id"]
+            isOneToOne: false
+            referencedRelation: "maintenance_locations"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      maintenance_occurrences: {
+        Row: {
+          blocking_recommended: boolean
+          canceled_reason: string | null
+          category_id: string
+          confirmed_party:
+            | Database["public"]["Enums"]["maintenance_responsible_party"]
+            | null
+          created_at: string
+          description: string
+          discovered_at: string
+          duplicate_of_id: string | null
+          hotel_id: string
+          id: string
+          kind: Database["public"]["Enums"]["maintenance_occurrence_kind"]
+          liability_decided_at: string | null
+          liability_decided_by: string | null
+          liability_notes: string | null
+          liability_status: Database["public"]["Enums"]["maintenance_liability_status"]
+          location_id: string | null
+          occurrence_number: number
+          priority: Database["public"]["Enums"]["maintenance_priority"]
+          reported_by: string
+          resolved_at: string | null
+          room_id: string | null
+          status: Database["public"]["Enums"]["maintenance_occurrence_status"]
+          stay_id: string | null
+          suspected_party:
+            | Database["public"]["Enums"]["maintenance_responsible_party"]
+            | null
+          triaged_at: string | null
+          triaged_by: string | null
+          updated_at: string
+        }
+        Insert: {
+          blocking_recommended?: boolean
+          canceled_reason?: string | null
+          category_id: string
+          confirmed_party?:
+            | Database["public"]["Enums"]["maintenance_responsible_party"]
+            | null
+          created_at?: string
+          description: string
+          discovered_at?: string
+          duplicate_of_id?: string | null
+          hotel_id: string
+          id?: string
+          kind: Database["public"]["Enums"]["maintenance_occurrence_kind"]
+          liability_decided_at?: string | null
+          liability_decided_by?: string | null
+          liability_notes?: string | null
+          liability_status?: Database["public"]["Enums"]["maintenance_liability_status"]
+          location_id?: string | null
+          occurrence_number?: number
+          priority?: Database["public"]["Enums"]["maintenance_priority"]
+          reported_by: string
+          resolved_at?: string | null
+          room_id?: string | null
+          status?: Database["public"]["Enums"]["maintenance_occurrence_status"]
+          stay_id?: string | null
+          suspected_party?:
+            | Database["public"]["Enums"]["maintenance_responsible_party"]
+            | null
+          triaged_at?: string | null
+          triaged_by?: string | null
+          updated_at?: string
+        }
+        Update: {
+          blocking_recommended?: boolean
+          canceled_reason?: string | null
+          category_id?: string
+          confirmed_party?:
+            | Database["public"]["Enums"]["maintenance_responsible_party"]
+            | null
+          created_at?: string
+          description?: string
+          discovered_at?: string
+          duplicate_of_id?: string | null
+          hotel_id?: string
+          id?: string
+          kind?: Database["public"]["Enums"]["maintenance_occurrence_kind"]
+          liability_decided_at?: string | null
+          liability_decided_by?: string | null
+          liability_notes?: string | null
+          liability_status?: Database["public"]["Enums"]["maintenance_liability_status"]
+          location_id?: string | null
+          occurrence_number?: number
+          priority?: Database["public"]["Enums"]["maintenance_priority"]
+          reported_by?: string
+          resolved_at?: string | null
+          room_id?: string | null
+          status?: Database["public"]["Enums"]["maintenance_occurrence_status"]
+          stay_id?: string | null
+          suspected_party?:
+            | Database["public"]["Enums"]["maintenance_responsible_party"]
+            | null
+          triaged_at?: string | null
+          triaged_by?: string | null
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "maintenance_occurrences_category_id_fkey"
+            columns: ["category_id"]
+            isOneToOne: false
+            referencedRelation: "maintenance_categories"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "maintenance_occurrences_duplicate_of_id_fkey"
+            columns: ["duplicate_of_id"]
+            isOneToOne: false
+            referencedRelation: "maintenance_occurrences"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "maintenance_occurrences_hotel_id_fkey"
+            columns: ["hotel_id"]
+            isOneToOne: false
+            referencedRelation: "hotels"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "maintenance_occurrences_liability_decided_by_fkey"
+            columns: ["liability_decided_by"]
+            isOneToOne: false
+            referencedRelation: "users"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "maintenance_occurrences_location_id_fkey"
+            columns: ["location_id"]
+            isOneToOne: false
+            referencedRelation: "maintenance_locations"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "maintenance_occurrences_reported_by_fkey"
+            columns: ["reported_by"]
+            isOneToOne: false
+            referencedRelation: "users"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "maintenance_occurrences_room_id_fkey"
+            columns: ["room_id"]
+            isOneToOne: false
+            referencedRelation: "rooms"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "maintenance_occurrences_stay_id_fkey"
+            columns: ["stay_id"]
+            isOneToOne: false
+            referencedRelation: "stays"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "maintenance_occurrences_triaged_by_fkey"
+            columns: ["triaged_by"]
+            isOneToOne: false
+            referencedRelation: "users"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      maintenance_work_orders: {
+        Row: {
+          assigned_to: string | null
+          completed_at: string | null
+          created_at: string
+          created_by: string
+          diagnosis: string | null
+          due_at: string | null
+          hotel_id: string
+          id: string
+          instructions: string
+          occurrence_id: string
+          priority: Database["public"]["Enums"]["maintenance_priority"]
+          requires_inspection: boolean
+          resolution_notes: string | null
+          started_at: string | null
+          status: Database["public"]["Enums"]["maintenance_work_order_status"]
+          title: string
+          updated_at: string
+          waiting_notes: string | null
+          waiting_reason:
+            | Database["public"]["Enums"]["maintenance_waiting_reason"]
+            | null
+        }
+        Insert: {
+          assigned_to?: string | null
+          completed_at?: string | null
+          created_at?: string
+          created_by: string
+          diagnosis?: string | null
+          due_at?: string | null
+          hotel_id: string
+          id?: string
+          instructions: string
+          occurrence_id: string
+          priority?: Database["public"]["Enums"]["maintenance_priority"]
+          requires_inspection?: boolean
+          resolution_notes?: string | null
+          started_at?: string | null
+          status?: Database["public"]["Enums"]["maintenance_work_order_status"]
+          title: string
+          updated_at?: string
+          waiting_notes?: string | null
+          waiting_reason?:
+            | Database["public"]["Enums"]["maintenance_waiting_reason"]
+            | null
+        }
+        Update: {
+          assigned_to?: string | null
+          completed_at?: string | null
+          created_at?: string
+          created_by?: string
+          diagnosis?: string | null
+          due_at?: string | null
+          hotel_id?: string
+          id?: string
+          instructions?: string
+          occurrence_id?: string
+          priority?: Database["public"]["Enums"]["maintenance_priority"]
+          requires_inspection?: boolean
+          resolution_notes?: string | null
+          started_at?: string | null
+          status?: Database["public"]["Enums"]["maintenance_work_order_status"]
+          title?: string
+          updated_at?: string
+          waiting_notes?: string | null
+          waiting_reason?:
+            | Database["public"]["Enums"]["maintenance_waiting_reason"]
+            | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "maintenance_work_orders_assigned_to_fkey"
+            columns: ["assigned_to"]
+            isOneToOne: false
+            referencedRelation: "users"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "maintenance_work_orders_created_by_fkey"
+            columns: ["created_by"]
+            isOneToOne: false
+            referencedRelation: "users"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "maintenance_work_orders_hotel_id_fkey"
+            columns: ["hotel_id"]
+            isOneToOne: false
+            referencedRelation: "hotels"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "maintenance_work_orders_occurrence_id_fkey"
+            columns: ["occurrence_id"]
+            isOneToOne: false
+            referencedRelation: "maintenance_occurrences"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       permissions: {
         Row: {
           id: string
@@ -442,36 +1064,98 @@ export type Database = {
       }
       room_blocks: {
         Row: {
+          conflicts_acknowledged_at: string | null
+          conflicts_acknowledged_by: string | null
+          conflicts_acknowledgement: string | null
           created_at: string
+          created_by: string | null
           end_date: string
+          hotel_id: string
           id: string
           label: string | null
+          maintenance_occurrence_id: string | null
+          release_reason: string | null
+          released_at: string | null
+          released_by: string | null
           room_id: string
           start_date: string
           status: Database["public"]["Enums"]["room_block_status"]
           updated_at: string
         }
         Insert: {
+          conflicts_acknowledged_at?: string | null
+          conflicts_acknowledged_by?: string | null
+          conflicts_acknowledgement?: string | null
           created_at?: string
+          created_by?: string | null
           end_date: string
+          hotel_id: string
           id?: string
           label?: string | null
+          maintenance_occurrence_id?: string | null
+          release_reason?: string | null
+          released_at?: string | null
+          released_by?: string | null
           room_id: string
           start_date: string
           status?: Database["public"]["Enums"]["room_block_status"]
           updated_at?: string
         }
         Update: {
+          conflicts_acknowledged_at?: string | null
+          conflicts_acknowledged_by?: string | null
+          conflicts_acknowledgement?: string | null
           created_at?: string
+          created_by?: string | null
           end_date?: string
+          hotel_id?: string
           id?: string
           label?: string | null
+          maintenance_occurrence_id?: string | null
+          release_reason?: string | null
+          released_at?: string | null
+          released_by?: string | null
           room_id?: string
           start_date?: string
           status?: Database["public"]["Enums"]["room_block_status"]
           updated_at?: string
         }
         Relationships: [
+          {
+            foreignKeyName: "room_blocks_conflicts_acknowledged_by_fkey"
+            columns: ["conflicts_acknowledged_by"]
+            isOneToOne: false
+            referencedRelation: "users"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "room_blocks_created_by_fkey"
+            columns: ["created_by"]
+            isOneToOne: false
+            referencedRelation: "users"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "room_blocks_hotel_id_fkey"
+            columns: ["hotel_id"]
+            isOneToOne: false
+            referencedRelation: "hotels"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "room_blocks_maintenance_occurrence_id_fkey"
+            columns: ["maintenance_occurrence_id"]
+            isOneToOne: false
+            referencedRelation: "maintenance_occurrences"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "room_blocks_released_by_fkey"
+            columns: ["released_by"]
+            isOneToOne: false
+            referencedRelation: "users"
+            referencedColumns: ["id"]
+          },
           {
             foreignKeyName: "room_blocks_room_id_fkey"
             columns: ["room_id"]
@@ -850,6 +1534,74 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      apply_maintenance_occurrence_change: {
+        Args: {
+          p_actor_id: string
+          p_event_type: string
+          p_hotel_id: string
+          p_message?: string
+          p_occurrence_id: string
+          p_patch: Json
+        }
+        Returns: boolean
+      }
+      checkout_stay_with_maintenance_acknowledgements: {
+        Args: {
+          p_actor_id: string
+          p_hotel_id: string
+          p_note?: string
+          p_occurrence_ids?: string[]
+          p_stay_id: string
+        }
+        Returns: boolean
+      }
+      create_default_maintenance_categories: {
+        Args: { p_hotel_id: string }
+        Returns: undefined
+      }
+      create_maintenance_occurrence: {
+        Args: {
+          p_blocking_recommended?: boolean
+          p_category_id: string
+          p_description?: string
+          p_discovered_at?: string
+          p_hotel_id: string
+          p_kind?: Database["public"]["Enums"]["maintenance_occurrence_kind"]
+          p_location_id?: string
+          p_priority?: Database["public"]["Enums"]["maintenance_priority"]
+          p_reported_by?: string
+          p_room_id?: string
+          p_stay_id?: string
+        }
+        Returns: string
+      }
+      create_maintenance_room_block: {
+        Args: {
+          p_actor_id: string
+          p_conflict_acknowledgement?: string
+          p_end_date: string
+          p_hotel_id: string
+          p_label?: string
+          p_occurrence_id: string
+          p_start_date: string
+          p_status: Database["public"]["Enums"]["room_block_status"]
+        }
+        Returns: string
+      }
+      create_maintenance_work_order: {
+        Args: {
+          p_actor_id: string
+          p_assigned_to?: string
+          p_due_at?: string
+          p_hotel_id: string
+          p_instructions: string
+          p_occurrence_id: string
+          p_priority: Database["public"]["Enums"]["maintenance_priority"]
+          p_requires_inspection?: boolean
+          p_title: string
+        }
+        Returns: string
+      }
       create_role_with_permissions:
         | {
             Args: {
@@ -901,6 +1653,46 @@ export type Database = {
               result: string
             }[]
           }
+      inspect_maintenance_work_order: {
+        Args: {
+          p_actor_id: string
+          p_hotel_id: string
+          p_notes: string
+          p_result: Database["public"]["Enums"]["maintenance_inspection_result"]
+          p_work_order_id: string
+        }
+        Returns: string
+      }
+      maintenance_user_has_hotel_scope: {
+        Args: { p_hotel_id: string; p_user_id: string }
+        Returns: boolean
+      }
+      recompute_maintenance_occurrence_status: {
+        Args: { p_occurrence_id: string }
+        Returns: Database["public"]["Enums"]["maintenance_occurrence_status"]
+      }
+      release_maintenance_room_block: {
+        Args: {
+          p_actor_id: string
+          p_block_id: string
+          p_hotel_id: string
+          p_reason: string
+        }
+        Returns: string
+      }
+      transition_maintenance_work_order: {
+        Args: {
+          p_action: string
+          p_actor_id: string
+          p_assigned_to?: string
+          p_diagnosis?: string
+          p_hotel_id: string
+          p_notes?: string
+          p_waiting_reason?: Database["public"]["Enums"]["maintenance_waiting_reason"]
+          p_work_order_id: string
+        }
+        Returns: string
+      }
       update_role_with_permissions: {
         Args: {
           p_id: string
@@ -944,6 +1736,50 @@ export type Database = {
       }
     }
     Enums: {
+      maintenance_inspection_result: "approved" | "rejected"
+      maintenance_liability_status:
+        | "not_applicable"
+        | "not_assessed"
+        | "suspected"
+        | "confirmed"
+        | "dismissed"
+      maintenance_location_kind: "area" | "equipment"
+      maintenance_occurrence_kind:
+        | "damage"
+        | "defect"
+        | "wear"
+        | "safety_risk"
+        | "special_cleaning"
+        | "other"
+      maintenance_occurrence_status:
+        | "reported"
+        | "triaged"
+        | "in_progress"
+        | "awaiting_inspection"
+        | "awaiting_liability"
+        | "resolved"
+        | "canceled"
+      maintenance_priority: "low" | "normal" | "high" | "critical"
+      maintenance_responsible_party:
+        | "guest"
+        | "hotel"
+        | "supplier"
+        | "normal_wear"
+      maintenance_waiting_reason:
+        | "parts"
+        | "vendor"
+        | "authorization"
+        | "access"
+        | "other"
+      maintenance_work_order_status:
+        | "pending"
+        | "assigned"
+        | "in_progress"
+        | "paused"
+        | "waiting"
+        | "awaiting_inspection"
+        | "completed"
+        | "canceled"
       payment_status: "pending" | "partial" | "paid" | "refunded"
       product_status: "active" | "inactive"
       reservation_source: "front_desk" | "website" | "phone" | "agency"
@@ -1099,6 +1935,56 @@ export type CompositeTypes<
 export const Constants = {
   public: {
     Enums: {
+      maintenance_inspection_result: ["approved", "rejected"],
+      maintenance_liability_status: [
+        "not_applicable",
+        "not_assessed",
+        "suspected",
+        "confirmed",
+        "dismissed",
+      ],
+      maintenance_location_kind: ["area", "equipment"],
+      maintenance_occurrence_kind: [
+        "damage",
+        "defect",
+        "wear",
+        "safety_risk",
+        "special_cleaning",
+        "other",
+      ],
+      maintenance_occurrence_status: [
+        "reported",
+        "triaged",
+        "in_progress",
+        "awaiting_inspection",
+        "awaiting_liability",
+        "resolved",
+        "canceled",
+      ],
+      maintenance_priority: ["low", "normal", "high", "critical"],
+      maintenance_responsible_party: [
+        "guest",
+        "hotel",
+        "supplier",
+        "normal_wear",
+      ],
+      maintenance_waiting_reason: [
+        "parts",
+        "vendor",
+        "authorization",
+        "access",
+        "other",
+      ],
+      maintenance_work_order_status: [
+        "pending",
+        "assigned",
+        "in_progress",
+        "paused",
+        "waiting",
+        "awaiting_inspection",
+        "completed",
+        "canceled",
+      ],
       payment_status: ["pending", "partial", "paid", "refunded"],
       product_status: ["active", "inactive"],
       reservation_source: ["front_desk", "website", "phone", "agency"],

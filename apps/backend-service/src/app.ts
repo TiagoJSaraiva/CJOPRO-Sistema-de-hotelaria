@@ -21,6 +21,7 @@ import { registerSeasonRoutes } from "./routes/seasonRoutes";
 import { registerSeasonRoomRateRoutes } from "./routes/seasonRoomRateRoutes";
 import { registerFinancialTransactionRoutes } from "./routes/financialTransactionRoutes";
 import { registerStayOperationsRoutes } from "./routes/stayOperationsRoutes";
+import { registerMaintenanceRoutes } from "./routes/maintenanceRoutes";
 
 const DEFAULT_ALLOWED_ORIGINS = [ // LOCALHOSTS PARA DESENVOLVIMENTO. DEPOIS COLOCAR AQUI AS URLS REAIS DOS SERVIÇOS HOSPEDADOS
   "http://localhost:3000",
@@ -146,6 +147,7 @@ export function createApp(options: CreateAppOptions = {}): FastifyInstance {
     registerSeasonRoutes(routes);
     registerSeasonRoomRateRoutes(routes);
     registerFinancialTransactionRoutes(routes);
+    registerMaintenanceRoutes(routes);
   });
 
   return app;

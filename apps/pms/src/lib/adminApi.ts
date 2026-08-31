@@ -41,11 +41,13 @@ import {
   AdminUser,
   AdminUserCreateInput,
   AdminUserUpdateInput,
-  AdminUsersReferenceData
+  AdminUsersReferenceData,
+  AdminMaintenanceOccurrenceListResponse,
+  AdminMaintenanceOccurrenceDetail,
+  AdminMaintenanceReferenceData,
+  AdminMaintenanceSummary
 } from "@hotel/shared";
-import {
-  getActiveHotelCookieValue
-} from "./activeHotel";
+import { getActiveHotelCookieValue } from "./activeHotel";
 
 const SESSION_COOKIE_NAME = "pms_session_token";
 const DEFAULT_BACKEND_URL = "http://localhost:3334";
@@ -344,6 +346,46 @@ export function getReservationsCalendar(startDate: string, days = 20): Promise<A
   return getAdminData<AdminReservationCalendarResponse>(`/admin/reservations/calendar?${query.toString()}`);
 }
 
+export async function requestMaintenanceEndpoint<T>(path: string, method: "GET" | "POST" | "PUT", body?: unknown): Promise<T> {
+  const token = await getSessionToken();
+  if (!token) throw new Error("Sessão inválida. Faça login novamente.");
+  const activeHotelHeaderValue = await getActiveHotelHeaderValue();
+  const headers: Record<string, string> = { Authorization: `Bearer ${token}` };
+  if (activeHotelHeaderValue !== null) headers[ACTIVE_HOTEL_HEADER_NAME] = activeHotelHeaderValue;
+  if (body !== undefined) headers["Content-Type"] = "application/json";
+  const response = await fetch(`${getBackendUrl()}/admin/maintenance/${path.replace(/^\/+/, "")}`, {
+    method,
+    cache: "no-store",
+    headers,
+    body: body === undefined ? undefined : JSON.stringify(body)
+  });
+  const payload = (await response.json().catch(() => ({}))) as T & AdminErrorResponse;
+  if (!response.ok) {
+    const error = new Error(payload.message || "Falha na operação de manutenção.") as Error & { statusCode?: number; details?: string };
+    error.statusCode = response.status;
+    error.details = payload.details;
+    throw error;
+  }
+  return payload;
+}
+
+export function getMaintenanceOccurrences(query = ""): Promise<AdminMaintenanceOccurrenceListResponse> {
+  return requestMaintenanceEndpoint<AdminMaintenanceOccurrenceListResponse>(`occurrences${query ? `?${query}` : ""}`, "GET");
+}
+
+export async function getMaintenanceOccurrence(id: string): Promise<AdminMaintenanceOccurrenceDetail> {
+  const response = await requestMaintenanceEndpoint<AdminItemResponse<AdminMaintenanceOccurrenceDetail>>(`occurrences/${id}`, "GET");
+  return response.item;
+}
+
+export function getMaintenanceReferenceData(): Promise<AdminMaintenanceReferenceData> {
+  return requestMaintenanceEndpoint<AdminMaintenanceReferenceData>("reference-data", "GET");
+}
+
+export function getMaintenanceSummary(): Promise<AdminMaintenanceSummary> {
+  return requestMaintenanceEndpoint<AdminMaintenanceSummary>("summary", "GET");
+}
+
 export function simulateReservationsCalendarBooking(
   payload: AdminReservationCalendarBookingCreateInput
 ): Promise<AdminReservationCalendarBookingCreateResponse> {
@@ -382,8 +424,11 @@ export function executeStayCheckin(stayId: string): Promise<AdminStayOperational
   return requestAdmin<AdminStayOperationalPanelResponse>(`/admin/stays/${stayId}/checkin`, "POST", {});
 }
 
-export function executeStayCheckout(stayId: string): Promise<AdminStayOperationalPanelResponse | null> {
-  return requestAdmin<AdminStayOperationalPanelResponse>(`/admin/stays/${stayId}/checkout`, "POST", {});
+export function executeStayCheckout(
+  stayId: string,
+  payload: { maintenance_acknowledged_occurrence_ids?: string[]; maintenance_acknowledgement_note?: string }
+): Promise<AdminStayOperationalPanelResponse | null> {
+  return requestAdmin<AdminStayOperationalPanelResponse>(`/admin/stays/${stayId}/checkout`, "POST", payload);
 }
 
 export function executeStayNoShow(stayId: string): Promise<AdminStayOperationalPanelResponse | null> {

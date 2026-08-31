@@ -44,6 +44,7 @@ type RoomRow = {
   room_number: string;
   room_type: string;
   base_daily_rate: number;
+  status: "available" | "occupied" | "maintenance" | "blocked";
 };
 
 type SeasonRow = {
@@ -193,7 +194,7 @@ async function computeBooking(
 
   const roomsResult = await supabase
     .from("rooms")
-    .select("id,hotel_id,room_number,room_type,base_daily_rate")
+    .select("id,hotel_id,room_number,room_type,base_daily_rate,status")
     .eq("hotel_id", activeHotelId)
     .in("id", roomIds);
 
@@ -206,6 +207,9 @@ async function computeBooking(
     return { ok: false, statusCode: 400, message: "Um ou mais quartos selecionados nao pertencem ao hotel ativo." };
   }
   const roomsById = new Map(rooms.map((room) => [room.id, room]));
+  if (rooms.some((room) => room.status === "maintenance" || room.status === "blocked")) {
+    return { ok: false, statusCode: 409, message: "Um ou mais quartos estão indisponíveis para novas reservas." };
+  }
 
   const conflictResult = await supabase
     .from("stays")
@@ -241,6 +245,27 @@ async function computeBooking(
     if (hasConflict) {
       return { ok: false, statusCode: 409, message: "Conflito de disponibilidade em uma ou mais celulas selecionadas." };
     }
+  }
+
+  const today = new Date().toISOString().slice(0, 10);
+  const blocksResult = await supabase
+    .from("room_blocks")
+    .select("room_id,start_date,end_date,released_at")
+    .eq("hotel_id", activeHotelId)
+    .in("room_id", roomIds)
+    .is("released_at", null)
+    .lte("start_date", maxDate);
+  if (blocksResult.error) {
+    return { ok: false, statusCode: 500, message: "Falha ao validar bloqueios de manutenção." };
+  }
+  const blockedSelection = normalizedCells.some((cell) =>
+    ((blocksResult.data || []) as Array<{ room_id: string; start_date: string; end_date: string; released_at: string | null }>).some((block) => {
+      const effectiveEnd = block.end_date < today ? "9999-12-31" : block.end_date;
+      return block.room_id === cell.room_id && cell.date >= block.start_date && cell.date <= effectiveEnd;
+    })
+  );
+  if (blockedSelection) {
+    return { ok: false, statusCode: 409, message: "Um ou mais quartos estão bloqueados por manutenção." };
   }
 
   const seasonsResult = await supabase

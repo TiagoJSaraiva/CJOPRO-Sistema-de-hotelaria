@@ -32,6 +32,14 @@ export const PERMISSIONS = {
   SEASON_ROOM_RATE_READ: "read_season_room_rate",
   SEASON_ROOM_RATE_UPDATE: "update_season_room_rate",
   SEASON_ROOM_RATE_DELETE: "delete_season_room_rate",
+  MAINTENANCE_OCCURRENCE_CREATE: "create_maintenance_occurrence",
+  MAINTENANCE_READ: "read_maintenance",
+  MAINTENANCE_TRIAGE: "triage_maintenance",
+  MAINTENANCE_EXECUTE: "execute_maintenance",
+  MAINTENANCE_BLOCK_MANAGE: "manage_maintenance_blocks",
+  MAINTENANCE_INSPECT: "inspect_maintenance",
+  MAINTENANCE_LIABILITY_CONFIRM: "confirm_damage_liability",
+  MAINTENANCE_CATALOG_MANAGE: "manage_maintenance_catalogs",
   USER_CREATE: "create_user",
   USER_READ: "read_user",
   USER_UPDATE: "update_user",
@@ -88,6 +96,11 @@ export const ADMIN_NAV_ITEMS = [
     href: "/dashboard/season-room-rates",
     label: "Tarifas por Temporada",
     permission: PERMISSIONS.SEASON_ROOM_RATE_READ
+  },
+  {
+    href: "/dashboard/maintenance",
+    label: "Manutenção",
+    permission: PERMISSIONS.MAINTENANCE_READ
   },
   {
     href: "/dashboard/users",

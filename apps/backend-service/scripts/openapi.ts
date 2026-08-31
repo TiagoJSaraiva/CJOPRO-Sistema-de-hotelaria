@@ -73,8 +73,8 @@ function assertOperationContract(document: Record<string, unknown>): void {
     }
   }
 
-  if (operationCount !== 55) {
-    throw new Error(`OpenAPI inválido: esperadas 55 operações, encontradas ${operationCount}.`);
+  if (operationCount !== 82) {
+    throw new Error(`OpenAPI inválido: esperadas 82 operações, encontradas ${operationCount}.`);
   }
 }
 
@@ -116,13 +116,13 @@ async function main(): Promise<void> {
     if (current.replace(/\r\n/g, "\n") !== generated) {
       throw new Error("Contrato OpenAPI desatualizado. Execute `pnpm api:openapi` e revise o diff.");
     }
-    process.stdout.write("Contrato OpenAPI válido e sincronizado (55 operações).\n");
+    process.stdout.write("Contrato OpenAPI válido e sincronizado (82 operações).\n");
     return;
   }
 
   await mkdir(path.dirname(outputPath), { recursive: true });
   await writeFile(outputPath, generated, "utf8");
-  process.stdout.write(`Contrato OpenAPI atualizado em ${path.relative(workspaceRoot, outputPath)} (55 operações).\n`);
+  process.stdout.write(`Contrato OpenAPI atualizado em ${path.relative(workspaceRoot, outputPath)} (82 operações).\n`);
 }
 
 main().catch((error) => {

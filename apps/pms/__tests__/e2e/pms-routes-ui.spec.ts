@@ -4,11 +4,11 @@ import { expect, test } from "./axe-test";
 const REFERENCE_TIME = new Date("2026-05-12T15:00:00.000Z");
 const TEST_TAGS = ["@visual", "@a11y"];
 
-async function authenticate(context: BrowserContext, baseURL: string) {
+async function authenticate(context: BrowserContext, baseURL: string, token = "e2e-token") {
   await context.addCookies([
     {
       name: "pms_session_token",
-      value: "e2e-token",
+      value: token,
       url: baseURL,
       httpOnly: true,
       sameSite: "Lax"
@@ -156,5 +156,20 @@ test.describe("PMS UI quality", () => {
     await auditAccessibility("financeiro-filtrado");
     await stabilizeVisualState(page);
     await expect(page).toHaveScreenshot("transactions-filtered.png");
+  });
+
+  test("central de manutenção", { tag: TEST_TAGS }, async ({ page, context, baseURL, auditAccessibility }) => {
+    await preparePage(page);
+    await authenticate(context, baseURL || "http://127.0.0.1:3001", "maintenance-e2e-token");
+    await page.goto("/dashboard/maintenance/view");
+    await expect(page.getByRole("heading", { name: "Manutenção" })).toBeVisible();
+    await expect(page.getByLabel("Resumo de manutenção")).toContainText("Quartos bloqueados");
+    await expect(page.getByRole("link", { name: /OCO-001001/ })).toContainText("Aguardando inspeção");
+    await page.getByLabel("Situação").selectOption("triaged");
+    await page.getByRole("button", { name: "Filtrar" }).click();
+    await expect(page).toHaveURL(/status=triaged/);
+    await auditAccessibility("central-manutencao");
+    await stabilizeVisualState(page);
+    await expect(page).toHaveScreenshot("maintenance-center.png");
   });
 });

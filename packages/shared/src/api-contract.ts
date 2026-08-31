@@ -3,6 +3,8 @@ import type {
   AdminCustomerCreateInput,
   AdminFinancialTransactionCreateInput,
   AdminHotelCreateInput,
+  AdminMaintenanceOccurrenceCreateInput,
+  AdminMaintenanceWorkOrderCreateInput,
   AdminPermissionCreateInput,
   AdminProductCreateInput,
   AdminReservationCalendarBookingCreateInput,
@@ -216,6 +218,137 @@ const ReservationStatusSchema = Type.Union([
   Type.Literal("canceled"), Type.Literal("no_show")
 ]);
 const PaymentStatusSchema = Type.Union([Type.Literal("pending"), Type.Literal("partial"), Type.Literal("paid")]);
+const MaintenancePrioritySchema = Type.Union([Type.Literal("low"), Type.Literal("normal"), Type.Literal("high"), Type.Literal("critical")]);
+const MaintenanceOccurrenceKindSchema = Type.Union([
+  Type.Literal("damage"), Type.Literal("defect"), Type.Literal("wear"), Type.Literal("safety_risk"),
+  Type.Literal("special_cleaning"), Type.Literal("other")
+]);
+const MaintenanceOccurrenceStatusSchema = Type.Union([
+  Type.Literal("reported"), Type.Literal("triaged"), Type.Literal("in_progress"), Type.Literal("awaiting_inspection"),
+  Type.Literal("awaiting_liability"), Type.Literal("resolved"), Type.Literal("canceled")
+]);
+const MaintenanceWorkOrderStatusSchema = Type.Union([
+  Type.Literal("pending"), Type.Literal("assigned"), Type.Literal("in_progress"), Type.Literal("paused"),
+  Type.Literal("waiting"), Type.Literal("awaiting_inspection"), Type.Literal("completed"), Type.Literal("canceled")
+]);
+const MaintenanceLiabilityStatusSchema = Type.Union([
+  Type.Literal("not_applicable"), Type.Literal("not_assessed"), Type.Literal("suspected"), Type.Literal("confirmed"), Type.Literal("dismissed")
+]);
+const MaintenanceResponsiblePartySchema = Type.Union([
+  Type.Literal("guest"), Type.Literal("hotel"), Type.Literal("supplier"), Type.Literal("normal_wear")
+]);
+export const MaintenanceCategorySchema = Type.Object({
+  id: uuid(), hotel_id: uuid(), name: Type.String(), description: nullable(Type.String()), display_order: Type.Integer(),
+  is_active: Type.Boolean(), created_at: dateTime(), updated_at: dateTime()
+}, { ...strict, $id: "MaintenanceCategory" });
+export const MaintenanceLocationSchema = Type.Object({
+  id: uuid(), hotel_id: uuid(), parent_location_id: nullable(uuid()), parent_name: Type.Optional(nullable(Type.String())),
+  kind: Type.Union([Type.Literal("area"), Type.Literal("equipment")]), name: Type.String(), description: nullable(Type.String()),
+  display_order: Type.Integer(), is_active: Type.Boolean(), created_at: dateTime(), updated_at: dateTime()
+}, { ...strict, $id: "MaintenanceLocation" });
+export const MaintenanceOccurrenceSummarySchema = Type.Object({
+  id: uuid(), occurrence_number: Type.Integer(), code: Type.String(), kind: MaintenanceOccurrenceKindSchema,
+  priority: MaintenancePrioritySchema, status: MaintenanceOccurrenceStatusSchema, description: Type.String(),
+  category_id: uuid(), category_name: Type.String(), room_id: nullable(uuid()), room_number: nullable(Type.String()),
+  location_id: nullable(uuid()), location_name: nullable(Type.String()), stay_id: nullable(uuid()), reported_by: uuid(),
+  reporter_name: Type.String(), blocking_recommended: Type.Boolean(), liability_status: MaintenanceLiabilityStatusSchema,
+  active_block: Type.Boolean(), open_work_orders: Type.Integer(), created_at: dateTime(), updated_at: dateTime()
+}, { ...strict, $id: "MaintenanceOccurrenceSummary" });
+export const MaintenanceWorkOrderSchema = Type.Object({
+  id: uuid(), occurrence_id: uuid(), title: Type.String(), instructions: Type.String(), priority: MaintenancePrioritySchema,
+  status: MaintenanceWorkOrderStatusSchema, assigned_to: nullable(uuid()), assignee_name: nullable(Type.String()), due_at: nullable(dateTime()),
+  waiting_reason: nullable(Type.Union([Type.Literal("parts"), Type.Literal("vendor"), Type.Literal("authorization"), Type.Literal("access"), Type.Literal("other")])),
+  waiting_notes: nullable(Type.String()), requires_inspection: Type.Boolean(), diagnosis: nullable(Type.String()),
+  resolution_notes: nullable(Type.String()), started_at: nullable(dateTime()), completed_at: nullable(dateTime()), created_at: dateTime(), updated_at: dateTime()
+}, { ...strict, $id: "MaintenanceWorkOrder" });
+const MaintenanceInspectionSchema = Type.Object({
+  id: uuid(), work_order_id: uuid(), inspector_id: uuid(), inspector_name: Type.String(), result: Type.Union([Type.Literal("approved"), Type.Literal("rejected")]),
+  notes: Type.String(), created_at: dateTime()
+}, strict);
+const MaintenanceEventSchema = Type.Object({
+  id: uuid(), occurrence_id: uuid(), work_order_id: nullable(uuid()), actor_id: uuid(), actor_name: Type.String(),
+  event_type: Type.String(), message: nullable(Type.String()), metadata: Type.Record(Type.String(), Type.Unknown()), created_at: dateTime()
+}, strict);
+const MaintenanceAttachmentSchema = Type.Object({
+  id: uuid(), occurrence_id: uuid(), work_order_id: nullable(uuid()), original_filename: Type.String(),
+  content_type: Type.Union([Type.Literal("image/jpeg"), Type.Literal("image/png"), Type.Literal("image/webp")]),
+  size_bytes: Type.Integer(), uploaded_by: uuid(), created_at: dateTime()
+}, strict);
+const MaintenanceRoomBlockSchema = Type.Object({
+  id: uuid(), occurrence_id: nullable(uuid()), room_id: uuid(), room_number: Type.String(),
+  status: Type.Union([Type.Literal("blocked"), Type.Literal("maintenance")]), label: nullable(Type.String()),
+  start_date: date(), planned_end_date: date(), released_at: nullable(dateTime()), is_overdue: Type.Boolean()
+}, strict);
+export const MaintenanceOccurrenceDetailSchema = Type.Intersect([
+  Type.Ref("MaintenanceOccurrenceSummary"),
+  Type.Object({
+    discovered_at: dateTime(), triaged_by: nullable(uuid()), triaged_at: nullable(dateTime()),
+    suspected_party: nullable(MaintenanceResponsiblePartySchema), confirmed_party: nullable(MaintenanceResponsiblePartySchema),
+    liability_notes: nullable(Type.String()), duplicate_of_id: nullable(uuid()), canceled_reason: nullable(Type.String()), resolved_at: nullable(dateTime()),
+    work_orders: Type.Array(Type.Ref("MaintenanceWorkOrder")), inspections: Type.Array(MaintenanceInspectionSchema),
+    events: Type.Array(MaintenanceEventSchema), attachments: Type.Array(MaintenanceAttachmentSchema), room_blocks: Type.Array(MaintenanceRoomBlockSchema)
+  }, strict)
+], { $id: "MaintenanceOccurrenceDetail" });
+export const MaintenanceOccurrenceBodySchema = Type.Object({
+  category_id: uuid(), room_id: optionalNullable(uuid()), location_id: optionalNullable(uuid()), stay_id: optionalNullable(uuid()),
+  kind: MaintenanceOccurrenceKindSchema, priority: Type.Optional(MaintenancePrioritySchema), description: Type.String({ minLength: 3, maxLength: 4000 }),
+  discovered_at: Type.Optional(dateTime()), blocking_recommended: Type.Optional(Type.Boolean())
+}, { ...strict, $id: "MaintenanceOccurrenceCreateInput" });
+export const MaintenanceWorkOrderBodySchema = Type.Object({
+  title: Type.String({ minLength: 3, maxLength: 160 }), instructions: Type.String({ minLength: 3, maxLength: 4000 }),
+  priority: Type.Optional(MaintenancePrioritySchema), assigned_to: optionalNullable(uuid()), due_at: optionalNullable(dateTime()),
+  requires_inspection: Type.Optional(Type.Boolean())
+}, { ...strict, $id: "MaintenanceWorkOrderCreateInput" });
+const MaintenanceCatalogBodySchema = Type.Object({
+  name: Type.String({ minLength: 1, maxLength: 120 }), description: optionalNullable(Type.String({ maxLength: 1000 })),
+  display_order: Type.Optional(Type.Integer()), is_active: Type.Optional(Type.Boolean()), kind: Type.Optional(Type.Union([Type.Literal("area"), Type.Literal("equipment")])),
+  parent_location_id: optionalNullable(uuid())
+}, strict);
+const MaintenanceTriageBodySchema = Type.Object({
+  category_id: Type.Optional(uuid()), priority: Type.Optional(MaintenancePrioritySchema),
+  suspected_party: optionalNullable(MaintenanceResponsiblePartySchema), liability_notes: optionalNullable(Type.String({ maxLength: 2000 }))
+}, strict);
+const MaintenanceReasonBodySchema = Type.Object({ reason: Type.String({ minLength: 3, maxLength: 2000 }) }, strict);
+const MaintenanceDuplicateBodySchema = Type.Object({ duplicate_of_id: uuid(), reason: Type.String({ minLength: 3, maxLength: 2000 }) }, strict);
+const MaintenanceLiabilityBodySchema = Type.Object({
+  decision: Type.Union([Type.Literal("confirmed"), Type.Literal("dismissed")]), party: optionalNullable(MaintenanceResponsiblePartySchema),
+  notes: Type.String({ minLength: 3, maxLength: 2000 })
+}, strict);
+const MaintenanceTransitionBodySchema = Type.Object({
+  action: Type.Union([Type.Literal("assign"), Type.Literal("start"), Type.Literal("pause"), Type.Literal("wait"), Type.Literal("resume"), Type.Literal("complete"), Type.Literal("cancel"), Type.Literal("reopen")]),
+  assigned_to: optionalNullable(uuid()), waiting_reason: Type.Optional(Type.Union([Type.Literal("parts"), Type.Literal("vendor"), Type.Literal("authorization"), Type.Literal("access"), Type.Literal("other")])),
+  notes: Type.Optional(Type.String({ maxLength: 4000 })), diagnosis: Type.Optional(Type.String({ maxLength: 4000 }))
+}, strict);
+const MaintenanceInspectionBodySchema = Type.Object({ result: Type.Union([Type.Literal("approved"), Type.Literal("rejected")]), notes: Type.String({ minLength: 3, maxLength: 2000 }) }, strict);
+const MaintenanceBlockBodySchema = Type.Object({
+  start_date: date(), end_date: date(), status: Type.Optional(Type.Union([Type.Literal("blocked"), Type.Literal("maintenance")])),
+  label: Type.Optional(Type.String({ maxLength: 240 })), conflict_acknowledgement: Type.Optional(Type.String({ minLength: 3, maxLength: 2000 }))
+}, strict);
+const MaintenanceAttachmentIntentBodySchema = Type.Object({ files: Type.Array(Type.Object({
+  filename: Type.String({ minLength: 1, maxLength: 255 }), content_type: Type.Union([Type.Literal("image/jpeg"), Type.Literal("image/png"), Type.Literal("image/webp")]),
+  size_bytes: Type.Integer({ minimum: 1, maximum: 10485760 })
+}, strict), { minItems: 1, maxItems: 5 }) }, strict);
+const MaintenanceAttachmentFinalizeBodySchema = Type.Object({ files: Type.Array(Type.Object({
+  storage_path: Type.String(), filename: Type.String(), content_type: Type.String(), size_bytes: Type.Integer(), work_order_id: optionalNullable(uuid())
+}, strict), { minItems: 1, maxItems: 5 }) }, strict);
+const StayCheckoutBodySchema = Type.Object({ maintenance_acknowledged_occurrence_ids: Type.Optional(Type.Array(uuid())), maintenance_acknowledgement_note: Type.Optional(Type.String({ maxLength: 2000 })) }, strict);
+const MaintenanceSummarySchema = Type.Object({
+  open: Type.Integer(), assigned_to_me: Type.Integer(), unassigned: Type.Integer(), overdue: Type.Integer(),
+  awaiting_inspection: Type.Integer(), blocked_rooms: Type.Integer()
+}, strict);
+const MaintenanceReferenceDataSchema = Type.Object({
+  categories: Type.Array(Type.Ref("MaintenanceCategory")), locations: Type.Array(Type.Ref("MaintenanceLocation")),
+  rooms: Type.Array(Type.Object({ id: uuid(), room_number: Type.String(), room_type: Type.String() }, strict)),
+  stays: Type.Array(Type.Object({ id: uuid(), room_id: uuid(), reservation_code: nullable(Type.String()), customer_name: nullable(Type.String()), status: ReservationStatusSchema }, strict)),
+  assignable_users: Type.Array(Type.Object({ id: uuid(), name: Type.String() }, strict))
+}, strict);
+const MaintenanceOccurrenceListSchema = Type.Object({
+  items: Type.Array(Type.Ref("MaintenanceOccurrenceSummary")), page: Type.Integer(), page_size: Type.Integer(), total: Type.Integer()
+}, strict);
+const MaintenanceUploadIntentSchema = Type.Object({ items: Type.Array(Type.Object({
+  storage_path: Type.String(), token: Type.String(), signed_url: Type.String()
+}, strict)) }, strict);
+const MaintenanceAttachmentAccessSchema = Type.Object({ signed_url: Type.String(), expires_in: Type.Integer() }, strict);
 const CalendarBreakdownSchema = Type.Object({
   room_id: uuid(), room_number: Type.String(), room_type: Type.String(), date: date(), base_daily_rate: Type.Number(),
   season_extra_rate: Type.Number(), final_daily_rate: Type.Number()
@@ -236,7 +369,7 @@ export const ReservationCalendarSchema = Type.Object({
     start_half: nullable(Type.Union([Type.Literal("left"), Type.Literal("right")])),
     end_half: nullable(Type.Union([Type.Literal("left"), Type.Literal("right")]))
   }, strict)),
-  blocks: Type.Array(Type.Object({ id: uuid(), room_id: uuid(), label: nullable(Type.String()), status: Type.String(), start_date: date(), end_date: date() }, strict)),
+  blocks: Type.Array(Type.Object({ id: uuid(), room_id: uuid(), label: nullable(Type.String()), status: Type.String(), start_date: date(), end_date: date(), maintenance_occurrence_id: Type.Optional(nullable(uuid())), occurrence_code: Type.Optional(nullable(Type.String())), is_overdue: Type.Optional(Type.Boolean()) }, strict)),
   legend: Type.Array(Type.Object({ key: Type.String(), label: Type.String(), color: Type.String() }, strict))
 }, { ...strict, $id: "ReservationCalendar" });
 const StayPaymentSchema = Type.Object({
@@ -259,7 +392,9 @@ export const StayPanelSchema = Type.Object({
     can_checkin: Type.Boolean(), checkin_block_reason: nullable(Type.String()), can_checkout: Type.Boolean(), checkout_block_reason: nullable(Type.String()),
     can_no_show: Type.Boolean(), no_show_block_reason: nullable(Type.String()), can_cancel: Type.Boolean(), cancel_block_reason: nullable(Type.String())
   }, strict),
-  payments: Type.Array(StayPaymentSchema)
+  payments: Type.Array(StayPaymentSchema),
+  maintenance_occurrences: Type.Optional(Type.Array(Type.Ref("MaintenanceOccurrenceSummary"))),
+  maintenance_acknowledgement_required: Type.Optional(Type.Boolean())
 }, { ...strict, $id: "StayPanel" });
 
 // These assertions keep the runtime contract assignable to the public client types.
@@ -278,7 +413,9 @@ type ContractCompatibility = [
   Assert<Compatible<typeof SeasonRoomRateBodySchema, AdminSeasonRoomRateCreateInput>>,
   Assert<Compatible<typeof FinancialTransactionBodySchema, AdminFinancialTransactionCreateInput>>,
   Assert<Compatible<typeof CalendarBookingBodySchema, AdminReservationCalendarBookingCreateInput>>,
-  Assert<Compatible<typeof StayPaymentBodySchema, AdminStayPaymentCreateInput>>
+  Assert<Compatible<typeof StayPaymentBodySchema, AdminStayPaymentCreateInput>>,
+  Assert<Compatible<typeof MaintenanceOccurrenceBodySchema, AdminMaintenanceOccurrenceCreateInput>>,
+  Assert<Compatible<typeof MaintenanceWorkOrderBodySchema, AdminMaintenanceWorkOrderCreateInput>>
 ];
 export type { ContractCompatibility };
 
@@ -287,10 +424,12 @@ export const API_COMPONENT_SCHEMAS = [
   RoleBodySchema, RoleUpdateSchema, PermissionBodySchema, PermissionUpdateSchema, RoomBodySchema, RoomUpdateSchema,
   CustomerBodySchema, CustomerUpdateSchema, ProductBodySchema, ProductUpdateSchema, SeasonBodySchema, SeasonUpdateSchema,
   SeasonRoomRateBodySchema, SeasonRoomRateUpdateSchema, FinancialTransactionBodySchema, FinancialTransactionUpdateSchema,
-  CalendarBookingBodySchema, StayPaymentBodySchema, HotelSchema, UserSchema, RoleSchema, PermissionSchema,
+  CalendarBookingBodySchema, StayPaymentBodySchema, MaintenanceOccurrenceBodySchema, MaintenanceWorkOrderBodySchema,
+  HotelSchema, UserSchema, RoleSchema, PermissionSchema,
   RoomSchema, CustomerSchema, ProductSchema, SeasonSchema, SeasonRoomRateSchema, FinancialTransactionSchema,
   AuthUserSchema, LoginResponseSchema, MeResponseSchema, UserReferenceDataSchema, RoleReferenceDataSchema,
-  CalendarBookingResponseSchema, ReservationCalendarSchema, StayPanelSchema
+  CalendarBookingResponseSchema, ReservationCalendarSchema, StayPanelSchema, MaintenanceCategorySchema,
+  MaintenanceLocationSchema, MaintenanceOccurrenceSummarySchema, MaintenanceWorkOrderSchema, MaintenanceOccurrenceDetailSchema
 ] as const;
 
 const AuthHeadersSchema = Type.Object({
@@ -347,6 +486,33 @@ export const API_ROUTE_CONTRACTS: Readonly<Record<string, ApiRouteContract>> = {
   ...crud("Season", "Seasons", "/admin/seasons", SeasonSchema, SeasonBodySchema, SeasonUpdateSchema),
   ...crud("SeasonRoomRate", "Season room rates", "/admin/season-room-rates", SeasonRoomRateSchema, SeasonRoomRateBodySchema, SeasonRoomRateUpdateSchema),
   ...crud("FinancialTransaction", "Financial transactions", "/admin/financial-transactions", FinancialTransactionSchema, FinancialTransactionBodySchema, FinancialTransactionUpdateSchema),
+  "GET /admin/maintenance/summary": admin("getMaintenanceSummary", "Maintenance", "Retorna contadores operacionais de manutenção.", MaintenanceSummarySchema),
+  "GET /admin/maintenance/reference-data": admin("getMaintenanceReferenceData", "Maintenance", "Retorna catálogos e referências do hotel ativo.", MaintenanceReferenceDataSchema),
+  "GET /admin/maintenance/categories": admin("listMaintenanceCategories", "Maintenance", "Lista categorias de manutenção.", listSchema(MaintenanceCategorySchema)),
+  "POST /admin/maintenance/categories": route("createMaintenanceCategory", "Maintenance", "Cria uma categoria de manutenção.", { headers: AuthHeadersSchema, security: [{ bearerAuth: [] }], body: MaintenanceCatalogBodySchema, response: { 201: itemSchema(MaintenanceCategorySchema), ...adminErrors } }),
+  "PUT /admin/maintenance/categories/:id": admin("updateMaintenanceCategory", "Maintenance", "Atualiza uma categoria de manutenção.", itemSchema(MaintenanceCategorySchema), { params: IdParamsSchema, body: MaintenanceCatalogBodySchema }),
+  "GET /admin/maintenance/locations": admin("listMaintenanceLocations", "Maintenance", "Lista áreas e equipamentos de manutenção.", listSchema(MaintenanceLocationSchema)),
+  "POST /admin/maintenance/locations": route("createMaintenanceLocation", "Maintenance", "Cria uma área ou equipamento.", { headers: AuthHeadersSchema, security: [{ bearerAuth: [] }], body: MaintenanceCatalogBodySchema, response: { 201: itemSchema(MaintenanceLocationSchema), ...adminErrors } }),
+  "PUT /admin/maintenance/locations/:id": admin("updateMaintenanceLocation", "Maintenance", "Atualiza uma área ou equipamento.", itemSchema(MaintenanceLocationSchema), { params: IdParamsSchema, body: MaintenanceCatalogBodySchema }),
+  "GET /admin/maintenance/occurrences": admin("listMaintenanceOccurrences", "Maintenance", "Lista ocorrências de manutenção.", MaintenanceOccurrenceListSchema, { querystring: Type.Object({ page: Type.Optional(Type.String()), page_size: Type.Optional(Type.String()), status: Type.Optional(Type.String()), priority: Type.Optional(Type.String()), category_id: Type.Optional(Type.String()), room_id: Type.Optional(Type.String()), location_id: Type.Optional(Type.String()), assigned_to: Type.Optional(Type.String()), overdue: Type.Optional(Type.String()), blocked: Type.Optional(Type.String()), search: Type.Optional(Type.String()) }, strict) }),
+  "POST /admin/maintenance/occurrences": route("createMaintenanceOccurrence", "Maintenance", "Registra uma ocorrência de manutenção.", { headers: AuthHeadersSchema, security: [{ bearerAuth: [] }], body: MaintenanceOccurrenceBodySchema, response: { 201: itemSchema(MaintenanceOccurrenceDetailSchema), ...adminErrors } }),
+  "GET /admin/maintenance/occurrences/:id": admin("getMaintenanceOccurrence", "Maintenance", "Retorna o detalhe de uma ocorrência.", itemSchema(MaintenanceOccurrenceDetailSchema), { params: IdParamsSchema }),
+  "POST /admin/maintenance/occurrences/:id/triage": admin("triageMaintenanceOccurrence", "Maintenance", "Realiza a triagem de uma ocorrência.", itemSchema(MaintenanceOccurrenceDetailSchema), { params: IdParamsSchema, body: MaintenanceTriageBodySchema }),
+  "POST /admin/maintenance/occurrences/:id/comments": admin("commentMaintenanceOccurrence", "Maintenance", "Adiciona comentário à ocorrência.", itemSchema(MaintenanceOccurrenceDetailSchema), { params: IdParamsSchema, body: MaintenanceReasonBodySchema }),
+  "POST /admin/maintenance/occurrences/:id/cancel": admin("cancelMaintenanceOccurrence", "Maintenance", "Cancela uma ocorrência preservando histórico.", itemSchema(MaintenanceOccurrenceDetailSchema), { params: IdParamsSchema, body: MaintenanceReasonBodySchema }),
+  "POST /admin/maintenance/occurrences/:id/duplicate": admin("markMaintenanceOccurrenceDuplicate", "Maintenance", "Marca a ocorrência como duplicada e preserva o vínculo com o registro canônico.", itemSchema(MaintenanceOccurrenceDetailSchema), { params: IdParamsSchema, body: MaintenanceDuplicateBodySchema }),
+  "POST /admin/maintenance/occurrences/:id/reopen": admin("reopenMaintenanceOccurrence", "Maintenance", "Reabre uma ocorrência concluída ou cancelada.", itemSchema(MaintenanceOccurrenceDetailSchema), { params: IdParamsSchema, body: MaintenanceReasonBodySchema }),
+  "POST /admin/maintenance/occurrences/:id/liability/suspect": admin("suspectMaintenanceLiability", "Maintenance", "Registra suspeita de responsabilidade.", itemSchema(MaintenanceOccurrenceDetailSchema), { params: IdParamsSchema, body: Type.Object({ party: MaintenanceResponsiblePartySchema, notes: Type.String({ minLength: 3, maxLength: 2000 }) }, strict) }),
+  "POST /admin/maintenance/occurrences/:id/liability/decide": admin("decideMaintenanceLiability", "Maintenance", "Confirma ou descarta responsabilidade.", itemSchema(MaintenanceOccurrenceDetailSchema), { params: IdParamsSchema, body: MaintenanceLiabilityBodySchema }),
+  "POST /admin/maintenance/occurrences/:id/work-orders": route("createMaintenanceWorkOrder", "Maintenance", "Cria uma ordem de trabalho.", { headers: AuthHeadersSchema, security: [{ bearerAuth: [] }], params: IdParamsSchema, body: MaintenanceWorkOrderBodySchema, response: { 201: itemSchema(MaintenanceOccurrenceDetailSchema), ...adminErrors } }),
+  "POST /admin/maintenance/work-orders/:id/transition": admin("transitionMaintenanceWorkOrder", "Maintenance", "Executa uma transição de ordem de trabalho.", itemSchema(MaintenanceOccurrenceDetailSchema), { params: IdParamsSchema, body: MaintenanceTransitionBodySchema }),
+  "POST /admin/maintenance/work-orders/:id/inspect": admin("inspectMaintenanceWorkOrder", "Maintenance", "Inspeciona uma ordem concluída.", itemSchema(MaintenanceOccurrenceDetailSchema), { params: IdParamsSchema, body: MaintenanceInspectionBodySchema }),
+  "POST /admin/maintenance/occurrences/:id/room-blocks": route("createMaintenanceRoomBlock", "Maintenance", "Bloqueia o quarto da ocorrência.", { headers: AuthHeadersSchema, security: [{ bearerAuth: [] }], params: IdParamsSchema, body: MaintenanceBlockBodySchema, response: { 201: itemSchema(MaintenanceOccurrenceDetailSchema), ...adminErrors } }),
+  "POST /admin/maintenance/room-blocks/:id/release": admin("releaseMaintenanceRoomBlock", "Maintenance", "Libera um bloqueio após os requisitos operacionais.", itemSchema(MaintenanceOccurrenceDetailSchema), { params: IdParamsSchema, body: MaintenanceReasonBodySchema }),
+  "POST /admin/maintenance/occurrences/:id/attachments/upload-intents": admin("createMaintenanceAttachmentUploadIntents", "Maintenance", "Gera autorizações temporárias para fotos.", MaintenanceUploadIntentSchema, { params: IdParamsSchema, body: MaintenanceAttachmentIntentBodySchema }),
+  "POST /admin/maintenance/occurrences/:id/attachments/finalize": admin("finalizeMaintenanceAttachments", "Maintenance", "Confirma fotos enviadas.", itemSchema(MaintenanceOccurrenceDetailSchema), { params: IdParamsSchema, body: MaintenanceAttachmentFinalizeBodySchema }),
+  "POST /admin/maintenance/attachments/:id/access": admin("accessMaintenanceAttachment", "Maintenance", "Gera acesso temporário a uma foto.", MaintenanceAttachmentAccessSchema, { params: IdParamsSchema }),
+  "POST /admin/maintenance/attachments/:id/remove": admin("removeMaintenanceAttachment", "Maintenance", "Remove uma foto com justificativa auditada.", itemSchema(MaintenanceOccurrenceDetailSchema), { params: IdParamsSchema, body: MaintenanceReasonBodySchema }),
   "GET /admin/reservations/calendar": admin("getReservationCalendar", "Reservations", "Consulta o calendário de reservas.", ReservationCalendarSchema, { querystring: Type.Object({ start_date: Type.Optional(date()), days: Type.Optional(Type.String({ pattern: "^[0-9]+$" })) }, strict) }),
   "POST /admin/reservations/calendar/booking/simulate": admin("simulateCalendarBooking", "Reservations", "Simula disponibilidade e preço de uma reserva.", itemSchema(CalendarBookingResponseSchema), { body: CalendarBookingBodySchema }),
   "POST /admin/reservations/calendar/booking": route("createCalendarBooking", "Reservations", "Cria uma reserva a partir do calendário.", { headers: AuthHeadersSchema, security: [{ bearerAuth: [] }], body: CalendarBookingBodySchema, response: { 201: itemSchema(CalendarBookingResponseSchema), ...adminErrors } }),
@@ -354,7 +520,7 @@ export const API_ROUTE_CONTRACTS: Readonly<Record<string, ApiRouteContract>> = {
   "GET /admin/stays/:id/panel": admin("getStayPanel", "Stays", "Retorna o painel operacional da estadia.", itemSchema(StayPanelSchema), { params: IdParamsSchema }),
   "POST /admin/stays/:id/payments": admin("createStayPayment", "Stays", "Registra um pagamento da estadia.", itemSchema(StayPanelSchema), { params: IdParamsSchema, body: StayPaymentBodySchema }),
   "POST /admin/stays/:id/checkin": admin("checkInStay", "Stays", "Realiza o check-in da estadia.", itemSchema(StayPanelSchema), { params: IdParamsSchema }),
-  "POST /admin/stays/:id/checkout": admin("checkOutStay", "Stays", "Realiza o checkout da estadia.", itemSchema(StayPanelSchema), { params: IdParamsSchema }),
+  "POST /admin/stays/:id/checkout": admin("checkOutStay", "Stays", "Realiza o checkout da estadia.", itemSchema(StayPanelSchema), { params: IdParamsSchema, body: StayCheckoutBodySchema }),
   "POST /admin/stays/:id/no-show": admin("markStayNoShow", "Stays", "Marca a estadia como no-show.", itemSchema(StayPanelSchema), { params: IdParamsSchema }),
   "POST /admin/stays/:id/cancel": admin("cancelStay", "Stays", "Cancela a estadia.", itemSchema(StayPanelSchema), { params: IdParamsSchema })
 };

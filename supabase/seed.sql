@@ -158,6 +158,49 @@ insert into public.financial_transactions (
   ('94000000-0000-4000-8000-000000000002', '10000000-0000-4000-8000-000000000001', 'INCOME', 'STAY_PAYMENT', 456.00, 'BRL', 'Pagamento encerrado sintetico', 'COMPLETED', '91000000-0000-4000-8000-000000000003', '90000000-0000-4000-8000-000000000003', 'pix', now() - interval '8 days', '80000000-0000-4000-8000-000000000002', 'LOCAL-PAY-002'),
   ('94000000-0000-4000-8000-000000000003', '10000000-0000-4000-8000-000000000002', 'EXPENSE', 'MAINTENANCE', 120.00, 'BRL', 'Manutencao sintetica', 'COMPLETED', null, null, 'bank_transfer', now(), '80000000-0000-4000-8000-000000000003', 'LOCAL-EXP-001');
 
-insert into public.room_blocks (id, room_id, status, label, start_date, end_date) values
-  ('95000000-0000-4000-8000-000000000001', '20000000-0000-4000-8000-000000000103', 'blocked', 'Limpeza programada', current_date + 1, current_date + 2),
-  ('95000000-0000-4000-8000-000000000002', '20000000-0000-4000-8000-000000000203', 'maintenance', 'Manutencao preventiva', current_date - 2, current_date + 1);
+insert into public.room_blocks (id, hotel_id, room_id, status, label, start_date, end_date) values
+  ('95000000-0000-4000-8000-000000000001', '10000000-0000-4000-8000-000000000001', '20000000-0000-4000-8000-000000000103', 'blocked', 'Limpeza programada', current_date + 1, current_date + 2),
+  ('95000000-0000-4000-8000-000000000002', '10000000-0000-4000-8000-000000000002', '20000000-0000-4000-8000-000000000203', 'maintenance', 'Manutencao preventiva', current_date - 2, current_date + 1);
+
+insert into public.maintenance_locations (
+  id, hotel_id, kind, name, description, display_order
+) values
+  ('96000000-0000-4000-8000-000000000001', '10000000-0000-4000-8000-000000000001', 'area', 'Recepção', 'Área de atendimento principal', 10),
+  ('96000000-0000-4000-8000-000000000002', '10000000-0000-4000-8000-000000000002', 'area', 'Piscina', 'Área externa da piscina', 10);
+
+insert into public.maintenance_occurrences (
+  id, occurrence_number, hotel_id, category_id, room_id, kind, priority, status,
+  description, discovered_at, reported_by, blocking_recommended, triaged_by, triaged_at
+)
+select
+  '97000000-0000-4000-8000-000000000001', 1001, '10000000-0000-4000-8000-000000000002', c.id,
+  '20000000-0000-4000-8000-000000000203', 'defect', 'high', 'in_progress',
+  'Ar-condicionado não refrigera adequadamente.', now() - interval '2 days',
+  '80000000-0000-4000-8000-000000000003', true,
+  '80000000-0000-4000-8000-000000000003', now() - interval '2 days'
+from public.maintenance_categories c
+where c.hotel_id = '10000000-0000-4000-8000-000000000002' and c.name = 'Climatização';
+
+select setval('public.maintenance_occurrence_number_seq', (select max(occurrence_number) from public.maintenance_occurrences), true);
+
+insert into public.maintenance_work_orders (
+  id, hotel_id, occurrence_id, title, instructions, priority, status, assigned_to,
+  due_at, requires_inspection, created_by
+) values (
+  '98000000-0000-4000-8000-000000000001', '10000000-0000-4000-8000-000000000002',
+  '97000000-0000-4000-8000-000000000001', 'Revisar ar-condicionado',
+  'Verificar alimentação, filtros e unidade condensadora.', 'high', 'in_progress',
+  '80000000-0000-4000-8000-000000000003', now() + interval '1 day', true,
+  '80000000-0000-4000-8000-000000000003'
+);
+
+update public.room_blocks
+set maintenance_occurrence_id = '97000000-0000-4000-8000-000000000001',
+    created_by = '80000000-0000-4000-8000-000000000003'
+where id = '95000000-0000-4000-8000-000000000002';
+
+insert into public.maintenance_events (
+  hotel_id, occurrence_id, work_order_id, actor_id, event_type, message
+) values
+  ('10000000-0000-4000-8000-000000000002', '97000000-0000-4000-8000-000000000001', null, '80000000-0000-4000-8000-000000000003', 'occurrence_reported', 'Ocorrência sintética'),
+  ('10000000-0000-4000-8000-000000000002', '97000000-0000-4000-8000-000000000001', '98000000-0000-4000-8000-000000000001', '80000000-0000-4000-8000-000000000003', 'work_order_started', 'Ordem sintética em execução');

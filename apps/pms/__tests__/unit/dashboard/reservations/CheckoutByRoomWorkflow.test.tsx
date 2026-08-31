@@ -12,6 +12,8 @@ type PanelOverrides = {
   hotel?: Partial<AdminStayOperationalPanelResponse["hotel"]>;
   eligibility?: Partial<AdminStayOperationalPanelResponse["eligibility"]>;
   payments?: AdminStayOperationalPanelResponse["payments"];
+  maintenance_occurrences?: AdminStayOperationalPanelResponse["maintenance_occurrences"];
+  maintenance_acknowledgement_required?: boolean;
 };
 
 function createPanel(overrides: PanelOverrides = {}): AdminStayOperationalPanelResponse {
@@ -89,7 +91,9 @@ function createPanel(overrides: PanelOverrides = {}): AdminStayOperationalPanelR
       ...base.eligibility,
       ...overrides.eligibility
     },
-    payments: overrides.payments ?? base.payments
+    payments: overrides.payments ?? base.payments,
+    maintenance_occurrences: overrides.maintenance_occurrences,
+    maintenance_acknowledgement_required: overrides.maintenance_acknowledgement_required
   };
 }
 
@@ -226,5 +230,22 @@ describe("CheckoutByRoomWorkflow", () => {
     });
     expect(await screen.findByText("Checkout confirmado para o quarto 102.")).toBeTruthy();
     expect(screen.getByText("Checked-out")).toBeTruthy();
+  });
+
+  it("exige ciência explícita e envia os ids das ocorrências abertas", async () => {
+    const openOccurrence = {
+      id: "97000000-0000-4000-8000-000000000001", occurrence_number: 1, code: "OCO-000001", kind: "damage" as const,
+      priority: "high" as const, status: "awaiting_liability" as const, description: "Televisor danificado", category_id: "category-1",
+      category_name: "Eletrônicos", room_id: "room-102", room_number: "102", location_id: null, location_name: null, stay_id: "stay-2",
+      reported_by: "user-1", reporter_name: "Gestor", blocking_recommended: false, liability_status: "suspected" as const,
+      active_block: false, open_work_orders: 0, created_at: "2026-05-18T10:00:00Z", updated_at: "2026-05-18T10:00:00Z"
+    };
+    const panel = createPanel({ maintenance_occurrences: [openOccurrence], maintenance_acknowledgement_required: true });
+    const fetchMock = vi.fn().mockResolvedValueOnce(jsonResponse(panel)).mockResolvedValueOnce(jsonResponse(createPanel({ stay: { stay_status: "checked_out" } })));
+    vi.stubGlobal("fetch", fetchMock); const user = userEvent.setup(); render(<CheckoutByRoomWorkflow />); await searchRoom(user);
+    const checkout = await screen.findByRole("button", { name: "Confirmar checkout" });
+    expect((checkout as HTMLButtonElement).disabled).toBe(true);
+    await user.click(screen.getByLabelText(/Declaro ciência/)); await user.click(checkout);
+    expect(fetchMock).toHaveBeenLastCalledWith("/api/stays/stay-2/checkout", expect.objectContaining({ body: JSON.stringify({ maintenance_acknowledged_occurrence_ids: [openOccurrence.id] }) }));
   });
 });

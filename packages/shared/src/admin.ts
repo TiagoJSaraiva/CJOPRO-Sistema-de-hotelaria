@@ -460,6 +460,9 @@ export type AdminReservationCalendarRoomBlock = {
   status: string;
   start_date: string;
   end_date: string;
+  maintenance_occurrence_id?: string | null;
+  occurrence_code?: string | null;
+  is_overdue?: boolean;
 };
 
 export type AdminReservationCalendarLegendItem = {
@@ -594,4 +597,209 @@ export type AdminStayOperationalPanelResponse = {
     cancel_block_reason: string | null;
   };
   payments: AdminStayPayment[];
+  maintenance_occurrences?: AdminMaintenanceOccurrenceSummary[];
+  maintenance_acknowledgement_required?: boolean;
+};
+
+export type MaintenanceLocationKind = "area" | "equipment";
+export type MaintenanceOccurrenceKind = "damage" | "defect" | "wear" | "safety_risk" | "special_cleaning" | "other";
+export type MaintenancePriority = "low" | "normal" | "high" | "critical";
+export type MaintenanceOccurrenceStatus =
+  | "reported"
+  | "triaged"
+  | "in_progress"
+  | "awaiting_inspection"
+  | "awaiting_liability"
+  | "resolved"
+  | "canceled";
+export type MaintenanceWorkOrderStatus =
+  | "pending"
+  | "assigned"
+  | "in_progress"
+  | "paused"
+  | "waiting"
+  | "awaiting_inspection"
+  | "completed"
+  | "canceled";
+export type MaintenanceWaitingReason = "parts" | "vendor" | "authorization" | "access" | "other";
+export type MaintenanceLiabilityStatus = "not_applicable" | "not_assessed" | "suspected" | "confirmed" | "dismissed";
+export type MaintenanceResponsibleParty = "guest" | "hotel" | "supplier" | "normal_wear";
+
+export type AdminMaintenanceCategory = {
+  id: string;
+  hotel_id: string;
+  name: string;
+  description: string | null;
+  display_order: number;
+  is_active: boolean;
+  created_at: string;
+  updated_at: string;
+};
+
+export type AdminMaintenanceLocation = {
+  id: string;
+  hotel_id: string;
+  parent_location_id: string | null;
+  parent_name?: string | null;
+  kind: MaintenanceLocationKind;
+  name: string;
+  description: string | null;
+  display_order: number;
+  is_active: boolean;
+  created_at: string;
+  updated_at: string;
+};
+
+export type AdminMaintenanceOccurrenceSummary = {
+  id: string;
+  occurrence_number: number;
+  code: string;
+  kind: MaintenanceOccurrenceKind;
+  priority: MaintenancePriority;
+  status: MaintenanceOccurrenceStatus;
+  description: string;
+  category_id: string;
+  category_name: string;
+  room_id: string | null;
+  room_number: string | null;
+  location_id: string | null;
+  location_name: string | null;
+  stay_id: string | null;
+  reported_by: string;
+  reporter_name: string;
+  blocking_recommended: boolean;
+  liability_status: MaintenanceLiabilityStatus;
+  active_block: boolean;
+  open_work_orders: number;
+  created_at: string;
+  updated_at: string;
+};
+
+export type AdminMaintenanceWorkOrder = {
+  id: string;
+  occurrence_id: string;
+  title: string;
+  instructions: string;
+  priority: MaintenancePriority;
+  status: MaintenanceWorkOrderStatus;
+  assigned_to: string | null;
+  assignee_name: string | null;
+  due_at: string | null;
+  waiting_reason: MaintenanceWaitingReason | null;
+  waiting_notes: string | null;
+  requires_inspection: boolean;
+  diagnosis: string | null;
+  resolution_notes: string | null;
+  started_at: string | null;
+  completed_at: string | null;
+  created_at: string;
+  updated_at: string;
+};
+
+export type AdminMaintenanceInspection = {
+  id: string;
+  work_order_id: string;
+  inspector_id: string;
+  inspector_name: string;
+  result: "approved" | "rejected";
+  notes: string;
+  created_at: string;
+};
+
+export type AdminMaintenanceEvent = {
+  id: string;
+  occurrence_id: string;
+  work_order_id: string | null;
+  actor_id: string;
+  actor_name: string;
+  event_type: string;
+  message: string | null;
+  metadata: Record<string, unknown>;
+  created_at: string;
+};
+
+export type AdminMaintenanceAttachment = {
+  id: string;
+  occurrence_id: string;
+  work_order_id: string | null;
+  original_filename: string;
+  content_type: "image/jpeg" | "image/png" | "image/webp";
+  size_bytes: number;
+  uploaded_by: string;
+  created_at: string;
+};
+
+export type AdminMaintenanceRoomBlock = {
+  id: string;
+  occurrence_id: string | null;
+  room_id: string;
+  room_number: string;
+  status: "blocked" | "maintenance";
+  label: string | null;
+  start_date: string;
+  planned_end_date: string;
+  released_at: string | null;
+  is_overdue: boolean;
+};
+
+export type AdminMaintenanceOccurrenceDetail = AdminMaintenanceOccurrenceSummary & {
+  discovered_at: string;
+  triaged_by: string | null;
+  triaged_at: string | null;
+  suspected_party: MaintenanceResponsibleParty | null;
+  confirmed_party: MaintenanceResponsibleParty | null;
+  liability_notes: string | null;
+  duplicate_of_id: string | null;
+  canceled_reason: string | null;
+  resolved_at: string | null;
+  work_orders: AdminMaintenanceWorkOrder[];
+  inspections: AdminMaintenanceInspection[];
+  events: AdminMaintenanceEvent[];
+  attachments: AdminMaintenanceAttachment[];
+  room_blocks: AdminMaintenanceRoomBlock[];
+};
+
+export type AdminMaintenanceOccurrenceCreateInput = {
+  category_id: string;
+  room_id?: string | null;
+  location_id?: string | null;
+  stay_id?: string | null;
+  kind: MaintenanceOccurrenceKind;
+  priority?: MaintenancePriority;
+  description: string;
+  discovered_at?: string;
+  blocking_recommended?: boolean;
+};
+
+export type AdminMaintenanceWorkOrderCreateInput = {
+  title: string;
+  instructions: string;
+  priority?: MaintenancePriority;
+  assigned_to?: string | null;
+  due_at?: string | null;
+  requires_inspection?: boolean;
+};
+
+export type AdminMaintenanceSummary = {
+  open: number;
+  assigned_to_me: number;
+  unassigned: number;
+  overdue: number;
+  awaiting_inspection: number;
+  blocked_rooms: number;
+};
+
+export type AdminMaintenanceReferenceData = {
+  categories: AdminMaintenanceCategory[];
+  locations: AdminMaintenanceLocation[];
+  rooms: Array<{ id: string; room_number: string; room_type: string }>;
+  stays: Array<{ id: string; room_id: string; reservation_code: string | null; customer_name: string | null; status: ReservationStatus }>;
+  assignable_users: Array<{ id: string; name: string }>;
+};
+
+export type AdminMaintenanceOccurrenceListResponse = {
+  items: AdminMaintenanceOccurrenceSummary[];
+  page: number;
+  page_size: number;
+  total: number;
 };

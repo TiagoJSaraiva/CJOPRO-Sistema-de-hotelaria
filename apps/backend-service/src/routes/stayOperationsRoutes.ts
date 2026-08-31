@@ -14,6 +14,7 @@ import { adminError } from "../common/adminError";
 import { requireActiveHotelId } from "../common/requireActiveHotelScope";
 import { createServerClient } from "../common/supabaseServer";
 import { normalizeOptionalText } from "../common/text";
+import { createMaintenanceRepository } from "../repositories/maintenanceRepository";
 
 type StayWithRelationsRow = {
   id: string;
@@ -65,6 +66,11 @@ type StayPaymentRow = {
 
 type CheckoutCandidateQuery = {
   room_number?: string;
+};
+
+type StayCheckoutBody = {
+  maintenance_acknowledged_occurrence_ids?: string[];
+  maintenance_acknowledgement_note?: string;
 };
 
 function toIsoDate(value: string): string {
@@ -211,7 +217,7 @@ async function loadStayPanel(activeHotelId: string, stayId: string): Promise<Adm
 
   const supabase = createServerClient();
   const reservationId = stay.reservation_id;
-  const [reservationStaysResult, paymentsResult] = await Promise.all([
+  const [reservationStaysResult, paymentsResult, maintenanceResult] = await Promise.all([
     supabase
       .from("stays")
       .select("total_price_estimated,total_paid")
@@ -224,7 +230,8 @@ async function loadStayPanel(activeHotelId: string, stayId: string): Promise<Adm
       .eq("category", "STAY_PAYMENT")
       .in("status", ["COMPLETED", "REFUNDED"])
       .order("paid_at", { ascending: false })
-      .order("created_at", { ascending: false })
+      .order("created_at", { ascending: false }),
+    createMaintenanceRepository().getStayMaintenance(activeHotelId, stay.id)
   ]);
 
   if (reservationStaysResult.error || paymentsResult.error) {
@@ -297,7 +304,9 @@ async function loadStayPanel(activeHotelId: string, stayId: string): Promise<Adm
       can_cancel: canCancel,
       cancel_block_reason: cancelBlockReason
     },
-    payments
+    payments,
+    maintenance_occurrences: maintenanceResult.occurrences,
+    maintenance_acknowledgement_required: maintenanceResult.acknowledgementRequired
   };
 }
 
@@ -517,7 +526,11 @@ export function registerStayOperationsRoutes(app: FastifyInstance): void {
     return reply.send({ item: refreshed });
   });
 
-  app.post<{ Params: HotelIdParams }>("/admin/stays/:id/checkout", async (request, reply) => {
+  app.post<{ Params: HotelIdParams; Body: StayCheckoutBody }>("/admin/stays/:id/checkout", {
+    preValidation: async (request) => {
+      if (request.body == null) request.body = {};
+    }
+  }, async (request, reply) => {
     const auth = ensureAuthorizedWithScope(request, reply, PERMISSIONS.RESERVATIONS_CALENDAR_ACCESS);
     if (!auth) return;
     const activeHotelId = requireActiveHotelId(reply, auth.activeHotelId);
@@ -536,11 +549,25 @@ export function registerStayOperationsRoutes(app: FastifyInstance): void {
       return reply.status(409).send(adminError(ADMIN_ERROR_CODE.CONFLICT, panel.eligibility.checkout_block_reason || "Checkout nao permitido."));
     }
 
+    const acknowledgedIds = Array.from(new Set(request.body?.maintenance_acknowledged_occurrence_ids || []));
+    const pendingOccurrenceIds = (panel.maintenance_occurrences || [])
+      .filter((occurrence) => occurrence.status !== "resolved" && occurrence.status !== "canceled")
+      .map((occurrence) => occurrence.id);
+    if (panel.maintenance_acknowledgement_required && pendingOccurrenceIds.some((id) => !acknowledgedIds.includes(id))) {
+      return reply.status(409).send(adminError(ADMIN_ERROR_CODE.CONFLICT, "Registre ciência de todas as ocorrências abertas antes do checkout."));
+    }
+
     const supabase = createServerClient();
-    const { error } = await supabase.from("stays").update({ stay_status: "checked_out", checkout_date_actual: new Date().toISOString() }).eq("id", stayId);
-    if (error) {
+    const { data: checkedOut, error } = await supabase.rpc("checkout_stay_with_maintenance_acknowledgements", {
+      p_hotel_id: activeHotelId,
+      p_stay_id: stayId,
+      p_actor_id: auth.session.id,
+      p_occurrence_ids: acknowledgedIds,
+      p_note: normalizeOptionalText(request.body?.maintenance_acknowledgement_note) || undefined
+    });
+    if (error || !checkedOut) {
       request.log.error(error);
-      return reply.status(409).send(adminError(ADMIN_ERROR_CODE.CONFLICT, "Falha ao executar checkout."));
+      return reply.status(409).send(adminError(ADMIN_ERROR_CODE.CONFLICT, error?.message || "Falha ao executar checkout."));
     }
 
     const refreshed = await loadStayPanel(activeHotelId, stayId);
