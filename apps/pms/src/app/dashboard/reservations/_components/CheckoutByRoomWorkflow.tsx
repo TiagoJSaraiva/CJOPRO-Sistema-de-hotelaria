@@ -10,7 +10,7 @@ import {
   formatDateDisplay,
   formatMoney,
   paymentMethodLabel,
-  paymentStatusLabel
+  paymentStatusLabel,
 } from "./OperationalPanelPrimitives";
 
 type ApiErrorPayload = {
@@ -23,7 +23,10 @@ const primaryButtonClassName =
 const secondaryButtonClassName =
   "cursor-pointer rounded-lg border border-[#d2d6db] bg-white px-[0.85rem] py-[0.58rem] font-semibold text-[#344054] disabled:cursor-not-allowed disabled:bg-[#eef2f6] disabled:text-[#98a2b3]";
 
-async function parseApiError(response: Response, fallback: string): Promise<Error> {
+async function parseApiError(
+  response: Response,
+  fallback: string,
+): Promise<Error> {
   const payload = (await response.json().catch(() => ({}))) as ApiErrorPayload;
   return new Error(payload.message || fallback);
 }
@@ -31,7 +34,7 @@ async function parseApiError(response: Response, fallback: string): Promise<Erro
 async function getJson<T>(url: string, fallback: string): Promise<T> {
   const response = await fetch(url, {
     method: "GET",
-    cache: "no-store"
+    cache: "no-store",
   });
 
   if (!response.ok) {
@@ -41,13 +44,17 @@ async function getJson<T>(url: string, fallback: string): Promise<T> {
   return (await response.json()) as T;
 }
 
-async function postJson<T>(url: string, body: unknown, fallback: string): Promise<T> {
+async function postJson<T>(
+  url: string,
+  body: unknown,
+  fallback: string,
+): Promise<T> {
   const response = await fetch(url, {
     method: "POST",
     headers: {
-      "Content-Type": "application/json"
+      "Content-Type": "application/json",
     },
-    body: JSON.stringify(body)
+    body: JSON.stringify(body),
   });
 
   if (!response.ok) {
@@ -58,7 +65,11 @@ async function postJson<T>(url: string, body: unknown, fallback: string): Promis
 }
 
 function getStayBalance(panel: AdminStayOperationalPanelResponse): number {
-  return Math.max(Number(panel.stay.total_price_estimated || 0) - Number(panel.stay.total_paid || 0), 0);
+  return Math.max(
+    Number(panel.stay.total_price_estimated || 0) -
+      Number(panel.stay.total_paid || 0),
+    0,
+  );
 }
 
 function formatPaymentInputValue(value: number): string {
@@ -67,7 +78,8 @@ function formatPaymentInputValue(value: number): string {
 
 export function CheckoutByRoomWorkflow() {
   const [roomNumber, setRoomNumber] = useState("");
-  const [panelData, setPanelData] = useState<AdminStayOperationalPanelResponse | null>(null);
+  const [panelData, setPanelData] =
+    useState<AdminStayOperationalPanelResponse | null>(null);
   const [paymentAmount, setPaymentAmount] = useState("");
   const [paymentMethod, setPaymentMethod] = useState("pix");
   const [paymentNote, setPaymentNote] = useState("");
@@ -77,7 +89,10 @@ export function CheckoutByRoomWorkflow() {
   const [success, setSuccess] = useState<string | null>(null);
   const [maintenanceAcknowledged, setMaintenanceAcknowledged] = useState(false);
 
-  const balance = useMemo(() => (panelData ? getStayBalance(panelData) : 0), [panelData]);
+  const balance = useMemo(
+    () => (panelData ? getStayBalance(panelData) : 0),
+    [panelData],
+  );
 
   function applyPanel(panel: AdminStayOperationalPanelResponse) {
     setPanelData(panel);
@@ -102,12 +117,19 @@ export function CheckoutByRoomWorkflow() {
       setError(null);
       setSuccess(null);
       const query = new URLSearchParams({ room_number: normalizedRoomNumber });
-      const panel = await getJson<AdminStayOperationalPanelResponse>(`/api/stays/checkout-candidate?${query.toString()}`, "Falha ao localizar estadia para checkout.");
+      const panel = await getJson<AdminStayOperationalPanelResponse>(
+        `/api/stays/checkout-candidate?${query.toString()}`,
+        "Falha ao localizar estadia para checkout.",
+      );
       applyPanel(panel);
     } catch (requestError) {
       setPanelData(null);
       setPaymentAmount("");
-      setError(requestError instanceof Error ? requestError.message : "Falha ao localizar estadia para checkout.");
+      setError(
+        requestError instanceof Error
+          ? requestError.message
+          : "Falha ao localizar estadia para checkout.",
+      );
     } finally {
       setIsSearching(false);
     }
@@ -132,14 +154,18 @@ export function CheckoutByRoomWorkflow() {
         {
           amount,
           method: paymentMethod,
-          note: paymentNote || null
+          note: paymentNote || null,
         },
-        "Falha ao registrar pagamento."
+        "Falha ao registrar pagamento.",
       );
       applyPanel(panel);
       setSuccess("Pagamento registrado.");
     } catch (requestError) {
-      setError(requestError instanceof Error ? requestError.message : "Falha ao registrar pagamento.");
+      setError(
+        requestError instanceof Error
+          ? requestError.message
+          : "Falha ao registrar pagamento.",
+      );
     } finally {
       setIsPending(false);
     }
@@ -152,15 +178,34 @@ export function CheckoutByRoomWorkflow() {
       setIsPending(true);
       setError(null);
       setSuccess(null);
-      const checkoutPayload = maintenanceAcknowledged ? {
-        maintenance_acknowledged_occurrence_ids: (panelData.maintenance_occurrences || [])
-          .filter((occurrence) => occurrence.status !== "resolved" && occurrence.status !== "canceled").map((occurrence) => occurrence.id)
-      } : {};
-      const panel = await postJson<AdminStayOperationalPanelResponse>(`/api/stays/${panelData.stay.id}/checkout`, checkoutPayload, "Falha ao executar checkout.");
+      const checkoutPayload = maintenanceAcknowledged
+        ? {
+            maintenance_acknowledged_occurrence_ids: (
+              panelData.maintenance_occurrences || []
+            )
+              .filter(
+                (occurrence) =>
+                  occurrence.status !== "resolved" &&
+                  occurrence.status !== "canceled",
+              )
+              .map((occurrence) => occurrence.id),
+          }
+        : {};
+      const panel = await postJson<AdminStayOperationalPanelResponse>(
+        `/api/stays/${panelData.stay.id}/checkout`,
+        checkoutPayload,
+        "Falha ao executar checkout.",
+      );
       applyPanel(panel);
-      setSuccess(`Checkout confirmado para o quarto ${panel.stay.room_number}.`);
+      setSuccess(
+        `Checkout confirmado para o quarto ${panel.stay.room_number}.`,
+      );
     } catch (requestError) {
-      setError(requestError instanceof Error ? requestError.message : "Falha ao executar checkout.");
+      setError(
+        requestError instanceof Error
+          ? requestError.message
+          : "Falha ao executar checkout.",
+      );
     } finally {
       setIsPending(false);
     }
@@ -171,15 +216,22 @@ export function CheckoutByRoomWorkflow() {
       <section className="rounded-lg border border-[#d9dfe7] bg-white p-4 shadow-[0_1px_2px_rgba(16,24,40,0.04)]">
         <div className="flex flex-wrap items-start justify-between gap-3">
           <div>
-            <h2 className="m-0 text-[1.05rem] font-semibold text-[#121926]">Checkout</h2>
-            <p className="mb-0 mt-[0.25rem] text-[0.86rem] text-[#52606d]">Localizar estadia em check-in por quarto.</p>
+            <h2 className="m-0 text-[1.05rem] font-semibold text-[#121926]">
+              Checkout
+            </h2>
+            <p className="mb-0 mt-[0.25rem] text-[0.86rem] text-[#52606d]">
+              Localizar estadia em check-in por quarto.
+            </p>
           </div>
           <span className="rounded-full border border-[#e4e7ec] bg-[#f8fafc] px-[0.6rem] py-[0.25rem] text-[0.78rem] font-semibold text-[#52606d]">
             {panelData ? panelData.stay.room_number : "Aguardando busca"}
           </span>
         </div>
 
-        <form onSubmit={handleSearch} className="mt-4 flex flex-col gap-3 md:flex-row md:items-end">
+        <form
+          onSubmit={handleSearch}
+          className="mt-4 flex flex-col gap-3 md:flex-row md:items-end"
+        >
           <label className="pms-field min-w-0 md:w-72">
             <span>Numero do quarto</span>
             <input
@@ -191,7 +243,11 @@ export function CheckoutByRoomWorkflow() {
             />
           </label>
           <div className="flex flex-wrap gap-2">
-            <button type="submit" disabled={isSearching || isPending} className={primaryButtonClassName}>
+            <button
+              type="submit"
+              disabled={isSearching || isPending}
+              className={primaryButtonClassName}
+            >
               {isSearching ? "Buscando..." : "Buscar"}
             </button>
             <button
@@ -213,28 +269,69 @@ export function CheckoutByRoomWorkflow() {
         </form>
       </section>
 
-      {error ? <p className="m-0 rounded-lg border border-[#f2a2a2] bg-[#fff2f2] p-3 text-[0.88rem] text-[#a12b2b]">{error}</p> : null}
-      {success ? <p className="m-0 rounded-lg border border-[#b6e4cb] bg-[#f1fbf5] p-3 text-[0.88rem] font-semibold text-[#176c43]">{success}</p> : null}
+      {error ? (
+        <p className="m-0 rounded-lg border border-[#f2a2a2] bg-[#fff2f2] p-3 text-[0.88rem] text-[#a12b2b]">
+          {error}
+        </p>
+      ) : null}
+      {success ? (
+        <p className="m-0 rounded-lg border border-[#b6e4cb] bg-[#f1fbf5] p-3 text-[0.88rem] font-semibold text-[#176c43]">
+          {success}
+        </p>
+      ) : null}
 
       {panelData ? (
         <section className="grid gap-4 xl:grid-cols-[minmax(0,1fr)_360px]">
           <div className="grid gap-4">
             <PanelSection title="Dados da estadia">
               <div className="flex flex-wrap items-center gap-2">
-                <strong className="text-[1rem] text-[#121926]">{panelData.stay.reservation_code || "Sem codigo"}</strong>
+                <strong className="text-[1rem] text-[#121926]">
+                  {panelData.stay.reservation_code || "Sem codigo"}
+                </strong>
                 <StatusPill status={panelData.stay.stay_status} />
               </div>
 
               <div className="grid grid-cols-1 gap-3 md:grid-cols-2 xl:grid-cols-3">
-                <DetailItem label="Hospede" value={panelData.stay.customer_name || "Nao informado"} />
-                <DetailItem label="Quarto" value={`${panelData.stay.room_number} - ${panelData.stay.room_type}`} />
-                <DetailItem label="Reserva" value={panelData.reservation.code || panelData.reservation.id} />
-                <DetailItem label="Check-in previsto" value={formatDateDisplay(panelData.stay.checkin_date_expected)} />
-                <DetailItem label="Check-out previsto" value={formatDateDisplay(panelData.stay.checkout_date_expected)} />
-                <DetailItem label="Check-in real" value={formatDateDisplay(panelData.stay.checkin_date_actual)} />
-                <DetailItem label="Check-out real" value={formatDateDisplay(panelData.stay.checkout_date_actual)} />
-                <DetailItem label="Janela checkout" value={`${panelData.hotel.checkout_time_start || "--"} - ${panelData.hotel.checkout_time_limit || "--"}`} />
-                <DetailItem label="Fuso do hotel" value={panelData.hotel.timezone} />
+                <DetailItem
+                  label="Hospede"
+                  value={panelData.stay.customer_name || "Nao informado"}
+                />
+                <DetailItem
+                  label="Quarto"
+                  value={`${panelData.stay.room_number} - ${panelData.stay.room_type}`}
+                />
+                <DetailItem
+                  label="Reserva"
+                  value={panelData.reservation.code || panelData.reservation.id}
+                />
+                <DetailItem
+                  label="Check-in previsto"
+                  value={formatDateDisplay(
+                    panelData.stay.checkin_date_expected,
+                  )}
+                />
+                <DetailItem
+                  label="Check-out previsto"
+                  value={formatDateDisplay(
+                    panelData.stay.checkout_date_expected,
+                  )}
+                />
+                <DetailItem
+                  label="Check-in real"
+                  value={formatDateDisplay(panelData.stay.checkin_date_actual)}
+                />
+                <DetailItem
+                  label="Check-out real"
+                  value={formatDateDisplay(panelData.stay.checkout_date_actual)}
+                />
+                <DetailItem
+                  label="Janela checkout"
+                  value={`${panelData.hotel.checkout_time_start || "--"} - ${panelData.hotel.checkout_time_limit || "--"}`}
+                />
+                <DetailItem
+                  label="Fuso do hotel"
+                  value={panelData.hotel.timezone}
+                />
               </div>
             </PanelSection>
 
@@ -243,8 +340,14 @@ export function CheckoutByRoomWorkflow() {
                 <PaymentSummaryCard
                   label="Total estadia"
                   value={formatMoney(panelData.stay.total_price_estimated)}
-                  detail={paymentStatusLabel(panelData.stay.stay_payment_status)}
-                  tone={panelData.stay.stay_payment_status === "paid" ? "good" : "neutral"}
+                  detail={paymentStatusLabel(
+                    panelData.stay.stay_payment_status,
+                  )}
+                  tone={
+                    panelData.stay.stay_payment_status === "paid"
+                      ? "good"
+                      : "neutral"
+                  }
                 />
                 <PaymentSummaryCard
                   label="Pago estadia"
@@ -252,8 +355,19 @@ export function CheckoutByRoomWorkflow() {
                   detail="Recebido"
                   tone={panelData.stay.total_paid > 0 ? "good" : "neutral"}
                 />
-                <PaymentSummaryCard label="Saldo" value={formatMoney(balance)} detail={balance > 0 ? "Pendente" : "Quitado"} tone={balance > 0 ? "danger" : "good"} />
-                <PaymentSummaryCard label="Total reserva" value={formatMoney(panelData.reservation.total_due)} detail={paymentStatusLabel(panelData.reservation.payment_status)} />
+                <PaymentSummaryCard
+                  label="Saldo"
+                  value={formatMoney(balance)}
+                  detail={balance > 0 ? "Pendente" : "Quitado"}
+                  tone={balance > 0 ? "danger" : "good"}
+                />
+                <PaymentSummaryCard
+                  label="Total reserva"
+                  value={formatMoney(panelData.reservation.total_due)}
+                  detail={paymentStatusLabel(
+                    panelData.reservation.payment_status,
+                  )}
+                />
               </div>
             </PanelSection>
 
@@ -261,12 +375,21 @@ export function CheckoutByRoomWorkflow() {
               <PanelSection title="Historico de pagamentos">
                 <div className="max-h-52 overflow-auto rounded-lg border border-[#eef2f6]">
                   {panelData.payments.map((payment) => (
-                    <div key={payment.id} className="flex items-center justify-between gap-3 border-b border-[#eef2f6] px-3 py-2 last:border-b-0">
+                    <div
+                      key={payment.id}
+                      className="flex items-center justify-between gap-3 border-b border-[#eef2f6] px-3 py-2 last:border-b-0"
+                    >
                       <div className="min-w-0">
-                        <strong className="block text-[0.82rem] text-[#202939]">{paymentMethodLabel(payment.method)}</strong>
-                        <span className="block text-[0.75rem] text-[#52606d]">{formatDateDisplay(payment.paid_at)}</span>
+                        <strong className="block text-[0.82rem] text-[#202939]">
+                          {paymentMethodLabel(payment.method)}
+                        </strong>
+                        <span className="block text-[0.75rem] text-[#52606d]">
+                          {formatDateDisplay(payment.paid_at)}
+                        </span>
                       </div>
-                      <span className="whitespace-nowrap text-[0.82rem] font-semibold text-[#176c43]">{formatMoney(payment.amount)}</span>
+                      <span className="whitespace-nowrap text-[0.82rem] font-semibold text-[#176c43]">
+                        {formatMoney(payment.amount)}
+                      </span>
                     </div>
                   ))}
                 </div>
@@ -290,19 +413,39 @@ export function CheckoutByRoomWorkflow() {
               </label>
               <label className="pms-field">
                 <span>Metodo</span>
-                <select value={paymentMethod} onChange={(event) => setPaymentMethod(event.target.value)} className="pms-field-input w-full">
+                <select
+                  value={paymentMethod}
+                  onChange={(event) => setPaymentMethod(event.target.value)}
+                  className="pms-field-input w-full"
+                >
                   <option value="cash">{paymentMethodLabel("cash")}</option>
                   <option value="pix">{paymentMethodLabel("pix")}</option>
-                  <option value="credit_card">{paymentMethodLabel("credit_card")}</option>
-                  <option value="debit_card">{paymentMethodLabel("debit_card")}</option>
-                  <option value="bank_transfer">{paymentMethodLabel("bank_transfer")}</option>
+                  <option value="credit_card">
+                    {paymentMethodLabel("credit_card")}
+                  </option>
+                  <option value="debit_card">
+                    {paymentMethodLabel("debit_card")}
+                  </option>
+                  <option value="bank_transfer">
+                    {paymentMethodLabel("bank_transfer")}
+                  </option>
                 </select>
               </label>
               <label className="pms-field">
                 <span>Observacao</span>
-                <input value={paymentNote} onChange={(event) => setPaymentNote(event.target.value)} placeholder="Opcional" className="pms-field-input w-full" />
+                <input
+                  value={paymentNote}
+                  onChange={(event) => setPaymentNote(event.target.value)}
+                  placeholder="Opcional"
+                  className="pms-field-input w-full"
+                />
               </label>
-              <button type="button" onClick={handleAddPayment} disabled={isPending || !paymentAmount} className={secondaryButtonClassName}>
+              <button
+                type="button"
+                onClick={handleAddPayment}
+                disabled={isPending || !paymentAmount}
+                className={secondaryButtonClassName}
+              >
                 Registrar pagamento
               </button>
             </PanelSection>
@@ -311,18 +454,52 @@ export function CheckoutByRoomWorkflow() {
               {(panelData.maintenance_occurrences || []).length ? (
                 <div className="grid gap-2 rounded-lg border border-[#f5d08a] bg-[#fff9eb] p-3 text-[0.86rem]">
                   <strong>Ocorrências e danos vinculados</strong>
-                  <ul className="m-0 pl-5">{panelData.maintenance_occurrences!.map((occurrence) => <li key={occurrence.id}>{occurrence.code} · {occurrence.description} · {occurrence.status}</li>)}</ul>
-                  {panelData.maintenance_acknowledgement_required ? <label><input type="checkbox" checked={maintenanceAcknowledged} onChange={(event) => setMaintenanceAcknowledged(event.target.checked)} /> Declaro ciência das ocorrências abertas; o checkout não atribui responsabilidade.</label> : null}
+                  <ul className="m-0 pl-5">
+                    {panelData.maintenance_occurrences!.map((occurrence) => (
+                      <li key={occurrence.id}>
+                        {occurrence.code} · {occurrence.description} ·{" "}
+                        {occurrence.status}
+                      </li>
+                    ))}
+                  </ul>
+                  {panelData.maintenance_acknowledgement_required ? (
+                    <label>
+                      <input
+                        type="checkbox"
+                        checked={maintenanceAcknowledged}
+                        onChange={(event) =>
+                          setMaintenanceAcknowledged(event.target.checked)
+                        }
+                      />{" "}
+                      Declaro ciência das ocorrências abertas; o checkout não
+                      atribui responsabilidade.
+                    </label>
+                  ) : null}
                 </div>
               ) : null}
               {panelData.eligibility.can_checkout ? (
-                <p className="m-0 rounded-lg border border-[#b6e4cb] bg-[#f1fbf5] p-3 text-[0.86rem] text-[#176c43]">Checkout liberado para esta estadia.</p>
+                <p className="m-0 rounded-lg border border-[#b6e4cb] bg-[#f1fbf5] p-3 text-[0.86rem] text-[#176c43]">
+                  Checkout liberado para esta estadia.
+                </p>
               ) : (
                 <p className="m-0 rounded-lg border border-[#f5d08a] bg-[#fff9eb] p-3 text-[0.86rem] text-[#8a5a00]">
-                  {panelData.eligibility.checkout_block_reason || "Checkout nao permitido para esta estadia."}
+                  {panelData.eligibility.checkout_block_reason ||
+                    "Checkout nao permitido para esta estadia."}
                 </p>
               )}
-              <button type="button" onClick={handleCheckout} disabled={isPending || !panelData.eligibility.can_checkout || Boolean(panelData.maintenance_acknowledgement_required && !maintenanceAcknowledged)} className={primaryButtonClassName}>
+              <button
+                type="button"
+                onClick={handleCheckout}
+                disabled={
+                  isPending ||
+                  !panelData.eligibility.can_checkout ||
+                  Boolean(
+                    panelData.maintenance_acknowledgement_required &&
+                    !maintenanceAcknowledged,
+                  )
+                }
+                className={primaryButtonClassName}
+              >
                 Confirmar checkout
               </button>
             </PanelSection>

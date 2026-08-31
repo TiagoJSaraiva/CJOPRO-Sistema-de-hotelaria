@@ -7,7 +7,7 @@ const {
   getUserFromSessionMock,
   createTransactionMock,
   updateTransactionMock,
-  deleteTransactionMock
+  deleteTransactionMock,
 } = vi.hoisted(() => ({
   redirectMock: vi.fn((path: string) => {
     throw new Error(`REDIRECT:${path}`);
@@ -16,31 +16,31 @@ const {
   getUserFromSessionMock: vi.fn(),
   createTransactionMock: vi.fn(),
   updateTransactionMock: vi.fn(),
-  deleteTransactionMock: vi.fn()
+  deleteTransactionMock: vi.fn(),
 }));
 
 vi.mock("next/navigation", () => ({
-  redirect: redirectMock
+  redirect: redirectMock,
 }));
 
 vi.mock("next/cache", () => ({
-  revalidatePath: revalidatePathMock
+  revalidatePath: revalidatePathMock,
 }));
 
 vi.mock("../../../../src/lib/auth", () => ({
-  getUserFromSession: getUserFromSessionMock
+  getUserFromSession: getUserFromSessionMock,
 }));
 
 vi.mock("../../../../src/lib/adminApi", () => ({
   createFinancialTransaction: createTransactionMock,
   updateFinancialTransaction: updateTransactionMock,
-  deleteFinancialTransaction: deleteTransactionMock
+  deleteFinancialTransaction: deleteTransactionMock,
 }));
 
 import {
   createTransactionAction,
   deleteTransactionAction,
-  updateTransactionAction
+  updateTransactionAction,
 } from "../../../../src/app/dashboard/transactions/actions";
 
 describe("dashboard/transactions/actions", () => {
@@ -53,7 +53,9 @@ describe("dashboard/transactions/actions", () => {
   });
 
   it("redireciona com forbidden quando usuario nao tem permissao de criacao", async () => {
-    getUserFromSessionMock.mockResolvedValueOnce({ permissions: [PERMISSIONS.TRANSACTION_READ] });
+    getUserFromSessionMock.mockResolvedValueOnce({
+      permissions: [PERMISSIONS.TRANSACTION_READ],
+    });
 
     const formData = new FormData();
     formData.set("type", "INCOME");
@@ -63,12 +65,14 @@ describe("dashboard/transactions/actions", () => {
     formData.set("status", "COMPLETED");
 
     await expect(createTransactionAction(formData)).rejects.toThrow(
-      redirectPattern("/dashboard/transactions/view\\?status=forbidden")
+      redirectPattern("/dashboard/transactions/view\\?status=forbidden"),
     );
   });
 
   it("redireciona para create_missing_fields quando payload e invalido", async () => {
-    getUserFromSessionMock.mockResolvedValueOnce({ permissions: [PERMISSIONS.TRANSACTION_CREATE] });
+    getUserFromSessionMock.mockResolvedValueOnce({
+      permissions: [PERMISSIONS.TRANSACTION_CREATE],
+    });
 
     const formData = new FormData();
     formData.set("type", "");
@@ -76,14 +80,18 @@ describe("dashboard/transactions/actions", () => {
     formData.set("amount", "-10");
 
     await expect(createTransactionAction(formData)).rejects.toThrow(
-      redirectPattern("/dashboard/transactions/create\\?status=create_missing_fields")
+      redirectPattern(
+        "/dashboard/transactions/create\\?status=create_missing_fields",
+      ),
     );
 
     expect(createTransactionMock).not.toHaveBeenCalled();
   });
 
   it("cria transacao e redireciona com status created", async () => {
-    getUserFromSessionMock.mockResolvedValueOnce({ permissions: [PERMISSIONS.TRANSACTION_CREATE] });
+    getUserFromSessionMock.mockResolvedValueOnce({
+      permissions: [PERMISSIONS.TRANSACTION_CREATE],
+    });
     createTransactionMock.mockResolvedValueOnce({ id: "tx-1" });
 
     const formData = new FormData();
@@ -95,7 +103,7 @@ describe("dashboard/transactions/actions", () => {
     formData.set("status", "COMPLETED");
 
     await expect(createTransactionAction(formData)).rejects.toThrow(
-      redirectPattern("/dashboard/transactions/create\\?status=created")
+      redirectPattern("/dashboard/transactions/create\\?status=created"),
     );
 
     expect(createTransactionMock).toHaveBeenCalledWith({
@@ -112,13 +120,15 @@ describe("dashboard/transactions/actions", () => {
       cost_center: null,
       reference_code: null,
       stay_id: null,
-      reservation_id: null
+      reservation_id: null,
     });
     expect(revalidatePathMock).toHaveBeenCalledWith("/dashboard/transactions");
   });
 
   it("atualiza transacao e redireciona com status updated", async () => {
-    getUserFromSessionMock.mockResolvedValueOnce({ permissions: [PERMISSIONS.TRANSACTION_UPDATE] });
+    getUserFromSessionMock.mockResolvedValueOnce({
+      permissions: [PERMISSIONS.TRANSACTION_UPDATE],
+    });
     updateTransactionMock.mockResolvedValueOnce({ id: "tx-1" });
 
     const formData = new FormData();
@@ -131,7 +141,7 @@ describe("dashboard/transactions/actions", () => {
     formData.set("status", "PENDING");
 
     await expect(updateTransactionAction(formData)).rejects.toThrow(
-      redirectPattern("/dashboard/transactions/view\\?status=updated")
+      redirectPattern("/dashboard/transactions/view\\?status=updated"),
     );
 
     expect(updateTransactionMock).toHaveBeenCalledWith("tx-1", {
@@ -148,19 +158,21 @@ describe("dashboard/transactions/actions", () => {
       cost_center: null,
       reference_code: null,
       stay_id: null,
-      reservation_id: null
+      reservation_id: null,
     });
   });
 
   it("remove transacao e redireciona com status deleted", async () => {
-    getUserFromSessionMock.mockResolvedValueOnce({ permissions: [PERMISSIONS.TRANSACTION_DELETE] });
+    getUserFromSessionMock.mockResolvedValueOnce({
+      permissions: [PERMISSIONS.TRANSACTION_DELETE],
+    });
     deleteTransactionMock.mockResolvedValueOnce(null);
 
     const formData = new FormData();
     formData.set("id", "tx-1");
 
     await expect(deleteTransactionAction(formData)).rejects.toThrow(
-      redirectPattern("/dashboard/transactions/view\\?status=deleted")
+      redirectPattern("/dashboard/transactions/view\\?status=deleted"),
     );
 
     expect(deleteTransactionMock).toHaveBeenCalledWith("tx-1");

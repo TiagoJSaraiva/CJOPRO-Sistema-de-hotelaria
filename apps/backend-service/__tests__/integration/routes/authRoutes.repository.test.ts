@@ -40,14 +40,16 @@ describe("routes/auth with injected repository", () => {
               name: "Administrador",
               hotel_id: null,
               hotels: { name: null },
-              role_permissions: [{ permissions: { name: PERMISSIONS.USER_READ } }]
-            }
-          }
-        ]
+              role_permissions: [
+                { permissions: { name: PERMISSIONS.USER_READ } },
+              ],
+            },
+          },
+        ],
       })),
       markSuccessfulLogin: vi.fn(async () => undefined),
       markFailedLoginAttempt: vi.fn(async () => undefined),
-      clearExpiredLoginLock: vi.fn(async () => undefined)
+      clearExpiredLoginLock: vi.fn(async () => undefined),
     };
 
     const app = await createAuthTestApp(repository);
@@ -57,12 +59,14 @@ describe("routes/auth with injected repository", () => {
       url: "/auth/login",
       payload: {
         email: "ADMIN@EXAMPLE.COM",
-        password: "Secret#123"
-      }
+        password: "Secret#123",
+      },
     });
 
     expect(response.statusCode).toBe(200);
-    expect(repository.findUserByEmail).toHaveBeenCalledWith("admin@example.com");
+    expect(repository.findUserByEmail).toHaveBeenCalledWith(
+      "admin@example.com",
+    );
     expect(repository.markSuccessfulLogin).toHaveBeenCalledWith("user-1");
 
     const body = response.json() as {
@@ -87,13 +91,13 @@ describe("routes/auth with injected repository", () => {
         password_hash: passwordHash,
         failed_attempts: 0,
         locked_until: null,
-        user_roles: []
+        user_roles: [],
       })),
       markSuccessfulLogin: vi.fn(async () => {
         throw new Error("write failure");
       }),
       markFailedLoginAttempt: vi.fn(async () => undefined),
-      clearExpiredLoginLock: vi.fn(async () => undefined)
+      clearExpiredLoginLock: vi.fn(async () => undefined),
     };
 
     const app = await createAuthTestApp(repository);
@@ -103,8 +107,8 @@ describe("routes/auth with injected repository", () => {
       url: "/auth/login",
       payload: {
         email: "admin@example.com",
-        password: "Secret#123"
-      }
+        password: "Secret#123",
+      },
     });
 
     expect(response.statusCode).toBe(200);
@@ -122,11 +126,11 @@ describe("routes/auth with injected repository", () => {
         password_hash: passwordHash,
         failed_attempts: 9,
         locked_until: null,
-        user_roles: []
+        user_roles: [],
       })),
       markSuccessfulLogin: vi.fn(async () => undefined),
       markFailedLoginAttempt: vi.fn(async () => undefined),
-      clearExpiredLoginLock: vi.fn(async () => undefined)
+      clearExpiredLoginLock: vi.fn(async () => undefined),
     };
 
     const app = await createAuthTestApp(repository);
@@ -136,18 +140,18 @@ describe("routes/auth with injected repository", () => {
       url: "/auth/login",
       payload: {
         email: "admin@example.com",
-        password: "senha-incorreta"
-      }
+        password: "senha-incorreta",
+      },
     });
 
     expect(response.statusCode).toBe(429);
     expect(response.json()).toMatchObject({
-      code: "AUTH_ACCOUNT_LOCKED"
+      code: "AUTH_ACCOUNT_LOCKED",
     });
     expect(repository.markFailedLoginAttempt).toHaveBeenCalledWith(
       "user-1",
       10,
-      expect.any(String)
+      expect.any(String),
     );
   });
 });

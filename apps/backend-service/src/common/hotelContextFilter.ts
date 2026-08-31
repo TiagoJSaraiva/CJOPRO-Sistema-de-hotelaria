@@ -15,7 +15,7 @@ type QueryWithEq<TQuery> = {
 export function applyHotelContextFilter<TQuery extends QueryWithEq<TQuery>>(
   query: TQuery,
   activeHotelId: string | null,
-  columnName: string = "hotel_id"
+  columnName: string = "hotel_id",
 ): TQuery {
   if (activeHotelId === null) {
     return query;

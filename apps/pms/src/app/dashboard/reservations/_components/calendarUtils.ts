@@ -16,7 +16,9 @@ export function addDaysIso(value: string, days: number): string {
   return date.toISOString().slice(0, 10);
 }
 
-export function formatDateRangeLabel(days: AdminReservationCalendarDay[]): string {
+export function formatDateRangeLabel(
+  days: AdminReservationCalendarDay[],
+): string {
   if (!days.length) return "--";
   const start = days[0]?.date || "";
   const end = days[days.length - 1]?.date || "";

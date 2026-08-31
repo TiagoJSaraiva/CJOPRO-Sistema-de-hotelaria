@@ -6,14 +6,18 @@ export type ReservationsCalendarAccess = {
   canAccess: boolean;
 };
 
-export function getReservationsCalendarAccess(user: UserLike): ReservationsCalendarAccess {
+export function getReservationsCalendarAccess(
+  user: UserLike,
+): ReservationsCalendarAccess {
   const permissions = user?.permissions || [];
   return {
-    canAccess: permissions.includes(PERMISSIONS.RESERVATIONS_CALENDAR_ACCESS)
+    canAccess: permissions.includes(PERMISSIONS.RESERVATIONS_CALENDAR_ACCESS),
   };
 }
 
-export function getReservationsCalendarDefaultRoute(access: ReservationsCalendarAccess): "/dashboard/reservations/view" | null {
+export function getReservationsCalendarDefaultRoute(
+  access: ReservationsCalendarAccess,
+): "/dashboard/reservations/view" | null {
   if (access.canAccess) {
     return "/dashboard/reservations/view";
   }

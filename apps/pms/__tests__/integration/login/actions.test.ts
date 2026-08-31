@@ -7,7 +7,7 @@ const {
   saveSessionCookieMock,
   getActiveHotelCookieValueMock,
   resolveActiveHotelForUserMock,
-  saveActiveHotelCookieMock
+  saveActiveHotelCookieMock,
 } = vi.hoisted(() => ({
   redirectMock: vi.fn((path: string) => {
     throw new Error(`REDIRECT:${path}`);
@@ -16,22 +16,22 @@ const {
   saveSessionCookieMock: vi.fn(),
   getActiveHotelCookieValueMock: vi.fn(),
   resolveActiveHotelForUserMock: vi.fn(),
-  saveActiveHotelCookieMock: vi.fn()
+  saveActiveHotelCookieMock: vi.fn(),
 }));
 
 vi.mock("next/navigation", () => ({
-  redirect: redirectMock
+  redirect: redirectMock,
 }));
 
 vi.mock("../../../src/lib/auth", () => ({
   loginWithCredentials: loginWithCredentialsMock,
-  saveSessionCookie: saveSessionCookieMock
+  saveSessionCookie: saveSessionCookieMock,
 }));
 
 vi.mock("../../../src/lib/activeHotel", () => ({
   getActiveHotelCookieValue: getActiveHotelCookieValueMock,
   resolveActiveHotelForUser: resolveActiveHotelForUserMock,
-  saveActiveHotelCookie: saveActiveHotelCookieMock
+  saveActiveHotelCookie: saveActiveHotelCookieMock,
 }));
 
 import { loginAction } from "../../../src/app/login/actions";
@@ -45,7 +45,7 @@ describe("login/actions", () => {
     const formData = new FormData();
 
     await expect(loginAction(formData)).rejects.toThrow(
-      `REDIRECT:/login?error=${LOGIN_PAGE_ERROR_PARAM.MISSING_FIELDS}`
+      `REDIRECT:/login?error=${LOGIN_PAGE_ERROR_PARAM.MISSING_FIELDS}`,
     );
 
     expect(loginWithCredentialsMock).not.toHaveBeenCalled();
@@ -59,10 +59,13 @@ describe("login/actions", () => {
     formData.set("password", "wrong-pass");
 
     await expect(loginAction(formData)).rejects.toThrow(
-      `REDIRECT:/login?error=${LOGIN_PAGE_ERROR_PARAM.INVALID_CREDENTIALS}`
+      `REDIRECT:/login?error=${LOGIN_PAGE_ERROR_PARAM.INVALID_CREDENTIALS}`,
     );
 
-    expect(loginWithCredentialsMock).toHaveBeenCalledWith("admin@example.com", "wrong-pass");
+    expect(loginWithCredentialsMock).toHaveBeenCalledWith(
+      "admin@example.com",
+      "wrong-pass",
+    );
     expect(saveSessionCookieMock).not.toHaveBeenCalled();
     expect(saveActiveHotelCookieMock).not.toHaveBeenCalled();
   });
@@ -78,8 +81,8 @@ describe("login/actions", () => {
         tenantId: null,
         roles: ["Admin"],
         permissions: [],
-        roleAssignments: []
-      }
+        roleAssignments: [],
+      },
     });
     getActiveHotelCookieValueMock.mockReturnValueOnce(undefined);
     resolveActiveHotelForUserMock.mockReturnValueOnce(null);
@@ -93,9 +96,9 @@ describe("login/actions", () => {
     expect(saveSessionCookieMock).toHaveBeenCalledWith("token-123", 3600);
     expect(resolveActiveHotelForUserMock).toHaveBeenCalledWith(
       expect.objectContaining({
-        id: "user-1"
+        id: "user-1",
       }),
-      undefined
+      undefined,
     );
     expect(saveActiveHotelCookieMock).toHaveBeenCalledWith(null);
     expect(redirectMock).toHaveBeenCalledWith("/dashboard");

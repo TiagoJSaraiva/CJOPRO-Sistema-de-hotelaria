@@ -14,7 +14,9 @@ type RolesCreatePageProps = {
   }>;
 };
 
-export default async function RolesCreatePage({ searchParams }: RolesCreatePageProps) {
+export default async function RolesCreatePage({
+  searchParams,
+}: RolesCreatePageProps) {
   const resolvedSearchParams = await searchParams;
   const user = await getUserFromSession();
   const access = getRolesAccess(user);
@@ -26,22 +28,46 @@ export default async function RolesCreatePage({ searchParams }: RolesCreatePageP
       redirect(fallback);
     }
 
-    return <DashboardAccessDeniedCard title="Roles" message="Sem permissão para criar role." />;
+    return (
+      <DashboardAccessDeniedCard
+        title="Roles"
+        message="Sem permissão para criar role."
+      />
+    );
   }
 
-  const referenceData = await getRolesReferenceData().catch(() => ({ hotels: [], permissions: [] }));
+  const referenceData = await getRolesReferenceData().catch(() => ({
+    hotels: [],
+    permissions: [],
+  }));
 
   return (
     <DashboardEntityPageShell
       title="Roles"
       activeTabKey="create"
       tabs={[
-        { key: "create", label: "Criar role", href: "/dashboard/roles/create", isVisible: access.canCreate },
-        { key: "view", label: "Ver roles", href: "/dashboard/roles/view", isVisible: access.canRead }
+        {
+          key: "create",
+          label: "Criar role",
+          href: "/dashboard/roles/create",
+          isVisible: access.canCreate,
+        },
+        {
+          key: "view",
+          label: "Ver roles",
+          href: "/dashboard/roles/view",
+          isVisible: access.canRead,
+        },
       ]}
-      statusContent={<RoleStatusMessage status={resolvedSearchParams?.status} />}
+      statusContent={
+        <RoleStatusMessage status={resolvedSearchParams?.status} />
+      }
     >
-      <RoleCreateForm formKey={resolvedSearchParams?.r} hotels={referenceData.hotels} permissions={referenceData.permissions} />
+      <RoleCreateForm
+        formKey={resolvedSearchParams?.r}
+        hotels={referenceData.hotels}
+        permissions={referenceData.permissions}
+      />
     </DashboardEntityPageShell>
   );
 }

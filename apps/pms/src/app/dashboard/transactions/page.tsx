@@ -9,12 +9,16 @@ type TransactionsPageProps = {
   }>;
 };
 
-export default async function TransactionsPage({ searchParams }: TransactionsPageProps) {
+export default async function TransactionsPage({
+  searchParams,
+}: TransactionsPageProps) {
   const resolvedSearchParams = await searchParams;
   const user = await getUserFromSession();
   const access = getTransactionsAccess(user);
   const targetRoute = getTransactionsDefaultRoute(access);
-  const statusQuery = resolvedSearchParams?.status ? `?status=${encodeURIComponent(resolvedSearchParams.status)}` : "";
+  const statusQuery = resolvedSearchParams?.status
+    ? `?status=${encodeURIComponent(resolvedSearchParams.status)}`
+    : "";
 
   if (!targetRoute) {
     return (

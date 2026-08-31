@@ -84,6 +84,7 @@ Os testes pgTAP ficam em `supabase/tests/database/`. A suíte Vitest de banco us
 
    `db reset --local` é destrutivo apenas para os dados locais. Seu sucesso é a
    principal prova de que o banco pode ser reconstruído do zero.
+
 6. Regenere os tipos Supabase versionados e adapte os acessos que deixarem de compilar:
 
    ```powershell

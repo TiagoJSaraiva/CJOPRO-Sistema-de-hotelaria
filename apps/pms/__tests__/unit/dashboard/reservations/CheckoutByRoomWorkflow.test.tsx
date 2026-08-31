@@ -16,7 +16,9 @@ type PanelOverrides = {
   maintenance_acknowledgement_required?: boolean;
 };
 
-function createPanel(overrides: PanelOverrides = {}): AdminStayOperationalPanelResponse {
+function createPanel(
+  overrides: PanelOverrides = {},
+): AdminStayOperationalPanelResponse {
   const base: AdminStayOperationalPanelResponse = {
     stay: {
       id: "stay-2",
@@ -33,14 +35,14 @@ function createPanel(overrides: PanelOverrides = {}): AdminStayOperationalPanelR
       checkout_date_actual: null,
       total_price_estimated: 960,
       total_paid: 960,
-      stay_payment_status: "paid"
+      stay_payment_status: "paid",
     },
     reservation: {
       id: "reservation-2",
       code: "RES-1002",
       total_due: 960,
       total_paid: 960,
-      payment_status: "paid"
+      payment_status: "paid",
     },
     hotel: {
       id: "hotel-1",
@@ -48,7 +50,7 @@ function createPanel(overrides: PanelOverrides = {}): AdminStayOperationalPanelR
       checkin_time_start: "14:00",
       checkin_time_limit: "22:00",
       checkout_time_start: "08:00",
-      checkout_time_limit: "12:00"
+      checkout_time_limit: "12:00",
     },
     eligibility: {
       can_checkin: false,
@@ -56,9 +58,11 @@ function createPanel(overrides: PanelOverrides = {}): AdminStayOperationalPanelR
       can_checkout: true,
       checkout_block_reason: null,
       can_no_show: false,
-      no_show_block_reason: "No-show so pode ser aplicado em estadia confirmada.",
+      no_show_block_reason:
+        "No-show so pode ser aplicado em estadia confirmada.",
       can_cancel: false,
-      cancel_block_reason: "Cancelamento permitido apenas para estadia confirmada."
+      cancel_block_reason:
+        "Cancelamento permitido apenas para estadia confirmada.",
     },
     payments: [
       {
@@ -69,31 +73,32 @@ function createPanel(overrides: PanelOverrides = {}): AdminStayOperationalPanelR
         note: null,
         paid_at: "2026-05-15T18:00:00.000Z",
         created_at: "2026-05-15T18:00:00.000Z",
-        created_by: "user-1"
-      }
-    ]
+        created_by: "user-1",
+      },
+    ],
   };
 
   return {
     stay: {
       ...base.stay,
-      ...overrides.stay
+      ...overrides.stay,
     },
     reservation: {
       ...base.reservation,
-      ...overrides.reservation
+      ...overrides.reservation,
     },
     hotel: {
       ...base.hotel,
-      ...overrides.hotel
+      ...overrides.hotel,
     },
     eligibility: {
       ...base.eligibility,
-      ...overrides.eligibility
+      ...overrides.eligibility,
     },
     payments: overrides.payments ?? base.payments,
     maintenance_occurrences: overrides.maintenance_occurrences,
-    maintenance_acknowledgement_required: overrides.maintenance_acknowledgement_required
+    maintenance_acknowledgement_required:
+      overrides.maintenance_acknowledgement_required,
   };
 }
 
@@ -101,12 +106,15 @@ function jsonResponse(payload: unknown, status = 200) {
   return new Response(JSON.stringify(payload), {
     status,
     headers: {
-      "Content-Type": "application/json"
-    }
+      "Content-Type": "application/json",
+    },
   });
 }
 
-async function searchRoom(user: ReturnType<typeof userEvent.setup>, roomNumber = "102") {
+async function searchRoom(
+  user: ReturnType<typeof userEvent.setup>,
+  roomNumber = "102",
+) {
   await user.type(screen.getByLabelText("Numero do quarto"), roomNumber);
   await user.click(screen.getByRole("button", { name: "Buscar" }));
 }
@@ -121,7 +129,9 @@ describe("CheckoutByRoomWorkflow", () => {
   });
 
   it("busca por quarto e exibe dados da estadia", async () => {
-    const fetchMock = vi.fn().mockResolvedValueOnce(jsonResponse(createPanel()));
+    const fetchMock = vi
+      .fn()
+      .mockResolvedValueOnce(jsonResponse(createPanel()));
     vi.stubGlobal("fetch", fetchMock);
     const user = userEvent.setup();
 
@@ -130,18 +140,21 @@ describe("CheckoutByRoomWorkflow", () => {
 
     expect(await screen.findByText("Bruno Lima")).toBeTruthy();
     expect(screen.getAllByText("RES-1002").length).toBeGreaterThan(0);
-    expect(fetchMock).toHaveBeenCalledWith("/api/stays/checkout-candidate?room_number=102", {
-      method: "GET",
-      cache: "no-store"
-    });
+    expect(fetchMock).toHaveBeenCalledWith(
+      "/api/stays/checkout-candidate?room_number=102",
+      {
+        method: "GET",
+        cache: "no-store",
+      },
+    );
   });
 
   it("mostra motivo e desabilita checkout quando elegibilidade bloqueia", async () => {
     const panel = createPanel({
       eligibility: {
         can_checkout: false,
-        checkout_block_reason: "Checkout permitido apenas na data esperada."
-      }
+        checkout_block_reason: "Checkout permitido apenas na data esperada.",
+      },
     });
     vi.stubGlobal("fetch", vi.fn().mockResolvedValueOnce(jsonResponse(panel)));
     const user = userEvent.setup();
@@ -149,19 +162,27 @@ describe("CheckoutByRoomWorkflow", () => {
     render(<CheckoutByRoomWorkflow />);
     await searchRoom(user);
 
-    expect(await screen.findByText("Checkout permitido apenas na data esperada.")).toBeTruthy();
-    expect((screen.getByRole("button", { name: "Confirmar checkout" }) as HTMLButtonElement).disabled).toBe(true);
+    expect(
+      await screen.findByText("Checkout permitido apenas na data esperada."),
+    ).toBeTruthy();
+    expect(
+      (
+        screen.getByRole("button", {
+          name: "Confirmar checkout",
+        }) as HTMLButtonElement
+      ).disabled,
+    ).toBe(true);
   });
 
   it("registra pagamento e atualiza saldo", async () => {
     const partialPanel = createPanel({
       stay: {
         total_paid: 600,
-        stay_payment_status: "partial"
+        stay_payment_status: "partial",
       },
       reservation: {
         total_paid: 600,
-        payment_status: "partial"
+        payment_status: "partial",
       },
       payments: [
         {
@@ -172,31 +193,38 @@ describe("CheckoutByRoomWorkflow", () => {
           note: null,
           paid_at: "2026-05-15T18:00:00.000Z",
           created_at: "2026-05-15T18:00:00.000Z",
-          created_by: "user-1"
-        }
-      ]
+          created_by: "user-1",
+        },
+      ],
     });
     const paidPanel = createPanel();
-    const fetchMock = vi.fn().mockResolvedValueOnce(jsonResponse(partialPanel)).mockResolvedValueOnce(jsonResponse(paidPanel));
+    const fetchMock = vi
+      .fn()
+      .mockResolvedValueOnce(jsonResponse(partialPanel))
+      .mockResolvedValueOnce(jsonResponse(paidPanel));
     vi.stubGlobal("fetch", fetchMock);
     const user = userEvent.setup();
 
     render(<CheckoutByRoomWorkflow />);
     await searchRoom(user);
 
-    expect((await screen.findByLabelText("Valor") as HTMLInputElement).value).toBe("360.00");
-    await user.click(screen.getByRole("button", { name: "Registrar pagamento" }));
+    expect(
+      ((await screen.findByLabelText("Valor")) as HTMLInputElement).value,
+    ).toBe("360.00");
+    await user.click(
+      screen.getByRole("button", { name: "Registrar pagamento" }),
+    );
 
     expect(fetchMock).toHaveBeenLastCalledWith("/api/stays/stay-2/payments", {
       method: "POST",
       headers: {
-        "Content-Type": "application/json"
+        "Content-Type": "application/json",
       },
       body: JSON.stringify({
         amount: 360,
         method: "pix",
-        note: null
-      })
+        note: null,
+      }),
     });
     expect(await screen.findByText("Pagamento registrado.")).toBeTruthy();
     expect((screen.getByLabelText("Valor") as HTMLInputElement).value).toBe("");
@@ -206,46 +234,92 @@ describe("CheckoutByRoomWorkflow", () => {
     const checkedOutPanel = createPanel({
       stay: {
         stay_status: "checked_out",
-        checkout_date_actual: "2026-05-18T13:20:00.000Z"
+        checkout_date_actual: "2026-05-18T13:20:00.000Z",
       },
       eligibility: {
         can_checkout: false,
-        checkout_block_reason: "A estadia precisa estar em checked_in para checkout."
-      }
+        checkout_block_reason:
+          "A estadia precisa estar em checked_in para checkout.",
+      },
     });
-    const fetchMock = vi.fn().mockResolvedValueOnce(jsonResponse(createPanel())).mockResolvedValueOnce(jsonResponse(checkedOutPanel));
+    const fetchMock = vi
+      .fn()
+      .mockResolvedValueOnce(jsonResponse(createPanel()))
+      .mockResolvedValueOnce(jsonResponse(checkedOutPanel));
     vi.stubGlobal("fetch", fetchMock);
     const user = userEvent.setup();
 
     render(<CheckoutByRoomWorkflow />);
     await searchRoom(user);
-    await user.click(await screen.findByRole("button", { name: "Confirmar checkout" }));
+    await user.click(
+      await screen.findByRole("button", { name: "Confirmar checkout" }),
+    );
 
     expect(fetchMock).toHaveBeenLastCalledWith("/api/stays/stay-2/checkout", {
       method: "POST",
       headers: {
-        "Content-Type": "application/json"
+        "Content-Type": "application/json",
       },
-      body: JSON.stringify({})
+      body: JSON.stringify({}),
     });
-    expect(await screen.findByText("Checkout confirmado para o quarto 102.")).toBeTruthy();
+    expect(
+      await screen.findByText("Checkout confirmado para o quarto 102."),
+    ).toBeTruthy();
     expect(screen.getByText("Checked-out")).toBeTruthy();
   });
 
   it("exige ciência explícita e envia os ids das ocorrências abertas", async () => {
     const openOccurrence = {
-      id: "97000000-0000-4000-8000-000000000001", occurrence_number: 1, code: "OCO-000001", kind: "damage" as const,
-      priority: "high" as const, status: "awaiting_liability" as const, description: "Televisor danificado", category_id: "category-1",
-      category_name: "Eletrônicos", room_id: "room-102", room_number: "102", location_id: null, location_name: null, stay_id: "stay-2",
-      reported_by: "user-1", reporter_name: "Gestor", blocking_recommended: false, liability_status: "suspected" as const,
-      active_block: false, open_work_orders: 0, created_at: "2026-05-18T10:00:00Z", updated_at: "2026-05-18T10:00:00Z"
+      id: "97000000-0000-4000-8000-000000000001",
+      occurrence_number: 1,
+      code: "OCO-000001",
+      kind: "damage" as const,
+      priority: "high" as const,
+      status: "awaiting_liability" as const,
+      description: "Televisor danificado",
+      category_id: "category-1",
+      category_name: "Eletrônicos",
+      room_id: "room-102",
+      room_number: "102",
+      location_id: null,
+      location_name: null,
+      stay_id: "stay-2",
+      reported_by: "user-1",
+      reporter_name: "Gestor",
+      blocking_recommended: false,
+      liability_status: "suspected" as const,
+      active_block: false,
+      open_work_orders: 0,
+      created_at: "2026-05-18T10:00:00Z",
+      updated_at: "2026-05-18T10:00:00Z",
     };
-    const panel = createPanel({ maintenance_occurrences: [openOccurrence], maintenance_acknowledgement_required: true });
-    const fetchMock = vi.fn().mockResolvedValueOnce(jsonResponse(panel)).mockResolvedValueOnce(jsonResponse(createPanel({ stay: { stay_status: "checked_out" } })));
-    vi.stubGlobal("fetch", fetchMock); const user = userEvent.setup(); render(<CheckoutByRoomWorkflow />); await searchRoom(user);
-    const checkout = await screen.findByRole("button", { name: "Confirmar checkout" });
+    const panel = createPanel({
+      maintenance_occurrences: [openOccurrence],
+      maintenance_acknowledgement_required: true,
+    });
+    const fetchMock = vi
+      .fn()
+      .mockResolvedValueOnce(jsonResponse(panel))
+      .mockResolvedValueOnce(
+        jsonResponse(createPanel({ stay: { stay_status: "checked_out" } })),
+      );
+    vi.stubGlobal("fetch", fetchMock);
+    const user = userEvent.setup();
+    render(<CheckoutByRoomWorkflow />);
+    await searchRoom(user);
+    const checkout = await screen.findByRole("button", {
+      name: "Confirmar checkout",
+    });
     expect((checkout as HTMLButtonElement).disabled).toBe(true);
-    await user.click(screen.getByLabelText(/Declaro ciência/)); await user.click(checkout);
-    expect(fetchMock).toHaveBeenLastCalledWith("/api/stays/stay-2/checkout", expect.objectContaining({ body: JSON.stringify({ maintenance_acknowledged_occurrence_ids: [openOccurrence.id] }) }));
+    await user.click(screen.getByLabelText(/Declaro ciência/));
+    await user.click(checkout);
+    expect(fetchMock).toHaveBeenLastCalledWith(
+      "/api/stays/stay-2/checkout",
+      expect.objectContaining({
+        body: JSON.stringify({
+          maintenance_acknowledged_occurrence_ids: [openOccurrence.id],
+        }),
+      }),
+    );
   });
 });

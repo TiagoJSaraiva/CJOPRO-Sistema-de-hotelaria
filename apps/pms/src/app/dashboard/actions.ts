@@ -8,7 +8,7 @@ import {
   getActiveHotelCookieValue,
   resolveActiveHotelForUser,
   userCanAccessHotel,
-  clearActiveHotelCookie
+  clearActiveHotelCookie,
 } from "../../lib/activeHotel";
 import { getUserFromSession } from "../../lib/auth";
 
@@ -20,12 +20,17 @@ export async function setActiveHotelAction(formData: FormData): Promise<void> {
     return;
   }
 
-  const requestedHotelId = decodeActiveHotelCookie(String(formData.get("hotelId") || ""));
+  const requestedHotelId = decodeActiveHotelCookie(
+    String(formData.get("hotelId") || ""),
+  );
   const preferredHotelId = userCanAccessHotel(user, requestedHotelId ?? null)
-    ? requestedHotelId ?? null
+    ? (requestedHotelId ?? null)
     : await getActiveHotelCookieValue();
 
-  const resolvedActiveHotelId = resolveActiveHotelForUser(user, preferredHotelId);
+  const resolvedActiveHotelId = resolveActiveHotelForUser(
+    user,
+    preferredHotelId,
+  );
   await saveActiveHotelCookie(resolvedActiveHotelId);
 }
 

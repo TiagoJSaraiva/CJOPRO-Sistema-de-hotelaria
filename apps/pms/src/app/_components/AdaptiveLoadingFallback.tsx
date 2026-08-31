@@ -13,7 +13,7 @@ export function AdaptiveLoadingFallback({
   minHeight = "180px",
   labelDelayMs = 0,
   className,
-  style
+  style,
 }: AdaptiveLoadingFallbackProps) {
   const shouldDelayLabel = labelDelayMs > 0;
 
@@ -22,7 +22,7 @@ export function AdaptiveLoadingFallback({
       className={`grid w-full place-items-center p-4 text-center [container-type:inline-size] ${className ?? ""}`}
       style={{
         minHeight,
-        ...style
+        ...style,
       }}
       role="status"
       aria-live="polite"
@@ -36,8 +36,10 @@ export function AdaptiveLoadingFallback({
           className="m-0 text-[clamp(0.95rem,3.2cqi,1.5rem)] font-semibold tracking-[0.02em] text-[#5b6470]"
           style={{
             opacity: shouldDelayLabel ? 0 : 1,
-            animation: shouldDelayLabel ? "pms-fade-in 140ms ease forwards" : undefined,
-            animationDelay: shouldDelayLabel ? `${labelDelayMs}ms` : undefined
+            animation: shouldDelayLabel
+              ? "pms-fade-in 140ms ease forwards"
+              : undefined,
+            animationDelay: shouldDelayLabel ? `${labelDelayMs}ms` : undefined,
           }}
         >
           {label}

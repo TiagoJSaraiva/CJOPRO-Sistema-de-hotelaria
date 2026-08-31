@@ -11,7 +11,7 @@ export const DEFAULT_ROLE_VIEW_FILTERS: RoleViewFilters = {
   search: "",
   roleType: "",
   hotelId: "",
-  permissionId: ""
+  permissionId: "",
 };
 
 export function countAppliedRoleFilters(filters: RoleViewFilters): number {
@@ -25,7 +25,10 @@ export function countAppliedRoleFilters(filters: RoleViewFilters): number {
   return total;
 }
 
-export function applyRoleViewFilters(roles: AdminRole[], filters: RoleViewFilters): AdminRole[] {
+export function applyRoleViewFilters(
+  roles: AdminRole[],
+  filters: RoleViewFilters,
+): AdminRole[] {
   const search = filters.search.trim().toLocaleLowerCase();
   const roleType = filters.roleType.trim();
   const hotelId = filters.hotelId.trim();
@@ -45,7 +48,9 @@ export function applyRoleViewFilters(roles: AdminRole[], filters: RoleViewFilter
     }
 
     if (permissionId) {
-      const matchesPermission = role.permissions.some((permission) => permission.id === permissionId);
+      const matchesPermission = role.permissions.some(
+        (permission) => permission.id === permissionId,
+      );
 
       if (!matchesPermission) {
         return false;

@@ -13,7 +13,9 @@ export default async function RolesPage({ searchParams }: RolesPageProps) {
   const user = await getUserFromSession();
   const access = getRolesAccess(user);
   const targetRoute = getRolesDefaultRoute(access);
-  const statusQuery = resolvedSearchParams?.status ? `?status=${encodeURIComponent(resolvedSearchParams.status)}` : "";
+  const statusQuery = resolvedSearchParams?.status
+    ? `?status=${encodeURIComponent(resolvedSearchParams.status)}`
+    : "";
 
   if (!targetRoute) {
     return (

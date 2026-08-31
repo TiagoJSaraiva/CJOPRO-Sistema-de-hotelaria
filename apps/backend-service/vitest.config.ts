@@ -4,9 +4,13 @@ import { defineConfig } from "vitest/config";
 export default defineConfig({
   resolve: {
     alias: {
-      "@hotel/shared/api-contract": fileURLToPath(new URL("../../packages/shared/src/api-contract.ts", import.meta.url)),
-      "@hotel/shared": fileURLToPath(new URL("../../packages/shared/src/index.ts", import.meta.url))
-    }
+      "@hotel/shared/api-contract": fileURLToPath(
+        new URL("../../packages/shared/src/api-contract.ts", import.meta.url),
+      ),
+      "@hotel/shared": fileURLToPath(
+        new URL("../../packages/shared/src/index.ts", import.meta.url),
+      ),
+    },
   },
   test: {
     environment: "node",
@@ -28,8 +32,8 @@ export default defineConfig({
         statements: 27,
         branches: 23,
         functions: 36,
-        lines: 28
-      }
-    }
-  }
+        lines: 28,
+      },
+    },
+  },
 });

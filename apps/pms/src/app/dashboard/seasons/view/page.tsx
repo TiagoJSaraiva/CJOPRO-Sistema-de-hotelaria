@@ -15,7 +15,9 @@ type SeasonsViewPageProps = {
   }>;
 };
 
-export default async function SeasonsViewPage({ searchParams }: SeasonsViewPageProps) {
+export default async function SeasonsViewPage({
+  searchParams,
+}: SeasonsViewPageProps) {
   const resolvedSearchParams = await searchParams;
   const user = await getUserFromSession();
   const access = getSeasonsAccess(user);
@@ -27,7 +29,12 @@ export default async function SeasonsViewPage({ searchParams }: SeasonsViewPageP
       redirect(fallback);
     }
 
-    return <DashboardAccessDeniedCard title="Temporadas" message="Sem permissão para visualizar temporadas." />;
+    return (
+      <DashboardAccessDeniedCard
+        title="Temporadas"
+        message="Sem permissão para visualizar temporadas."
+      />
+    );
   }
 
   const seasons = await listSeasons();
@@ -39,10 +46,22 @@ export default async function SeasonsViewPage({ searchParams }: SeasonsViewPageP
       title="Temporadas"
       activeTabKey="view"
       tabs={[
-        { key: "create", label: "Criar temporada", href: "/dashboard/seasons/create", isVisible: access.canCreate },
-        { key: "view", label: "Ver temporadas", href: "/dashboard/seasons/view", isVisible: access.canRead }
+        {
+          key: "create",
+          label: "Criar temporada",
+          href: "/dashboard/seasons/create",
+          isVisible: access.canCreate,
+        },
+        {
+          key: "view",
+          label: "Ver temporadas",
+          href: "/dashboard/seasons/view",
+          isVisible: access.canRead,
+        },
       ]}
-      statusContent={<SeasonStatusMessage status={resolvedSearchParams?.status} />}
+      statusContent={
+        <SeasonStatusMessage status={resolvedSearchParams?.status} />
+      }
     >
       <SeasonsViewFilterableSection
         seasons={seasons}

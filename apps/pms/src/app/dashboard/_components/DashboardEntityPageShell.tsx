@@ -12,7 +12,14 @@ type DashboardEntityPageShellProps = {
   children: ReactNode;
 };
 
-export function DashboardEntityPageShell({ title, activeTabKey, tabs, status, statusContent, children }: DashboardEntityPageShellProps) {
+export function DashboardEntityPageShell({
+  title,
+  activeTabKey,
+  tabs,
+  status,
+  statusContent,
+  children,
+}: DashboardEntityPageShellProps) {
   const placeTabsInFilterBar = shouldPlaceTabsInFilterBar(activeTabKey);
 
   return (
@@ -20,8 +27,17 @@ export function DashboardEntityPageShell({ title, activeTabKey, tabs, status, st
       <section className="pms-page-stack">
         <section>
           <h1 className="pms-page-title">{title}</h1>
-          {placeTabsInFilterBar ? null : <PermissionTabs activeKey={activeTabKey} items={tabs} className="pms-entity-tabs-header" />}
-          {statusContent || (status ? <p className="pms-status-muted">Status: {status}</p> : null)}
+          {placeTabsInFilterBar ? null : (
+            <PermissionTabs
+              activeKey={activeTabKey}
+              items={tabs}
+              className="pms-entity-tabs-header"
+            />
+          )}
+          {statusContent ||
+            (status ? (
+              <p className="pms-status-muted">Status: {status}</p>
+            ) : null)}
         </section>
 
         {children}

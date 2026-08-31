@@ -15,9 +15,16 @@ type PermissionListItemProps = {
   isEditing: boolean;
 };
 
-function PermissionEditForm({ permissionItem }: { permissionItem: AdminPermission }) {
+function PermissionEditForm({
+  permissionItem,
+}: {
+  permissionItem: AdminPermission;
+}) {
   return (
-    <form action={updatePermissionAction} className="mt-[0.85rem] grid gap-[0.65rem]">
+    <form
+      action={updatePermissionAction}
+      className="mt-[0.85rem] grid gap-[0.65rem]"
+    >
       <input type="hidden" name="id" value={permissionItem.id} />
 
       <div className="pms-field">
@@ -39,19 +46,32 @@ function PermissionEditForm({ permissionItem }: { permissionItem: AdminPermissio
           defaultValue={permissionItem.type}
           className="pms-field-input"
         >
-          <option value={ADMIN_PERMISSION_TYPES.SYSTEM}>SYSTEM PERMISSION</option>
+          <option value={ADMIN_PERMISSION_TYPES.SYSTEM}>
+            SYSTEM PERMISSION
+          </option>
           <option value={ADMIN_PERMISSION_TYPES.HOTEL}>HOTEL PERMISSION</option>
         </select>
       </div>
 
-      <button type="submit" className="justify-self-start rounded-lg border-0 bg-[#1c6d4e] px-[0.75rem] py-[0.55rem] text-white">
+      <button
+        type="submit"
+        className="justify-self-start rounded-lg border-0 bg-[#1c6d4e] px-[0.75rem] py-[0.55rem] text-white"
+      >
         Salvar alterações
       </button>
     </form>
   );
 }
 
-export function PermissionListItem({ permissionItem, canRead, canUpdate, canDelete, isCurrentUserPermission, isViewing, isEditing }: PermissionListItemProps) {
+export function PermissionListItem({
+  permissionItem,
+  canRead,
+  canUpdate,
+  canDelete,
+  isCurrentUserPermission,
+  isViewing,
+  isEditing,
+}: PermissionListItemProps) {
   const viewHref = `/dashboard/permissions/view?permissionId=${permissionItem.id}&mode=view`;
   const editHref = `/dashboard/permissions/view?permissionId=${permissionItem.id}&mode=edit`;
 
@@ -83,12 +103,17 @@ export function PermissionListItem({ permissionItem, canRead, canUpdate, canDele
             <strong>Nome:</strong> {permissionItem.name}
           </p>
           <p className="m-0 mt-[0.35rem]">
-            <strong>Tipo:</strong> {permissionItem.type === ADMIN_PERMISSION_TYPES.SYSTEM ? "SYSTEM PERMISSION" : "HOTEL PERMISSION"}
+            <strong>Tipo:</strong>{" "}
+            {permissionItem.type === ADMIN_PERMISSION_TYPES.SYSTEM
+              ? "SYSTEM PERMISSION"
+              : "HOTEL PERMISSION"}
           </p>
         </div>
       ) : null}
 
-      {isEditing && !isCurrentUserPermission ? <PermissionEditForm permissionItem={permissionItem} /> : null}
+      {isEditing && !isCurrentUserPermission ? (
+        <PermissionEditForm permissionItem={permissionItem} />
+      ) : null}
     </DashboardEntityListItemFrame>
   );
 }

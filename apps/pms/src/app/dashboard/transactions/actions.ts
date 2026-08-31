@@ -6,14 +6,21 @@ import { PERMISSIONS } from "@hotel/shared";
 import {
   createFinancialTransaction,
   deleteFinancialTransaction,
-  updateFinancialTransaction
+  updateFinancialTransaction,
 } from "../../../lib/adminApi";
 import { getUserFromSession } from "../../../lib/auth";
 
 const TRANSACTION_TYPES = new Set(["INCOME", "EXPENSE", "REFUND"]);
-const TRANSACTION_STATUSES = new Set(["PENDING", "COMPLETED", "FAILED", "CANCELLED", "REFUNDED"]);
+const TRANSACTION_STATUSES = new Set([
+  "PENDING",
+  "COMPLETED",
+  "FAILED",
+  "CANCELLED",
+  "REFUNDED",
+]);
 const CURRENCY_PATTERN = /^[A-Z]{3}$/;
-const UUID_PATTERN = /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
+const UUID_PATTERN =
+  /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
 const DATE_ONLY_PATTERN = /^\d{4}-\d{2}-\d{2}$/;
 
 function revalidateTransactionPage(): void {
@@ -22,7 +29,10 @@ function revalidateTransactionPage(): void {
   revalidatePath("/dashboard/transactions/view");
 }
 
-function redirectWithStatus(status: string, section: "create" | "view" | "root" = "root"): never {
+function redirectWithStatus(
+  status: string,
+  section: "create" | "view" | "root" = "root",
+): never {
   const nonce = Date.now().toString(36);
 
   if (section === "root") {
@@ -36,7 +46,9 @@ function normalizeStatus(value: string): string {
   return value.trim().toUpperCase();
 }
 
-function normalizeOptionalText(value: FormDataEntryValue | null): string | null {
+function normalizeOptionalText(
+  value: FormDataEntryValue | null,
+): string | null {
   const text = String(value || "").trim();
   return text.length ? text : null;
 }
@@ -45,13 +57,17 @@ function normalizeCurrency(value: FormDataEntryValue | null): string {
   return normalizeStatus(String(value || "BRL"));
 }
 
-function normalizeOptionalUuid(value: FormDataEntryValue | null): string | null | undefined {
+function normalizeOptionalUuid(
+  value: FormDataEntryValue | null,
+): string | null | undefined {
   const text = normalizeOptionalText(value);
   if (!text) return null;
   return UUID_PATTERN.test(text) ? text : undefined;
 }
 
-function normalizeOptionalDateOnly(value: FormDataEntryValue | null): string | null | undefined {
+function normalizeOptionalDateOnly(
+  value: FormDataEntryValue | null,
+): string | null | undefined {
   const text = normalizeOptionalText(value);
   if (!text) return null;
 
@@ -60,10 +76,15 @@ function normalizeOptionalDateOnly(value: FormDataEntryValue | null): string | n
   }
 
   const parsed = new Date(`${text}T00:00:00.000Z`);
-  return Number.isNaN(parsed.getTime()) || parsed.toISOString().slice(0, 10) !== text ? undefined : text;
+  return Number.isNaN(parsed.getTime()) ||
+    parsed.toISOString().slice(0, 10) !== text
+    ? undefined
+    : text;
 }
 
-function normalizeOptionalDateTime(value: FormDataEntryValue | null): string | null | undefined {
+function normalizeOptionalDateTime(
+  value: FormDataEntryValue | null,
+): string | null | undefined {
   const text = normalizeOptionalText(value);
   if (!text) return null;
 
@@ -71,11 +92,15 @@ function normalizeOptionalDateTime(value: FormDataEntryValue | null): string | n
   return Number.isNaN(parsed.getTime()) ? undefined : parsed.toISOString();
 }
 
-export async function createTransactionAction(formData: FormData): Promise<void> {
+export async function createTransactionAction(
+  formData: FormData,
+): Promise<void> {
   const user = await getUserFromSession();
 
   if (!user || !user.permissions.includes(PERMISSIONS.TRANSACTION_CREATE)) {
-    const fallback = user?.permissions.includes(PERMISSIONS.TRANSACTION_READ) ? "view" : "root";
+    const fallback = user?.permissions.includes(PERMISSIONS.TRANSACTION_READ)
+      ? "view"
+      : "root";
     redirectWithStatus("forbidden", fallback);
   }
 
@@ -116,7 +141,8 @@ export async function createTransactionAction(formData: FormData): Promise<void>
       amount,
       currency,
       description,
-      status: status as "PENDING" | "COMPLETED" | "FAILED" | "CANCELLED" | "REFUNDED",
+      status: status as
+        "PENDING" | "COMPLETED" | "FAILED" | "CANCELLED" | "REFUNDED",
       payment_method: paymentMethod,
       paid_at: paidAt,
       due_date: dueDate,
@@ -124,7 +150,7 @@ export async function createTransactionAction(formData: FormData): Promise<void>
       cost_center: costCenter,
       reference_code: referenceCode,
       stay_id: stayId,
-      reservation_id: reservationId
+      reservation_id: reservationId,
     });
   } catch {
     redirectWithStatus("create_error", "create");
@@ -134,11 +160,15 @@ export async function createTransactionAction(formData: FormData): Promise<void>
   redirectWithStatus("created", "create");
 }
 
-export async function updateTransactionAction(formData: FormData): Promise<void> {
+export async function updateTransactionAction(
+  formData: FormData,
+): Promise<void> {
   const user = await getUserFromSession();
 
   if (!user || !user.permissions.includes(PERMISSIONS.TRANSACTION_UPDATE)) {
-    const fallback = user?.permissions.includes(PERMISSIONS.TRANSACTION_READ) ? "view" : "root";
+    const fallback = user?.permissions.includes(PERMISSIONS.TRANSACTION_READ)
+      ? "view"
+      : "root";
     redirectWithStatus("forbidden", fallback);
   }
 
@@ -181,7 +211,8 @@ export async function updateTransactionAction(formData: FormData): Promise<void>
       amount,
       currency,
       description,
-      status: status as "PENDING" | "COMPLETED" | "FAILED" | "CANCELLED" | "REFUNDED",
+      status: status as
+        "PENDING" | "COMPLETED" | "FAILED" | "CANCELLED" | "REFUNDED",
       payment_method: paymentMethod,
       paid_at: paidAt,
       due_date: dueDate,
@@ -189,7 +220,7 @@ export async function updateTransactionAction(formData: FormData): Promise<void>
       cost_center: costCenter,
       reference_code: referenceCode,
       stay_id: stayId,
-      reservation_id: reservationId
+      reservation_id: reservationId,
     });
   } catch {
     redirectWithStatus("update_error", "view");
@@ -199,11 +230,15 @@ export async function updateTransactionAction(formData: FormData): Promise<void>
   redirectWithStatus("updated", "view");
 }
 
-export async function deleteTransactionAction(formData: FormData): Promise<void> {
+export async function deleteTransactionAction(
+  formData: FormData,
+): Promise<void> {
   const user = await getUserFromSession();
 
   if (!user || !user.permissions.includes(PERMISSIONS.TRANSACTION_DELETE)) {
-    const fallback = user?.permissions.includes(PERMISSIONS.TRANSACTION_READ) ? "view" : "root";
+    const fallback = user?.permissions.includes(PERMISSIONS.TRANSACTION_READ)
+      ? "view"
+      : "root";
     redirectWithStatus("forbidden", fallback);
   }
 

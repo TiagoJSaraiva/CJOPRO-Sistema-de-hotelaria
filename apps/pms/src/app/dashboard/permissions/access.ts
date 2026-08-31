@@ -16,11 +16,13 @@ export function getPermissionsAccess(user: UserLike): PermissionsAccess {
     canCreate: permissions.includes(PERMISSIONS.PERMISSION_CREATE),
     canRead: permissions.includes(PERMISSIONS.PERMISSION_READ),
     canUpdate: permissions.includes(PERMISSIONS.PERMISSION_UPDATE),
-    canDelete: permissions.includes(PERMISSIONS.PERMISSION_DELETE)
+    canDelete: permissions.includes(PERMISSIONS.PERMISSION_DELETE),
   };
 }
 
-export function getPermissionsDefaultRoute(access: PermissionsAccess): "/dashboard/permissions/view" | "/dashboard/permissions/create" | null {
+export function getPermissionsDefaultRoute(
+  access: PermissionsAccess,
+): "/dashboard/permissions/view" | "/dashboard/permissions/create" | null {
   if (access.canRead) {
     return "/dashboard/permissions/view";
   }

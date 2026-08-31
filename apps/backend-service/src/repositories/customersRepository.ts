@@ -1,9 +1,14 @@
 import type { AdminCustomer, TablesInsert, TablesUpdate } from "@hotel/shared";
 import { applyHotelContextFilter } from "../common/hotelContextFilter";
 import { createServerClient } from "../common/supabaseServer";
-import { isSupabaseConflictError, isSupabaseForeignKeyError, isSupabaseNotFoundError } from "./supabaseError";
+import {
+  isSupabaseConflictError,
+  isSupabaseForeignKeyError,
+  isSupabaseNotFoundError,
+} from "./supabaseError";
 
-const CUSTOMER_SELECT_FIELDS = "id,hotel_id,full_name,document_number,document_type,email,mobile_phone,phone,birth_date,nationality,notes,created_at,updated_at";
+const CUSTOMER_SELECT_FIELDS =
+  "id,hotel_id,full_name,document_number,document_type,email,mobile_phone,phone,birth_date,nationality,notes,created_at,updated_at";
 
 export type CustomerWriteResult = "ok" | "conflict" | "not-found";
 type CustomerCreate = Omit<TablesInsert<"customers">, "hotel_id">;
@@ -11,10 +16,24 @@ type CustomerUpdate = Omit<TablesUpdate<"customers">, "hotel_id">;
 
 export interface CustomersRepository {
   listCustomers(activeHotelId: string): Promise<AdminCustomer[]>;
-  createCustomer(activeHotelId: string, payload: CustomerCreate): Promise<{ result: CustomerWriteResult; item?: AdminCustomer }>;
-  findCustomerByDocument(activeHotelId: string, documentType: string | null, documentNumber: string): Promise<AdminCustomer | null>;
-  updateCustomer(id: string, activeHotelId: string, payload: CustomerUpdate): Promise<{ result: CustomerWriteResult; item?: AdminCustomer }>;
-  deleteCustomer(id: string, activeHotelId: string): Promise<CustomerWriteResult>;
+  createCustomer(
+    activeHotelId: string,
+    payload: CustomerCreate,
+  ): Promise<{ result: CustomerWriteResult; item?: AdminCustomer }>;
+  findCustomerByDocument(
+    activeHotelId: string,
+    documentType: string | null,
+    documentNumber: string,
+  ): Promise<AdminCustomer | null>;
+  updateCustomer(
+    id: string,
+    activeHotelId: string,
+    payload: CustomerUpdate,
+  ): Promise<{ result: CustomerWriteResult; item?: AdminCustomer }>;
+  deleteCustomer(
+    id: string,
+    activeHotelId: string,
+  ): Promise<CustomerWriteResult>;
 }
 
 class SupabaseCustomersRepository implements CustomersRepository {
@@ -22,7 +41,9 @@ class SupabaseCustomersRepository implements CustomersRepository {
     const supabase = createServerClient();
     let query = supabase.from("customers").select(CUSTOMER_SELECT_FIELDS);
     query = applyHotelContextFilter(query, activeHotelId);
-    const { data, error } = await query.order("created_at", { ascending: false });
+    const { data, error } = await query.order("created_at", {
+      ascending: false,
+    });
 
     if (error) {
       throw error;
@@ -31,7 +52,10 @@ class SupabaseCustomersRepository implements CustomersRepository {
     return data || [];
   }
 
-  async createCustomer(activeHotelId: string, payload: CustomerCreate): Promise<{ result: CustomerWriteResult; item?: AdminCustomer }> {
+  async createCustomer(
+    activeHotelId: string,
+    payload: CustomerCreate,
+  ): Promise<{ result: CustomerWriteResult; item?: AdminCustomer }> {
     const supabase = createServerClient();
     const { data, error } = await supabase
       .from("customers")
@@ -50,7 +74,11 @@ class SupabaseCustomersRepository implements CustomersRepository {
     return { result: "ok", item: data };
   }
 
-  async findCustomerByDocument(activeHotelId: string, documentType: string | null, documentNumber: string): Promise<AdminCustomer | null> {
+  async findCustomerByDocument(
+    activeHotelId: string,
+    documentType: string | null,
+    documentNumber: string,
+  ): Promise<AdminCustomer | null> {
     const supabase = createServerClient();
     let query = supabase.from("customers").select(CUSTOMER_SELECT_FIELDS);
     query = applyHotelContextFilter(query, activeHotelId);
@@ -70,7 +98,11 @@ class SupabaseCustomersRepository implements CustomersRepository {
     return data || null;
   }
 
-  async updateCustomer(id: string, activeHotelId: string, payload: CustomerUpdate): Promise<{ result: CustomerWriteResult; item?: AdminCustomer }> {
+  async updateCustomer(
+    id: string,
+    activeHotelId: string,
+    payload: CustomerUpdate,
+  ): Promise<{ result: CustomerWriteResult; item?: AdminCustomer }> {
     const supabase = createServerClient();
     let query = supabase.from("customers").update(payload).eq("id", id);
     query = applyHotelContextFilter(query, activeHotelId);
@@ -91,7 +123,10 @@ class SupabaseCustomersRepository implements CustomersRepository {
     return { result: "ok", item: data };
   }
 
-  async deleteCustomer(id: string, activeHotelId: string): Promise<CustomerWriteResult> {
+  async deleteCustomer(
+    id: string,
+    activeHotelId: string,
+  ): Promise<CustomerWriteResult> {
     const supabase = createServerClient();
     let query = supabase.from("customers").delete().eq("id", id);
     query = applyHotelContextFilter(query, activeHotelId);

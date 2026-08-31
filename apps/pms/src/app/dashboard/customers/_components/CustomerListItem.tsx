@@ -23,7 +23,9 @@ function CustomerDataPreview({ customer }: { customer: AdminCustomer }) {
       </div>
       <div>
         <strong>Documento:</strong>
-        <p className="m-0 mt-[0.2rem]">{customer.document_type}: {customer.document_number}</p>
+        <p className="m-0 mt-[0.2rem]">
+          {customer.document_type}: {customer.document_number}
+        </p>
       </div>
       <div>
         <strong>Nascimento:</strong>
@@ -55,62 +57,132 @@ function CustomerDataPreview({ customer }: { customer: AdminCustomer }) {
 
 function CustomerEditForm({ customer }: { customer: AdminCustomer }) {
   return (
-    <form action={updateCustomerAction} className="mt-[0.85rem] grid gap-[0.65rem]">
+    <form
+      action={updateCustomerAction}
+      className="mt-[0.85rem] grid gap-[0.65rem]"
+    >
       <input type="hidden" name="id" value={customer.id} />
 
       <div className="pms-field">
         <label htmlFor={`customer-name-${customer.id}`}>Nome completo</label>
-        <input id={`customer-name-${customer.id}`} name="full_name" defaultValue={customer.full_name} required className="pms-field-input" />
+        <input
+          id={`customer-name-${customer.id}`}
+          name="full_name"
+          defaultValue={customer.full_name}
+          required
+          className="pms-field-input"
+        />
       </div>
 
       <div className="pms-field">
-        <label htmlFor={`customer-document-number-${customer.id}`}>Número do documento</label>
-        <input id={`customer-document-number-${customer.id}`} name="document_number" defaultValue={customer.document_number} required className="pms-field-input" />
+        <label htmlFor={`customer-document-number-${customer.id}`}>
+          Número do documento
+        </label>
+        <input
+          id={`customer-document-number-${customer.id}`}
+          name="document_number"
+          defaultValue={customer.document_number}
+          required
+          className="pms-field-input"
+        />
       </div>
 
       <div className="pms-field">
-        <label htmlFor={`customer-document-type-${customer.id}`}>Tipo do documento</label>
-        <input id={`customer-document-type-${customer.id}`} name="document_type" defaultValue={customer.document_type} required className="pms-field-input" />
+        <label htmlFor={`customer-document-type-${customer.id}`}>
+          Tipo do documento
+        </label>
+        <input
+          id={`customer-document-type-${customer.id}`}
+          name="document_type"
+          defaultValue={customer.document_type}
+          required
+          className="pms-field-input"
+        />
       </div>
 
       <div className="pms-field">
         <label htmlFor={`customer-birth-date-${customer.id}`}>Nascimento</label>
-        <input id={`customer-birth-date-${customer.id}`} name="birth_date" type="date" defaultValue={customer.birth_date} required className="pms-field-input" />
+        <input
+          id={`customer-birth-date-${customer.id}`}
+          name="birth_date"
+          type="date"
+          defaultValue={customer.birth_date}
+          required
+          className="pms-field-input"
+        />
       </div>
 
       <div className="pms-field">
         <label htmlFor={`customer-email-${customer.id}`}>Email</label>
-        <input id={`customer-email-${customer.id}`} name="email" type="email" defaultValue={customer.email || ""} className="pms-field-input" />
+        <input
+          id={`customer-email-${customer.id}`}
+          name="email"
+          type="email"
+          defaultValue={customer.email || ""}
+          className="pms-field-input"
+        />
       </div>
 
       <div className="pms-field">
         <label htmlFor={`customer-mobile-${customer.id}`}>Celular</label>
-        <input id={`customer-mobile-${customer.id}`} name="mobile_phone" defaultValue={customer.mobile_phone || ""} className="pms-field-input" />
+        <input
+          id={`customer-mobile-${customer.id}`}
+          name="mobile_phone"
+          defaultValue={customer.mobile_phone || ""}
+          className="pms-field-input"
+        />
       </div>
 
       <div className="pms-field">
         <label htmlFor={`customer-phone-${customer.id}`}>Telefone</label>
-        <input id={`customer-phone-${customer.id}`} name="phone" defaultValue={customer.phone || ""} className="pms-field-input" />
+        <input
+          id={`customer-phone-${customer.id}`}
+          name="phone"
+          defaultValue={customer.phone || ""}
+          className="pms-field-input"
+        />
       </div>
 
       <div className="pms-field">
-        <label htmlFor={`customer-nationality-${customer.id}`}>Nacionalidade</label>
-        <input id={`customer-nationality-${customer.id}`} name="nationality" defaultValue={customer.nationality || ""} className="pms-field-input" />
+        <label htmlFor={`customer-nationality-${customer.id}`}>
+          Nacionalidade
+        </label>
+        <input
+          id={`customer-nationality-${customer.id}`}
+          name="nationality"
+          defaultValue={customer.nationality || ""}
+          className="pms-field-input"
+        />
       </div>
 
       <div className="pms-field">
         <label htmlFor={`customer-notes-${customer.id}`}>Observações</label>
-        <input id={`customer-notes-${customer.id}`} name="notes" defaultValue={customer.notes || ""} className="pms-field-input" />
+        <input
+          id={`customer-notes-${customer.id}`}
+          name="notes"
+          defaultValue={customer.notes || ""}
+          className="pms-field-input"
+        />
       </div>
 
-      <button type="submit" className="justify-self-start rounded-lg border-0 bg-[#1c6d4e] px-[0.75rem] py-[0.55rem] text-white">
+      <button
+        type="submit"
+        className="justify-self-start rounded-lg border-0 bg-[#1c6d4e] px-[0.75rem] py-[0.55rem] text-white"
+      >
         Salvar alterações
       </button>
     </form>
   );
 }
 
-export function CustomerListItem({ customer, canRead, canUpdate, canDelete, isViewing, isEditing }: CustomerListItemProps) {
+export function CustomerListItem({
+  customer,
+  canRead,
+  canUpdate,
+  canDelete,
+  isViewing,
+  isEditing,
+}: CustomerListItemProps) {
   const viewHref = `/dashboard/customers/view?customerId=${customer.id}&mode=view`;
   const editHref = `/dashboard/customers/view?customerId=${customer.id}&mode=edit`;
 

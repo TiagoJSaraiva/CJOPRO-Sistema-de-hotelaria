@@ -5,7 +5,12 @@ type AdminTableProps = {
   rows: string[][];
 };
 
-export function AdminTable({ title, description, columns, rows }: AdminTableProps) {
+export function AdminTable({
+  title,
+  description,
+  columns,
+  rows,
+}: AdminTableProps) {
   return (
     <section className="pms-surface-card">
       <h2 className="pms-panel-title">{title}</h2>
@@ -16,7 +21,10 @@ export function AdminTable({ title, description, columns, rows }: AdminTableProp
           <thead>
             <tr>
               {columns.map((column) => (
-                <th key={column} className="border-b border-[#e7e7e7] px-[0.4rem] py-[0.6rem] text-left text-[0.9rem]">
+                <th
+                  key={column}
+                  className="border-b border-[#e7e7e7] px-[0.4rem] py-[0.6rem] text-left text-[0.9rem]"
+                >
                   {column}
                 </th>
               ))}
@@ -27,7 +35,10 @@ export function AdminTable({ title, description, columns, rows }: AdminTableProp
               rows.map((row, index) => (
                 <tr key={`row-${index}`}>
                   {row.map((cell, cellIndex) => (
-                    <td key={`cell-${index}-${cellIndex}`} className="border-b border-[#f1f1f1] px-[0.4rem] py-[0.6rem]">
+                    <td
+                      key={`cell-${index}-${cellIndex}`}
+                      className="border-b border-[#f1f1f1] px-[0.4rem] py-[0.6rem]"
+                    >
                       {cell}
                     </td>
                   ))}
@@ -35,7 +46,10 @@ export function AdminTable({ title, description, columns, rows }: AdminTableProp
               ))
             ) : (
               <tr>
-                <td colSpan={columns.length} className="px-[0.4rem] py-[0.9rem] text-[#666]">
+                <td
+                  colSpan={columns.length}
+                  className="px-[0.4rem] py-[0.9rem] text-[#666]"
+                >
                   Nenhum registro encontrado.
                 </td>
               </tr>

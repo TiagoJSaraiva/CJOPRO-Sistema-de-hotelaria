@@ -12,11 +12,12 @@ function getRequiredEnvVar(name: "SUPABASE_URL"): string {
 }
 
 function getRequiredSupabaseAdminKey(): string {
-  const value = process.env.SUPABASE_SECRET_KEY ?? process.env.SUPABASE_SERVICE_ROLE_KEY;
+  const value =
+    process.env.SUPABASE_SECRET_KEY ?? process.env.SUPABASE_SERVICE_ROLE_KEY;
 
   if (!value) {
     throw new Error(
-      "Missing required environment variable: SUPABASE_SECRET_KEY (or legacy SUPABASE_SERVICE_ROLE_KEY)"
+      "Missing required environment variable: SUPABASE_SECRET_KEY (or legacy SUPABASE_SERVICE_ROLE_KEY)",
     );
   }
 
@@ -25,5 +26,8 @@ function getRequiredSupabaseAdminKey(): string {
 
 // Uso apenas no backend-service, com chave administrativa.
 export const createServerClient = (): SupabaseClient<Database> => {
-  return createClient<Database>(getRequiredEnvVar("SUPABASE_URL"), getRequiredSupabaseAdminKey());
+  return createClient<Database>(
+    getRequiredEnvVar("SUPABASE_URL"),
+    getRequiredSupabaseAdminKey(),
+  );
 };

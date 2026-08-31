@@ -1,4 +1,8 @@
-import { ACTIVE_HOTEL_GLOBAL_VALUE, ACTIVE_HOTEL_HEADER_NAME, type SessionPayload } from "@hotel/shared";
+import {
+  ACTIVE_HOTEL_GLOBAL_VALUE,
+  ACTIVE_HOTEL_HEADER_NAME,
+  type SessionPayload,
+} from "@hotel/shared";
 
 type HeaderValue = string | string[] | undefined;
 
@@ -8,7 +12,9 @@ export type ActiveHotelValidationResult =
 
 function getFirstHeaderValue(value: HeaderValue): string | null {
   if (Array.isArray(value)) {
-    const first = value.find((item) => typeof item === "string" && item.trim().length > 0);
+    const first = value.find(
+      (item) => typeof item === "string" && item.trim().length > 0,
+    );
     return first ? first.trim() : null;
   }
 
@@ -19,7 +25,9 @@ function getFirstHeaderValue(value: HeaderValue): string | null {
   return null;
 }
 
-function listAccessibleHotelIds(session: Pick<SessionPayload, "roleAssignments">): string[] {
+function listAccessibleHotelIds(
+  session: Pick<SessionPayload, "roleAssignments">,
+): string[] {
   const ids = new Set<string>();
 
   for (const assignment of session.roleAssignments || []) {
@@ -30,14 +38,22 @@ function listAccessibleHotelIds(session: Pick<SessionPayload, "roleAssignments">
     }
   }
 
-  return Array.from(ids).sort((a, b) => a.localeCompare(b, "pt-BR", { sensitivity: "base" }));
+  return Array.from(ids).sort((a, b) =>
+    a.localeCompare(b, "pt-BR", { sensitivity: "base" }),
+  );
 }
 
-export function canAccessGlobalScope(session: Pick<SessionPayload, "roleAssignments">): boolean {
-  return (session.roleAssignments || []).some((assignment) => !assignment.hotelId);
+export function canAccessGlobalScope(
+  session: Pick<SessionPayload, "roleAssignments">,
+): boolean {
+  return (session.roleAssignments || []).some(
+    (assignment) => !assignment.hotelId,
+  );
 }
 
-function parseRequestedActiveHotelId(headers: Record<string, HeaderValue>): string | null | undefined {
+function parseRequestedActiveHotelId(
+  headers: Record<string, HeaderValue>,
+): string | null | undefined {
   const rawHeaderValue = getFirstHeaderValue(headers[ACTIVE_HOTEL_HEADER_NAME]);
 
   if (!rawHeaderValue) {
@@ -53,7 +69,7 @@ function parseRequestedActiveHotelId(headers: Record<string, HeaderValue>): stri
 
 export function resolveActiveHotelContext(
   session: Pick<SessionPayload, "roleAssignments">,
-  headers: Record<string, HeaderValue>
+  headers: Record<string, HeaderValue>,
 ): ActiveHotelValidationResult {
   const requestedActiveHotelId = parseRequestedActiveHotelId(headers);
   const hasGlobalScope = canAccessGlobalScope(session);
@@ -66,7 +82,7 @@ export function resolveActiveHotelContext(
 
     return {
       ok: true,
-      activeHotelId: accessibleHotelIds[0] || null
+      activeHotelId: accessibleHotelIds[0] || null,
     };
   }
 
@@ -75,7 +91,7 @@ export function resolveActiveHotelContext(
       return {
         ok: false,
         statusCode: 403,
-        message: "Contexto global nao permitido para este usuario."
+        message: "Contexto global nao permitido para este usuario.",
       };
     }
 
@@ -86,7 +102,7 @@ export function resolveActiveHotelContext(
     return {
       ok: false,
       statusCode: 403,
-      message: "Hotel ativo nao permitido para este usuario."
+      message: "Hotel ativo nao permitido para este usuario.",
     };
   }
 

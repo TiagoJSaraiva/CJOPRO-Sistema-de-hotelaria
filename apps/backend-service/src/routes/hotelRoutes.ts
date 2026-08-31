@@ -19,18 +19,24 @@ import {
   type AdminHotelCreateInput,
   type AdminHotelUpdateInput,
   type HotelIdParams,
-  type TablesUpdate
+  type TablesUpdate,
 } from "@hotel/shared";
 import { ensureAuthorizedSystem } from "../auth/authorization";
 import { adminError, ADMIN_ERROR_CODE } from "../common/adminError";
 import { normalizeOptionalText } from "../common/text";
-import { createHotelsRepository, type HotelsRepository } from "../repositories/hotelsRepository";
+import {
+  createHotelsRepository,
+  type HotelsRepository,
+} from "../repositories/hotelsRepository";
 
 function isValidTimeOfDay(value: string): boolean {
   return /^([01]\d|2[0-3]):([0-5]\d)(:[0-5]\d)?$/.test(value);
 }
 
-export function registerHotelRoutes(app: FastifyInstance, repository: HotelsRepository = createHotelsRepository()): void {
+export function registerHotelRoutes(
+  app: FastifyInstance,
+  repository: HotelsRepository = createHotelsRepository(),
+): void {
   app.get("/admin/hotels", async (request, reply) => {
     if (!ensureAuthorizedSystem(request, reply, PERMISSIONS.HOTEL_READ)) {
       return;
@@ -42,428 +48,747 @@ export function registerHotelRoutes(app: FastifyInstance, repository: HotelsRepo
     });
 
     if (!data) {
-      return reply.status(500).send(adminError(ADMIN_ERROR_CODE.INTERNAL, "Falha ao consultar hoteis."));
+      return reply
+        .status(500)
+        .send(
+          adminError(ADMIN_ERROR_CODE.INTERNAL, "Falha ao consultar hoteis."),
+        );
     }
 
     return reply.send({ items: data });
   });
 
-  app.post<{ Body: AdminHotelCreateInput }>("/admin/hotels", async (request, reply) => {
-    if (!ensureAuthorizedSystem(request, reply, PERMISSIONS.HOTEL_CREATE)) {
-      return;
-    }
-
-    const name = request.body?.name?.trim();
-    const legalName = request.body?.legal_name?.trim();
-    const taxId = request.body?.tax_id?.trim();
-    const slug = normalizeSlug(request.body?.slug || "");
-    const email = normalizeEmail(request.body?.email || "");
-    const phone = sanitizePhone(request.body?.phone || "");
-    const addressLine = request.body?.address_line?.trim();
-    const addressNumber = request.body?.address_number?.trim();
-    const district = request.body?.district?.trim();
-    const city = request.body?.city?.trim();
-    const state = request.body?.state?.trim();
-    const country = normalizeCountryCode(request.body?.country || "");
-    const zipCode = normalizeZipCode(request.body?.zip_code || "");
-
-    if (
-      !name ||
-      !legalName ||
-      !taxId ||
-      !email ||
-      !phone ||
-      !addressLine ||
-      !addressNumber ||
-      !district ||
-      !city ||
-      !state ||
-      !country ||
-      !zipCode ||
-      !slug
-    ) {
-      return reply.status(400).send(adminError(ADMIN_ERROR_CODE.VALIDATION, "Campos obrigatorios ausentes no cadastro inicial do hotel."));
-    }
-
-    if (!isValidCountryCode(country)) {
-      return reply
-        .status(400)
-        .send(adminError(ADMIN_ERROR_CODE.VALIDATION, "Country invalido. Use codigo ISO de 2 letras (ex.: BR, US, PT)."));
-    }
-
-    if (!isValidEmail(email)) {
-      return reply.status(400).send(adminError(ADMIN_ERROR_CODE.VALIDATION, "Email invalido."));
-    }
-
-    if (!isValidPhone(phone)) {
-      return reply.status(400).send(adminError(ADMIN_ERROR_CODE.VALIDATION, "Telefone invalido. Informe entre 8 e 15 digitos."));
-    }
-
-    if (!isValidSlug(slug)) {
-      return reply.status(400).send(adminError(ADMIN_ERROR_CODE.VALIDATION, "Slug invalido. Use apenas letras minusculas, numeros e hifen."));
-    }
-
-    if (!isValidZipCodeByCountry(country, zipCode)) {
-      return reply.status(400).send(adminError(ADMIN_ERROR_CODE.VALIDATION, "CEP/Zip code invalido para o pais informado."));
-    }
-
-    const localeSuggestion = suggestLocaleByCountry(country);
-    const timezone = request.body?.timezone?.trim() || localeSuggestion.timezone;
-    const currency = normalizeCurrency(request.body?.currency || localeSuggestion.currency || "");
-
-    if (!timezone || !currency) {
-      return reply
-        .status(400)
-        .send(adminError(ADMIN_ERROR_CODE.VALIDATION, "Timezone e currency sao obrigatorios (podem ser inferidos automaticamente pelo country)."));
-    }
-
-    if (!isValidTimezone(timezone)) {
-      return reply.status(400).send(adminError(ADMIN_ERROR_CODE.VALIDATION, "Timezone invalido."));
-    }
-
-    if (!isValidCurrency(currency)) {
-      return reply.status(400).send(adminError(ADMIN_ERROR_CODE.VALIDATION, "Moeda invalida."));
-    }
-
-    const taxIdValidation = validateTaxIdByCountry(country, taxId);
-
-    if (!taxIdValidation.isValid) {
-      return reply
-        .status(400)
-        .send(adminError(ADMIN_ERROR_CODE.VALIDATION, taxIdValidation.message || "Tax ID invalido para o pais informado."));
-    }
-
-    const payload = {
-      name,
-      legal_name: legalName,
-      tax_id: taxIdValidation.normalizedTaxId,
-      slug,
-      email,
-      phone,
-      address_line: addressLine,
-      address_number: addressNumber,
-      address_complement: normalizeOptionalText(request.body?.address_complement),
-      district,
-      city,
-      state,
-      country,
-      zip_code: zipCode,
-      timezone,
-      currency,
-      checkin_time_start: normalizeOptionalText(request.body?.checkin_time_start),
-      checkin_time_limit: normalizeOptionalText(request.body?.checkin_time_limit),
-      checkout_time_start: normalizeOptionalText(request.body?.checkout_time_start),
-      checkout_time_limit: normalizeOptionalText(request.body?.checkout_time_limit),
-      is_active: true
-    };
-
-    const createTimeFields = [
-      ["checkin_time_start", payload.checkin_time_start],
-      ["checkin_time_limit", payload.checkin_time_limit],
-      ["checkout_time_start", payload.checkout_time_start],
-      ["checkout_time_limit", payload.checkout_time_limit]
-    ] as const;
-    for (const [field, value] of createTimeFields) {
-      if (value && !isValidTimeOfDay(value)) {
-        return reply.status(400).send(adminError(ADMIN_ERROR_CODE.VALIDATION, `${field} invalido. Use o formato HH:mm.`));
-      }
-    }
-
-    const createResult = await repository.createHotel(payload).catch((error) => {
-      request.log.error(error);
-      return null;
-    });
-
-    if (!createResult) {
-      return reply.status(500).send(adminError(ADMIN_ERROR_CODE.INTERNAL, "Falha ao criar hotel."));
-    }
-
-    if (createResult.result === "conflict") {
-      return reply.status(409).send(adminError(ADMIN_ERROR_CODE.CONFLICT, "Slug ja utilizado por outro hotel."));
-    }
-
-    if (!createResult.item) {
-      return reply.status(500).send(adminError(ADMIN_ERROR_CODE.INTERNAL, "Falha ao criar hotel."));
-    }
-
-    return reply.status(201).send({ item: createResult.item });
-  });
-
-  app.put<{ Params: HotelIdParams; Body: AdminHotelUpdateInput }>("/admin/hotels/:id", async (request, reply) => {
-    if (!ensureAuthorizedSystem(request, reply, PERMISSIONS.HOTEL_UPDATE)) {
-      return;
-    }
-
-    const id = request.params.id;
-
-    if (!id) {
-      return reply.status(400).send(adminError(ADMIN_ERROR_CODE.VALIDATION, "Id do hotel e obrigatorio para atualizacao."));
-    }
-
-    const payload: TablesUpdate<"hotels"> = {};
-
-    if (request.body?.name !== undefined) {
-      const parsedName = request.body.name.trim();
-
-      if (!parsedName) {
-        return reply.status(400).send(adminError(ADMIN_ERROR_CODE.VALIDATION, "Nome do hotel nao pode ficar vazio."));
+  app.post<{ Body: AdminHotelCreateInput }>(
+    "/admin/hotels",
+    async (request, reply) => {
+      if (!ensureAuthorizedSystem(request, reply, PERMISSIONS.HOTEL_CREATE)) {
+        return;
       }
 
-      payload.name = parsedName;
-    }
+      const name = request.body?.name?.trim();
+      const legalName = request.body?.legal_name?.trim();
+      const taxId = request.body?.tax_id?.trim();
+      const slug = normalizeSlug(request.body?.slug || "");
+      const email = normalizeEmail(request.body?.email || "");
+      const phone = sanitizePhone(request.body?.phone || "");
+      const addressLine = request.body?.address_line?.trim();
+      const addressNumber = request.body?.address_number?.trim();
+      const district = request.body?.district?.trim();
+      const city = request.body?.city?.trim();
+      const state = request.body?.state?.trim();
+      const country = normalizeCountryCode(request.body?.country || "");
+      const zipCode = normalizeZipCode(request.body?.zip_code || "");
 
-    if (request.body?.legal_name !== undefined) {
-      const parsedLegalName = normalizeOptionalText(request.body.legal_name);
-
-      if (!parsedLegalName) {
-        return reply.status(400).send(adminError(ADMIN_ERROR_CODE.VALIDATION, "Razao social nao pode ficar vazia."));
+      if (
+        !name ||
+        !legalName ||
+        !taxId ||
+        !email ||
+        !phone ||
+        !addressLine ||
+        !addressNumber ||
+        !district ||
+        !city ||
+        !state ||
+        !country ||
+        !zipCode ||
+        !slug
+      ) {
+        return reply
+          .status(400)
+          .send(
+            adminError(
+              ADMIN_ERROR_CODE.VALIDATION,
+              "Campos obrigatorios ausentes no cadastro inicial do hotel.",
+            ),
+          );
       }
 
-      payload.legal_name = parsedLegalName;
-    }
-
-    if (request.body?.slug !== undefined) {
-      const parsedSlug = normalizeSlug(request.body.slug);
-
-      if (!parsedSlug) {
-        return reply.status(400).send(adminError(ADMIN_ERROR_CODE.VALIDATION, "Slug nao pode ficar vazio."));
+      if (!isValidCountryCode(country)) {
+        return reply
+          .status(400)
+          .send(
+            adminError(
+              ADMIN_ERROR_CODE.VALIDATION,
+              "Country invalido. Use codigo ISO de 2 letras (ex.: BR, US, PT).",
+            ),
+          );
       }
 
-      if (!isValidSlug(parsedSlug)) {
-        return reply.status(400).send(adminError(ADMIN_ERROR_CODE.VALIDATION, "Slug invalido. Use apenas letras minusculas, numeros e hifen."));
+      if (!isValidEmail(email)) {
+        return reply
+          .status(400)
+          .send(adminError(ADMIN_ERROR_CODE.VALIDATION, "Email invalido."));
       }
 
-      payload.slug = parsedSlug;
-    }
-
-    if (request.body?.email !== undefined) {
-      const parsedEmail = normalizeOptionalText(normalizeEmail(request.body.email || ""));
-
-      if (!parsedEmail) {
-        return reply.status(400).send(adminError(ADMIN_ERROR_CODE.VALIDATION, "Email nao pode ficar vazio."));
+      if (!isValidPhone(phone)) {
+        return reply
+          .status(400)
+          .send(
+            adminError(
+              ADMIN_ERROR_CODE.VALIDATION,
+              "Telefone invalido. Informe entre 8 e 15 digitos.",
+            ),
+          );
       }
 
-      if (!isValidEmail(parsedEmail)) {
-        return reply.status(400).send(adminError(ADMIN_ERROR_CODE.VALIDATION, "Email invalido."));
+      if (!isValidSlug(slug)) {
+        return reply
+          .status(400)
+          .send(
+            adminError(
+              ADMIN_ERROR_CODE.VALIDATION,
+              "Slug invalido. Use apenas letras minusculas, numeros e hifen.",
+            ),
+          );
       }
 
-      payload.email = parsedEmail;
-    }
-
-    if (request.body?.phone !== undefined) {
-      const parsedPhone = normalizeOptionalText(sanitizePhone(request.body.phone || ""));
-
-      if (!parsedPhone) {
-        return reply.status(400).send(adminError(ADMIN_ERROR_CODE.VALIDATION, "Telefone nao pode ficar vazio."));
+      if (!isValidZipCodeByCountry(country, zipCode)) {
+        return reply
+          .status(400)
+          .send(
+            adminError(
+              ADMIN_ERROR_CODE.VALIDATION,
+              "CEP/Zip code invalido para o pais informado.",
+            ),
+          );
       }
 
-      if (!isValidPhone(parsedPhone)) {
-        return reply.status(400).send(adminError(ADMIN_ERROR_CODE.VALIDATION, "Telefone invalido. Informe entre 8 e 15 digitos."));
+      const localeSuggestion = suggestLocaleByCountry(country);
+      const timezone =
+        request.body?.timezone?.trim() || localeSuggestion.timezone;
+      const currency = normalizeCurrency(
+        request.body?.currency || localeSuggestion.currency || "",
+      );
+
+      if (!timezone || !currency) {
+        return reply
+          .status(400)
+          .send(
+            adminError(
+              ADMIN_ERROR_CODE.VALIDATION,
+              "Timezone e currency sao obrigatorios (podem ser inferidos automaticamente pelo country).",
+            ),
+          );
       }
 
-      payload.phone = parsedPhone;
-    }
-
-    if (request.body?.address_line !== undefined) {
-      payload.address_line = normalizeOptionalText(request.body.address_line) || "";
-    }
-
-    if (request.body?.address_number !== undefined) {
-      payload.address_number = normalizeOptionalText(request.body.address_number) || "";
-    }
-
-    if (request.body?.address_complement !== undefined) {
-      payload.address_complement = normalizeOptionalText(request.body.address_complement);
-    }
-
-    if (request.body?.district !== undefined) {
-      payload.district = normalizeOptionalText(request.body.district) || "";
-    }
-
-    if (request.body?.city !== undefined) {
-      payload.city = normalizeOptionalText(request.body.city) || "";
-    }
-
-    if (request.body?.state !== undefined) {
-      payload.state = normalizeOptionalText(request.body.state) || "";
-    }
-
-    if (request.body?.country !== undefined) {
-      const parsedCountry = normalizeOptionalText(request.body.country);
-
-      if (!parsedCountry) {
-        return reply.status(400).send(adminError(ADMIN_ERROR_CODE.VALIDATION, "Country nao pode ficar vazio."));
+      if (!isValidTimezone(timezone)) {
+        return reply
+          .status(400)
+          .send(adminError(ADMIN_ERROR_CODE.VALIDATION, "Timezone invalido."));
       }
 
-      const normalizedCountry = normalizeCountryCode(parsedCountry);
-
-      if (!isValidCountryCode(normalizedCountry)) {
-        return reply.status(400).send(adminError(ADMIN_ERROR_CODE.VALIDATION, "Country invalido. Use codigo ISO de 2 letras."));
+      if (!isValidCurrency(currency)) {
+        return reply
+          .status(400)
+          .send(adminError(ADMIN_ERROR_CODE.VALIDATION, "Moeda invalida."));
       }
 
-      payload.country = normalizedCountry;
-    }
-
-    if (request.body?.zip_code !== undefined) {
-      const parsedZipCode = normalizeOptionalText(request.body.zip_code);
-      const parsedCountry = normalizeOptionalText((payload.country as string | null | undefined) || request.body?.country);
-
-      if (!parsedZipCode) {
-        return reply.status(400).send(adminError(ADMIN_ERROR_CODE.VALIDATION, "CEP/Zip code nao pode ficar vazio."));
-      }
-
-      if (parsedCountry && !isValidZipCodeByCountry(parsedCountry, parsedZipCode)) {
-        return reply.status(400).send(adminError(ADMIN_ERROR_CODE.VALIDATION, "CEP/Zip code invalido para o pais informado."));
-      }
-
-      payload.zip_code = parsedZipCode;
-    }
-
-    if (request.body?.timezone !== undefined) {
-      const parsedTimezone = normalizeOptionalText(request.body.timezone);
-
-      if (!parsedTimezone) {
-        return reply.status(400).send(adminError(ADMIN_ERROR_CODE.VALIDATION, "Timezone nao pode ficar vazio."));
-      }
-
-      if (!isValidTimezone(parsedTimezone)) {
-        return reply.status(400).send(adminError(ADMIN_ERROR_CODE.VALIDATION, "Timezone invalido."));
-      }
-
-      payload.timezone = parsedTimezone;
-    }
-
-    if (request.body?.currency !== undefined) {
-      const parsedCurrency = normalizeOptionalText(request.body.currency);
-
-      if (!parsedCurrency) {
-        return reply.status(400).send(adminError(ADMIN_ERROR_CODE.VALIDATION, "Moeda nao pode ficar vazia."));
-      }
-
-      const normalizedCurrency = normalizeCurrency(parsedCurrency);
-
-      if (!isValidCurrency(normalizedCurrency)) {
-        return reply.status(400).send(adminError(ADMIN_ERROR_CODE.VALIDATION, "Moeda invalida."));
-      }
-
-      payload.currency = normalizedCurrency;
-    }
-
-    if (request.body?.checkin_time_start !== undefined) {
-      const parsed = normalizeOptionalText(request.body.checkin_time_start);
-      if (parsed && !isValidTimeOfDay(parsed)) {
-        return reply.status(400).send(adminError(ADMIN_ERROR_CODE.VALIDATION, "checkin_time_start invalido. Use o formato HH:mm."));
-      }
-      payload.checkin_time_start = parsed;
-    }
-
-    if (request.body?.checkin_time_limit !== undefined) {
-      const parsed = normalizeOptionalText(request.body.checkin_time_limit);
-      if (parsed && !isValidTimeOfDay(parsed)) {
-        return reply.status(400).send(adminError(ADMIN_ERROR_CODE.VALIDATION, "checkin_time_limit invalido. Use o formato HH:mm."));
-      }
-      payload.checkin_time_limit = parsed;
-    }
-
-    if (request.body?.checkout_time_start !== undefined) {
-      const parsed = normalizeOptionalText(request.body.checkout_time_start);
-      if (parsed && !isValidTimeOfDay(parsed)) {
-        return reply.status(400).send(adminError(ADMIN_ERROR_CODE.VALIDATION, "checkout_time_start invalido. Use o formato HH:mm."));
-      }
-      payload.checkout_time_start = parsed;
-    }
-
-    if (request.body?.checkout_time_limit !== undefined) {
-      const parsed = normalizeOptionalText(request.body.checkout_time_limit);
-      if (parsed && !isValidTimeOfDay(parsed)) {
-        return reply.status(400).send(adminError(ADMIN_ERROR_CODE.VALIDATION, "checkout_time_limit invalido. Use o formato HH:mm."));
-      }
-      payload.checkout_time_limit = parsed;
-    }
-
-    if (request.body?.is_active !== undefined) {
-      payload.is_active = request.body.is_active;
-    }
-
-    if (request.body?.tax_id !== undefined) {
-      const parsedTaxId = normalizeOptionalText(request.body.tax_id);
-      const countryForValidation = normalizeOptionalText(request.body?.country);
-
-      if (!parsedTaxId) {
-        return reply.status(400).send(adminError(ADMIN_ERROR_CODE.VALIDATION, "Tax ID nao pode ficar vazio."));
-      }
-
-      if (!countryForValidation) {
-        return reply.status(400).send(adminError(ADMIN_ERROR_CODE.VALIDATION, "Ao atualizar tax_id, informe tambem o campo country."));
-      }
-
-      const taxIdValidation = validateTaxIdByCountry(countryForValidation, parsedTaxId);
+      const taxIdValidation = validateTaxIdByCountry(country, taxId);
 
       if (!taxIdValidation.isValid) {
         return reply
           .status(400)
-          .send(adminError(ADMIN_ERROR_CODE.VALIDATION, taxIdValidation.message || "Tax ID invalido para o pais informado."));
+          .send(
+            adminError(
+              ADMIN_ERROR_CODE.VALIDATION,
+              taxIdValidation.message ||
+                "Tax ID invalido para o pais informado.",
+            ),
+          );
       }
 
-      payload.tax_id = taxIdValidation.normalizedTaxId;
-    }
+      const payload = {
+        name,
+        legal_name: legalName,
+        tax_id: taxIdValidation.normalizedTaxId,
+        slug,
+        email,
+        phone,
+        address_line: addressLine,
+        address_number: addressNumber,
+        address_complement: normalizeOptionalText(
+          request.body?.address_complement,
+        ),
+        district,
+        city,
+        state,
+        country,
+        zip_code: zipCode,
+        timezone,
+        currency,
+        checkin_time_start: normalizeOptionalText(
+          request.body?.checkin_time_start,
+        ),
+        checkin_time_limit: normalizeOptionalText(
+          request.body?.checkin_time_limit,
+        ),
+        checkout_time_start: normalizeOptionalText(
+          request.body?.checkout_time_start,
+        ),
+        checkout_time_limit: normalizeOptionalText(
+          request.body?.checkout_time_limit,
+        ),
+        is_active: true,
+      };
 
-    if (!Object.keys(payload).length) {
-      return reply.status(400).send(adminError(ADMIN_ERROR_CODE.VALIDATION, "Nenhum campo informado para atualizacao."));
-    }
+      const createTimeFields = [
+        ["checkin_time_start", payload.checkin_time_start],
+        ["checkin_time_limit", payload.checkin_time_limit],
+        ["checkout_time_start", payload.checkout_time_start],
+        ["checkout_time_limit", payload.checkout_time_limit],
+      ] as const;
+      for (const [field, value] of createTimeFields) {
+        if (value && !isValidTimeOfDay(value)) {
+          return reply
+            .status(400)
+            .send(
+              adminError(
+                ADMIN_ERROR_CODE.VALIDATION,
+                `${field} invalido. Use o formato HH:mm.`,
+              ),
+            );
+        }
+      }
 
-    const updateResult = await repository.updateHotel(id, payload).catch((error) => {
-      request.log.error(error);
-      return null;
-    });
+      const createResult = await repository
+        .createHotel(payload)
+        .catch((error) => {
+          request.log.error(error);
+          return null;
+        });
 
-    if (!updateResult) {
-      return reply.status(500).send(adminError(ADMIN_ERROR_CODE.INTERNAL, "Falha ao atualizar hotel."));
-    }
+      if (!createResult) {
+        return reply
+          .status(500)
+          .send(adminError(ADMIN_ERROR_CODE.INTERNAL, "Falha ao criar hotel."));
+      }
 
-    if (updateResult.result === "not-found") {
-      return reply.status(404).send(adminError(ADMIN_ERROR_CODE.NOT_FOUND, "Hotel nao encontrado."));
-    }
+      if (createResult.result === "conflict") {
+        return reply
+          .status(409)
+          .send(
+            adminError(
+              ADMIN_ERROR_CODE.CONFLICT,
+              "Slug ja utilizado por outro hotel.",
+            ),
+          );
+      }
 
-    if (updateResult.result === "conflict") {
-      return reply.status(409).send(adminError(ADMIN_ERROR_CODE.CONFLICT, "Slug ja utilizado por outro hotel."));
-    }
+      if (!createResult.item) {
+        return reply
+          .status(500)
+          .send(adminError(ADMIN_ERROR_CODE.INTERNAL, "Falha ao criar hotel."));
+      }
 
-    if (!updateResult.item) {
-      return reply.status(500).send(adminError(ADMIN_ERROR_CODE.INTERNAL, "Falha ao atualizar hotel."));
-    }
+      return reply.status(201).send({ item: createResult.item });
+    },
+  );
 
-    return reply.send({ item: updateResult.item });
-  });
+  app.put<{ Params: HotelIdParams; Body: AdminHotelUpdateInput }>(
+    "/admin/hotels/:id",
+    async (request, reply) => {
+      if (!ensureAuthorizedSystem(request, reply, PERMISSIONS.HOTEL_UPDATE)) {
+        return;
+      }
 
-  app.delete<{ Params: HotelIdParams }>("/admin/hotels/:id", async (request, reply) => {
-    if (!ensureAuthorizedSystem(request, reply, PERMISSIONS.HOTEL_DELETE)) {
-      return;
-    }
+      const id = request.params.id;
 
-    const id = request.params.id;
+      if (!id) {
+        return reply
+          .status(400)
+          .send(
+            adminError(
+              ADMIN_ERROR_CODE.VALIDATION,
+              "Id do hotel e obrigatorio para atualizacao.",
+            ),
+          );
+      }
 
-    if (!id) {
-      return reply.status(400).send(adminError(ADMIN_ERROR_CODE.VALIDATION, "Id do hotel e obrigatorio para exclusao."));
-    }
+      const payload: TablesUpdate<"hotels"> = {};
 
-    const deleteResult = await repository.deleteHotel(id).catch((error) => {
-      request.log.error(error);
-      return null;
-    });
+      if (request.body?.name !== undefined) {
+        const parsedName = request.body.name.trim();
 
-    if (!deleteResult) {
-      return reply.status(500).send(adminError(ADMIN_ERROR_CODE.INTERNAL, "Falha ao excluir hotel."));
-    }
+        if (!parsedName) {
+          return reply
+            .status(400)
+            .send(
+              adminError(
+                ADMIN_ERROR_CODE.VALIDATION,
+                "Nome do hotel nao pode ficar vazio.",
+              ),
+            );
+        }
 
-    if (deleteResult === "not-found") {
-      return reply.status(404).send(adminError(ADMIN_ERROR_CODE.NOT_FOUND, "Hotel nao encontrado."));
-    }
+        payload.name = parsedName;
+      }
 
-    if (deleteResult === "conflict") {
-      return reply.status(409).send(adminError(ADMIN_ERROR_CODE.CONFLICT, "Hotel nao pode ser excluido: possui dependencias ativas."));
-    }
+      if (request.body?.legal_name !== undefined) {
+        const parsedLegalName = normalizeOptionalText(request.body.legal_name);
 
-    return reply.send({ ok: true });
-  });
+        if (!parsedLegalName) {
+          return reply
+            .status(400)
+            .send(
+              adminError(
+                ADMIN_ERROR_CODE.VALIDATION,
+                "Razao social nao pode ficar vazia.",
+              ),
+            );
+        }
+
+        payload.legal_name = parsedLegalName;
+      }
+
+      if (request.body?.slug !== undefined) {
+        const parsedSlug = normalizeSlug(request.body.slug);
+
+        if (!parsedSlug) {
+          return reply
+            .status(400)
+            .send(
+              adminError(
+                ADMIN_ERROR_CODE.VALIDATION,
+                "Slug nao pode ficar vazio.",
+              ),
+            );
+        }
+
+        if (!isValidSlug(parsedSlug)) {
+          return reply
+            .status(400)
+            .send(
+              adminError(
+                ADMIN_ERROR_CODE.VALIDATION,
+                "Slug invalido. Use apenas letras minusculas, numeros e hifen.",
+              ),
+            );
+        }
+
+        payload.slug = parsedSlug;
+      }
+
+      if (request.body?.email !== undefined) {
+        const parsedEmail = normalizeOptionalText(
+          normalizeEmail(request.body.email || ""),
+        );
+
+        if (!parsedEmail) {
+          return reply
+            .status(400)
+            .send(
+              adminError(
+                ADMIN_ERROR_CODE.VALIDATION,
+                "Email nao pode ficar vazio.",
+              ),
+            );
+        }
+
+        if (!isValidEmail(parsedEmail)) {
+          return reply
+            .status(400)
+            .send(adminError(ADMIN_ERROR_CODE.VALIDATION, "Email invalido."));
+        }
+
+        payload.email = parsedEmail;
+      }
+
+      if (request.body?.phone !== undefined) {
+        const parsedPhone = normalizeOptionalText(
+          sanitizePhone(request.body.phone || ""),
+        );
+
+        if (!parsedPhone) {
+          return reply
+            .status(400)
+            .send(
+              adminError(
+                ADMIN_ERROR_CODE.VALIDATION,
+                "Telefone nao pode ficar vazio.",
+              ),
+            );
+        }
+
+        if (!isValidPhone(parsedPhone)) {
+          return reply
+            .status(400)
+            .send(
+              adminError(
+                ADMIN_ERROR_CODE.VALIDATION,
+                "Telefone invalido. Informe entre 8 e 15 digitos.",
+              ),
+            );
+        }
+
+        payload.phone = parsedPhone;
+      }
+
+      if (request.body?.address_line !== undefined) {
+        payload.address_line =
+          normalizeOptionalText(request.body.address_line) || "";
+      }
+
+      if (request.body?.address_number !== undefined) {
+        payload.address_number =
+          normalizeOptionalText(request.body.address_number) || "";
+      }
+
+      if (request.body?.address_complement !== undefined) {
+        payload.address_complement = normalizeOptionalText(
+          request.body.address_complement,
+        );
+      }
+
+      if (request.body?.district !== undefined) {
+        payload.district = normalizeOptionalText(request.body.district) || "";
+      }
+
+      if (request.body?.city !== undefined) {
+        payload.city = normalizeOptionalText(request.body.city) || "";
+      }
+
+      if (request.body?.state !== undefined) {
+        payload.state = normalizeOptionalText(request.body.state) || "";
+      }
+
+      if (request.body?.country !== undefined) {
+        const parsedCountry = normalizeOptionalText(request.body.country);
+
+        if (!parsedCountry) {
+          return reply
+            .status(400)
+            .send(
+              adminError(
+                ADMIN_ERROR_CODE.VALIDATION,
+                "Country nao pode ficar vazio.",
+              ),
+            );
+        }
+
+        const normalizedCountry = normalizeCountryCode(parsedCountry);
+
+        if (!isValidCountryCode(normalizedCountry)) {
+          return reply
+            .status(400)
+            .send(
+              adminError(
+                ADMIN_ERROR_CODE.VALIDATION,
+                "Country invalido. Use codigo ISO de 2 letras.",
+              ),
+            );
+        }
+
+        payload.country = normalizedCountry;
+      }
+
+      if (request.body?.zip_code !== undefined) {
+        const parsedZipCode = normalizeOptionalText(request.body.zip_code);
+        const parsedCountry = normalizeOptionalText(
+          (payload.country as string | null | undefined) ||
+            request.body?.country,
+        );
+
+        if (!parsedZipCode) {
+          return reply
+            .status(400)
+            .send(
+              adminError(
+                ADMIN_ERROR_CODE.VALIDATION,
+                "CEP/Zip code nao pode ficar vazio.",
+              ),
+            );
+        }
+
+        if (
+          parsedCountry &&
+          !isValidZipCodeByCountry(parsedCountry, parsedZipCode)
+        ) {
+          return reply
+            .status(400)
+            .send(
+              adminError(
+                ADMIN_ERROR_CODE.VALIDATION,
+                "CEP/Zip code invalido para o pais informado.",
+              ),
+            );
+        }
+
+        payload.zip_code = parsedZipCode;
+      }
+
+      if (request.body?.timezone !== undefined) {
+        const parsedTimezone = normalizeOptionalText(request.body.timezone);
+
+        if (!parsedTimezone) {
+          return reply
+            .status(400)
+            .send(
+              adminError(
+                ADMIN_ERROR_CODE.VALIDATION,
+                "Timezone nao pode ficar vazio.",
+              ),
+            );
+        }
+
+        if (!isValidTimezone(parsedTimezone)) {
+          return reply
+            .status(400)
+            .send(
+              adminError(ADMIN_ERROR_CODE.VALIDATION, "Timezone invalido."),
+            );
+        }
+
+        payload.timezone = parsedTimezone;
+      }
+
+      if (request.body?.currency !== undefined) {
+        const parsedCurrency = normalizeOptionalText(request.body.currency);
+
+        if (!parsedCurrency) {
+          return reply
+            .status(400)
+            .send(
+              adminError(
+                ADMIN_ERROR_CODE.VALIDATION,
+                "Moeda nao pode ficar vazia.",
+              ),
+            );
+        }
+
+        const normalizedCurrency = normalizeCurrency(parsedCurrency);
+
+        if (!isValidCurrency(normalizedCurrency)) {
+          return reply
+            .status(400)
+            .send(adminError(ADMIN_ERROR_CODE.VALIDATION, "Moeda invalida."));
+        }
+
+        payload.currency = normalizedCurrency;
+      }
+
+      if (request.body?.checkin_time_start !== undefined) {
+        const parsed = normalizeOptionalText(request.body.checkin_time_start);
+        if (parsed && !isValidTimeOfDay(parsed)) {
+          return reply
+            .status(400)
+            .send(
+              adminError(
+                ADMIN_ERROR_CODE.VALIDATION,
+                "checkin_time_start invalido. Use o formato HH:mm.",
+              ),
+            );
+        }
+        payload.checkin_time_start = parsed;
+      }
+
+      if (request.body?.checkin_time_limit !== undefined) {
+        const parsed = normalizeOptionalText(request.body.checkin_time_limit);
+        if (parsed && !isValidTimeOfDay(parsed)) {
+          return reply
+            .status(400)
+            .send(
+              adminError(
+                ADMIN_ERROR_CODE.VALIDATION,
+                "checkin_time_limit invalido. Use o formato HH:mm.",
+              ),
+            );
+        }
+        payload.checkin_time_limit = parsed;
+      }
+
+      if (request.body?.checkout_time_start !== undefined) {
+        const parsed = normalizeOptionalText(request.body.checkout_time_start);
+        if (parsed && !isValidTimeOfDay(parsed)) {
+          return reply
+            .status(400)
+            .send(
+              adminError(
+                ADMIN_ERROR_CODE.VALIDATION,
+                "checkout_time_start invalido. Use o formato HH:mm.",
+              ),
+            );
+        }
+        payload.checkout_time_start = parsed;
+      }
+
+      if (request.body?.checkout_time_limit !== undefined) {
+        const parsed = normalizeOptionalText(request.body.checkout_time_limit);
+        if (parsed && !isValidTimeOfDay(parsed)) {
+          return reply
+            .status(400)
+            .send(
+              adminError(
+                ADMIN_ERROR_CODE.VALIDATION,
+                "checkout_time_limit invalido. Use o formato HH:mm.",
+              ),
+            );
+        }
+        payload.checkout_time_limit = parsed;
+      }
+
+      if (request.body?.is_active !== undefined) {
+        payload.is_active = request.body.is_active;
+      }
+
+      if (request.body?.tax_id !== undefined) {
+        const parsedTaxId = normalizeOptionalText(request.body.tax_id);
+        const countryForValidation = normalizeOptionalText(
+          request.body?.country,
+        );
+
+        if (!parsedTaxId) {
+          return reply
+            .status(400)
+            .send(
+              adminError(
+                ADMIN_ERROR_CODE.VALIDATION,
+                "Tax ID nao pode ficar vazio.",
+              ),
+            );
+        }
+
+        if (!countryForValidation) {
+          return reply
+            .status(400)
+            .send(
+              adminError(
+                ADMIN_ERROR_CODE.VALIDATION,
+                "Ao atualizar tax_id, informe tambem o campo country.",
+              ),
+            );
+        }
+
+        const taxIdValidation = validateTaxIdByCountry(
+          countryForValidation,
+          parsedTaxId,
+        );
+
+        if (!taxIdValidation.isValid) {
+          return reply
+            .status(400)
+            .send(
+              adminError(
+                ADMIN_ERROR_CODE.VALIDATION,
+                taxIdValidation.message ||
+                  "Tax ID invalido para o pais informado.",
+              ),
+            );
+        }
+
+        payload.tax_id = taxIdValidation.normalizedTaxId;
+      }
+
+      if (!Object.keys(payload).length) {
+        return reply
+          .status(400)
+          .send(
+            adminError(
+              ADMIN_ERROR_CODE.VALIDATION,
+              "Nenhum campo informado para atualizacao.",
+            ),
+          );
+      }
+
+      const updateResult = await repository
+        .updateHotel(id, payload)
+        .catch((error) => {
+          request.log.error(error);
+          return null;
+        });
+
+      if (!updateResult) {
+        return reply
+          .status(500)
+          .send(
+            adminError(ADMIN_ERROR_CODE.INTERNAL, "Falha ao atualizar hotel."),
+          );
+      }
+
+      if (updateResult.result === "not-found") {
+        return reply
+          .status(404)
+          .send(
+            adminError(ADMIN_ERROR_CODE.NOT_FOUND, "Hotel nao encontrado."),
+          );
+      }
+
+      if (updateResult.result === "conflict") {
+        return reply
+          .status(409)
+          .send(
+            adminError(
+              ADMIN_ERROR_CODE.CONFLICT,
+              "Slug ja utilizado por outro hotel.",
+            ),
+          );
+      }
+
+      if (!updateResult.item) {
+        return reply
+          .status(500)
+          .send(
+            adminError(ADMIN_ERROR_CODE.INTERNAL, "Falha ao atualizar hotel."),
+          );
+      }
+
+      return reply.send({ item: updateResult.item });
+    },
+  );
+
+  app.delete<{ Params: HotelIdParams }>(
+    "/admin/hotels/:id",
+    async (request, reply) => {
+      if (!ensureAuthorizedSystem(request, reply, PERMISSIONS.HOTEL_DELETE)) {
+        return;
+      }
+
+      const id = request.params.id;
+
+      if (!id) {
+        return reply
+          .status(400)
+          .send(
+            adminError(
+              ADMIN_ERROR_CODE.VALIDATION,
+              "Id do hotel e obrigatorio para exclusao.",
+            ),
+          );
+      }
+
+      const deleteResult = await repository.deleteHotel(id).catch((error) => {
+        request.log.error(error);
+        return null;
+      });
+
+      if (!deleteResult) {
+        return reply
+          .status(500)
+          .send(
+            adminError(ADMIN_ERROR_CODE.INTERNAL, "Falha ao excluir hotel."),
+          );
+      }
+
+      if (deleteResult === "not-found") {
+        return reply
+          .status(404)
+          .send(
+            adminError(ADMIN_ERROR_CODE.NOT_FOUND, "Hotel nao encontrado."),
+          );
+      }
+
+      if (deleteResult === "conflict") {
+        return reply
+          .status(409)
+          .send(
+            adminError(
+              ADMIN_ERROR_CODE.CONFLICT,
+              "Hotel nao pode ser excluido: possui dependencias ativas.",
+            ),
+          );
+      }
+
+      return reply.send({ ok: true });
+    },
+  );
 }

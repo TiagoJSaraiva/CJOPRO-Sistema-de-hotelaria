@@ -2,8 +2,19 @@
 
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
-import { normalizeEmail, normalizeSlug, PERMISSIONS, sanitizePhone } from "@hotel/shared";
-import { createHotel, deleteHotel, updateHotel, type AdminHotelCreateInput, type AdminHotelUpdateInput } from "../../../lib/adminApi";
+import {
+  normalizeEmail,
+  normalizeSlug,
+  PERMISSIONS,
+  sanitizePhone,
+} from "@hotel/shared";
+import {
+  createHotel,
+  deleteHotel,
+  updateHotel,
+  type AdminHotelCreateInput,
+  type AdminHotelUpdateInput,
+} from "../../../lib/adminApi";
 import { getUserFromSession } from "../../../lib/auth";
 
 function sanitizeDigits(value: string): string {
@@ -39,14 +50,16 @@ function parseCreateHotelPayload(formData: FormData): AdminHotelCreateInput {
     district: String(formData.get("district") || "").trim(),
     city: String(formData.get("city") || "").trim(),
     state: String(formData.get("state") || "").trim(),
-    country: String(formData.get("country") || "").trim().toUpperCase(),
+    country: String(formData.get("country") || "")
+      .trim()
+      .toUpperCase(),
     zip_code: String(formData.get("zip_code") || "").trim(),
     timezone: toOptionalText(formData.get("timezone")),
     currency: toOptionalText(formData.get("currency"))?.toUpperCase() || null,
     checkin_time_start: toOptionalText(formData.get("checkin_time_start")),
     checkin_time_limit: toOptionalText(formData.get("checkin_time_limit")),
     checkout_time_start: toOptionalText(formData.get("checkout_time_start")),
-    checkout_time_limit: toOptionalText(formData.get("checkout_time_limit"))
+    checkout_time_limit: toOptionalText(formData.get("checkout_time_limit")),
   };
 }
 
@@ -60,11 +73,14 @@ function parseUpdateHotelPayload(formData: FormData): AdminHotelUpdateInput {
     checkin_time_limit: toOptionalText(formData.get("checkin_time_limit")),
     checkout_time_start: toOptionalText(formData.get("checkout_time_start")),
     checkout_time_limit: toOptionalText(formData.get("checkout_time_limit")),
-    is_active: formData.get("is_active") === "on"
+    is_active: formData.get("is_active") === "on",
   };
 }
 
-function redirectWithStatus(status: string, section: "create" | "view" | "root" = "root"): never {
+function redirectWithStatus(
+  status: string,
+  section: "create" | "view" | "root" = "root",
+): never {
   const nonce = getRedirectNonce();
 
   if (section === "root") {
@@ -88,14 +104,19 @@ function isDeleteConflictError(error: unknown): boolean {
   }
 
   const message = error.message.toLowerCase();
-  return message.includes("dependencias ativas") || message.includes("nao pode ser exclu");
+  return (
+    message.includes("dependencias ativas") ||
+    message.includes("nao pode ser exclu")
+  );
 }
 
 export async function createHotelAction(formData: FormData): Promise<void> {
   const user = await getUserFromSession();
 
   if (!user || !user.permissions.includes(PERMISSIONS.HOTEL_CREATE)) {
-    const fallback = user?.permissions.includes(PERMISSIONS.HOTEL_READ) ? "view" : "root";
+    const fallback = user?.permissions.includes(PERMISSIONS.HOTEL_READ)
+      ? "view"
+      : "root";
     redirectWithStatus("forbidden", fallback);
   }
 
@@ -126,7 +147,7 @@ export async function createHotelAction(formData: FormData): Promise<void> {
       userId: user?.id,
       permissions: user?.permissions,
       payload,
-      error
+      error,
     });
     redirectWithStatus("create_error", "create");
   }
@@ -139,7 +160,9 @@ export async function updateHotelAction(formData: FormData): Promise<void> {
   const user = await getUserFromSession();
 
   if (!user || !user.permissions.includes(PERMISSIONS.HOTEL_UPDATE)) {
-    const fallback = user?.permissions.includes(PERMISSIONS.HOTEL_READ) ? "view" : "root";
+    const fallback = user?.permissions.includes(PERMISSIONS.HOTEL_READ)
+      ? "view"
+      : "root";
     redirectWithStatus("forbidden", fallback);
   }
 
@@ -158,7 +181,7 @@ export async function updateHotelAction(formData: FormData): Promise<void> {
       permissions: user?.permissions,
       hotelId: id,
       payload,
-      error
+      error,
     });
     redirectWithStatus("update_error", "view");
   }
@@ -171,7 +194,9 @@ export async function deleteHotelAction(formData: FormData): Promise<void> {
   const user = await getUserFromSession();
 
   if (!user || !user.permissions.includes(PERMISSIONS.HOTEL_DELETE)) {
-    const fallback = user?.permissions.includes(PERMISSIONS.HOTEL_READ) ? "view" : "root";
+    const fallback = user?.permissions.includes(PERMISSIONS.HOTEL_READ)
+      ? "view"
+      : "root";
     redirectWithStatus("forbidden", fallback);
   }
 
@@ -188,7 +213,7 @@ export async function deleteHotelAction(formData: FormData): Promise<void> {
       userId: user?.id,
       permissions: user?.permissions,
       hotelId: id,
-      error
+      error,
     });
 
     if (isDeleteConflictError(error)) {

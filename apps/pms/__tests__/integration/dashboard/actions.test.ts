@@ -9,7 +9,7 @@ const {
   getActiveHotelCookieValueMock,
   userCanAccessHotelMock,
   resolveActiveHotelForUserMock,
-  saveActiveHotelCookieMock
+  saveActiveHotelCookieMock,
 } = vi.hoisted(() => ({
   redirectMock: vi.fn((path: string) => {
     throw new Error(`REDIRECT:${path}`);
@@ -21,16 +21,16 @@ const {
   getActiveHotelCookieValueMock: vi.fn(),
   userCanAccessHotelMock: vi.fn(),
   resolveActiveHotelForUserMock: vi.fn(),
-  saveActiveHotelCookieMock: vi.fn()
+  saveActiveHotelCookieMock: vi.fn(),
 }));
 
 vi.mock("next/navigation", () => ({
-  redirect: redirectMock
+  redirect: redirectMock,
 }));
 
 vi.mock("../../../src/lib/auth", () => ({
   clearSessionCookie: clearSessionCookieMock,
-  getUserFromSession: getUserFromSessionMock
+  getUserFromSession: getUserFromSessionMock,
 }));
 
 vi.mock("../../../src/lib/activeHotel", () => ({
@@ -39,10 +39,13 @@ vi.mock("../../../src/lib/activeHotel", () => ({
   userCanAccessHotel: userCanAccessHotelMock,
   resolveActiveHotelForUser: resolveActiveHotelForUserMock,
   saveActiveHotelCookie: saveActiveHotelCookieMock,
-  clearActiveHotelCookie: clearActiveHotelCookieMock
+  clearActiveHotelCookie: clearActiveHotelCookieMock,
 }));
 
-import { logoutAction, setActiveHotelAction } from "../../../src/app/dashboard/actions";
+import {
+  logoutAction,
+  setActiveHotelAction,
+} from "../../../src/app/dashboard/actions";
 
 describe("dashboard/actions", () => {
   beforeEach(() => {

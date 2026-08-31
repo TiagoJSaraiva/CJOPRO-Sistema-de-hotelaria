@@ -11,7 +11,7 @@ export const DEFAULT_SEASON_VIEW_FILTERS: SeasonViewFilters = {
   search: "",
   status: "all",
   startFrom: "",
-  startTo: ""
+  startTo: "",
 };
 
 function parseDateStart(value: string): number | null {
@@ -22,7 +22,12 @@ function parseDateStart(value: string): number | null {
   const year = Number(parts[0]);
   const month = Number(parts[1]);
   const day = Number(parts[2]);
-  if (!Number.isFinite(year) || !Number.isFinite(month) || !Number.isFinite(day)) return null;
+  if (
+    !Number.isFinite(year) ||
+    !Number.isFinite(month) ||
+    !Number.isFinite(day)
+  )
+    return null;
   const timestamp = new Date(year, month - 1, day).getTime();
   return Number.isNaN(timestamp) ? null : timestamp;
 }
@@ -35,7 +40,12 @@ function parseDateEnd(value: string): number | null {
   const year = Number(parts[0]);
   const month = Number(parts[1]);
   const day = Number(parts[2]);
-  if (!Number.isFinite(year) || !Number.isFinite(month) || !Number.isFinite(day)) return null;
+  if (
+    !Number.isFinite(year) ||
+    !Number.isFinite(month) ||
+    !Number.isFinite(day)
+  )
+    return null;
   const timestamp = new Date(year, month - 1, day, 23, 59, 59, 999).getTime();
   return Number.isNaN(timestamp) ? null : timestamp;
 }
@@ -51,7 +61,10 @@ export function countAppliedSeasonFilters(filters: SeasonViewFilters): number {
   return total;
 }
 
-export function applySeasonViewFilters(seasons: AdminSeason[], filters: SeasonViewFilters): AdminSeason[] {
+export function applySeasonViewFilters(
+  seasons: AdminSeason[],
+  filters: SeasonViewFilters,
+): AdminSeason[] {
   const search = filters.search.trim().toLocaleLowerCase();
   const startFrom = parseDateStart(filters.startFrom);
   const startTo = parseDateEnd(filters.startTo);

@@ -6,13 +6,16 @@ const selectAuthUsers = (supabase: ReturnType<typeof createServerClient>) =>
   supabase
     .from("users")
     .select(
-      "id,name,email,is_active,password_hash,failed_attempts,locked_until,user_roles(hotel_id,hotels(name),roles(id,name,role_type,hotel_id,hotels(name),role_permissions(permissions(name))))"
+      "id,name,email,is_active,password_hash,failed_attempts,locked_until,user_roles(hotel_id,hotels(name),roles(id,name,role_type,hotel_id,hotels(name),role_permissions(permissions(name))))",
     );
 
-type InferredAuthUserRow = QueryData<ReturnType<typeof selectAuthUsers>>[number];
+type InferredAuthUserRow = QueryData<
+  ReturnType<typeof selectAuthUsers>
+>[number];
 
 export type AuthUserRolePermissionRow = {
-  permissions?: { name?: string | null } | Array<{ name?: string | null }> | null;
+  permissions?:
+    { name?: string | null } | Array<{ name?: string | null }> | null;
 };
 
 export type AuthUserRoleRow = {
@@ -30,7 +33,10 @@ export type AuthUserRoleAssignmentRow = {
   roles?: AuthUserRoleRow | AuthUserRoleRow[] | null;
 };
 
-export type AuthUserRow = Omit<InferredAuthUserRow, "is_active" | "user_roles"> & {
+export type AuthUserRow = Omit<
+  InferredAuthUserRow,
+  "is_active" | "user_roles"
+> & {
   is_active: boolean;
   user_roles?: AuthUserRoleAssignmentRow[];
 };
@@ -38,14 +44,20 @@ export type AuthUserRow = Omit<InferredAuthUserRow, "is_active" | "user_roles"> 
 export interface AuthRepository {
   findUserByEmail(email: string): Promise<AuthUserRow | null>;
   markSuccessfulLogin(userId: string): Promise<void>;
-  markFailedLoginAttempt(userId: string, failedAttempts: number, lockedUntilIso: string | null): Promise<void>;
+  markFailedLoginAttempt(
+    userId: string,
+    failedAttempts: number,
+    lockedUntilIso: string | null,
+  ): Promise<void>;
   clearExpiredLoginLock(userId: string): Promise<void>;
 }
 
 class SupabaseAuthRepository implements AuthRepository {
   async findUserByEmail(email: string): Promise<AuthUserRow | null> {
     const supabase = createServerClient();
-    const { data, error } = await selectAuthUsers(supabase).eq("email", email).single();
+    const { data, error } = await selectAuthUsers(supabase)
+      .eq("email", email)
+      .single();
 
     if (error) {
       if (isSupabaseNotFoundError(error)) {
@@ -63,7 +75,11 @@ class SupabaseAuthRepository implements AuthRepository {
     const supabase = createServerClient();
     const { error } = await supabase
       .from("users")
-      .update({ last_login_at: new Date().toISOString(), failed_attempts: 0, locked_until: null })
+      .update({
+        last_login_at: new Date().toISOString(),
+        failed_attempts: 0,
+        locked_until: null,
+      })
       .eq("id", userId);
 
     if (error) {
@@ -71,7 +87,11 @@ class SupabaseAuthRepository implements AuthRepository {
     }
   }
 
-  async markFailedLoginAttempt(userId: string, failedAttempts: number, lockedUntilIso: string | null): Promise<void> {
+  async markFailedLoginAttempt(
+    userId: string,
+    failedAttempts: number,
+    lockedUntilIso: string | null,
+  ): Promise<void> {
     const supabase = createServerClient();
     const { error } = await supabase
       .from("users")
@@ -85,7 +105,10 @@ class SupabaseAuthRepository implements AuthRepository {
 
   async clearExpiredLoginLock(userId: string): Promise<void> {
     const supabase = createServerClient();
-    const { error } = await supabase.from("users").update({ failed_attempts: 0, locked_until: null }).eq("id", userId);
+    const { error } = await supabase
+      .from("users")
+      .update({ failed_attempts: 0, locked_until: null })
+      .eq("id", userId);
 
     if (error) {
       throw error;

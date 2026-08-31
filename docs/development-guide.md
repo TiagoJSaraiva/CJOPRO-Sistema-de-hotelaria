@@ -2,14 +2,14 @@
 
 ## Mapa do monorepo
 
-| Área | Responsabilidade | Entrada principal |
-| --- | --- | --- |
-| `apps/pms` | PMS web em Next.js | `src/app` |
-| `apps/backend-service` | API Fastify, autenticação e persistência | `src/app.ts` |
-| `apps/booking-engine-service` | simulador do motor de reservas | `src/index.ts` |
-| `packages/shared` | tipos, utilitários e schemas TypeBox | `src/index.ts` |
-| `supabase` | schema, seed e pgTAP | `migrations` e `tests/database` |
-| `scripts` | orquestradores portáveis da raiz | arquivos `.mjs` |
+| Área                          | Responsabilidade                         | Entrada principal               |
+| ----------------------------- | ---------------------------------------- | ------------------------------- |
+| `apps/pms`                    | PMS web em Next.js                       | `src/app`                       |
+| `apps/backend-service`        | API Fastify, autenticação e persistência | `src/app.ts`                    |
+| `apps/booking-engine-service` | simulador do motor de reservas           | `src/index.ts`                  |
+| `packages/shared`             | tipos, utilitários e schemas TypeBox     | `src/index.ts`                  |
+| `supabase`                    | schema, seed e pgTAP                     | `migrations` e `tests/database` |
+| `scripts`                     | orquestradores portáveis da raiz         | arquivos `.mjs`                 |
 
 `apps/public` contém uma cópia histórica de assets e não possui `package.json`.
 Ele não é um workspace executável. O Next.js serve exclusivamente os arquivos
@@ -29,12 +29,12 @@ use `pnpm run doctor`; no pnpm 9, `pnpm doctor` é um comando interno diferente.
 
 ## Aplicações e variáveis
 
-| Serviço | Porta padrão | Arquivo de exemplo |
-| --- | --- | --- |
-| PMS | `3001` | `apps/pms/.env.example` |
-| Booking engine | `3333` | `apps/booking-engine-service/.env.example` |
-| Backend | `3334` | `apps/backend-service/.env.example` |
-| Supabase API local | `54321` | gerenciada pelo Supabase CLI |
+| Serviço            | Porta padrão | Arquivo de exemplo                         |
+| ------------------ | ------------ | ------------------------------------------ |
+| PMS                | `3001`       | `apps/pms/.env.example`                    |
+| Booking engine     | `3333`       | `apps/booking-engine-service/.env.example` |
+| Backend            | `3334`       | `apps/backend-service/.env.example`        |
+| Supabase API local | `54321`      | gerenciada pelo Supabase CLI               |
 
 Use arquivos `.env` ou `.env.local` ignorados pelo Git. O backend exige URL e
 chave do Supabase local, segredo de sessão com pelo menos 32 caracteres e origens
@@ -77,12 +77,12 @@ acessibilidade descritos em [qualidade de UI](ui-quality.md).
 
 ## Artefatos gerados
 
-| Artefato | Fonte | Comando de atualização |
-| --- | --- | --- |
-| `pnpm-lock.yaml` | manifests | `pnpm install` com as versões fixadas |
-| `docs/openapi.json` | schemas e rotas TypeBox | `pnpm api:openapi` |
-| `packages/shared/src/database.types.ts` | schema Supabase local | `pnpm db:types` |
-| snapshots Playwright | UI determinística | `pnpm test:visual:update` |
+| Artefato                                | Fonte                   | Comando de atualização                |
+| --------------------------------------- | ----------------------- | ------------------------------------- |
+| `pnpm-lock.yaml`                        | manifests               | `pnpm install` com as versões fixadas |
+| `docs/openapi.json`                     | schemas e rotas TypeBox | `pnpm api:openapi`                    |
+| `packages/shared/src/database.types.ts` | schema Supabase local   | `pnpm db:types`                       |
+| snapshots Playwright                    | UI determinística       | `pnpm test:visual:update`             |
 
 Não edite esses arquivos manualmente. Um diff gerado deve acompanhar a mudança
 de sua fonte e ser revisado antes do commit.

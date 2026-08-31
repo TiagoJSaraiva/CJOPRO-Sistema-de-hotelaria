@@ -14,7 +14,9 @@ export default async function SeasonsPage({ searchParams }: SeasonsPageProps) {
   const user = await getUserFromSession();
   const access = getSeasonsAccess(user);
   const targetRoute = getSeasonsDefaultRoute(access);
-  const statusQuery = resolvedSearchParams?.status ? `?status=${encodeURIComponent(resolvedSearchParams.status)}` : "";
+  const statusQuery = resolvedSearchParams?.status
+    ? `?status=${encodeURIComponent(resolvedSearchParams.status)}`
+    : "";
 
   if (!targetRoute) {
     return (

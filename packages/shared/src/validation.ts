@@ -2,8 +2,14 @@ const intlWithSupportedValues = Intl as unknown as {
   supportedValuesOf?: (key: string) => string[];
 };
 
-const SUPPORTED_TIMEZONES = new Set(intlWithSupportedValues.supportedValuesOf?.("timeZone") || []);
-const SUPPORTED_CURRENCIES = new Set((intlWithSupportedValues.supportedValuesOf?.("currency") || []).map((value) => value.toUpperCase()));
+const SUPPORTED_TIMEZONES = new Set(
+  intlWithSupportedValues.supportedValuesOf?.("timeZone") || [],
+);
+const SUPPORTED_CURRENCIES = new Set(
+  (intlWithSupportedValues.supportedValuesOf?.("currency") || []).map((value) =>
+    value.toUpperCase(),
+  ),
+);
 
 export type TaxIdValidationResult = {
   isValid: boolean;
@@ -92,7 +98,10 @@ export function normalizeZipCode(value: string): string {
   return value.trim();
 }
 
-export function isValidZipCodeByCountry(country: string, zipCode: string): boolean {
+export function isValidZipCodeByCountry(
+  country: string,
+  zipCode: string,
+): boolean {
   const normalizedCountry = normalizeCountryCode(country);
   const normalizedZip = normalizeZipCode(zipCode);
 
@@ -141,47 +150,62 @@ function isValidCnpj(cnpj: string): boolean {
   return value.endsWith(`${firstDigit}${secondDigit}`);
 }
 
-export function validateTaxIdByCountry(country: string, taxId: string): TaxIdValidationResult {
+export function validateTaxIdByCountry(
+  country: string,
+  taxId: string,
+): TaxIdValidationResult {
   const normalizedCountry = normalizeCountryCode(country);
 
-  if (normalizedCountry === "BR" || normalizedCountry === "BRAZIL" || normalizedCountry === "BRASIL") {
+  if (
+    normalizedCountry === "BR" ||
+    normalizedCountry === "BRAZIL" ||
+    normalizedCountry === "BRASIL"
+  ) {
     const normalizedTaxId = normalizeDigits(taxId);
     const isValid = isValidCnpj(normalizedTaxId);
 
     return {
       isValid,
       normalizedTaxId,
-      message: isValid ? undefined : "CNPJ inválido para o país informado."
+      message: isValid ? undefined : "CNPJ inválido para o país informado.",
     };
   }
 
   return {
     isValid: true,
-    normalizedTaxId: taxId.trim()
+    normalizedTaxId: taxId.trim(),
   };
 }
 
 export function suggestLocaleByCountry(country: string): LocaleSuggestion {
   const normalizedCountry = normalizeCountryCode(country);
 
-  if (normalizedCountry === "BR" || normalizedCountry === "BRAZIL" || normalizedCountry === "BRASIL") {
+  if (
+    normalizedCountry === "BR" ||
+    normalizedCountry === "BRAZIL" ||
+    normalizedCountry === "BRASIL"
+  ) {
     return {
       timezone: "America/Sao_Paulo",
-      currency: "BRL"
+      currency: "BRL",
     };
   }
 
   if (normalizedCountry === "PT" || normalizedCountry === "PORTUGAL") {
     return {
       timezone: "Europe/Lisbon",
-      currency: "EUR"
+      currency: "EUR",
     };
   }
 
-  if (normalizedCountry === "US" || normalizedCountry === "USA" || normalizedCountry === "UNITED STATES") {
+  if (
+    normalizedCountry === "US" ||
+    normalizedCountry === "USA" ||
+    normalizedCountry === "UNITED STATES"
+  ) {
     return {
       timezone: "America/New_York",
-      currency: "USD"
+      currency: "USD",
     };
   }
 

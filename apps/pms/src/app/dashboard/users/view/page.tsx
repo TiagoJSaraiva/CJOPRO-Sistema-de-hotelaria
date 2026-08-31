@@ -15,7 +15,9 @@ type UsersViewPageProps = {
   }>;
 };
 
-export default async function UsersViewPage({ searchParams }: UsersViewPageProps) {
+export default async function UsersViewPage({
+  searchParams,
+}: UsersViewPageProps) {
   const resolvedSearchParams = await searchParams;
   const user = await getUserFromSession();
   const access = getUsersAccess(user);
@@ -27,12 +29,17 @@ export default async function UsersViewPage({ searchParams }: UsersViewPageProps
       redirect(fallback);
     }
 
-    return <DashboardAccessDeniedCard title="Usuários" message="Sem permissão para visualizar usuários." />;
+    return (
+      <DashboardAccessDeniedCard
+        title="Usuários"
+        message="Sem permissão para visualizar usuários."
+      />
+    );
   }
 
   const [users, referenceData] = await Promise.all([
     listUsers(),
-    getUsersReferenceData().catch(() => ({ hotels: [], roles: [] }))
+    getUsersReferenceData().catch(() => ({ hotels: [], roles: [] })),
   ]);
 
   const activeUserId = String(resolvedSearchParams?.userId || "").trim();
@@ -43,10 +50,22 @@ export default async function UsersViewPage({ searchParams }: UsersViewPageProps
       title="Usuários"
       activeTabKey="view"
       tabs={[
-        { key: "create", label: "Criar usuário", href: "/dashboard/users/create", isVisible: access.canCreate },
-        { key: "view", label: "Ver usuários", href: "/dashboard/users/view", isVisible: access.canRead }
+        {
+          key: "create",
+          label: "Criar usuário",
+          href: "/dashboard/users/create",
+          isVisible: access.canCreate,
+        },
+        {
+          key: "view",
+          label: "Ver usuários",
+          href: "/dashboard/users/view",
+          isVisible: access.canRead,
+        },
       ]}
-      statusContent={<UserStatusMessage status={resolvedSearchParams?.status} />}
+      statusContent={
+        <UserStatusMessage status={resolvedSearchParams?.status} />
+      }
     >
       <UsersViewFilterableSection
         users={users}

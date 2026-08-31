@@ -13,7 +13,9 @@ type PermissionsCreatePageProps = {
   }>;
 };
 
-export default async function PermissionsCreatePage({ searchParams }: PermissionsCreatePageProps) {
+export default async function PermissionsCreatePage({
+  searchParams,
+}: PermissionsCreatePageProps) {
   const resolvedSearchParams = await searchParams;
   const user = await getUserFromSession();
   const access = getPermissionsAccess(user);
@@ -25,7 +27,12 @@ export default async function PermissionsCreatePage({ searchParams }: Permission
       redirect(fallback);
     }
 
-    return <DashboardAccessDeniedCard title="Permissões" message="Sem permissão para criar permissão." />;
+    return (
+      <DashboardAccessDeniedCard
+        title="Permissões"
+        message="Sem permissão para criar permissão."
+      />
+    );
   }
 
   return (
@@ -33,10 +40,22 @@ export default async function PermissionsCreatePage({ searchParams }: Permission
       title="Permissões"
       activeTabKey="create"
       tabs={[
-        { key: "create", label: "Criar permissão", href: "/dashboard/permissions/create", isVisible: access.canCreate },
-        { key: "view", label: "Ver permissões", href: "/dashboard/permissions/view", isVisible: access.canRead }
+        {
+          key: "create",
+          label: "Criar permissão",
+          href: "/dashboard/permissions/create",
+          isVisible: access.canCreate,
+        },
+        {
+          key: "view",
+          label: "Ver permissões",
+          href: "/dashboard/permissions/view",
+          isVisible: access.canRead,
+        },
       ]}
-      statusContent={<PermissionStatusMessage status={resolvedSearchParams?.status} />}
+      statusContent={
+        <PermissionStatusMessage status={resolvedSearchParams?.status} />
+      }
     >
       <PermissionCreateForm formKey={resolvedSearchParams?.r} />
     </DashboardEntityPageShell>

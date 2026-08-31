@@ -2,7 +2,7 @@ import { cookies } from "next/headers";
 import {
   ACTIVE_HOTEL_GLOBAL_VALUE,
   type ActiveHotelOption,
-  type AuthUser
+  type AuthUser,
 } from "@hotel/shared";
 
 const ACTIVE_HOTEL_COOKIE_NAME = "pms_active_hotel";
@@ -13,7 +13,9 @@ function normalizeHotelName(value: string | null): string {
   return trimmed || "Hotel sem nome";
 }
 
-function dedupeHotelsById(user: Pick<AuthUser, "roleAssignments">): Array<{ id: string; name: string }> {
+function dedupeHotelsById(
+  user: Pick<AuthUser, "roleAssignments">,
+): Array<{ id: string; name: string }> {
   const uniqueById = new Map<string, string>();
 
   for (const assignment of user.roleAssignments || []) {
@@ -30,18 +32,26 @@ function dedupeHotelsById(user: Pick<AuthUser, "roleAssignments">): Array<{ id: 
 
   return Array.from(uniqueById.entries())
     .map(([id, name]) => ({ id, name }))
-    .sort((a, b) => a.name.localeCompare(b.name, "pt-BR", { sensitivity: "base" }));
+    .sort((a, b) =>
+      a.name.localeCompare(b.name, "pt-BR", { sensitivity: "base" }),
+    );
 }
 
-export function canAccessGlobalScope(user: Pick<AuthUser, "roleAssignments">): boolean {
+export function canAccessGlobalScope(
+  user: Pick<AuthUser, "roleAssignments">,
+): boolean {
   return (user.roleAssignments || []).some((assignment) => !assignment.hotelId);
 }
 
-export function listAccessibleHotels(user: Pick<AuthUser, "roleAssignments">): Array<{ id: string; name: string }> {
+export function listAccessibleHotels(
+  user: Pick<AuthUser, "roleAssignments">,
+): Array<{ id: string; name: string }> {
   return dedupeHotelsById(user);
 }
 
-export function listActiveHotelOptions(user: Pick<AuthUser, "roleAssignments">): ActiveHotelOption[] {
+export function listActiveHotelOptions(
+  user: Pick<AuthUser, "roleAssignments">,
+): ActiveHotelOption[] {
   const options: ActiveHotelOption[] = [];
 
   if (canAccessGlobalScope(user)) {
@@ -55,7 +65,9 @@ export function listActiveHotelOptions(user: Pick<AuthUser, "roleAssignments">):
   return options;
 }
 
-export function decodeActiveHotelCookie(rawValue: string | null | undefined): string | null | undefined {
+export function decodeActiveHotelCookie(
+  rawValue: string | null | undefined,
+): string | null | undefined {
   const normalized = String(rawValue || "").trim();
 
   if (!normalized) {
@@ -73,13 +85,18 @@ export function encodeActiveHotelCookie(hotelId: string | null): string {
   return hotelId ? hotelId : ACTIVE_HOTEL_GLOBAL_VALUE;
 }
 
-export async function getActiveHotelCookieValue(): Promise<string | null | undefined> {
+export async function getActiveHotelCookieValue(): Promise<
+  string | null | undefined
+> {
   const cookieStore = await cookies();
   const value = cookieStore.get(ACTIVE_HOTEL_COOKIE_NAME)?.value;
   return decodeActiveHotelCookie(value);
 }
 
-export function userCanAccessHotel(user: Pick<AuthUser, "roleAssignments">, hotelId: string | null): boolean {
+export function userCanAccessHotel(
+  user: Pick<AuthUser, "roleAssignments">,
+  hotelId: string | null,
+): boolean {
   if (hotelId === null) {
     return canAccessGlobalScope(user);
   }
@@ -93,11 +110,15 @@ export function userCanAccessHotel(user: Pick<AuthUser, "roleAssignments">, hote
 
 export function resolveActiveHotelForUser(
   user: Pick<AuthUser, "roleAssignments">,
-  preferredHotelId: string | null | undefined
+  preferredHotelId: string | null | undefined,
 ): string | null {
-  const normalizedPreferred = preferredHotelId === undefined ? undefined : preferredHotelId;
+  const normalizedPreferred =
+    preferredHotelId === undefined ? undefined : preferredHotelId;
 
-  if (normalizedPreferred !== undefined && userCanAccessHotel(user, normalizedPreferred)) {
+  if (
+    normalizedPreferred !== undefined &&
+    userCanAccessHotel(user, normalizedPreferred)
+  ) {
     return normalizedPreferred;
   }
 
@@ -115,14 +136,16 @@ export function resolveActiveHotelForUser(
   return firstHotel ? firstHotel.id : null;
 }
 
-export async function saveActiveHotelCookie(hotelId: string | null): Promise<void> {
+export async function saveActiveHotelCookie(
+  hotelId: string | null,
+): Promise<void> {
   const cookieStore = await cookies();
   cookieStore.set(ACTIVE_HOTEL_COOKIE_NAME, encodeActiveHotelCookie(hotelId), {
     httpOnly: true,
     sameSite: "lax",
     secure: process.env.NODE_ENV === "production",
     path: "/",
-    maxAge: ACTIVE_HOTEL_COOKIE_MAX_AGE_SECONDS
+    maxAge: ACTIVE_HOTEL_COOKIE_MAX_AGE_SECONDS,
   });
 }
 

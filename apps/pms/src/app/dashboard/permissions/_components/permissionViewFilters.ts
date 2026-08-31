@@ -7,10 +7,12 @@ export type PermissionViewFilters = {
 
 export const DEFAULT_PERMISSION_VIEW_FILTERS: PermissionViewFilters = {
   search: "",
-  type: ""
+  type: "",
 };
 
-export function countAppliedPermissionFilters(filters: PermissionViewFilters): number {
+export function countAppliedPermissionFilters(
+  filters: PermissionViewFilters,
+): number {
   let total = 0;
 
   if (filters.search.trim()) total += 1;
@@ -19,7 +21,10 @@ export function countAppliedPermissionFilters(filters: PermissionViewFilters): n
   return total;
 }
 
-export function applyPermissionViewFilters(permissions: AdminPermission[], filters: PermissionViewFilters): AdminPermission[] {
+export function applyPermissionViewFilters(
+  permissions: AdminPermission[],
+  filters: PermissionViewFilters,
+): AdminPermission[] {
   const search = filters.search.trim().toLocaleLowerCase();
   const type = filters.type;
 

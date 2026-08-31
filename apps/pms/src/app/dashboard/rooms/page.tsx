@@ -14,7 +14,9 @@ export default async function RoomsPage({ searchParams }: RoomsPageProps) {
   const user = await getUserFromSession();
   const access = getRoomsAccess(user);
   const targetRoute = getRoomsDefaultRoute(access);
-  const statusQuery = resolvedSearchParams?.status ? `?status=${encodeURIComponent(resolvedSearchParams.status)}` : "";
+  const statusQuery = resolvedSearchParams?.status
+    ? `?status=${encodeURIComponent(resolvedSearchParams.status)}`
+    : "";
 
   if (!targetRoute) {
     return (

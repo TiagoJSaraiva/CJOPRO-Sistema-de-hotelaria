@@ -8,7 +8,7 @@ import {
   type AuthUser,
   type LoginResult,
   type LoginRequest,
-  type MeSuccessResponse
+  type MeSuccessResponse,
 } from "@hotel/shared";
 import { getActiveHotelCookieValue } from "./activeHotel";
 
@@ -19,7 +19,10 @@ function getBackendUrl(): string {
   return process.env.BACKEND_SERVICE_URL || DEFAULT_BACKEND_URL;
 }
 
-export async function loginWithCredentials(email: string, password: string): Promise<LoginResult> {
+export async function loginWithCredentials(
+  email: string,
+  password: string,
+): Promise<LoginResult> {
   const loginBody: LoginRequest = { email, password };
 
   let response: Response;
@@ -28,18 +31,25 @@ export async function loginWithCredentials(email: string, password: string): Pro
     response = await fetch(`${getBackendUrl()}/auth/login`, {
       method: "POST",
       headers: {
-        "Content-Type": "application/json"
+        "Content-Type": "application/json",
       },
       cache: "no-store",
-      body: JSON.stringify(loginBody)
+      body: JSON.stringify(loginBody),
     });
   } catch {
     throw new Error("Serviço de autenticação indisponível no momento.");
   }
 
-  const payload = (await response.json().catch(() => ({}))) as Partial<LoginResult> & Partial<AuthErrorResponse>;
+  const payload = (await response
+    .json()
+    .catch(() => ({}))) as Partial<LoginResult> & Partial<AuthErrorResponse>;
 
-  if (!response.ok || !payload.token || !payload.user || typeof payload.expiresIn !== "number") {
+  if (
+    !response.ok ||
+    !payload.token ||
+    !payload.user ||
+    typeof payload.expiresIn !== "number"
+  ) {
     const errorCode = payload.code || AUTH_ERROR_CODE.UNKNOWN;
     throw new Error(payload.message || AUTH_ERROR_MESSAGE[errorCode]);
   }
@@ -47,7 +57,7 @@ export async function loginWithCredentials(email: string, password: string): Pro
   return {
     token: payload.token,
     expiresIn: payload.expiresIn,
-    user: payload.user
+    user: payload.user,
   };
 }
 
@@ -62,18 +72,19 @@ export async function getUserFromSession(): Promise<AuthUser | null> {
   let response: Response;
   const activeHotelId = await getActiveHotelCookieValue();
   const headers: Record<string, string> = {
-    Authorization: `Bearer ${token}`
+    Authorization: `Bearer ${token}`,
   };
 
   if (activeHotelId !== undefined) {
-    headers[ACTIVE_HOTEL_HEADER_NAME] = activeHotelId || ACTIVE_HOTEL_GLOBAL_VALUE;
+    headers[ACTIVE_HOTEL_HEADER_NAME] =
+      activeHotelId || ACTIVE_HOTEL_GLOBAL_VALUE;
   }
 
   try {
     response = await fetch(`${getBackendUrl()}/auth/me`, {
       method: "GET",
       cache: "no-store",
-      headers
+      headers,
     });
   } catch {
     // Backend offline or network issue: treat as unauthenticated to avoid crashing SSR.
@@ -88,14 +99,17 @@ export async function getUserFromSession(): Promise<AuthUser | null> {
   return payload.user || null;
 }
 
-export async function saveSessionCookie(token: string, expiresInSeconds: number): Promise<void> {
+export async function saveSessionCookie(
+  token: string,
+  expiresInSeconds: number,
+): Promise<void> {
   const cookieStore = await cookies();
   cookieStore.set(SESSION_COOKIE_NAME, token, {
     httpOnly: true,
     sameSite: "lax",
     secure: process.env.NODE_ENV === "production",
     path: "/",
-    maxAge: expiresInSeconds
+    maxAge: expiresInSeconds,
   });
 }
 

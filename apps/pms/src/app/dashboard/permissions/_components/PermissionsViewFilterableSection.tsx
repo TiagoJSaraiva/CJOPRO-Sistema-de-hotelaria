@@ -7,7 +7,7 @@ import {
   DEFAULT_PERMISSION_VIEW_FILTERS,
   applyPermissionViewFilters,
   countAppliedPermissionFilters,
-  type PermissionViewFilters
+  type PermissionViewFilters,
 } from "./permissionViewFilters";
 import { viewFiltersFieldClassName } from "../../_components/ViewFiltersBase";
 import { EntityViewFilterableSection } from "../../_components/EntityViewFilterableSection";
@@ -32,7 +32,7 @@ export function PermissionsViewFilterableSection({
   currentUserPermissionNames,
   activePermissionId,
   mode,
-  children
+  children,
 }: PermissionsViewFilterableSectionProps) {
   const {
     isModalOpen,
@@ -42,14 +42,16 @@ export function PermissionsViewFilterableSection({
     closeFilters,
     applyFilters,
     clearFilters,
-    updateDraftFilter
-  } = useViewFiltersState<PermissionViewFilters>(DEFAULT_PERMISSION_VIEW_FILTERS);
+    updateDraftFilter,
+  } = useViewFiltersState<PermissionViewFilters>(
+    DEFAULT_PERMISSION_VIEW_FILTERS,
+  );
 
   const appliedFilterCount = countAppliedPermissionFilters(appliedFilters);
 
   const filteredPermissions = useMemo(
     () => applyPermissionViewFilters(permissions, appliedFilters),
-    [permissions, appliedFilters]
+    [permissions, appliedFilters],
   );
 
   return (
@@ -73,7 +75,9 @@ export function PermissionsViewFilterableSection({
           canRead={canRead}
           canUpdate={canUpdate}
           canDelete={canDelete}
-          isCurrentUserPermission={currentUserPermissionNames.includes(item.name)}
+          isCurrentUserPermission={currentUserPermissionNames.includes(
+            item.name,
+          )}
           isViewing={activePermissionId === item.id && mode === "view"}
           isEditing={activePermissionId === item.id && mode === "edit"}
         />
@@ -84,7 +88,9 @@ export function PermissionsViewFilterableSection({
             <span>Nome da permissão</span>
             <input
               value={draftFilters.search}
-              onChange={(event) => updateDraftFilter("search", event.target.value)}
+              onChange={(event) =>
+                updateDraftFilter("search", event.target.value)
+              }
               placeholder="Ex.: USER_READ"
               className={viewFiltersFieldClassName}
             />
@@ -94,12 +100,22 @@ export function PermissionsViewFilterableSection({
             <span>Tipo</span>
             <select
               value={draftFilters.type}
-              onChange={(event) => updateDraftFilter("type", event.target.value as "" | "SYSTEM_PERMISSION" | "HOTEL_PERMISSION")}
+              onChange={(event) =>
+                updateDraftFilter(
+                  "type",
+                  event.target.value as
+                    "" | "SYSTEM_PERMISSION" | "HOTEL_PERMISSION",
+                )
+              }
               className={viewFiltersFieldClassName}
             >
               <option value="">Todos</option>
-              <option value={ADMIN_PERMISSION_TYPES.SYSTEM}>SYSTEM PERMISSION</option>
-              <option value={ADMIN_PERMISSION_TYPES.HOTEL}>HOTEL PERMISSION</option>
+              <option value={ADMIN_PERMISSION_TYPES.SYSTEM}>
+                SYSTEM PERMISSION
+              </option>
+              <option value={ADMIN_PERMISSION_TYPES.HOTEL}>
+                HOTEL PERMISSION
+              </option>
             </select>
           </label>
         </div>

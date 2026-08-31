@@ -1,6 +1,11 @@
 import { afterAll, beforeAll, describe, expect, it } from "vitest";
 import type { FastifyInstance } from "fastify";
-import { AUTH_ERROR_CODE, AUTH_ERROR_MESSAGE, PERMISSIONS, type SessionPayload } from "@hotel/shared";
+import {
+  AUTH_ERROR_CODE,
+  AUTH_ERROR_MESSAGE,
+  PERMISSIONS,
+  type SessionPayload,
+} from "@hotel/shared";
 import { createApp } from "../../../src/app";
 import { signToken } from "../../../src/auth/session";
 
@@ -14,9 +19,17 @@ function createToken(permissions: string[]): string {
     tenantId: null,
     roles: ["Admin"],
     permissions,
-    roleAssignments: [{ roleId: "role-system", roleName: "Admin", roleType: "SYSTEM_ROLE", hotelId: null, hotelName: null }],
+    roleAssignments: [
+      {
+        roleId: "role-system",
+        roleName: "Admin",
+        roleType: "SYSTEM_ROLE",
+        hotelId: null,
+        hotelName: null,
+      },
+    ],
     iat: nowInSeconds,
-    exp: nowInSeconds + 3600
+    exp: nowInSeconds + 3600,
   };
 
   return signToken(payload);
@@ -37,13 +50,13 @@ describe("routes/permissions", () => {
   it("retorna 401 para GET /admin/permissions sem autenticacao", async () => {
     const response = await app.inject({
       method: "GET",
-      url: "/admin/permissions"
+      url: "/admin/permissions",
     });
 
     expect(response.statusCode).toBe(401);
     expect(response.json()).toEqual({
       code: AUTH_ERROR_CODE.TOKEN_INVALID_OR_EXPIRED,
-      message: AUTH_ERROR_MESSAGE[AUTH_ERROR_CODE.TOKEN_INVALID_OR_EXPIRED]
+      message: AUTH_ERROR_MESSAGE[AUTH_ERROR_CODE.TOKEN_INVALID_OR_EXPIRED],
     });
   });
 
@@ -54,18 +67,18 @@ describe("routes/permissions", () => {
       method: "POST",
       url: "/admin/permissions",
       headers: {
-        authorization: `Bearer ${token}`
+        authorization: `Bearer ${token}`,
       },
       payload: {
         name: "hotel_manage",
-        type: "SYSTEM_PERMISSION"
-      }
+        type: "SYSTEM_PERMISSION",
+      },
     });
 
     expect(response.statusCode).toBe(403);
     expect(response.json()).toEqual({
       code: AUTH_ERROR_CODE.FORBIDDEN,
-      message: AUTH_ERROR_MESSAGE[AUTH_ERROR_CODE.FORBIDDEN]
+      message: AUTH_ERROR_MESSAGE[AUTH_ERROR_CODE.FORBIDDEN],
     });
   });
 
@@ -76,18 +89,18 @@ describe("routes/permissions", () => {
       method: "POST",
       url: "/admin/permissions",
       headers: {
-        authorization: `Bearer ${token}`
+        authorization: `Bearer ${token}`,
       },
       payload: {
         name: "",
-        type: "SYSTEM_PERMISSION"
-      }
+        type: "SYSTEM_PERMISSION",
+      },
     });
 
     expect(response.statusCode).toBe(400);
     expect(response.json()).toEqual({
       code: "ADMIN_VALIDATION_ERROR",
-      message: "Nome da permissao e obrigatorio."
+      message: "Nome da permissao e obrigatorio.",
     });
   });
 
@@ -106,25 +119,25 @@ describe("routes/permissions", () => {
           roleName: "Gestor Hotel",
           roleType: "HOTEL_ROLE",
           hotelId: "hotel-1",
-          hotelName: "Hotel Centro"
-        }
+          hotelName: "Hotel Centro",
+        },
       ],
       iat: nowInSeconds,
-      exp: nowInSeconds + 3600
+      exp: nowInSeconds + 3600,
     });
 
     const response = await app.inject({
       method: "GET",
       url: "/admin/permissions",
       headers: {
-        authorization: `Bearer ${token}`
-      }
+        authorization: `Bearer ${token}`,
+      },
     });
 
     expect(response.statusCode).toBe(403);
     expect(response.json()).toEqual({
       code: "ADMIN_SCOPE_NOT_ALLOWED",
-      message: "Acesso global de sistema obrigatorio para esta operacao."
+      message: "Acesso global de sistema obrigatorio para esta operacao.",
     });
   });
 });

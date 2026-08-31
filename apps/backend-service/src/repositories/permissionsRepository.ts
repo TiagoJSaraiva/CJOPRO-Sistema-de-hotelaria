@@ -1,5 +1,9 @@
 import { createServerClient } from "../common/supabaseServer";
-import { isSupabaseConflictError, isSupabaseForeignKeyError, isSupabaseNotFoundError } from "./supabaseError";
+import {
+  isSupabaseConflictError,
+  isSupabaseForeignKeyError,
+  isSupabaseNotFoundError,
+} from "./supabaseError";
 
 export type PermissionWriteResult = "ok" | "conflict" | "not-found";
 
@@ -12,10 +16,13 @@ type PermissionRow = {
 export interface PermissionsRepository {
   listPermissions(): Promise<PermissionRow[]>;
   getPermissionById(id: string): Promise<PermissionRow | null>;
-  createPermission(payload: { name: string; type: "SYSTEM_PERMISSION" | "HOTEL_PERMISSION" }): Promise<{ result: PermissionWriteResult; item?: PermissionRow }>;
+  createPermission(payload: {
+    name: string;
+    type: "SYSTEM_PERMISSION" | "HOTEL_PERMISSION";
+  }): Promise<{ result: PermissionWriteResult; item?: PermissionRow }>;
   updatePermission(
     id: string,
-    payload: { name?: string; type?: "SYSTEM_PERMISSION" | "HOTEL_PERMISSION" }
+    payload: { name?: string; type?: "SYSTEM_PERMISSION" | "HOTEL_PERMISSION" },
   ): Promise<{ result: PermissionWriteResult; item?: PermissionRow }>;
   deletePermission(id: string): Promise<PermissionWriteResult>;
 }
@@ -23,7 +30,10 @@ export interface PermissionsRepository {
 class SupabasePermissionsRepository implements PermissionsRepository {
   async listPermissions(): Promise<PermissionRow[]> {
     const supabase = createServerClient();
-    const { data, error } = await supabase.from("permissions").select("id,name,type").order("name", { ascending: true });
+    const { data, error } = await supabase
+      .from("permissions")
+      .select("id,name,type")
+      .order("name", { ascending: true });
 
     if (error) {
       throw error;
@@ -34,7 +44,11 @@ class SupabasePermissionsRepository implements PermissionsRepository {
 
   async getPermissionById(id: string): Promise<PermissionRow | null> {
     const supabase = createServerClient();
-    const { data, error } = await supabase.from("permissions").select("id,name,type").eq("id", id).single();
+    const { data, error } = await supabase
+      .from("permissions")
+      .select("id,name,type")
+      .eq("id", id)
+      .single();
 
     if (error) {
       if (isSupabaseNotFoundError(error)) {
@@ -47,9 +61,16 @@ class SupabasePermissionsRepository implements PermissionsRepository {
     return data as PermissionRow;
   }
 
-  async createPermission(payload: { name: string; type: "SYSTEM_PERMISSION" | "HOTEL_PERMISSION" }): Promise<{ result: PermissionWriteResult; item?: PermissionRow }> {
+  async createPermission(payload: {
+    name: string;
+    type: "SYSTEM_PERMISSION" | "HOTEL_PERMISSION";
+  }): Promise<{ result: PermissionWriteResult; item?: PermissionRow }> {
     const supabase = createServerClient();
-    const { data, error } = await supabase.from("permissions").insert(payload).select("id,name,type").single();
+    const { data, error } = await supabase
+      .from("permissions")
+      .insert(payload)
+      .select("id,name,type")
+      .single();
 
     if (error) {
       if (isSupabaseConflictError(error)) {
@@ -64,10 +85,15 @@ class SupabasePermissionsRepository implements PermissionsRepository {
 
   async updatePermission(
     id: string,
-    payload: { name?: string; type?: "SYSTEM_PERMISSION" | "HOTEL_PERMISSION" }
+    payload: { name?: string; type?: "SYSTEM_PERMISSION" | "HOTEL_PERMISSION" },
   ): Promise<{ result: PermissionWriteResult; item?: PermissionRow }> {
     const supabase = createServerClient();
-    const { data, error } = await supabase.from("permissions").update(payload).eq("id", id).select("id,name,type").single();
+    const { data, error } = await supabase
+      .from("permissions")
+      .update(payload)
+      .eq("id", id)
+      .select("id,name,type")
+      .single();
 
     if (error) {
       if (isSupabaseNotFoundError(error)) {
@@ -86,7 +112,11 @@ class SupabasePermissionsRepository implements PermissionsRepository {
 
   async deletePermission(id: string): Promise<PermissionWriteResult> {
     const supabase = createServerClient();
-    const { data, error } = await supabase.from("permissions").delete().eq("id", id).select("id");
+    const { data, error } = await supabase
+      .from("permissions")
+      .delete()
+      .eq("id", id)
+      .select("id");
 
     if (error) {
       if (isSupabaseForeignKeyError(error) || isSupabaseConflictError(error)) {

@@ -6,7 +6,7 @@ import {
   mapAuthUserFromDb,
   mapRoleOption,
   normalizePermissionIds,
-  normalizeRoleAssignments
+  normalizeRoleAssignments,
 } from "../../../src/admin/mappers";
 import { adminError } from "../../../src/common/adminError";
 import { applyHotelContextFilter } from "../../../src/common/hotelContextFilter";
@@ -29,9 +29,9 @@ describe("admin/mappers", () => {
             hotels: { name: null },
             role_permissions: [
               { permissions: { name: PERMISSIONS.USER_READ } },
-              { permissions: { name: "invalid_permission" } }
-            ]
-          }
+              { permissions: { name: "invalid_permission" } },
+            ],
+          },
         },
         {
           hotels: { name: "Hotel Azul" },
@@ -41,10 +41,12 @@ describe("admin/mappers", () => {
             role_type: "HOTEL_ROLE",
             hotel_id: "hotel-2",
             hotels: { name: "Hotel Azul" },
-            role_permissions: [{ permissions: { name: PERMISSIONS.USER_UPDATE } }]
-          }
-        }
-      ]
+            role_permissions: [
+              { permissions: { name: PERMISSIONS.USER_UPDATE } },
+            ],
+          },
+        },
+      ],
     });
 
     expect(result).toEqual({
@@ -61,7 +63,7 @@ describe("admin/mappers", () => {
           roleType: "SYSTEM_ROLE",
           hotelId: "hotel-fallback",
           hotelName: "Hotel Reserva",
-          permissions: [PERMISSIONS.USER_READ, "invalid_permission"]
+          permissions: [PERMISSIONS.USER_READ, "invalid_permission"],
         },
         {
           roleId: "role-2",
@@ -69,9 +71,9 @@ describe("admin/mappers", () => {
           roleType: "HOTEL_ROLE",
           hotelId: "hotel-2",
           hotelName: "Hotel Azul",
-          permissions: [PERMISSIONS.USER_UPDATE]
-        }
-      ]
+          permissions: [PERMISSIONS.USER_UPDATE],
+        },
+      ],
     });
   });
 
@@ -90,10 +92,10 @@ describe("admin/mappers", () => {
             role_type: "HOTEL_ROLE",
             hotel_id: "hotel-da-role",
             hotels: { name: "Hotel da Role" },
-            role_permissions: []
-          }
-        }
-      ]
+            role_permissions: [],
+          },
+        },
+      ],
     });
 
     expect(result.roleAssignments).toEqual([
@@ -103,8 +105,8 @@ describe("admin/mappers", () => {
         roleType: "HOTEL_ROLE",
         hotelId: "hotel-assignment",
         hotelName: "Hotel do Assignment",
-        permissions: []
-      }
+        permissions: [],
+      },
     ]);
   });
 
@@ -114,18 +116,24 @@ describe("admin/mappers", () => {
       { role_id: "role-1", hotel_id: "hotel-1" },
       { role_id: "role-1", hotel_id: "hotel-2" },
       { role_id: "", hotel_id: "hotel-2" },
-      { role_id: "role-2", hotel_id: "" }
+      { role_id: "role-2", hotel_id: "" },
     ]);
 
     expect(result).toEqual([
       { role_id: "role-1", hotel_id: "hotel-1" },
       { role_id: "role-1", hotel_id: "hotel-2" },
-      { role_id: "role-2", hotel_id: null }
+      { role_id: "role-2", hotel_id: null },
     ]);
   });
 
   it("normalizePermissionIds remove duplicidades e valores vazios", () => {
-    const result = normalizePermissionIds([" perm-1 ", "perm-1", "", null, "perm-2"]);
+    const result = normalizePermissionIds([
+      " perm-1 ",
+      "perm-1",
+      "",
+      null,
+      "perm-2",
+    ]);
 
     expect(result).toEqual(["perm-1", "perm-2"]);
   });
@@ -136,7 +144,7 @@ describe("admin/mappers", () => {
       name: "Operador",
       role_type: "HOTEL_ROLE",
       hotel_id: "hotel-1",
-      hotels: { name: "Hotel Verde" }
+      hotels: { name: "Hotel Verde" },
     });
 
     expect(result).toEqual({
@@ -144,7 +152,7 @@ describe("admin/mappers", () => {
       name: "Operador",
       role_type: "HOTEL_ROLE",
       hotel_id: "hotel-1",
-      hotel_name: "Hotel Verde"
+      hotel_name: "Hotel Verde",
     });
   });
 
@@ -159,10 +167,16 @@ describe("admin/mappers", () => {
       user_roles: [
         {
           hotels: { name: "Hotel Central" },
-          roles: { id: "role-1", name: "Gestor", role_type: "SYSTEM_ROLE", hotel_id: null, hotels: { name: null } }
+          roles: {
+            id: "role-1",
+            name: "Gestor",
+            role_type: "SYSTEM_ROLE",
+            hotel_id: null,
+            hotels: { name: null },
+          },
         },
-        { roles: null }
-      ]
+        { roles: null },
+      ],
     });
 
     expect(result).toEqual({
@@ -180,9 +194,9 @@ describe("admin/mappers", () => {
           hotel_id: null,
           hotel_name: "Hotel Central",
           role_hotel_id: null,
-          role_hotel_name: null
-        }
-      ]
+          role_hotel_name: null,
+        },
+      ],
     });
   });
 
@@ -194,9 +208,15 @@ describe("admin/mappers", () => {
       hotel_id: "hotel-1",
       hotels: { name: "Hotel Central" },
       role_permissions: [
-        { permissions: { id: "perm-1", name: "user_read", type: "HOTEL_PERMISSION" } },
-        { permissions: { id: null, name: "invalid" } }
-      ]
+        {
+          permissions: {
+            id: "perm-1",
+            name: "user_read",
+            type: "HOTEL_PERMISSION",
+          },
+        },
+        { permissions: { id: null, name: "invalid" } },
+      ],
     });
 
     expect(result).toEqual({
@@ -205,13 +225,15 @@ describe("admin/mappers", () => {
       role_type: "HOTEL_ROLE",
       hotel_id: "hotel-1",
       hotel_name: "Hotel Central",
-      permissions: [{ id: "perm-1", name: "user_read", type: "HOTEL_PERMISSION" }]
+      permissions: [
+        { id: "perm-1", name: "user_read", type: "HOTEL_PERMISSION" },
+      ],
     });
 
     expect(adminError("ADMIN_CONFLICT", "Conflito", "constraint_x")).toEqual({
       code: "ADMIN_CONFLICT",
       message: "Conflito",
-      details: "constraint_x"
+      details: "constraint_x",
     });
 
     const calls: Array<[string, string]> = [];
@@ -219,11 +241,16 @@ describe("admin/mappers", () => {
       eq(column: string, value: string) {
         calls.push([column, value]);
         return query;
-      }
+      },
     };
     expect(applyHotelContextFilter(query, null)).toBe(query);
     expect(applyHotelContextFilter(query, "hotel-1")).toBe(query);
-    expect(applyHotelContextFilter(query, "hotel-2", "rooms.hotel_id")).toBe(query);
-    expect(calls).toEqual([["hotel_id", "hotel-1"], ["rooms.hotel_id", "hotel-2"]]);
+    expect(applyHotelContextFilter(query, "hotel-2", "rooms.hotel_id")).toBe(
+      query,
+    );
+    expect(calls).toEqual([
+      ["hotel_id", "hotel-1"],
+      ["rooms.hotel_id", "hotel-2"],
+    ]);
   });
 });

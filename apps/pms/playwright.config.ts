@@ -9,15 +9,16 @@ export default defineConfig({
   testDir: "./__tests__/e2e",
   timeout: 45_000,
   updateSnapshots: "none",
-  snapshotPathTemplate: "{testDir}/__screenshots__/{platform}/{projectName}/{arg}{ext}",
+  snapshotPathTemplate:
+    "{testDir}/__screenshots__/{platform}/{projectName}/{arg}{ext}",
   expect: {
     timeout: 10_000,
     toHaveScreenshot: {
       animations: "disabled",
       caret: "hide",
       scale: "css",
-      maxDiffPixelRatio: 0.001
-    }
+      maxDiffPixelRatio: 0.001,
+    },
   },
   fullyParallel: false,
   // A single shared Next.js development server compiles routes on demand. Keep
@@ -26,7 +27,13 @@ export default defineConfig({
   workers: 1,
   reporter: [
     ["list"],
-    ["html", { outputFolder: "../../node_modules/.cache/pms-playwright-report", open: "never" }]
+    [
+      "html",
+      {
+        outputFolder: "../../node_modules/.cache/pms-playwright-report",
+        open: "never",
+      },
+    ],
   ],
   outputDir: "../../node_modules/.cache/pms-playwright-results",
   use: {
@@ -35,7 +42,7 @@ export default defineConfig({
     timezoneId: "America/Sao_Paulo",
     colorScheme: "light",
     trace: "retain-on-failure",
-    screenshot: "only-on-failure"
+    screenshot: "only-on-failure",
   },
   webServer: [
     {
@@ -44,8 +51,8 @@ export default defineConfig({
       reuseExistingServer: false,
       timeout: 30_000,
       env: {
-        PMS_E2E_BACKEND_PORT: String(mockBackendPort)
-      }
+        PMS_E2E_BACKEND_PORT: String(mockBackendPort),
+      },
     },
     {
       command: "pnpm dev",
@@ -53,23 +60,23 @@ export default defineConfig({
       reuseExistingServer: false,
       timeout: 120_000,
       env: {
-        BACKEND_SERVICE_URL: mockBackendURL
-      }
-    }
+        BACKEND_SERVICE_URL: mockBackendURL,
+      },
+    },
   ],
   projects: [
     {
       name: "chromium",
       use: {
         ...devices["Desktop Chrome"],
-        viewport: { width: 1440, height: 960 }
-      }
+        viewport: { width: 1440, height: 960 },
+      },
     },
     {
       name: "mobile-chromium",
       use: {
-        ...devices["Pixel 5"]
-      }
-    }
-  ]
+        ...devices["Pixel 5"],
+      },
+    },
+  ],
 });

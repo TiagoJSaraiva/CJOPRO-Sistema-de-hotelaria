@@ -15,8 +15,12 @@ type HotelListItemProps = {
 };
 
 function HotelDataPreview({ hotel }: { hotel: AdminHotel }) {
-  const createdAt = hotel.created_at ? new Date(hotel.created_at).toLocaleString("pt-BR") : "-";
-  const updatedAt = hotel.updated_at ? new Date(hotel.updated_at).toLocaleString("pt-BR") : "-";
+  const createdAt = hotel.created_at
+    ? new Date(hotel.created_at).toLocaleString("pt-BR")
+    : "-";
+  const updatedAt = hotel.updated_at
+    ? new Date(hotel.updated_at).toLocaleString("pt-BR")
+    : "-";
 
   return (
     <div className="mt-[0.9rem] grid grid-cols-[repeat(auto-fit,minmax(200px,1fr))] gap-[0.75rem]">
@@ -50,18 +54,22 @@ function HotelDataPreview({ hotel }: { hotel: AdminHotel }) {
       </div>
       <div>
         <strong>Status:</strong>
-        <p className="m-0 mt-[0.2rem]">{hotel.is_active ? "Ativo" : "Inativo"}</p>
+        <p className="m-0 mt-[0.2rem]">
+          {hotel.is_active ? "Ativo" : "Inativo"}
+        </p>
       </div>
       <div>
         <strong>Janela check-in:</strong>
         <p className="m-0 mt-[0.2rem]">
-          {hotel.checkin_time_start || "-"} até {hotel.checkin_time_limit || "-"}
+          {hotel.checkin_time_start || "-"} até{" "}
+          {hotel.checkin_time_limit || "-"}
         </p>
       </div>
       <div>
         <strong>Janela checkout:</strong>
         <p className="m-0 mt-[0.2rem]">
-          {hotel.checkout_time_start || "-"} até {hotel.checkout_time_limit || "-"}
+          {hotel.checkout_time_start || "-"} até{" "}
+          {hotel.checkout_time_limit || "-"}
         </p>
       </div>
       <div>
@@ -105,7 +113,12 @@ function HotelEditForm({ hotel }: { hotel: AdminHotel }) {
 
       <div className="pms-field">
         <label htmlFor={`city-${hotel.id}`}>Cidade</label>
-        <input id={`city-${hotel.id}`} name="city" defaultValue={hotel.city || ""} className="pms-field-input" />
+        <input
+          id={`city-${hotel.id}`}
+          name="city"
+          defaultValue={hotel.city || ""}
+          className="pms-field-input"
+        />
       </div>
 
       <div className="pms-field">
@@ -120,38 +133,80 @@ function HotelEditForm({ hotel }: { hotel: AdminHotel }) {
       </div>
 
       <div className="pms-field">
-        <label htmlFor={`checkin-start-${hotel.id}`}>Check-in início (HH:mm)</label>
-        <input id={`checkin-start-${hotel.id}`} name="checkin_time_start" defaultValue={hotel.checkin_time_start || ""} className="pms-field-input" />
+        <label htmlFor={`checkin-start-${hotel.id}`}>
+          Check-in início (HH:mm)
+        </label>
+        <input
+          id={`checkin-start-${hotel.id}`}
+          name="checkin_time_start"
+          defaultValue={hotel.checkin_time_start || ""}
+          className="pms-field-input"
+        />
       </div>
 
       <div className="pms-field">
-        <label htmlFor={`checkin-limit-${hotel.id}`}>Check-in limite (HH:mm)</label>
-        <input id={`checkin-limit-${hotel.id}`} name="checkin_time_limit" defaultValue={hotel.checkin_time_limit || ""} className="pms-field-input" />
+        <label htmlFor={`checkin-limit-${hotel.id}`}>
+          Check-in limite (HH:mm)
+        </label>
+        <input
+          id={`checkin-limit-${hotel.id}`}
+          name="checkin_time_limit"
+          defaultValue={hotel.checkin_time_limit || ""}
+          className="pms-field-input"
+        />
       </div>
 
       <div className="pms-field">
-        <label htmlFor={`checkout-start-${hotel.id}`}>Checkout início (HH:mm)</label>
-        <input id={`checkout-start-${hotel.id}`} name="checkout_time_start" defaultValue={hotel.checkout_time_start || ""} className="pms-field-input" />
+        <label htmlFor={`checkout-start-${hotel.id}`}>
+          Checkout início (HH:mm)
+        </label>
+        <input
+          id={`checkout-start-${hotel.id}`}
+          name="checkout_time_start"
+          defaultValue={hotel.checkout_time_start || ""}
+          className="pms-field-input"
+        />
       </div>
 
       <div className="pms-field">
-        <label htmlFor={`checkout-limit-${hotel.id}`}>Checkout limite (HH:mm)</label>
-        <input id={`checkout-limit-${hotel.id}`} name="checkout_time_limit" defaultValue={hotel.checkout_time_limit || ""} className="pms-field-input" />
+        <label htmlFor={`checkout-limit-${hotel.id}`}>
+          Checkout limite (HH:mm)
+        </label>
+        <input
+          id={`checkout-limit-${hotel.id}`}
+          name="checkout_time_limit"
+          defaultValue={hotel.checkout_time_limit || ""}
+          className="pms-field-input"
+        />
       </div>
 
       <label className="flex items-center gap-2">
-        <input name="is_active" type="checkbox" defaultChecked={hotel.is_active} />
+        <input
+          name="is_active"
+          type="checkbox"
+          defaultChecked={hotel.is_active}
+        />
         <span>Hotel ativo</span>
       </label>
 
-      <button type="submit" className="justify-self-start rounded-lg border-0 bg-[#1c6d4e] px-[0.75rem] py-[0.55rem] text-white">
+      <button
+        type="submit"
+        className="justify-self-start rounded-lg border-0 bg-[#1c6d4e] px-[0.75rem] py-[0.55rem] text-white"
+      >
         Salvar alterações
       </button>
     </form>
   );
 }
 
-export function HotelListItem({ hotel, canRead, canUpdate, canDelete, isViewing, isEditing }: HotelListItemProps) {
+export function HotelListItem({
+  hotel,
+  canRead,
+  canUpdate,
+  canDelete,
+  isViewing,
+  isEditing,
+}: HotelListItemProps) {
   const viewHref = `/dashboard/hotels/view?hotelId=${hotel.id}&mode=view`;
   const editHref = `/dashboard/hotels/view?hotelId=${hotel.id}&mode=edit`;
 

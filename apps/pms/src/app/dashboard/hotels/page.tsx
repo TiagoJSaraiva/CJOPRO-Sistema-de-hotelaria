@@ -13,7 +13,9 @@ export default async function HotelsPage({ searchParams }: HotelsPageProps) {
   const user = await getUserFromSession();
   const access = getHotelAccess(user);
   const targetRoute = getHotelDefaultRoute(access);
-  const statusQuery = resolvedSearchParams?.status ? `?status=${encodeURIComponent(resolvedSearchParams.status)}` : "";
+  const statusQuery = resolvedSearchParams?.status
+    ? `?status=${encodeURIComponent(resolvedSearchParams.status)}`
+    : "";
 
   if (!targetRoute) {
     return (

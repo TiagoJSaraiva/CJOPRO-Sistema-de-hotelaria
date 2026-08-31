@@ -2,8 +2,16 @@
 
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
-import { ADMIN_PERMISSION_TYPES, PERMISSIONS, type AdminPermissionType } from "@hotel/shared";
-import { createPermission, deletePermission, updatePermission } from "../../../lib/adminApi";
+import {
+  ADMIN_PERMISSION_TYPES,
+  PERMISSIONS,
+  type AdminPermissionType,
+} from "@hotel/shared";
+import {
+  createPermission,
+  deletePermission,
+  updatePermission,
+} from "../../../lib/adminApi";
 import { getUserFromSession } from "../../../lib/auth";
 
 function revalidatePermissionPages(): void {
@@ -16,7 +24,10 @@ function getRedirectNonce(): string {
   return Date.now().toString(36);
 }
 
-function redirectWithStatus(status: string, section: "create" | "view" | "root" = "root"): never {
+function redirectWithStatus(
+  status: string,
+  section: "create" | "view" | "root" = "root",
+): never {
   const nonce = getRedirectNonce();
 
   if (section === "root") {
@@ -40,24 +51,36 @@ function isDeleteConflictError(error: unknown): boolean {
   }
 
   const message = error.message.toLowerCase();
-  return message.includes("dependencias ativas") || message.includes("nao pode ser exclu");
+  return (
+    message.includes("dependencias ativas") ||
+    message.includes("nao pode ser exclu")
+  );
 }
 
-function normalizePermissionType(rawValue: FormDataEntryValue | null): AdminPermissionType | null {
+function normalizePermissionType(
+  rawValue: FormDataEntryValue | null,
+): AdminPermissionType | null {
   const parsed = String(rawValue || "").trim();
 
-  if (parsed === ADMIN_PERMISSION_TYPES.SYSTEM || parsed === ADMIN_PERMISSION_TYPES.HOTEL) {
+  if (
+    parsed === ADMIN_PERMISSION_TYPES.SYSTEM ||
+    parsed === ADMIN_PERMISSION_TYPES.HOTEL
+  ) {
     return parsed;
   }
 
   return null;
 }
 
-export async function createPermissionAction(formData: FormData): Promise<void> {
+export async function createPermissionAction(
+  formData: FormData,
+): Promise<void> {
   const user = await getUserFromSession();
 
   if (!user || !user.permissions.includes(PERMISSIONS.PERMISSION_CREATE)) {
-    const fallback = user?.permissions.includes(PERMISSIONS.PERMISSION_READ) ? "view" : "root";
+    const fallback = user?.permissions.includes(PERMISSIONS.PERMISSION_READ)
+      ? "view"
+      : "root";
     redirectWithStatus("forbidden", fallback);
   }
 
@@ -78,11 +101,15 @@ export async function createPermissionAction(formData: FormData): Promise<void> 
   redirectWithStatus("created", "create");
 }
 
-export async function updatePermissionAction(formData: FormData): Promise<void> {
+export async function updatePermissionAction(
+  formData: FormData,
+): Promise<void> {
   const user = await getUserFromSession();
 
   if (!user || !user.permissions.includes(PERMISSIONS.PERMISSION_UPDATE)) {
-    const fallback = user?.permissions.includes(PERMISSIONS.PERMISSION_READ) ? "view" : "root";
+    const fallback = user?.permissions.includes(PERMISSIONS.PERMISSION_READ)
+      ? "view"
+      : "root";
     redirectWithStatus("forbidden", fallback);
   }
 
@@ -104,11 +131,15 @@ export async function updatePermissionAction(formData: FormData): Promise<void> 
   redirectWithStatus("updated", "view");
 }
 
-export async function deletePermissionAction(formData: FormData): Promise<void> {
+export async function deletePermissionAction(
+  formData: FormData,
+): Promise<void> {
   const user = await getUserFromSession();
 
   if (!user || !user.permissions.includes(PERMISSIONS.PERMISSION_DELETE)) {
-    const fallback = user?.permissions.includes(PERMISSIONS.PERMISSION_READ) ? "view" : "root";
+    const fallback = user?.permissions.includes(PERMISSIONS.PERMISSION_READ)
+      ? "view"
+      : "root";
     redirectWithStatus("forbidden", fallback);
   }
 

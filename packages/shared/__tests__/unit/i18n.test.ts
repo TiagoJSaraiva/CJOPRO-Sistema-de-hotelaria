@@ -76,11 +76,15 @@ describe("i18n - Translation Functions", () => {
     });
 
     it("should translate 'checked_in' to 'Check in realizado'", () => {
-      expect(translateReservationStatus("checked_in")).toBe("Check in realizado");
+      expect(translateReservationStatus("checked_in")).toBe(
+        "Check in realizado",
+      );
     });
 
     it("should translate 'checked_out' to 'Check out realizado'", () => {
-      expect(translateReservationStatus("checked_out")).toBe("Check out realizado");
+      expect(translateReservationStatus("checked_out")).toBe(
+        "Check out realizado",
+      );
     });
 
     it("should translate 'canceled' to 'Cancelada'", () => {
@@ -106,8 +110,18 @@ describe("i18n - Translation Functions", () => {
 
   describe("Enum Value Preservation (Critical)", () => {
     it("should never mutate original enum values across all translation functions", () => {
-      const roomStatuses = ["available", "occupied", "maintenance", "blocked"] as const;
-      const reservationSources = ["front_desk", "website", "phone", "agency"] as const;
+      const roomStatuses = [
+        "available",
+        "occupied",
+        "maintenance",
+        "blocked",
+      ] as const;
+      const reservationSources = [
+        "front_desk",
+        "website",
+        "phone",
+        "agency",
+      ] as const;
       const reservationStatuses = [
         "pending",
         "confirmed",
@@ -123,8 +137,18 @@ describe("i18n - Translation Functions", () => {
       reservationStatuses.forEach(translateReservationStatus);
 
       // Verify values remain unchanged
-      expect(roomStatuses).toEqual(["available", "occupied", "maintenance", "blocked"]);
-      expect(reservationSources).toEqual(["front_desk", "website", "phone", "agency"]);
+      expect(roomStatuses).toEqual([
+        "available",
+        "occupied",
+        "maintenance",
+        "blocked",
+      ]);
+      expect(reservationSources).toEqual([
+        "front_desk",
+        "website",
+        "phone",
+        "agency",
+      ]);
       expect(reservationStatuses).toEqual([
         "pending",
         "confirmed",

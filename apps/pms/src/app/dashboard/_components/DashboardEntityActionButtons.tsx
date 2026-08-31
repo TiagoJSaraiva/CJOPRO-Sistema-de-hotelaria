@@ -33,7 +33,7 @@ export function DashboardEntityActionButtons({
   editDisabled = false,
   editDisabledTitle,
   deleteDisabled = false,
-  deleteDisabledTitle
+  deleteDisabledTitle,
 }: DashboardEntityActionButtonsProps) {
   return (
     <>
@@ -42,7 +42,9 @@ export function DashboardEntityActionButtons({
           href={viewHref}
           scroll={false}
           className={`${baseButtonClassName} border border-[#2d6cdf] no-underline ${
-            isViewing ? "bg-[#e9f0ff] text-[#1b4db3]" : "bg-white text-[#1b4db3]"
+            isViewing
+              ? "bg-[#e9f0ff] text-[#1b4db3]"
+              : "bg-white text-[#1b4db3]"
           }`}
         >
           Visualizar dados
@@ -54,7 +56,9 @@ export function DashboardEntityActionButtons({
           href={editHref}
           scroll={false}
           className={`${baseButtonClassName} border border-[#0f766e] no-underline ${
-            isEditing ? "bg-[#ddf5f2] text-[#0a5f58]" : "bg-white text-[#0a5f58]"
+            isEditing
+              ? "bg-[#ddf5f2] text-[#0a5f58]"
+              : "bg-white text-[#0a5f58]"
           }`}
         >
           Editar dados
@@ -75,7 +79,10 @@ export function DashboardEntityActionButtons({
       {canDelete && !deleteDisabled ? (
         <form action={deleteAction}>
           <input type="hidden" name="id" value={deleteId} />
-          <button type="submit" className={`${baseButtonClassName} border border-[#c83a3a] bg-white text-[#b00020]`}>
+          <button
+            type="submit"
+            className={`${baseButtonClassName} border border-[#c83a3a] bg-white text-[#b00020]`}
+          >
             Apagar dados
           </button>
         </form>

@@ -3,7 +3,11 @@
 import { LOGIN_PAGE_ERROR_PARAM } from "@hotel/shared";
 import { redirect } from "next/navigation";
 import { loginWithCredentials, saveSessionCookie } from "../../lib/auth";
-import { getActiveHotelCookieValue, resolveActiveHotelForUser, saveActiveHotelCookie } from "../../lib/activeHotel";
+import {
+  getActiveHotelCookieValue,
+  resolveActiveHotelForUser,
+  saveActiveHotelCookie,
+} from "../../lib/activeHotel";
 
 export async function loginAction(formData: FormData): Promise<void> {
   const email = String(formData.get("email") || "").trim();
@@ -17,7 +21,10 @@ export async function loginAction(formData: FormData): Promise<void> {
     const result = await loginWithCredentials(email, password);
     await saveSessionCookie(result.token, result.expiresIn);
     const preferredHotelId = await getActiveHotelCookieValue();
-    const resolvedActiveHotelId = resolveActiveHotelForUser(result.user, preferredHotelId);
+    const resolvedActiveHotelId = resolveActiveHotelForUser(
+      result.user,
+      preferredHotelId,
+    );
     await saveActiveHotelCookie(resolvedActiveHotelId);
   } catch {
     redirect(`/login?error=${LOGIN_PAGE_ERROR_PARAM.INVALID_CREDENTIALS}`);

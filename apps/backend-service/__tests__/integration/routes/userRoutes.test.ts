@@ -1,6 +1,11 @@
 import { afterAll, beforeAll, describe, expect, it } from "vitest";
 import type { FastifyInstance } from "fastify";
-import { AUTH_ERROR_CODE, AUTH_ERROR_MESSAGE, PERMISSIONS, type SessionPayload } from "@hotel/shared";
+import {
+  AUTH_ERROR_CODE,
+  AUTH_ERROR_MESSAGE,
+  PERMISSIONS,
+  type SessionPayload,
+} from "@hotel/shared";
 import { createApp } from "../../../src/app";
 import { signToken } from "../../../src/auth/session";
 
@@ -16,7 +21,7 @@ function createToken(permissions: string[]): string {
     permissions,
     roleAssignments: [],
     iat: nowInSeconds,
-    exp: nowInSeconds + 3600
+    exp: nowInSeconds + 3600,
   };
 
   return signToken(payload);
@@ -37,13 +42,13 @@ describe("routes/users", () => {
   it("retorna 401 para GET /admin/users sem autenticacao", async () => {
     const response = await app.inject({
       method: "GET",
-      url: "/admin/users"
+      url: "/admin/users",
     });
 
     expect(response.statusCode).toBe(401);
     expect(response.json()).toEqual({
       code: AUTH_ERROR_CODE.TOKEN_INVALID_OR_EXPIRED,
-      message: AUTH_ERROR_MESSAGE[AUTH_ERROR_CODE.TOKEN_INVALID_OR_EXPIRED]
+      message: AUTH_ERROR_MESSAGE[AUTH_ERROR_CODE.TOKEN_INVALID_OR_EXPIRED],
     });
   });
 
@@ -54,20 +59,20 @@ describe("routes/users", () => {
       method: "POST",
       url: "/admin/users",
       headers: {
-        authorization: `Bearer ${token}`
+        authorization: `Bearer ${token}`,
       },
       payload: {
         name: "Operador",
         email: "op@hotel.com",
         password_hash: "tmp123",
-        role_assignments: []
-      }
+        role_assignments: [],
+      },
     });
 
     expect(response.statusCode).toBe(403);
     expect(response.json()).toEqual({
       code: AUTH_ERROR_CODE.FORBIDDEN,
-      message: AUTH_ERROR_MESSAGE[AUTH_ERROR_CODE.FORBIDDEN]
+      message: AUTH_ERROR_MESSAGE[AUTH_ERROR_CODE.FORBIDDEN],
     });
   });
 
@@ -78,17 +83,17 @@ describe("routes/users", () => {
       method: "POST",
       url: "/admin/users",
       headers: {
-        authorization: `Bearer ${token}`
+        authorization: `Bearer ${token}`,
       },
       payload: {
-        name: ""
-      }
+        name: "",
+      },
     });
 
     expect(response.statusCode).toBe(400);
     expect(response.json()).toEqual({
       code: "ADMIN_VALIDATION_ERROR",
-      message: "Dados inválidos para a requisição."
+      message: "Dados inválidos para a requisição.",
     });
   });
 });

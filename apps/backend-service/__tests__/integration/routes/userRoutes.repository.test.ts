@@ -1,6 +1,10 @@
 import Fastify from "fastify";
 import { afterEach, describe, expect, it, vi } from "vitest";
-import { ADMIN_ROLE_TYPES, PERMISSIONS, type SessionPayload } from "@hotel/shared";
+import {
+  ADMIN_ROLE_TYPES,
+  PERMISSIONS,
+  type SessionPayload,
+} from "@hotel/shared";
 import { registerUserRoutes } from "../../../src/routes/userRoutes";
 import type { UsersRepository } from "../../../src/repositories/usersRepository";
 import { signToken } from "../../../src/auth/session";
@@ -19,13 +23,15 @@ function createToken(permissions: string[]): string {
     permissions,
     roleAssignments: [],
     iat: nowInSeconds,
-    exp: nowInSeconds + 3600
+    exp: nowInSeconds + 3600,
   };
 
   return signToken(payload);
 }
 
-function createUsersRepositoryMock(overrides: Partial<UsersRepository> = {}): UsersRepository {
+function createUsersRepositoryMock(
+  overrides: Partial<UsersRepository> = {},
+): UsersRepository {
   return {
     listReferenceHotels: vi.fn(async () => []),
     listReferenceRoles: vi.fn(async () => []),
@@ -49,17 +55,17 @@ function createUsersRepositoryMock(overrides: Partial<UsersRepository> = {}): Us
             name: "Operador",
             role_type: "SYSTEM_ROLE",
             hotel_id: null,
-            hotels: { name: null }
-          }
-        }
-      ]
+            hotels: { name: null },
+          },
+        },
+      ],
     })),
     updateUserWithRoles: vi.fn(async () => "ok"),
     updateUser: vi.fn(async () => "ok"),
     userExists: vi.fn(async () => true),
     clearUserRoles: vi.fn(async () => undefined),
     deleteUser: vi.fn(async () => "ok"),
-    ...overrides
+    ...overrides,
   };
 }
 
@@ -86,18 +92,18 @@ describe("routes/users with injected repository", () => {
       method: "PUT",
       url: "/admin/users/user-1",
       headers: {
-        authorization: `Bearer ${createToken([PERMISSIONS.USER_UPDATE])}`
+        authorization: `Bearer ${createToken([PERMISSIONS.USER_UPDATE])}`,
       },
       payload: {
         name: "Admin",
-        email: "admin@example.com"
-      }
+        email: "admin@example.com",
+      },
     });
 
     expect(response.statusCode).toBe(403);
     expect(response.json()).toEqual({
       code: "ADMIN_SELF_ACTION_FORBIDDEN",
-      message: "Nao e permitido atualizar o proprio usuario por esta rota."
+      message: "Nao e permitido atualizar o proprio usuario por esta rota.",
     });
     expect(repository.updateUserWithRoles).not.toHaveBeenCalled();
   });
@@ -110,14 +116,14 @@ describe("routes/users with injected repository", () => {
       method: "DELETE",
       url: "/admin/users/user-1",
       headers: {
-        authorization: `Bearer ${createToken([PERMISSIONS.USER_DELETE])}`
-      }
+        authorization: `Bearer ${createToken([PERMISSIONS.USER_DELETE])}`,
+      },
     });
 
     expect(response.statusCode).toBe(403);
     expect(response.json()).toEqual({
       code: "ADMIN_SELF_ACTION_FORBIDDEN",
-      message: "Nao e permitido excluir o proprio usuario por esta rota."
+      message: "Nao e permitido excluir o proprio usuario por esta rota.",
     });
     expect(repository.deleteUser).not.toHaveBeenCalled();
   });
@@ -130,9 +136,9 @@ describe("routes/users with injected repository", () => {
           name: "Operador",
           role_type: ADMIN_ROLE_TYPES.SYSTEM,
           hotel_id: null,
-          hotels: { name: null }
-        }
-      ])
+          hotels: { name: null },
+        },
+      ]),
     });
 
     const app = await createUsersTestApp(repository);
@@ -141,14 +147,14 @@ describe("routes/users with injected repository", () => {
       method: "POST",
       url: "/admin/users",
       headers: {
-        authorization: `Bearer ${createToken([PERMISSIONS.USER_CREATE])}`
+        authorization: `Bearer ${createToken([PERMISSIONS.USER_CREATE])}`,
       },
       payload: {
         name: "Operador",
         email: "op@hotel.com",
         password_hash: "Secret#123",
-        role_assignments: [{ role_id: "role-1", hotel_id: null }]
-      }
+        role_assignments: [{ role_id: "role-1", hotel_id: null }],
+      },
     });
 
     expect(response.statusCode).toBe(201);
@@ -156,9 +162,9 @@ describe("routes/users with injected repository", () => {
       expect.objectContaining({
         name: "Operador",
         email: "op@hotel.com",
-        is_active: true
+        is_active: true,
       }),
-      [{ role_id: "role-1", hotel_id: null }]
+      [{ role_id: "role-1", hotel_id: null }],
     );
   });
 
@@ -170,9 +176,9 @@ describe("routes/users with injected repository", () => {
           name: "Operador",
           role_type: ADMIN_ROLE_TYPES.HOTEL,
           hotel_id: null,
-          hotels: { name: null }
-        }
-      ])
+          hotels: { name: null },
+        },
+      ]),
     });
 
     const app = await createUsersTestApp(repository);
@@ -181,26 +187,26 @@ describe("routes/users with injected repository", () => {
       method: "POST",
       url: "/admin/users",
       headers: {
-        authorization: `Bearer ${createToken([PERMISSIONS.USER_CREATE])}`
+        authorization: `Bearer ${createToken([PERMISSIONS.USER_CREATE])}`,
       },
       payload: {
         name: "Operador",
         email: "op@hotel.com",
         password_hash: "Secret#123",
-        role_assignments: [{ role_id: "role-hotel-generica", hotel_id: null }]
-      }
+        role_assignments: [{ role_id: "role-hotel-generica", hotel_id: null }],
+      },
     });
 
     expect(response.statusCode).toBe(400);
     expect(response.json()).toEqual({
       code: "ADMIN_VALIDATION_ERROR",
-      message: "Roles genericas de hotel exigem um hotel de contexto."
+      message: "Roles genericas de hotel exigem um hotel de contexto.",
     });
   });
 
   it("retorna 409 quando operacao atomica de criacao sinaliza conflito", async () => {
     const repository = createUsersRepositoryMock({
-      createUserWithRoles: vi.fn(async () => ({ result: "conflict" }))
+      createUserWithRoles: vi.fn(async () => ({ result: "conflict" })),
     });
 
     const app = await createUsersTestApp(repository);
@@ -209,23 +215,26 @@ describe("routes/users with injected repository", () => {
       method: "POST",
       url: "/admin/users",
       headers: {
-        authorization: `Bearer ${createToken([PERMISSIONS.USER_CREATE])}`
+        authorization: `Bearer ${createToken([PERMISSIONS.USER_CREATE])}`,
       },
       payload: {
         name: "Operador",
         email: "op@hotel.com",
         password_hash: "Secret#123",
-        role_assignments: []
-      }
+        role_assignments: [],
+      },
     });
 
     expect(response.statusCode).toBe(409);
-    expect(response.json()).toEqual({ code: "ADMIN_CONFLICT", message: "Email ja utilizado por outro usuario." });
+    expect(response.json()).toEqual({
+      code: "ADMIN_CONFLICT",
+      message: "Email ja utilizado por outro usuario.",
+    });
   });
 
   it("retorna 409 quando delete de usuario sinaliza conflito", async () => {
     const repository = createUsersRepositoryMock({
-      deleteUser: vi.fn(async () => "conflict")
+      deleteUser: vi.fn(async () => "conflict"),
     });
 
     const app = await createUsersTestApp(repository);
@@ -234,11 +243,14 @@ describe("routes/users with injected repository", () => {
       method: "DELETE",
       url: "/admin/users/user-2",
       headers: {
-        authorization: `Bearer ${createToken([PERMISSIONS.USER_DELETE])}`
-      }
+        authorization: `Bearer ${createToken([PERMISSIONS.USER_DELETE])}`,
+      },
     });
 
     expect(response.statusCode).toBe(409);
-    expect(response.json()).toEqual({ code: "ADMIN_CONFLICT", message: "Usuario nao pode ser excluido: possui dependencias ativas." });
+    expect(response.json()).toEqual({
+      code: "ADMIN_CONFLICT",
+      message: "Usuario nao pode ser excluido: possui dependencias ativas.",
+    });
   });
 });

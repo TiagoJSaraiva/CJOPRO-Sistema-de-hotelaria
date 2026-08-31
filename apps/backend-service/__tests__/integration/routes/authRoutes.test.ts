@@ -1,21 +1,42 @@
-import { afterAll, beforeAll, beforeEach, describe, expect, it, vi } from "vitest";
+import {
+  afterAll,
+  beforeAll,
+  beforeEach,
+  describe,
+  expect,
+  it,
+  vi,
+} from "vitest";
 import type { FastifyInstance } from "fastify";
 
 vi.mock("../../../src/common/supabaseServer", () => ({
-  createServerClient: vi.fn()
+  createServerClient: vi.fn(),
 }));
 
-import { ACTIVE_HOTEL_HEADER_NAME, AUTH_ERROR_CODE, AUTH_ERROR_MESSAGE, PERMISSIONS, type SessionPayload } from "@hotel/shared";
+import {
+  ACTIVE_HOTEL_HEADER_NAME,
+  AUTH_ERROR_CODE,
+  AUTH_ERROR_MESSAGE,
+  PERMISSIONS,
+  type SessionPayload,
+} from "@hotel/shared";
 import { createServerClient } from "../../../src/common/supabaseServer";
 import { createApp } from "../../../src/app";
-import { hashTemporaryPassword, signToken, verifyToken } from "../../../src/auth/session";
+import {
+  hashTemporaryPassword,
+  signToken,
+  verifyToken,
+} from "../../../src/auth/session";
 
 function createLoginSupabaseMock(options: {
   userRow: any;
   userError: { code?: string } | null;
   updateError?: { code?: string } | null;
 }) {
-  const single = vi.fn(async () => ({ data: options.userRow, error: options.userError }));
+  const single = vi.fn(async () => ({
+    data: options.userRow,
+    error: options.userError,
+  }));
   const eqForSelect = vi.fn(() => ({ single }));
   const select = vi.fn(() => ({ eq: eqForSelect }));
 
@@ -24,14 +45,14 @@ function createLoginSupabaseMock(options: {
 
   const from = vi.fn(() => ({
     select,
-    update
+    update,
   }));
 
   return {
     from,
     select,
     update,
-    updateEq
+    updateEq,
   };
 }
 
@@ -46,7 +67,7 @@ const mePayload: SessionPayload = {
   permissions: [PERMISSIONS.USER_READ],
   roleAssignments: [],
   iat: nowInSeconds,
-  exp: nowInSeconds + 3600
+  exp: nowInSeconds + 3600,
 };
 
 describe("routes/auth", () => {
@@ -69,20 +90,20 @@ describe("routes/auth", () => {
     const response = await app.inject({
       method: "POST",
       url: "/auth/login",
-      payload: {}
+      payload: {},
     });
 
     expect(response.statusCode).toBe(400);
     expect(response.json()).toEqual({
       code: AUTH_ERROR_CODE.MISSING_FIELDS,
-      message: AUTH_ERROR_MESSAGE[AUTH_ERROR_CODE.MISSING_FIELDS]
+      message: AUTH_ERROR_MESSAGE[AUTH_ERROR_CODE.MISSING_FIELDS],
     });
   });
 
   it("retorna 401 quando usuario nao e encontrado", async () => {
     const supabase = createLoginSupabaseMock({
       userRow: null,
-      userError: { code: "PGRST116" }
+      userError: { code: "PGRST116" },
     });
 
     vi.mocked(createServerClient).mockReturnValue(supabase as any);
@@ -92,14 +113,14 @@ describe("routes/auth", () => {
       url: "/auth/login",
       payload: {
         email: "admin@example.com",
-        password: "Secret#123"
-      }
+        password: "Secret#123",
+      },
     });
 
     expect(response.statusCode).toBe(401);
     expect(response.json()).toEqual({
       code: AUTH_ERROR_CODE.INVALID_CREDENTIALS,
-      message: AUTH_ERROR_MESSAGE[AUTH_ERROR_CODE.INVALID_CREDENTIALS]
+      message: AUTH_ERROR_MESSAGE[AUTH_ERROR_CODE.INVALID_CREDENTIALS],
     });
   });
 
@@ -123,12 +144,14 @@ describe("routes/auth", () => {
               role_type: "SYSTEM_ROLE",
               hotel_id: null,
               hotels: { name: null },
-              role_permissions: [{ permissions: { name: PERMISSIONS.USER_READ } }]
-            }
-          }
-        ]
+              role_permissions: [
+                { permissions: { name: PERMISSIONS.USER_READ } },
+              ],
+            },
+          },
+        ],
       },
-      userError: null
+      userError: null,
     });
 
     vi.mocked(createServerClient).mockReturnValue(supabase as any);
@@ -138,8 +161,8 @@ describe("routes/auth", () => {
       url: "/auth/login",
       payload: {
         email: "ADMIN@EXAMPLE.COM",
-        password: "Secret#123"
-      }
+        password: "Secret#123",
+      },
     });
 
     expect(response.statusCode).toBe(200);
@@ -161,9 +184,9 @@ describe("routes/auth", () => {
           roleType: "SYSTEM_ROLE",
           hotelId: null,
           hotelName: null,
-          permissions: [PERMISSIONS.USER_READ]
-        }
-      ]
+          permissions: [PERMISSIONS.USER_READ],
+        },
+      ],
     });
     expect(verifyToken(body.token)).not.toBeNull();
     expect(supabase.update).toHaveBeenCalled();
@@ -192,12 +215,14 @@ describe("routes/auth", () => {
               role_type: "HOTEL_ROLE",
               hotel_id: null,
               hotels: { name: null },
-              role_permissions: [{ permissions: { name: PERMISSIONS.USER_READ } }]
-            }
-          }
-        ]
+              role_permissions: [
+                { permissions: { name: PERMISSIONS.USER_READ } },
+              ],
+            },
+          },
+        ],
       },
-      userError: null
+      userError: null,
     });
 
     vi.mocked(createServerClient).mockReturnValue(supabase as any);
@@ -207,8 +232,8 @@ describe("routes/auth", () => {
       url: "/auth/login",
       payload: {
         email: "gestor@example.com",
-        password: "Secret#123"
-      }
+        password: "Secret#123",
+      },
     });
 
     expect(response.statusCode).toBe(200);
@@ -222,8 +247,8 @@ describe("routes/auth", () => {
         roleType: "HOTEL_ROLE",
         hotelId: "hotel-legal-id",
         hotelName: "Hotel Legal",
-        permissions: [PERMISSIONS.USER_READ]
-      }
+        permissions: [PERMISSIONS.USER_READ],
+      },
     ]);
   });
 
@@ -239,9 +264,9 @@ describe("routes/auth", () => {
         password_hash: passwordHash,
         failed_attempts: 10,
         locked_until: lockedUntil,
-        user_roles: []
+        user_roles: [],
       },
-      userError: null
+      userError: null,
     });
 
     vi.mocked(createServerClient).mockReturnValue(supabase as any);
@@ -251,27 +276,27 @@ describe("routes/auth", () => {
       url: "/auth/login",
       payload: {
         email: "admin@example.com",
-        password: "Secret#123"
-      }
+        password: "Secret#123",
+      },
     });
 
     expect(response.statusCode).toBe(429);
     expect(response.json()).toMatchObject({
       code: AUTH_ERROR_CODE.ACCOUNT_LOCKED,
-      message: AUTH_ERROR_MESSAGE[AUTH_ERROR_CODE.ACCOUNT_LOCKED]
+      message: AUTH_ERROR_MESSAGE[AUTH_ERROR_CODE.ACCOUNT_LOCKED],
     });
   });
 
   it("retorna 401 no /auth/me sem token", async () => {
     const response = await app.inject({
       method: "GET",
-      url: "/auth/me"
+      url: "/auth/me",
     });
 
     expect(response.statusCode).toBe(401);
     expect(response.json()).toEqual({
       code: AUTH_ERROR_CODE.TOKEN_INVALID_OR_EXPIRED,
-      message: AUTH_ERROR_MESSAGE[AUTH_ERROR_CODE.TOKEN_INVALID_OR_EXPIRED]
+      message: AUTH_ERROR_MESSAGE[AUTH_ERROR_CODE.TOKEN_INVALID_OR_EXPIRED],
     });
   });
 
@@ -282,8 +307,8 @@ describe("routes/auth", () => {
       method: "GET",
       url: "/auth/me",
       headers: {
-        authorization: `Bearer ${token}`
-      }
+        authorization: `Bearer ${token}`,
+      },
     });
 
     expect(response.statusCode).toBe(200);
@@ -295,8 +320,8 @@ describe("routes/auth", () => {
         tenantId: mePayload.tenantId,
         roles: mePayload.roles,
         permissions: mePayload.permissions,
-        roleAssignments: mePayload.roleAssignments
-      }
+        roleAssignments: mePayload.roleAssignments,
+      },
     });
   });
 
@@ -312,7 +337,7 @@ describe("routes/auth", () => {
           roleType: "SYSTEM_ROLE",
           hotelId: null,
           hotelName: null,
-          permissions: [PERMISSIONS.PERMISSION_CREATE]
+          permissions: [PERMISSIONS.PERMISSION_CREATE],
         },
         {
           roleId: "role-hotel",
@@ -320,9 +345,9 @@ describe("routes/auth", () => {
           roleType: "HOTEL_ROLE",
           hotelId: "hotel-legal-id",
           hotelName: "Hotel Legal",
-          permissions: [PERMISSIONS.USER_READ]
-        }
-      ]
+          permissions: [PERMISSIONS.USER_READ],
+        },
+      ],
     });
 
     const response = await app.inject({
@@ -330,8 +355,8 @@ describe("routes/auth", () => {
       url: "/auth/me",
       headers: {
         authorization: `Bearer ${token}`,
-        [ACTIVE_HOTEL_HEADER_NAME]: "hotel-legal-id"
-      }
+        [ACTIVE_HOTEL_HEADER_NAME]: "hotel-legal-id",
+      },
     });
 
     expect(response.statusCode).toBe(200);
@@ -350,7 +375,7 @@ describe("routes/auth", () => {
             roleType: "SYSTEM_ROLE",
             hotelId: null,
             hotelName: null,
-            permissions: [PERMISSIONS.PERMISSION_CREATE]
+            permissions: [PERMISSIONS.PERMISSION_CREATE],
           },
           {
             roleId: "role-hotel",
@@ -358,10 +383,10 @@ describe("routes/auth", () => {
             roleType: "HOTEL_ROLE",
             hotelId: "hotel-legal-id",
             hotelName: "Hotel Legal",
-            permissions: [PERMISSIONS.USER_READ]
-          }
-        ]
-      }
+            permissions: [PERMISSIONS.USER_READ],
+          },
+        ],
+      },
     });
   });
 });

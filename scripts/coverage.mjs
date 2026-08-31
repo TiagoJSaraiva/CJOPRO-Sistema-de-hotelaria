@@ -7,7 +7,7 @@ import {
   mkdirSync,
   readFileSync,
   rmSync,
-  writeFileSync
+  writeFileSync,
 } from "node:fs";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
@@ -20,7 +20,7 @@ const WORKSPACES = [
   { name: "Backend", directory: "apps/backend-service" },
   { name: "Booking engine", directory: "apps/booking-engine-service" },
   { name: "PMS", directory: "apps/pms" },
-  { name: "Shared", directory: "packages/shared" }
+  { name: "Shared", directory: "packages/shared" },
 ];
 
 function workspaceCoverageDirectory(workspace) {
@@ -29,7 +29,11 @@ function workspaceCoverageDirectory(workspace) {
 
 function assertGeneratedPath(target) {
   const relativePath = path.relative(ROOT_DIRECTORY, target);
-  if (!relativePath || relativePath.startsWith("..") || path.isAbsolute(relativePath)) {
+  if (
+    !relativePath ||
+    relativePath.startsWith("..") ||
+    path.isAbsolute(relativePath)
+  ) {
     throw new Error(`Caminho de relatório inseguro: ${target}`);
   }
 }
@@ -37,7 +41,7 @@ function assertGeneratedPath(target) {
 function cleanReports() {
   const reportDirectories = [
     ROOT_REPORT_DIRECTORY,
-    ...WORKSPACES.map(workspaceCoverageDirectory)
+    ...WORKSPACES.map(workspaceCoverageDirectory),
   ];
 
   for (const reportDirectory of reportDirectories) {
@@ -54,7 +58,7 @@ function runTurboCoverage() {
     return spawnSync(process.execPath, [inheritedPnpmEntry, ...args], {
       cwd: ROOT_DIRECTORY,
       stdio: "inherit",
-      windowsHide: true
+      windowsHide: true,
     });
   }
 
@@ -63,7 +67,7 @@ function runTurboCoverage() {
     cwd: ROOT_DIRECTORY,
     stdio: "inherit",
     shell: process.platform === "win32",
-    windowsHide: true
+    windowsHide: true,
   });
 }
 
@@ -86,11 +90,13 @@ function readMetric(metric, workspaceName, metricName) {
 function readWorkspaceSummary(workspace) {
   const summaryPath = path.join(
     workspaceCoverageDirectory(workspace),
-    "coverage-summary.json"
+    "coverage-summary.json",
   );
 
   if (!existsSync(summaryPath)) {
-    throw new Error(`${workspace.name}: ${path.relative(ROOT_DIRECTORY, summaryPath)} ausente.`);
+    throw new Error(
+      `${workspace.name}: ${path.relative(ROOT_DIRECTORY, summaryPath)} ausente.`,
+    );
   }
 
   let parsed;
@@ -98,24 +104,32 @@ function readWorkspaceSummary(workspace) {
     parsed = JSON.parse(readFileSync(summaryPath, "utf8"));
   } catch (error) {
     const reason = error instanceof Error ? error.message : String(error);
-    throw new Error(`${workspace.name}: JSON de cobertura inválido (${reason}).`);
+    throw new Error(
+      `${workspace.name}: JSON de cobertura inválido (${reason}).`,
+    );
   }
 
-  if (typeof parsed !== "object" || parsed === null || typeof parsed.total !== "object") {
+  if (
+    typeof parsed !== "object" ||
+    parsed === null ||
+    typeof parsed.total !== "object"
+  ) {
     throw new Error(`${workspace.name}: resumo não contém o objeto total.`);
   }
 
   return Object.fromEntries(
     METRICS.map((metricName) => [
       metricName,
-      readMetric(parsed.total[metricName], workspace.name, metricName)
-    ])
+      readMetric(parsed.total[metricName], workspace.name, metricName),
+    ]),
   );
 }
 
 function formatMetric(metric) {
   const percentage =
-    metric.total === 0 ? 100 : Math.floor((metric.covered * 10_000) / metric.total) / 100;
+    metric.total === 0
+      ? 100
+      : Math.floor((metric.covered * 10_000) / metric.total) / 100;
   return `${percentage.toFixed(2)}% (${metric.covered}/${metric.total})`;
 }
 
@@ -123,7 +137,7 @@ function buildReport() {
   const rows = [];
   const errors = [];
   const totals = Object.fromEntries(
-    METRICS.map((metricName) => [metricName, { covered: 0, total: 0 }])
+    METRICS.map((metricName) => [metricName, { covered: 0, total: 0 }]),
   );
 
   for (const workspace of WORKSPACES) {
@@ -134,17 +148,19 @@ function buildReport() {
         totals[metricName].total += summary[metricName].total;
       }
       rows.push(
-        `| ${workspace.name} | ${METRICS.map((metricName) => formatMetric(summary[metricName])).join(" | ")} |`
+        `| ${workspace.name} | ${METRICS.map((metricName) => formatMetric(summary[metricName])).join(" | ")} |`,
       );
     } catch (error) {
       const message = error instanceof Error ? error.message : String(error);
       errors.push(message);
-      rows.push(`| ${workspace.name} | indisponível | indisponível | indisponível | indisponível |`);
+      rows.push(
+        `| ${workspace.name} | indisponível | indisponível | indisponível | indisponível |`,
+      );
     }
   }
 
   rows.push(
-    `| **Total ponderado** | ${METRICS.map((metricName) => `**${formatMetric(totals[metricName])}**`).join(" | ")} |`
+    `| **Total ponderado** | ${METRICS.map((metricName) => `**${formatMetric(totals[metricName])}**`).join(" | ")} |`,
   );
 
   const lines = [
@@ -154,11 +170,16 @@ function buildReport() {
     "| --- | ---: | ---: | ---: | ---: |",
     ...rows,
     "",
-    "O total é calculado pela soma de itens cobertos e elegíveis, sem média simples entre workspaces."
+    "O total é calculado pela soma de itens cobertos e elegíveis, sem média simples entre workspaces.",
   ];
 
   if (errors.length > 0) {
-    lines.push("", "## Problemas nos relatórios", "", ...errors.map((error) => `- ${error}`));
+    lines.push(
+      "",
+      "## Problemas nos relatórios",
+      "",
+      ...errors.map((error) => `- ${error}`),
+    );
   }
 
   return { markdown: `${lines.join("\n")}\n`, errors };
@@ -184,7 +205,9 @@ if (!reportOnly) {
     const result = runTurboCoverage();
     coverageExitCode = result.status ?? 1;
     if (result.error) {
-      process.stderr.write(`Falha ao iniciar o Turbo: ${result.error.message}\n`);
+      process.stderr.write(
+        `Falha ao iniciar o Turbo: ${result.error.message}\n`,
+      );
     }
   } catch (error) {
     coverageExitCode = 1;
@@ -204,10 +227,14 @@ try {
 }
 
 if (coverageExitCode !== 0) {
-  process.stderr.write(`A execução de cobertura falhou com código ${coverageExitCode}.\n`);
+  process.stderr.write(
+    `A execução de cobertura falhou com código ${coverageExitCode}.\n`,
+  );
 }
 if (reportErrors.length > 0) {
-  process.stderr.write("Os relatórios de cobertura estão ausentes ou inválidos.\n");
+  process.stderr.write(
+    "Os relatórios de cobertura estão ausentes ou inválidos.\n",
+  );
 }
 
 process.exitCode = coverageExitCode === 0 && reportErrors.length === 0 ? 0 : 1;

@@ -15,7 +15,9 @@ type HotelViewPageProps = {
   }>;
 };
 
-export default async function HotelViewPage({ searchParams }: HotelViewPageProps) {
+export default async function HotelViewPage({
+  searchParams,
+}: HotelViewPageProps) {
   const resolvedSearchParams = await searchParams;
   const user = await getUserFromSession();
   const access = getHotelAccess(user);
@@ -27,7 +29,12 @@ export default async function HotelViewPage({ searchParams }: HotelViewPageProps
       redirect(fallback);
     }
 
-    return <DashboardAccessDeniedCard title="Hotéis" message="Sem permissão para visualizar hotéis." />;
+    return (
+      <DashboardAccessDeniedCard
+        title="Hotéis"
+        message="Sem permissão para visualizar hotéis."
+      />
+    );
   }
 
   const activeHotelId = String(resolvedSearchParams?.hotelId || "").trim();
@@ -39,10 +46,22 @@ export default async function HotelViewPage({ searchParams }: HotelViewPageProps
       title="Hotéis"
       activeTabKey="view"
       tabs={[
-        { key: "create", label: "Criar hotel", href: "/dashboard/hotels/create", isVisible: access.canCreate },
-        { key: "view", label: "Ver hotéis", href: "/dashboard/hotels/view", isVisible: access.canRead }
+        {
+          key: "create",
+          label: "Criar hotel",
+          href: "/dashboard/hotels/create",
+          isVisible: access.canCreate,
+        },
+        {
+          key: "view",
+          label: "Ver hotéis",
+          href: "/dashboard/hotels/view",
+          isVisible: access.canRead,
+        },
       ]}
-      statusContent={<HotelStatusMessage status={resolvedSearchParams?.status} />}
+      statusContent={
+        <HotelStatusMessage status={resolvedSearchParams?.status} />
+      }
     >
       <HotelsViewFilterableSection
         hotels={hotels}

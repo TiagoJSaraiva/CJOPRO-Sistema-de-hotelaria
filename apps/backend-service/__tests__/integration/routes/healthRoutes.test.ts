@@ -13,38 +13,43 @@ describe("routes/health", () => {
     process.env.ALLOWED_ORIGINS = "http://example.test";
     documentationApp = createApp({ documentation: "ui" });
     openApiOnlyApp = createApp({ documentation: "openapi" });
-    if (previousAllowedOrigins === undefined) delete process.env.ALLOWED_ORIGINS;
+    if (previousAllowedOrigins === undefined)
+      delete process.env.ALLOWED_ORIGINS;
     else process.env.ALLOWED_ORIGINS = previousAllowedOrigins;
     await Promise.all([app.ready(), documentationApp.ready()]);
   });
 
   afterAll(async () => {
-    await Promise.all([app.close(), documentationApp.close(), openApiOnlyApp.close()]);
+    await Promise.all([
+      app.close(),
+      documentationApp.close(),
+      openApiOnlyApp.close(),
+    ]);
   });
 
   it("retorna status do servico", async () => {
     const response = await app.inject({
       method: "GET",
-      url: "/health"
+      url: "/health",
     });
 
     expect(response.statusCode).toBe(200);
     expect(response.json()).toEqual({
       status: "ok",
-      service: "backend-service"
+      service: "backend-service",
     });
 
     const malformedJson = await app.inject({
       method: "POST",
       url: "/auth/login",
       headers: { "content-type": "application/json" },
-      payload: "{"
+      payload: "{",
     });
     expect(malformedJson.statusCode).toBe(400);
 
     const [documentation, hiddenUi] = await Promise.all([
       documentationApp.inject({ method: "GET", url: "/docs/json" }),
-      app.inject({ method: "GET", url: "/docs/json" })
+      app.inject({ method: "GET", url: "/docs/json" }),
     ]);
 
     expect(documentation.statusCode).toBe(200);

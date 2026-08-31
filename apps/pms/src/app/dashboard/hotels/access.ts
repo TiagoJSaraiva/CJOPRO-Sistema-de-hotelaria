@@ -16,11 +16,13 @@ export function getHotelAccess(user: UserLike): HotelAccess {
     canCreate: permissions.includes(PERMISSIONS.HOTEL_CREATE),
     canRead: permissions.includes(PERMISSIONS.HOTEL_READ),
     canUpdate: permissions.includes(PERMISSIONS.HOTEL_UPDATE),
-    canDelete: permissions.includes(PERMISSIONS.HOTEL_DELETE)
+    canDelete: permissions.includes(PERMISSIONS.HOTEL_DELETE),
   };
 }
 
-export function getHotelDefaultRoute(access: HotelAccess): "/dashboard/hotels/view" | "/dashboard/hotels/create" | null {
+export function getHotelDefaultRoute(
+  access: HotelAccess,
+): "/dashboard/hotels/view" | "/dashboard/hotels/create" | null {
   if (access.canRead) {
     return "/dashboard/hotels/view";
   }

@@ -6,7 +6,7 @@ import {
   DEFAULT_CUSTOMER_VIEW_FILTERS,
   applyCustomerViewFilters,
   countAppliedCustomerFilters,
-  type CustomerViewFilters
+  type CustomerViewFilters,
 } from "./customerViewFilters";
 import { viewFiltersFieldClassName } from "../../_components/ViewFiltersBase";
 import { EntityViewFilterableSection } from "../../_components/EntityViewFilterableSection";
@@ -23,7 +23,15 @@ type CustomersViewFilterableSectionProps = {
   children?: React.ReactNode;
 };
 
-export function CustomersViewFilterableSection({ customers, canRead, canUpdate, canDelete, activeCustomerId, mode, children }: CustomersViewFilterableSectionProps) {
+export function CustomersViewFilterableSection({
+  customers,
+  canRead,
+  canUpdate,
+  canDelete,
+  activeCustomerId,
+  mode,
+  children,
+}: CustomersViewFilterableSectionProps) {
   const {
     isModalOpen,
     appliedFilters,
@@ -32,11 +40,14 @@ export function CustomersViewFilterableSection({ customers, canRead, canUpdate, 
     closeFilters,
     applyFilters,
     clearFilters,
-    updateDraftFilter
+    updateDraftFilter,
   } = useViewFiltersState<CustomerViewFilters>(DEFAULT_CUSTOMER_VIEW_FILTERS);
 
   const appliedFilterCount = countAppliedCustomerFilters(appliedFilters);
-  const filteredCustomers = useMemo(() => applyCustomerViewFilters(customers, appliedFilters), [customers, appliedFilters]);
+  const filteredCustomers = useMemo(
+    () => applyCustomerViewFilters(customers, appliedFilters),
+    [customers, appliedFilters],
+  );
 
   return (
     <EntityViewFilterableSection
@@ -69,7 +80,9 @@ export function CustomersViewFilterableSection({ customers, canRead, canUpdate, 
             <span>Nome, documento ou contato</span>
             <input
               value={draftFilters.search}
-              onChange={(event) => updateDraftFilter("search", event.target.value)}
+              onChange={(event) =>
+                updateDraftFilter("search", event.target.value)
+              }
               placeholder="Ex.: maria, CPF, email"
               className={viewFiltersFieldClassName}
             />
@@ -79,7 +92,9 @@ export function CustomersViewFilterableSection({ customers, canRead, canUpdate, 
             <span>Tipo de documento</span>
             <input
               value={draftFilters.documentType}
-              onChange={(event) => updateDraftFilter("documentType", event.target.value)}
+              onChange={(event) =>
+                updateDraftFilter("documentType", event.target.value)
+              }
               placeholder="Ex.: CPF"
               className={viewFiltersFieldClassName}
             />
@@ -87,12 +102,26 @@ export function CustomersViewFilterableSection({ customers, canRead, canUpdate, 
 
           <label className="pms-field">
             <span>Nascimento a partir de</span>
-            <input type="date" value={draftFilters.birthFrom} onChange={(event) => updateDraftFilter("birthFrom", event.target.value)} className={viewFiltersFieldClassName} />
+            <input
+              type="date"
+              value={draftFilters.birthFrom}
+              onChange={(event) =>
+                updateDraftFilter("birthFrom", event.target.value)
+              }
+              className={viewFiltersFieldClassName}
+            />
           </label>
 
           <label className="pms-field">
             <span>Nascimento até</span>
-            <input type="date" value={draftFilters.birthTo} onChange={(event) => updateDraftFilter("birthTo", event.target.value)} className={viewFiltersFieldClassName} />
+            <input
+              type="date"
+              value={draftFilters.birthTo}
+              onChange={(event) =>
+                updateDraftFilter("birthTo", event.target.value)
+              }
+              className={viewFiltersFieldClassName}
+            />
           </label>
         </div>
       }

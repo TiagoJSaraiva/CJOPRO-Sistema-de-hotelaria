@@ -1,9 +1,13 @@
-import type { AdminFinancialTransaction, TransactionStatus, TransactionType } from "@hotel/shared";
+import type {
+  AdminFinancialTransaction,
+  TransactionStatus,
+  TransactionType,
+} from "@hotel/shared";
 import {
   getFinancialTransactionEffectiveDate,
   isFinancialTransactionDueSoon,
   isFinancialTransactionOverdue,
-  isFinancialTransactionSettled
+  isFinancialTransactionSettled,
 } from "@hotel/shared";
 
 export type TransactionViewFilters = {
@@ -29,10 +33,12 @@ export const DEFAULT_TRANSACTION_VIEW_FILTERS: TransactionViewFilters = {
   dateFrom: "",
   dateTo: "",
   minAmount: "",
-  maxAmount: ""
+  maxAmount: "",
 };
 
-export function countAppliedTransactionFilters(filters: TransactionViewFilters): number {
+export function countAppliedTransactionFilters(
+  filters: TransactionViewFilters,
+): number {
   let total = 0;
 
   if (filters.search.trim()) total += 1;
@@ -52,7 +58,7 @@ export function countAppliedTransactionFilters(filters: TransactionViewFilters):
 export function applyTransactionViewFilters(
   transactions: AdminFinancialTransaction[],
   filters: TransactionViewFilters,
-  referenceDate: Date = new Date()
+  referenceDate: Date = new Date(),
 ): AdminFinancialTransaction[] {
   const search = filters.search.trim().toLocaleLowerCase();
   const costCenter = filters.costCenter.trim().toLocaleLowerCase();
@@ -70,7 +76,7 @@ export function applyTransactionViewFilters(
         transaction.counterparty,
         transaction.cost_center,
         transaction.reference_code,
-        transaction.payment_method
+        transaction.payment_method,
       ]
         .filter(Boolean)
         .join(" ")
@@ -89,7 +95,10 @@ export function applyTransactionViewFilters(
       return false;
     }
 
-    if (filters.settlement === "paid" && !isFinancialTransactionSettled(transaction)) {
+    if (
+      filters.settlement === "paid" &&
+      !isFinancialTransactionSettled(transaction)
+    ) {
       return false;
     }
 
@@ -97,19 +106,35 @@ export function applyTransactionViewFilters(
       return false;
     }
 
-    if (filters.settlement === "overdue" && !isFinancialTransactionOverdue(transaction, referenceDate)) {
+    if (
+      filters.settlement === "overdue" &&
+      !isFinancialTransactionOverdue(transaction, referenceDate)
+    ) {
       return false;
     }
 
-    if (filters.settlement === "due_soon" && !isFinancialTransactionDueSoon(transaction, referenceDate, 7)) {
+    if (
+      filters.settlement === "due_soon" &&
+      !isFinancialTransactionDueSoon(transaction, referenceDate, 7)
+    ) {
       return false;
     }
 
-    if (costCenter && !String(transaction.cost_center || "").toLocaleLowerCase().includes(costCenter)) {
+    if (
+      costCenter &&
+      !String(transaction.cost_center || "")
+        .toLocaleLowerCase()
+        .includes(costCenter)
+    ) {
       return false;
     }
 
-    if (paymentMethod && !String(transaction.payment_method || "").toLocaleLowerCase().includes(paymentMethod)) {
+    if (
+      paymentMethod &&
+      !String(transaction.payment_method || "")
+        .toLocaleLowerCase()
+        .includes(paymentMethod)
+    ) {
       return false;
     }
 
@@ -130,11 +155,17 @@ export function applyTransactionViewFilters(
       }
     }
 
-    if (filters.minAmount.trim() && (!Number.isFinite(minAmount) || transaction.amount < minAmount)) {
+    if (
+      filters.minAmount.trim() &&
+      (!Number.isFinite(minAmount) || transaction.amount < minAmount)
+    ) {
       return false;
     }
 
-    if (filters.maxAmount.trim() && (!Number.isFinite(maxAmount) || transaction.amount > maxAmount)) {
+    if (
+      filters.maxAmount.trim() &&
+      (!Number.isFinite(maxAmount) || transaction.amount > maxAmount)
+    ) {
       return false;
     }
 

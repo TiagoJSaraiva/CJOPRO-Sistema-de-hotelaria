@@ -8,10 +8,13 @@ const FOCUSABLE_SELECTOR = [
   "input:not([disabled])",
   "select:not([disabled])",
   "textarea:not([disabled])",
-  "[tabindex]:not([tabindex='-1'])"
+  "[tabindex]:not([tabindex='-1'])",
 ].join(",");
 
-export function useModalFocus<T extends HTMLElement>(open: boolean, onClose: () => void): RefObject<T | null> {
+export function useModalFocus<T extends HTMLElement>(
+  open: boolean,
+  onClose: () => void,
+): RefObject<T | null> {
   const containerRef = useRef<T>(null);
   const onCloseRef = useRef(onClose);
 
@@ -22,13 +25,19 @@ export function useModalFocus<T extends HTMLElement>(open: boolean, onClose: () 
   useEffect(() => {
     if (!open) return;
 
-    const previouslyFocused = document.activeElement instanceof HTMLElement ? document.activeElement : null;
+    const previouslyFocused =
+      document.activeElement instanceof HTMLElement
+        ? document.activeElement
+        : null;
     const container = containerRef.current;
     if (!container) return;
 
     const getFocusableElements = () =>
-      Array.from(container.querySelectorAll<HTMLElement>(FOCUSABLE_SELECTOR)).filter(
-        (element) => !element.hidden && element.getAttribute("aria-hidden") !== "true"
+      Array.from(
+        container.querySelectorAll<HTMLElement>(FOCUSABLE_SELECTOR),
+      ).filter(
+        (element) =>
+          !element.hidden && element.getAttribute("aria-hidden") !== "true",
       );
 
     (getFocusableElements()[0] ?? container).focus();

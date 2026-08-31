@@ -1,10 +1,19 @@
 "use client";
 
 import { useMemo, useState } from "react";
-import { ADMIN_ROLE_TYPES, type AdminHotelOption, type AdminRoleOption, type AdminRoleType, type AdminUserRoleAssignment } from "@hotel/shared";
+import {
+  ADMIN_ROLE_TYPES,
+  type AdminHotelOption,
+  type AdminRoleOption,
+  type AdminRoleType,
+  type AdminUserRoleAssignment,
+} from "@hotel/shared";
 import { RelationListEditor } from "../../_components/RelationListEditor";
 import { SelectionModal } from "../../_components/SelectionModal";
-import { formatRoleOptionLabel, formatUserRoleAssignmentLabel } from "./userRoleLabels";
+import {
+  formatRoleOptionLabel,
+  formatUserRoleAssignmentLabel,
+} from "./userRoleLabels";
 
 type UserRoleAssignmentsFieldProps = {
   roles: AdminRoleOption[];
@@ -25,7 +34,9 @@ type AssignmentItem = {
 
 const SYSTEM_CONTEXT_OPTION_ID = "__system_context__";
 
-function getInitialAssignments(defaultAssignments: AdminUserRoleAssignment[] | undefined): AssignmentItem[] {
+function getInitialAssignments(
+  defaultAssignments: AdminUserRoleAssignment[] | undefined,
+): AssignmentItem[] {
   if (!defaultAssignments?.length) {
     return [];
   }
@@ -50,18 +61,30 @@ function getInitialAssignments(defaultAssignments: AdminUserRoleAssignment[] | u
       hotel_id: item.hotel_id,
       hotel_name: item.hotel_name,
       role_hotel_id: item.role_hotel_id ?? null,
-      role_hotel_name: item.role_hotel_name ?? null
+      role_hotel_name: item.role_hotel_name ?? null,
     }));
 }
 
-export function UserRoleAssignmentsField({ roles, hotels, defaultAssignments, inputName = "role_assignments" }: UserRoleAssignmentsFieldProps) {
-  const [assignments, setAssignments] = useState<AssignmentItem[]>(() => getInitialAssignments(defaultAssignments));
-  const [selectedContextType, setSelectedContextType] = useState<"SYSTEM" | "HOTEL">("SYSTEM");
+export function UserRoleAssignmentsField({
+  roles,
+  hotels,
+  defaultAssignments,
+  inputName = "role_assignments",
+}: UserRoleAssignmentsFieldProps) {
+  const [assignments, setAssignments] = useState<AssignmentItem[]>(() =>
+    getInitialAssignments(defaultAssignments),
+  );
+  const [selectedContextType, setSelectedContextType] = useState<
+    "SYSTEM" | "HOTEL"
+  >("SYSTEM");
   const [selectedHotelId, setSelectedHotelId] = useState<string | null>(null);
   const [isContextModalOpen, setIsContextModalOpen] = useState(false);
   const [isRoleModalOpen, setIsRoleModalOpen] = useState(false);
 
-  const selectedHotel = useMemo(() => hotels.find((hotel) => hotel.id === selectedHotelId) || null, [hotels, selectedHotelId]);
+  const selectedHotel = useMemo(
+    () => hotels.find((hotel) => hotel.id === selectedHotelId) || null,
+    [hotels, selectedHotelId],
+  );
 
   const selectedContextLabel = useMemo(() => {
     if (selectedContextType === "SYSTEM") {
@@ -74,9 +97,11 @@ export function UserRoleAssignmentsField({ roles, hotels, defaultAssignments, in
   const assignmentKeySet = useMemo(
     () =>
       new Set(
-        assignments.map((item) => `${item.role_id}::${item.hotel_id || "__null__"}`)
+        assignments.map(
+          (item) => `${item.role_id}::${item.hotel_id || "__null__"}`,
+        ),
       ),
-    [assignments]
+    [assignments],
   );
 
   const availableRoles = useMemo(() => {
@@ -97,7 +122,10 @@ export function UserRoleAssignmentsField({ roles, hotels, defaultAssignments, in
     });
 
     return byContext.filter((role) => {
-      const effectiveHotelId = role.role_type === ADMIN_ROLE_TYPES.SYSTEM ? null : role.hotel_id || selectedHotelId;
+      const effectiveHotelId =
+        role.role_type === ADMIN_ROLE_TYPES.SYSTEM
+          ? null
+          : role.hotel_id || selectedHotelId;
       const dedupeKey = `${role.id}::${effectiveHotelId || "__null__"}`;
       return !assignmentKeySet.has(dedupeKey);
     });
@@ -107,11 +135,19 @@ export function UserRoleAssignmentsField({ roles, hotels, defaultAssignments, in
     return {
       id: `${item.role_id}::${item.hotel_id || "__null__"}`,
       primary: formatUserRoleAssignmentLabel(item),
-      secondary: item.role_type === ADMIN_ROLE_TYPES.SYSTEM ? "SYSTEM ROLE" : "HOTEL ROLE"
+      secondary:
+        item.role_type === ADMIN_ROLE_TYPES.SYSTEM
+          ? "SYSTEM ROLE"
+          : "HOTEL ROLE",
     };
   });
 
-  const serializedValue = JSON.stringify(assignments.map((item) => ({ role_id: item.role_id, hotel_id: item.hotel_id })));
+  const serializedValue = JSON.stringify(
+    assignments.map((item) => ({
+      role_id: item.role_id,
+      hotel_id: item.hotel_id,
+    })),
+  );
 
   const handleAddClick = () => {
     setSelectedContextType("SYSTEM");
@@ -152,7 +188,11 @@ export function UserRoleAssignmentsField({ roles, hotels, defaultAssignments, in
     const dedupeKey = `${selectedRole.id}::${effectiveHotelId || "__null__"}`;
 
     setAssignments((current) => {
-      const existingKeys = new Set(current.map((item) => `${item.role_id}::${item.hotel_id || "__null__"}`));
+      const existingKeys = new Set(
+        current.map(
+          (item) => `${item.role_id}::${item.hotel_id || "__null__"}`,
+        ),
+      );
 
       if (existingKeys.has(dedupeKey)) {
         return current;
@@ -167,8 +207,8 @@ export function UserRoleAssignmentsField({ roles, hotels, defaultAssignments, in
           hotel_id: effectiveHotelId || null,
           hotel_name: effectiveHotelName,
           role_hotel_id: selectedRole.hotel_id || null,
-          role_hotel_name: selectedRole.hotel_name || null
-        }
+          role_hotel_name: selectedRole.hotel_name || null,
+        },
       ];
     });
   };
@@ -183,19 +223,38 @@ export function UserRoleAssignmentsField({ roles, hotels, defaultAssignments, in
           items={assignmentRows}
           onAdd={handleAddClick}
           onRemove={(assignmentKey) =>
-            setAssignments((current) => current.filter((item) => `${item.role_id}::${item.hotel_id || "__null__"}` !== assignmentKey))
+            setAssignments((current) =>
+              current.filter(
+                (item) =>
+                  `${item.role_id}::${item.hotel_id || "__null__"}` !==
+                  assignmentKey,
+              ),
+            )
           }
         />
 
-        <input type="hidden" name={inputName} value={serializedValue} readOnly />
+        <input
+          type="hidden"
+          name={inputName}
+          value={serializedValue}
+          readOnly
+        />
       </div>
 
       <SelectionModal
         open={isContextModalOpen}
         title="Selecione o contexto"
         items={[
-          { id: SYSTEM_CONTEXT_OPTION_ID, label: "Sistema", description: "Atribuir roles de sistema." },
-          ...hotels.map((hotel) => ({ id: hotel.id, label: hotel.name, description: "Atribuir roles de hotel." }))
+          {
+            id: SYSTEM_CONTEXT_OPTION_ID,
+            label: "Sistema",
+            description: "Atribuir roles de sistema.",
+          },
+          ...hotels.map((hotel) => ({
+            id: hotel.id,
+            label: hotel.name,
+            description: "Atribuir roles de hotel.",
+          })),
         ]}
         emptyMessage="Nenhum contexto disponível para seleção."
         onSelect={handleContextSelect}
@@ -208,7 +267,7 @@ export function UserRoleAssignmentsField({ roles, hotels, defaultAssignments, in
         items={availableRoles.map((role) => ({
           id: role.id,
           label: role.name,
-          description: formatRoleOptionLabel(role, selectedContextLabel)
+          description: formatRoleOptionLabel(role, selectedContextLabel),
         }))}
         emptyMessage="Não existem papéis disponíveis para o contexto selecionado."
         onSelect={handleRoleSelect}

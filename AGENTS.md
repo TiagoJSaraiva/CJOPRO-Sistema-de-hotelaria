@@ -16,6 +16,22 @@ Não faça commit, push, deploy, publicação ou alteração remota sem autoriza
 explícita. Não apague arquivos, descarte mudanças ou reescreva histórico para
 resolver conflitos de escopo.
 
+## Commits durante implementações
+
+- Faça commits descritivos sobre o que foi implementado até aquele ponto,
+  preferencialmente seguindo Conventional Commits.
+- Não é necessário criar commits para cada pequena alteração. Crie um ponto de
+  commit quando um módulo de uma etapa estiver concluído e validado.
+- Antes de qualquer commit, apresente a mensagem proposta e peça autorização
+  explícita ao usuário. A autorização para implementar não autoriza o commit.
+- Quando o comando local `commit` estiver disponível, ele pode ser usado no
+  formato `commit "mensagem de commit"`; esse helper abstrai a inclusão das
+  mudanças e a criação do commit.
+- Uma anotação `.txt` incidental pode acompanhar o commit sem exigir separação,
+  desde que não contenha segredo, dado pessoal ou conteúdo destrutivo.
+- A permissão para criar um commit não autoriza `push`, merge, rebase, deploy,
+  publicação ou qualquer outra alteração remota.
+
 ## Mapa e fontes de verdade
 
 - `apps/pms`: Next.js e interfaces administrativas.

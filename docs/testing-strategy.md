@@ -2,15 +2,15 @@
 
 ## Camadas
 
-| Camada | Ferramenta | Escopo | Serviço externo |
-| --- | --- | --- | --- |
-| Unitária | Vitest e Testing Library | regras isoladas, componentes e utilitários | nenhum |
-| Integração | Vitest e Fastify inject | rotas com dependências controladas | nenhum |
-| Cobertura | Vitest V8 | todos os arquivos TypeScript elegíveis | nenhum |
-| E2E | Playwright | quatro fluxos do PMS com backend mockado | nenhum |
-| Visual | Playwright snapshots | desktop e mobile, Windows e Linux | nenhum |
-| Acessibilidade | axe + Playwright | WCAG automatizável e estados interativos | nenhum |
-| Banco | pgTAP e Vitest/Fastify | schema, seed, RLS, RPCs e fluxos reais | Docker local |
+| Camada         | Ferramenta               | Escopo                                     | Serviço externo |
+| -------------- | ------------------------ | ------------------------------------------ | --------------- |
+| Unitária       | Vitest e Testing Library | regras isoladas, componentes e utilitários | nenhum          |
+| Integração     | Vitest e Fastify inject  | rotas com dependências controladas         | nenhum          |
+| Cobertura      | Vitest V8                | todos os arquivos TypeScript elegíveis     | nenhum          |
+| E2E            | Playwright               | quatro fluxos do PMS com backend mockado   | nenhum          |
+| Visual         | Playwright snapshots     | desktop e mobile, Windows e Linux          | nenhum          |
+| Acessibilidade | axe + Playwright         | WCAG automatizável e estados interativos   | nenhum          |
+| Banco          | pgTAP e Vitest/Fastify   | schema, seed, RLS, RPCs e fluxos reais     | Docker local    |
 
 Testes Vitest ficam em `__tests__/unit`, `__tests__/integration`, `fixtures` e
 `helpers` conforme sua função. A suíte real de banco é separada para manter o
@@ -33,17 +33,17 @@ Todo planejamento deve incluir uma seção **Proteção e testes** contendo:
 5. contratos, tipos Supabase, migrations, relatórios ou snapshots afetados;
 6. comandos de aceite e efeito esperado sobre a cobertura do workspace.
 
-| Tipo de mudança | Proteção mínima esperada |
-| --- | --- |
-| Regra de negócio | teste unitário de sucesso, limites e falhas relevantes |
-| Rota Fastify | HTTP válido, schema inválido, autenticação, autorização e erro de domínio |
-| Repositório | unidade com dependências controladas e `pnpm test:db` quando houver SQL relevante |
-| Server Action | sucesso, validação, erro do backend, redirect e revalidação |
-| Componente interativo | Testing Library com estado, teclado e foco |
-| Superfície visual representativa | Playwright funcional, snapshot e axe |
-| Jornada entre módulos | E2E do fluxo completo e seus estados persistidos |
-| Migration, RLS ou RPC | pgTAP, tipos Supabase e integração real local |
-| Contrato HTTP | schema TypeBox, respostas por status, OpenAPI e teste de drift |
+| Tipo de mudança                  | Proteção mínima esperada                                                          |
+| -------------------------------- | --------------------------------------------------------------------------------- |
+| Regra de negócio                 | teste unitário de sucesso, limites e falhas relevantes                            |
+| Rota Fastify                     | HTTP válido, schema inválido, autenticação, autorização e erro de domínio         |
+| Repositório                      | unidade com dependências controladas e `pnpm test:db` quando houver SQL relevante |
+| Server Action                    | sucesso, validação, erro do backend, redirect e revalidação                       |
+| Componente interativo            | Testing Library com estado, teclado e foco                                        |
+| Superfície visual representativa | Playwright funcional, snapshot e axe                                              |
+| Jornada entre módulos            | E2E do fluxo completo e seus estados persistidos                                  |
+| Migration, RLS ou RPC            | pgTAP, tipos Supabase e integração real local                                     |
+| Contrato HTTP                    | schema TypeBox, respostas por status, OpenAPI e teste de drift                    |
 
 ### Regras de cobertura
 

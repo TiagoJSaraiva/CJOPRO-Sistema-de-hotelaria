@@ -1,6 +1,12 @@
 "use client";
 
-import { useEffect, useRef, useState, type CSSProperties, type ReactNode } from "react";
+import {
+  useEffect,
+  useRef,
+  useState,
+  type CSSProperties,
+  type ReactNode,
+} from "react";
 import { useFormStatus } from "react-dom";
 
 type PendingSubmitButtonProps = {
@@ -20,7 +26,7 @@ export function PendingSubmitButton({
   minVisibleMs = 320,
   lockUntilUnmount = false,
   style,
-  className
+  className,
 }: PendingSubmitButtonProps) {
   const { pending } = useFormStatus();
   const [isVisualPending, setIsVisualPending] = useState(false);
@@ -85,7 +91,9 @@ export function PendingSubmitButton({
       disabled={pending || isVisualPending}
       aria-busy={isVisualPending}
       className={`inline-flex min-h-[2.35rem] min-w-36 items-center justify-center rounded-lg border-0 bg-[#0f6d5f] px-[0.8rem] py-[0.6rem] font-semibold text-white ${
-        pending || isVisualPending ? "cursor-not-allowed opacity-[0.88]" : "cursor-pointer"
+        pending || isVisualPending
+          ? "cursor-not-allowed opacity-[0.88]"
+          : "cursor-pointer"
       } ${className ?? ""}`}
       style={style}
     >

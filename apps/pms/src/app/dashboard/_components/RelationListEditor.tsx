@@ -15,7 +15,14 @@ type RelationListEditorProps = {
   onRemove: (id: string) => void;
 };
 
-export function RelationListEditor({ title, addLabel, emptyMessage, items, onAdd, onRemove }: RelationListEditorProps) {
+export function RelationListEditor({
+  title,
+  addLabel,
+  emptyMessage,
+  items,
+  onAdd,
+  onRemove,
+}: RelationListEditorProps) {
   return (
     <section className="grid gap-[0.55rem] rounded-[10px] border border-[#d7dce5] p-[0.7rem]">
       <strong>{title}</strong>
@@ -29,7 +36,11 @@ export function RelationListEditor({ title, addLabel, emptyMessage, items, onAdd
             >
               <div className="min-w-0">
                 <p className="m-0 font-semibold">{item.primary}</p>
-                {item.secondary ? <p className="m-0 mt-[0.1rem] text-[0.92rem] text-[#5c6876]">{item.secondary}</p> : null}
+                {item.secondary ? (
+                  <p className="m-0 mt-[0.1rem] text-[0.92rem] text-[#5c6876]">
+                    {item.secondary}
+                  </p>
+                ) : null}
               </div>
 
               <button

@@ -14,12 +14,14 @@ function toUtcDateKey(date: Date): string {
   return date.toISOString().slice(0, 10);
 }
 
-export function isFinancialTransactionSettled(transaction: Pick<AdminFinancialTransaction, "status">): boolean {
+export function isFinancialTransactionSettled(
+  transaction: Pick<AdminFinancialTransaction, "status">,
+): boolean {
   return SETTLED_TRANSACTION_STATUSES.has(transaction.status);
 }
 
 export function getFinancialTransactionSignedAmount(
-  transaction: Pick<AdminFinancialTransaction, "amount" | "type" | "status">
+  transaction: Pick<AdminFinancialTransaction, "amount" | "type" | "status">,
 ): number {
   if (IGNORED_CASHFLOW_STATUSES.has(transaction.status)) {
     return 0;
@@ -35,14 +37,22 @@ export function getFinancialTransactionSignedAmount(
 }
 
 export function getFinancialTransactionEffectiveDate(
-  transaction: Pick<AdminFinancialTransaction, "paid_at" | "due_date" | "created_at">
+  transaction: Pick<
+    AdminFinancialTransaction,
+    "paid_at" | "due_date" | "created_at"
+  >,
 ): string | null {
-  return transaction.paid_at || transaction.due_date || transaction.created_at || null;
+  return (
+    transaction.paid_at ||
+    transaction.due_date ||
+    transaction.created_at ||
+    null
+  );
 }
 
 export function isFinancialTransactionOverdue(
   transaction: Pick<AdminFinancialTransaction, "status" | "due_date">,
-  referenceDate: Date = new Date()
+  referenceDate: Date = new Date(),
 ): boolean {
   if (transaction.status !== "PENDING") {
     return false;
@@ -59,7 +69,7 @@ export function isFinancialTransactionOverdue(
 export function isFinancialTransactionDueSoon(
   transaction: Pick<AdminFinancialTransaction, "status" | "due_date">,
   referenceDate: Date = new Date(),
-  daysAhead = 7
+  daysAhead = 7,
 ): boolean {
   if (transaction.status !== "PENDING") {
     return false;

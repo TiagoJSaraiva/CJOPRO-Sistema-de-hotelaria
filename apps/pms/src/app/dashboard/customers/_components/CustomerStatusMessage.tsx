@@ -10,7 +10,7 @@ const statusMessages: Record<string, string> = {
   delete_missing_id: "Não foi possível identificar o cliente para exclusão.",
   create_error: "Falha ao criar cliente.",
   update_error: "Falha ao atualizar cliente.",
-  delete_error: "Falha ao excluir cliente."
+  delete_error: "Falha ao excluir cliente.",
 };
 
 type CustomerStatusMessageProps = {
@@ -18,6 +18,15 @@ type CustomerStatusMessageProps = {
   detail?: string;
 };
 
-export function CustomerStatusMessage({ status, detail }: CustomerStatusMessageProps) {
-  return <DashboardStatusMessage status={status} detail={detail} messages={statusMessages} />;
+export function CustomerStatusMessage({
+  status,
+  detail,
+}: CustomerStatusMessageProps) {
+  return (
+    <DashboardStatusMessage
+      status={status}
+      detail={detail}
+      messages={statusMessages}
+    />
+  );
 }

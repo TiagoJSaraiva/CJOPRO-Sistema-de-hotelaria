@@ -11,24 +11,36 @@ import type { FinancialTransactionReportInput } from "../../../../src/app/dashbo
 const generatePdfMock = vi.hoisted(() => vi.fn(() => Promise.resolve()));
 
 vi.mock("next/link", () => ({
-  default: ({ href, children, scroll, ...props }: { href: string; children: ReactNode; scroll?: boolean }) => {
+  default: ({
+    href,
+    children,
+    scroll,
+    ...props
+  }: {
+    href: string;
+    children: ReactNode;
+    scroll?: boolean;
+  }) => {
     void scroll;
     return (
       <a href={href} {...props}>
         {children}
       </a>
     );
-  }
+  },
 }));
 
 vi.mock("../../../../src/app/dashboard/transactions/actions", () => ({
   deleteTransactionAction: vi.fn(),
-  updateTransactionAction: vi.fn()
+  updateTransactionAction: vi.fn(),
 }));
 
-vi.mock("../../../../src/app/dashboard/transactions/_components/financialTransactionPdf", () => ({
-  generateFinancialTransactionsPdf: generatePdfMock
-}));
+vi.mock(
+  "../../../../src/app/dashboard/transactions/_components/financialTransactionPdf",
+  () => ({
+    generateFinancialTransactionsPdf: generatePdfMock,
+  }),
+);
 
 const transactions: AdminFinancialTransaction[] = [
   {
@@ -47,7 +59,7 @@ const transactions: AdminFinancialTransaction[] = [
     cost_center: "Recepcao",
     reference_code: "RES-1001",
     created_at: "2026-05-10T10:00:00.000Z",
-    updated_at: "2026-05-10T12:00:00.000Z"
+    updated_at: "2026-05-10T12:00:00.000Z",
   },
   {
     id: "transaction-2",
@@ -65,8 +77,8 @@ const transactions: AdminFinancialTransaction[] = [
     cost_center: "Operacao",
     reference_code: "ENE-0526",
     created_at: "2026-05-08T10:00:00.000Z",
-    updated_at: "2026-05-08T10:00:00.000Z"
-  }
+    updated_at: "2026-05-08T10:00:00.000Z",
+  },
 ];
 
 function renderTransactionsSection() {
@@ -82,9 +94,9 @@ function renderTransactionsSection() {
       reportContext={{
         hotelLabel: "Hotel Demo",
         generatedBy: "Marina Costa",
-        hasActiveHotel: true
+        hasActiveHotel: true,
       }}
-    />
+    />,
   );
 }
 
@@ -102,15 +114,26 @@ describe("TransactionsViewFilterableSection report menu", () => {
     renderTransactionsSection();
 
     await user.click(screen.getByRole("button", { name: "Filtrar dados" }));
-    await user.type(screen.getByPlaceholderText("Categoria, fornecedor, descrição ou referência"), "Energia");
+    await user.type(
+      screen.getByPlaceholderText(
+        "Categoria, fornecedor, descrição ou referência",
+      ),
+      "Energia",
+    );
     await user.click(screen.getByRole("button", { name: "Aplicar filtros" }));
 
-    expect(screen.getByText("Exibindo 1 de 2 lançamentos financeiros.")).toBeTruthy();
+    expect(
+      screen.getByText("Exibindo 1 de 2 lançamentos financeiros."),
+    ).toBeTruthy();
 
     await user.click(screen.getByRole("button", { name: "Gerar relatório" }));
-    await user.click(screen.getByRole("menuitem", { name: "Recorte filtrado" }));
+    await user.click(
+      screen.getByRole("menuitem", { name: "Recorte filtrado" }),
+    );
 
-    const calls = generatePdfMock.mock.calls as unknown as Array<[FinancialTransactionReportInput]>;
+    const calls = generatePdfMock.mock.calls as unknown as Array<
+      [FinancialTransactionReportInput]
+    >;
     const filteredCall = calls[0]?.[0];
     expect(filteredCall).toBeDefined();
     if (!filteredCall) return;
@@ -119,7 +142,11 @@ describe("TransactionsViewFilterableSection report menu", () => {
     expect(filteredCall.totalTransactions).toBe(2);
     expect(filteredCall.hotelLabel).toBe("Hotel Demo");
     expect(filteredCall.generatedBy).toBe("Marina Costa");
-    expect(filteredCall.transactions.map((transaction: AdminFinancialTransaction) => transaction.id)).toEqual(["transaction-2"]);
+    expect(
+      filteredCall.transactions.map(
+        (transaction: AdminFinancialTransaction) => transaction.id,
+      ),
+    ).toEqual(["transaction-2"]);
 
     await user.click(screen.getByRole("button", { name: "Gerar relatório" }));
     await user.click(screen.getByRole("menuitem", { name: "Todas do hotel" }));
@@ -129,7 +156,11 @@ describe("TransactionsViewFilterableSection report menu", () => {
     if (!allCall) return;
 
     expect(allCall.scope).toBe("all");
-    expect(allCall.transactions.map((transaction: AdminFinancialTransaction) => transaction.id)).toEqual(["transaction-1", "transaction-2"]);
+    expect(
+      allCall.transactions.map(
+        (transaction: AdminFinancialTransaction) => transaction.id,
+      ),
+    ).toEqual(["transaction-1", "transaction-2"]);
   });
 
   it("opera o menu por teclado e devolve o foco ao acionador", async () => {
@@ -140,7 +171,9 @@ describe("TransactionsViewFilterableSection report menu", () => {
     trigger.focus();
     await user.keyboard("{ArrowDown}");
 
-    const filteredItem = screen.getByRole("menuitem", { name: "Recorte filtrado" });
+    const filteredItem = screen.getByRole("menuitem", {
+      name: "Recorte filtrado",
+    });
     const allItem = screen.getByRole("menuitem", { name: "Todas do hotel" });
     expect(document.activeElement).toBe(filteredItem);
 
@@ -151,7 +184,9 @@ describe("TransactionsViewFilterableSection report menu", () => {
     expect(document.activeElement).toBe(filteredItem);
 
     await user.keyboard("{Escape}");
-    expect(screen.queryByRole("menu", { name: "Opções de relatório financeiro" })).toBeNull();
+    expect(
+      screen.queryByRole("menu", { name: "Opções de relatório financeiro" }),
+    ).toBeNull();
     expect(document.activeElement).toBe(trigger);
   });
 });

@@ -13,7 +13,9 @@ type HotelCreatePageProps = {
   }>;
 };
 
-export default async function HotelCreatePage({ searchParams }: HotelCreatePageProps) {
+export default async function HotelCreatePage({
+  searchParams,
+}: HotelCreatePageProps) {
   const resolvedSearchParams = await searchParams;
   const user = await getUserFromSession();
   const access = getHotelAccess(user);
@@ -25,7 +27,12 @@ export default async function HotelCreatePage({ searchParams }: HotelCreatePageP
       redirect(fallback);
     }
 
-    return <DashboardAccessDeniedCard title="Hotéis" message="Sem permissão para criar hotel." />;
+    return (
+      <DashboardAccessDeniedCard
+        title="Hotéis"
+        message="Sem permissão para criar hotel."
+      />
+    );
   }
 
   return (
@@ -33,10 +40,22 @@ export default async function HotelCreatePage({ searchParams }: HotelCreatePageP
       title="Hotéis"
       activeTabKey="create"
       tabs={[
-        { key: "create", label: "Criar hotel", href: "/dashboard/hotels/create", isVisible: access.canCreate },
-        { key: "view", label: "Ver hotéis", href: "/dashboard/hotels/view", isVisible: access.canRead }
+        {
+          key: "create",
+          label: "Criar hotel",
+          href: "/dashboard/hotels/create",
+          isVisible: access.canCreate,
+        },
+        {
+          key: "view",
+          label: "Ver hotéis",
+          href: "/dashboard/hotels/view",
+          isVisible: access.canRead,
+        },
       ]}
-      statusContent={<HotelStatusMessage status={resolvedSearchParams?.status} />}
+      statusContent={
+        <HotelStatusMessage status={resolvedSearchParams?.status} />
+      }
     >
       <HotelCreateForm formKey={resolvedSearchParams?.r} />
     </DashboardEntityPageShell>

@@ -1,6 +1,10 @@
 import { describe, expect, it } from "vitest";
 import type { AdminRole } from "@hotel/shared";
-import { DEFAULT_ROLE_VIEW_FILTERS, applyRoleViewFilters, countAppliedRoleFilters } from "../../../../src/app/dashboard/roles/_components/roleViewFilters";
+import {
+  DEFAULT_ROLE_VIEW_FILTERS,
+  applyRoleViewFilters,
+  countAppliedRoleFilters,
+} from "../../../../src/app/dashboard/roles/_components/roleViewFilters";
 
 function makeRole(overrides: Partial<AdminRole>): AdminRole {
   return {
@@ -9,7 +13,7 @@ function makeRole(overrides: Partial<AdminRole>): AdminRole {
     role_type: overrides.role_type || "SYSTEM_ROLE",
     hotel_id: overrides.hotel_id ?? null,
     hotel_name: overrides.hotel_name ?? null,
-    permissions: overrides.permissions || []
+    permissions: overrides.permissions || [],
   };
 }
 
@@ -23,8 +27,8 @@ describe("roleViewFilters", () => {
       hotel_name: "Hotel Centro",
       permissions: [
         { id: "perm-users", name: "USER_MANAGE", type: "HOTEL_PERMISSION" },
-        { id: "perm-report", name: "REPORT_VIEW", type: "HOTEL_PERMISSION" }
-      ]
+        { id: "perm-report", name: "REPORT_VIEW", type: "HOTEL_PERMISSION" },
+      ],
     }),
     makeRole({
       id: "role-2",
@@ -32,7 +36,13 @@ describe("roleViewFilters", () => {
       role_type: "HOTEL_ROLE",
       hotel_id: "hotel-praia",
       hotel_name: "Hotel Praia",
-      permissions: [{ id: "perm-checkin", name: "CHECKIN_MANAGE", type: "HOTEL_PERMISSION" }]
+      permissions: [
+        {
+          id: "perm-checkin",
+          name: "CHECKIN_MANAGE",
+          type: "HOTEL_PERMISSION",
+        },
+      ],
     }),
     makeRole({
       id: "role-3",
@@ -40,21 +50,27 @@ describe("roleViewFilters", () => {
       role_type: "SYSTEM_ROLE",
       hotel_id: null,
       hotel_name: null,
-      permissions: [{ id: "perm-report", name: "REPORT_VIEW", type: "SYSTEM_PERMISSION" }]
-    })
+      permissions: [
+        { id: "perm-report", name: "REPORT_VIEW", type: "SYSTEM_PERMISSION" },
+      ],
+    }),
   ];
 
   it("retorna todas as roles sem filtros", () => {
     const result = applyRoleViewFilters(roles, DEFAULT_ROLE_VIEW_FILTERS);
 
-    expect(result.map((item) => item.id)).toEqual(["role-1", "role-2", "role-3"]);
+    expect(result.map((item) => item.id)).toEqual([
+      "role-1",
+      "role-2",
+      "role-3",
+    ]);
   });
 
   it("filtra por nome sem diferenciar maiusculas e minusculas", () => {
     const result = applyRoleViewFilters(roles, {
       ...DEFAULT_ROLE_VIEW_FILTERS,
       roleType: "",
-      search: "AUDITORIA"
+      search: "AUDITORIA",
     });
 
     expect(result.map((item) => item.id)).toEqual(["role-3"]);
@@ -64,7 +80,7 @@ describe("roleViewFilters", () => {
     const result = applyRoleViewFilters(roles, {
       ...DEFAULT_ROLE_VIEW_FILTERS,
       roleType: "",
-      hotelId: "hotel-centro"
+      hotelId: "hotel-centro",
     });
 
     expect(result.map((item) => item.id)).toEqual(["role-1"]);
@@ -74,7 +90,7 @@ describe("roleViewFilters", () => {
     const result = applyRoleViewFilters(roles, {
       ...DEFAULT_ROLE_VIEW_FILTERS,
       roleType: "",
-      permissionId: "perm-checkin"
+      permissionId: "perm-checkin",
     });
 
     expect(result.map((item) => item.id)).toEqual(["role-2"]);
@@ -86,7 +102,7 @@ describe("roleViewFilters", () => {
       search: "admin",
       roleType: "HOTEL_ROLE",
       hotelId: "hotel-centro",
-      permissionId: "perm-users"
+      permissionId: "perm-users",
     });
 
     expect(result.map((item) => item.id)).toEqual(["role-1"]);
@@ -97,7 +113,7 @@ describe("roleViewFilters", () => {
       ...DEFAULT_ROLE_VIEW_FILTERS,
       search: "admin",
       roleType: "HOTEL_ROLE",
-      permissionId: "perm-users"
+      permissionId: "perm-users",
     });
 
     expect(count).toBe(3);
@@ -106,7 +122,7 @@ describe("roleViewFilters", () => {
   it("filtra por tipo da role", () => {
     const result = applyRoleViewFilters(roles, {
       ...DEFAULT_ROLE_VIEW_FILTERS,
-      roleType: "SYSTEM_ROLE"
+      roleType: "SYSTEM_ROLE",
     });
 
     expect(result.map((item) => item.id)).toEqual(["role-3"]);

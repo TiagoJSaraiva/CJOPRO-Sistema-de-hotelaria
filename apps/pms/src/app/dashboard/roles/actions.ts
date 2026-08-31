@@ -2,7 +2,11 @@
 
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
-import { ADMIN_ROLE_TYPES, PERMISSIONS, type AdminRoleType } from "@hotel/shared";
+import {
+  ADMIN_ROLE_TYPES,
+  PERMISSIONS,
+  type AdminRoleType,
+} from "@hotel/shared";
 import { createRole, deleteRole, updateRole } from "../../../lib/adminApi";
 import { getUserFromSession } from "../../../lib/auth";
 
@@ -37,12 +41,16 @@ function normalizePermissionIds(rawValue: FormDataEntryValue | null): string[] {
   }
 }
 
-function normalizeOptionalText(rawValue: FormDataEntryValue | null): string | null {
+function normalizeOptionalText(
+  rawValue: FormDataEntryValue | null,
+): string | null {
   const parsed = String(rawValue || "").trim();
   return parsed.length ? parsed : null;
 }
 
-function normalizeRoleType(rawValue: FormDataEntryValue | null): AdminRoleType | null {
+function normalizeRoleType(
+  rawValue: FormDataEntryValue | null,
+): AdminRoleType | null {
   const parsed = String(rawValue || "").trim();
 
   if (parsed === ADMIN_ROLE_TYPES.SYSTEM || parsed === ADMIN_ROLE_TYPES.HOTEL) {
@@ -62,15 +70,23 @@ function getRedirectNonce(): string {
   return Date.now().toString(36);
 }
 
-function redirectWithStatus(status: string, section: "create" | "view" | "root" = "root", detail?: string): never {
+function redirectWithStatus(
+  status: string,
+  section: "create" | "view" | "root" = "root",
+  detail?: string,
+): never {
   const nonce = getRedirectNonce();
-  const detailParam = detail ? `&detail=${encodeURIComponent(detail.slice(0, 220))}` : "";
+  const detailParam = detail
+    ? `&detail=${encodeURIComponent(detail.slice(0, 220))}`
+    : "";
 
   if (section === "root") {
     redirect(`/dashboard/roles?status=${status}${detailParam}&r=${nonce}`);
   }
 
-  redirect(`/dashboard/roles/${section}?status=${status}${detailParam}&r=${nonce}`);
+  redirect(
+    `/dashboard/roles/${section}?status=${status}${detailParam}&r=${nonce}`,
+  );
 }
 
 function isDeleteConflictError(error: unknown): boolean {
@@ -87,7 +103,10 @@ function isDeleteConflictError(error: unknown): boolean {
   }
 
   const message = error.message.toLowerCase();
-  return message.includes("dependencias ativas") || message.includes("nao pode ser exclu");
+  return (
+    message.includes("dependencias ativas") ||
+    message.includes("nao pode ser exclu")
+  );
 }
 
 function getErrorStatusCode(error: unknown): number | null {
@@ -109,14 +128,20 @@ function getErrorMessage(error: unknown): string {
 
 function isNetworkError(error: unknown): boolean {
   const message = getErrorMessage(error).toLowerCase();
-  return message.includes("fetch failed") || message.includes("failed to fetch") || message.includes("network");
+  return (
+    message.includes("fetch failed") ||
+    message.includes("failed to fetch") ||
+    message.includes("network")
+  );
 }
 
 export async function createRoleAction(formData: FormData): Promise<void> {
   const user = await getUserFromSession();
 
   if (!user || !user.permissions.includes(PERMISSIONS.ROLE_CREATE)) {
-    const fallback = user?.permissions.includes(PERMISSIONS.ROLE_READ) ? "view" : "root";
+    const fallback = user?.permissions.includes(PERMISSIONS.ROLE_READ)
+      ? "view"
+      : "root";
     redirectWithStatus("forbidden", fallback);
   }
 
@@ -130,7 +155,12 @@ export async function createRoleAction(formData: FormData): Promise<void> {
   }
 
   try {
-    await createRole({ name, role_type: roleType, hotel_id: hotelId, permission_ids: permissionIds });
+    await createRole({
+      name,
+      role_type: roleType,
+      hotel_id: hotelId,
+      permission_ids: permissionIds,
+    });
   } catch {
     redirectWithStatus("create_error", "create");
   }
@@ -143,7 +173,9 @@ export async function updateRoleAction(formData: FormData): Promise<void> {
   const user = await getUserFromSession();
 
   if (!user || !user.permissions.includes(PERMISSIONS.ROLE_UPDATE)) {
-    const fallback = user?.permissions.includes(PERMISSIONS.ROLE_READ) ? "view" : "root";
+    const fallback = user?.permissions.includes(PERMISSIONS.ROLE_READ)
+      ? "view"
+      : "root";
     redirectWithStatus("forbidden", fallback);
   }
 
@@ -162,7 +194,7 @@ export async function updateRoleAction(formData: FormData): Promise<void> {
       name,
       role_type: roleType,
       hotel_id: hotelId,
-      permission_ids: permissionIds
+      permission_ids: permissionIds,
     });
   } catch {
     redirectWithStatus("update_error", "view");
@@ -176,7 +208,9 @@ export async function deleteRoleAction(formData: FormData): Promise<void> {
   const user = await getUserFromSession();
 
   if (!user || !user.permissions.includes(PERMISSIONS.ROLE_DELETE)) {
-    const fallback = user?.permissions.includes(PERMISSIONS.ROLE_READ) ? "view" : "root";
+    const fallback = user?.permissions.includes(PERMISSIONS.ROLE_READ)
+      ? "view"
+      : "root";
     redirectWithStatus("forbidden", fallback);
   }
 
@@ -198,7 +232,7 @@ export async function deleteRoleAction(formData: FormData): Promise<void> {
     console.error("[roles/deleteRoleAction] falha ao excluir", {
       id,
       statusCode,
-      message
+      message,
     });
 
     if (statusCode === 404) {

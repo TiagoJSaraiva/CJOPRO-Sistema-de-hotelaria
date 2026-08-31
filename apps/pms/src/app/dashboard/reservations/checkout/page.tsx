@@ -2,7 +2,10 @@ import { redirect } from "next/navigation";
 import { DashboardAccessDeniedCard } from "../../_components/DashboardAccessDeniedCard";
 import { DashboardEntityPageShell } from "../../_components/DashboardEntityPageShell";
 import { getUserFromSession } from "../../../../lib/auth";
-import { getReservationsCalendarAccess, getReservationsCalendarDefaultRoute } from "../access";
+import {
+  getReservationsCalendarAccess,
+  getReservationsCalendarDefaultRoute,
+} from "../access";
 import { CheckoutByRoomWorkflow } from "../_components/CheckoutByRoomWorkflow";
 
 export default async function ReservationsCheckoutPage() {
@@ -14,7 +17,12 @@ export default async function ReservationsCheckoutPage() {
     if (fallback) {
       redirect(fallback);
     }
-    return <DashboardAccessDeniedCard title="Calendario de Reservas" message="Sem permissao para executar checkout de reservas." />;
+    return (
+      <DashboardAccessDeniedCard
+        title="Calendario de Reservas"
+        message="Sem permissao para executar checkout de reservas."
+      />
+    );
   }
 
   return (
@@ -22,8 +30,18 @@ export default async function ReservationsCheckoutPage() {
       title="Calendario de Reservas"
       activeTabKey="checkout"
       tabs={[
-        { key: "calendar", label: "Calendario", href: "/dashboard/reservations/view", isVisible: access.canAccess },
-        { key: "checkout", label: "Checkout", href: "/dashboard/reservations/checkout", isVisible: access.canAccess }
+        {
+          key: "calendar",
+          label: "Calendario",
+          href: "/dashboard/reservations/view",
+          isVisible: access.canAccess,
+        },
+        {
+          key: "checkout",
+          label: "Checkout",
+          href: "/dashboard/reservations/checkout",
+          isVisible: access.canAccess,
+        },
       ]}
     >
       <CheckoutByRoomWorkflow />

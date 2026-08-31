@@ -15,7 +15,9 @@ type CustomersViewPageProps = {
   }>;
 };
 
-export default async function CustomersViewPage({ searchParams }: CustomersViewPageProps) {
+export default async function CustomersViewPage({
+  searchParams,
+}: CustomersViewPageProps) {
   const resolvedSearchParams = await searchParams;
   const user = await getUserFromSession();
   const access = getCustomersAccess(user);
@@ -27,11 +29,18 @@ export default async function CustomersViewPage({ searchParams }: CustomersViewP
       redirect(fallback);
     }
 
-    return <DashboardAccessDeniedCard title="Clientes" message="Sem permissão para visualizar clientes." />;
+    return (
+      <DashboardAccessDeniedCard
+        title="Clientes"
+        message="Sem permissão para visualizar clientes."
+      />
+    );
   }
 
   const customers = await listCustomers();
-  const activeCustomerId = String(resolvedSearchParams?.customerId || "").trim();
+  const activeCustomerId = String(
+    resolvedSearchParams?.customerId || "",
+  ).trim();
   const mode = resolvedSearchParams?.mode === "edit" ? "edit" : "view";
 
   return (
@@ -39,10 +48,22 @@ export default async function CustomersViewPage({ searchParams }: CustomersViewP
       title="Clientes"
       activeTabKey="view"
       tabs={[
-        { key: "create", label: "Criar cliente", href: "/dashboard/customers/create", isVisible: access.canCreate },
-        { key: "view", label: "Ver clientes", href: "/dashboard/customers/view", isVisible: access.canRead }
+        {
+          key: "create",
+          label: "Criar cliente",
+          href: "/dashboard/customers/create",
+          isVisible: access.canCreate,
+        },
+        {
+          key: "view",
+          label: "Ver clientes",
+          href: "/dashboard/customers/view",
+          isVisible: access.canRead,
+        },
       ]}
-      statusContent={<CustomerStatusMessage status={resolvedSearchParams?.status} />}
+      statusContent={
+        <CustomerStatusMessage status={resolvedSearchParams?.status} />
+      }
     >
       <CustomersViewFilterableSection
         customers={customers}

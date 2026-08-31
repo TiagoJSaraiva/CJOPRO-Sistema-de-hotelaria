@@ -7,12 +7,13 @@ import { LOGIN_SUBMIT_BUTTON_PROPS } from "./submitButtonConfig";
 export const dynamic = "force-static";
 
 export default function LoginPage() {
-
   return (
     <main className="grid min-h-screen place-items-center bg-[linear-gradient(160deg,#f8f0e8_0%,#f4f9ff_100%)] p-8">
       <section className="w-full max-w-[420px] rounded-[14px] border border-[#e6e6e6] bg-white p-6 shadow-[0_8px_20px_rgba(0,0,0,0.06)]">
         <h1 className="mb-[0.4rem] mt-0">Login do PMS</h1>
-        <p className="mt-0 text-[#555]">Use email e senha para acessar seu dashboard.</p>
+        <p className="mt-0 text-[#555]">
+          Use email e senha para acessar seu dashboard.
+        </p>
 
         <LoginErrorMessage />
 

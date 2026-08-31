@@ -17,22 +17,42 @@ function createToken(permissions: string[]): string {
     tenantId: null,
     roles: ["Admin"],
     permissions,
-    roleAssignments: [{ roleId: "role-system", roleName: "Admin", roleType: "SYSTEM_ROLE", hotelId: null, hotelName: null }],
+    roleAssignments: [
+      {
+        roleId: "role-system",
+        roleName: "Admin",
+        roleType: "SYSTEM_ROLE",
+        hotelId: null,
+        hotelName: null,
+      },
+    ],
     iat: nowInSeconds,
-    exp: nowInSeconds + 3600
+    exp: nowInSeconds + 3600,
   };
 
   return signToken(payload);
 }
 
-function createPermissionsRepositoryMock(overrides: Partial<PermissionsRepository> = {}): PermissionsRepository {
+function createPermissionsRepositoryMock(
+  overrides: Partial<PermissionsRepository> = {},
+): PermissionsRepository {
   return {
     listPermissions: vi.fn(async () => []),
-    getPermissionById: vi.fn(async (id: string) => ({ id, name: "perm_name", type: "SYSTEM_PERMISSION" })),
-    createPermission: vi.fn(async () => ({ result: "ok", item: { id: "perm-1", name: "perm_name", type: "SYSTEM_PERMISSION" } })),
-    updatePermission: vi.fn(async () => ({ result: "ok", item: { id: "perm-1", name: "perm_name", type: "SYSTEM_PERMISSION" } })),
+    getPermissionById: vi.fn(async (id: string) => ({
+      id,
+      name: "perm_name",
+      type: "SYSTEM_PERMISSION",
+    })),
+    createPermission: vi.fn(async () => ({
+      result: "ok",
+      item: { id: "perm-1", name: "perm_name", type: "SYSTEM_PERMISSION" },
+    })),
+    updatePermission: vi.fn(async () => ({
+      result: "ok",
+      item: { id: "perm-1", name: "perm_name", type: "SYSTEM_PERMISSION" },
+    })),
     deletePermission: vi.fn(async () => "ok"),
-    ...overrides
+    ...overrides,
   };
 }
 
@@ -53,7 +73,11 @@ afterEach(async () => {
 describe("routes/permissions with injected repository", () => {
   it("bloqueia atualizacao de permissao vinculada ao proprio usuario", async () => {
     const repository = createPermissionsRepositoryMock({
-      getPermissionById: vi.fn(async () => ({ id: "perm-1", name: "perm_name", type: "SYSTEM_PERMISSION" }))
+      getPermissionById: vi.fn(async () => ({
+        id: "perm-1",
+        name: "perm_name",
+        type: "SYSTEM_PERMISSION",
+      })),
     });
 
     const app = await createPermissionsTestApp(repository);
@@ -72,35 +96,40 @@ describe("routes/permissions with injected repository", () => {
           roleType: "SYSTEM_ROLE",
           hotelId: null,
           hotelName: null,
-          permissions: ["perm_name"]
-        }
+          permissions: ["perm_name"],
+        },
       ],
       iat: nowInSeconds,
-      exp: nowInSeconds + 3600
+      exp: nowInSeconds + 3600,
     });
 
     const response = await app.inject({
       method: "PUT",
       url: "/admin/permissions/perm-1",
       headers: {
-        authorization: `Bearer ${token}`
+        authorization: `Bearer ${token}`,
       },
       payload: {
-        name: "perm_name_updated"
-      }
+        name: "perm_name_updated",
+      },
     });
 
     expect(response.statusCode).toBe(403);
     expect(response.json()).toEqual({
       code: "ADMIN_SELF_ACTION_FORBIDDEN",
-      message: "Nao e permitido atualizar uma permissao vinculada ao proprio usuario."
+      message:
+        "Nao e permitido atualizar uma permissao vinculada ao proprio usuario.",
     });
     expect(repository.updatePermission).not.toHaveBeenCalled();
   });
 
   it("bloqueia exclusao de permissao vinculada ao proprio usuario", async () => {
     const repository = createPermissionsRepositoryMock({
-      getPermissionById: vi.fn(async () => ({ id: "perm-1", name: "perm_name", type: "SYSTEM_PERMISSION" }))
+      getPermissionById: vi.fn(async () => ({
+        id: "perm-1",
+        name: "perm_name",
+        type: "SYSTEM_PERMISSION",
+      })),
     });
 
     const app = await createPermissionsTestApp(repository);
@@ -119,32 +148,33 @@ describe("routes/permissions with injected repository", () => {
           roleType: "SYSTEM_ROLE",
           hotelId: null,
           hotelName: null,
-          permissions: ["perm_name"]
-        }
+          permissions: ["perm_name"],
+        },
       ],
       iat: nowInSeconds,
-      exp: nowInSeconds + 3600
+      exp: nowInSeconds + 3600,
     });
 
     const response = await app.inject({
       method: "DELETE",
       url: "/admin/permissions/perm-1",
       headers: {
-        authorization: `Bearer ${token}`
-      }
+        authorization: `Bearer ${token}`,
+      },
     });
 
     expect(response.statusCode).toBe(403);
     expect(response.json()).toEqual({
       code: "ADMIN_SELF_ACTION_FORBIDDEN",
-      message: "Nao e permitido excluir uma permissao vinculada ao proprio usuario."
+      message:
+        "Nao e permitido excluir uma permissao vinculada ao proprio usuario.",
     });
     expect(repository.deletePermission).not.toHaveBeenCalled();
   });
 
   it("retorna 409 quando delete de permissao sinaliza conflito", async () => {
     const repository = createPermissionsRepositoryMock({
-      deletePermission: vi.fn(async () => "conflict")
+      deletePermission: vi.fn(async () => "conflict"),
     });
 
     const app = await createPermissionsTestApp(repository);
@@ -153,11 +183,14 @@ describe("routes/permissions with injected repository", () => {
       method: "DELETE",
       url: "/admin/permissions/perm-1",
       headers: {
-        authorization: `Bearer ${createToken([PERMISSIONS.PERMISSION_DELETE])}`
-      }
+        authorization: `Bearer ${createToken([PERMISSIONS.PERMISSION_DELETE])}`,
+      },
     });
 
     expect(response.statusCode).toBe(409);
-    expect(response.json()).toEqual({ code: "ADMIN_CONFLICT", message: "Permissao nao pode ser excluida: possui dependencias ativas." });
+    expect(response.json()).toEqual({
+      code: "ADMIN_CONFLICT",
+      message: "Permissao nao pode ser excluida: possui dependencias ativas.",
+    });
   });
 });

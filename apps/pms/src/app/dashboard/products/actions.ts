@@ -3,7 +3,11 @@
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import { PERMISSIONS } from "@hotel/shared";
-import { createProduct, deleteProduct, updateProduct } from "../../../lib/adminApi";
+import {
+  createProduct,
+  deleteProduct,
+  updateProduct,
+} from "../../../lib/adminApi";
 import { getUserFromSession } from "../../../lib/auth";
 
 function revalidateProductPage(): void {
@@ -12,7 +16,10 @@ function revalidateProductPage(): void {
   revalidatePath("/dashboard/products/view");
 }
 
-function redirectWithStatus(status: string, section: "create" | "view" | "root" = "root"): never {
+function redirectWithStatus(
+  status: string,
+  section: "create" | "view" | "root" = "root",
+): never {
   const nonce = Date.now().toString(36);
 
   if (section === "root") {
@@ -26,7 +33,9 @@ export async function createProductAction(formData: FormData): Promise<void> {
   const user = await getUserFromSession();
 
   if (!user || !user.permissions.includes(PERMISSIONS.PRODUCT_CREATE)) {
-    const fallback = user?.permissions.includes(PERMISSIONS.PRODUCT_READ) ? "view" : "root";
+    const fallback = user?.permissions.includes(PERMISSIONS.PRODUCT_READ)
+      ? "view"
+      : "root";
     redirectWithStatus("forbidden", fallback);
   }
 
@@ -41,7 +50,8 @@ export async function createProductAction(formData: FormData): Promise<void> {
       name,
       category: String(formData.get("category") || "").trim() || null,
       unit_price: unitPrice,
-      status: (String(formData.get("status") || "active").trim() as "active" | "inactive")
+      status: String(formData.get("status") || "active").trim() as
+        "active" | "inactive",
     });
   } catch {
     redirectWithStatus("create_error", "create");
@@ -55,7 +65,9 @@ export async function updateProductAction(formData: FormData): Promise<void> {
   const user = await getUserFromSession();
 
   if (!user || !user.permissions.includes(PERMISSIONS.PRODUCT_UPDATE)) {
-    const fallback = user?.permissions.includes(PERMISSIONS.PRODUCT_READ) ? "view" : "root";
+    const fallback = user?.permissions.includes(PERMISSIONS.PRODUCT_READ)
+      ? "view"
+      : "root";
     redirectWithStatus("forbidden", fallback);
   }
 
@@ -71,7 +83,8 @@ export async function updateProductAction(formData: FormData): Promise<void> {
       name,
       category: String(formData.get("category") || "").trim() || null,
       unit_price: unitPrice,
-      status: (String(formData.get("status") || "active").trim() as "active" | "inactive")
+      status: String(formData.get("status") || "active").trim() as
+        "active" | "inactive",
     });
   } catch {
     redirectWithStatus("update_error", "view");
@@ -85,7 +98,9 @@ export async function deleteProductAction(formData: FormData): Promise<void> {
   const user = await getUserFromSession();
 
   if (!user || !user.permissions.includes(PERMISSIONS.PRODUCT_DELETE)) {
-    const fallback = user?.permissions.includes(PERMISSIONS.PRODUCT_READ) ? "view" : "root";
+    const fallback = user?.permissions.includes(PERMISSIONS.PRODUCT_READ)
+      ? "view"
+      : "root";
     redirectWithStatus("forbidden", fallback);
   }
 

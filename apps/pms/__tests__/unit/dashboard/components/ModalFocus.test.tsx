@@ -73,7 +73,9 @@ describe("modal focus management", () => {
     expect(document.activeElement).toBe(closeButton);
 
     await user.keyboard("{Escape}");
-    expect(screen.queryByRole("dialog", { name: "Filtros de teste" })).toBeNull();
+    expect(
+      screen.queryByRole("dialog", { name: "Filtros de teste" }),
+    ).toBeNull();
     expect(document.activeElement).toBe(trigger);
   });
 
@@ -83,7 +85,9 @@ describe("modal focus management", () => {
 
     const trigger = screen.getByRole("button", { name: "Abrir seleção" });
     await user.click(trigger);
-    expect(document.activeElement).toBe(screen.getByRole("button", { name: "Fechar" }));
+    expect(document.activeElement).toBe(
+      screen.getByRole("button", { name: "Fechar" }),
+    );
 
     await user.keyboard("{Escape}");
     expect(screen.queryByRole("dialog", { name: "Escolher hotel" })).toBeNull();

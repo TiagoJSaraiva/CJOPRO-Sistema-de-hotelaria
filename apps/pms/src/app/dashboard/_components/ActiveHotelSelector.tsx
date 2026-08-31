@@ -2,7 +2,10 @@
 
 import { useRouter } from "next/navigation";
 import { useMemo, useState, useTransition } from "react";
-import { ACTIVE_HOTEL_GLOBAL_VALUE, type ActiveHotelOption } from "@hotel/shared";
+import {
+  ACTIVE_HOTEL_GLOBAL_VALUE,
+  type ActiveHotelOption,
+} from "@hotel/shared";
 
 type ActiveHotelSelectorProps = {
   options: ActiveHotelOption[];
@@ -18,7 +21,11 @@ function fromSelectValue(value: string): string | null {
   return value === ACTIVE_HOTEL_GLOBAL_VALUE ? null : value;
 }
 
-export function ActiveHotelSelector({ options, initialHotelId, onChangeAction }: ActiveHotelSelectorProps) {
+export function ActiveHotelSelector({
+  options,
+  initialHotelId,
+  onChangeAction,
+}: ActiveHotelSelectorProps) {
   const router = useRouter();
   const [isPending, startTransition] = useTransition();
   const [value, setValue] = useState<string>(toSelectValue(initialHotelId));
@@ -27,9 +34,9 @@ export function ActiveHotelSelector({ options, initialHotelId, onChangeAction }:
     () =>
       options.map((option) => ({
         value: toSelectValue(option.hotelId),
-        label: option.label
+        label: option.label,
       })),
-    [options]
+    [options],
   );
 
   const handleChange = (nextValue: string) => {

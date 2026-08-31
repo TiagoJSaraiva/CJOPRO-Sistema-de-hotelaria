@@ -45,7 +45,7 @@ import {
   AdminMaintenanceOccurrenceListResponse,
   AdminMaintenanceOccurrenceDetail,
   AdminMaintenanceReferenceData,
-  AdminMaintenanceSummary
+  AdminMaintenanceSummary,
 } from "@hotel/shared";
 import { getActiveHotelCookieValue } from "./activeHotel";
 
@@ -80,7 +80,7 @@ async function getAdminList<T>(path: string): Promise<T[]> {
 
   const activeHotelHeaderValue = await getActiveHotelHeaderValue();
   const headers: Record<string, string> = {
-    Authorization: `Bearer ${token}`
+    Authorization: `Bearer ${token}`,
   };
 
   if (activeHotelHeaderValue !== null) {
@@ -90,7 +90,7 @@ async function getAdminList<T>(path: string): Promise<T[]> {
   const response = await fetch(`${getBackendUrl()}${path}`, {
     method: "GET",
     cache: "no-store",
-    headers
+    headers,
   });
 
   if (!response.ok) {
@@ -104,7 +104,7 @@ async function getAdminList<T>(path: string): Promise<T[]> {
 async function requestAdmin<T>(
   path: string,
   method: "POST" | "PUT" | "DELETE",
-  body?: unknown
+  body?: unknown,
 ): Promise<T | null> {
   const token = await getSessionToken();
 
@@ -115,7 +115,7 @@ async function requestAdmin<T>(
   const hasBody = body !== undefined;
   const activeHotelHeaderValue = await getActiveHotelHeaderValue();
   const headers: Record<string, string> = {
-    Authorization: `Bearer ${token}`
+    Authorization: `Bearer ${token}`,
   };
 
   if (activeHotelHeaderValue !== null) {
@@ -130,11 +130,13 @@ async function requestAdmin<T>(
     method,
     cache: "no-store",
     headers,
-    body: hasBody ? JSON.stringify(body) : undefined
+    body: hasBody ? JSON.stringify(body) : undefined,
   });
 
   if (!response.ok) {
-    const payload = (await response.json().catch(() => ({}))) as AdminErrorResponse;
+    const payload = (await response
+      .json()
+      .catch(() => ({}))) as AdminErrorResponse;
     console.error("[adminApi] Request failed", {
       method,
       path,
@@ -142,9 +144,11 @@ async function requestAdmin<T>(
       statusText: response.statusText,
       error: payload,
       requestBody: hasBody ? body : undefined,
-      backendUrl: getBackendUrl()
+      backendUrl: getBackendUrl(),
     });
-    const error = new Error(payload.message || "Falha na operação administrativa.") as Error & {
+    const error = new Error(
+      payload.message || "Falha na operação administrativa.",
+    ) as Error & {
       statusCode?: number;
       details?: string;
     };
@@ -170,7 +174,7 @@ async function getAdminData<T>(path: string): Promise<T> {
 
   const activeHotelHeaderValue = await getActiveHotelHeaderValue();
   const headers: Record<string, string> = {
-    Authorization: `Bearer ${token}`
+    Authorization: `Bearer ${token}`,
   };
 
   if (activeHotelHeaderValue !== null) {
@@ -180,12 +184,16 @@ async function getAdminData<T>(path: string): Promise<T> {
   const response = await fetch(`${getBackendUrl()}${path}`, {
     method: "GET",
     cache: "no-store",
-    headers
+    headers,
   });
 
   if (!response.ok) {
-    const payload = (await response.json().catch(() => ({}))) as AdminErrorResponse;
-    const error = new Error(payload.message || "Falha na consulta administrativa.") as Error & { statusCode?: number };
+    const payload = (await response
+      .json()
+      .catch(() => ({}))) as AdminErrorResponse;
+    const error = new Error(
+      payload.message || "Falha na consulta administrativa.",
+    ) as Error & { statusCode?: number };
     error.statusCode = response.status;
     throw error;
   }
@@ -231,18 +239,23 @@ export type {
   AdminUser,
   AdminUserCreateInput,
   AdminUserUpdateInput,
-  AdminUsersReferenceData
+  AdminUsersReferenceData,
 } from "@hotel/shared";
 
 export function listHotels(): Promise<AdminHotel[]> {
   return getAdminList<AdminHotel>("/admin/hotels");
 }
 
-export function createHotel(payload: AdminHotelCreateInput): Promise<AdminHotel | null> {
+export function createHotel(
+  payload: AdminHotelCreateInput,
+): Promise<AdminHotel | null> {
   return requestAdmin<AdminHotel>("/admin/hotels", "POST", payload);
 }
 
-export function updateHotel(id: string, payload: AdminHotelUpdateInput): Promise<AdminHotel | null> {
+export function updateHotel(
+  id: string,
+  payload: AdminHotelUpdateInput,
+): Promise<AdminHotel | null> {
   return requestAdmin<AdminHotel>(`/admin/hotels/${id}`, "PUT", payload);
 }
 
@@ -258,11 +271,16 @@ export function getUsersReferenceData(): Promise<AdminUsersReferenceData> {
   return getAdminData<AdminUsersReferenceData>("/admin/users/reference-data");
 }
 
-export function createUser(payload: AdminUserCreateInput): Promise<AdminUser | null> {
+export function createUser(
+  payload: AdminUserCreateInput,
+): Promise<AdminUser | null> {
   return requestAdmin<AdminUser>("/admin/users", "POST", payload);
 }
 
-export function updateUser(id: string, payload: AdminUserUpdateInput): Promise<AdminUser | null> {
+export function updateUser(
+  id: string,
+  payload: AdminUserUpdateInput,
+): Promise<AdminUser | null> {
   return requestAdmin<AdminUser>(`/admin/users/${id}`, "PUT", payload);
 }
 
@@ -278,11 +296,16 @@ export function getRolesReferenceData(): Promise<AdminRolesReferenceData> {
   return getAdminData<AdminRolesReferenceData>("/admin/roles/reference-data");
 }
 
-export function createRole(payload: AdminRoleCreateInput): Promise<AdminRole | null> {
+export function createRole(
+  payload: AdminRoleCreateInput,
+): Promise<AdminRole | null> {
   return requestAdmin<AdminRole>("/admin/roles", "POST", payload);
 }
 
-export function updateRole(id: string, payload: AdminRoleUpdateInput): Promise<AdminRole | null> {
+export function updateRole(
+  id: string,
+  payload: AdminRoleUpdateInput,
+): Promise<AdminRole | null> {
   return requestAdmin<AdminRole>(`/admin/roles/${id}`, "PUT", payload);
 }
 
@@ -294,12 +317,21 @@ export function listPermissions(): Promise<AdminPermission[]> {
   return getAdminList<AdminPermission>("/admin/permissions");
 }
 
-export function createPermission(payload: AdminPermissionCreateInput): Promise<AdminPermission | null> {
+export function createPermission(
+  payload: AdminPermissionCreateInput,
+): Promise<AdminPermission | null> {
   return requestAdmin<AdminPermission>("/admin/permissions", "POST", payload);
 }
 
-export function updatePermission(id: string, payload: AdminPermissionUpdateInput): Promise<AdminPermission | null> {
-  return requestAdmin<AdminPermission>(`/admin/permissions/${id}`, "PUT", payload);
+export function updatePermission(
+  id: string,
+  payload: AdminPermissionUpdateInput,
+): Promise<AdminPermission | null> {
+  return requestAdmin<AdminPermission>(
+    `/admin/permissions/${id}`,
+    "PUT",
+    payload,
+  );
 }
 
 export function deletePermission(id: string): Promise<null> {
@@ -310,11 +342,16 @@ export function listRooms(): Promise<AdminRoom[]> {
   return getAdminList<AdminRoom>("/admin/rooms");
 }
 
-export function createRoom(payload: AdminRoomCreateInput): Promise<AdminRoom | null> {
+export function createRoom(
+  payload: AdminRoomCreateInput,
+): Promise<AdminRoom | null> {
   return requestAdmin<AdminRoom>("/admin/rooms", "POST", payload);
 }
 
-export function updateRoom(id: string, payload: AdminRoomUpdateInput): Promise<AdminRoom | null> {
+export function updateRoom(
+  id: string,
+  payload: AdminRoomUpdateInput,
+): Promise<AdminRoom | null> {
   return requestAdmin<AdminRoom>(`/admin/rooms/${id}`, "PUT", payload);
 }
 
@@ -326,11 +363,16 @@ export function listCustomers(): Promise<AdminCustomer[]> {
   return getAdminList<AdminCustomer>("/admin/customers");
 }
 
-export function createCustomer(payload: AdminCustomerCreateInput): Promise<AdminCustomer | null> {
+export function createCustomer(
+  payload: AdminCustomerCreateInput,
+): Promise<AdminCustomer | null> {
   return requestAdmin<AdminCustomer>("/admin/customers", "POST", payload);
 }
 
-export function updateCustomer(id: string, payload: AdminCustomerUpdateInput): Promise<AdminCustomer | null> {
+export function updateCustomer(
+  id: string,
+  payload: AdminCustomerUpdateInput,
+): Promise<AdminCustomer | null> {
   return requestAdmin<AdminCustomer>(`/admin/customers/${id}`, "PUT", payload);
 }
 
@@ -338,30 +380,46 @@ export function deleteCustomer(id: string): Promise<null> {
   return requestAdmin<never>(`/admin/customers/${id}`, "DELETE");
 }
 
-export function getReservationsCalendar(startDate: string, days = 20): Promise<AdminReservationCalendarResponse> {
+export function getReservationsCalendar(
+  startDate: string,
+  days = 20,
+): Promise<AdminReservationCalendarResponse> {
   const query = new URLSearchParams({
     start_date: startDate,
-    days: String(days)
+    days: String(days),
   });
-  return getAdminData<AdminReservationCalendarResponse>(`/admin/reservations/calendar?${query.toString()}`);
+  return getAdminData<AdminReservationCalendarResponse>(
+    `/admin/reservations/calendar?${query.toString()}`,
+  );
 }
 
-export async function requestMaintenanceEndpoint<T>(path: string, method: "GET" | "POST" | "PUT", body?: unknown): Promise<T> {
+export async function requestMaintenanceEndpoint<T>(
+  path: string,
+  method: "GET" | "POST" | "PUT",
+  body?: unknown,
+): Promise<T> {
   const token = await getSessionToken();
   if (!token) throw new Error("Sessão inválida. Faça login novamente.");
   const activeHotelHeaderValue = await getActiveHotelHeaderValue();
   const headers: Record<string, string> = { Authorization: `Bearer ${token}` };
-  if (activeHotelHeaderValue !== null) headers[ACTIVE_HOTEL_HEADER_NAME] = activeHotelHeaderValue;
+  if (activeHotelHeaderValue !== null)
+    headers[ACTIVE_HOTEL_HEADER_NAME] = activeHotelHeaderValue;
   if (body !== undefined) headers["Content-Type"] = "application/json";
-  const response = await fetch(`${getBackendUrl()}/admin/maintenance/${path.replace(/^\/+/, "")}`, {
-    method,
-    cache: "no-store",
-    headers,
-    body: body === undefined ? undefined : JSON.stringify(body)
-  });
-  const payload = (await response.json().catch(() => ({}))) as T & AdminErrorResponse;
+  const response = await fetch(
+    `${getBackendUrl()}/admin/maintenance/${path.replace(/^\/+/, "")}`,
+    {
+      method,
+      cache: "no-store",
+      headers,
+      body: body === undefined ? undefined : JSON.stringify(body),
+    },
+  );
+  const payload = (await response.json().catch(() => ({}))) as T &
+    AdminErrorResponse;
   if (!response.ok) {
-    const error = new Error(payload.message || "Falha na operação de manutenção.") as Error & { statusCode?: number; details?: string };
+    const error = new Error(
+      payload.message || "Falha na operação de manutenção.",
+    ) as Error & { statusCode?: number; details?: string };
     error.statusCode = response.status;
     error.details = payload.details;
     throw error;
@@ -369,17 +427,29 @@ export async function requestMaintenanceEndpoint<T>(path: string, method: "GET" 
   return payload;
 }
 
-export function getMaintenanceOccurrences(query = ""): Promise<AdminMaintenanceOccurrenceListResponse> {
-  return requestMaintenanceEndpoint<AdminMaintenanceOccurrenceListResponse>(`occurrences${query ? `?${query}` : ""}`, "GET");
+export function getMaintenanceOccurrences(
+  query = "",
+): Promise<AdminMaintenanceOccurrenceListResponse> {
+  return requestMaintenanceEndpoint<AdminMaintenanceOccurrenceListResponse>(
+    `occurrences${query ? `?${query}` : ""}`,
+    "GET",
+  );
 }
 
-export async function getMaintenanceOccurrence(id: string): Promise<AdminMaintenanceOccurrenceDetail> {
-  const response = await requestMaintenanceEndpoint<AdminItemResponse<AdminMaintenanceOccurrenceDetail>>(`occurrences/${id}`, "GET");
+export async function getMaintenanceOccurrence(
+  id: string,
+): Promise<AdminMaintenanceOccurrenceDetail> {
+  const response = await requestMaintenanceEndpoint<
+    AdminItemResponse<AdminMaintenanceOccurrenceDetail>
+  >(`occurrences/${id}`, "GET");
   return response.item;
 }
 
 export function getMaintenanceReferenceData(): Promise<AdminMaintenanceReferenceData> {
-  return requestMaintenanceEndpoint<AdminMaintenanceReferenceData>("reference-data", "GET");
+  return requestMaintenanceEndpoint<AdminMaintenanceReferenceData>(
+    "reference-data",
+    "GET",
+  );
 }
 
 export function getMaintenanceSummary(): Promise<AdminMaintenanceSummary> {
@@ -387,68 +457,128 @@ export function getMaintenanceSummary(): Promise<AdminMaintenanceSummary> {
 }
 
 export function simulateReservationsCalendarBooking(
-  payload: AdminReservationCalendarBookingCreateInput
+  payload: AdminReservationCalendarBookingCreateInput,
 ): Promise<AdminReservationCalendarBookingCreateResponse> {
-  return requestAdmin<AdminReservationCalendarBookingCreateResponse>("/admin/reservations/calendar/booking/simulate", "POST", payload).then(
-    (result) => result as AdminReservationCalendarBookingCreateResponse
-  );
+  return requestAdmin<AdminReservationCalendarBookingCreateResponse>(
+    "/admin/reservations/calendar/booking/simulate",
+    "POST",
+    payload,
+  ).then((result) => result as AdminReservationCalendarBookingCreateResponse);
 }
 
 export function createReservationsCalendarBooking(
-  payload: AdminReservationCalendarBookingCreateInput
+  payload: AdminReservationCalendarBookingCreateInput,
 ): Promise<AdminReservationCalendarBookingCreateResponse | null> {
-  return requestAdmin<AdminReservationCalendarBookingCreateResponse>("/admin/reservations/calendar/booking", "POST", payload);
+  return requestAdmin<AdminReservationCalendarBookingCreateResponse>(
+    "/admin/reservations/calendar/booking",
+    "POST",
+    payload,
+  );
 }
 
-export async function getStayOperationalPanel(stayId: string): Promise<AdminStayOperationalPanelResponse> {
-  const response = await getAdminData<AdminItemResponse<AdminStayOperationalPanelResponse>>(`/admin/stays/${stayId}/panel`);
+export async function getStayOperationalPanel(
+  stayId: string,
+): Promise<AdminStayOperationalPanelResponse> {
+  const response = await getAdminData<
+    AdminItemResponse<AdminStayOperationalPanelResponse>
+  >(`/admin/stays/${stayId}/panel`);
   return response.item;
 }
 
-export async function getStayCheckoutCandidateByRoomNumber(roomNumber: string): Promise<AdminStayOperationalPanelResponse> {
+export async function getStayCheckoutCandidateByRoomNumber(
+  roomNumber: string,
+): Promise<AdminStayOperationalPanelResponse> {
   const query = new URLSearchParams({
-    room_number: roomNumber
+    room_number: roomNumber,
   });
-  const response = await getAdminData<AdminItemResponse<AdminStayOperationalPanelResponse>>(`/admin/stays/checkout-candidate?${query.toString()}`);
+  const response = await getAdminData<
+    AdminItemResponse<AdminStayOperationalPanelResponse>
+  >(`/admin/stays/checkout-candidate?${query.toString()}`);
   return response.item;
 }
 
 export function createStayPayment(
   stayId: string,
-  payload: AdminStayPaymentCreateInput
+  payload: AdminStayPaymentCreateInput,
 ): Promise<AdminStayOperationalPanelResponse | null> {
-  return requestAdmin<AdminStayOperationalPanelResponse>(`/admin/stays/${stayId}/payments`, "POST", payload);
+  return requestAdmin<AdminStayOperationalPanelResponse>(
+    `/admin/stays/${stayId}/payments`,
+    "POST",
+    payload,
+  );
 }
 
-export function executeStayCheckin(stayId: string): Promise<AdminStayOperationalPanelResponse | null> {
-  return requestAdmin<AdminStayOperationalPanelResponse>(`/admin/stays/${stayId}/checkin`, "POST", {});
+export function executeStayCheckin(
+  stayId: string,
+): Promise<AdminStayOperationalPanelResponse | null> {
+  return requestAdmin<AdminStayOperationalPanelResponse>(
+    `/admin/stays/${stayId}/checkin`,
+    "POST",
+    {},
+  );
 }
 
 export function executeStayCheckout(
   stayId: string,
-  payload: { maintenance_acknowledged_occurrence_ids?: string[]; maintenance_acknowledgement_note?: string }
+  payload: {
+    maintenance_acknowledged_occurrence_ids?: string[];
+    maintenance_acknowledgement_note?: string;
+  },
 ): Promise<AdminStayOperationalPanelResponse | null> {
-  return requestAdmin<AdminStayOperationalPanelResponse>(`/admin/stays/${stayId}/checkout`, "POST", payload);
+  return requestAdmin<AdminStayOperationalPanelResponse>(
+    `/admin/stays/${stayId}/checkout`,
+    "POST",
+    payload,
+  );
 }
 
-export function executeStayNoShow(stayId: string): Promise<AdminStayOperationalPanelResponse | null> {
-  return requestAdmin<AdminStayOperationalPanelResponse>(`/admin/stays/${stayId}/no-show`, "POST", {});
+export function executeStayNoShow(
+  stayId: string,
+): Promise<AdminStayOperationalPanelResponse | null> {
+  return requestAdmin<AdminStayOperationalPanelResponse>(
+    `/admin/stays/${stayId}/no-show`,
+    "POST",
+    {},
+  );
 }
 
-export function executeStayCancel(stayId: string): Promise<AdminStayOperationalPanelResponse | null> {
-  return requestAdmin<AdminStayOperationalPanelResponse>(`/admin/stays/${stayId}/cancel`, "POST", {});
+export function executeStayCancel(
+  stayId: string,
+): Promise<AdminStayOperationalPanelResponse | null> {
+  return requestAdmin<AdminStayOperationalPanelResponse>(
+    `/admin/stays/${stayId}/cancel`,
+    "POST",
+    {},
+  );
 }
 
-export function listFinancialTransactions(): Promise<AdminFinancialTransaction[]> {
-  return getAdminList<AdminFinancialTransaction>("/admin/financial-transactions");
+export function listFinancialTransactions(): Promise<
+  AdminFinancialTransaction[]
+> {
+  return getAdminList<AdminFinancialTransaction>(
+    "/admin/financial-transactions",
+  );
 }
 
-export function createFinancialTransaction(payload: AdminFinancialTransactionCreateInput): Promise<AdminFinancialTransaction | null> {
-  return requestAdmin<AdminFinancialTransaction>("/admin/financial-transactions", "POST", payload);
+export function createFinancialTransaction(
+  payload: AdminFinancialTransactionCreateInput,
+): Promise<AdminFinancialTransaction | null> {
+  return requestAdmin<AdminFinancialTransaction>(
+    "/admin/financial-transactions",
+    "POST",
+    payload,
+  );
 }
 
-export function updateFinancialTransaction(id: string, payload: AdminFinancialTransactionUpdateInput): Promise<AdminFinancialTransaction | null> {
-  return requestAdmin<AdminFinancialTransaction>(`/admin/financial-transactions/${id}`, "PUT", payload);
+export function updateFinancialTransaction(
+  id: string,
+  payload: AdminFinancialTransactionUpdateInput,
+): Promise<AdminFinancialTransaction | null> {
+  return requestAdmin<AdminFinancialTransaction>(
+    `/admin/financial-transactions/${id}`,
+    "PUT",
+    payload,
+  );
 }
 
 export function deleteFinancialTransaction(id: string): Promise<null> {
@@ -459,11 +589,16 @@ export function listProducts(): Promise<AdminProduct[]> {
   return getAdminList<AdminProduct>("/admin/products");
 }
 
-export function createProduct(payload: AdminProductCreateInput): Promise<AdminProduct | null> {
+export function createProduct(
+  payload: AdminProductCreateInput,
+): Promise<AdminProduct | null> {
   return requestAdmin<AdminProduct>("/admin/products", "POST", payload);
 }
 
-export function updateProduct(id: string, payload: AdminProductUpdateInput): Promise<AdminProduct | null> {
+export function updateProduct(
+  id: string,
+  payload: AdminProductUpdateInput,
+): Promise<AdminProduct | null> {
   return requestAdmin<AdminProduct>(`/admin/products/${id}`, "PUT", payload);
 }
 
@@ -475,11 +610,16 @@ export function listSeasons(): Promise<AdminSeason[]> {
   return getAdminList<AdminSeason>("/admin/seasons");
 }
 
-export function createSeason(payload: AdminSeasonCreateInput): Promise<AdminSeason | null> {
+export function createSeason(
+  payload: AdminSeasonCreateInput,
+): Promise<AdminSeason | null> {
   return requestAdmin<AdminSeason>("/admin/seasons", "POST", payload);
 }
 
-export function updateSeason(id: string, payload: AdminSeasonUpdateInput): Promise<AdminSeason | null> {
+export function updateSeason(
+  id: string,
+  payload: AdminSeasonUpdateInput,
+): Promise<AdminSeason | null> {
   return requestAdmin<AdminSeason>(`/admin/seasons/${id}`, "PUT", payload);
 }
 
@@ -491,12 +631,25 @@ export function listSeasonRoomRates(): Promise<AdminSeasonRoomRate[]> {
   return getAdminList<AdminSeasonRoomRate>("/admin/season-room-rates");
 }
 
-export function createSeasonRoomRate(payload: AdminSeasonRoomRateCreateInput): Promise<AdminSeasonRoomRate | null> {
-  return requestAdmin<AdminSeasonRoomRate>("/admin/season-room-rates", "POST", payload);
+export function createSeasonRoomRate(
+  payload: AdminSeasonRoomRateCreateInput,
+): Promise<AdminSeasonRoomRate | null> {
+  return requestAdmin<AdminSeasonRoomRate>(
+    "/admin/season-room-rates",
+    "POST",
+    payload,
+  );
 }
 
-export function updateSeasonRoomRate(id: string, payload: AdminSeasonRoomRateUpdateInput): Promise<AdminSeasonRoomRate | null> {
-  return requestAdmin<AdminSeasonRoomRate>(`/admin/season-room-rates/${id}`, "PUT", payload);
+export function updateSeasonRoomRate(
+  id: string,
+  payload: AdminSeasonRoomRateUpdateInput,
+): Promise<AdminSeasonRoomRate | null> {
+  return requestAdmin<AdminSeasonRoomRate>(
+    `/admin/season-room-rates/${id}`,
+    "PUT",
+    payload,
+  );
 }
 
 export function deleteSeasonRoomRate(id: string): Promise<null> {

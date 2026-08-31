@@ -1,7 +1,13 @@
 "use client";
 
 import { useState } from "react";
-import { ADMIN_ROLE_TYPES, type AdminHotelOption, type AdminPermissionOption, type AdminRole, type AdminRoleType } from "@hotel/shared";
+import {
+  ADMIN_ROLE_TYPES,
+  type AdminHotelOption,
+  type AdminPermissionOption,
+  type AdminRole,
+  type AdminRoleType,
+} from "@hotel/shared";
 import { deleteRoleAction, updateRoleAction } from "../actions";
 import { RoleHotelPickerField } from "./RoleHotelPickerField";
 import { RolePermissionAssignmentsField } from "./RolePermissionAssignmentsField";
@@ -31,7 +37,10 @@ function RoleDataPreview({ roleItem }: { roleItem: AdminRole }) {
   return (
     <div className="mt-[0.85rem] grid gap-[0.7rem]">
       <p className="m-0">
-        <strong>Tipo da role:</strong> {roleItem.role_type === ADMIN_ROLE_TYPES.SYSTEM ? "SYSTEM ROLE" : "HOTEL ROLE"}
+        <strong>Tipo da role:</strong>{" "}
+        {roleItem.role_type === ADMIN_ROLE_TYPES.SYSTEM
+          ? "SYSTEM ROLE"
+          : "HOTEL ROLE"}
       </p>
       <p className="m-0">
         <strong>Escopo:</strong> {scopeLabel}
@@ -46,14 +55,24 @@ function RoleDataPreview({ roleItem }: { roleItem: AdminRole }) {
             ))}
           </ul>
         ) : (
-          <p className="m-0 mt-[0.35rem] text-[#626c79]">Sem permissões vinculadas.</p>
+          <p className="m-0 mt-[0.35rem] text-[#626c79]">
+            Sem permissões vinculadas.
+          </p>
         )}
       </div>
     </div>
   );
 }
 
-function RoleEditForm({ roleItem, hotels, permissions }: { roleItem: AdminRole; hotels: AdminHotelOption[]; permissions: AdminPermissionOption[] }) {
+function RoleEditForm({
+  roleItem,
+  hotels,
+  permissions,
+}: {
+  roleItem: AdminRole;
+  hotels: AdminHotelOption[];
+  permissions: AdminPermissionOption[];
+}) {
   const [roleType, setRoleType] = useState<AdminRoleType>(roleItem.role_type);
 
   return (
@@ -85,17 +104,38 @@ function RoleEditForm({ roleItem, hotels, permissions }: { roleItem: AdminRole; 
         </select>
       </div>
 
-      <RoleHotelPickerField hotels={hotels} roleType={roleType} defaultHotelId={roleItem.hotel_id} />
-      <RolePermissionAssignmentsField roleType={roleType} permissions={permissions} defaultPermissions={roleItem.permissions} />
+      <RoleHotelPickerField
+        hotels={hotels}
+        roleType={roleType}
+        defaultHotelId={roleItem.hotel_id}
+      />
+      <RolePermissionAssignmentsField
+        roleType={roleType}
+        permissions={permissions}
+        defaultPermissions={roleItem.permissions}
+      />
 
-      <button type="submit" className="justify-self-start rounded-lg border-0 bg-[#1c6d4e] px-[0.75rem] py-[0.55rem] text-white">
+      <button
+        type="submit"
+        className="justify-self-start rounded-lg border-0 bg-[#1c6d4e] px-[0.75rem] py-[0.55rem] text-white"
+      >
         Salvar alterações
       </button>
     </form>
   );
 }
 
-export function RoleListItem({ roleItem, hotels, permissions, canRead, canUpdate, canDelete, isCurrentUserRole, isViewing, isEditing }: RoleListItemProps) {
+export function RoleListItem({
+  roleItem,
+  hotels,
+  permissions,
+  canRead,
+  canUpdate,
+  canDelete,
+  isCurrentUserRole,
+  isViewing,
+  isEditing,
+}: RoleListItemProps) {
   const viewHref = `/dashboard/roles/view?roleId=${roleItem.id}&mode=view`;
   const editHref = `/dashboard/roles/view?roleId=${roleItem.id}&mode=edit`;
   const roleScopeLabel =
@@ -128,7 +168,13 @@ export function RoleListItem({ roleItem, hotels, permissions, canRead, canUpdate
       }
     >
       {isViewing ? <RoleDataPreview roleItem={roleItem} /> : null}
-      {isEditing && !isCurrentUserRole ? <RoleEditForm roleItem={roleItem} hotels={hotels} permissions={permissions} /> : null}
+      {isEditing && !isCurrentUserRole ? (
+        <RoleEditForm
+          roleItem={roleItem}
+          hotels={hotels}
+          permissions={permissions}
+        />
+      ) : null}
     </DashboardEntityListItemFrame>
   );
 }

@@ -15,11 +15,13 @@ export function getSeasonsAccess(user: UserLike): SeasonsAccess {
     canCreate: permissions.includes(PERMISSIONS.SEASON_CREATE),
     canRead: permissions.includes(PERMISSIONS.SEASON_READ),
     canUpdate: permissions.includes(PERMISSIONS.SEASON_UPDATE),
-    canDelete: permissions.includes(PERMISSIONS.SEASON_DELETE)
+    canDelete: permissions.includes(PERMISSIONS.SEASON_DELETE),
   };
 }
 
-export function getSeasonsDefaultRoute(access: SeasonsAccess): "/dashboard/seasons/view" | "/dashboard/seasons/create" | null {
+export function getSeasonsDefaultRoute(
+  access: SeasonsAccess,
+): "/dashboard/seasons/view" | "/dashboard/seasons/create" | null {
   if (access.canRead) {
     return "/dashboard/seasons/view";
   }

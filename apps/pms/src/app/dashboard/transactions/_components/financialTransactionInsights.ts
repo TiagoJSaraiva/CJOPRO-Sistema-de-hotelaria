@@ -3,7 +3,7 @@ import {
   getFinancialTransactionSignedAmount,
   isFinancialTransactionDueSoon,
   isFinancialTransactionOverdue,
-  isFinancialTransactionSettled
+  isFinancialTransactionSettled,
 } from "@hotel/shared";
 
 export type ExpenseCategoryInsight = {
@@ -38,12 +38,16 @@ function getAmount(transaction: AdminFinancialTransaction): number {
 }
 
 function isActiveExpense(transaction: AdminFinancialTransaction): boolean {
-  return transaction.type === "EXPENSE" && transaction.status !== "FAILED" && transaction.status !== "CANCELLED";
+  return (
+    transaction.type === "EXPENSE" &&
+    transaction.status !== "FAILED" &&
+    transaction.status !== "CANCELLED"
+  );
 }
 
 export function buildFinancialTransactionInsights(
   transactions: AdminFinancialTransaction[],
-  referenceDate: Date = new Date()
+  referenceDate: Date = new Date(),
 ): FinancialTransactionInsights {
   let realizedIncome = 0;
   let realizedExpenses = 0;
@@ -77,10 +81,13 @@ export function buildFinancialTransactionInsights(
     }
 
     if (isActiveExpense(transaction)) {
-      const current = categoryTotals.get(transaction.category) || { amount: 0, count: 0 };
+      const current = categoryTotals.get(transaction.category) || {
+        amount: 0,
+        count: 0,
+      };
       categoryTotals.set(transaction.category, {
         amount: current.amount + amount,
-        count: current.count + 1
+        count: current.count + 1,
       });
     }
 
@@ -99,25 +106,42 @@ export function buildFinancialTransactionInsights(
     }
   }
 
-  const categoryGrandTotal = Array.from(categoryTotals.values()).reduce((sum, item) => sum + item.amount, 0);
+  const categoryGrandTotal = Array.from(categoryTotals.values()).reduce(
+    (sum, item) => sum + item.amount,
+    0,
+  );
   const topExpenseCategories = Array.from(categoryTotals.entries())
     .map(([category, item]) => ({
       category,
       amount: roundMoney(item.amount),
       count: item.count,
-      share: categoryGrandTotal > 0 ? Math.round((item.amount / categoryGrandTotal) * 100) : 0
+      share:
+        categoryGrandTotal > 0
+          ? Math.round((item.amount / categoryGrandTotal) * 100)
+          : 0,
     }))
     .sort((a, b) => b.amount - a.amount)
     .slice(0, 5);
 
   const upcomingExpenses = transactions
-    .filter((transaction) => transaction.type === "EXPENSE" && transaction.status === "PENDING")
-    .sort((a, b) => String(a.due_date || "9999-12-31").localeCompare(String(b.due_date || "9999-12-31")))
+    .filter(
+      (transaction) =>
+        transaction.type === "EXPENSE" && transaction.status === "PENDING",
+    )
+    .sort((a, b) =>
+      String(a.due_date || "9999-12-31").localeCompare(
+        String(b.due_date || "9999-12-31"),
+      ),
+    )
     .slice(0, 5);
 
   const netRealized = transactions
     .filter((transaction) => isFinancialTransactionSettled(transaction))
-    .reduce((sum, transaction) => sum + getFinancialTransactionSignedAmount(transaction), 0);
+    .reduce(
+      (sum, transaction) =>
+        sum + getFinancialTransactionSignedAmount(transaction),
+      0,
+    );
 
   return {
     realizedIncome: roundMoney(realizedIncome),
@@ -130,8 +154,11 @@ export function buildFinancialTransactionInsights(
     overdueCount,
     pendingCount,
     completedCount,
-    averageExpense: expenseCountForAverage > 0 ? roundMoney(realizedExpenses / expenseCountForAverage) : 0,
+    averageExpense:
+      expenseCountForAverage > 0
+        ? roundMoney(realizedExpenses / expenseCountForAverage)
+        : 0,
     topExpenseCategories,
-    upcomingExpenses
+    upcomingExpenses,
   };
 }

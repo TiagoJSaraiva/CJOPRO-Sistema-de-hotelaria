@@ -3,7 +3,7 @@ import {
   getFinancialTransactionEffectiveDate,
   getFinancialTransactionSignedAmount,
   translateTransactionStatus,
-  translateTransactionType
+  translateTransactionType,
 } from "@hotel/shared";
 import { buildFinancialTransactionInsights } from "./financialTransactionInsights";
 
@@ -28,7 +28,12 @@ export type FinancialTransactionReportData = {
   generatedAtLabel: string;
   transactionCountLabel: string;
   summaryRows: Array<{ label: string; value: string }>;
-  categoryRows: Array<{ category: string; amount: string; count: string; share: string }>;
+  categoryRows: Array<{
+    category: string;
+    amount: string;
+    count: string;
+    share: string;
+  }>;
   tableRows: string[][];
 };
 
@@ -40,7 +45,7 @@ function formatMoney(amount: number, currency = "BRL"): string {
   try {
     return new Intl.NumberFormat("pt-BR", {
       style: "currency",
-      currency
+      currency,
     }).format(value);
   } catch {
     return `${currency} ${value.toFixed(2)}`;
@@ -54,7 +59,9 @@ function formatSignedMoney(amount: number, currency = "BRL"): string {
     return formatMoney(0, currency);
   }
 
-  return value > 0 ? `+${formatMoney(value, currency)}` : `-${formatMoney(Math.abs(value), currency)}`;
+  return value > 0
+    ? `+${formatMoney(value, currency)}`
+    : `-${formatMoney(Math.abs(value), currency)}`;
 }
 
 function formatDateKey(value: string | null | undefined): string {
@@ -76,7 +83,7 @@ function formatDateKey(value: string | null | undefined): string {
   return new Intl.DateTimeFormat("pt-BR", {
     day: "2-digit",
     month: "2-digit",
-    year: "numeric"
+    year: "numeric",
   }).format(date);
 }
 
@@ -86,7 +93,7 @@ function formatDateTime(value: Date): string {
     month: "2-digit",
     year: "numeric",
     hour: "2-digit",
-    minute: "2-digit"
+    minute: "2-digit",
   }).format(value);
 }
 
@@ -113,7 +120,11 @@ function getScopeFilePart(scope: FinancialTransactionReportScope): string {
   return scope === "filtered" ? "recorte-filtrado" : "todas-do-hotel";
 }
 
-function buildTransactionCountLabel(scope: FinancialTransactionReportScope, count: number, total: number): string {
+function buildTransactionCountLabel(
+  scope: FinancialTransactionReportScope,
+  count: number,
+  total: number,
+): string {
   if (scope === "filtered" && total !== count) {
     return `${count} de ${total} lançamento(s)`;
   }
@@ -134,13 +145,18 @@ function buildTableRows(transactions: AdminFinancialTransaction[]): string[][] {
       transaction.counterparty || "-",
       transaction.cost_center || "-",
       transaction.reference_code || "-",
-      formatSignedMoney(signedAmount, transaction.currency)
+      formatSignedMoney(signedAmount, transaction.currency),
     ];
   });
 }
 
-export function buildFinancialTransactionReportData(input: FinancialTransactionReportInput): FinancialTransactionReportData {
-  const insights = buildFinancialTransactionInsights(input.transactions, input.referenceDate);
+export function buildFinancialTransactionReportData(
+  input: FinancialTransactionReportInput,
+): FinancialTransactionReportData {
+  const insights = buildFinancialTransactionInsights(
+    input.transactions,
+    input.referenceDate,
+  );
   const scopeLabel = getScopeLabel(input.scope);
   const safeHotelName = sanitizeFilePart(input.hotelLabel);
   const fileName = `relatorio-financeiro-${safeHotelName}-${toDateKey(input.generatedAt)}-${getScopeFilePart(input.scope)}.pdf`;
@@ -152,23 +168,51 @@ export function buildFinancialTransactionReportData(input: FinancialTransactionR
     hotelLabel: input.hotelLabel,
     generatedBy: input.generatedBy,
     generatedAtLabel: formatDateTime(input.generatedAt),
-    transactionCountLabel: buildTransactionCountLabel(input.scope, input.transactions.length, input.totalTransactions),
+    transactionCountLabel: buildTransactionCountLabel(
+      input.scope,
+      input.transactions.length,
+      input.totalTransactions,
+    ),
     summaryRows: [
-      { label: "Resultado realizado", value: formatMoney(insights.netRealized) },
-      { label: "Receitas realizadas", value: formatMoney(insights.realizedIncome) },
-      { label: "Gastos realizados", value: formatMoney(insights.realizedExpenses) },
-      { label: "Reembolsos realizados", value: formatMoney(insights.realizedRefunds) },
-      { label: "Gastos pendentes", value: formatMoney(insights.pendingExpenses) },
-      { label: "Despesas vencidas", value: formatMoney(insights.overdueExpenses) },
-      { label: "Proximos 7 dias", value: formatMoney(insights.dueSoonExpenses) },
-      { label: "Ticket medio de gasto", value: formatMoney(insights.averageExpense) }
+      {
+        label: "Resultado realizado",
+        value: formatMoney(insights.netRealized),
+      },
+      {
+        label: "Receitas realizadas",
+        value: formatMoney(insights.realizedIncome),
+      },
+      {
+        label: "Gastos realizados",
+        value: formatMoney(insights.realizedExpenses),
+      },
+      {
+        label: "Reembolsos realizados",
+        value: formatMoney(insights.realizedRefunds),
+      },
+      {
+        label: "Gastos pendentes",
+        value: formatMoney(insights.pendingExpenses),
+      },
+      {
+        label: "Despesas vencidas",
+        value: formatMoney(insights.overdueExpenses),
+      },
+      {
+        label: "Proximos 7 dias",
+        value: formatMoney(insights.dueSoonExpenses),
+      },
+      {
+        label: "Ticket medio de gasto",
+        value: formatMoney(insights.averageExpense),
+      },
     ],
     categoryRows: insights.topExpenseCategories.map((category) => ({
       category: category.category,
       amount: formatMoney(category.amount),
       count: `${category.count}`,
-      share: `${category.share}%`
+      share: `${category.share}%`,
     })),
-    tableRows: buildTableRows(input.transactions)
+    tableRows: buildTableRows(input.transactions),
   };
 }

@@ -14,7 +14,7 @@ import {
   normalizeSlug,
   sanitizePhone,
   suggestLocaleByCountry,
-  validateTaxIdByCountry
+  validateTaxIdByCountry,
 } from "../../src/validation";
 
 describe("validation", () => {
@@ -73,7 +73,7 @@ describe("validation", () => {
     expect(result).toEqual({
       isValid: true,
       normalizedTaxId: "04252011000110",
-      message: undefined
+      message: undefined,
     });
   });
 
@@ -90,24 +90,24 @@ describe("validation", () => {
 
     expect(result).toEqual({
       isValid: true,
-      normalizedTaxId: "PT12345"
+      normalizedTaxId: "PT12345",
     });
   });
 
   it("sugere locale para BR, PT e US", () => {
     expect(suggestLocaleByCountry("br")).toEqual({
       timezone: "America/Sao_Paulo",
-      currency: "BRL"
+      currency: "BRL",
     });
 
     expect(suggestLocaleByCountry("Portugal")).toEqual({
       timezone: "Europe/Lisbon",
-      currency: "EUR"
+      currency: "EUR",
     });
 
     expect(suggestLocaleByCountry("United States")).toEqual({
       timezone: "America/New_York",
-      currency: "USD"
+      currency: "USD",
     });
   });
 

@@ -1,6 +1,15 @@
 import { describe, expect, it, vi } from "vitest";
-import { ACTIVE_HOTEL_HEADER_NAME, AUTH_ERROR_CODE, PERMISSIONS, type SessionPayload } from "@hotel/shared";
-import { ensureAuthorized, ensureAuthorizedAny, hasPermission } from "../../../src/auth/authorization";
+import {
+  ACTIVE_HOTEL_HEADER_NAME,
+  AUTH_ERROR_CODE,
+  PERMISSIONS,
+  type SessionPayload,
+} from "@hotel/shared";
+import {
+  ensureAuthorized,
+  ensureAuthorizedAny,
+  hasPermission,
+} from "../../../src/auth/authorization";
 import { signToken } from "../../../src/auth/session";
 
 const baseSession: SessionPayload = {
@@ -12,7 +21,7 @@ const baseSession: SessionPayload = {
   permissions: [PERMISSIONS.HOTEL_READ, PERMISSIONS.USER_READ],
   roleAssignments: [],
   iat: 1_700_000_000,
-  exp: 4_700_000_000
+  exp: 4_700_000_000,
 };
 
 function createReplyMock() {
@@ -22,7 +31,7 @@ function createReplyMock() {
   return {
     reply: { status },
     status,
-    send
+    send,
   };
 }
 
@@ -38,14 +47,18 @@ describe("auth/authorization", () => {
   it("ensureAuthorized retorna 401 quando token nao e informado", () => {
     const { reply, status, send } = createReplyMock();
 
-    const result = ensureAuthorized({ headers: {} }, reply, PERMISSIONS.HOTEL_READ);
+    const result = ensureAuthorized(
+      { headers: {} },
+      reply,
+      PERMISSIONS.HOTEL_READ,
+    );
 
     expect(result).toBeNull();
     expect(status).toHaveBeenCalledWith(401);
     expect(send).toHaveBeenCalledWith(
       expect.objectContaining({
-        code: AUTH_ERROR_CODE.TOKEN_INVALID_OR_EXPIRED
-      })
+        code: AUTH_ERROR_CODE.TOKEN_INVALID_OR_EXPIRED,
+      }),
     );
   });
 
@@ -56,15 +69,15 @@ describe("auth/authorization", () => {
     const result = ensureAuthorized(
       { headers: { authorization: `Bearer ${token}` } },
       reply,
-      PERMISSIONS.HOTEL_DELETE
+      PERMISSIONS.HOTEL_DELETE,
     );
 
     expect(result).toBeNull();
     expect(status).toHaveBeenCalledWith(403);
     expect(send).toHaveBeenCalledWith(
       expect.objectContaining({
-        code: AUTH_ERROR_CODE.FORBIDDEN
-      })
+        code: AUTH_ERROR_CODE.FORBIDDEN,
+      }),
     );
   });
 
@@ -75,7 +88,7 @@ describe("auth/authorization", () => {
     const result = ensureAuthorized(
       { headers: { authorization: `Bearer ${token}` } },
       reply,
-      PERMISSIONS.HOTEL_READ
+      PERMISSIONS.HOTEL_READ,
     );
 
     expect(result).toEqual(baseSession);
@@ -88,7 +101,7 @@ describe("auth/authorization", () => {
     const result = ensureAuthorizedAny(
       { headers: { authorization: `Bearer ${token}` } },
       reply,
-      [PERMISSIONS.HOTEL_DELETE, PERMISSIONS.USER_READ]
+      [PERMISSIONS.HOTEL_DELETE, PERMISSIONS.USER_READ],
     );
 
     expect(result).toEqual(baseSession);
@@ -101,15 +114,15 @@ describe("auth/authorization", () => {
     const result = ensureAuthorizedAny(
       { headers: { authorization: `Bearer ${token}` } },
       reply,
-      [PERMISSIONS.HOTEL_DELETE, PERMISSIONS.USER_DELETE]
+      [PERMISSIONS.HOTEL_DELETE, PERMISSIONS.USER_DELETE],
     );
 
     expect(result).toBeNull();
     expect(status).toHaveBeenCalledWith(403);
     expect(send).toHaveBeenCalledWith(
       expect.objectContaining({
-        code: AUTH_ERROR_CODE.FORBIDDEN
-      })
+        code: AUTH_ERROR_CODE.FORBIDDEN,
+      }),
     );
   });
 
@@ -123,28 +136,28 @@ describe("auth/authorization", () => {
           roleName: "Recepcao",
           roleType: "HOTEL_ROLE",
           hotelId: "hotel-1",
-          hotelName: "Alpha"
-        }
-      ]
+          hotelName: "Alpha",
+        },
+      ],
     });
 
     const result = ensureAuthorized(
       {
         headers: {
           authorization: `Bearer ${token}`,
-          [ACTIVE_HOTEL_HEADER_NAME]: "hotel-999"
-        }
+          [ACTIVE_HOTEL_HEADER_NAME]: "hotel-999",
+        },
       },
       reply,
-      PERMISSIONS.HOTEL_READ
+      PERMISSIONS.HOTEL_READ,
     );
 
     expect(result).toBeNull();
     expect(status).toHaveBeenCalledWith(403);
     expect(send).toHaveBeenCalledWith(
       expect.objectContaining({
-        message: "Hotel ativo nao permitido para este usuario."
-      })
+        message: "Hotel ativo nao permitido para este usuario.",
+      }),
     );
   });
 });

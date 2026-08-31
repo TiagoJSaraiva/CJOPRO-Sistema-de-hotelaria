@@ -8,15 +8,23 @@ type DashboardEntityTabsContextValue = {
   tabs: DashboardEntityTabItem[];
 };
 
-const DashboardEntityTabsContext = createContext<DashboardEntityTabsContextValue | null>(null);
+const DashboardEntityTabsContext =
+  createContext<DashboardEntityTabsContextValue | null>(null);
 
 type DashboardEntityTabsProviderProps = {
   value: DashboardEntityTabsContextValue;
   children: ReactNode;
 };
 
-export function DashboardEntityTabsProvider({ value, children }: DashboardEntityTabsProviderProps) {
-  return <DashboardEntityTabsContext.Provider value={value}>{children}</DashboardEntityTabsContext.Provider>;
+export function DashboardEntityTabsProvider({
+  value,
+  children,
+}: DashboardEntityTabsProviderProps) {
+  return (
+    <DashboardEntityTabsContext.Provider value={value}>
+      {children}
+    </DashboardEntityTabsContext.Provider>
+  );
 }
 
 export function useDashboardEntityTabs() {

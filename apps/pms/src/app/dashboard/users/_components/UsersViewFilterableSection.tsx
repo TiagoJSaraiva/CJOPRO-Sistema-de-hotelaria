@@ -1,9 +1,18 @@
 "use client";
 
 import { useMemo, type ReactNode } from "react";
-import { type AdminHotelOption, type AdminRoleOption, type AdminUser } from "@hotel/shared";
+import {
+  type AdminHotelOption,
+  type AdminRoleOption,
+  type AdminUser,
+} from "@hotel/shared";
 import { UserListItem } from "./UserListItem";
-import { DEFAULT_USER_VIEW_FILTERS, applyUserViewFilters, countAppliedUserFilters, type UserViewFilters } from "./userViewFilters";
+import {
+  DEFAULT_USER_VIEW_FILTERS,
+  applyUserViewFilters,
+  countAppliedUserFilters,
+  type UserViewFilters,
+} from "./userViewFilters";
 import { viewFiltersFieldClassName } from "../../_components/ViewFiltersBase";
 import { EntityViewFilterableSection } from "../../_components/EntityViewFilterableSection";
 import { useViewFiltersState } from "../../_components/useViewFiltersState";
@@ -36,7 +45,7 @@ export function UsersViewFilterableSection({
   currentUserId,
   activeUserId,
   mode,
-  children
+  children,
 }: UsersViewFilterableSectionProps) {
   const {
     isModalOpen,
@@ -46,12 +55,15 @@ export function UsersViewFilterableSection({
     closeFilters,
     applyFilters,
     clearFilters,
-    updateDraftFilter
+    updateDraftFilter,
   } = useViewFiltersState<UserViewFilters>(DEFAULT_USER_VIEW_FILTERS);
 
   const appliedFilterCount = countAppliedUserFilters(appliedFilters);
 
-  const filteredUsers = useMemo(() => applyUserViewFilters(users, appliedFilters), [users, appliedFilters]);
+  const filteredUsers = useMemo(
+    () => applyUserViewFilters(users, appliedFilters),
+    [users, appliedFilters],
+  );
 
   return (
     <EntityViewFilterableSection
@@ -87,7 +99,9 @@ export function UsersViewFilterableSection({
             <span>Nome ou email</span>
             <input
               value={draftFilters.search}
-              onChange={(event) => updateDraftFilter("search", event.target.value)}
+              onChange={(event) =>
+                updateDraftFilter("search", event.target.value)
+              }
               placeholder="Ex.: maria ou hotel.com"
               className={viewFiltersFieldClassName}
             />
@@ -97,7 +111,12 @@ export function UsersViewFilterableSection({
             <span>Status</span>
             <select
               value={draftFilters.status}
-              onChange={(event) => updateDraftFilter("status", event.target.value as UserViewFilters["status"])}
+              onChange={(event) =>
+                updateDraftFilter(
+                  "status",
+                  event.target.value as UserViewFilters["status"],
+                )
+              }
               className={viewFiltersFieldClassName}
             >
               <option value="all">Todos</option>
@@ -108,7 +127,13 @@ export function UsersViewFilterableSection({
 
           <label className="pms-field">
             <span>Hotel</span>
-            <select value={draftFilters.hotelId} onChange={(event) => updateDraftFilter("hotelId", event.target.value)} className={viewFiltersFieldClassName}>
+            <select
+              value={draftFilters.hotelId}
+              onChange={(event) =>
+                updateDraftFilter("hotelId", event.target.value)
+              }
+              className={viewFiltersFieldClassName}
+            >
               <option value="">Todos</option>
               {hotels.map((hotel) => (
                 <option key={hotel.id} value={hotel.id}>
@@ -120,7 +145,13 @@ export function UsersViewFilterableSection({
 
           <label className="pms-field">
             <span>Role</span>
-            <select value={draftFilters.roleId} onChange={(event) => updateDraftFilter("roleId", event.target.value)} className={viewFiltersFieldClassName}>
+            <select
+              value={draftFilters.roleId}
+              onChange={(event) =>
+                updateDraftFilter("roleId", event.target.value)
+              }
+              className={viewFiltersFieldClassName}
+            >
               <option value="">Todas</option>
               {roles.map((role) => (
                 <option key={role.id} value={role.id}>
@@ -132,12 +163,26 @@ export function UsersViewFilterableSection({
 
           <label className="pms-field">
             <span>Criado a partir de</span>
-            <input type="date" value={draftFilters.createdFrom} onChange={(event) => updateDraftFilter("createdFrom", event.target.value)} className={viewFiltersFieldClassName} />
+            <input
+              type="date"
+              value={draftFilters.createdFrom}
+              onChange={(event) =>
+                updateDraftFilter("createdFrom", event.target.value)
+              }
+              className={viewFiltersFieldClassName}
+            />
           </label>
 
           <label className="pms-field">
             <span>Criado até</span>
-            <input type="date" value={draftFilters.createdTo} onChange={(event) => updateDraftFilter("createdTo", event.target.value)} className={viewFiltersFieldClassName} />
+            <input
+              type="date"
+              value={draftFilters.createdTo}
+              onChange={(event) =>
+                updateDraftFilter("createdTo", event.target.value)
+              }
+              className={viewFiltersFieldClassName}
+            />
           </label>
         </div>
       }

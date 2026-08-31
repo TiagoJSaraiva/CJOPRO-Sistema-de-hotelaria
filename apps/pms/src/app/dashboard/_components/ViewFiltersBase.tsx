@@ -19,12 +19,20 @@ type ViewFiltersModalProps = {
   children: ReactNode;
 };
 
-const overlayClassName = "fixed inset-0 z-[1000] grid place-items-center bg-[rgba(9,18,31,0.45)] p-4";
-const panelClassName = "grid max-h-[82vh] w-full max-w-[760px] gap-[0.9rem] overflow-auto rounded-xl border border-[#d9dfe7] bg-white p-4";
+const overlayClassName =
+  "fixed inset-0 z-[1000] grid place-items-center bg-[rgba(9,18,31,0.45)] p-4";
+const panelClassName =
+  "grid max-h-[82vh] w-full max-w-[760px] gap-[0.9rem] overflow-auto rounded-xl border border-[#d9dfe7] bg-white p-4";
 
-export const viewFiltersFieldClassName = "w-full min-w-0 rounded-lg border border-[#d2d2d2] p-[0.55rem]";
+export const viewFiltersFieldClassName =
+  "w-full min-w-0 rounded-lg border border-[#d2d2d2] p-[0.55rem]";
 
-export function ViewFiltersActionsBar({ appliedFilterCount, onOpen, onClear, children }: ViewFiltersActionsBarProps) {
+export function ViewFiltersActionsBar({
+  appliedFilterCount,
+  onOpen,
+  onClear,
+  children,
+}: ViewFiltersActionsBarProps) {
   return (
     <div className="flex flex-wrap items-center justify-between gap-3">
       <div className="min-w-[220px] flex-1">{children}</div>
@@ -52,7 +60,14 @@ export function ViewFiltersActionsBar({ appliedFilterCount, onOpen, onClear, chi
   );
 }
 
-export function ViewFiltersModal({ title, open, onClose, onApply, onClear, children }: ViewFiltersModalProps) {
+export function ViewFiltersModal({
+  title,
+  open,
+  onClose,
+  onApply,
+  onClear,
+  children,
+}: ViewFiltersModalProps) {
   const titleId = useId();
   const dialogRef = useModalFocus<HTMLDivElement>(open, onClose);
 
@@ -71,7 +86,9 @@ export function ViewFiltersModal({ title, open, onClose, onApply, onClear, child
     >
       <section className={panelClassName}>
         <header className="flex flex-wrap items-center justify-between gap-3">
-          <h3 id={titleId} className="m-0">{title}</h3>
+          <h3 id={titleId} className="m-0">
+            {title}
+          </h3>
 
           <button
             type="button"

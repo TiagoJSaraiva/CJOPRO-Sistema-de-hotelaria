@@ -18,10 +18,19 @@ type SelectionModalProps = {
   onClose: () => void;
 };
 
-const overlayClassName = "fixed inset-0 z-[1000] grid place-items-center bg-[rgba(9,18,31,0.45)] p-4";
-const panelClassName = "grid max-h-[75vh] w-full max-w-[620px] gap-[0.75rem] overflow-auto rounded-xl border border-[#d9dfe7] bg-white p-4";
+const overlayClassName =
+  "fixed inset-0 z-[1000] grid place-items-center bg-[rgba(9,18,31,0.45)] p-4";
+const panelClassName =
+  "grid max-h-[75vh] w-full max-w-[620px] gap-[0.75rem] overflow-auto rounded-xl border border-[#d9dfe7] bg-white p-4";
 
-export function SelectionModal({ open, title, items, emptyMessage, onSelect, onClose }: SelectionModalProps) {
+export function SelectionModal({
+  open,
+  title,
+  items,
+  emptyMessage,
+  onSelect,
+  onClose,
+}: SelectionModalProps) {
   const titleId = useId();
   const dialogRef = useModalFocus<HTMLDivElement>(open, onClose);
 
@@ -40,7 +49,9 @@ export function SelectionModal({ open, title, items, emptyMessage, onSelect, onC
     >
       <section className={panelClassName}>
         <header className="flex items-center justify-between gap-3">
-          <h3 id={titleId} className="m-0">{title}</h3>
+          <h3 id={titleId} className="m-0">
+            {title}
+          </h3>
           <button
             type="button"
             onClick={onClose}
@@ -60,7 +71,11 @@ export function SelectionModal({ open, title, items, emptyMessage, onSelect, onC
                 className="cursor-pointer rounded-[10px] border border-[#d5dce7] bg-[#f9fbff] px-[0.75rem] py-[0.6rem] text-left"
               >
                 <strong>{item.label}</strong>
-                {item.description ? <p className="m-0 mt-[0.25rem] text-[#526070]">{item.description}</p> : null}
+                {item.description ? (
+                  <p className="m-0 mt-[0.25rem] text-[#526070]">
+                    {item.description}
+                  </p>
+                ) : null}
               </button>
             ))}
           </div>

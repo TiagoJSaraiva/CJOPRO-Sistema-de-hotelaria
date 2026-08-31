@@ -15,7 +15,9 @@ type PermissionsViewPageProps = {
   }>;
 };
 
-export default async function PermissionsViewPage({ searchParams }: PermissionsViewPageProps) {
+export default async function PermissionsViewPage({
+  searchParams,
+}: PermissionsViewPageProps) {
   const resolvedSearchParams = await searchParams;
   const user = await getUserFromSession();
   const access = getPermissionsAccess(user);
@@ -27,23 +29,44 @@ export default async function PermissionsViewPage({ searchParams }: PermissionsV
       redirect(fallback);
     }
 
-    return <DashboardAccessDeniedCard title="Permissões" message="Sem permissão para visualizar permissões." />;
+    return (
+      <DashboardAccessDeniedCard
+        title="Permissões"
+        message="Sem permissão para visualizar permissões."
+      />
+    );
   }
 
-  const activePermissionId = String(resolvedSearchParams?.permissionId || "").trim();
+  const activePermissionId = String(
+    resolvedSearchParams?.permissionId || "",
+  ).trim();
   const mode = resolvedSearchParams?.mode === "edit" ? "edit" : "view";
   const permissions = await listPermissions();
-  const currentUserPermissionNames = Array.from(new Set(user?.permissions || []));
+  const currentUserPermissionNames = Array.from(
+    new Set(user?.permissions || []),
+  );
 
   return (
     <DashboardEntityPageShell
       title="Permissões"
       activeTabKey="view"
       tabs={[
-        { key: "create", label: "Criar permissão", href: "/dashboard/permissions/create", isVisible: access.canCreate },
-        { key: "view", label: "Ver permissões", href: "/dashboard/permissions/view", isVisible: access.canRead }
+        {
+          key: "create",
+          label: "Criar permissão",
+          href: "/dashboard/permissions/create",
+          isVisible: access.canCreate,
+        },
+        {
+          key: "view",
+          label: "Ver permissões",
+          href: "/dashboard/permissions/view",
+          isVisible: access.canRead,
+        },
       ]}
-      statusContent={<PermissionStatusMessage status={resolvedSearchParams?.status} />}
+      statusContent={
+        <PermissionStatusMessage status={resolvedSearchParams?.status} />
+      }
     >
       <PermissionsViewFilterableSection
         permissions={permissions}

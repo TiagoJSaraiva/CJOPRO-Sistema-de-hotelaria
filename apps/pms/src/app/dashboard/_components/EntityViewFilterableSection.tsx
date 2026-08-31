@@ -41,16 +41,25 @@ export function EntityViewFilterableSection<T>({
   getItemKey,
   renderItem,
   filters,
-  children
+  children,
 }: EntityViewFilterableSectionProps<T>) {
   const tabsContext = useDashboardEntityTabs();
-  const viewTabs = tabsContext && shouldPlaceTabsInFilterBar(tabsContext.activeTabKey) ? (
-    <PermissionTabs activeKey={tabsContext.activeTabKey} items={tabsContext.tabs} className="pms-entity-tabs-inline" />
-  ) : null;
+  const viewTabs =
+    tabsContext && shouldPlaceTabsInFilterBar(tabsContext.activeTabKey) ? (
+      <PermissionTabs
+        activeKey={tabsContext.activeTabKey}
+        items={tabsContext.tabs}
+        className="pms-entity-tabs-inline"
+      />
+    ) : null;
 
   return (
     <section className="grid gap-[0.85rem]">
-      <ViewFiltersActionsBar appliedFilterCount={appliedFilterCount} onOpen={onOpenFilters} onClear={onClearFilters}>
+      <ViewFiltersActionsBar
+        appliedFilterCount={appliedFilterCount}
+        onOpen={onOpenFilters}
+        onClear={onClearFilters}
+      >
         {viewTabs}
         {children}
       </ViewFiltersActionsBar>
@@ -61,13 +70,23 @@ export function EntityViewFilterableSection<T>({
 
       <section className="grid gap-[0.75rem]">
         {filteredItems.length ? (
-          filteredItems.map((item) => <div key={getItemKey(item)}>{renderItem(item)}</div>)
+          filteredItems.map((item) => (
+            <div key={getItemKey(item)}>{renderItem(item)}</div>
+          ))
         ) : (
-          <article className="pms-empty-state">{appliedFilterCount ? filteredEmptyMessage : emptyMessage}</article>
+          <article className="pms-empty-state">
+            {appliedFilterCount ? filteredEmptyMessage : emptyMessage}
+          </article>
         )}
       </section>
 
-      <ViewFiltersModal title={filtersTitle} open={isModalOpen} onClose={onCloseFilters} onApply={onApplyFilters} onClear={onClearFilters}>
+      <ViewFiltersModal
+        title={filtersTitle}
+        open={isModalOpen}
+        onClose={onCloseFilters}
+        onApply={onApplyFilters}
+        onClear={onClearFilters}
+      >
         {filters}
       </ViewFiltersModal>
     </section>

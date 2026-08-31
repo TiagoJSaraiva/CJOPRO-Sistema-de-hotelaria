@@ -5,7 +5,7 @@ import nextPlugin from "@next/eslint-plugin-next";
 const compat = new FlatCompat({
   baseDirectory: import.meta.dirname,
   recommendedConfig: js.configs.recommended,
-  allConfig: js.configs.all
+  allConfig: js.configs.all,
 });
 
 export default [
@@ -15,15 +15,15 @@ export default [
       "**/dist/**",
       "**/coverage/**",
       "**/.next/**",
-      "**/playwright-report/**"
-    ]
+      "**/playwright-report/**",
+    ],
   },
   {
     files: ["eslint.config.mjs", "apps/pms/package.json"],
     plugins: {
-      "@next/next": nextPlugin
+      "@next/next": nextPlugin,
     },
-    rules: {}
+    rules: {},
   },
   ...compat.config({
     overrides: [
@@ -31,31 +31,34 @@ export default [
         files: [
           "apps/backend-service/**/*.{ts,tsx}",
           "apps/booking-engine-service/**/*.{ts,tsx}",
-          "packages/shared/**/*.{ts,tsx}"
+          "packages/shared/**/*.{ts,tsx}",
         ],
         parser: "@typescript-eslint/parser",
         plugins: ["@typescript-eslint"],
-        extends: ["eslint:recommended", "plugin:@typescript-eslint/recommended"],
+        extends: [
+          "eslint:recommended",
+          "plugin:@typescript-eslint/recommended",
+        ],
         env: {
           node: true,
-          es2022: true
+          es2022: true,
         },
         rules: {
-          "@typescript-eslint/no-explicit-any": "off"
-        }
+          "@typescript-eslint/no-explicit-any": "off",
+        },
       },
       {
         files: ["apps/pms/**/*.{ts,tsx,js,jsx}"],
         extends: ["next/core-web-vitals", "next/typescript"],
         settings: {
           next: {
-            rootDir: "apps/pms/"
-          }
+            rootDir: "apps/pms/",
+          },
         },
         rules: {
-          "@next/next/no-html-link-for-pages": "off"
-        }
-      }
-    ]
-  })
+          "@next/next/no-html-link-for-pages": "off",
+        },
+      },
+    ],
+  }),
 ];

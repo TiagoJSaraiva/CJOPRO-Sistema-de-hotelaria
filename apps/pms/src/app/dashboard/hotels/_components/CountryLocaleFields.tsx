@@ -27,25 +27,30 @@ const COUNTRY_OPTIONS: CountryOption[] = Object.entries(countries)
       code,
       name: countryData.name,
       currency,
-      timezone
+      timezone,
     };
   })
   .sort((a, b) => a.name.localeCompare(b.name, "pt-BR"));
 
-const ALL_TIMEZONES = Array.from(new Set(COUNTRY_OPTIONS.map((option) => option.timezone).filter(Boolean))).sort((a, b) =>
-  a.localeCompare(b)
-);
+const ALL_TIMEZONES = Array.from(
+  new Set(COUNTRY_OPTIONS.map((option) => option.timezone).filter(Boolean)),
+).sort((a, b) => a.localeCompare(b));
 
-const ALL_CURRENCIES = Array.from(new Set(COUNTRY_OPTIONS.map((option) => option.currency).filter(Boolean))).sort((a, b) =>
-  a.localeCompare(b)
-);
+const ALL_CURRENCIES = Array.from(
+  new Set(COUNTRY_OPTIONS.map((option) => option.currency).filter(Boolean)),
+).sort((a, b) => a.localeCompare(b));
 
 function findCountryOption(code: string): CountryOption | undefined {
   return COUNTRY_OPTIONS.find((option) => option.code === code);
 }
 
-export function CountryLocaleFields({ defaultCountryCode = "BR" }: CountryLocaleFieldsProps) {
-  const initialOption = useMemo(() => findCountryOption(defaultCountryCode) || COUNTRY_OPTIONS[0], [defaultCountryCode]);
+export function CountryLocaleFields({
+  defaultCountryCode = "BR",
+}: CountryLocaleFieldsProps) {
+  const initialOption = useMemo(
+    () => findCountryOption(defaultCountryCode) || COUNTRY_OPTIONS[0],
+    [defaultCountryCode],
+  );
 
   const [countryCode, setCountryCode] = useState(initialOption?.code || "BR");
   const [timezone, setTimezone] = useState(initialOption?.timezone || "");
@@ -68,7 +73,9 @@ export function CountryLocaleFields({ defaultCountryCode = "BR" }: CountryLocale
       return;
     }
 
-    event.target.setCustomValidity("Timezone inválido. Escolha um timezone existente.");
+    event.target.setCustomValidity(
+      "Timezone inválido. Escolha um timezone existente.",
+    );
     event.target.reportValidity();
   };
 
@@ -80,7 +87,9 @@ export function CountryLocaleFields({ defaultCountryCode = "BR" }: CountryLocale
       return;
     }
 
-    event.target.setCustomValidity("Moeda inválida. Informe um código de moeda existente.");
+    event.target.setCustomValidity(
+      "Moeda inválida. Informe um código de moeda existente.",
+    );
     event.target.reportValidity();
   };
 

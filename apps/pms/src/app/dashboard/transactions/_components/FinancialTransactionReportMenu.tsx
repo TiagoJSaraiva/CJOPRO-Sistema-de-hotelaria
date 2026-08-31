@@ -27,10 +27,11 @@ export function FinancialTransactionReportMenu({
   hotelLabel,
   generatedBy,
   hasActiveHotel,
-  referenceDate
+  referenceDate,
 }: FinancialTransactionReportMenuProps) {
   const [isOpen, setIsOpen] = useState(false);
-  const [generatingScope, setGeneratingScope] = useState<FinancialTransactionReportScope | null>(null);
+  const [generatingScope, setGeneratingScope] =
+    useState<FinancialTransactionReportScope | null>(null);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
   const triggerRef = useRef<HTMLButtonElement>(null);
   const itemRefs = useRef<Array<HTMLButtonElement | null>>([]);
@@ -67,12 +68,18 @@ export function FinancialTransactionReportMenu({
       return;
     }
 
-    const items = itemRefs.current.filter((item): item is HTMLButtonElement => item !== null);
-    const currentIndex = items.findIndex((item) => item === document.activeElement);
+    const items = itemRefs.current.filter(
+      (item): item is HTMLButtonElement => item !== null,
+    );
+    const currentIndex = items.findIndex(
+      (item) => item === document.activeElement,
+    );
     let nextIndex: number | null = null;
 
-    if (event.key === "ArrowDown") nextIndex = (currentIndex + 1) % items.length;
-    if (event.key === "ArrowUp") nextIndex = (currentIndex - 1 + items.length) % items.length;
+    if (event.key === "ArrowDown")
+      nextIndex = (currentIndex + 1) % items.length;
+    if (event.key === "ArrowUp")
+      nextIndex = (currentIndex - 1 + items.length) % items.length;
     if (event.key === "Home") nextIndex = 0;
     if (event.key === "End") nextIndex = items.length - 1;
 
@@ -89,13 +96,14 @@ export function FinancialTransactionReportMenu({
 
     try {
       await generateFinancialTransactionsPdf({
-        transactions: scope === "filtered" ? filteredTransactions : allTransactions,
+        transactions:
+          scope === "filtered" ? filteredTransactions : allTransactions,
         scope,
         totalTransactions: allTransactions.length,
         hotelLabel,
         generatedBy,
         generatedAt: new Date(),
-        referenceDate
+        referenceDate,
       });
     } catch {
       setErrorMessage("Não foi possível gerar o relatório.");
@@ -112,12 +120,18 @@ export function FinancialTransactionReportMenu({
         disabled={isDisabled}
         aria-haspopup="menu"
         aria-expanded={isOpen}
-        title={!hasActiveHotel ? "Selecione um hotel ativo para gerar relatório." : undefined}
+        title={
+          !hasActiveHotel
+            ? "Selecione um hotel ativo para gerar relatório."
+            : undefined
+        }
         onClick={() => setIsOpen((current) => !current)}
         onKeyDown={handleTriggerKeyDown}
         className={`${menuButtonClassName} ${isDisabled ? "cursor-not-allowed opacity-60" : ""}`}
       >
-        {generatingScope ? `Gerando ${getScopeLabel(generatingScope)}...` : "Gerar relatório"}
+        {generatingScope
+          ? `Gerando ${getScopeLabel(generatingScope)}...`
+          : "Gerar relatório"}
       </button>
 
       {isOpen ? (
@@ -153,7 +167,10 @@ export function FinancialTransactionReportMenu({
       ) : null}
 
       {errorMessage ? (
-        <p role="status" className="absolute right-0 mt-2 w-[240px] text-right text-[0.8rem] text-[#b42318]">
+        <p
+          role="status"
+          className="absolute right-0 mt-2 w-[240px] text-right text-[0.8rem] text-[#b42318]"
+        >
           {errorMessage}
         </p>
       ) : null}

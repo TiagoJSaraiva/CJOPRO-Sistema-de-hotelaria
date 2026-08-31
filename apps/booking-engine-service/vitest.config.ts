@@ -4,8 +4,10 @@ import { defineConfig } from "vitest/config";
 export default defineConfig({
   resolve: {
     alias: {
-      "@hotel/shared": fileURLToPath(new URL("../../packages/shared/src/index.ts", import.meta.url))
-    }
+      "@hotel/shared": fileURLToPath(
+        new URL("../../packages/shared/src/index.ts", import.meta.url),
+      ),
+    },
   },
   test: {
     environment: "node",
@@ -26,8 +28,8 @@ export default defineConfig({
         statements: 100,
         branches: 100,
         functions: 100,
-        lines: 100
-      }
-    }
-  }
+        lines: 100,
+      },
+    },
+  },
 });

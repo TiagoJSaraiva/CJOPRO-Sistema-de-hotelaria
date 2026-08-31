@@ -5,13 +5,15 @@ export default defineConfig({
   oxc: {
     jsx: {
       runtime: "automatic",
-      importSource: "react"
-    }
+      importSource: "react",
+    },
   },
   resolve: {
     alias: {
-      "@hotel/shared": fileURLToPath(new URL("../../packages/shared/src/index.ts", import.meta.url))
-    }
+      "@hotel/shared": fileURLToPath(
+        new URL("../../packages/shared/src/index.ts", import.meta.url),
+      ),
+    },
   },
   test: {
     environment: "node",
@@ -31,8 +33,8 @@ export default defineConfig({
         statements: 37,
         branches: 33,
         functions: 29,
-        lines: 37
-      }
-    }
-  }
+        lines: 37,
+      },
+    },
+  },
 });

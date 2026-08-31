@@ -12,13 +12,29 @@ export function HotelCreateForm({ formKey }: HotelCreateFormProps) {
     <article className="pms-surface-card">
       <h3 className="mt-0">Criar hotel</h3>
 
-      <form key={formKey} action={createHotelAction} className="grid gap-[0.7rem] md:grid-cols-2">
+      <form
+        key={formKey}
+        action={createHotelAction}
+        className="grid gap-[0.7rem] md:grid-cols-2"
+      >
         <FormField label="Nome" htmlFor="create-name">
-          <input id="create-name" name="name" minLength={2} required className="pms-field-input" />
+          <input
+            id="create-name"
+            name="name"
+            minLength={2}
+            required
+            className="pms-field-input"
+          />
         </FormField>
 
         <FormField label="Razão Social" htmlFor="create-legal-name">
-          <input id="create-legal-name" name="legal_name" minLength={3} required className="pms-field-input" />
+          <input
+            id="create-legal-name"
+            name="legal_name"
+            minLength={3}
+            required
+            className="pms-field-input"
+          />
         </FormField>
 
         <FormField label="CNPJ / Tax ID" htmlFor="create-tax-id">
@@ -45,7 +61,13 @@ export function HotelCreateForm({ formKey }: HotelCreateFormProps) {
         </FormField>
 
         <FormField label="Email" htmlFor="create-email">
-          <input id="create-email" name="email" type="email" required className="pms-field-input" />
+          <input
+            id="create-email"
+            name="email"
+            type="email"
+            required
+            className="pms-field-input"
+          />
         </FormField>
 
         <FormField label="Telefone" htmlFor="create-phone">
@@ -61,27 +83,65 @@ export function HotelCreateForm({ formKey }: HotelCreateFormProps) {
         </FormField>
 
         <FormField label="Endereço (logradouro)" htmlFor="create-address-line">
-          <input id="create-address-line" name="address_line" minLength={3} required className="pms-field-input" />
+          <input
+            id="create-address-line"
+            name="address_line"
+            minLength={3}
+            required
+            className="pms-field-input"
+          />
         </FormField>
 
         <FormField label="Número" htmlFor="create-address-number">
-          <input id="create-address-number" name="address_number" minLength={1} required className="pms-field-input" />
+          <input
+            id="create-address-number"
+            name="address_number"
+            minLength={1}
+            required
+            className="pms-field-input"
+          />
         </FormField>
 
-        <FormField label="Complemento (opcional)" htmlFor="create-address-complement" fullWidth>
-          <input id="create-address-complement" name="address_complement" className="pms-field-input" />
+        <FormField
+          label="Complemento (opcional)"
+          htmlFor="create-address-complement"
+          fullWidth
+        >
+          <input
+            id="create-address-complement"
+            name="address_complement"
+            className="pms-field-input"
+          />
         </FormField>
 
         <FormField label="Bairro" htmlFor="create-district">
-          <input id="create-district" name="district" minLength={2} required className="pms-field-input" />
+          <input
+            id="create-district"
+            name="district"
+            minLength={2}
+            required
+            className="pms-field-input"
+          />
         </FormField>
 
         <FormField label="Cidade" htmlFor="create-city">
-          <input id="create-city" name="city" minLength={2} required className="pms-field-input" />
+          <input
+            id="create-city"
+            name="city"
+            minLength={2}
+            required
+            className="pms-field-input"
+          />
         </FormField>
 
         <FormField label="Estado" htmlFor="create-state">
-          <input id="create-state" name="state" minLength={2} required className="pms-field-input" />
+          <input
+            id="create-state"
+            name="state"
+            minLength={2}
+            required
+            className="pms-field-input"
+          />
         </FormField>
 
         <CountryLocaleFields defaultCountryCode="BR" />
@@ -97,23 +157,58 @@ export function HotelCreateForm({ formKey }: HotelCreateFormProps) {
           />
         </FormField>
 
-        <FormField label="Check-in início (HH:mm)" htmlFor="create-checkin-time-start">
-          <input id="create-checkin-time-start" name="checkin_time_start" placeholder="14:00" className="pms-field-input" />
+        <FormField
+          label="Check-in início (HH:mm)"
+          htmlFor="create-checkin-time-start"
+        >
+          <input
+            id="create-checkin-time-start"
+            name="checkin_time_start"
+            placeholder="14:00"
+            className="pms-field-input"
+          />
         </FormField>
 
-        <FormField label="Check-in limite (HH:mm)" htmlFor="create-checkin-time-limit">
-          <input id="create-checkin-time-limit" name="checkin_time_limit" placeholder="23:00" className="pms-field-input" />
+        <FormField
+          label="Check-in limite (HH:mm)"
+          htmlFor="create-checkin-time-limit"
+        >
+          <input
+            id="create-checkin-time-limit"
+            name="checkin_time_limit"
+            placeholder="23:00"
+            className="pms-field-input"
+          />
         </FormField>
 
-        <FormField label="Checkout início (HH:mm)" htmlFor="create-checkout-time-start">
-          <input id="create-checkout-time-start" name="checkout_time_start" placeholder="06:00" className="pms-field-input" />
+        <FormField
+          label="Checkout início (HH:mm)"
+          htmlFor="create-checkout-time-start"
+        >
+          <input
+            id="create-checkout-time-start"
+            name="checkout_time_start"
+            placeholder="06:00"
+            className="pms-field-input"
+          />
         </FormField>
 
-        <FormField label="Checkout limite (HH:mm)" htmlFor="create-checkout-time-limit">
-          <input id="create-checkout-time-limit" name="checkout_time_limit" placeholder="12:00" className="pms-field-input" />
+        <FormField
+          label="Checkout limite (HH:mm)"
+          htmlFor="create-checkout-time-limit"
+        >
+          <input
+            id="create-checkout-time-limit"
+            name="checkout_time_limit"
+            placeholder="12:00"
+            className="pms-field-input"
+          />
         </FormField>
 
-        <PendingSubmitButton pendingLabel="Criando hotel..." className="justify-self-start md:col-span-2">
+        <PendingSubmitButton
+          pendingLabel="Criando hotel..."
+          className="justify-self-start md:col-span-2"
+        >
           Criar hotel
         </PendingSubmitButton>
       </form>

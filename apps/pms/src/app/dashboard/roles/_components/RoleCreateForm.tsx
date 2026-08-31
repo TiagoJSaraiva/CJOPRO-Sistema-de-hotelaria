@@ -15,16 +15,32 @@ type RoleCreateFormProps = {
   permissions: AdminPermissionOption[];
 };
 
-export function RoleCreateForm({ formKey, hotels, permissions }: RoleCreateFormProps) {
-  const [roleType, setRoleType] = useState<AdminRoleType>(ADMIN_ROLE_TYPES.SYSTEM);
+export function RoleCreateForm({
+  formKey,
+  hotels,
+  permissions,
+}: RoleCreateFormProps) {
+  const [roleType, setRoleType] = useState<AdminRoleType>(
+    ADMIN_ROLE_TYPES.SYSTEM,
+  );
 
   return (
     <article className="pms-surface-card">
       <h3 className="mt-0">Criar role</h3>
 
-      <form key={formKey} action={createRoleAction} className="grid gap-[0.7rem] md:grid-cols-2">
+      <form
+        key={formKey}
+        action={createRoleAction}
+        className="grid gap-[0.7rem] md:grid-cols-2"
+      >
         <FormField label="Nome" htmlFor="create-role-name">
-          <input id="create-role-name" name="name" minLength={2} required className="pms-field-input" />
+          <input
+            id="create-role-name"
+            name="name"
+            minLength={2}
+            required
+            className="pms-field-input"
+          />
         </FormField>
 
         <FormField label="Tipo da role" htmlFor="create-role-type">
@@ -32,7 +48,9 @@ export function RoleCreateForm({ formKey, hotels, permissions }: RoleCreateFormP
             id="create-role-type"
             name="role_type"
             value={roleType}
-            onChange={(event) => setRoleType(event.target.value as AdminRoleType)}
+            onChange={(event) =>
+              setRoleType(event.target.value as AdminRoleType)
+            }
             className="pms-field-input"
           >
             <option value={ADMIN_ROLE_TYPES.SYSTEM}>SYSTEM ROLE</option>
@@ -41,9 +59,15 @@ export function RoleCreateForm({ formKey, hotels, permissions }: RoleCreateFormP
         </FormField>
 
         <RoleHotelPickerField hotels={hotels} roleType={roleType} />
-        <RolePermissionAssignmentsField roleType={roleType} permissions={permissions} />
+        <RolePermissionAssignmentsField
+          roleType={roleType}
+          permissions={permissions}
+        />
 
-        <PendingSubmitButton pendingLabel="Criando papel..." className="justify-self-start md:col-span-2">
+        <PendingSubmitButton
+          pendingLabel="Criando papel..."
+          className="justify-self-start md:col-span-2"
+        >
           Criar papel
         </PendingSubmitButton>
       </form>

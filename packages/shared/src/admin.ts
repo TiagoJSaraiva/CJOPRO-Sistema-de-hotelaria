@@ -17,10 +17,11 @@ export const ADMIN_ERROR_CODE = {
   NOT_FOUND: "ADMIN_NOT_FOUND",
   CONFLICT: "ADMIN_CONFLICT",
   INTERNAL: "ADMIN_INTERNAL_ERROR",
-  SELF_ACTION_FORBIDDEN: "ADMIN_SELF_ACTION_FORBIDDEN"
+  SELF_ACTION_FORBIDDEN: "ADMIN_SELF_ACTION_FORBIDDEN",
 } as const;
 
-export type AdminErrorCode = (typeof ADMIN_ERROR_CODE)[keyof typeof ADMIN_ERROR_CODE];
+export type AdminErrorCode =
+  (typeof ADMIN_ERROR_CODE)[keyof typeof ADMIN_ERROR_CODE];
 
 export type AdminErrorResponse = {
   code: AdminErrorCode;
@@ -30,17 +31,19 @@ export type AdminErrorResponse = {
 
 export const ADMIN_PERMISSION_TYPES = {
   SYSTEM: "SYSTEM_PERMISSION",
-  HOTEL: "HOTEL_PERMISSION"
+  HOTEL: "HOTEL_PERMISSION",
 } as const;
 
-export type AdminPermissionType = (typeof ADMIN_PERMISSION_TYPES)[keyof typeof ADMIN_PERMISSION_TYPES];
+export type AdminPermissionType =
+  (typeof ADMIN_PERMISSION_TYPES)[keyof typeof ADMIN_PERMISSION_TYPES];
 
 export const ADMIN_ROLE_TYPES = {
   SYSTEM: "SYSTEM_ROLE",
-  HOTEL: "HOTEL_ROLE"
+  HOTEL: "HOTEL_ROLE",
 } as const;
 
-export type AdminRoleType = (typeof ADMIN_ROLE_TYPES)[keyof typeof ADMIN_ROLE_TYPES];
+export type AdminRoleType =
+  (typeof ADMIN_ROLE_TYPES)[keyof typeof ADMIN_ROLE_TYPES];
 
 export type HotelIdParams = {
   id: string;
@@ -286,7 +289,13 @@ export type AdminCustomerCreateInput = {
 
 export type AdminCustomerUpdateInput = Partial<AdminCustomerCreateInput>;
 
-export type ReservationStatus = "pending" | "confirmed" | "checked_in" | "checked_out" | "canceled" | "no_show";
+export type ReservationStatus =
+  | "pending"
+  | "confirmed"
+  | "checked_in"
+  | "checked_out"
+  | "canceled"
+  | "no_show";
 export type ReservationSource = "front_desk" | "website" | "phone" | "agency";
 export type PaymentStatus = "pending" | "partial" | "paid" | "refunded";
 
@@ -319,7 +328,8 @@ export type AdminReservationCreateInput = {
 export type AdminReservationUpdateInput = Partial<AdminReservationCreateInput>;
 
 export type TransactionType = "INCOME" | "EXPENSE" | "REFUND";
-export type TransactionStatus = "PENDING" | "COMPLETED" | "FAILED" | "CANCELLED" | "REFUNDED";
+export type TransactionStatus =
+  "PENDING" | "COMPLETED" | "FAILED" | "CANCELLED" | "REFUNDED";
 
 export type AdminFinancialTransaction = {
   id: string;
@@ -360,7 +370,8 @@ export type AdminFinancialTransactionCreateInput = {
   reference_code?: string | null;
 };
 
-export type AdminFinancialTransactionUpdateInput = Partial<AdminFinancialTransactionCreateInput>;
+export type AdminFinancialTransactionUpdateInput =
+  Partial<AdminFinancialTransactionCreateInput>;
 
 export type ProductStatus = "active" | "inactive";
 
@@ -420,7 +431,8 @@ export type AdminSeasonRoomRateCreateInput = {
   daily_rate: number;
 };
 
-export type AdminSeasonRoomRateUpdateInput = Partial<AdminSeasonRoomRateCreateInput>;
+export type AdminSeasonRoomRateUpdateInput =
+  Partial<AdminSeasonRoomRateCreateInput>;
 
 export type AdminReservationCalendarDay = {
   date: string;
@@ -602,7 +614,8 @@ export type AdminStayOperationalPanelResponse = {
 };
 
 export type MaintenanceLocationKind = "area" | "equipment";
-export type MaintenanceOccurrenceKind = "damage" | "defect" | "wear" | "safety_risk" | "special_cleaning" | "other";
+export type MaintenanceOccurrenceKind =
+  "damage" | "defect" | "wear" | "safety_risk" | "special_cleaning" | "other";
 export type MaintenancePriority = "low" | "normal" | "high" | "critical";
 export type MaintenanceOccurrenceStatus =
   | "reported"
@@ -621,9 +634,12 @@ export type MaintenanceWorkOrderStatus =
   | "awaiting_inspection"
   | "completed"
   | "canceled";
-export type MaintenanceWaitingReason = "parts" | "vendor" | "authorization" | "access" | "other";
-export type MaintenanceLiabilityStatus = "not_applicable" | "not_assessed" | "suspected" | "confirmed" | "dismissed";
-export type MaintenanceResponsibleParty = "guest" | "hotel" | "supplier" | "normal_wear";
+export type MaintenanceWaitingReason =
+  "parts" | "vendor" | "authorization" | "access" | "other";
+export type MaintenanceLiabilityStatus =
+  "not_applicable" | "not_assessed" | "suspected" | "confirmed" | "dismissed";
+export type MaintenanceResponsibleParty =
+  "guest" | "hotel" | "supplier" | "normal_wear";
 
 export type AdminMaintenanceCategory = {
   id: string;
@@ -742,22 +758,23 @@ export type AdminMaintenanceRoomBlock = {
   is_overdue: boolean;
 };
 
-export type AdminMaintenanceOccurrenceDetail = AdminMaintenanceOccurrenceSummary & {
-  discovered_at: string;
-  triaged_by: string | null;
-  triaged_at: string | null;
-  suspected_party: MaintenanceResponsibleParty | null;
-  confirmed_party: MaintenanceResponsibleParty | null;
-  liability_notes: string | null;
-  duplicate_of_id: string | null;
-  canceled_reason: string | null;
-  resolved_at: string | null;
-  work_orders: AdminMaintenanceWorkOrder[];
-  inspections: AdminMaintenanceInspection[];
-  events: AdminMaintenanceEvent[];
-  attachments: AdminMaintenanceAttachment[];
-  room_blocks: AdminMaintenanceRoomBlock[];
-};
+export type AdminMaintenanceOccurrenceDetail =
+  AdminMaintenanceOccurrenceSummary & {
+    discovered_at: string;
+    triaged_by: string | null;
+    triaged_at: string | null;
+    suspected_party: MaintenanceResponsibleParty | null;
+    confirmed_party: MaintenanceResponsibleParty | null;
+    liability_notes: string | null;
+    duplicate_of_id: string | null;
+    canceled_reason: string | null;
+    resolved_at: string | null;
+    work_orders: AdminMaintenanceWorkOrder[];
+    inspections: AdminMaintenanceInspection[];
+    events: AdminMaintenanceEvent[];
+    attachments: AdminMaintenanceAttachment[];
+    room_blocks: AdminMaintenanceRoomBlock[];
+  };
 
 export type AdminMaintenanceOccurrenceCreateInput = {
   category_id: string;
@@ -793,7 +810,13 @@ export type AdminMaintenanceReferenceData = {
   categories: AdminMaintenanceCategory[];
   locations: AdminMaintenanceLocation[];
   rooms: Array<{ id: string; room_number: string; room_type: string }>;
-  stays: Array<{ id: string; room_id: string; reservation_code: string | null; customer_name: string | null; status: ReservationStatus }>;
+  stays: Array<{
+    id: string;
+    room_id: string;
+    reservation_code: string | null;
+    customer_name: string | null;
+    status: ReservationStatus;
+  }>;
   assignable_users: Array<{ id: string; name: string }>;
 };
 

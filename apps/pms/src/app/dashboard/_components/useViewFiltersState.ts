@@ -2,7 +2,9 @@
 
 import { useState } from "react";
 
-export function useViewFiltersState<T extends Record<string, string>>(defaultFilters: T) {
+export function useViewFiltersState<T extends Record<string, string>>(
+  defaultFilters: T,
+) {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [appliedFilters, setAppliedFilters] = useState<T>(defaultFilters);
   const [draftFilters, setDraftFilters] = useState<T>(defaultFilters);
@@ -30,7 +32,7 @@ export function useViewFiltersState<T extends Record<string, string>>(defaultFil
   const updateDraftFilter = <K extends keyof T>(key: K, value: T[K]) => {
     setDraftFilters((current) => ({
       ...current,
-      [key]: value
+      [key]: value,
     }));
   };
 
@@ -43,6 +45,6 @@ export function useViewFiltersState<T extends Record<string, string>>(defaultFil
     closeFilters,
     applyFilters,
     clearFilters,
-    updateDraftFilter
+    updateDraftFilter,
   };
 }

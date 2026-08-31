@@ -3,7 +3,10 @@ import { DashboardAccessDeniedCard } from "../../_components/DashboardAccessDeni
 import { DashboardEntityPageShell } from "../../_components/DashboardEntityPageShell";
 import { listSeasonRoomRates, listSeasons } from "../../../../lib/adminApi";
 import { getUserFromSession } from "../../../../lib/auth";
-import { getSeasonRoomRatesAccess, getSeasonRoomRatesDefaultRoute } from "../access";
+import {
+  getSeasonRoomRatesAccess,
+  getSeasonRoomRatesDefaultRoute,
+} from "../access";
 import { SeasonRoomRatesViewFilterableSection } from "../_components/SeasonRoomRatesViewFilterableSection";
 import { SeasonRoomRateStatusMessage } from "../_components/SeasonRoomRateStatusMessage";
 
@@ -15,7 +18,9 @@ type SeasonRoomRatesViewPageProps = {
   }>;
 };
 
-export default async function SeasonRoomRatesViewPage({ searchParams }: SeasonRoomRatesViewPageProps) {
+export default async function SeasonRoomRatesViewPage({
+  searchParams,
+}: SeasonRoomRatesViewPageProps) {
   const resolvedSearchParams = await searchParams;
   const user = await getUserFromSession();
   const access = getSeasonRoomRatesAccess(user);
@@ -27,12 +32,19 @@ export default async function SeasonRoomRatesViewPage({ searchParams }: SeasonRo
       redirect(fallback);
     }
 
-    return <DashboardAccessDeniedCard title="Tarifas por Temporada" message="Sem permissão para visualizar tarifas de temporada." />;
+    return (
+      <DashboardAccessDeniedCard
+        title="Tarifas por Temporada"
+        message="Sem permissão para visualizar tarifas de temporada."
+      />
+    );
   }
 
   const items = await listSeasonRoomRates();
   const seasons = await listSeasons();
-  const activeSeasonRoomRateId = String(resolvedSearchParams?.seasonRoomRateId || "").trim();
+  const activeSeasonRoomRateId = String(
+    resolvedSearchParams?.seasonRoomRateId || "",
+  ).trim();
   const mode = resolvedSearchParams?.mode === "edit" ? "edit" : "view";
 
   return (
@@ -44,16 +56,18 @@ export default async function SeasonRoomRatesViewPage({ searchParams }: SeasonRo
           key: "create",
           label: "Criar tarifa",
           href: "/dashboard/season-room-rates/create",
-          isVisible: access.canCreate
+          isVisible: access.canCreate,
         },
         {
           key: "view",
           label: "Ver tarifas",
           href: "/dashboard/season-room-rates/view",
-          isVisible: access.canRead
-        }
+          isVisible: access.canRead,
+        },
       ]}
-      statusContent={<SeasonRoomRateStatusMessage status={resolvedSearchParams?.status} />}
+      statusContent={
+        <SeasonRoomRateStatusMessage status={resolvedSearchParams?.status} />
+      }
     >
       <SeasonRoomRatesViewFilterableSection
         items={items}

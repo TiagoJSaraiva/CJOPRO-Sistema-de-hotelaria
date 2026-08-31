@@ -1,6 +1,10 @@
 "use client";
 
-import { type AdminHotelOption, type AdminRoleOption, type AdminUser } from "@hotel/shared";
+import {
+  type AdminHotelOption,
+  type AdminRoleOption,
+  type AdminUser,
+} from "@hotel/shared";
 import { deleteUserAction, updateUserAction } from "../actions";
 import { SelfManagementDisabledActions } from "./SelfManagementDisabledActions";
 import { UserRoleAssignmentsField } from "./UserRoleAssignmentsField";
@@ -21,8 +25,12 @@ type UserListItemProps = {
 };
 
 function UserDataPreview({ userItem }: { userItem: AdminUser }) {
-  const createdAt = userItem.created_at ? new Date(userItem.created_at).toLocaleString("pt-BR") : "-";
-  const lastLogin = userItem.last_login_at ? new Date(userItem.last_login_at).toLocaleString("pt-BR") : "-";
+  const createdAt = userItem.created_at
+    ? new Date(userItem.created_at).toLocaleString("pt-BR")
+    : "-";
+  const lastLogin = userItem.last_login_at
+    ? new Date(userItem.last_login_at).toLocaleString("pt-BR")
+    : "-";
 
   return (
     <div className="mt-[0.85rem] grid gap-[0.7rem]">
@@ -41,20 +49,32 @@ function UserDataPreview({ userItem }: { userItem: AdminUser }) {
         {userItem.role_assignments.length ? (
           <ul className="mb-0 mt-[0.45rem] pl-[1.1rem]">
             {userItem.role_assignments.map((assignment) => (
-              <li key={`${assignment.role_id}-${assignment.hotel_id || "global"}`}>
+              <li
+                key={`${assignment.role_id}-${assignment.hotel_id || "global"}`}
+              >
                 {formatUserRoleAssignmentLabel(assignment)}
               </li>
             ))}
           </ul>
         ) : (
-          <p className="m-0 mt-[0.35rem] text-[#626c79]">Sem papeis vinculados.</p>
+          <p className="m-0 mt-[0.35rem] text-[#626c79]">
+            Sem papeis vinculados.
+          </p>
         )}
       </div>
     </div>
   );
 }
 
-function UserEditForm({ userItem, hotels, roles }: { userItem: AdminUser; hotels: AdminHotelOption[]; roles: AdminRoleOption[] }) {
+function UserEditForm({
+  userItem,
+  hotels,
+  roles,
+}: {
+  userItem: AdminUser;
+  hotels: AdminHotelOption[];
+  roles: AdminRoleOption[];
+}) {
   return (
     <form action={updateUserAction} className="mt-[0.85rem] grid gap-[0.65rem]">
       <input type="hidden" name="id" value={userItem.id} />
@@ -83,7 +103,9 @@ function UserEditForm({ userItem, hotels, roles }: { userItem: AdminUser; hotels
       </div>
 
       <div className="pms-field">
-        <label htmlFor={`password-${userItem.id}`}>Nova senha temporaria (opcional)</label>
+        <label htmlFor={`password-${userItem.id}`}>
+          Nova senha temporaria (opcional)
+        </label>
         <input
           id={`password-${userItem.id}`}
           name="password_hash"
@@ -93,21 +115,42 @@ function UserEditForm({ userItem, hotels, roles }: { userItem: AdminUser; hotels
         />
       </div>
 
-      <UserRoleAssignmentsField hotels={hotels} roles={roles} defaultAssignments={userItem.role_assignments} />
+      <UserRoleAssignmentsField
+        hotels={hotels}
+        roles={roles}
+        defaultAssignments={userItem.role_assignments}
+      />
 
       <label className="flex items-center gap-2">
-        <input name="is_active" type="checkbox" defaultChecked={userItem.is_active} />
+        <input
+          name="is_active"
+          type="checkbox"
+          defaultChecked={userItem.is_active}
+        />
         <span>Usuário ativo</span>
       </label>
 
-      <button type="submit" className="justify-self-start rounded-lg border-0 bg-[#1c6d4e] px-[0.75rem] py-[0.55rem] text-white">
+      <button
+        type="submit"
+        className="justify-self-start rounded-lg border-0 bg-[#1c6d4e] px-[0.75rem] py-[0.55rem] text-white"
+      >
         Salvar alterações
       </button>
     </form>
   );
 }
 
-export function UserListItem({ userItem, hotels, roles, canRead, canUpdate, canDelete, isCurrentUser, isViewing, isEditing }: UserListItemProps) {
+export function UserListItem({
+  userItem,
+  hotels,
+  roles,
+  canRead,
+  canUpdate,
+  canDelete,
+  isCurrentUser,
+  isViewing,
+  isEditing,
+}: UserListItemProps) {
   const viewHref = `/dashboard/users/view?userId=${userItem.id}&mode=view`;
   const editHref = `/dashboard/users/view?userId=${userItem.id}&mode=edit`;
   const canEditThisUser = canUpdate && !isCurrentUser;
@@ -131,12 +174,19 @@ export function UserListItem({ userItem, hotels, roles, canRead, canUpdate, canD
             deleteAction={deleteUserAction}
           />
 
-          {isCurrentUser ? <SelfManagementDisabledActions showEdit={canUpdate} showDelete={canDelete} /> : null}
+          {isCurrentUser ? (
+            <SelfManagementDisabledActions
+              showEdit={canUpdate}
+              showDelete={canDelete}
+            />
+          ) : null}
         </>
       }
     >
       {isViewing ? <UserDataPreview userItem={userItem} /> : null}
-      {isEditing && canEditThisUser ? <UserEditForm userItem={userItem} hotels={hotels} roles={roles} /> : null}
+      {isEditing && canEditThisUser ? (
+        <UserEditForm userItem={userItem} hotels={hotels} roles={roles} />
+      ) : null}
     </DashboardEntityListItemFrame>
   );
 }

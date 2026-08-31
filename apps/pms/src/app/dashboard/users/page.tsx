@@ -13,7 +13,9 @@ export default async function UsersPage({ searchParams }: UsersPageProps) {
   const user = await getUserFromSession();
   const access = getUsersAccess(user);
   const targetRoute = getUsersDefaultRoute(access);
-  const statusQuery = resolvedSearchParams?.status ? `?status=${encodeURIComponent(resolvedSearchParams.status)}` : "";
+  const statusQuery = resolvedSearchParams?.status
+    ? `?status=${encodeURIComponent(resolvedSearchParams.status)}`
+    : "";
 
   if (!targetRoute) {
     return (

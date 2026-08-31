@@ -1,7 +1,11 @@
 "use client";
 
 import { useEffect, useMemo, useState } from "react";
-import { ADMIN_ROLE_TYPES, type AdminHotelOption, type AdminRoleType } from "@hotel/shared";
+import {
+  ADMIN_ROLE_TYPES,
+  type AdminHotelOption,
+  type AdminRoleType,
+} from "@hotel/shared";
 import { SelectionModal } from "../../_components/SelectionModal";
 
 type RoleHotelPickerFieldProps = {
@@ -17,9 +21,11 @@ export function RoleHotelPickerField({
   hotels,
   roleType,
   defaultHotelId = null,
-  inputName = "hotel_id"
+  inputName = "hotel_id",
 }: RoleHotelPickerFieldProps) {
-  const [selectedHotelId, setSelectedHotelId] = useState<string | null>(defaultHotelId || null);
+  const [selectedHotelId, setSelectedHotelId] = useState<string | null>(
+    defaultHotelId || null,
+  );
   const [isModalOpen, setIsModalOpen] = useState(false);
 
   useEffect(() => {
@@ -37,7 +43,10 @@ export function RoleHotelPickerField({
       return "Generica (qualquer hotel)";
     }
 
-    return hotels.find((hotel) => hotel.id === selectedHotelId)?.name || "Generica (qualquer hotel)";
+    return (
+      hotels.find((hotel) => hotel.id === selectedHotelId)?.name ||
+      "Generica (qualquer hotel)"
+    );
   }, [hotels, roleType, selectedHotelId]);
 
   const canSelectHotel = roleType === ADMIN_ROLE_TYPES.HOTEL;
@@ -51,28 +60,44 @@ export function RoleHotelPickerField({
       <label htmlFor="create-role-hotel-select">Hotel da role</label>
 
       <div className="flex flex-wrap items-center gap-[0.55rem]">
-        <span id="create-role-hotel-select" className="rounded-lg border border-[#d5dbe5] bg-[#fbfdff] px-[0.65rem] py-[0.45rem]">{selectedHotelName}</span>
+        <span
+          id="create-role-hotel-select"
+          className="rounded-lg border border-[#d5dbe5] bg-[#fbfdff] px-[0.65rem] py-[0.45rem]"
+        >
+          {selectedHotelName}
+        </span>
 
         <button
           type="button"
           disabled={!canSelectHotel}
           onClick={() => setIsModalOpen(true)}
           className={`rounded-lg border border-[#2b6ad6] bg-white px-[0.6rem] py-[0.4rem] ${
-            canSelectHotel ? "text-[#1c4eb0]" : "cursor-not-allowed text-[#7b8ba6]"
+            canSelectHotel
+              ? "text-[#1c4eb0]"
+              : "cursor-not-allowed text-[#7b8ba6]"
           }`}
         >
           Selecionar hotel
         </button>
       </div>
 
-      <input type="hidden" name={inputName} value={selectedHotelId || ""} readOnly />
+      <input
+        type="hidden"
+        name={inputName}
+        value={selectedHotelId || ""}
+        readOnly
+      />
 
       <SelectionModal
         open={isModalOpen}
         title="Selecione um hotel"
         items={[
-          { id: GENERIC_HOTEL_OPTION_ID, label: "Generica", description: "Pode ser vinculada em qualquer hotel." },
-          ...hotels.map((hotel) => ({ id: hotel.id, label: hotel.name }))
+          {
+            id: GENERIC_HOTEL_OPTION_ID,
+            label: "Generica",
+            description: "Pode ser vinculada em qualquer hotel.",
+          },
+          ...hotels.map((hotel) => ({ id: hotel.id, label: hotel.name })),
         ]}
         emptyMessage="Nenhum hotel disponível para seleção."
         onSelect={(id) => {

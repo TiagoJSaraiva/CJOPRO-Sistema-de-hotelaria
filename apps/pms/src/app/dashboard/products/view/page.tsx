@@ -15,7 +15,9 @@ type ProductsViewPageProps = {
   }>;
 };
 
-export default async function ProductsViewPage({ searchParams }: ProductsViewPageProps) {
+export default async function ProductsViewPage({
+  searchParams,
+}: ProductsViewPageProps) {
   const resolvedSearchParams = await searchParams;
   const user = await getUserFromSession();
   const access = getProductsAccess(user);
@@ -27,7 +29,12 @@ export default async function ProductsViewPage({ searchParams }: ProductsViewPag
       redirect(fallback);
     }
 
-    return <DashboardAccessDeniedCard title="Produtos" message="Sem permissão para visualizar produtos." />;
+    return (
+      <DashboardAccessDeniedCard
+        title="Produtos"
+        message="Sem permissão para visualizar produtos."
+      />
+    );
   }
 
   const products = await listProducts();
@@ -39,10 +46,22 @@ export default async function ProductsViewPage({ searchParams }: ProductsViewPag
       title="Produtos"
       activeTabKey="view"
       tabs={[
-        { key: "create", label: "Criar produto", href: "/dashboard/products/create", isVisible: access.canCreate },
-        { key: "view", label: "Ver produtos", href: "/dashboard/products/view", isVisible: access.canRead }
+        {
+          key: "create",
+          label: "Criar produto",
+          href: "/dashboard/products/create",
+          isVisible: access.canCreate,
+        },
+        {
+          key: "view",
+          label: "Ver produtos",
+          href: "/dashboard/products/view",
+          isVisible: access.canRead,
+        },
       ]}
-      statusContent={<ProductStatusMessage status={resolvedSearchParams?.status} />}
+      statusContent={
+        <ProductStatusMessage status={resolvedSearchParams?.status} />
+      }
     >
       <ProductsViewFilterableSection
         products={products}

@@ -51,7 +51,7 @@ export const PERMISSIONS = {
   PERMISSION_CREATE: "create_permission",
   PERMISSION_READ: "read_permission",
   PERMISSION_UPDATE: "update_permission",
-  PERMISSION_DELETE: "delete_permission"
+  PERMISSION_DELETE: "delete_permission",
 } as const;
 
 export type PermissionName = (typeof PERMISSIONS)[keyof typeof PERMISSIONS];
@@ -60,61 +60,61 @@ export const ADMIN_NAV_ITEMS = [
   {
     href: "/dashboard/hotels",
     label: "Hotéis",
-    permission: PERMISSIONS.HOTEL_READ
+    permission: PERMISSIONS.HOTEL_READ,
   },
   {
     href: "/dashboard/rooms",
     label: "Quartos",
-    permission: PERMISSIONS.ROOM_READ
+    permission: PERMISSIONS.ROOM_READ,
   },
   {
     href: "/dashboard/customers",
     label: "Clientes",
-    permission: PERMISSIONS.CUSTOMER_READ
+    permission: PERMISSIONS.CUSTOMER_READ,
   },
   {
     href: "/dashboard/reservations",
     label: "Reservas",
-    permission: PERMISSIONS.RESERVATIONS_CALENDAR_ACCESS
+    permission: PERMISSIONS.RESERVATIONS_CALENDAR_ACCESS,
   },
   {
     href: "/dashboard/transactions",
     label: "Painel financeiro",
-    permission: PERMISSIONS.TRANSACTION_READ
+    permission: PERMISSIONS.TRANSACTION_READ,
   },
   {
     href: "/dashboard/products",
     label: "Produtos",
-    permission: PERMISSIONS.PRODUCT_READ
+    permission: PERMISSIONS.PRODUCT_READ,
   },
   {
     href: "/dashboard/seasons",
     label: "Temporadas",
-    permission: PERMISSIONS.SEASON_READ
+    permission: PERMISSIONS.SEASON_READ,
   },
   {
     href: "/dashboard/season-room-rates",
     label: "Tarifas por Temporada",
-    permission: PERMISSIONS.SEASON_ROOM_RATE_READ
+    permission: PERMISSIONS.SEASON_ROOM_RATE_READ,
   },
   {
     href: "/dashboard/maintenance",
     label: "Manutenção",
-    permission: PERMISSIONS.MAINTENANCE_READ
+    permission: PERMISSIONS.MAINTENANCE_READ,
   },
   {
     href: "/dashboard/users",
     label: "Usuários",
-    permission: PERMISSIONS.USER_READ
+    permission: PERMISSIONS.USER_READ,
   },
   {
     href: "/dashboard/roles",
     label: "Roles",
-    permission: PERMISSIONS.ROLE_READ
+    permission: PERMISSIONS.ROLE_READ,
   },
   {
     href: "/dashboard/permissions",
     label: "Permissões",
-    permission: PERMISSIONS.PERMISSION_READ
-  }
+    permission: PERMISSIONS.PERMISSION_READ,
+  },
 ] as const;

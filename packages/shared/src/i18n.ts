@@ -1,12 +1,19 @@
 /**
  * i18n Translation Utilities
- * 
+ *
  * Centralized mapping for UI labels in pt-BR
  * Backend logic and enum values remain unchanged
  * All functions are pure and return fallback to original value if not found
  */
 
-import type { PaymentStatus, RoomStatus, ReservationSource, ReservationStatus, TransactionStatus, TransactionType } from "./admin";
+import type {
+  PaymentStatus,
+  RoomStatus,
+  ReservationSource,
+  ReservationStatus,
+  TransactionStatus,
+  TransactionType,
+} from "./admin";
 
 const ROOM_STATUS_LABELS: Record<RoomStatus, string> = {
   available: "Disponível",

@@ -1,6 +1,9 @@
 import { redirect } from "next/navigation";
 import { getUserFromSession } from "../../../lib/auth";
-import { getReservationsCalendarAccess, getReservationsCalendarDefaultRoute } from "./access";
+import {
+  getReservationsCalendarAccess,
+  getReservationsCalendarDefaultRoute,
+} from "./access";
 
 export default async function ReservationsCalendarPage() {
   const user = await getUserFromSession();

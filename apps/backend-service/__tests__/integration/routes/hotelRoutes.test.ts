@@ -1,6 +1,11 @@
 import { afterAll, beforeAll, describe, expect, it } from "vitest";
 import type { FastifyInstance } from "fastify";
-import { AUTH_ERROR_CODE, AUTH_ERROR_MESSAGE, PERMISSIONS, type SessionPayload } from "@hotel/shared";
+import {
+  AUTH_ERROR_CODE,
+  AUTH_ERROR_MESSAGE,
+  PERMISSIONS,
+  type SessionPayload,
+} from "@hotel/shared";
 import { createApp } from "../../../src/app";
 import { signToken } from "../../../src/auth/session";
 
@@ -14,9 +19,17 @@ function createToken(permissions: string[]): string {
     tenantId: null,
     roles: ["Admin"],
     permissions,
-    roleAssignments: [{ roleId: "role-system", roleName: "Admin", roleType: "SYSTEM_ROLE", hotelId: null, hotelName: null }],
+    roleAssignments: [
+      {
+        roleId: "role-system",
+        roleName: "Admin",
+        roleType: "SYSTEM_ROLE",
+        hotelId: null,
+        hotelName: null,
+      },
+    ],
     iat: nowInSeconds,
-    exp: nowInSeconds + 3600
+    exp: nowInSeconds + 3600,
   };
 
   return signToken(payload);
@@ -37,13 +50,13 @@ describe("routes/hotels", () => {
   it("retorna 401 para GET /admin/hotels sem autenticacao", async () => {
     const response = await app.inject({
       method: "GET",
-      url: "/admin/hotels"
+      url: "/admin/hotels",
     });
 
     expect(response.statusCode).toBe(401);
     expect(response.json()).toEqual({
       code: AUTH_ERROR_CODE.TOKEN_INVALID_OR_EXPIRED,
-      message: AUTH_ERROR_MESSAGE[AUTH_ERROR_CODE.TOKEN_INVALID_OR_EXPIRED]
+      message: AUTH_ERROR_MESSAGE[AUTH_ERROR_CODE.TOKEN_INVALID_OR_EXPIRED],
     });
   });
 
@@ -54,7 +67,7 @@ describe("routes/hotels", () => {
       method: "POST",
       url: "/admin/hotels",
       headers: {
-        authorization: `Bearer ${token}`
+        authorization: `Bearer ${token}`,
       },
       payload: {
         name: "Hotel Centro",
@@ -72,14 +85,14 @@ describe("routes/hotels", () => {
         country: "BR",
         zip_code: "01001-000",
         timezone: null,
-        currency: null
-      }
+        currency: null,
+      },
     });
 
     expect(response.statusCode).toBe(403);
     expect(response.json()).toEqual({
       code: AUTH_ERROR_CODE.FORBIDDEN,
-      message: AUTH_ERROR_MESSAGE[AUTH_ERROR_CODE.FORBIDDEN]
+      message: AUTH_ERROR_MESSAGE[AUTH_ERROR_CODE.FORBIDDEN],
     });
   });
 
@@ -90,17 +103,17 @@ describe("routes/hotels", () => {
       method: "POST",
       url: "/admin/hotels",
       headers: {
-        authorization: `Bearer ${token}`
+        authorization: `Bearer ${token}`,
       },
       payload: {
-        name: "Hotel Centro"
-      }
+        name: "Hotel Centro",
+      },
     });
 
     expect(response.statusCode).toBe(400);
     expect(response.json()).toEqual({
       code: "ADMIN_VALIDATION_ERROR",
-      message: "Dados inválidos para a requisição."
+      message: "Dados inválidos para a requisição.",
     });
   });
 
@@ -119,25 +132,25 @@ describe("routes/hotels", () => {
           roleName: "Gestor Hotel",
           roleType: "HOTEL_ROLE",
           hotelId: "hotel-1",
-          hotelName: "Hotel Centro"
-        }
+          hotelName: "Hotel Centro",
+        },
       ],
       iat: nowInSeconds,
-      exp: nowInSeconds + 3600
+      exp: nowInSeconds + 3600,
     });
 
     const response = await app.inject({
       method: "GET",
       url: "/admin/hotels",
       headers: {
-        authorization: `Bearer ${token}`
-      }
+        authorization: `Bearer ${token}`,
+      },
     });
 
     expect(response.statusCode).toBe(403);
     expect(response.json()).toEqual({
       code: "ADMIN_SCOPE_NOT_ALLOWED",
-      message: "Acesso global de sistema obrigatorio para esta operacao."
+      message: "Acesso global de sistema obrigatorio para esta operacao.",
     });
   });
 
@@ -148,7 +161,7 @@ describe("routes/hotels", () => {
       method: "POST",
       url: "/admin/hotels",
       headers: {
-        authorization: `Bearer ${token}`
+        authorization: `Bearer ${token}`,
       },
       payload: {
         name: "Hotel Centro",
@@ -166,12 +179,14 @@ describe("routes/hotels", () => {
         country: "BR",
         zip_code: "01001-000",
         timezone: null,
-        currency: null
-      }
+        currency: null,
+      },
     });
 
     expect(response.statusCode).toBe(400);
     expect(response.json().code).toBe("ADMIN_VALIDATION_ERROR");
-    expect(response.json().message).toBe("CNPJ inválido para o país informado.");
+    expect(response.json().message).toBe(
+      "CNPJ inválido para o país informado.",
+    );
   });
 });

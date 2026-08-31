@@ -3,7 +3,11 @@
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import { PERMISSIONS } from "@hotel/shared";
-import { createCustomer, deleteCustomer, updateCustomer } from "../../../lib/adminApi";
+import {
+  createCustomer,
+  deleteCustomer,
+  updateCustomer,
+} from "../../../lib/adminApi";
 import { getUserFromSession } from "../../../lib/auth";
 
 function revalidateCustomerPage(): void {
@@ -12,20 +16,30 @@ function revalidateCustomerPage(): void {
   revalidatePath("/dashboard/customers/view");
 }
 
-function redirectWithStatus(status: string, section: "create" | "view" | "root" = "root", detail?: string): never {
+function redirectWithStatus(
+  status: string,
+  section: "create" | "view" | "root" = "root",
+  detail?: string,
+): never {
   const nonce = Date.now().toString(36);
-  const detailParam = detail ? `&detail=${encodeURIComponent(detail.slice(0, 220))}` : "";
+  const detailParam = detail
+    ? `&detail=${encodeURIComponent(detail.slice(0, 220))}`
+    : "";
 
   if (section === "root") {
     redirect(`/dashboard/customers?status=${status}${detailParam}&r=${nonce}`);
   }
 
-  redirect(`/dashboard/customers/${section}?status=${status}${detailParam}&r=${nonce}`);
+  redirect(
+    `/dashboard/customers/${section}?status=${status}${detailParam}&r=${nonce}`,
+  );
 }
 
 function getErrorDetail(error: unknown): string {
   if (typeof error === "object" && error !== null && "details" in error) {
-    const details = String((error as { details?: unknown }).details || "").trim();
+    const details = String(
+      (error as { details?: unknown }).details || "",
+    ).trim();
 
     if (details) {
       return details;
@@ -43,7 +57,9 @@ export async function createCustomerAction(formData: FormData): Promise<void> {
   const user = await getUserFromSession();
 
   if (!user || !user.permissions.includes(PERMISSIONS.CUSTOMER_CREATE)) {
-    const fallback = user?.permissions.includes(PERMISSIONS.CUSTOMER_READ) ? "view" : "root";
+    const fallback = user?.permissions.includes(PERMISSIONS.CUSTOMER_READ)
+      ? "view"
+      : "root";
     redirectWithStatus("forbidden", fallback);
   }
 
@@ -66,7 +82,7 @@ export async function createCustomerAction(formData: FormData): Promise<void> {
       mobile_phone: String(formData.get("mobile_phone") || "").trim() || null,
       phone: String(formData.get("phone") || "").trim() || null,
       nationality: String(formData.get("nationality") || "").trim() || null,
-      notes: String(formData.get("notes") || "").trim() || null
+      notes: String(formData.get("notes") || "").trim() || null,
     });
   } catch (error) {
     const detail = getErrorDetail(error);
@@ -76,7 +92,7 @@ export async function createCustomerAction(formData: FormData): Promise<void> {
       documentNumber,
       documentType,
       birthDate,
-      detail
+      detail,
     });
 
     redirectWithStatus("create_error", "create", detail);
@@ -90,7 +106,9 @@ export async function updateCustomerAction(formData: FormData): Promise<void> {
   const user = await getUserFromSession();
 
   if (!user || !user.permissions.includes(PERMISSIONS.CUSTOMER_UPDATE)) {
-    const fallback = user?.permissions.includes(PERMISSIONS.CUSTOMER_READ) ? "view" : "root";
+    const fallback = user?.permissions.includes(PERMISSIONS.CUSTOMER_READ)
+      ? "view"
+      : "root";
     redirectWithStatus("forbidden", fallback);
   }
 
@@ -111,7 +129,7 @@ export async function updateCustomerAction(formData: FormData): Promise<void> {
       mobile_phone: String(formData.get("mobile_phone") || "").trim() || null,
       phone: String(formData.get("phone") || "").trim() || null,
       nationality: String(formData.get("nationality") || "").trim() || null,
-      notes: String(formData.get("notes") || "").trim() || null
+      notes: String(formData.get("notes") || "").trim() || null,
     });
   } catch {
     redirectWithStatus("update_error", "view");
@@ -125,7 +143,9 @@ export async function deleteCustomerAction(formData: FormData): Promise<void> {
   const user = await getUserFromSession();
 
   if (!user || !user.permissions.includes(PERMISSIONS.CUSTOMER_DELETE)) {
-    const fallback = user?.permissions.includes(PERMISSIONS.CUSTOMER_READ) ? "view" : "root";
+    const fallback = user?.permissions.includes(PERMISSIONS.CUSTOMER_READ)
+      ? "view"
+      : "root";
     redirectWithStatus("forbidden", fallback);
   }
 

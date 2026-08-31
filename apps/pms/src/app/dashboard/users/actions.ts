@@ -2,11 +2,17 @@
 
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
-import { normalizeEmail, PERMISSIONS, type AdminUserRoleAssignmentInput } from "@hotel/shared";
+import {
+  normalizeEmail,
+  PERMISSIONS,
+  type AdminUserRoleAssignmentInput,
+} from "@hotel/shared";
 import { createUser, deleteUser, updateUser } from "../../../lib/adminApi";
 import { getUserFromSession } from "../../../lib/auth";
 
-function normalizeRoleAssignments(rawValue: FormDataEntryValue | null): AdminUserRoleAssignmentInput[] {
+function normalizeRoleAssignments(
+  rawValue: FormDataEntryValue | null,
+): AdminUserRoleAssignmentInput[] {
   const rawText = String(rawValue || "").trim();
 
   if (!rawText) {
@@ -14,7 +20,10 @@ function normalizeRoleAssignments(rawValue: FormDataEntryValue | null): AdminUse
   }
 
   try {
-    const parsed = JSON.parse(rawText) as Array<{ role_id?: string; hotel_id?: string | null }>;
+    const parsed = JSON.parse(rawText) as Array<{
+      role_id?: string;
+      hotel_id?: string | null;
+    }>;
 
     if (!Array.isArray(parsed)) {
       return [];
@@ -23,7 +32,7 @@ function normalizeRoleAssignments(rawValue: FormDataEntryValue | null): AdminUse
     return parsed
       .map((item) => ({
         role_id: String(item?.role_id || "").trim(),
-        hotel_id: String(item?.hotel_id || "").trim() || null
+        hotel_id: String(item?.hotel_id || "").trim() || null,
       }))
       .filter((item) => item.role_id.length > 0);
   } catch {
@@ -41,7 +50,10 @@ function getRedirectNonce(): string {
   return Date.now().toString(36);
 }
 
-function redirectWithStatus(status: string, section: "create" | "view" | "root" = "root"): never {
+function redirectWithStatus(
+  status: string,
+  section: "create" | "view" | "root" = "root",
+): never {
   const nonce = getRedirectNonce();
 
   if (section === "root") {
@@ -65,21 +77,28 @@ function isDeleteConflictError(error: unknown): boolean {
   }
 
   const message = error.message.toLowerCase();
-  return message.includes("dependencias ativas") || message.includes("nao pode ser exclu");
+  return (
+    message.includes("dependencias ativas") ||
+    message.includes("nao pode ser exclu")
+  );
 }
 
 export async function createUserAction(formData: FormData): Promise<void> {
   const user = await getUserFromSession();
 
   if (!user || !user.permissions.includes(PERMISSIONS.USER_CREATE)) {
-    const fallback = user?.permissions.includes(PERMISSIONS.USER_READ) ? "view" : "root";
+    const fallback = user?.permissions.includes(PERMISSIONS.USER_READ)
+      ? "view"
+      : "root";
     redirectWithStatus("forbidden", fallback);
   }
 
   const name = String(formData.get("name") || "").trim();
   const email = normalizeEmail(String(formData.get("email") || ""));
   const passwordHash = String(formData.get("password_hash") || "").trim();
-  const roleAssignments = normalizeRoleAssignments(formData.get("role_assignments"));
+  const roleAssignments = normalizeRoleAssignments(
+    formData.get("role_assignments"),
+  );
 
   if (!name || !email || !passwordHash) {
     redirectWithStatus("create_missing_fields", "create");
@@ -90,7 +109,7 @@ export async function createUserAction(formData: FormData): Promise<void> {
       name,
       email,
       password_hash: passwordHash,
-      role_assignments: roleAssignments
+      role_assignments: roleAssignments,
     });
   } catch {
     redirectWithStatus("create_error", "create");
@@ -104,7 +123,9 @@ export async function updateUserAction(formData: FormData): Promise<void> {
   const user = await getUserFromSession();
 
   if (!user || !user.permissions.includes(PERMISSIONS.USER_UPDATE)) {
-    const fallback = user?.permissions.includes(PERMISSIONS.USER_READ) ? "view" : "root";
+    const fallback = user?.permissions.includes(PERMISSIONS.USER_READ)
+      ? "view"
+      : "root";
     redirectWithStatus("forbidden", fallback);
   }
 
@@ -112,7 +133,9 @@ export async function updateUserAction(formData: FormData): Promise<void> {
   const name = String(formData.get("name") || "").trim();
   const email = normalizeEmail(String(formData.get("email") || ""));
   const passwordHash = String(formData.get("password_hash") || "").trim();
-  const roleAssignments = normalizeRoleAssignments(formData.get("role_assignments"));
+  const roleAssignments = normalizeRoleAssignments(
+    formData.get("role_assignments"),
+  );
 
   if (!id || !name || !email) {
     redirectWithStatus("update_missing_fields", "view");
@@ -128,7 +151,7 @@ export async function updateUserAction(formData: FormData): Promise<void> {
     name,
     email,
     role_assignments: roleAssignments,
-    is_active: formData.get("is_active") === "on"
+    is_active: formData.get("is_active") === "on",
   };
 
   if (passwordHash) {
@@ -149,7 +172,9 @@ export async function deleteUserAction(formData: FormData): Promise<void> {
   const user = await getUserFromSession();
 
   if (!user || !user.permissions.includes(PERMISSIONS.USER_DELETE)) {
-    const fallback = user?.permissions.includes(PERMISSIONS.USER_READ) ? "view" : "root";
+    const fallback = user?.permissions.includes(PERMISSIONS.USER_READ)
+      ? "view"
+      : "root";
     redirectWithStatus("forbidden", fallback);
   }
 

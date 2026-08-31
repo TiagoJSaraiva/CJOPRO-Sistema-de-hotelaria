@@ -14,7 +14,7 @@ describe("financialTransactionInsights", () => {
         currency: "BRL",
         description: null,
         status: "COMPLETED",
-        paid_at: "2026-05-11T10:00:00.000Z"
+        paid_at: "2026-05-11T10:00:00.000Z",
       },
       {
         id: "expense-1",
@@ -25,7 +25,7 @@ describe("financialTransactionInsights", () => {
         currency: "BRL",
         description: null,
         status: "COMPLETED",
-        paid_at: "2026-05-10T10:00:00.000Z"
+        paid_at: "2026-05-10T10:00:00.000Z",
       },
       {
         id: "expense-2",
@@ -36,7 +36,7 @@ describe("financialTransactionInsights", () => {
         currency: "BRL",
         description: null,
         status: "PENDING",
-        due_date: "2026-05-10"
+        due_date: "2026-05-10",
       },
       {
         id: "refund-1",
@@ -47,11 +47,14 @@ describe("financialTransactionInsights", () => {
         currency: "BRL",
         description: null,
         status: "REFUNDED",
-        paid_at: "2026-05-09T10:00:00.000Z"
-      }
+        paid_at: "2026-05-09T10:00:00.000Z",
+      },
     ];
 
-    const insights = buildFinancialTransactionInsights(transactions, new Date("2026-05-12T12:00:00.000Z"));
+    const insights = buildFinancialTransactionInsights(
+      transactions,
+      new Date("2026-05-12T12:00:00.000Z"),
+    );
 
     expect(insights.realizedIncome).toBe(1000);
     expect(insights.realizedExpenses).toBe(200);
@@ -60,6 +63,9 @@ describe("financialTransactionInsights", () => {
     expect(insights.pendingExpenses).toBe(350);
     expect(insights.overdueExpenses).toBe(350);
     expect(insights.overdueCount).toBe(1);
-    expect(insights.topExpenseCategories.map((item) => item.category)).toEqual(["Manutencao", "Lavanderia"]);
+    expect(insights.topExpenseCategories.map((item) => item.category)).toEqual([
+      "Manutencao",
+      "Lavanderia",
+    ]);
   });
 });

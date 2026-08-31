@@ -26,16 +26,16 @@ Commits usam Conventional Commits, em português quando possível. Exemplos:
 
 ## Validação por tipo de mudança
 
-| Mudança | Validação mínima adicional a `pnpm check` |
-| --- | --- |
-| Documentação ou instruções | `pnpm docs:check` |
-| Backend ou contrato HTTP | testes afetados, `pnpm api:openapi:check` e `pnpm test` |
-| PMS sem alteração visual | testes afetados e `pnpm test` |
-| PMS visual ou interativo | `pnpm test:visual`, `pnpm test:a11y` e `pnpm test:e2e` |
-| Shared | `pnpm test`, typecheck e build dos consumidores |
-| Migration, seed ou acesso ao banco | `pnpm db:types` e `pnpm test:db` |
-| Dependências | instalação congelada, `pnpm security:audit` e `pnpm check:full` |
-| CI ou tooling transversal | `pnpm check:ci` e a suíte afetada pelo tooling |
+| Mudança                            | Validação mínima adicional a `pnpm check`                       |
+| ---------------------------------- | --------------------------------------------------------------- |
+| Documentação ou instruções         | `pnpm docs:check`                                               |
+| Backend ou contrato HTTP           | testes afetados, `pnpm api:openapi:check` e `pnpm test`         |
+| PMS sem alteração visual           | testes afetados e `pnpm test`                                   |
+| PMS visual ou interativo           | `pnpm test:visual`, `pnpm test:a11y` e `pnpm test:e2e`          |
+| Shared                             | `pnpm test`, typecheck e build dos consumidores                 |
+| Migration, seed ou acesso ao banco | `pnpm db:types` e `pnpm test:db`                                |
+| Dependências                       | instalação congelada, `pnpm security:audit` e `pnpm check:full` |
+| CI ou tooling transversal          | `pnpm check:ci` e a suíte afetada pelo tooling                  |
 
 O [catálogo de comandos](docs/commands.md) descreve pré-requisitos e efeitos.
 O [guia de testes](docs/testing-strategy.md) explica como selecionar as suítes.

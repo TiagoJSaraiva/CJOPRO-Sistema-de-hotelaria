@@ -1,9 +1,19 @@
 "use client";
 
 import { useMemo, type ReactNode } from "react";
-import { ADMIN_ROLE_TYPES, type AdminHotelOption, type AdminPermissionOption, type AdminRole } from "@hotel/shared";
+import {
+  ADMIN_ROLE_TYPES,
+  type AdminHotelOption,
+  type AdminPermissionOption,
+  type AdminRole,
+} from "@hotel/shared";
 import { RoleListItem } from "./RoleListItem";
-import { DEFAULT_ROLE_VIEW_FILTERS, applyRoleViewFilters, countAppliedRoleFilters, type RoleViewFilters } from "./roleViewFilters";
+import {
+  DEFAULT_ROLE_VIEW_FILTERS,
+  applyRoleViewFilters,
+  countAppliedRoleFilters,
+  type RoleViewFilters,
+} from "./roleViewFilters";
 import { viewFiltersFieldClassName } from "../../_components/ViewFiltersBase";
 import { EntityViewFilterableSection } from "../../_components/EntityViewFilterableSection";
 import { useViewFiltersState } from "../../_components/useViewFiltersState";
@@ -31,7 +41,7 @@ export function RolesViewFilterableSection({
   currentUserRoleIds,
   activeRoleId,
   mode,
-  children
+  children,
 }: RolesViewFilterableSectionProps) {
   const {
     isModalOpen,
@@ -41,12 +51,15 @@ export function RolesViewFilterableSection({
     closeFilters,
     applyFilters,
     clearFilters,
-    updateDraftFilter
+    updateDraftFilter,
   } = useViewFiltersState<RoleViewFilters>(DEFAULT_ROLE_VIEW_FILTERS);
 
   const appliedFilterCount = countAppliedRoleFilters(appliedFilters);
 
-  const filteredRoles = useMemo(() => applyRoleViewFilters(roles, appliedFilters), [roles, appliedFilters]);
+  const filteredRoles = useMemo(
+    () => applyRoleViewFilters(roles, appliedFilters),
+    [roles, appliedFilters],
+  );
 
   return (
     <EntityViewFilterableSection
@@ -82,7 +95,9 @@ export function RolesViewFilterableSection({
             <span>Nome da role</span>
             <input
               value={draftFilters.search}
-              onChange={(event) => updateDraftFilter("search", event.target.value)}
+              onChange={(event) =>
+                updateDraftFilter("search", event.target.value)
+              }
               placeholder="Ex.: admin"
               className={viewFiltersFieldClassName}
             />
@@ -92,7 +107,12 @@ export function RolesViewFilterableSection({
             <span>Tipo da role</span>
             <select
               value={draftFilters.roleType}
-              onChange={(event) => updateDraftFilter("roleType", event.target.value as RoleViewFilters["roleType"])}
+              onChange={(event) =>
+                updateDraftFilter(
+                  "roleType",
+                  event.target.value as RoleViewFilters["roleType"],
+                )
+              }
               className={viewFiltersFieldClassName}
             >
               <option value="">Todos</option>
@@ -103,7 +123,13 @@ export function RolesViewFilterableSection({
 
           <label className="pms-field">
             <span>Hotel</span>
-            <select value={draftFilters.hotelId} onChange={(event) => updateDraftFilter("hotelId", event.target.value)} className={viewFiltersFieldClassName}>
+            <select
+              value={draftFilters.hotelId}
+              onChange={(event) =>
+                updateDraftFilter("hotelId", event.target.value)
+              }
+              className={viewFiltersFieldClassName}
+            >
               <option value="">Todos</option>
               {hotels.map((hotel) => (
                 <option key={hotel.id} value={hotel.id}>
@@ -115,11 +141,20 @@ export function RolesViewFilterableSection({
 
           <label className="pms-field">
             <span>Permissão vinculada</span>
-            <select value={draftFilters.permissionId} onChange={(event) => updateDraftFilter("permissionId", event.target.value)} className={viewFiltersFieldClassName}>
+            <select
+              value={draftFilters.permissionId}
+              onChange={(event) =>
+                updateDraftFilter("permissionId", event.target.value)
+              }
+              className={viewFiltersFieldClassName}
+            >
               <option value="">Todas</option>
               {permissions.map((permission) => (
                 <option key={permission.id} value={permission.id}>
-                  {permission.name} {permission.type === "SYSTEM_PERMISSION" ? "(SYSTEM)" : "(HOTEL)"}
+                  {permission.name}{" "}
+                  {permission.type === "SYSTEM_PERMISSION"
+                    ? "(SYSTEM)"
+                    : "(HOTEL)"}
                 </option>
               ))}
             </select>

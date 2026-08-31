@@ -6,7 +6,7 @@ import {
   hashTemporaryPassword,
   matchesPasswordHash,
   signToken,
-  verifyToken
+  verifyToken,
 } from "../../../src/auth/session";
 
 const basePayload: SessionPayload = {
@@ -18,7 +18,7 @@ const basePayload: SessionPayload = {
   permissions: [PERMISSIONS.USER_READ],
   roleAssignments: [],
   iat: 1_700_000_000,
-  exp: 4_700_000_000
+  exp: 4_700_000_000,
 };
 
 describe("auth/session", () => {
@@ -47,7 +47,7 @@ describe("auth/session", () => {
     const expiredToken = signToken({
       ...basePayload,
       iat: nowInSeconds - 20,
-      exp: nowInSeconds - 10
+      exp: nowInSeconds - 10,
     });
 
     expect(verifyToken(expiredToken)).toBeNull();
@@ -58,8 +58,8 @@ describe("auth/session", () => {
 
     const session = getSessionFromRequest({
       headers: {
-        authorization: `Bearer ${token}`
-      }
+        authorization: `Bearer ${token}`,
+      },
     });
 
     expect(session).toEqual(basePayload);
@@ -78,7 +78,7 @@ describe("auth/session", () => {
 
     expect(error).toEqual({
       code: "AUTH_FORBIDDEN",
-      message: "Sem permissão para executar esta operação."
+      message: "Sem permissão para executar esta operação.",
     });
   });
 });

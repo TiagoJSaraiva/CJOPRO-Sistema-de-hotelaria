@@ -16,7 +16,8 @@ const READINESS_TIMEOUT_MS = readPositiveInteger(
   "HOTEL_DEV_READINESS_TIMEOUT_MS",
 );
 const SHUTDOWN_GRACE_MS = 3_000;
-const EXPECTED_SUPABASE_KEY_PLACEHOLDER = "obtenha-com-pnpm-exec-supabase-status";
+const EXPECTED_SUPABASE_KEY_PLACEHOLDER =
+  "obtenha-com-pnpm-exec-supabase-status";
 
 let servicesProcess;
 let servicesExited;
@@ -78,7 +79,9 @@ function validateBackendEnvironment() {
   const supabaseKey =
     configured.SUPABASE_SECRET_KEY ?? configured.SUPABASE_SERVICE_ROLE_KEY;
   if (!supabaseKey || supabaseKey === EXPECTED_SUPABASE_KEY_PLACEHOLDER) {
-    errors.push("SUPABASE_SECRET_KEY (ou SUPABASE_SERVICE_ROLE_KEY) está ausente");
+    errors.push(
+      "SUPABASE_SECRET_KEY (ou SUPABASE_SERVICE_ROLE_KEY) está ausente",
+    );
   }
 
   if (!configured.AUTH_SESSION_SECRET) {
@@ -117,9 +120,12 @@ function checkAddress(port, host) {
 
       reject(error);
     });
-    server.listen({ host, port, exclusive: true, ipv6Only: host === "::1" }, () => {
-      server.close((error) => (error ? reject(error) : resolve()));
-    });
+    server.listen(
+      { host, port, exclusive: true, ipv6Only: host === "::1" },
+      () => {
+        server.close((error) => (error ? reject(error) : resolve()));
+      },
+    );
   });
 }
 
@@ -256,7 +262,9 @@ async function waitForServices() {
     const detail = outcome.result.signal
       ? `sinal ${outcome.result.signal}`
       : `código ${outcome.result.code ?? "desconhecido"}`;
-    throw new Error(`O processo de desenvolvimento encerrou antes do readiness (${detail}).`);
+    throw new Error(
+      `O processo de desenvolvimento encerrou antes do readiness (${detail}).`,
+    );
   }
 }
 
@@ -289,12 +297,18 @@ async function terminateServices() {
     if (!isProcessAlive(child.pid)) {
       return;
     }
-    const result = spawnSync("taskkill", ["/PID", String(child.pid), "/T", "/F"], {
-      stdio: "ignore",
-      windowsHide: true,
-    });
+    const result = spawnSync(
+      "taskkill",
+      ["/PID", String(child.pid), "/T", "/F"],
+      {
+        stdio: "ignore",
+        windowsHide: true,
+      },
+    );
     if (result.status !== 0 && isProcessAlive(child.pid)) {
-      throw new Error(`taskkill não conseguiu encerrar a árvore do PID ${child.pid}.`);
+      throw new Error(
+        `taskkill não conseguiu encerrar a árvore do PID ${child.pid}.`,
+      );
     }
     await exited?.catch(() => undefined);
     return;
@@ -370,7 +384,9 @@ async function main() {
     const detail = result.signal
       ? `sinal ${result.signal}`
       : `código ${result.code ?? "desconhecido"}`;
-    throw new Error(`O processo de desenvolvimento encerrou inesperadamente (${detail}).`);
+    throw new Error(
+      `O processo de desenvolvimento encerrou inesperadamente (${detail}).`,
+    );
   }
 }
 
@@ -383,7 +399,9 @@ try {
   try {
     await shutdown();
   } catch (shutdownError) {
-    console.error(`Falha adicional durante a limpeza: ${shutdownError.message}`);
+    console.error(
+      `Falha adicional durante a limpeza: ${shutdownError.message}`,
+    );
   }
   if (!shutdownRequested) {
     console.error(`\nErro: ${error.message}`);

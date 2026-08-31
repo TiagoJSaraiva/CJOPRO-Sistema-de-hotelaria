@@ -1,5 +1,8 @@
 import { describe, expect, it } from "vitest";
-import { formatRoleOptionLabel, formatUserRoleAssignmentLabel } from "../../../../src/app/dashboard/users/_components/userRoleLabels";
+import {
+  formatRoleOptionLabel,
+  formatUserRoleAssignmentLabel,
+} from "../../../../src/app/dashboard/users/_components/userRoleLabels";
 
 describe("userRoleLabels", () => {
   it("formata role de sistema para o view de usuarios", () => {
@@ -9,8 +12,8 @@ describe("userRoleLabels", () => {
         role_type: "SYSTEM_ROLE",
         hotel_name: null,
         role_hotel_id: null,
-        role_hotel_name: null
-      })
+        role_hotel_name: null,
+      }),
     ).toBe("Sistema - Administrador");
   });
 
@@ -21,8 +24,8 @@ describe("userRoleLabels", () => {
         role_type: "HOTEL_ROLE",
         hotel_name: "Hotel Legal",
         role_hotel_id: null,
-        role_hotel_name: null
-      })
+        role_hotel_name: null,
+      }),
     ).toBe("Hotel Legal - Recepcionista (Genérico)");
   });
 
@@ -33,8 +36,8 @@ describe("userRoleLabels", () => {
         role_type: "HOTEL_ROLE",
         hotel_name: "Hotel do Vinculo",
         role_hotel_id: "hotel-1",
-        role_hotel_name: "Hotel Central"
-      })
+        role_hotel_name: "Hotel Central",
+      }),
     ).toBe("Hotel Central - Recepcionista");
   });
 
@@ -45,8 +48,8 @@ describe("userRoleLabels", () => {
         name: "Recepcionista",
         role_type: "HOTEL_ROLE",
         hotel_id: null,
-        hotel_name: null
-      })
+        hotel_name: null,
+      }),
     ).toBe("Recepcionista (GENERICA)");
 
     expect(
@@ -56,10 +59,10 @@ describe("userRoleLabels", () => {
           name: "Auditor",
           role_type: "HOTEL_ROLE",
           hotel_id: "hotel-2",
-          hotel_name: "Hotel Praia"
+          hotel_name: "Hotel Praia",
         },
-        "Hotel Praia"
-      )
+        "Hotel Praia",
+      ),
     ).toBe("Auditor (Hotel Praia)");
   });
 });

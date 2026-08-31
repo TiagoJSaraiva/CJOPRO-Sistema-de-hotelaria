@@ -4,7 +4,11 @@ import { redirect } from "next/navigation";
 import { ADMIN_NAV_ITEMS, PERMISSIONS } from "@hotel/shared";
 import type { ReactNode } from "react";
 import { getUserFromSession } from "../../lib/auth";
-import { getActiveHotelCookieValue, listActiveHotelOptions, resolveActiveHotelForUser } from "../../lib/activeHotel";
+import {
+  getActiveHotelCookieValue,
+  listActiveHotelOptions,
+  resolveActiveHotelForUser,
+} from "../../lib/activeHotel";
 import { logoutAction, setActiveHotelAction } from "./actions";
 import { ActiveHotelSelector } from "./_components/ActiveHotelSelector";
 import { getRoomsAccess } from "./rooms/access";
@@ -13,10 +17,7 @@ import { getMaintenanceAccess } from "./maintenance/access";
 const NAME_CONNECTORS = new Set(["da", "de", "do", "das", "dos", "e"]);
 
 function formatUserDisplayName(name: string): string {
-  const parts = name
-    .trim()
-    .split(/\s+/)
-    .filter(Boolean);
+  const parts = name.trim().split(/\s+/).filter(Boolean);
 
   if (parts.length <= 2) {
     return name;
@@ -24,17 +25,25 @@ function formatUserDisplayName(name: string): string {
 
   const firstName = parts[0];
   const lastName = parts[parts.length - 1];
-  const middleNames = parts.slice(1, -1).filter((part) => !NAME_CONNECTORS.has(part.toLowerCase()));
+  const middleNames = parts
+    .slice(1, -1)
+    .filter((part) => !NAME_CONNECTORS.has(part.toLowerCase()));
 
   if (!middleNames.length) {
     return `${firstName} ${lastName}`;
   }
 
-  const abbreviatedMiddle = middleNames.map((part) => `${part.charAt(0).toUpperCase()}.`).join(" ");
+  const abbreviatedMiddle = middleNames
+    .map((part) => `${part.charAt(0).toUpperCase()}.`)
+    .join(" ");
   return `${firstName} ${abbreviatedMiddle} ${lastName}`;
 }
 
-export default async function DashboardLayout({ children }: { children: ReactNode }) {
+export default async function DashboardLayout({
+  children,
+}: {
+  children: ReactNode;
+}) {
   const user = await getUserFromSession();
 
   if (!user) {
@@ -45,27 +54,49 @@ export default async function DashboardLayout({ children }: { children: ReactNod
   const maintenanceAccess = getMaintenanceAccess(user);
 
   const moduleEntryAccess: Record<string, boolean> = {
-    "/dashboard/hotels": user.permissions.includes(PERMISSIONS.HOTEL_READ) || user.permissions.includes(PERMISSIONS.HOTEL_CREATE),
+    "/dashboard/hotels":
+      user.permissions.includes(PERMISSIONS.HOTEL_READ) ||
+      user.permissions.includes(PERMISSIONS.HOTEL_CREATE),
     "/dashboard/rooms": roomsAccess.canRead || roomsAccess.canCreate,
-    "/dashboard/customers": user.permissions.includes(PERMISSIONS.CUSTOMER_READ) || user.permissions.includes(PERMISSIONS.CUSTOMER_CREATE),
-    "/dashboard/reservations": user.permissions.includes(PERMISSIONS.RESERVATIONS_CALENDAR_ACCESS),
-    "/dashboard/transactions": user.permissions.includes(PERMISSIONS.TRANSACTION_READ) || user.permissions.includes(PERMISSIONS.TRANSACTION_CREATE),
-    "/dashboard/products": user.permissions.includes(PERMISSIONS.PRODUCT_READ) || user.permissions.includes(PERMISSIONS.PRODUCT_CREATE),
-    "/dashboard/seasons": user.permissions.includes(PERMISSIONS.SEASON_READ) || user.permissions.includes(PERMISSIONS.SEASON_CREATE),
+    "/dashboard/customers":
+      user.permissions.includes(PERMISSIONS.CUSTOMER_READ) ||
+      user.permissions.includes(PERMISSIONS.CUSTOMER_CREATE),
+    "/dashboard/reservations": user.permissions.includes(
+      PERMISSIONS.RESERVATIONS_CALENDAR_ACCESS,
+    ),
+    "/dashboard/transactions":
+      user.permissions.includes(PERMISSIONS.TRANSACTION_READ) ||
+      user.permissions.includes(PERMISSIONS.TRANSACTION_CREATE),
+    "/dashboard/products":
+      user.permissions.includes(PERMISSIONS.PRODUCT_READ) ||
+      user.permissions.includes(PERMISSIONS.PRODUCT_CREATE),
+    "/dashboard/seasons":
+      user.permissions.includes(PERMISSIONS.SEASON_READ) ||
+      user.permissions.includes(PERMISSIONS.SEASON_CREATE),
     "/dashboard/season-room-rates":
-      user.permissions.includes(PERMISSIONS.SEASON_ROOM_RATE_READ) || user.permissions.includes(PERMISSIONS.SEASON_ROOM_RATE_CREATE),
-    "/dashboard/users": user.permissions.includes(PERMISSIONS.USER_READ) || user.permissions.includes(PERMISSIONS.USER_CREATE),
-    "/dashboard/roles": user.permissions.includes(PERMISSIONS.ROLE_READ) || user.permissions.includes(PERMISSIONS.ROLE_CREATE),
-    "/dashboard/permissions": user.permissions.includes(PERMISSIONS.PERMISSION_READ) || user.permissions.includes(PERMISSIONS.PERMISSION_CREATE),
-    "/dashboard/maintenance": maintenanceAccess.canEnter
+      user.permissions.includes(PERMISSIONS.SEASON_ROOM_RATE_READ) ||
+      user.permissions.includes(PERMISSIONS.SEASON_ROOM_RATE_CREATE),
+    "/dashboard/users":
+      user.permissions.includes(PERMISSIONS.USER_READ) ||
+      user.permissions.includes(PERMISSIONS.USER_CREATE),
+    "/dashboard/roles":
+      user.permissions.includes(PERMISSIONS.ROLE_READ) ||
+      user.permissions.includes(PERMISSIONS.ROLE_CREATE),
+    "/dashboard/permissions":
+      user.permissions.includes(PERMISSIONS.PERMISSION_READ) ||
+      user.permissions.includes(PERMISSIONS.PERMISSION_CREATE),
+    "/dashboard/maintenance": maintenanceAccess.canEnter,
   };
 
-  const navItems = ADMIN_NAV_ITEMS.filter((item) => moduleEntryAccess[item.href]);
+  const navItems = ADMIN_NAV_ITEMS.filter(
+    (item) => moduleEntryAccess[item.href],
+  );
   const userDisplayName = formatUserDisplayName(user.name);
   const activeHotelOptions = listActiveHotelOptions(user);
   const preferredHotelId = await getActiveHotelCookieValue();
   const activeHotelId = resolveActiveHotelForUser(user, preferredHotelId);
-  const navLinkClassName = "rounded-lg border border-[#d2d2d2] bg-white px-[0.7rem] py-[0.45rem] font-medium leading-none text-[#232323] no-underline";
+  const navLinkClassName =
+    "rounded-lg border border-[#d2d2d2] bg-white px-[0.7rem] py-[0.45rem] font-medium leading-none text-[#232323] no-underline";
 
   return (
     <div className="min-h-screen bg-[#f5f6f8] p-5">
@@ -77,17 +108,35 @@ export default async function DashboardLayout({ children }: { children: ReactNod
       </a>
       <header className="mb-4 flex flex-wrap items-center justify-between gap-4">
         <div className="flex min-w-0 flex-wrap items-center gap-4">
-          <Link href="/dashboard" aria-label="Voltar para início" className="inline-flex items-center">
-            <Image src="/img/logo.png" alt="PMS Hotelaria" width={116} height={34} priority className="h-10 w-[116px]" />
+          <Link
+            href="/dashboard"
+            aria-label="Voltar para início"
+            className="inline-flex items-center"
+          >
+            <Image
+              src="/img/logo.png"
+              alt="PMS Hotelaria"
+              width={116}
+              height={34}
+              priority
+              className="h-10 w-[116px]"
+            />
           </Link>
 
-          <nav aria-label="Navegação principal do PMS" className="flex flex-wrap gap-[0.55rem]">
+          <nav
+            aria-label="Navegação principal do PMS"
+            className="flex flex-wrap gap-[0.55rem]"
+          >
             <Link href="/dashboard" className={navLinkClassName}>
               Início
             </Link>
 
             {navItems.map((item) => (
-              <Link key={item.href} href={item.href} className={navLinkClassName}>
+              <Link
+                key={item.href}
+                href={item.href}
+                className={navLinkClassName}
+              >
                 {item.label}
               </Link>
             ))}
@@ -96,13 +145,22 @@ export default async function DashboardLayout({ children }: { children: ReactNod
 
         <div className="flex flex-wrap items-center justify-end gap-3">
           {activeHotelOptions.length > 1 ? (
-            <ActiveHotelSelector options={activeHotelOptions} initialHotelId={activeHotelId} onChangeAction={setActiveHotelAction} />
+            <ActiveHotelSelector
+              options={activeHotelOptions}
+              initialHotelId={activeHotelId}
+              onChangeAction={setActiveHotelAction}
+            />
           ) : null}
 
-          <span className="whitespace-nowrap text-[0.95rem] text-[#3f3f3f]">{userDisplayName}</span>
+          <span className="whitespace-nowrap text-[0.95rem] text-[#3f3f3f]">
+            {userDisplayName}
+          </span>
 
           <form action={logoutAction}>
-            <button type="submit" className="cursor-pointer rounded-lg border border-[#d0d0d0] bg-white px-[0.8rem] py-[0.45rem]">
+            <button
+              type="submit"
+              className="cursor-pointer rounded-lg border border-[#d0d0d0] bg-white px-[0.8rem] py-[0.45rem]"
+            >
               Sair
             </button>
           </form>

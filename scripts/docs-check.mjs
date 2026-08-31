@@ -24,7 +24,7 @@ const REQUIRED_FILES = [
   "apps/pms/AGENTS.md",
   "packages/shared/AGENTS.md",
   "scripts/AGENTS.md",
-  "supabase/AGENTS.md"
+  "supabase/AGENTS.md",
 ];
 
 const BUILTIN_PNPM_COMMANDS = new Set([
@@ -35,7 +35,7 @@ const BUILTIN_PNPM_COMMANDS = new Set([
   "install",
   "outdated",
   "remove",
-  "run"
+  "run",
 ]);
 
 const checks = [];
@@ -58,7 +58,7 @@ function addCheck(id, label, details) {
     id,
     label,
     ok: !errors.some((error) => error.id === id),
-    details
+    details,
   });
 }
 
@@ -141,7 +141,7 @@ function validateLinks(markdownFiles) {
           file: toRepositoryPath(markdownPath),
           line: lineAt(contents, match.index),
           message: `link possui escape inválido: ${destination}`,
-          hint: "Use um caminho relativo codificado como URL."
+          hint: "Use um caminho relativo codificado como URL.",
         });
         continue;
       }
@@ -151,18 +151,20 @@ function validateLinks(markdownFiles) {
           file: toRepositoryPath(markdownPath),
           line: lineAt(contents, match.index),
           message: `link local absoluto não é portável: ${destination}`,
-          hint: "Use um caminho relativo ao documento."
+          hint: "Use um caminho relativo ao documento.",
         });
         continue;
       }
 
-      const targetPath = decodedPath ? resolve(dirname(markdownPath), decodedPath) : markdownPath;
+      const targetPath = decodedPath
+        ? resolve(dirname(markdownPath), decodedPath)
+        : markdownPath;
       if (!existsSync(targetPath)) {
         addError("links", {
           file: toRepositoryPath(markdownPath),
           line: lineAt(contents, match.index),
           message: `alvo local não existe: ${destination}`,
-          hint: "Corrija o caminho ou adicione o arquivo referenciado."
+          hint: "Corrija o caminho ou adicione o arquivo referenciado.",
         });
         continue;
       }
@@ -174,14 +176,18 @@ function validateLinks(markdownFiles) {
             file: toRepositoryPath(markdownPath),
             line: lineAt(contents, match.index),
             message: `fragmento não existe em ${toRepositoryPath(targetPath)}: #${decodedFragment}`,
-            hint: "Use o slug de um heading existente no documento de destino."
+            hint: "Use o slug de um heading existente no documento de destino.",
           });
         }
       }
     }
   }
 
-  addCheck("links", "Links e imagens locais", `${linkCount} referências verificadas`);
+  addCheck(
+    "links",
+    "Links e imagens locais",
+    `${linkCount} referências verificadas`,
+  );
 }
 
 function collectCodeSegments(contents) {
@@ -202,7 +208,9 @@ function validateCommands(markdownFiles, packageJson) {
   for (const markdownPath of markdownFiles) {
     const contents = readFileSync(markdownPath, "utf8");
     for (const segment of collectCodeSegments(contents)) {
-      for (const match of segment.value.matchAll(/\bpnpm(?:\s+run)?\s+([:@\w-]+)/g)) {
+      for (const match of segment.value.matchAll(
+        /\bpnpm(?:\s+run)?\s+([:@\w-]+)/g,
+      )) {
         referenceCount += 1;
         const command = match[1];
         if (scripts.has(command) || BUILTIN_PNPM_COMMANDS.has(command)) {
@@ -213,13 +221,17 @@ function validateCommands(markdownFiles, packageJson) {
           file: toRepositoryPath(markdownPath),
           line: lineAt(contents, segment.index + match.index),
           message: `comando pnpm não existe na raiz: ${command}`,
-          hint: "Corrija o nome ou declare o script em package.json e no catálogo."
+          hint: "Corrija o nome ou declare o script em package.json e no catálogo.",
         });
       }
     }
   }
 
-  addCheck("commands", "Referências a comandos pnpm", `${referenceCount} referências verificadas`);
+  addCheck(
+    "commands",
+    "Referências a comandos pnpm",
+    `${referenceCount} referências verificadas`,
+  );
 }
 
 function escapeRegularExpression(value) {
@@ -237,17 +249,23 @@ function validateCommandCatalog(packageJson) {
   const scripts = Object.keys(packageJson.scripts ?? {});
   for (const script of scripts) {
     const escapedScript = escapeRegularExpression(script);
-    const pattern = new RegExp(`pnpm(?:\\s+run)?\\s+${escapedScript}(?![\\w:-])`);
+    const pattern = new RegExp(
+      `pnpm(?:\\s+run)?\\s+${escapedScript}(?![\\w:-])`,
+    );
     if (!pattern.test(catalog)) {
       addError("catalog", {
         file: "docs/commands.md",
         message: `script da raiz não documentado: ${script}`,
-        hint: `Adicione pnpm ${script} ao catálogo com finalidade, requisito e efeito.`
+        hint: `Adicione pnpm ${script} ao catálogo com finalidade, requisito e efeito.`,
       });
     }
   }
 
-  addCheck("catalog", "Catálogo de scripts", `${scripts.length} scripts documentados`);
+  addCheck(
+    "catalog",
+    "Catálogo de scripts",
+    `${scripts.length} scripts documentados`,
+  );
 }
 
 for (const requiredFile of REQUIRED_FILES) {
@@ -255,20 +273,30 @@ for (const requiredFile of REQUIRED_FILES) {
     addError("required-files", {
       file: requiredFile,
       message: "documento ou instrução obrigatória ausente",
-      hint: "Restaure o arquivo canônico ou ajuste conscientemente a lista obrigatória."
+      hint: "Restaure o arquivo canônico ou ajuste conscientemente a lista obrigatória.",
     });
   }
 }
-addCheck("required-files", "Arquivos canônicos", `${REQUIRED_FILES.length} arquivos obrigatórios`);
+addCheck(
+  "required-files",
+  "Arquivos canônicos",
+  `${REQUIRED_FILES.length} arquivos obrigatórios`,
+);
 
 const markdownFiles = [
   resolve(ROOT_DIRECTORY, "README.md"),
   resolve(ROOT_DIRECTORY, "CONTRIBUTING.md"),
   ...collectMarkdownFiles(resolve(ROOT_DIRECTORY, "docs")),
-  ...REQUIRED_FILES.filter((file) => file.endsWith("AGENTS.md")).map((file) => resolve(ROOT_DIRECTORY, file))
-].filter((file, index, files) => existsSync(file) && files.indexOf(file) === index);
+  ...REQUIRED_FILES.filter((file) => file.endsWith("AGENTS.md")).map((file) =>
+    resolve(ROOT_DIRECTORY, file),
+  ),
+].filter(
+  (file, index, files) => existsSync(file) && files.indexOf(file) === index,
+);
 
-const packageJson = JSON.parse(readFileSync(resolve(ROOT_DIRECTORY, "package.json"), "utf8"));
+const packageJson = JSON.parse(
+  readFileSync(resolve(ROOT_DIRECTORY, "package.json"), "utf8"),
+);
 validateLinks(markdownFiles);
 validateCommands(markdownFiles, packageJson);
 validateCommandCatalog(packageJson);
@@ -277,18 +305,24 @@ const result = {
   ok: errors.length === 0,
   filesChecked: markdownFiles.length,
   checks,
-  errors
+  errors,
 };
 
 if (JSON_OUTPUT) {
   process.stdout.write(`${JSON.stringify(result, null, 2)}\n`);
 } else {
-  process.stdout.write(`Documentação: ${markdownFiles.length} arquivos verificados.\n`);
+  process.stdout.write(
+    `Documentação: ${markdownFiles.length} arquivos verificados.\n`,
+  );
   for (const check of checks) {
-    process.stdout.write(`${check.ok ? "[ok]" : "[falha]"} ${check.label}: ${check.details}\n`);
+    process.stdout.write(
+      `${check.ok ? "[ok]" : "[falha]"} ${check.label}: ${check.details}\n`,
+    );
   }
   for (const error of errors) {
-    process.stderr.write(`\n${error.file}:${error.line} — ${error.message}\nCorreção: ${error.hint}\n`);
+    process.stderr.write(
+      `\n${error.file}:${error.line} — ${error.message}\nCorreção: ${error.hint}\n`,
+    );
   }
 }
 

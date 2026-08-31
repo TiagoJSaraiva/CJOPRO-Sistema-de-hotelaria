@@ -7,27 +7,30 @@ export const AUTH_ERROR_CODE = {
   TOKEN_MISSING: "AUTH_TOKEN_MISSING",
   TOKEN_INVALID_OR_EXPIRED: "AUTH_TOKEN_INVALID_OR_EXPIRED",
   FORBIDDEN: "AUTH_FORBIDDEN",
-  UNKNOWN: "AUTH_UNKNOWN"
+  UNKNOWN: "AUTH_UNKNOWN",
 } as const;
 
-export type AuthErrorCode = (typeof AUTH_ERROR_CODE)[keyof typeof AUTH_ERROR_CODE];
+export type AuthErrorCode =
+  (typeof AUTH_ERROR_CODE)[keyof typeof AUTH_ERROR_CODE];
 
 export const AUTH_ERROR_MESSAGE: Record<AuthErrorCode, string> = {
   [AUTH_ERROR_CODE.MISSING_FIELDS]: "Email e senha são obrigatórios.",
   [AUTH_ERROR_CODE.INVALID_CREDENTIALS]: "Credenciais inválidas.",
-  [AUTH_ERROR_CODE.ACCOUNT_LOCKED]: "Conta temporariamente bloqueada por tentativas de login inválidas.",
+  [AUTH_ERROR_CODE.ACCOUNT_LOCKED]:
+    "Conta temporariamente bloqueada por tentativas de login inválidas.",
   [AUTH_ERROR_CODE.TOKEN_MISSING]: "Token ausente.",
   [AUTH_ERROR_CODE.TOKEN_INVALID_OR_EXPIRED]: "Token inválido ou expirado.",
   [AUTH_ERROR_CODE.FORBIDDEN]: "Sem permissão para executar esta operação.",
-  [AUTH_ERROR_CODE.UNKNOWN]: "Falha ao autenticar."
+  [AUTH_ERROR_CODE.UNKNOWN]: "Falha ao autenticar.",
 };
 
 export const LOGIN_PAGE_ERROR_PARAM = {
   MISSING_FIELDS: "missing_fields",
-  INVALID_CREDENTIALS: "invalid_credentials"
+  INVALID_CREDENTIALS: "invalid_credentials",
 } as const;
 
-export type LoginPageErrorParam = (typeof LOGIN_PAGE_ERROR_PARAM)[keyof typeof LOGIN_PAGE_ERROR_PARAM];
+export type LoginPageErrorParam =
+  (typeof LOGIN_PAGE_ERROR_PARAM)[keyof typeof LOGIN_PAGE_ERROR_PARAM];
 
 export type AuthUser = {
   id: string;

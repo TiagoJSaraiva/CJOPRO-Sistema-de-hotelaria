@@ -16,11 +16,13 @@ export function getRoomsAccess(user: UserLike): RoomsAccess {
     canCreate: permissions.includes(PERMISSIONS.ROOM_CREATE),
     canRead: permissions.includes(PERMISSIONS.ROOM_READ),
     canUpdate: permissions.includes(PERMISSIONS.ROOM_UPDATE),
-    canDelete: permissions.includes(PERMISSIONS.ROOM_DELETE)
+    canDelete: permissions.includes(PERMISSIONS.ROOM_DELETE),
   };
 }
 
-export function getRoomsDefaultRoute(access: RoomsAccess): "/dashboard/rooms/view" | "/dashboard/rooms/create" | null {
+export function getRoomsDefaultRoute(
+  access: RoomsAccess,
+): "/dashboard/rooms/view" | "/dashboard/rooms/create" | null {
   if (access.canRead) {
     return "/dashboard/rooms/view";
   }

@@ -1,6 +1,9 @@
 import { redirect } from "next/navigation";
 import { getUserFromSession } from "../../../lib/auth";
-import { getSeasonRoomRatesAccess, getSeasonRoomRatesDefaultRoute } from "./access";
+import {
+  getSeasonRoomRatesAccess,
+  getSeasonRoomRatesDefaultRoute,
+} from "./access";
 
 type SeasonRoomRatesPageProps = {
   searchParams?: Promise<{
@@ -9,12 +12,16 @@ type SeasonRoomRatesPageProps = {
   }>;
 };
 
-export default async function SeasonRoomRatesPage({ searchParams }: SeasonRoomRatesPageProps) {
+export default async function SeasonRoomRatesPage({
+  searchParams,
+}: SeasonRoomRatesPageProps) {
   const resolvedSearchParams = await searchParams;
   const user = await getUserFromSession();
   const access = getSeasonRoomRatesAccess(user);
   const targetRoute = getSeasonRoomRatesDefaultRoute(access);
-  const statusQuery = resolvedSearchParams?.status ? `?status=${encodeURIComponent(resolvedSearchParams.status)}` : "";
+  const statusQuery = resolvedSearchParams?.status
+    ? `?status=${encodeURIComponent(resolvedSearchParams.status)}`
+    : "";
 
   if (!targetRoute) {
     return (

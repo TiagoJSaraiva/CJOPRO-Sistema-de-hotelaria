@@ -15,7 +15,9 @@ type ProductsCreatePageProps = {
   }>;
 };
 
-export default async function ProductsCreatePage({ searchParams }: ProductsCreatePageProps) {
+export default async function ProductsCreatePage({
+  searchParams,
+}: ProductsCreatePageProps) {
   const resolvedSearchParams = await searchParams;
   const user = await getUserFromSession();
   const access = getProductsAccess(user);
@@ -27,7 +29,12 @@ export default async function ProductsCreatePage({ searchParams }: ProductsCreat
       redirect(fallback);
     }
 
-    return <DashboardAccessDeniedCard title="Produtos" message="Sem permissão para criar produto." />;
+    return (
+      <DashboardAccessDeniedCard
+        title="Produtos"
+        message="Sem permissão para criar produto."
+      />
+    );
   }
 
   return (
@@ -35,26 +42,65 @@ export default async function ProductsCreatePage({ searchParams }: ProductsCreat
       title="Produtos"
       activeTabKey="create"
       tabs={[
-        { key: "create", label: "Criar produto", href: "/dashboard/products/create", isVisible: access.canCreate },
-        { key: "view", label: "Ver produtos", href: "/dashboard/products/view", isVisible: access.canRead }
+        {
+          key: "create",
+          label: "Criar produto",
+          href: "/dashboard/products/create",
+          isVisible: access.canCreate,
+        },
+        {
+          key: "view",
+          label: "Ver produtos",
+          href: "/dashboard/products/view",
+          isVisible: access.canRead,
+        },
       ]}
-      statusContent={<ProductStatusMessage status={resolvedSearchParams?.status} />}
+      statusContent={
+        <ProductStatusMessage status={resolvedSearchParams?.status} />
+      }
     >
-      <DashboardCreateFormCard title="Criar produto" submitLabel="Criar produto" action={createProductAction} resetKey={resolvedSearchParams?.r}>
+      <DashboardCreateFormCard
+        title="Criar produto"
+        submitLabel="Criar produto"
+        action={createProductAction}
+        resetKey={resolvedSearchParams?.r}
+      >
         <FormField label="Nome" htmlFor="create-product-name">
-          <input id="create-product-name" name="name" required className="pms-field-input" />
+          <input
+            id="create-product-name"
+            name="name"
+            required
+            className="pms-field-input"
+          />
         </FormField>
 
         <FormField label="Categoria" htmlFor="create-product-category">
-          <input id="create-product-category" name="category" className="pms-field-input" />
+          <input
+            id="create-product-category"
+            name="category"
+            className="pms-field-input"
+          />
         </FormField>
 
         <FormField label="Preço unitário" htmlFor="create-product-unit-price">
-          <input id="create-product-unit-price" name="unit_price" type="number" min={0} step="0.01" required className="pms-field-input" />
+          <input
+            id="create-product-unit-price"
+            name="unit_price"
+            type="number"
+            min={0}
+            step="0.01"
+            required
+            className="pms-field-input"
+          />
         </FormField>
 
         <FormField label="Status" htmlFor="create-product-status">
-          <select id="create-product-status" name="status" defaultValue="active" className="pms-field-input">
+          <select
+            id="create-product-status"
+            name="status"
+            defaultValue="active"
+            className="pms-field-input"
+          >
             <option value="active">active</option>
             <option value="inactive">inactive</option>
           </select>

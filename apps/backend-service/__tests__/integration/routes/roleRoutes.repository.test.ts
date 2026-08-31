@@ -1,6 +1,10 @@
 import Fastify from "fastify";
 import { afterEach, describe, expect, it, vi } from "vitest";
-import { ADMIN_ROLE_TYPES, PERMISSIONS, type SessionPayload } from "@hotel/shared";
+import {
+  ADMIN_ROLE_TYPES,
+  PERMISSIONS,
+  type SessionPayload,
+} from "@hotel/shared";
 import { registerRoleRoutes } from "../../../src/routes/roleRoutes";
 import type { RolesRepository } from "../../../src/repositories/rolesRepository";
 import { signToken } from "../../../src/auth/session";
@@ -17,22 +21,35 @@ function createToken(permissions: string[]): string {
     tenantId: null,
     roles: ["Admin"],
     permissions,
-    roleAssignments: [{ roleId: "role-system", roleName: "Admin", roleType: "SYSTEM_ROLE", hotelId: null, hotelName: null }],
+    roleAssignments: [
+      {
+        roleId: "role-system",
+        roleName: "Admin",
+        roleType: "SYSTEM_ROLE",
+        hotelId: null,
+        hotelName: null,
+      },
+    ],
     iat: nowInSeconds,
-    exp: nowInSeconds + 3600
+    exp: nowInSeconds + 3600,
   };
 
   return signToken(payload);
 }
 
-function createRolesRepositoryMock(overrides: Partial<RolesRepository> = {}): RolesRepository {
+function createRolesRepositoryMock(
+  overrides: Partial<RolesRepository> = {},
+): RolesRepository {
   return {
     listReferenceHotels: vi.fn(async () => []),
     listReferencePermissions: vi.fn(async () => []),
     listRolesWithRelations: vi.fn(async () => []),
     hotelExists: vi.fn(async () => true),
     findPermissionsByIds: vi.fn(async () => []),
-    createRoleWithPermissions: vi.fn(async () => ({ result: "ok", id: "role-2" })),
+    createRoleWithPermissions: vi.fn(async () => ({
+      result: "ok",
+      id: "role-2",
+    })),
     createRole: vi.fn(async () => ({ result: "ok", id: "role-2" })),
     assignRolePermissions: vi.fn(async () => undefined),
     getRoleWithRelationsById: vi.fn(async () => ({
@@ -41,14 +58,14 @@ function createRolesRepositoryMock(overrides: Partial<RolesRepository> = {}): Ro
       role_type: "SYSTEM_ROLE",
       hotel_id: null,
       hotels: { name: null },
-      role_permissions: []
+      role_permissions: [],
     })),
     updateRoleWithPermissions: vi.fn(async () => "ok"),
     updateRole: vi.fn(async () => "ok"),
     roleExists: vi.fn(async () => true),
     clearRolePermissions: vi.fn(async () => undefined),
     deleteRole: vi.fn(async () => "ok"),
-    ...overrides
+    ...overrides,
   };
 }
 
@@ -79,26 +96,35 @@ describe("routes/roles with injected repository", () => {
       tenantId: null,
       roles: ["Admin"],
       permissions: [PERMISSIONS.ROLE_UPDATE],
-      roleAssignments: [{ roleId: "role-own", roleName: "Admin", roleType: "SYSTEM_ROLE", hotelId: null, hotelName: null }],
+      roleAssignments: [
+        {
+          roleId: "role-own",
+          roleName: "Admin",
+          roleType: "SYSTEM_ROLE",
+          hotelId: null,
+          hotelName: null,
+        },
+      ],
       iat: nowInSeconds,
-      exp: nowInSeconds + 3600
+      exp: nowInSeconds + 3600,
     });
 
     const response = await app.inject({
       method: "PUT",
       url: "/admin/roles/role-own",
       headers: {
-        authorization: `Bearer ${token}`
+        authorization: `Bearer ${token}`,
       },
       payload: {
-        name: "Admin Atualizado"
-      }
+        name: "Admin Atualizado",
+      },
     });
 
     expect(response.statusCode).toBe(403);
     expect(response.json()).toEqual({
       code: "ADMIN_SELF_ACTION_FORBIDDEN",
-      message: "Nao e permitido atualizar uma role vinculada ao proprio usuario."
+      message:
+        "Nao e permitido atualizar uma role vinculada ao proprio usuario.",
     });
     expect(repository.updateRoleWithPermissions).not.toHaveBeenCalled();
   });
@@ -115,23 +141,31 @@ describe("routes/roles with injected repository", () => {
       tenantId: null,
       roles: ["Admin"],
       permissions: [PERMISSIONS.ROLE_DELETE],
-      roleAssignments: [{ roleId: "role-own", roleName: "Admin", roleType: "SYSTEM_ROLE", hotelId: null, hotelName: null }],
+      roleAssignments: [
+        {
+          roleId: "role-own",
+          roleName: "Admin",
+          roleType: "SYSTEM_ROLE",
+          hotelId: null,
+          hotelName: null,
+        },
+      ],
       iat: nowInSeconds,
-      exp: nowInSeconds + 3600
+      exp: nowInSeconds + 3600,
     });
 
     const response = await app.inject({
       method: "DELETE",
       url: "/admin/roles/role-own",
       headers: {
-        authorization: `Bearer ${token}`
-      }
+        authorization: `Bearer ${token}`,
+      },
     });
 
     expect(response.statusCode).toBe(403);
     expect(response.json()).toEqual({
       code: "ADMIN_SELF_ACTION_FORBIDDEN",
-      message: "Nao e permitido excluir uma role vinculada ao proprio usuario."
+      message: "Nao e permitido excluir uma role vinculada ao proprio usuario.",
     });
     expect(repository.deleteRole).not.toHaveBeenCalled();
   });
@@ -140,8 +174,8 @@ describe("routes/roles with injected repository", () => {
     const repository = createRolesRepositoryMock({
       findPermissionsByIds: vi.fn(async () => [
         { id: "perm-1", type: "SYSTEM_PERMISSION" },
-        { id: "perm-2", type: "SYSTEM_PERMISSION" }
-      ])
+        { id: "perm-2", type: "SYSTEM_PERMISSION" },
+      ]),
     });
 
     const app = await createRolesTestApp(repository);
@@ -150,14 +184,14 @@ describe("routes/roles with injected repository", () => {
       method: "POST",
       url: "/admin/roles",
       headers: {
-        authorization: `Bearer ${createToken([PERMISSIONS.ROLE_CREATE])}`
+        authorization: `Bearer ${createToken([PERMISSIONS.ROLE_CREATE])}`,
       },
       payload: {
         name: "Supervisor",
         role_type: ADMIN_ROLE_TYPES.SYSTEM,
         hotel_id: null,
-        permission_ids: ["perm-1", "perm-2"]
-      }
+        permission_ids: ["perm-1", "perm-2"],
+      },
     });
 
     expect(response.statusCode).toBe(201);
@@ -165,15 +199,17 @@ describe("routes/roles with injected repository", () => {
       {
         name: "Supervisor",
         role_type: ADMIN_ROLE_TYPES.SYSTEM,
-        hotel_id: null
+        hotel_id: null,
       },
-      ["perm-1", "perm-2"]
+      ["perm-1", "perm-2"],
     );
   });
 
   it("retorna 400 quando role de sistema recebe permissao de hotel", async () => {
     const repository = createRolesRepositoryMock({
-      findPermissionsByIds: vi.fn(async () => [{ id: "perm-1", type: "HOTEL_PERMISSION" }])
+      findPermissionsByIds: vi.fn(async () => [
+        { id: "perm-1", type: "HOTEL_PERMISSION" },
+      ]),
     });
 
     const app = await createRolesTestApp(repository);
@@ -182,26 +218,27 @@ describe("routes/roles with injected repository", () => {
       method: "POST",
       url: "/admin/roles",
       headers: {
-        authorization: `Bearer ${createToken([PERMISSIONS.ROLE_CREATE])}`
+        authorization: `Bearer ${createToken([PERMISSIONS.ROLE_CREATE])}`,
       },
       payload: {
         name: "Supervisor",
         role_type: ADMIN_ROLE_TYPES.SYSTEM,
         hotel_id: null,
-        permission_ids: ["perm-1"]
-      }
+        permission_ids: ["perm-1"],
+      },
     });
 
     expect(response.statusCode).toBe(400);
     expect(response.json()).toEqual({
       code: "ADMIN_VALIDATION_ERROR",
-      message: "Role de sistema aceita apenas permissoes do tipo SYSTEM_PERMISSION."
+      message:
+        "Role de sistema aceita apenas permissoes do tipo SYSTEM_PERMISSION.",
     });
   });
 
   it("retorna 409 quando operacao atomica de role sinaliza conflito", async () => {
     const repository = createRolesRepositoryMock({
-      createRoleWithPermissions: vi.fn(async () => ({ result: "conflict" }))
+      createRoleWithPermissions: vi.fn(async () => ({ result: "conflict" })),
     });
 
     const app = await createRolesTestApp(repository);
@@ -210,23 +247,26 @@ describe("routes/roles with injected repository", () => {
       method: "POST",
       url: "/admin/roles",
       headers: {
-        authorization: `Bearer ${createToken([PERMISSIONS.ROLE_CREATE])}`
+        authorization: `Bearer ${createToken([PERMISSIONS.ROLE_CREATE])}`,
       },
       payload: {
         name: "Supervisor",
         role_type: ADMIN_ROLE_TYPES.SYSTEM,
         hotel_id: null,
-        permission_ids: []
-      }
+        permission_ids: [],
+      },
     });
 
     expect(response.statusCode).toBe(409);
-    expect(response.json()).toEqual({ code: "ADMIN_CONFLICT", message: "Nome de role ja existente." });
+    expect(response.json()).toEqual({
+      code: "ADMIN_CONFLICT",
+      message: "Nome de role ja existente.",
+    });
   });
 
   it("retorna 409 quando delete de role sinaliza conflito", async () => {
     const repository = createRolesRepositoryMock({
-      deleteRole: vi.fn(async () => "conflict")
+      deleteRole: vi.fn(async () => "conflict"),
     });
 
     const app = await createRolesTestApp(repository);
@@ -235,17 +275,20 @@ describe("routes/roles with injected repository", () => {
       method: "DELETE",
       url: "/admin/roles/role-1",
       headers: {
-        authorization: `Bearer ${createToken([PERMISSIONS.ROLE_DELETE])}`
-      }
+        authorization: `Bearer ${createToken([PERMISSIONS.ROLE_DELETE])}`,
+      },
     });
 
     expect(response.statusCode).toBe(409);
-    expect(response.json()).toEqual({ code: "ADMIN_CONFLICT", message: "Role nao pode ser excluida: possui dependencias ativas." });
+    expect(response.json()).toEqual({
+      code: "ADMIN_CONFLICT",
+      message: "Role nao pode ser excluida: possui dependencias ativas.",
+    });
   });
 
   it("retorna 200 quando delete de role e concluido", async () => {
     const repository = createRolesRepositoryMock({
-      deleteRole: vi.fn(async () => "ok")
+      deleteRole: vi.fn(async () => "ok"),
     });
 
     const app = await createRolesTestApp(repository);
@@ -254,8 +297,8 @@ describe("routes/roles with injected repository", () => {
       method: "DELETE",
       url: "/admin/roles/role-1",
       headers: {
-        authorization: `Bearer ${createToken([PERMISSIONS.ROLE_DELETE])}`
-      }
+        authorization: `Bearer ${createToken([PERMISSIONS.ROLE_DELETE])}`,
+      },
     });
 
     expect(response.statusCode).toBe(200);
@@ -264,7 +307,7 @@ describe("routes/roles with injected repository", () => {
 
   it("retorna 404 quando role nao existe no delete", async () => {
     const repository = createRolesRepositoryMock({
-      deleteRole: vi.fn(async () => "not-found")
+      deleteRole: vi.fn(async () => "not-found"),
     });
 
     const app = await createRolesTestApp(repository);
@@ -273,11 +316,14 @@ describe("routes/roles with injected repository", () => {
       method: "DELETE",
       url: "/admin/roles/role-inexistente",
       headers: {
-        authorization: `Bearer ${createToken([PERMISSIONS.ROLE_DELETE])}`
-      }
+        authorization: `Bearer ${createToken([PERMISSIONS.ROLE_DELETE])}`,
+      },
     });
 
     expect(response.statusCode).toBe(404);
-    expect(response.json()).toEqual({ code: "ADMIN_NOT_FOUND", message: "Role nao encontrada." });
+    expect(response.json()).toEqual({
+      code: "ADMIN_NOT_FOUND",
+      message: "Role nao encontrada.",
+    });
   });
 });

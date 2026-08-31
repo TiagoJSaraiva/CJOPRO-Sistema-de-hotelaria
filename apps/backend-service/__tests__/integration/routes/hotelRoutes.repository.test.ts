@@ -1,6 +1,10 @@
 import Fastify from "fastify";
 import { afterEach, describe, expect, it, vi } from "vitest";
-import { PERMISSIONS, type AdminHotel, type SessionPayload } from "@hotel/shared";
+import {
+  PERMISSIONS,
+  type AdminHotel,
+  type SessionPayload,
+} from "@hotel/shared";
 import { signToken } from "../../../src/auth/session";
 import { registerHotelRoutes } from "../../../src/routes/hotelRoutes";
 import type { HotelsRepository } from "../../../src/repositories/hotelsRepository";
@@ -17,9 +21,17 @@ function createToken(permissions: string[]): string {
     tenantId: null,
     roles: ["Admin"],
     permissions,
-    roleAssignments: [{ roleId: "role-system", roleName: "Admin", roleType: "SYSTEM_ROLE", hotelId: null, hotelName: null }],
+    roleAssignments: [
+      {
+        roleId: "role-system",
+        roleName: "Admin",
+        roleType: "SYSTEM_ROLE",
+        hotelId: null,
+        hotelName: null,
+      },
+    ],
     iat: nowInSeconds,
-    exp: nowInSeconds + 3600
+    exp: nowInSeconds + 3600,
   };
 
   return signToken(payload);
@@ -45,12 +57,18 @@ describe("routes/hotels with injected repository", () => {
       listHotels: vi.fn(async () => [
         {
           id: "hotel-1",
-          name: "Hotel Centro"
-        }
+          name: "Hotel Centro",
+        },
       ]),
-      createHotel: vi.fn(async () => ({ result: "ok", item: { id: "hotel-1", name: "Hotel Centro" } })),
-      updateHotel: vi.fn(async () => ({ result: "ok", item: { id: "hotel-1", name: "Hotel Centro" } })),
-      deleteHotel: vi.fn(async () => "ok")
+      createHotel: vi.fn(async () => ({
+        result: "ok",
+        item: { id: "hotel-1", name: "Hotel Centro" },
+      })),
+      updateHotel: vi.fn(async () => ({
+        result: "ok",
+        item: { id: "hotel-1", name: "Hotel Centro" },
+      })),
+      deleteHotel: vi.fn(async () => "ok"),
     };
 
     const app = await createHotelsTestApp(repository);
@@ -59,8 +77,8 @@ describe("routes/hotels with injected repository", () => {
       method: "GET",
       url: "/admin/hotels",
       headers: {
-        authorization: `Bearer ${createToken([PERMISSIONS.HOTEL_READ])}`
-      }
+        authorization: `Bearer ${createToken([PERMISSIONS.HOTEL_READ])}`,
+      },
     });
 
     expect(response.statusCode).toBe(200);
@@ -68,9 +86,9 @@ describe("routes/hotels with injected repository", () => {
       items: [
         {
           id: "hotel-1",
-          name: "Hotel Centro"
-        }
-      ]
+          name: "Hotel Centro",
+        },
+      ],
     });
     expect(repository.listHotels).toHaveBeenCalledTimes(1);
   });
@@ -94,13 +112,13 @@ describe("routes/hotels with injected repository", () => {
       zip_code: "01001-000",
       timezone: "America/Sao_Paulo",
       currency: "BRL",
-      is_active: true
+      is_active: true,
     };
     const repository: HotelsRepository = {
       listHotels: vi.fn(async () => []),
       createHotel: vi.fn(async () => ({ result: "ok", item: createdHotel })),
       updateHotel: vi.fn(async () => ({ result: "ok", item: createdHotel })),
-      deleteHotel: vi.fn(async () => "ok")
+      deleteHotel: vi.fn(async () => "ok"),
     };
     const app = await createHotelsTestApp(repository);
 
@@ -108,7 +126,7 @@ describe("routes/hotels with injected repository", () => {
       method: "POST",
       url: "/admin/hotels",
       headers: {
-        authorization: `Bearer ${createToken([PERMISSIONS.HOTEL_CREATE])}`
+        authorization: `Bearer ${createToken([PERMISSIONS.HOTEL_CREATE])}`,
       },
       payload: {
         name: "Hotel Centro",
@@ -123,8 +141,8 @@ describe("routes/hotels with injected repository", () => {
         city: "Sao Paulo",
         state: "SP",
         country: "BR",
-        zip_code: "01001-000"
-      }
+        zip_code: "01001-000",
+      },
     });
 
     expect(response.statusCode).toBe(201);
@@ -133,8 +151,8 @@ describe("routes/hotels with injected repository", () => {
         tax_id: "04252011000110",
         country: "BR",
         timezone: "America/Sao_Paulo",
-        currency: "BRL"
-      })
+        currency: "BRL",
+      }),
     );
     expect(response.json().item.tax_id).toBe("04252011000110");
   });
@@ -143,8 +161,11 @@ describe("routes/hotels with injected repository", () => {
     const repository: HotelsRepository = {
       listHotels: vi.fn(async () => []),
       createHotel: vi.fn(async () => ({ result: "conflict" })),
-      updateHotel: vi.fn(async () => ({ result: "ok", item: { id: "hotel-1" } })),
-      deleteHotel: vi.fn(async () => "ok")
+      updateHotel: vi.fn(async () => ({
+        result: "ok",
+        item: { id: "hotel-1" },
+      })),
+      deleteHotel: vi.fn(async () => "ok"),
     };
 
     const app = await createHotelsTestApp(repository);
@@ -153,7 +174,7 @@ describe("routes/hotels with injected repository", () => {
       method: "POST",
       url: "/admin/hotels",
       headers: {
-        authorization: `Bearer ${createToken([PERMISSIONS.HOTEL_CREATE])}`
+        authorization: `Bearer ${createToken([PERMISSIONS.HOTEL_CREATE])}`,
       },
       payload: {
         name: "Hotel Centro",
@@ -171,21 +192,30 @@ describe("routes/hotels with injected repository", () => {
         country: "US",
         zip_code: "10001",
         timezone: "America/New_York",
-        currency: "USD"
-      }
+        currency: "USD",
+      },
     });
 
     expect(response.statusCode).toBe(409);
-    expect(response.json()).toEqual({ code: "ADMIN_CONFLICT", message: "Slug ja utilizado por outro hotel." });
+    expect(response.json()).toEqual({
+      code: "ADMIN_CONFLICT",
+      message: "Slug ja utilizado por outro hotel.",
+    });
     expect(repository.createHotel).toHaveBeenCalledTimes(1);
   });
 
   it("retorna 409 quando delete de hotel sinaliza conflito", async () => {
     const repository: HotelsRepository = {
       listHotels: vi.fn(async () => []),
-      createHotel: vi.fn(async () => ({ result: "ok", item: { id: "hotel-1" } })),
-      updateHotel: vi.fn(async () => ({ result: "ok", item: { id: "hotel-1" } })),
-      deleteHotel: vi.fn(async () => "conflict")
+      createHotel: vi.fn(async () => ({
+        result: "ok",
+        item: { id: "hotel-1" },
+      })),
+      updateHotel: vi.fn(async () => ({
+        result: "ok",
+        item: { id: "hotel-1" },
+      })),
+      deleteHotel: vi.fn(async () => "conflict"),
     };
 
     const app = await createHotelsTestApp(repository);
@@ -194,11 +224,14 @@ describe("routes/hotels with injected repository", () => {
       method: "DELETE",
       url: "/admin/hotels/hotel-1",
       headers: {
-        authorization: `Bearer ${createToken([PERMISSIONS.HOTEL_DELETE])}`
-      }
+        authorization: `Bearer ${createToken([PERMISSIONS.HOTEL_DELETE])}`,
+      },
     });
 
     expect(response.statusCode).toBe(409);
-    expect(response.json()).toEqual({ code: "ADMIN_CONFLICT", message: "Hotel nao pode ser excluido: possui dependencias ativas." });
+    expect(response.json()).toEqual({
+      code: "ADMIN_CONFLICT",
+      message: "Hotel nao pode ser excluido: possui dependencias ativas.",
+    });
   });
 });

@@ -6,7 +6,10 @@ import { FormField } from "../../_components/FormField";
 import { getUserFromSession } from "../../../../lib/auth";
 import { listSeasons } from "../../../../lib/adminApi";
 import { createSeasonRoomRateAction } from "../actions";
-import { getSeasonRoomRatesAccess, getSeasonRoomRatesDefaultRoute } from "../access";
+import {
+  getSeasonRoomRatesAccess,
+  getSeasonRoomRatesDefaultRoute,
+} from "../access";
 import { SeasonRoomRateStatusMessage } from "../_components/SeasonRoomRateStatusMessage";
 import { SeasonRoomSelect } from "../_components/SeasonRoomSelect";
 
@@ -17,7 +20,9 @@ type SeasonRoomRatesCreatePageProps = {
   }>;
 };
 
-export default async function SeasonRoomRatesCreatePage({ searchParams }: SeasonRoomRatesCreatePageProps) {
+export default async function SeasonRoomRatesCreatePage({
+  searchParams,
+}: SeasonRoomRatesCreatePageProps) {
   const resolvedSearchParams = await searchParams;
   const user = await getUserFromSession();
   const access = getSeasonRoomRatesAccess(user);
@@ -29,7 +34,12 @@ export default async function SeasonRoomRatesCreatePage({ searchParams }: Season
       redirect(fallback);
     }
 
-    return <DashboardAccessDeniedCard title="Tarifas por Temporada" message="Sem permissão para criar tarifa de temporada." />;
+    return (
+      <DashboardAccessDeniedCard
+        title="Tarifas por Temporada"
+        message="Sem permissão para criar tarifa de temporada."
+      />
+    );
   }
 
   const seasons = await listSeasons();
@@ -43,28 +53,56 @@ export default async function SeasonRoomRatesCreatePage({ searchParams }: Season
           key: "create",
           label: "Criar tarifa",
           href: "/dashboard/season-room-rates/create",
-          isVisible: access.canCreate
+          isVisible: access.canCreate,
         },
         {
           key: "view",
           label: "Ver tarifas",
           href: "/dashboard/season-room-rates/view",
-          isVisible: access.canRead
-        }
+          isVisible: access.canRead,
+        },
       ]}
-      statusContent={<SeasonRoomRateStatusMessage status={resolvedSearchParams?.status} />}
+      statusContent={
+        <SeasonRoomRateStatusMessage status={resolvedSearchParams?.status} />
+      }
     >
-      <DashboardCreateFormCard title="Criar tarifa" submitLabel="Criar tarifa" action={createSeasonRoomRateAction} resetKey={resolvedSearchParams?.r}>
+      <DashboardCreateFormCard
+        title="Criar tarifa"
+        submitLabel="Criar tarifa"
+        action={createSeasonRoomRateAction}
+        resetKey={resolvedSearchParams?.r}
+      >
         <FormField label="Temporada" htmlFor="create-season-rate-season-id">
-          <SeasonRoomSelect id="create-season-rate-season-id" name="season_id" seasons={seasons} required />
+          <SeasonRoomSelect
+            id="create-season-rate-season-id"
+            name="season_id"
+            seasons={seasons}
+            required
+          />
         </FormField>
 
-        <FormField label="Tipo de quarto" htmlFor="create-season-rate-room-type">
-          <input id="create-season-rate-room-type" name="room_type" required className="pms-field-input" />
+        <FormField
+          label="Tipo de quarto"
+          htmlFor="create-season-rate-room-type"
+        >
+          <input
+            id="create-season-rate-room-type"
+            name="room_type"
+            required
+            className="pms-field-input"
+          />
         </FormField>
 
         <FormField label="Taxa diária" htmlFor="create-season-rate-daily-rate">
-          <input id="create-season-rate-daily-rate" name="daily_rate" type="number" min={0} step="0.01" required className="pms-field-input" />
+          <input
+            id="create-season-rate-daily-rate"
+            name="daily_rate"
+            type="number"
+            min={0}
+            step="0.01"
+            required
+            className="pms-field-input"
+          />
         </FormField>
       </DashboardCreateFormCard>
     </DashboardEntityPageShell>

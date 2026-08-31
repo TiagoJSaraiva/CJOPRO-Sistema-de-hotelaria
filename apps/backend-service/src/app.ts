@@ -5,9 +5,12 @@ import swaggerUi from "@fastify/swagger-ui";
 import {
   ADMIN_ERROR_CODE,
   AUTH_ERROR_CODE,
-  AUTH_ERROR_MESSAGE
+  AUTH_ERROR_MESSAGE,
 } from "@hotel/shared";
-import { API_COMPONENT_SCHEMAS, API_ROUTE_CONTRACTS } from "@hotel/shared/api-contract";
+import {
+  API_COMPONENT_SCHEMAS,
+  API_ROUTE_CONTRACTS,
+} from "@hotel/shared/api-contract";
 import { registerAuthRoutes } from "./routes/authRoutes";
 import { registerHotelRoutes } from "./routes/hotelRoutes";
 import { registerPermissionRoutes } from "./routes/permissionRoutes";
@@ -23,11 +26,12 @@ import { registerFinancialTransactionRoutes } from "./routes/financialTransactio
 import { registerStayOperationsRoutes } from "./routes/stayOperationsRoutes";
 import { registerMaintenanceRoutes } from "./routes/maintenanceRoutes";
 
-const DEFAULT_ALLOWED_ORIGINS = [ // LOCALHOSTS PARA DESENVOLVIMENTO. DEPOIS COLOCAR AQUI AS URLS REAIS DOS SERVIÇOS HOSPEDADOS
+const DEFAULT_ALLOWED_ORIGINS = [
+  // LOCALHOSTS PARA DESENVOLVIMENTO. DEPOIS COLOCAR AQUI AS URLS REAIS DOS SERVIÇOS HOSPEDADOS
   "http://localhost:3000",
   "http://localhost:3001",
   "http://localhost:3333",
-  "http://localhost:3334"
+  "http://localhost:3334",
 ];
 
 function normalizeOrigin(origin: string): string {
@@ -53,7 +57,7 @@ export type CreateAppOptions = {
 export function createApp(options: CreateAppOptions = {}): FastifyInstance {
   const app = Fastify({
     logger: true,
-    ajv: { customOptions: { removeAdditional: false } }
+    ajv: { customOptions: { removeAdditional: false } },
   });
   const allowedOrigins = new Set(getAllowedOrigins());
   const documentation = options.documentation ?? "disabled";
@@ -63,7 +67,9 @@ export function createApp(options: CreateAppOptions = {}): FastifyInstance {
   }
 
   app.addHook("onRoute", (routeOptions) => {
-    const methods = Array.isArray(routeOptions.method) ? routeOptions.method : [routeOptions.method];
+    const methods = Array.isArray(routeOptions.method)
+      ? routeOptions.method
+      : [routeOptions.method];
     const method = methods.find((value) => value !== "HEAD");
     if (!method) return;
 
@@ -80,21 +86,25 @@ export function createApp(options: CreateAppOptions = {}): FastifyInstance {
         info: {
           title: "Hotelaria API",
           description: "Contrato HTTP do PMS e dos serviços administrativos.",
-          version: "0.1.0"
+          version: "0.1.0",
         },
         components: {
           securitySchemes: {
-            bearerAuth: { type: "http", scheme: "bearer", bearerFormat: "session-token" }
-          }
-        }
-      }
+            bearerAuth: {
+              type: "http",
+              scheme: "bearer",
+              bearerFormat: "session-token",
+            },
+          },
+        },
+      },
     });
 
     if (documentation === "ui") {
       app.register(swaggerUi, {
         routePrefix: "/docs",
         uiConfig: { docExpansion: "list", deepLinking: true },
-        staticCSP: true
+        staticCSP: true,
       });
     }
   }
@@ -107,7 +117,7 @@ export function createApp(options: CreateAppOptions = {}): FastifyInstance {
       }
 
       callback(null, allowedOrigins.has(normalizeOrigin(origin)));
-    }
+    },
   });
 
   app.setErrorHandler((error, request, reply) => {
@@ -115,13 +125,13 @@ export function createApp(options: CreateAppOptions = {}): FastifyInstance {
       if (request.url.startsWith("/auth/")) {
         return reply.status(400).send({
           code: AUTH_ERROR_CODE.MISSING_FIELDS,
-          message: AUTH_ERROR_MESSAGE[AUTH_ERROR_CODE.MISSING_FIELDS]
+          message: AUTH_ERROR_MESSAGE[AUTH_ERROR_CODE.MISSING_FIELDS],
         });
       }
 
       return reply.status(400).send({
         code: ADMIN_ERROR_CODE.VALIDATION,
-        message: "Dados inválidos para a requisição."
+        message: "Dados inválidos para a requisição.",
       });
     }
 
@@ -131,7 +141,7 @@ export function createApp(options: CreateAppOptions = {}): FastifyInstance {
   app.register(async (routes) => {
     routes.get("/health", async () => ({
       status: "ok",
-      service: "backend-service"
+      service: "backend-service",
     }));
 
     registerAuthRoutes(routes);

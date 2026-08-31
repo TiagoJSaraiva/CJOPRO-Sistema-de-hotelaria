@@ -1,10 +1,10 @@
 {
-	"version": "2.0.0",
-	"tasks": [
-		{
-			"label": "Test CNPJ Validation",
-			"type": "shell",
-			"command": "cd c:\\Programacao\\IFSP PROJETO && pnpm test -- packages/shared/__tests__/unit/validation.test.ts -t 'CNPJ'"
-		}
-	]
+  "version": "2.0.0",
+  "tasks": [
+    {
+      "label": "Test CNPJ Validation",
+      "type": "shell",
+      "command": "cd c:\\Programacao\\IFSP PROJETO && pnpm test -- packages/shared/__tests__/unit/validation.test.ts -t 'CNPJ'"
+    }
+  ]
 }

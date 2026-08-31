@@ -13,5 +13,5 @@ export type {
   Json,
   Tables,
   TablesInsert,
-  TablesUpdate
+  TablesUpdate,
 } from "./database.types";

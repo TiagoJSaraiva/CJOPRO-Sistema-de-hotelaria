@@ -1,29 +1,48 @@
 import type { Json, TablesUpdate } from "@hotel/shared";
 import type { QueryData } from "@supabase/supabase-js";
 import { createServerClient } from "../common/supabaseServer";
-import { isSupabaseConflictError, isSupabaseForeignKeyError, isSupabaseNotFoundError } from "./supabaseError";
+import {
+  isSupabaseConflictError,
+  isSupabaseForeignKeyError,
+  isSupabaseNotFoundError,
+} from "./supabaseError";
 
 export type RoleWriteResult = "ok" | "conflict" | "not-found";
 type RoleUpdate = TablesUpdate<"roles">;
 
-const selectRolesWithRelations = (supabase: ReturnType<typeof createServerClient>) =>
+const selectRolesWithRelations = (
+  supabase: ReturnType<typeof createServerClient>,
+) =>
   supabase
     .from("roles")
-    .select("id,name,role_type,hotel_id,hotels(name),role_permissions(permission_id,permissions(id,name,type))");
+    .select(
+      "id,name,role_type,hotel_id,hotels(name),role_permissions(permission_id,permissions(id,name,type))",
+    );
 
-type InferredRoleWithRelationsRow = QueryData<ReturnType<typeof selectRolesWithRelations>>[number];
+type InferredRoleWithRelationsRow = QueryData<
+  ReturnType<typeof selectRolesWithRelations>
+>[number];
 
-export type RoleWithRelationsRow = Omit<InferredRoleWithRelationsRow, "role_type" | "role_permissions"> & {
+export type RoleWithRelationsRow = Omit<
+  InferredRoleWithRelationsRow,
+  "role_type" | "role_permissions"
+> & {
   role_type: "SYSTEM_ROLE" | "HOTEL_ROLE";
-  role_permissions?:
-    | Array<{
-        permission_id?: string | null;
-        permissions?:
-          | { id?: string | null; name?: string | null; type?: "SYSTEM_PERMISSION" | "HOTEL_PERMISSION" | null }
-          | Array<{ id?: string | null; name?: string | null; type?: "SYSTEM_PERMISSION" | "HOTEL_PERMISSION" | null }>
-          | null;
-      }>
-    | null;
+  role_permissions?: Array<{
+    permission_id?: string | null;
+    permissions?:
+      | {
+          id?: string | null;
+          name?: string | null;
+          type?: "SYSTEM_PERMISSION" | "HOTEL_PERMISSION" | null;
+        }
+      | Array<{
+          id?: string | null;
+          name?: string | null;
+          type?: "SYSTEM_PERMISSION" | "HOTEL_PERMISSION" | null;
+        }>
+      | null;
+  }> | null;
 };
 
 type RpcRoleWriteResultRow = {
@@ -31,7 +50,9 @@ type RpcRoleWriteResultRow = {
   id?: string | null;
 };
 
-function normalizeRpcRoleWriteResult(data: unknown): { result: RoleWriteResult; id?: string } | null {
+function normalizeRpcRoleWriteResult(
+  data: unknown,
+): { result: RoleWriteResult; id?: string } | null {
   const row = Array.isArray(data) ? data[0] : data;
 
   if (!row || typeof row !== "object") {
@@ -48,7 +69,7 @@ function normalizeRpcRoleWriteResult(data: unknown): { result: RoleWriteResult; 
 
   return {
     result,
-    id: typeof id === "string" ? id : undefined
+    id: typeof id === "string" ? id : undefined,
   };
 }
 
@@ -57,10 +78,18 @@ function isMissingRpcFunctionError(error: unknown): boolean {
     return false;
   }
 
-  const code = "code" in error ? String((error as { code?: unknown }).code || "") : "";
-  const message = "message" in error ? String((error as { message?: unknown }).message || "").toLowerCase() : "";
+  const code =
+    "code" in error ? String((error as { code?: unknown }).code || "") : "";
+  const message =
+    "message" in error
+      ? String((error as { message?: unknown }).message || "").toLowerCase()
+      : "";
 
-  return code === "PGRST202" || code === "42883" || message.includes("function") && message.includes("does not exist");
+  return (
+    code === "PGRST202" ||
+    code === "42883" ||
+    (message.includes("function") && message.includes("does not exist"))
+  );
 }
 
 function isRolePermissionsDependencyError(error: unknown): boolean {
@@ -68,27 +97,64 @@ function isRolePermissionsDependencyError(error: unknown): boolean {
     return false;
   }
 
-  const message = "message" in error ? String((error as { message?: unknown }).message || "").toLowerCase() : "";
-  const details = "details" in error ? String((error as { details?: unknown }).details || "").toLowerCase() : "";
-  const hint = "hint" in error ? String((error as { hint?: unknown }).hint || "").toLowerCase() : "";
+  const message =
+    "message" in error
+      ? String((error as { message?: unknown }).message || "").toLowerCase()
+      : "";
+  const details =
+    "details" in error
+      ? String((error as { details?: unknown }).details || "").toLowerCase()
+      : "";
+  const hint =
+    "hint" in error
+      ? String((error as { hint?: unknown }).hint || "").toLowerCase()
+      : "";
 
-  return message.includes("role_permissions") || details.includes("role_permissions") || hint.includes("role_permissions");
+  return (
+    message.includes("role_permissions") ||
+    details.includes("role_permissions") ||
+    hint.includes("role_permissions")
+  );
 }
 
 export interface RolesRepository {
   listReferenceHotels(): Promise<Array<{ id: string; name: string }>>;
-  listReferencePermissions(): Promise<Array<{ id: string; name: string; type: "SYSTEM_PERMISSION" | "HOTEL_PERMISSION" }>>;
+  listReferencePermissions(): Promise<
+    Array<{
+      id: string;
+      name: string;
+      type: "SYSTEM_PERMISSION" | "HOTEL_PERMISSION";
+    }>
+  >;
   listRolesWithRelations(): Promise<RoleWithRelationsRow[]>;
   hotelExists(hotelId: string): Promise<boolean>;
-  findPermissionsByIds(permissionIds: string[]): Promise<Array<{ id: string; type: "SYSTEM_PERMISSION" | "HOTEL_PERMISSION" }>>;
+  findPermissionsByIds(
+    permissionIds: string[],
+  ): Promise<
+    Array<{ id: string; type: "SYSTEM_PERMISSION" | "HOTEL_PERMISSION" }>
+  >;
   createRoleWithPermissions(
-    payload: { name: string; role_type: "SYSTEM_ROLE" | "HOTEL_ROLE"; hotel_id: string | null },
-    permissionIds: string[]
+    payload: {
+      name: string;
+      role_type: "SYSTEM_ROLE" | "HOTEL_ROLE";
+      hotel_id: string | null;
+    },
+    permissionIds: string[],
   ): Promise<{ result: RoleWriteResult; id?: string }>;
-  createRole(payload: { name: string; role_type: "SYSTEM_ROLE" | "HOTEL_ROLE"; hotel_id: string | null }): Promise<{ result: RoleWriteResult; id?: string }>;
-  assignRolePermissions(items: Array<{ role_id: string; permission_id: string }>): Promise<void>;
+  createRole(payload: {
+    name: string;
+    role_type: "SYSTEM_ROLE" | "HOTEL_ROLE";
+    hotel_id: string | null;
+  }): Promise<{ result: RoleWriteResult; id?: string }>;
+  assignRolePermissions(
+    items: Array<{ role_id: string; permission_id: string }>,
+  ): Promise<void>;
   getRoleWithRelationsById(id: string): Promise<RoleWithRelationsRow | null>;
-  updateRoleWithPermissions(id: string, payload: RoleUpdate, permissionIds?: string[]): Promise<RoleWriteResult>;
+  updateRoleWithPermissions(
+    id: string,
+    payload: RoleUpdate,
+    permissionIds?: string[],
+  ): Promise<RoleWriteResult>;
   updateRole(id: string, payload: RoleUpdate): Promise<RoleWriteResult>;
   roleExists(id: string): Promise<boolean>;
   clearRolePermissions(roleId: string): Promise<void>;
@@ -98,7 +164,10 @@ export interface RolesRepository {
 class SupabaseRolesRepository implements RolesRepository {
   private async getRolePermissionIds(roleId: string): Promise<string[]> {
     const supabase = createServerClient();
-    const { data, error } = await supabase.from("role_permissions").select("permission_id").eq("role_id", roleId);
+    const { data, error } = await supabase
+      .from("role_permissions")
+      .select("permission_id")
+      .eq("role_id", roleId);
 
     if (error) {
       throw error;
@@ -107,12 +176,19 @@ class SupabaseRolesRepository implements RolesRepository {
     const rows = (data || []) as Array<{ permission_id: string | null }>;
     return rows
       .map((row) => row.permission_id)
-      .filter((permissionId): permissionId is string => typeof permissionId === "string" && permissionId.length > 0);
+      .filter(
+        (permissionId): permissionId is string =>
+          typeof permissionId === "string" && permissionId.length > 0,
+      );
   }
 
   private async createRoleWithPermissionsFallback(
-    payload: { name: string; role_type: "SYSTEM_ROLE" | "HOTEL_ROLE"; hotel_id: string | null },
-    permissionIds: string[]
+    payload: {
+      name: string;
+      role_type: "SYSTEM_ROLE" | "HOTEL_ROLE";
+      hotel_id: string | null;
+    },
+    permissionIds: string[],
   ): Promise<{ result: RoleWriteResult; id?: string }> {
     const createResult = await this.createRole(payload);
 
@@ -126,7 +202,10 @@ class SupabaseRolesRepository implements RolesRepository {
 
     try {
       await this.assignRolePermissions(
-        permissionIds.map((permissionId) => ({ role_id: createResult.id!, permission_id: permissionId }))
+        permissionIds.map((permissionId) => ({
+          role_id: createResult.id!,
+          permission_id: permissionId,
+        })),
       );
       return createResult;
     } catch (error) {
@@ -138,7 +217,7 @@ class SupabaseRolesRepository implements RolesRepository {
   private async updateRoleWithPermissionsFallback(
     id: string,
     payload: RoleUpdate,
-    permissionIds?: string[]
+    permissionIds?: string[],
   ): Promise<RoleWriteResult> {
     if (Object.keys(payload).length) {
       const updateResult = await this.updateRole(id, payload);
@@ -164,7 +243,10 @@ class SupabaseRolesRepository implements RolesRepository {
     try {
       if (permissionIds.length) {
         await this.assignRolePermissions(
-          permissionIds.map((permissionId) => ({ role_id: id, permission_id: permissionId }))
+          permissionIds.map((permissionId) => ({
+            role_id: id,
+            permission_id: permissionId,
+          })),
         );
       }
     } catch (error) {
@@ -172,7 +254,10 @@ class SupabaseRolesRepository implements RolesRepository {
 
       if (previousPermissionIds.length) {
         await this.assignRolePermissions(
-          previousPermissionIds.map((permissionId) => ({ role_id: id, permission_id: permissionId }))
+          previousPermissionIds.map((permissionId) => ({
+            role_id: id,
+            permission_id: permissionId,
+          })),
         ).catch(() => undefined);
       }
 
@@ -184,7 +269,10 @@ class SupabaseRolesRepository implements RolesRepository {
 
   async listReferenceHotels(): Promise<Array<{ id: string; name: string }>> {
     const supabase = createServerClient();
-    const { data, error } = await supabase.from("hotels").select("id,name").order("name", { ascending: true });
+    const { data, error } = await supabase
+      .from("hotels")
+      .select("id,name")
+      .order("name", { ascending: true });
 
     if (error) {
       throw error;
@@ -193,20 +281,36 @@ class SupabaseRolesRepository implements RolesRepository {
     return (data || []) as Array<{ id: string; name: string }>;
   }
 
-  async listReferencePermissions(): Promise<Array<{ id: string; name: string; type: "SYSTEM_PERMISSION" | "HOTEL_PERMISSION" }>> {
+  async listReferencePermissions(): Promise<
+    Array<{
+      id: string;
+      name: string;
+      type: "SYSTEM_PERMISSION" | "HOTEL_PERMISSION";
+    }>
+  > {
     const supabase = createServerClient();
-    const { data, error } = await supabase.from("permissions").select("id,name,type").order("name", { ascending: true });
+    const { data, error } = await supabase
+      .from("permissions")
+      .select("id,name,type")
+      .order("name", { ascending: true });
 
     if (error) {
       throw error;
     }
 
-    return (data || []) as Array<{ id: string; name: string; type: "SYSTEM_PERMISSION" | "HOTEL_PERMISSION" }>;
+    return (data || []) as Array<{
+      id: string;
+      name: string;
+      type: "SYSTEM_PERMISSION" | "HOTEL_PERMISSION";
+    }>;
   }
 
   async listRolesWithRelations(): Promise<RoleWithRelationsRow[]> {
     const supabase = createServerClient();
-    const { data, error } = await selectRolesWithRelations(supabase).order("name", { ascending: true });
+    const { data, error } = await selectRolesWithRelations(supabase).order(
+      "name",
+      { ascending: true },
+    );
 
     if (error) {
       throw error;
@@ -217,7 +321,11 @@ class SupabaseRolesRepository implements RolesRepository {
 
   async hotelExists(hotelId: string): Promise<boolean> {
     const supabase = createServerClient();
-    const { data, error } = await supabase.from("hotels").select("id").eq("id", hotelId).single();
+    const { data, error } = await supabase
+      .from("hotels")
+      .select("id")
+      .eq("id", hotelId)
+      .single();
 
     if (error) {
       if (isSupabaseNotFoundError(error)) {
@@ -230,27 +338,41 @@ class SupabaseRolesRepository implements RolesRepository {
     return !!data;
   }
 
-  async findPermissionsByIds(permissionIds: string[]): Promise<Array<{ id: string; type: "SYSTEM_PERMISSION" | "HOTEL_PERMISSION" }>> {
+  async findPermissionsByIds(
+    permissionIds: string[],
+  ): Promise<
+    Array<{ id: string; type: "SYSTEM_PERMISSION" | "HOTEL_PERMISSION" }>
+  > {
     const supabase = createServerClient();
-    const { data, error } = await supabase.from("permissions").select("id,type").in("id", permissionIds);
+    const { data, error } = await supabase
+      .from("permissions")
+      .select("id,type")
+      .in("id", permissionIds);
 
     if (error) {
       throw error;
     }
 
-    return (data || []) as Array<{ id: string; type: "SYSTEM_PERMISSION" | "HOTEL_PERMISSION" }>;
+    return (data || []) as Array<{
+      id: string;
+      type: "SYSTEM_PERMISSION" | "HOTEL_PERMISSION";
+    }>;
   }
 
   async createRoleWithPermissions(
-    payload: { name: string; role_type: "SYSTEM_ROLE" | "HOTEL_ROLE"; hotel_id: string | null },
-    permissionIds: string[]
+    payload: {
+      name: string;
+      role_type: "SYSTEM_ROLE" | "HOTEL_ROLE";
+      hotel_id: string | null;
+    },
+    permissionIds: string[],
   ): Promise<{ result: RoleWriteResult; id?: string }> {
     const supabase = createServerClient();
     const { data, error } = await supabase.rpc("create_role_with_permissions", {
       p_name: payload.name,
       p_role_type: payload.role_type,
       p_hotel_id: payload.hotel_id as string,
-      p_permission_ids: permissionIds
+      p_permission_ids: permissionIds,
     });
 
     if (!error) {
@@ -274,9 +396,17 @@ class SupabaseRolesRepository implements RolesRepository {
     return this.createRoleWithPermissionsFallback(payload, permissionIds);
   }
 
-  async createRole(payload: { name: string; role_type: "SYSTEM_ROLE" | "HOTEL_ROLE"; hotel_id: string | null }): Promise<{ result: RoleWriteResult; id?: string }> {
+  async createRole(payload: {
+    name: string;
+    role_type: "SYSTEM_ROLE" | "HOTEL_ROLE";
+    hotel_id: string | null;
+  }): Promise<{ result: RoleWriteResult; id?: string }> {
     const supabase = createServerClient();
-    const { data, error } = await supabase.from("roles").insert(payload).select("id").single();
+    const { data, error } = await supabase
+      .from("roles")
+      .insert(payload)
+      .select("id")
+      .single();
 
     if (error) {
       if (isSupabaseConflictError(error)) {
@@ -289,7 +419,9 @@ class SupabaseRolesRepository implements RolesRepository {
     return { result: "ok", id: data.id };
   }
 
-  async assignRolePermissions(items: Array<{ role_id: string; permission_id: string }>): Promise<void> {
+  async assignRolePermissions(
+    items: Array<{ role_id: string; permission_id: string }>,
+  ): Promise<void> {
     const supabase = createServerClient();
     const { error } = await supabase.from("role_permissions").insert(items);
 
@@ -298,11 +430,15 @@ class SupabaseRolesRepository implements RolesRepository {
     }
   }
 
-  async getRoleWithRelationsById(id: string): Promise<RoleWithRelationsRow | null> {
+  async getRoleWithRelationsById(
+    id: string,
+  ): Promise<RoleWithRelationsRow | null> {
     const supabase = createServerClient();
     const { data, error } = await supabase
       .from("roles")
-      .select("id,name,role_type,hotel_id,hotels(name),role_permissions(permission_id,permissions(id,name,type))")
+      .select(
+        "id,name,role_type,hotel_id,hotels(name),role_permissions(permission_id,permissions(id,name,type))",
+      )
       .eq("id", id)
       .single();
 
@@ -320,14 +456,14 @@ class SupabaseRolesRepository implements RolesRepository {
   async updateRoleWithPermissions(
     id: string,
     payload: RoleUpdate,
-    permissionIds?: string[]
+    permissionIds?: string[],
   ): Promise<RoleWriteResult> {
     const supabase = createServerClient();
     const { data, error } = await supabase.rpc("update_role_with_permissions", {
       p_id: id,
       p_payload: payload as Json,
       p_permission_ids: permissionIds ?? [],
-      p_should_replace_permissions: permissionIds !== undefined
+      p_should_replace_permissions: permissionIds !== undefined,
     });
 
     if (!error) {
@@ -376,7 +512,11 @@ class SupabaseRolesRepository implements RolesRepository {
 
   async roleExists(id: string): Promise<boolean> {
     const supabase = createServerClient();
-    const { data, error } = await supabase.from("roles").select("id").eq("id", id).single();
+    const { data, error } = await supabase
+      .from("roles")
+      .select("id")
+      .eq("id", id)
+      .single();
 
     if (error) {
       if (isSupabaseNotFoundError(error)) {
@@ -391,7 +531,10 @@ class SupabaseRolesRepository implements RolesRepository {
 
   async clearRolePermissions(roleId: string): Promise<void> {
     const supabase = createServerClient();
-    const { error } = await supabase.from("role_permissions").delete().eq("role_id", roleId);
+    const { error } = await supabase
+      .from("role_permissions")
+      .delete()
+      .eq("role_id", roleId);
 
     if (error) {
       throw error;
@@ -400,7 +543,11 @@ class SupabaseRolesRepository implements RolesRepository {
 
   async deleteRole(id: string): Promise<RoleWriteResult> {
     const supabase = createServerClient();
-    const { data, error } = await supabase.from("roles").delete().eq("id", id).select("id");
+    const { data, error } = await supabase
+      .from("roles")
+      .delete()
+      .eq("id", id)
+      .select("id");
 
     if (!error) {
       return data && data.length ? "ok" : "not-found";
@@ -416,10 +563,17 @@ class SupabaseRolesRepository implements RolesRepository {
 
     await this.clearRolePermissions(id);
 
-    const retryResult = await supabase.from("roles").delete().eq("id", id).select("id");
+    const retryResult = await supabase
+      .from("roles")
+      .delete()
+      .eq("id", id)
+      .select("id");
 
     if (retryResult.error) {
-      if (isSupabaseForeignKeyError(retryResult.error) || isSupabaseConflictError(retryResult.error)) {
+      if (
+        isSupabaseForeignKeyError(retryResult.error) ||
+        isSupabaseConflictError(retryResult.error)
+      ) {
         return "conflict";
       }
 

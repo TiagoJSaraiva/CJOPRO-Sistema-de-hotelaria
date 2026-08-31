@@ -1,6 +1,10 @@
 import { createHmac, timingSafeEqual } from "node:crypto";
 import argon2 from "argon2";
-import { AUTH_ERROR_MESSAGE, type AuthErrorResponse, type SessionPayload } from "@hotel/shared";
+import {
+  AUTH_ERROR_MESSAGE,
+  type AuthErrorResponse,
+  type SessionPayload,
+} from "@hotel/shared";
 
 export type { SessionPayload };
 
@@ -11,11 +15,15 @@ export function getRequiredSessionSecret(): string {
   const sessionSecret = process.env.AUTH_SESSION_SECRET;
 
   if (!sessionSecret) {
-    throw new Error("Missing required environment variable: AUTH_SESSION_SECRET");
+    throw new Error(
+      "Missing required environment variable: AUTH_SESSION_SECRET",
+    );
   }
 
   if (sessionSecret.length < MIN_SESSION_SECRET_LENGTH) {
-    throw new Error(`AUTH_SESSION_SECRET must be at least ${MIN_SESSION_SECRET_LENGTH} characters long.`);
+    throw new Error(
+      `AUTH_SESSION_SECRET must be at least ${MIN_SESSION_SECRET_LENGTH} characters long.`,
+    );
   }
 
   return sessionSecret;
@@ -31,7 +39,9 @@ function base64UrlDecode(value: string): string {
 
 export function signToken(payload: SessionPayload): string {
   const encodedPayload = base64UrlEncode(JSON.stringify(payload));
-  const signature = createHmac("sha256", getRequiredSessionSecret()).update(encodedPayload).digest("base64url");
+  const signature = createHmac("sha256", getRequiredSessionSecret())
+    .update(encodedPayload)
+    .digest("base64url");
   return `${encodedPayload}.${signature}`;
 }
 
@@ -42,7 +52,9 @@ export function verifyToken(token: string): SessionPayload | null {
     return null;
   }
 
-  const expectedSignature = createHmac("sha256", getRequiredSessionSecret()).update(encodedPayload).digest("base64url");
+  const expectedSignature = createHmac("sha256", getRequiredSessionSecret())
+    .update(encodedPayload)
+    .digest("base64url");
 
   const receivedBuffer = Buffer.from(signature);
   const expectedBuffer = Buffer.from(expectedSignature);
@@ -56,7 +68,9 @@ export function verifyToken(token: string): SessionPayload | null {
   }
 
   try {
-    const parsed = JSON.parse(base64UrlDecode(encodedPayload)) as SessionPayload;
+    const parsed = JSON.parse(
+      base64UrlDecode(encodedPayload),
+    ) as SessionPayload;
     const nowInSeconds = Math.floor(Date.now() / 1000);
 
     if (!parsed.exp || parsed.exp <= nowInSeconds) {
@@ -69,16 +83,22 @@ export function verifyToken(token: string): SessionPayload | null {
   }
 }
 
-export function getAuthError(code: AuthErrorResponse["code"]): AuthErrorResponse {
+export function getAuthError(
+  code: AuthErrorResponse["code"],
+): AuthErrorResponse {
   return {
     code,
-    message: AUTH_ERROR_MESSAGE[code]
+    message: AUTH_ERROR_MESSAGE[code],
   };
 }
 
-export function getSessionFromRequest(request: { headers: { authorization?: string } }): SessionPayload | null {
+export function getSessionFromRequest(request: {
+  headers: { authorization?: string };
+}): SessionPayload | null {
   const authorization = request.headers.authorization;
-  const token = authorization?.startsWith("Bearer ") ? authorization.slice("Bearer ".length) : null;
+  const token = authorization?.startsWith("Bearer ")
+    ? authorization.slice("Bearer ".length)
+    : null;
 
   if (!token) {
     return null;
@@ -92,13 +112,13 @@ export async function hashTemporaryPassword(value: string): Promise<string> {
     type: argon2.argon2id,
     memoryCost: 19_456,
     timeCost: 2,
-    parallelism: 1
+    parallelism: 1,
   });
 }
 
 export async function matchesPasswordHash(
   plainTextPassword: string,
-  storedPasswordHash: string | null | undefined
+  storedPasswordHash: string | null | undefined,
 ): Promise<boolean> {
   if (!storedPasswordHash) {
     return false;

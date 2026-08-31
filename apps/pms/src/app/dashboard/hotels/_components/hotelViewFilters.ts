@@ -15,7 +15,7 @@ export const DEFAULT_HOTEL_VIEW_FILTERS: HotelViewFilters = {
   status: "all",
   city: "",
   state: "",
-  country: ""
+  country: "",
 };
 
 export function countAppliedHotelFilters(filters: HotelViewFilters): number {
@@ -30,7 +30,10 @@ export function countAppliedHotelFilters(filters: HotelViewFilters): number {
   return total;
 }
 
-export function applyHotelViewFilters(hotels: AdminHotel[], filters: HotelViewFilters): AdminHotel[] {
+export function applyHotelViewFilters(
+  hotels: AdminHotel[],
+  filters: HotelViewFilters,
+): AdminHotel[] {
   const search = filters.search.trim().toLocaleLowerCase();
   const city = filters.city.trim().toLocaleLowerCase();
   const state = filters.state.trim().toLocaleLowerCase();
@@ -53,15 +56,30 @@ export function applyHotelViewFilters(hotels: AdminHotel[], filters: HotelViewFi
       return false;
     }
 
-    if (city && !String(hotel.city || "").toLocaleLowerCase().includes(city)) {
+    if (
+      city &&
+      !String(hotel.city || "")
+        .toLocaleLowerCase()
+        .includes(city)
+    ) {
       return false;
     }
 
-    if (state && !String(hotel.state || "").toLocaleLowerCase().includes(state)) {
+    if (
+      state &&
+      !String(hotel.state || "")
+        .toLocaleLowerCase()
+        .includes(state)
+    ) {
       return false;
     }
 
-    if (country && !String(hotel.country || "").toLocaleLowerCase().includes(country)) {
+    if (
+      country &&
+      !String(hotel.country || "")
+        .toLocaleLowerCase()
+        .includes(country)
+    ) {
       return false;
     }
 

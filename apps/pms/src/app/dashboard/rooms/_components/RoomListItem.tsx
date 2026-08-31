@@ -30,7 +30,14 @@ function RoomDataPreview({ room }: { room: AdminRoom }) {
       <div>
         <strong>Status:</strong>
         <p className="m-0 mt-[0.2rem]">{translateRoomStatus(room.status)}</p>
-        {room.status === "maintenance" || room.status === "blocked" ? <Link href={`/dashboard/maintenance/view?room_id=${room.id}`} className="mt-1 inline-block font-semibold text-[#0f766e]">Ver manutenção</Link> : null}
+        {room.status === "maintenance" || room.status === "blocked" ? (
+          <Link
+            href={`/dashboard/maintenance/view?room_id=${room.id}`}
+            className="mt-1 inline-block font-semibold text-[#0f766e]"
+          >
+            Ver manutenção
+          </Link>
+        ) : null}
       </div>
       <div>
         <strong>Capacidade máxima:</strong>
@@ -55,47 +62,100 @@ function RoomEditForm({ room }: { room: AdminRoom }) {
 
       <div className="pms-field">
         <label htmlFor={`room-number-${room.id}`}>Número</label>
-        <input id={`room-number-${room.id}`} name="room_number" defaultValue={room.room_number} required className="pms-field-input" />
+        <input
+          id={`room-number-${room.id}`}
+          name="room_number"
+          defaultValue={room.room_number}
+          required
+          className="pms-field-input"
+        />
       </div>
 
       <div className="pms-field">
         <label htmlFor={`room-type-${room.id}`}>Tipo</label>
-        <input id={`room-type-${room.id}`} name="room_type" defaultValue={room.room_type} required className="pms-field-input" />
+        <input
+          id={`room-type-${room.id}`}
+          name="room_type"
+          defaultValue={room.room_type}
+          required
+          className="pms-field-input"
+        />
       </div>
 
       <div className="pms-field">
-        <label htmlFor={`room-max-occupancy-${room.id}`}>Capacidade máxima</label>
-        <input id={`room-max-occupancy-${room.id}`} name="max_occupancy" type="number" min={1} defaultValue={room.max_occupancy} required className="pms-field-input" />
+        <label htmlFor={`room-max-occupancy-${room.id}`}>
+          Capacidade máxima
+        </label>
+        <input
+          id={`room-max-occupancy-${room.id}`}
+          name="max_occupancy"
+          type="number"
+          min={1}
+          defaultValue={room.max_occupancy}
+          required
+          className="pms-field-input"
+        />
       </div>
 
       <div className="pms-field">
         <label htmlFor={`room-base-daily-rate-${room.id}`}>Diária base</label>
-        <input id={`room-base-daily-rate-${room.id}`} name="base_daily_rate" type="number" min={0} step="0.01" defaultValue={room.base_daily_rate} required className="pms-field-input" />
+        <input
+          id={`room-base-daily-rate-${room.id}`}
+          name="base_daily_rate"
+          type="number"
+          min={0}
+          step="0.01"
+          defaultValue={room.base_daily_rate}
+          required
+          className="pms-field-input"
+        />
       </div>
 
       <div className="pms-field">
         <label htmlFor={`room-status-${room.id}`}>Status</label>
-        <select id={`room-status-${room.id}`} name="status" defaultValue={room.status} className="pms-field-input">
+        <select
+          id={`room-status-${room.id}`}
+          name="status"
+          defaultValue={room.status}
+          className="pms-field-input"
+        >
           <option value="available">{translateRoomStatus("available")}</option>
           <option value="occupied">{translateRoomStatus("occupied")}</option>
-          <option value="maintenance">{translateRoomStatus("maintenance")}</option>
+          <option value="maintenance">
+            {translateRoomStatus("maintenance")}
+          </option>
           <option value="blocked">{translateRoomStatus("blocked")}</option>
         </select>
       </div>
 
       <div className="pms-field">
         <label htmlFor={`room-notes-${room.id}`}>Observações</label>
-        <input id={`room-notes-${room.id}`} name="notes" defaultValue={room.notes || ""} className="pms-field-input" />
+        <input
+          id={`room-notes-${room.id}`}
+          name="notes"
+          defaultValue={room.notes || ""}
+          className="pms-field-input"
+        />
       </div>
 
-      <button type="submit" className="justify-self-start rounded-lg border-0 bg-[#1c6d4e] px-[0.75rem] py-[0.55rem] text-white">
+      <button
+        type="submit"
+        className="justify-self-start rounded-lg border-0 bg-[#1c6d4e] px-[0.75rem] py-[0.55rem] text-white"
+      >
         Salvar alterações
       </button>
     </form>
   );
 }
 
-export function RoomListItem({ room, canRead, canUpdate, canDelete, isViewing, isEditing }: RoomListItemProps) {
+export function RoomListItem({
+  room,
+  canRead,
+  canUpdate,
+  canDelete,
+  isViewing,
+  isEditing,
+}: RoomListItemProps) {
   const viewHref = `/dashboard/rooms/view?roomId=${room.id}&mode=view`;
   const editHref = `/dashboard/rooms/view?roomId=${room.id}&mode=edit`;
 

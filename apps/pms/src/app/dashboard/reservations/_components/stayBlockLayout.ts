@@ -20,7 +20,7 @@ export function computeStayBlockLayout({
   startHalf,
   endHalf,
   cellWidth,
-  minWidth = 8
+  minWidth = 8,
 }: StayBlockLayoutInput): StayBlockLayout {
   const clampedEndIndex = Math.max(endIndex, startIndex);
   const halfCell = cellWidth / 2;
@@ -33,6 +33,6 @@ export function computeStayBlockLayout({
 
   return {
     left,
-    width: Math.max(minWidth, computedWidth)
+    width: Math.max(minWidth, computedWidth),
   };
 }

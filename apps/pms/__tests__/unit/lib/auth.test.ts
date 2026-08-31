@@ -4,11 +4,14 @@ vi.mock("next/headers", () => ({
   cookies: vi.fn(() => ({
     get: vi.fn(),
     set: vi.fn(),
-    delete: vi.fn()
-  }))
+    delete: vi.fn(),
+  })),
 }));
 
-import { getUserFromSession, loginWithCredentials } from "../../../src/lib/auth";
+import {
+  getUserFromSession,
+  loginWithCredentials,
+} from "../../../src/lib/auth";
 import { cookies } from "next/headers";
 
 describe("lib/auth - loginWithCredentials", () => {
@@ -29,16 +32,16 @@ describe("lib/auth - loginWithCredentials", () => {
             tenantId: null,
             roles: ["Admin"],
             permissions: ["read_hotel"],
-            roleAssignments: []
-          }
+            roleAssignments: [],
+          },
         }),
         {
           status: 200,
           headers: {
-            "Content-Type": "application/json"
-          }
-        }
-      )
+            "Content-Type": "application/json",
+          },
+        },
+      ),
     );
 
     vi.stubGlobal("fetch", fetchMock);
@@ -56,17 +59,17 @@ describe("lib/auth - loginWithCredentials", () => {
         tenantId: null,
         roles: ["Admin"],
         permissions: ["read_hotel"],
-        roleAssignments: []
-      }
+        roleAssignments: [],
+      },
     });
   });
 
   it("retorna erro amigavel quando backend esta indisponivel", async () => {
     vi.stubGlobal("fetch", vi.fn().mockRejectedValue(new Error("offline")));
 
-    await expect(loginWithCredentials("admin@hotel.com", "secret")).rejects.toThrow(
-      "Serviço de autenticação indisponível no momento."
-    );
+    await expect(
+      loginWithCredentials("admin@hotel.com", "secret"),
+    ).rejects.toThrow("Serviço de autenticação indisponível no momento.");
   });
 });
 
@@ -89,7 +92,9 @@ describe("lib/auth - getUserFromSession", () => {
       return undefined;
     });
 
-    vi.mocked(cookies).mockResolvedValue({ get: getMock } as unknown as Awaited<ReturnType<typeof cookies>>);
+    vi.mocked(cookies).mockResolvedValue({ get: getMock } as unknown as Awaited<
+      ReturnType<typeof cookies>
+    >);
 
     const fetchMock = vi.fn().mockResolvedValue(
       new Response(
@@ -101,14 +106,14 @@ describe("lib/auth - getUserFromSession", () => {
             tenantId: null,
             roles: ["Gestor"],
             permissions: ["user_read"],
-            roleAssignments: []
-          }
+            roleAssignments: [],
+          },
         }),
         {
           status: 200,
-          headers: { "Content-Type": "application/json" }
-        }
-      )
+          headers: { "Content-Type": "application/json" },
+        },
+      ),
     );
 
     vi.stubGlobal("fetch", fetchMock);
@@ -121,8 +126,8 @@ describe("lib/auth - getUserFromSession", () => {
       cache: "no-store",
       headers: {
         Authorization: "Bearer token-abc",
-        "x-active-hotel-id": "hotel-1"
-      }
+        "x-active-hotel-id": "hotel-1",
+      },
     });
   });
 
@@ -135,13 +140,15 @@ describe("lib/auth - getUserFromSession", () => {
       return undefined;
     });
 
-    vi.mocked(cookies).mockResolvedValue({ get: getMock } as unknown as Awaited<ReturnType<typeof cookies>>);
+    vi.mocked(cookies).mockResolvedValue({ get: getMock } as unknown as Awaited<
+      ReturnType<typeof cookies>
+    >);
 
     const fetchMock = vi.fn().mockResolvedValue(
       new Response(JSON.stringify({ user: null }), {
         status: 200,
-        headers: { "Content-Type": "application/json" }
-      })
+        headers: { "Content-Type": "application/json" },
+      }),
     );
 
     vi.stubGlobal("fetch", fetchMock);
@@ -152,8 +159,8 @@ describe("lib/auth - getUserFromSession", () => {
       method: "GET",
       cache: "no-store",
       headers: {
-        Authorization: "Bearer token-abc"
-      }
+        Authorization: "Bearer token-abc",
+      },
     });
   });
 });

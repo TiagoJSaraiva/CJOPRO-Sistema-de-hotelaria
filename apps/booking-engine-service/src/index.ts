@@ -8,7 +8,7 @@ const DEFAULT_ALLOWED_ORIGINS = [
   "http://localhost:3000",
   "http://localhost:3001",
   "http://localhost:3333",
-  "http://localhost:3334"
+  "http://localhost:3334",
 ];
 
 function normalizeOrigin(origin: string): string {
@@ -36,13 +36,16 @@ async function bootstrap() {
       }
 
       callback(null, allowedOrigins.has(normalizeOrigin(origin)));
-    }
+    },
   });
 
-  app.get("/health", async () => ({ status: "ok", service: "booking-engine-service" }));
+  app.get("/health", async () => ({
+    status: "ok",
+    service: "booking-engine-service",
+  }));
 
   app.get("/", async () => ({
-    message: "Booking engine service base scaffold"
+    message: "Booking engine service base scaffold",
   }));
 
   await app.listen({ port, host: "0.0.0.0" });

@@ -17,7 +17,7 @@ export const DEFAULT_USER_VIEW_FILTERS: UserViewFilters = {
   roleId: "",
   status: "all",
   createdFrom: "",
-  createdTo: ""
+  createdTo: "",
 };
 
 function parseDateStart(value: string): number | null {
@@ -59,7 +59,10 @@ export function countAppliedUserFilters(filters: UserViewFilters): number {
   return total;
 }
 
-export function applyUserViewFilters(users: AdminUser[], filters: UserViewFilters): AdminUser[] {
+export function applyUserViewFilters(
+  users: AdminUser[],
+  filters: UserViewFilters,
+): AdminUser[] {
   const search = filters.search.trim().toLocaleLowerCase();
   const hotelId = filters.hotelId.trim();
   const roleId = filters.roleId.trim();
@@ -86,14 +89,19 @@ export function applyUserViewFilters(users: AdminUser[], filters: UserViewFilter
     const assignments = user.role_assignments || [];
 
     if (hotelId && roleId) {
-      const matchesPair = assignments.some((assignment) => assignment.hotel_id === hotelId && assignment.role_id === roleId);
+      const matchesPair = assignments.some(
+        (assignment) =>
+          assignment.hotel_id === hotelId && assignment.role_id === roleId,
+      );
 
       if (!matchesPair) {
         return false;
       }
     } else {
       if (hotelId) {
-        const matchesHotel = assignments.some((assignment) => assignment.hotel_id === hotelId);
+        const matchesHotel = assignments.some(
+          (assignment) => assignment.hotel_id === hotelId,
+        );
 
         if (!matchesHotel) {
           return false;
@@ -101,7 +109,9 @@ export function applyUserViewFilters(users: AdminUser[], filters: UserViewFilter
       }
 
       if (roleId) {
-        const matchesRole = assignments.some((assignment) => assignment.role_id === roleId);
+        const matchesRole = assignments.some(
+          (assignment) => assignment.role_id === roleId,
+        );
 
         if (!matchesRole) {
           return false;

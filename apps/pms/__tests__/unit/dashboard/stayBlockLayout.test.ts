@@ -10,7 +10,7 @@ describe("stay block layout", () => {
       endIndex: 4,
       startHalf: null,
       endHalf: null,
-      cellWidth
+      cellWidth,
     });
     expect(layout.left).toBe(88);
     expect(layout.width).toBe(132);
@@ -22,7 +22,7 @@ describe("stay block layout", () => {
       endIndex: 4,
       startHalf: "right",
       endHalf: null,
-      cellWidth
+      cellWidth,
     });
     expect(layout.left).toBe(110);
     expect(layout.width).toBe(110);
@@ -34,7 +34,7 @@ describe("stay block layout", () => {
       endIndex: 4,
       startHalf: null,
       endHalf: "left",
-      cellWidth
+      cellWidth,
     });
     expect(layout.left).toBe(88);
     expect(layout.width).toBe(110);
@@ -46,7 +46,7 @@ describe("stay block layout", () => {
       endIndex: 4,
       startHalf: "right",
       endHalf: "left",
-      cellWidth
+      cellWidth,
     });
     expect(layout.left).toBe(110);
     expect(layout.width).toBe(88);
@@ -59,7 +59,7 @@ describe("stay block layout", () => {
       startHalf: "right",
       endHalf: "left",
       cellWidth,
-      minWidth: 8
+      minWidth: 8,
     });
     expect(layout.width).toBeGreaterThanOrEqual(8);
   });

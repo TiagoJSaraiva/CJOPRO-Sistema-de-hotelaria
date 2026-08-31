@@ -11,7 +11,7 @@ export const DEFAULT_CUSTOMER_VIEW_FILTERS: CustomerViewFilters = {
   search: "",
   documentType: "",
   birthFrom: "",
-  birthTo: ""
+  birthTo: "",
 };
 
 function parseDateStart(value: string): number | null {
@@ -28,7 +28,11 @@ function parseDateStart(value: string): number | null {
   const year = Number(parts[0]);
   const month = Number(parts[1]);
   const day = Number(parts[2]);
-  if (!Number.isFinite(year) || !Number.isFinite(month) || !Number.isFinite(day)) {
+  if (
+    !Number.isFinite(year) ||
+    !Number.isFinite(month) ||
+    !Number.isFinite(day)
+  ) {
     return null;
   }
   const timestamp = new Date(year, month - 1, day).getTime();
@@ -49,14 +53,20 @@ function parseDateEnd(value: string): number | null {
   const year = Number(parts[0]);
   const month = Number(parts[1]);
   const day = Number(parts[2]);
-  if (!Number.isFinite(year) || !Number.isFinite(month) || !Number.isFinite(day)) {
+  if (
+    !Number.isFinite(year) ||
+    !Number.isFinite(month) ||
+    !Number.isFinite(day)
+  ) {
     return null;
   }
   const timestamp = new Date(year, month - 1, day, 23, 59, 59, 999).getTime();
   return Number.isNaN(timestamp) ? null : timestamp;
 }
 
-export function countAppliedCustomerFilters(filters: CustomerViewFilters): number {
+export function countAppliedCustomerFilters(
+  filters: CustomerViewFilters,
+): number {
   let total = 0;
 
   if (filters.search.trim()) total += 1;
@@ -67,7 +77,10 @@ export function countAppliedCustomerFilters(filters: CustomerViewFilters): numbe
   return total;
 }
 
-export function applyCustomerViewFilters(customers: AdminCustomer[], filters: CustomerViewFilters): AdminCustomer[] {
+export function applyCustomerViewFilters(
+  customers: AdminCustomer[],
+  filters: CustomerViewFilters,
+): AdminCustomer[] {
   const search = filters.search.trim().toLocaleLowerCase();
   const documentType = filters.documentType.trim().toLocaleLowerCase();
   const birthFrom = parseDateStart(filters.birthFrom);
@@ -75,14 +88,18 @@ export function applyCustomerViewFilters(customers: AdminCustomer[], filters: Cu
 
   return customers.filter((customer) => {
     if (search) {
-      const haystack = `${customer.full_name} ${customer.document_number} ${customer.email || ""} ${customer.mobile_phone || ""} ${customer.phone || ""}`.toLocaleLowerCase();
+      const haystack =
+        `${customer.full_name} ${customer.document_number} ${customer.email || ""} ${customer.mobile_phone || ""} ${customer.phone || ""}`.toLocaleLowerCase();
 
       if (!haystack.includes(search)) {
         return false;
       }
     }
 
-    if (documentType && customer.document_type.toLocaleLowerCase() !== documentType) {
+    if (
+      documentType &&
+      customer.document_type.toLocaleLowerCase() !== documentType
+    ) {
       return false;
     }
 

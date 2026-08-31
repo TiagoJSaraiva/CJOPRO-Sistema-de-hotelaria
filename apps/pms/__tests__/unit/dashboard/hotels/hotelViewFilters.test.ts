@@ -1,6 +1,10 @@
 import { describe, expect, it } from "vitest";
 import type { AdminHotel } from "@hotel/shared";
-import { DEFAULT_HOTEL_VIEW_FILTERS, applyHotelViewFilters, countAppliedHotelFilters } from "../../../../src/app/dashboard/hotels/_components/hotelViewFilters";
+import {
+  DEFAULT_HOTEL_VIEW_FILTERS,
+  applyHotelViewFilters,
+  countAppliedHotelFilters,
+} from "../../../../src/app/dashboard/hotels/_components/hotelViewFilters";
 
 function makeHotel(overrides: Partial<AdminHotel>): AdminHotel {
   return {
@@ -23,27 +27,55 @@ function makeHotel(overrides: Partial<AdminHotel>): AdminHotel {
     email: overrides.email ?? null,
     is_active: overrides.is_active ?? true,
     created_at: overrides.created_at,
-    updated_at: overrides.updated_at
+    updated_at: overrides.updated_at,
   };
 }
 
 describe("hotelViewFilters", () => {
   const hotels: AdminHotel[] = [
-    makeHotel({ id: "hotel-1", name: "Hotel Centro", slug: "hotel-centro", city: "Sao Paulo", state: "SP", country: "BR", is_active: true }),
-    makeHotel({ id: "hotel-2", name: "Hotel Praia", slug: "hotel-praia", city: "Florianopolis", state: "SC", country: "BR", is_active: false }),
-    makeHotel({ id: "hotel-3", name: "Ocean Suites", slug: "ocean-suites", city: "Lisboa", state: "LX", country: "PT", is_active: true })
+    makeHotel({
+      id: "hotel-1",
+      name: "Hotel Centro",
+      slug: "hotel-centro",
+      city: "Sao Paulo",
+      state: "SP",
+      country: "BR",
+      is_active: true,
+    }),
+    makeHotel({
+      id: "hotel-2",
+      name: "Hotel Praia",
+      slug: "hotel-praia",
+      city: "Florianopolis",
+      state: "SC",
+      country: "BR",
+      is_active: false,
+    }),
+    makeHotel({
+      id: "hotel-3",
+      name: "Ocean Suites",
+      slug: "ocean-suites",
+      city: "Lisboa",
+      state: "LX",
+      country: "PT",
+      is_active: true,
+    }),
   ];
 
   it("retorna todos sem filtros", () => {
     const result = applyHotelViewFilters(hotels, DEFAULT_HOTEL_VIEW_FILTERS);
 
-    expect(result.map((item) => item.id)).toEqual(["hotel-1", "hotel-2", "hotel-3"]);
+    expect(result.map((item) => item.id)).toEqual([
+      "hotel-1",
+      "hotel-2",
+      "hotel-3",
+    ]);
   });
 
   it("filtra por nome ou slug", () => {
     const result = applyHotelViewFilters(hotels, {
       ...DEFAULT_HOTEL_VIEW_FILTERS,
-      search: "PRAIA"
+      search: "PRAIA",
     });
 
     expect(result.map((item) => item.id)).toEqual(["hotel-2"]);
@@ -52,7 +84,7 @@ describe("hotelViewFilters", () => {
   it("filtra por status", () => {
     const result = applyHotelViewFilters(hotels, {
       ...DEFAULT_HOTEL_VIEW_FILTERS,
-      status: "inactive"
+      status: "inactive",
     });
 
     expect(result.map((item) => item.id)).toEqual(["hotel-2"]);
@@ -63,7 +95,7 @@ describe("hotelViewFilters", () => {
       ...DEFAULT_HOTEL_VIEW_FILTERS,
       city: "sao",
       state: "sp",
-      country: "br"
+      country: "br",
     });
 
     expect(result.map((item) => item.id)).toEqual(["hotel-1"]);
@@ -73,7 +105,7 @@ describe("hotelViewFilters", () => {
     const count = countAppliedHotelFilters({
       ...DEFAULT_HOTEL_VIEW_FILTERS,
       status: "active",
-      country: "br"
+      country: "br",
     });
 
     expect(count).toBe(2);

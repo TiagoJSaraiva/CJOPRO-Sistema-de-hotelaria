@@ -6,7 +6,7 @@ import { existsSync } from "node:fs";
 const PHASES = [
   { name: "check", script: "check" },
   { name: "testes Vitest e cobertura", script: "test:coverage" },
-  { name: "testes E2E", script: "test:e2e" }
+  { name: "testes E2E", script: "test:e2e" },
 ];
 
 function runPnpmScript(script) {
@@ -15,7 +15,7 @@ function runPnpmScript(script) {
   if (inheritedPnpmEntry && existsSync(inheritedPnpmEntry)) {
     return spawnSync(process.execPath, [inheritedPnpmEntry, "run", script], {
       stdio: "inherit",
-      windowsHide: true
+      windowsHide: true,
     });
   }
 
@@ -23,7 +23,7 @@ function runPnpmScript(script) {
   return spawnSync(executable, ["run", script], {
     stdio: "inherit",
     shell: process.platform === "win32",
-    windowsHide: true
+    windowsHide: true,
   });
 }
 

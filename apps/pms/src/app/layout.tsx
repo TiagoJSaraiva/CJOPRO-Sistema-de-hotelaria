@@ -4,7 +4,7 @@ import "./globals.css";
 
 export const metadata: Metadata = {
   title: "PMS Hotelaria",
-  description: "Sistema PMS para gerenciamento de reservas"
+  description: "Sistema PMS para gerenciamento de reservas",
 };
 
 export default function RootLayout({ children }: { children: ReactNode }) {

@@ -15,8 +15,12 @@ type ProductListItemProps = {
 };
 
 function ProductDataPreview({ product }: { product: AdminProduct }) {
-  const createdAt = product.created_at ? new Date(product.created_at).toLocaleString("pt-BR") : "-";
-  const updatedAt = product.updated_at ? new Date(product.updated_at).toLocaleString("pt-BR") : "-";
+  const createdAt = product.created_at
+    ? new Date(product.created_at).toLocaleString("pt-BR")
+    : "-";
+  const updatedAt = product.updated_at
+    ? new Date(product.updated_at).toLocaleString("pt-BR")
+    : "-";
 
   return (
     <div className="mt-[0.85rem] grid grid-cols-[repeat(auto-fit,minmax(200px,1fr))] gap-[0.75rem]">
@@ -50,40 +54,78 @@ function ProductDataPreview({ product }: { product: AdminProduct }) {
 
 function ProductEditForm({ product }: { product: AdminProduct }) {
   return (
-    <form action={updateProductAction} className="mt-[0.85rem] grid gap-[0.65rem]">
+    <form
+      action={updateProductAction}
+      className="mt-[0.85rem] grid gap-[0.65rem]"
+    >
       <input type="hidden" name="id" value={product.id} />
 
       <div className="pms-field">
         <label htmlFor={`product-name-${product.id}`}>Nome</label>
-        <input id={`product-name-${product.id}`} name="name" defaultValue={product.name} required className="pms-field-input" />
+        <input
+          id={`product-name-${product.id}`}
+          name="name"
+          defaultValue={product.name}
+          required
+          className="pms-field-input"
+        />
       </div>
 
       <div className="pms-field">
         <label htmlFor={`product-category-${product.id}`}>Categoria</label>
-        <input id={`product-category-${product.id}`} name="category" defaultValue={product.category || ""} className="pms-field-input" />
+        <input
+          id={`product-category-${product.id}`}
+          name="category"
+          defaultValue={product.category || ""}
+          className="pms-field-input"
+        />
       </div>
 
       <div className="pms-field">
         <label htmlFor={`product-price-${product.id}`}>Preço unitário</label>
-        <input id={`product-price-${product.id}`} name="unit_price" type="number" min={0} step="0.01" defaultValue={product.unit_price} required className="pms-field-input" />
+        <input
+          id={`product-price-${product.id}`}
+          name="unit_price"
+          type="number"
+          min={0}
+          step="0.01"
+          defaultValue={product.unit_price}
+          required
+          className="pms-field-input"
+        />
       </div>
 
       <div className="pms-field">
         <label htmlFor={`product-status-${product.id}`}>Status</label>
-        <select id={`product-status-${product.id}`} name="status" defaultValue={product.status} className="pms-field-input">
+        <select
+          id={`product-status-${product.id}`}
+          name="status"
+          defaultValue={product.status}
+          className="pms-field-input"
+        >
           <option value="active">active</option>
           <option value="inactive">inactive</option>
         </select>
       </div>
 
-      <button type="submit" className="justify-self-start rounded-lg border-0 bg-[#1c6d4e] px-[0.75rem] py-[0.55rem] text-white">
+      <button
+        type="submit"
+        className="justify-self-start rounded-lg border-0 bg-[#1c6d4e] px-[0.75rem] py-[0.55rem] text-white"
+      >
         Salvar alterações
       </button>
     </form>
   );
 }
 
-export function ProductListItem({ product, canRead, canUpdate, canDelete, isViewing, isEditing }: ProductListItemProps) {
+export function ProductListItem({
+  product,
+  canRead,
+  canUpdate,
+  canDelete,
+  isViewing,
+  isEditing,
+}: ProductListItemProps) {
   const viewHref = `/dashboard/products/view?productId=${product.id}&mode=view`;
   const editHref = `/dashboard/products/view?productId=${product.id}&mode=edit`;
 

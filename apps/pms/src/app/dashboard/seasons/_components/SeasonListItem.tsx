@@ -15,8 +15,12 @@ type SeasonListItemProps = {
 };
 
 function SeasonDataPreview({ season }: { season: AdminSeason }) {
-  const createdAt = season.created_at ? new Date(season.created_at).toLocaleString("pt-BR") : "-";
-  const updatedAt = season.updated_at ? new Date(season.updated_at).toLocaleString("pt-BR") : "-";
+  const createdAt = season.created_at
+    ? new Date(season.created_at).toLocaleString("pt-BR")
+    : "-";
+  const updatedAt = season.updated_at
+    ? new Date(season.updated_at).toLocaleString("pt-BR")
+    : "-";
 
   return (
     <div className="mt-[0.85rem] grid grid-cols-[repeat(auto-fit,minmax(200px,1fr))] gap-[0.75rem]">
@@ -34,7 +38,9 @@ function SeasonDataPreview({ season }: { season: AdminSeason }) {
       </div>
       <div>
         <strong>Status:</strong>
-        <p className="m-0 mt-[0.2rem]">{season.is_active ? "ativa" : "inativa"}</p>
+        <p className="m-0 mt-[0.2rem]">
+          {season.is_active ? "ativa" : "inativa"}
+        </p>
       </div>
       <div>
         <strong>Criado em:</strong>
@@ -50,37 +56,74 @@ function SeasonDataPreview({ season }: { season: AdminSeason }) {
 
 function SeasonEditForm({ season }: { season: AdminSeason }) {
   return (
-    <form action={updateSeasonAction} className="mt-[0.85rem] grid gap-[0.65rem]">
+    <form
+      action={updateSeasonAction}
+      className="mt-[0.85rem] grid gap-[0.65rem]"
+    >
       <input type="hidden" name="id" value={season.id} />
 
       <div className="pms-field">
         <label htmlFor={`season-name-${season.id}`}>Nome</label>
-        <input id={`season-name-${season.id}`} name="name" defaultValue={season.name} required className="pms-field-input" />
+        <input
+          id={`season-name-${season.id}`}
+          name="name"
+          defaultValue={season.name}
+          required
+          className="pms-field-input"
+        />
       </div>
 
       <div className="pms-field">
         <label htmlFor={`season-start-${season.id}`}>Início</label>
-        <input id={`season-start-${season.id}`} name="start_date" type="date" defaultValue={season.start_date} required className="pms-field-input" />
+        <input
+          id={`season-start-${season.id}`}
+          name="start_date"
+          type="date"
+          defaultValue={season.start_date}
+          required
+          className="pms-field-input"
+        />
       </div>
 
       <div className="pms-field">
         <label htmlFor={`season-end-${season.id}`}>Fim</label>
-        <input id={`season-end-${season.id}`} name="end_date" type="date" defaultValue={season.end_date} required className="pms-field-input" />
+        <input
+          id={`season-end-${season.id}`}
+          name="end_date"
+          type="date"
+          defaultValue={season.end_date}
+          required
+          className="pms-field-input"
+        />
       </div>
 
       <label className="flex items-center gap-2">
-        <input name="is_active" type="checkbox" defaultChecked={season.is_active} />
+        <input
+          name="is_active"
+          type="checkbox"
+          defaultChecked={season.is_active}
+        />
         <span>Temporada ativa</span>
       </label>
 
-      <button type="submit" className="justify-self-start rounded-lg border-0 bg-[#1c6d4e] px-[0.75rem] py-[0.55rem] text-white">
+      <button
+        type="submit"
+        className="justify-self-start rounded-lg border-0 bg-[#1c6d4e] px-[0.75rem] py-[0.55rem] text-white"
+      >
         Salvar alterações
       </button>
     </form>
   );
 }
 
-export function SeasonListItem({ season, canRead, canUpdate, canDelete, isViewing, isEditing }: SeasonListItemProps) {
+export function SeasonListItem({
+  season,
+  canRead,
+  canUpdate,
+  canDelete,
+  isViewing,
+  isEditing,
+}: SeasonListItemProps) {
   const viewHref = `/dashboard/seasons/view?seasonId=${season.id}&mode=view`;
   const editHref = `/dashboard/seasons/view?seasonId=${season.id}&mode=edit`;
 

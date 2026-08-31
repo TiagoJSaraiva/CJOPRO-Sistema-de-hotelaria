@@ -3,7 +3,12 @@
 import { useMemo, type ReactNode } from "react";
 import type { AdminHotel } from "@hotel/shared";
 import { HotelListItem } from "./HotelListItem";
-import { DEFAULT_HOTEL_VIEW_FILTERS, applyHotelViewFilters, countAppliedHotelFilters, type HotelViewFilters } from "./hotelViewFilters";
+import {
+  DEFAULT_HOTEL_VIEW_FILTERS,
+  applyHotelViewFilters,
+  countAppliedHotelFilters,
+  type HotelViewFilters,
+} from "./hotelViewFilters";
 import { viewFiltersFieldClassName } from "../../_components/ViewFiltersBase";
 import { EntityViewFilterableSection } from "../../_components/EntityViewFilterableSection";
 import { useViewFiltersState } from "../../_components/useViewFiltersState";
@@ -18,7 +23,15 @@ type HotelsViewFilterableSectionProps = {
   children?: ReactNode;
 };
 
-export function HotelsViewFilterableSection({ hotels, canRead, canUpdate, canDelete, activeHotelId, mode, children }: HotelsViewFilterableSectionProps) {
+export function HotelsViewFilterableSection({
+  hotels,
+  canRead,
+  canUpdate,
+  canDelete,
+  activeHotelId,
+  mode,
+  children,
+}: HotelsViewFilterableSectionProps) {
   const {
     isModalOpen,
     appliedFilters,
@@ -27,12 +40,15 @@ export function HotelsViewFilterableSection({ hotels, canRead, canUpdate, canDel
     closeFilters,
     applyFilters,
     clearFilters,
-    updateDraftFilter
+    updateDraftFilter,
   } = useViewFiltersState<HotelViewFilters>(DEFAULT_HOTEL_VIEW_FILTERS);
 
   const appliedFilterCount = countAppliedHotelFilters(appliedFilters);
 
-  const filteredHotels = useMemo(() => applyHotelViewFilters(hotels, appliedFilters), [hotels, appliedFilters]);
+  const filteredHotels = useMemo(
+    () => applyHotelViewFilters(hotels, appliedFilters),
+    [hotels, appliedFilters],
+  );
 
   return (
     <EntityViewFilterableSection
@@ -65,7 +81,9 @@ export function HotelsViewFilterableSection({ hotels, canRead, canUpdate, canDel
             <span>Nome ou slug</span>
             <input
               value={draftFilters.search}
-              onChange={(event) => updateDraftFilter("search", event.target.value)}
+              onChange={(event) =>
+                updateDraftFilter("search", event.target.value)
+              }
               placeholder="Ex.: centro ou hotel-centro"
               className={viewFiltersFieldClassName}
             />
@@ -75,7 +93,12 @@ export function HotelsViewFilterableSection({ hotels, canRead, canUpdate, canDel
             <span>Status</span>
             <select
               value={draftFilters.status}
-              onChange={(event) => updateDraftFilter("status", event.target.value as HotelViewFilters["status"])}
+              onChange={(event) =>
+                updateDraftFilter(
+                  "status",
+                  event.target.value as HotelViewFilters["status"],
+                )
+              }
               className={viewFiltersFieldClassName}
             >
               <option value="all">Todos</option>
@@ -86,17 +109,38 @@ export function HotelsViewFilterableSection({ hotels, canRead, canUpdate, canDel
 
           <label className="pms-field">
             <span>Cidade</span>
-            <input value={draftFilters.city} onChange={(event) => updateDraftFilter("city", event.target.value)} placeholder="Ex.: São Paulo" className={viewFiltersFieldClassName} />
+            <input
+              value={draftFilters.city}
+              onChange={(event) =>
+                updateDraftFilter("city", event.target.value)
+              }
+              placeholder="Ex.: São Paulo"
+              className={viewFiltersFieldClassName}
+            />
           </label>
 
           <label className="pms-field">
             <span>Estado</span>
-            <input value={draftFilters.state} onChange={(event) => updateDraftFilter("state", event.target.value)} placeholder="Ex.: SP" className={viewFiltersFieldClassName} />
+            <input
+              value={draftFilters.state}
+              onChange={(event) =>
+                updateDraftFilter("state", event.target.value)
+              }
+              placeholder="Ex.: SP"
+              className={viewFiltersFieldClassName}
+            />
           </label>
 
           <label className="pms-field">
             <span>País</span>
-            <input value={draftFilters.country} onChange={(event) => updateDraftFilter("country", event.target.value)} placeholder="Ex.: BR" className={viewFiltersFieldClassName} />
+            <input
+              value={draftFilters.country}
+              onChange={(event) =>
+                updateDraftFilter("country", event.target.value)
+              }
+              placeholder="Ex.: BR"
+              className={viewFiltersFieldClassName}
+            />
           </label>
         </div>
       }

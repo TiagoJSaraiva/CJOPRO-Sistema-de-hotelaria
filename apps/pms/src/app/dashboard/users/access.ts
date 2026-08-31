@@ -16,11 +16,13 @@ export function getUsersAccess(user: UserLike): UsersAccess {
     canCreate: permissions.includes(PERMISSIONS.USER_CREATE),
     canRead: permissions.includes(PERMISSIONS.USER_READ),
     canUpdate: permissions.includes(PERMISSIONS.USER_UPDATE),
-    canDelete: permissions.includes(PERMISSIONS.USER_DELETE)
+    canDelete: permissions.includes(PERMISSIONS.USER_DELETE),
   };
 }
 
-export function getUsersDefaultRoute(access: UsersAccess): "/dashboard/users/view" | "/dashboard/users/create" | null {
+export function getUsersDefaultRoute(
+  access: UsersAccess,
+): "/dashboard/users/view" | "/dashboard/users/create" | null {
   if (access.canRead) {
     return "/dashboard/users/view";
   }

@@ -16,12 +16,12 @@ export function getTransactionsAccess(user: UserLike): TransactionsAccess {
     canCreate: permissions.includes(PERMISSIONS.TRANSACTION_CREATE),
     canRead: permissions.includes(PERMISSIONS.TRANSACTION_READ),
     canUpdate: permissions.includes(PERMISSIONS.TRANSACTION_UPDATE),
-    canDelete: permissions.includes(PERMISSIONS.TRANSACTION_DELETE)
+    canDelete: permissions.includes(PERMISSIONS.TRANSACTION_DELETE),
   };
 }
 
 export function getTransactionsDefaultRoute(
-  access: TransactionsAccess
+  access: TransactionsAccess,
 ): "/dashboard/transactions/view" | "/dashboard/transactions/create" | null {
   if (access.canRead) {
     return "/dashboard/transactions/view";

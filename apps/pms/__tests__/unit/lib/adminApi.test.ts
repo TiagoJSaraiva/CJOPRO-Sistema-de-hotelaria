@@ -1,14 +1,19 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
 const { cookiesMock } = vi.hoisted(() => ({
-  cookiesMock: vi.fn()
+  cookiesMock: vi.fn(),
 }));
 
 vi.mock("next/headers", () => ({
-  cookies: cookiesMock
+  cookies: cookiesMock,
 }));
 
-import { createHotel, deleteHotel, getUsersReferenceData, listHotels } from "../../../src/lib/adminApi";
+import {
+  createHotel,
+  deleteHotel,
+  getUsersReferenceData,
+  listHotels,
+} from "../../../src/lib/adminApi";
 
 function mockSessionToken(token: string | null, activeHotelId?: string | null) {
   cookiesMock.mockReturnValue({
@@ -22,7 +27,7 @@ function mockSessionToken(token: string | null, activeHotelId?: string | null) {
       }
 
       return undefined;
-    })
+    }),
   });
 }
 
@@ -47,10 +52,13 @@ describe("lib/adminApi", () => {
     mockSessionToken("token-123");
 
     const fetchMock = vi.fn().mockResolvedValue(
-      new Response(JSON.stringify({ items: [{ id: "hotel-1", name: "Hotel Centro" }] }), {
-        status: 200,
-        headers: { "Content-Type": "application/json" }
-      })
+      new Response(
+        JSON.stringify({ items: [{ id: "hotel-1", name: "Hotel Centro" }] }),
+        {
+          status: 200,
+          headers: { "Content-Type": "application/json" },
+        },
+      ),
     );
     vi.stubGlobal("fetch", fetchMock);
 
@@ -80,8 +88,8 @@ describe("lib/adminApi", () => {
         country: "BR",
         zip_code: "01001-000",
         timezone: "America/Sao_Paulo",
-        currency: "BRL"
-      })
+        currency: "BRL",
+      }),
     ).rejects.toThrow("Sessão inválida. Faça login novamente.");
   });
 
@@ -89,10 +97,13 @@ describe("lib/adminApi", () => {
     mockSessionToken("token-123");
 
     const fetchMock = vi.fn().mockResolvedValue(
-      new Response(JSON.stringify({ message: "Slug ja utilizado por outro hotel." }), {
-        status: 409,
-        headers: { "Content-Type": "application/json" }
-      })
+      new Response(
+        JSON.stringify({ message: "Slug ja utilizado por outro hotel." }),
+        {
+          status: 409,
+          headers: { "Content-Type": "application/json" },
+        },
+      ),
     );
     vi.stubGlobal("fetch", fetchMock);
 
@@ -113,36 +124,47 @@ describe("lib/adminApi", () => {
         country: "BR",
         zip_code: "01001-000",
         timezone: "America/Sao_Paulo",
-        currency: "BRL"
-      })
+        currency: "BRL",
+      }),
     ).rejects.toThrow("Slug ja utilizado por outro hotel.");
   });
 
   it("deleteHotel retorna null quando backend confirma exclusao", async () => {
     mockSessionToken("token-123");
 
-    const fetchMock = vi.fn().mockResolvedValue(new Response(JSON.stringify({ ok: true }), { status: 200 }));
+    const fetchMock = vi
+      .fn()
+      .mockResolvedValue(
+        new Response(JSON.stringify({ ok: true }), { status: 200 }),
+      );
     vi.stubGlobal("fetch", fetchMock);
 
     const result = await deleteHotel("hotel-1");
 
     expect(result).toBeNull();
-    expect(fetchMock).toHaveBeenCalledWith("http://localhost:3334/admin/hotels/hotel-1", {
-      method: "DELETE",
-      cache: "no-store",
-      headers: {
-        Authorization: "Bearer token-123"
+    expect(fetchMock).toHaveBeenCalledWith(
+      "http://localhost:3334/admin/hotels/hotel-1",
+      {
+        method: "DELETE",
+        cache: "no-store",
+        headers: {
+          Authorization: "Bearer token-123",
+        },
+        body: undefined,
       },
-      body: undefined
-    });
+    );
   });
 
   it("getUsersReferenceData falha com mensagem padrao quando backend responde erro sem payload", async () => {
     mockSessionToken("token-123");
 
-    const fetchMock = vi.fn().mockResolvedValue(new Response("", { status: 500 }));
+    const fetchMock = vi
+      .fn()
+      .mockResolvedValue(new Response("", { status: 500 }));
     vi.stubGlobal("fetch", fetchMock);
 
-    await expect(getUsersReferenceData()).rejects.toThrow("Falha na consulta administrativa.");
+    await expect(getUsersReferenceData()).rejects.toThrow(
+      "Falha na consulta administrativa.",
+    );
   });
 });

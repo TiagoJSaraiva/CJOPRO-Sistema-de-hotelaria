@@ -2,7 +2,10 @@ import { redirect } from "next/navigation";
 import { DashboardAccessDeniedCard } from "../../_components/DashboardAccessDeniedCard";
 import { DashboardEntityPageShell } from "../../_components/DashboardEntityPageShell";
 import { listFinancialTransactions } from "../../../../lib/adminApi";
-import { getActiveHotelCookieValue, resolveActiveHotelForUser } from "../../../../lib/activeHotel";
+import {
+  getActiveHotelCookieValue,
+  resolveActiveHotelForUser,
+} from "../../../../lib/activeHotel";
 import { getUserFromSession } from "../../../../lib/auth";
 import { getTransactionsAccess, getTransactionsDefaultRoute } from "../access";
 import { TransactionsViewFilterableSection } from "../_components/TransactionsViewFilterableSection";
@@ -17,16 +20,23 @@ type TransactionsViewPageProps = {
   }>;
 };
 
-function resolveActiveHotelLabel(user: Pick<AuthUser, "roleAssignments"> | null, activeHotelId: string | null): string {
+function resolveActiveHotelLabel(
+  user: Pick<AuthUser, "roleAssignments"> | null,
+  activeHotelId: string | null,
+): string {
   if (!activeHotelId) {
     return "Sistema (todos os hotéis)";
   }
 
-  const assignment = (user?.roleAssignments || []).find((item) => item.hotelId === activeHotelId);
+  const assignment = (user?.roleAssignments || []).find(
+    (item) => item.hotelId === activeHotelId,
+  );
   return assignment?.hotelName || "Hotel selecionado";
 }
 
-export default async function TransactionsViewPage({ searchParams }: TransactionsViewPageProps) {
+export default async function TransactionsViewPage({
+  searchParams,
+}: TransactionsViewPageProps) {
   const resolvedSearchParams = await searchParams;
   const user = await getUserFromSession();
   const access = getTransactionsAccess(user);
@@ -38,14 +48,23 @@ export default async function TransactionsViewPage({ searchParams }: Transaction
       redirect(fallback);
     }
 
-    return <DashboardAccessDeniedCard title="Painel Financeiro" message="Sem permissão para visualizar lançamentos financeiros." />;
+    return (
+      <DashboardAccessDeniedCard
+        title="Painel Financeiro"
+        message="Sem permissão para visualizar lançamentos financeiros."
+      />
+    );
   }
 
   const transactions = await listFinancialTransactions();
   const preferredHotelId = await getActiveHotelCookieValue();
-  const activeHotelId = user ? resolveActiveHotelForUser(user, preferredHotelId) : null;
+  const activeHotelId = user
+    ? resolveActiveHotelForUser(user, preferredHotelId)
+    : null;
   const hotelLabel = resolveActiveHotelLabel(user, activeHotelId);
-  const activeTransactionId = String(resolvedSearchParams?.transactionId || "").trim();
+  const activeTransactionId = String(
+    resolvedSearchParams?.transactionId || "",
+  ).trim();
   const mode = resolvedSearchParams?.mode === "edit" ? "edit" : "view";
 
   return (
@@ -53,10 +72,22 @@ export default async function TransactionsViewPage({ searchParams }: Transaction
       title="Painel Financeiro"
       activeTabKey="view"
       tabs={[
-        { key: "create", label: "Lançamento", href: "/dashboard/transactions/create", isVisible: access.canCreate },
-        { key: "view", label: "Monitoramento", href: "/dashboard/transactions/view", isVisible: access.canRead }
+        {
+          key: "create",
+          label: "Lançamento",
+          href: "/dashboard/transactions/create",
+          isVisible: access.canCreate,
+        },
+        {
+          key: "view",
+          label: "Monitoramento",
+          href: "/dashboard/transactions/view",
+          isVisible: access.canRead,
+        },
       ]}
-      statusContent={<TransactionStatusMessage status={resolvedSearchParams?.status} />}
+      statusContent={
+        <TransactionStatusMessage status={resolvedSearchParams?.status} />
+      }
     >
       <TransactionsViewFilterableSection
         transactions={transactions}
@@ -69,7 +100,7 @@ export default async function TransactionsViewPage({ searchParams }: Transaction
         reportContext={{
           hotelLabel,
           generatedBy: user?.name || "Usuário autenticado",
-          hasActiveHotel: Boolean(activeHotelId)
+          hasActiveHotel: Boolean(activeHotelId),
         }}
       />
     </DashboardEntityPageShell>

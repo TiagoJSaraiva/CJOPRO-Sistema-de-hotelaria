@@ -7,7 +7,7 @@ import {
   type AdminStayPaymentCreateInput,
   type AdminStayPaymentStatus,
   type HotelIdParams,
-  type ReservationStatus
+  type ReservationStatus,
 } from "@hotel/shared";
 import { ensureAuthorizedWithScope } from "../auth/authorization";
 import { adminError } from "../common/adminError";
@@ -95,41 +95,52 @@ function getNowInTimezone(timezone: string): { date: string; minutes: number } {
     day: "2-digit",
     hour: "2-digit",
     minute: "2-digit",
-    hourCycle: "h23"
+    hourCycle: "h23",
   }).formatToParts(now);
 
   const year = parts.find((part) => part.type === "year")?.value || "1970";
   const month = parts.find((part) => part.type === "month")?.value || "01";
   const day = parts.find((part) => part.type === "day")?.value || "01";
   const hour = Number(parts.find((part) => part.type === "hour")?.value || "0");
-  const minute = Number(parts.find((part) => part.type === "minute")?.value || "0");
+  const minute = Number(
+    parts.find((part) => part.type === "minute")?.value || "0",
+  );
 
   return {
     date: `${year}-${month}-${day}`,
-    minutes: hour * 60 + minute
+    minutes: hour * 60 + minute,
   };
 }
 
-function isWithinWindow(minutesNow: number, start: number, end: number): boolean {
+function isWithinWindow(
+  minutesNow: number,
+  start: number,
+  end: number,
+): boolean {
   if (start <= end) {
     return minutesNow >= start && minutesNow <= end;
   }
   return minutesNow >= start || minutesNow <= end;
 }
 
-function derivePaymentStatus(totalPaid: number, totalDue: number): AdminStayPaymentStatus {
+function derivePaymentStatus(
+  totalPaid: number,
+  totalDue: number,
+): AdminStayPaymentStatus {
   if (totalDue <= 0) return "paid";
   if (totalPaid <= 0) return "pending";
   if (totalPaid >= totalDue) return "paid";
   return "partial";
 }
 
-async function loadStayWithRelations(stayId: string): Promise<StayWithRelationsRow | null> {
+async function loadStayWithRelations(
+  stayId: string,
+): Promise<StayWithRelationsRow | null> {
   const supabase = createServerClient();
   const { data, error } = await supabase
     .from("stays")
     .select(
-      "id,reservation_id,room_id,stay_status,checkin_date_expected,checkout_date_expected,checkin_date_actual,checkout_date_actual,total_price_estimated,total_paid,reservations:reservation_id(id,hotel_id,reservation_code,customers:booking_customer_id(full_name)),rooms:room_id(id,hotel_id,room_number,room_type,hotels:hotel_id(id,timezone,checkin_time_start,checkin_time_limit,checkout_time_start,checkout_time_limit))"
+      "id,reservation_id,room_id,stay_status,checkin_date_expected,checkout_date_expected,checkin_date_actual,checkout_date_actual,total_price_estimated,total_paid,reservations:reservation_id(id,hotel_id,reservation_code,customers:booking_customer_id(full_name)),rooms:room_id(id,hotel_id,room_number,room_type,hotels:hotel_id(id,timezone,checkin_time_start,checkin_time_limit,checkout_time_start,checkout_time_limit))",
     )
     .eq("id", stayId)
     .single();
@@ -141,7 +152,10 @@ async function loadStayWithRelations(stayId: string): Promise<StayWithRelationsR
   return data as StayWithRelationsRow;
 }
 
-async function loadStayPanel(activeHotelId: string, stayId: string): Promise<AdminStayOperationalPanelResponse | null> {
+async function loadStayPanel(
+  activeHotelId: string,
+  stayId: string,
+): Promise<AdminStayOperationalPanelResponse | null> {
   const stay = await loadStayWithRelations(stayId);
   if (!stay) {
     return null;
@@ -177,7 +191,13 @@ async function loadStayPanel(activeHotelId: string, stayId: string): Promise<Adm
     checkinBlockReason = "Janela de check-in nao configurada no hotel.";
   } else if (nowInHotelTz.date !== expectedCheckinDate) {
     checkinBlockReason = "Check-in permitido apenas na data esperada.";
-  } else if (!isWithinWindow(nowInHotelTz.minutes, checkinStartMinutes, checkinLimitMinutes)) {
+  } else if (
+    !isWithinWindow(
+      nowInHotelTz.minutes,
+      checkinStartMinutes,
+      checkinLimitMinutes,
+    )
+  ) {
     checkinBlockReason = "Horario fora da janela de check-in do hotel.";
   } else {
     canCheckin = true;
@@ -186,12 +206,19 @@ async function loadStayPanel(activeHotelId: string, stayId: string): Promise<Adm
   let canCheckout = false;
   let checkoutBlockReason: string | null = null;
   if (stayStatus !== "checked_in") {
-    checkoutBlockReason = "A estadia precisa estar em checked_in para checkout.";
+    checkoutBlockReason =
+      "A estadia precisa estar em checked_in para checkout.";
   } else if (checkoutStartMinutes === null || checkoutLimitMinutes === null) {
     checkoutBlockReason = "Janela de checkout nao configurada no hotel.";
   } else if (nowInHotelTz.date !== expectedCheckoutDate) {
     checkoutBlockReason = "Checkout permitido apenas na data esperada.";
-  } else if (!isWithinWindow(nowInHotelTz.minutes, checkoutStartMinutes, checkoutLimitMinutes)) {
+  } else if (
+    !isWithinWindow(
+      nowInHotelTz.minutes,
+      checkoutStartMinutes,
+      checkoutLimitMinutes,
+    )
+  ) {
     checkoutBlockReason = "Horario fora da janela de checkout do hotel.";
   } else {
     canCheckout = true;
@@ -205,7 +232,8 @@ async function loadStayPanel(activeHotelId: string, stayId: string): Promise<Adm
     noShowBlockReason = "Janela de check-in nao configurada no hotel.";
   } else if (
     nowInHotelTz.date > expectedCheckinDate ||
-    (nowInHotelTz.date === expectedCheckinDate && nowInHotelTz.minutes > checkinLimitMinutes)
+    (nowInHotelTz.date === expectedCheckinDate &&
+      nowInHotelTz.minutes > checkinLimitMinutes)
   ) {
     canNoShow = true;
   } else {
@@ -213,35 +241,52 @@ async function loadStayPanel(activeHotelId: string, stayId: string): Promise<Adm
   }
 
   const canCancel = stayStatus === "confirmed";
-  const cancelBlockReason = canCancel ? null : "Cancelamento permitido apenas para estadia confirmada.";
+  const cancelBlockReason = canCancel
+    ? null
+    : "Cancelamento permitido apenas para estadia confirmada.";
 
   const supabase = createServerClient();
   const reservationId = stay.reservation_id;
-  const [reservationStaysResult, paymentsResult, maintenanceResult] = await Promise.all([
-    supabase
-      .from("stays")
-      .select("total_price_estimated,total_paid")
-      .eq("reservation_id", reservationId),
-    supabase
-      .from("financial_transactions")
-      .select("id,stay_id,amount,payment_method,description,paid_at,created_at,created_by,type,status")
-      .eq("hotel_id", activeHotelId)
-      .eq("stay_id", stay.id)
-      .eq("category", "STAY_PAYMENT")
-      .in("status", ["COMPLETED", "REFUNDED"])
-      .order("paid_at", { ascending: false })
-      .order("created_at", { ascending: false }),
-    createMaintenanceRepository().getStayMaintenance(activeHotelId, stay.id)
-  ]);
+  const [reservationStaysResult, paymentsResult, maintenanceResult] =
+    await Promise.all([
+      supabase
+        .from("stays")
+        .select("total_price_estimated,total_paid")
+        .eq("reservation_id", reservationId),
+      supabase
+        .from("financial_transactions")
+        .select(
+          "id,stay_id,amount,payment_method,description,paid_at,created_at,created_by,type,status",
+        )
+        .eq("hotel_id", activeHotelId)
+        .eq("stay_id", stay.id)
+        .eq("category", "STAY_PAYMENT")
+        .in("status", ["COMPLETED", "REFUNDED"])
+        .order("paid_at", { ascending: false })
+        .order("created_at", { ascending: false }),
+      createMaintenanceRepository().getStayMaintenance(activeHotelId, stay.id),
+    ]);
 
   if (reservationStaysResult.error || paymentsResult.error) {
     return null;
   }
 
-  const reservationRows = (reservationStaysResult.data || []) as Array<{ total_price_estimated: number | null; total_paid: number | null }>;
-  const reservationTotalDue = reservationRows.reduce((sum, row) => sum + Number(row.total_price_estimated || 0), 0);
-  const reservationTotalPaid = reservationRows.reduce((sum, row) => sum + Number(row.total_paid || 0), 0);
-  const reservationPaymentStatus = derivePaymentStatus(reservationTotalPaid, reservationTotalDue);
+  const reservationRows = (reservationStaysResult.data || []) as Array<{
+    total_price_estimated: number | null;
+    total_paid: number | null;
+  }>;
+  const reservationTotalDue = reservationRows.reduce(
+    (sum, row) => sum + Number(row.total_price_estimated || 0),
+    0,
+  );
+  const reservationTotalPaid = reservationRows.reduce(
+    (sum, row) => sum + Number(row.total_paid || 0),
+    0,
+  );
+  const reservationPaymentStatus = derivePaymentStatus(
+    reservationTotalPaid,
+    reservationTotalDue,
+  );
 
   const stayTotalDue = Number(stay.total_price_estimated || 0);
   const stayTotalPaid = Number(stay.total_paid || 0);
@@ -257,8 +302,8 @@ async function loadStayPanel(activeHotelId: string, stayId: string): Promise<Adm
         note: payment.description ? String(payment.description) : null,
         paid_at: String(payment.paid_at),
         created_at: String(payment.created_at),
-        created_by: payment.created_by ? String(payment.created_by) : null
-      }) satisfies AdminStayPayment
+        created_by: payment.created_by ? String(payment.created_by) : null,
+      }) satisfies AdminStayPayment,
   );
 
   return {
@@ -273,18 +318,22 @@ async function loadStayPanel(activeHotelId: string, stayId: string): Promise<Adm
       stay_status: stayStatus,
       checkin_date_expected: expectedCheckinDate,
       checkout_date_expected: expectedCheckoutDate,
-      checkin_date_actual: stay.checkin_date_actual ? String(stay.checkin_date_actual) : null,
-      checkout_date_actual: stay.checkout_date_actual ? String(stay.checkout_date_actual) : null,
+      checkin_date_actual: stay.checkin_date_actual
+        ? String(stay.checkin_date_actual)
+        : null,
+      checkout_date_actual: stay.checkout_date_actual
+        ? String(stay.checkout_date_actual)
+        : null,
       total_price_estimated: stayTotalDue,
       total_paid: stayTotalPaid,
-      stay_payment_status: stayPaymentStatus
+      stay_payment_status: stayPaymentStatus,
     },
     reservation: {
       id: String(reservationId),
       code: stay.reservations?.reservation_code || null,
       total_due: Number(reservationTotalDue.toFixed(2)),
       total_paid: Number(reservationTotalPaid.toFixed(2)),
-      payment_status: reservationPaymentStatus
+      payment_status: reservationPaymentStatus,
     },
     hotel: {
       id: activeHotelId,
@@ -292,7 +341,7 @@ async function loadStayPanel(activeHotelId: string, stayId: string): Promise<Adm
       checkin_time_start: checkinStart,
       checkin_time_limit: checkinLimit,
       checkout_time_start: checkoutStart,
-      checkout_time_limit: checkoutLimit
+      checkout_time_limit: checkoutLimit,
     },
     eligibility: {
       can_checkin: canCheckin,
@@ -302,114 +351,213 @@ async function loadStayPanel(activeHotelId: string, stayId: string): Promise<Adm
       can_no_show: canNoShow,
       no_show_block_reason: noShowBlockReason,
       can_cancel: canCancel,
-      cancel_block_reason: cancelBlockReason
+      cancel_block_reason: cancelBlockReason,
     },
     payments,
     maintenance_occurrences: maintenanceResult.occurrences,
-    maintenance_acknowledgement_required: maintenanceResult.acknowledgementRequired
+    maintenance_acknowledgement_required:
+      maintenanceResult.acknowledgementRequired,
   };
 }
 
 export function registerStayOperationsRoutes(app: FastifyInstance): void {
-  app.get<{ Querystring: CheckoutCandidateQuery }>("/admin/stays/checkout-candidate", async (request, reply) => {
-    const auth = ensureAuthorizedWithScope(request, reply, PERMISSIONS.RESERVATIONS_CALENDAR_ACCESS);
+  app.get<{ Querystring: CheckoutCandidateQuery }>(
+    "/admin/stays/checkout-candidate",
+    async (request, reply) => {
+      const auth = ensureAuthorizedWithScope(
+        request,
+        reply,
+        PERMISSIONS.RESERVATIONS_CALENDAR_ACCESS,
+      );
+      if (!auth) return;
+      const activeHotelId = requireActiveHotelId(reply, auth.activeHotelId);
+      if (!activeHotelId) return;
+
+      const roomNumber = normalizeOptionalText(request.query.room_number);
+      if (!roomNumber) {
+        return reply
+          .status(400)
+          .send(
+            adminError(
+              ADMIN_ERROR_CODE.VALIDATION,
+              "Numero do quarto obrigatorio.",
+            ),
+          );
+      }
+
+      const supabase = createServerClient();
+      const roomsResult = await supabase
+        .from("rooms")
+        .select("id")
+        .eq("hotel_id", activeHotelId)
+        .eq("room_number", roomNumber)
+        .limit(2);
+
+      if (roomsResult.error) {
+        request.log.error(roomsResult.error);
+        return reply
+          .status(500)
+          .send(
+            adminError(
+              ADMIN_ERROR_CODE.INTERNAL,
+              "Falha ao localizar quarto para checkout.",
+            ),
+          );
+      }
+
+      const rooms = (roomsResult.data || []) as Array<{ id: string }>;
+      if (!rooms.length) {
+        return reply
+          .status(404)
+          .send(
+            adminError(
+              ADMIN_ERROR_CODE.NOT_FOUND,
+              "Quarto nao encontrado para o hotel ativo.",
+            ),
+          );
+      }
+      if (rooms.length > 1) {
+        return reply
+          .status(409)
+          .send(
+            adminError(
+              ADMIN_ERROR_CODE.CONFLICT,
+              "Mais de um quarto encontrado com este numero no hotel ativo.",
+            ),
+          );
+      }
+
+      const staysResult = await supabase
+        .from("stays")
+        .select("id")
+        .eq("room_id", String(rooms[0]!.id))
+        .eq("stay_status", "checked_in")
+        .order("checkout_date_expected", { ascending: true })
+        .limit(2);
+
+      if (staysResult.error) {
+        request.log.error(staysResult.error);
+        return reply
+          .status(500)
+          .send(
+            adminError(
+              ADMIN_ERROR_CODE.INTERNAL,
+              "Falha ao localizar estadia para checkout.",
+            ),
+          );
+      }
+
+      const stays = (staysResult.data || []) as Array<{ id: string }>;
+      if (!stays.length) {
+        return reply
+          .status(404)
+          .send(
+            adminError(
+              ADMIN_ERROR_CODE.NOT_FOUND,
+              "Nenhuma estadia em check-in encontrada para este quarto.",
+            ),
+          );
+      }
+      if (stays.length > 1) {
+        return reply
+          .status(409)
+          .send(
+            adminError(
+              ADMIN_ERROR_CODE.CONFLICT,
+              "Mais de uma estadia em check-in encontrada para este quarto. Use o calendario de reservas.",
+            ),
+          );
+      }
+
+      const panel = await loadStayPanel(
+        activeHotelId,
+        String(stays[0]!.id),
+      ).catch((error) => {
+        request.log.error(error);
+        return null;
+      });
+
+      if (!panel) {
+        return reply
+          .status(404)
+          .send(
+            adminError(
+              ADMIN_ERROR_CODE.NOT_FOUND,
+              "Estadia nao encontrada para o hotel ativo.",
+            ),
+          );
+      }
+
+      return reply.send({ item: panel });
+    },
+  );
+
+  app.get<{ Params: HotelIdParams }>(
+    "/admin/stays/:id/panel",
+    async (request, reply) => {
+      const auth = ensureAuthorizedWithScope(
+        request,
+        reply,
+        PERMISSIONS.RESERVATIONS_CALENDAR_ACCESS,
+      );
+      if (!auth) return;
+      const activeHotelId = requireActiveHotelId(reply, auth.activeHotelId);
+      if (!activeHotelId) return;
+
+      const stayId = normalizeOptionalText(request.params.id);
+      if (!stayId) {
+        return reply
+          .status(400)
+          .send(
+            adminError(
+              ADMIN_ERROR_CODE.VALIDATION,
+              "Id da estadia obrigatorio.",
+            ),
+          );
+      }
+
+      const panel = await loadStayPanel(activeHotelId, stayId).catch(
+        (error) => {
+          request.log.error(error);
+          return null;
+        },
+      );
+
+      if (!panel) {
+        return reply
+          .status(404)
+          .send(
+            adminError(
+              ADMIN_ERROR_CODE.NOT_FOUND,
+              "Estadia nao encontrada para o hotel ativo.",
+            ),
+          );
+      }
+
+      return reply.send({ item: panel });
+    },
+  );
+
+  app.post<{
+    Params: HotelIdParams;
+    Body: Partial<AdminStayPaymentCreateInput>;
+  }>("/admin/stays/:id/payments", async (request, reply) => {
+    const auth = ensureAuthorizedWithScope(
+      request,
+      reply,
+      PERMISSIONS.RESERVATIONS_CALENDAR_ACCESS,
+    );
     if (!auth) return;
     const activeHotelId = requireActiveHotelId(reply, auth.activeHotelId);
     if (!activeHotelId) return;
 
-    const roomNumber = normalizeOptionalText(request.query.room_number);
-    if (!roomNumber) {
-      return reply.status(400).send(adminError(ADMIN_ERROR_CODE.VALIDATION, "Numero do quarto obrigatorio."));
-    }
-
-    const supabase = createServerClient();
-    const roomsResult = await supabase
-      .from("rooms")
-      .select("id")
-      .eq("hotel_id", activeHotelId)
-      .eq("room_number", roomNumber)
-      .limit(2);
-
-    if (roomsResult.error) {
-      request.log.error(roomsResult.error);
-      return reply.status(500).send(adminError(ADMIN_ERROR_CODE.INTERNAL, "Falha ao localizar quarto para checkout."));
-    }
-
-    const rooms = (roomsResult.data || []) as Array<{ id: string }>;
-    if (!rooms.length) {
-      return reply.status(404).send(adminError(ADMIN_ERROR_CODE.NOT_FOUND, "Quarto nao encontrado para o hotel ativo."));
-    }
-    if (rooms.length > 1) {
-      return reply.status(409).send(adminError(ADMIN_ERROR_CODE.CONFLICT, "Mais de um quarto encontrado com este numero no hotel ativo."));
-    }
-
-    const staysResult = await supabase
-      .from("stays")
-      .select("id")
-      .eq("room_id", String(rooms[0]!.id))
-      .eq("stay_status", "checked_in")
-      .order("checkout_date_expected", { ascending: true })
-      .limit(2);
-
-    if (staysResult.error) {
-      request.log.error(staysResult.error);
-      return reply.status(500).send(adminError(ADMIN_ERROR_CODE.INTERNAL, "Falha ao localizar estadia para checkout."));
-    }
-
-    const stays = (staysResult.data || []) as Array<{ id: string }>;
-    if (!stays.length) {
-      return reply.status(404).send(adminError(ADMIN_ERROR_CODE.NOT_FOUND, "Nenhuma estadia em check-in encontrada para este quarto."));
-    }
-    if (stays.length > 1) {
+    const stayId = normalizeOptionalText(request.params.id);
+    if (!stayId) {
       return reply
-        .status(409)
-        .send(adminError(ADMIN_ERROR_CODE.CONFLICT, "Mais de uma estadia em check-in encontrada para este quarto. Use o calendario de reservas."));
-    }
-
-    const panel = await loadStayPanel(activeHotelId, String(stays[0]!.id)).catch((error) => {
-      request.log.error(error);
-      return null;
-    });
-
-    if (!panel) {
-      return reply.status(404).send(adminError(ADMIN_ERROR_CODE.NOT_FOUND, "Estadia nao encontrada para o hotel ativo."));
-    }
-
-    return reply.send({ item: panel });
-  });
-
-  app.get<{ Params: HotelIdParams }>("/admin/stays/:id/panel", async (request, reply) => {
-    const auth = ensureAuthorizedWithScope(request, reply, PERMISSIONS.RESERVATIONS_CALENDAR_ACCESS);
-    if (!auth) return;
-    const activeHotelId = requireActiveHotelId(reply, auth.activeHotelId);
-    if (!activeHotelId) return;
-
-    const stayId = normalizeOptionalText(request.params.id);
-    if (!stayId) {
-      return reply.status(400).send(adminError(ADMIN_ERROR_CODE.VALIDATION, "Id da estadia obrigatorio."));
-    }
-
-    const panel = await loadStayPanel(activeHotelId, stayId).catch((error) => {
-      request.log.error(error);
-      return null;
-    });
-
-    if (!panel) {
-      return reply.status(404).send(adminError(ADMIN_ERROR_CODE.NOT_FOUND, "Estadia nao encontrada para o hotel ativo."));
-    }
-
-    return reply.send({ item: panel });
-  });
-
-  app.post<{ Params: HotelIdParams; Body: Partial<AdminStayPaymentCreateInput> }>("/admin/stays/:id/payments", async (request, reply) => {
-    const auth = ensureAuthorizedWithScope(request, reply, PERMISSIONS.RESERVATIONS_CALENDAR_ACCESS);
-    if (!auth) return;
-    const activeHotelId = requireActiveHotelId(reply, auth.activeHotelId);
-    if (!activeHotelId) return;
-
-    const stayId = normalizeOptionalText(request.params.id);
-    if (!stayId) {
-      return reply.status(400).send(adminError(ADMIN_ERROR_CODE.VALIDATION, "Id da estadia obrigatorio."));
+        .status(400)
+        .send(
+          adminError(ADMIN_ERROR_CODE.VALIDATION, "Id da estadia obrigatorio."),
+        );
     }
 
     const amount = Number(request.body?.amount || 0);
@@ -418,36 +566,66 @@ export function registerStayOperationsRoutes(app: FastifyInstance): void {
     const paidAt = normalizeOptionalText(request.body?.paid_at);
 
     if (!Number.isFinite(amount) || amount <= 0) {
-      return reply.status(400).send(adminError(ADMIN_ERROR_CODE.VALIDATION, "Valor de pagamento invalido."));
+      return reply
+        .status(400)
+        .send(
+          adminError(
+            ADMIN_ERROR_CODE.VALIDATION,
+            "Valor de pagamento invalido.",
+          ),
+        );
     }
     if (!method) {
-      return reply.status(400).send(adminError(ADMIN_ERROR_CODE.VALIDATION, "Metodo de pagamento obrigatorio."));
+      return reply
+        .status(400)
+        .send(
+          adminError(
+            ADMIN_ERROR_CODE.VALIDATION,
+            "Metodo de pagamento obrigatorio.",
+          ),
+        );
     }
 
     const panelBefore = await loadStayPanel(activeHotelId, stayId);
     if (!panelBefore) {
-      return reply.status(404).send(adminError(ADMIN_ERROR_CODE.NOT_FOUND, "Estadia nao encontrada para o hotel ativo."));
+      return reply
+        .status(404)
+        .send(
+          adminError(
+            ADMIN_ERROR_CODE.NOT_FOUND,
+            "Estadia nao encontrada para o hotel ativo.",
+          ),
+        );
     }
 
     const supabase = createServerClient();
-    const { error: insertError } = await supabase.from("financial_transactions").insert({
-      hotel_id: activeHotelId,
-      type: "INCOME",
-      category: "STAY_PAYMENT",
-      amount: Number(amount.toFixed(2)),
-      currency: "BRL",
-      description: note || null,
-      status: "COMPLETED",
-      stay_id: stayId,
-      reservation_id: panelBefore.stay.reservation_id,
-      payment_method: method,
-      paid_at: paidAt || new Date().toISOString(),
-      created_by: auth.session.id
-    });
+    const { error: insertError } = await supabase
+      .from("financial_transactions")
+      .insert({
+        hotel_id: activeHotelId,
+        type: "INCOME",
+        category: "STAY_PAYMENT",
+        amount: Number(amount.toFixed(2)),
+        currency: "BRL",
+        description: note || null,
+        status: "COMPLETED",
+        stay_id: stayId,
+        reservation_id: panelBefore.stay.reservation_id,
+        payment_method: method,
+        paid_at: paidAt || new Date().toISOString(),
+        created_by: auth.session.id,
+      });
 
     if (insertError) {
       request.log.error(insertError);
-      return reply.status(409).send(adminError(ADMIN_ERROR_CODE.CONFLICT, "Falha ao registrar pagamento."));
+      return reply
+        .status(409)
+        .send(
+          adminError(
+            ADMIN_ERROR_CODE.CONFLICT,
+            "Falha ao registrar pagamento.",
+          ),
+        );
     }
 
     const paymentsSumResult = await supabase
@@ -459,19 +637,29 @@ export function registerStayOperationsRoutes(app: FastifyInstance): void {
       .in("status", ["COMPLETED", "REFUNDED"]);
     if (paymentsSumResult.error) {
       request.log.error(paymentsSumResult.error);
-      return reply.status(500).send(adminError(ADMIN_ERROR_CODE.INTERNAL, "Falha ao recalcular total pago da estadia."));
+      return reply
+        .status(500)
+        .send(
+          adminError(
+            ADMIN_ERROR_CODE.INTERNAL,
+            "Falha ao recalcular total pago da estadia.",
+          ),
+        );
     }
 
-    const recalculatedTotalPaid = ((paymentsSumResult.data || []) as Array<{ amount: number | null; type: "INCOME" | "EXPENSE" | "REFUND"; status: string }>).reduce(
-      (sum, row) => {
-        const amountValue = Number(row.amount || 0);
-        if (row.type === "REFUND") {
-          return sum - amountValue;
-        }
-        return sum + amountValue;
-      },
-      0
-    );
+    const recalculatedTotalPaid = (
+      (paymentsSumResult.data || []) as Array<{
+        amount: number | null;
+        type: "INCOME" | "EXPENSE" | "REFUND";
+        status: string;
+      }>
+    ).reduce((sum, row) => {
+      const amountValue = Number(row.amount || 0);
+      if (row.type === "REFUND") {
+        return sum - amountValue;
+      }
+      return sum + amountValue;
+    }, 0);
     const { error: updateStayError } = await supabase
       .from("stays")
       .update({ total_paid: Number(recalculatedTotalPaid.toFixed(2)) })
@@ -479,7 +667,14 @@ export function registerStayOperationsRoutes(app: FastifyInstance): void {
 
     if (updateStayError) {
       request.log.error(updateStayError);
-      return reply.status(409).send(adminError(ADMIN_ERROR_CODE.CONFLICT, "Falha ao atualizar saldo da estadia."));
+      return reply
+        .status(409)
+        .send(
+          adminError(
+            ADMIN_ERROR_CODE.CONFLICT,
+            "Falha ao atualizar saldo da estadia.",
+          ),
+        );
     }
 
     const panel = await loadStayPanel(activeHotelId, stayId).catch((error) => {
@@ -487,159 +682,367 @@ export function registerStayOperationsRoutes(app: FastifyInstance): void {
       return null;
     });
     if (!panel) {
-      return reply.status(500).send(adminError(ADMIN_ERROR_CODE.INTERNAL, "Falha ao recarregar painel da estadia."));
+      return reply
+        .status(500)
+        .send(
+          adminError(
+            ADMIN_ERROR_CODE.INTERNAL,
+            "Falha ao recarregar painel da estadia.",
+          ),
+        );
     }
 
     return reply.send({ item: panel });
   });
 
-  app.post<{ Params: HotelIdParams }>("/admin/stays/:id/checkin", async (request, reply) => {
-    const auth = ensureAuthorizedWithScope(request, reply, PERMISSIONS.RESERVATIONS_CALENDAR_ACCESS);
-    if (!auth) return;
-    const activeHotelId = requireActiveHotelId(reply, auth.activeHotelId);
-    if (!activeHotelId) return;
+  app.post<{ Params: HotelIdParams }>(
+    "/admin/stays/:id/checkin",
+    async (request, reply) => {
+      const auth = ensureAuthorizedWithScope(
+        request,
+        reply,
+        PERMISSIONS.RESERVATIONS_CALENDAR_ACCESS,
+      );
+      if (!auth) return;
+      const activeHotelId = requireActiveHotelId(reply, auth.activeHotelId);
+      if (!activeHotelId) return;
 
-    const stayId = normalizeOptionalText(request.params.id);
-    if (!stayId) {
-      return reply.status(400).send(adminError(ADMIN_ERROR_CODE.VALIDATION, "Id da estadia obrigatorio."));
-    }
+      const stayId = normalizeOptionalText(request.params.id);
+      if (!stayId) {
+        return reply
+          .status(400)
+          .send(
+            adminError(
+              ADMIN_ERROR_CODE.VALIDATION,
+              "Id da estadia obrigatorio.",
+            ),
+          );
+      }
 
-    const panel = await loadStayPanel(activeHotelId, stayId);
-    if (!panel) {
-      return reply.status(404).send(adminError(ADMIN_ERROR_CODE.NOT_FOUND, "Estadia nao encontrada para o hotel ativo."));
-    }
-    if (!panel.eligibility.can_checkin) {
-      return reply.status(409).send(adminError(ADMIN_ERROR_CODE.CONFLICT, panel.eligibility.checkin_block_reason || "Check-in nao permitido."));
-    }
+      const panel = await loadStayPanel(activeHotelId, stayId);
+      if (!panel) {
+        return reply
+          .status(404)
+          .send(
+            adminError(
+              ADMIN_ERROR_CODE.NOT_FOUND,
+              "Estadia nao encontrada para o hotel ativo.",
+            ),
+          );
+      }
+      if (!panel.eligibility.can_checkin) {
+        return reply
+          .status(409)
+          .send(
+            adminError(
+              ADMIN_ERROR_CODE.CONFLICT,
+              panel.eligibility.checkin_block_reason ||
+                "Check-in nao permitido.",
+            ),
+          );
+      }
 
-    const supabase = createServerClient();
-    const { error } = await supabase.from("stays").update({ stay_status: "checked_in", checkin_date_actual: new Date().toISOString() }).eq("id", stayId);
-    if (error) {
-      request.log.error(error);
-      return reply.status(409).send(adminError(ADMIN_ERROR_CODE.CONFLICT, "Falha ao executar check-in."));
-    }
+      const supabase = createServerClient();
+      const { error } = await supabase
+        .from("stays")
+        .update({
+          stay_status: "checked_in",
+          checkin_date_actual: new Date().toISOString(),
+        })
+        .eq("id", stayId);
+      if (error) {
+        request.log.error(error);
+        return reply
+          .status(409)
+          .send(
+            adminError(
+              ADMIN_ERROR_CODE.CONFLICT,
+              "Falha ao executar check-in.",
+            ),
+          );
+      }
 
-    const refreshed = await loadStayPanel(activeHotelId, stayId);
-    if (!refreshed) {
-      return reply.status(500).send(adminError(ADMIN_ERROR_CODE.INTERNAL, "Falha ao recarregar painel da estadia."));
-    }
-    return reply.send({ item: refreshed });
-  });
+      const refreshed = await loadStayPanel(activeHotelId, stayId);
+      if (!refreshed) {
+        return reply
+          .status(500)
+          .send(
+            adminError(
+              ADMIN_ERROR_CODE.INTERNAL,
+              "Falha ao recarregar painel da estadia.",
+            ),
+          );
+      }
+      return reply.send({ item: refreshed });
+    },
+  );
 
-  app.post<{ Params: HotelIdParams; Body: StayCheckoutBody }>("/admin/stays/:id/checkout", {
-    preValidation: async (request) => {
-      if (request.body == null) request.body = {};
-    }
-  }, async (request, reply) => {
-    const auth = ensureAuthorizedWithScope(request, reply, PERMISSIONS.RESERVATIONS_CALENDAR_ACCESS);
-    if (!auth) return;
-    const activeHotelId = requireActiveHotelId(reply, auth.activeHotelId);
-    if (!activeHotelId) return;
+  app.post<{ Params: HotelIdParams; Body: StayCheckoutBody }>(
+    "/admin/stays/:id/checkout",
+    {
+      preValidation: async (request) => {
+        if (request.body == null) request.body = {};
+      },
+    },
+    async (request, reply) => {
+      const auth = ensureAuthorizedWithScope(
+        request,
+        reply,
+        PERMISSIONS.RESERVATIONS_CALENDAR_ACCESS,
+      );
+      if (!auth) return;
+      const activeHotelId = requireActiveHotelId(reply, auth.activeHotelId);
+      if (!activeHotelId) return;
 
-    const stayId = normalizeOptionalText(request.params.id);
-    if (!stayId) {
-      return reply.status(400).send(adminError(ADMIN_ERROR_CODE.VALIDATION, "Id da estadia obrigatorio."));
-    }
+      const stayId = normalizeOptionalText(request.params.id);
+      if (!stayId) {
+        return reply
+          .status(400)
+          .send(
+            adminError(
+              ADMIN_ERROR_CODE.VALIDATION,
+              "Id da estadia obrigatorio.",
+            ),
+          );
+      }
 
-    const panel = await loadStayPanel(activeHotelId, stayId);
-    if (!panel) {
-      return reply.status(404).send(adminError(ADMIN_ERROR_CODE.NOT_FOUND, "Estadia nao encontrada para o hotel ativo."));
-    }
-    if (!panel.eligibility.can_checkout) {
-      return reply.status(409).send(adminError(ADMIN_ERROR_CODE.CONFLICT, panel.eligibility.checkout_block_reason || "Checkout nao permitido."));
-    }
+      const panel = await loadStayPanel(activeHotelId, stayId);
+      if (!panel) {
+        return reply
+          .status(404)
+          .send(
+            adminError(
+              ADMIN_ERROR_CODE.NOT_FOUND,
+              "Estadia nao encontrada para o hotel ativo.",
+            ),
+          );
+      }
+      if (!panel.eligibility.can_checkout) {
+        return reply
+          .status(409)
+          .send(
+            adminError(
+              ADMIN_ERROR_CODE.CONFLICT,
+              panel.eligibility.checkout_block_reason ||
+                "Checkout nao permitido.",
+            ),
+          );
+      }
 
-    const acknowledgedIds = Array.from(new Set(request.body?.maintenance_acknowledged_occurrence_ids || []));
-    const pendingOccurrenceIds = (panel.maintenance_occurrences || [])
-      .filter((occurrence) => occurrence.status !== "resolved" && occurrence.status !== "canceled")
-      .map((occurrence) => occurrence.id);
-    if (panel.maintenance_acknowledgement_required && pendingOccurrenceIds.some((id) => !acknowledgedIds.includes(id))) {
-      return reply.status(409).send(adminError(ADMIN_ERROR_CODE.CONFLICT, "Registre ciência de todas as ocorrências abertas antes do checkout."));
-    }
+      const acknowledgedIds = Array.from(
+        new Set(request.body?.maintenance_acknowledged_occurrence_ids || []),
+      );
+      const pendingOccurrenceIds = (panel.maintenance_occurrences || [])
+        .filter(
+          (occurrence) =>
+            occurrence.status !== "resolved" &&
+            occurrence.status !== "canceled",
+        )
+        .map((occurrence) => occurrence.id);
+      if (
+        panel.maintenance_acknowledgement_required &&
+        pendingOccurrenceIds.some((id) => !acknowledgedIds.includes(id))
+      ) {
+        return reply
+          .status(409)
+          .send(
+            adminError(
+              ADMIN_ERROR_CODE.CONFLICT,
+              "Registre ciência de todas as ocorrências abertas antes do checkout.",
+            ),
+          );
+      }
 
-    const supabase = createServerClient();
-    const { data: checkedOut, error } = await supabase.rpc("checkout_stay_with_maintenance_acknowledgements", {
-      p_hotel_id: activeHotelId,
-      p_stay_id: stayId,
-      p_actor_id: auth.session.id,
-      p_occurrence_ids: acknowledgedIds,
-      p_note: normalizeOptionalText(request.body?.maintenance_acknowledgement_note) || undefined
-    });
-    if (error || !checkedOut) {
-      request.log.error(error);
-      return reply.status(409).send(adminError(ADMIN_ERROR_CODE.CONFLICT, error?.message || "Falha ao executar checkout."));
-    }
+      const supabase = createServerClient();
+      const { data: checkedOut, error } = await supabase.rpc(
+        "checkout_stay_with_maintenance_acknowledgements",
+        {
+          p_hotel_id: activeHotelId,
+          p_stay_id: stayId,
+          p_actor_id: auth.session.id,
+          p_occurrence_ids: acknowledgedIds,
+          p_note:
+            normalizeOptionalText(
+              request.body?.maintenance_acknowledgement_note,
+            ) || undefined,
+        },
+      );
+      if (error || !checkedOut) {
+        request.log.error(error);
+        return reply
+          .status(409)
+          .send(
+            adminError(
+              ADMIN_ERROR_CODE.CONFLICT,
+              error?.message || "Falha ao executar checkout.",
+            ),
+          );
+      }
 
-    const refreshed = await loadStayPanel(activeHotelId, stayId);
-    if (!refreshed) {
-      return reply.status(500).send(adminError(ADMIN_ERROR_CODE.INTERNAL, "Falha ao recarregar painel da estadia."));
-    }
-    return reply.send({ item: refreshed });
-  });
+      const refreshed = await loadStayPanel(activeHotelId, stayId);
+      if (!refreshed) {
+        return reply
+          .status(500)
+          .send(
+            adminError(
+              ADMIN_ERROR_CODE.INTERNAL,
+              "Falha ao recarregar painel da estadia.",
+            ),
+          );
+      }
+      return reply.send({ item: refreshed });
+    },
+  );
 
-  app.post<{ Params: HotelIdParams }>("/admin/stays/:id/no-show", async (request, reply) => {
-    const auth = ensureAuthorizedWithScope(request, reply, PERMISSIONS.RESERVATIONS_CALENDAR_ACCESS);
-    if (!auth) return;
-    const activeHotelId = requireActiveHotelId(reply, auth.activeHotelId);
-    if (!activeHotelId) return;
+  app.post<{ Params: HotelIdParams }>(
+    "/admin/stays/:id/no-show",
+    async (request, reply) => {
+      const auth = ensureAuthorizedWithScope(
+        request,
+        reply,
+        PERMISSIONS.RESERVATIONS_CALENDAR_ACCESS,
+      );
+      if (!auth) return;
+      const activeHotelId = requireActiveHotelId(reply, auth.activeHotelId);
+      if (!activeHotelId) return;
 
-    const stayId = normalizeOptionalText(request.params.id);
-    if (!stayId) {
-      return reply.status(400).send(adminError(ADMIN_ERROR_CODE.VALIDATION, "Id da estadia obrigatorio."));
-    }
+      const stayId = normalizeOptionalText(request.params.id);
+      if (!stayId) {
+        return reply
+          .status(400)
+          .send(
+            adminError(
+              ADMIN_ERROR_CODE.VALIDATION,
+              "Id da estadia obrigatorio.",
+            ),
+          );
+      }
 
-    const panel = await loadStayPanel(activeHotelId, stayId);
-    if (!panel) {
-      return reply.status(404).send(adminError(ADMIN_ERROR_CODE.NOT_FOUND, "Estadia nao encontrada para o hotel ativo."));
-    }
-    if (!panel.eligibility.can_no_show) {
-      return reply.status(409).send(adminError(ADMIN_ERROR_CODE.CONFLICT, panel.eligibility.no_show_block_reason || "No-show nao permitido."));
-    }
+      const panel = await loadStayPanel(activeHotelId, stayId);
+      if (!panel) {
+        return reply
+          .status(404)
+          .send(
+            adminError(
+              ADMIN_ERROR_CODE.NOT_FOUND,
+              "Estadia nao encontrada para o hotel ativo.",
+            ),
+          );
+      }
+      if (!panel.eligibility.can_no_show) {
+        return reply
+          .status(409)
+          .send(
+            adminError(
+              ADMIN_ERROR_CODE.CONFLICT,
+              panel.eligibility.no_show_block_reason ||
+                "No-show nao permitido.",
+            ),
+          );
+      }
 
-    const supabase = createServerClient();
-    const { error } = await supabase.from("stays").update({ stay_status: "no_show" }).eq("id", stayId);
-    if (error) {
-      request.log.error(error);
-      return reply.status(409).send(adminError(ADMIN_ERROR_CODE.CONFLICT, "Falha ao aplicar no-show."));
-    }
+      const supabase = createServerClient();
+      const { error } = await supabase
+        .from("stays")
+        .update({ stay_status: "no_show" })
+        .eq("id", stayId);
+      if (error) {
+        request.log.error(error);
+        return reply
+          .status(409)
+          .send(
+            adminError(ADMIN_ERROR_CODE.CONFLICT, "Falha ao aplicar no-show."),
+          );
+      }
 
-    const refreshed = await loadStayPanel(activeHotelId, stayId);
-    if (!refreshed) {
-      return reply.status(500).send(adminError(ADMIN_ERROR_CODE.INTERNAL, "Falha ao recarregar painel da estadia."));
-    }
-    return reply.send({ item: refreshed });
-  });
+      const refreshed = await loadStayPanel(activeHotelId, stayId);
+      if (!refreshed) {
+        return reply
+          .status(500)
+          .send(
+            adminError(
+              ADMIN_ERROR_CODE.INTERNAL,
+              "Falha ao recarregar painel da estadia.",
+            ),
+          );
+      }
+      return reply.send({ item: refreshed });
+    },
+  );
 
-  app.post<{ Params: HotelIdParams }>("/admin/stays/:id/cancel", async (request, reply) => {
-    const auth = ensureAuthorizedWithScope(request, reply, PERMISSIONS.RESERVATIONS_CALENDAR_ACCESS);
-    if (!auth) return;
-    const activeHotelId = requireActiveHotelId(reply, auth.activeHotelId);
-    if (!activeHotelId) return;
+  app.post<{ Params: HotelIdParams }>(
+    "/admin/stays/:id/cancel",
+    async (request, reply) => {
+      const auth = ensureAuthorizedWithScope(
+        request,
+        reply,
+        PERMISSIONS.RESERVATIONS_CALENDAR_ACCESS,
+      );
+      if (!auth) return;
+      const activeHotelId = requireActiveHotelId(reply, auth.activeHotelId);
+      if (!activeHotelId) return;
 
-    const stayId = normalizeOptionalText(request.params.id);
-    if (!stayId) {
-      return reply.status(400).send(adminError(ADMIN_ERROR_CODE.VALIDATION, "Id da estadia obrigatorio."));
-    }
+      const stayId = normalizeOptionalText(request.params.id);
+      if (!stayId) {
+        return reply
+          .status(400)
+          .send(
+            adminError(
+              ADMIN_ERROR_CODE.VALIDATION,
+              "Id da estadia obrigatorio.",
+            ),
+          );
+      }
 
-    const panel = await loadStayPanel(activeHotelId, stayId);
-    if (!panel) {
-      return reply.status(404).send(adminError(ADMIN_ERROR_CODE.NOT_FOUND, "Estadia nao encontrada para o hotel ativo."));
-    }
-    if (!panel.eligibility.can_cancel) {
-      return reply.status(409).send(adminError(ADMIN_ERROR_CODE.CONFLICT, panel.eligibility.cancel_block_reason || "Cancelamento nao permitido."));
-    }
+      const panel = await loadStayPanel(activeHotelId, stayId);
+      if (!panel) {
+        return reply
+          .status(404)
+          .send(
+            adminError(
+              ADMIN_ERROR_CODE.NOT_FOUND,
+              "Estadia nao encontrada para o hotel ativo.",
+            ),
+          );
+      }
+      if (!panel.eligibility.can_cancel) {
+        return reply
+          .status(409)
+          .send(
+            adminError(
+              ADMIN_ERROR_CODE.CONFLICT,
+              panel.eligibility.cancel_block_reason ||
+                "Cancelamento nao permitido.",
+            ),
+          );
+      }
 
-    const supabase = createServerClient();
-    const { error } = await supabase.from("stays").update({ stay_status: "canceled" }).eq("id", stayId);
-    if (error) {
-      request.log.error(error);
-      return reply.status(409).send(adminError(ADMIN_ERROR_CODE.CONFLICT, "Falha ao cancelar estadia."));
-    }
+      const supabase = createServerClient();
+      const { error } = await supabase
+        .from("stays")
+        .update({ stay_status: "canceled" })
+        .eq("id", stayId);
+      if (error) {
+        request.log.error(error);
+        return reply
+          .status(409)
+          .send(
+            adminError(ADMIN_ERROR_CODE.CONFLICT, "Falha ao cancelar estadia."),
+          );
+      }
 
-    const refreshed = await loadStayPanel(activeHotelId, stayId);
-    if (!refreshed) {
-      return reply.status(500).send(adminError(ADMIN_ERROR_CODE.INTERNAL, "Falha ao recarregar painel da estadia."));
-    }
-    return reply.send({ item: refreshed });
-  });
+      const refreshed = await loadStayPanel(activeHotelId, stayId);
+      if (!refreshed) {
+        return reply
+          .status(500)
+          .send(
+            adminError(
+              ADMIN_ERROR_CODE.INTERNAL,
+              "Falha ao recarregar painel da estadia.",
+            ),
+          );
+      }
+      return reply.send({ item: refreshed });
+    },
+  );
 }

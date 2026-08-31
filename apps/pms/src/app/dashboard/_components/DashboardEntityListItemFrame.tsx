@@ -7,7 +7,12 @@ type DashboardEntityListItemFrameProps = {
   children?: ReactNode;
 };
 
-export function DashboardEntityListItemFrame({ title, subtitle, actions, children }: DashboardEntityListItemFrameProps) {
+export function DashboardEntityListItemFrame({
+  title,
+  subtitle,
+  actions,
+  children,
+}: DashboardEntityListItemFrameProps) {
   return (
     <article className="rounded-xl border border-[#e2e2e2] bg-white p-[0.95rem]">
       <div className="flex flex-wrap items-center justify-between gap-3">

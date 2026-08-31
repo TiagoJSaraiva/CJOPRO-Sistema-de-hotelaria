@@ -12,7 +12,10 @@ function revalidateRoomPage(): void {
   revalidatePath("/dashboard/rooms/view");
 }
 
-function redirectWithStatus(status: string, section: "create" | "view" | "root" = "root"): never {
+function redirectWithStatus(
+  status: string,
+  section: "create" | "view" | "root" = "root",
+): never {
   const nonce = Date.now().toString(36);
 
   if (section === "root") {
@@ -26,7 +29,9 @@ export async function createRoomAction(formData: FormData): Promise<void> {
   const user = await getUserFromSession();
 
   if (!user || !user.permissions.includes(PERMISSIONS.ROOM_CREATE)) {
-    const fallback = user?.permissions.includes(PERMISSIONS.ROOM_READ) ? "view" : "root";
+    const fallback = user?.permissions.includes(PERMISSIONS.ROOM_READ)
+      ? "view"
+      : "root";
     redirectWithStatus("forbidden", fallback);
   }
 
@@ -37,7 +42,14 @@ export async function createRoomAction(formData: FormData): Promise<void> {
   const status = String(formData.get("status") || "available").trim();
   const notes = String(formData.get("notes") || "").trim() || null;
 
-  if (!roomNumber || !roomType || !Number.isFinite(maxOccupancy) || maxOccupancy <= 0 || !Number.isFinite(baseDailyRate) || baseDailyRate < 0) {
+  if (
+    !roomNumber ||
+    !roomType ||
+    !Number.isFinite(maxOccupancy) ||
+    maxOccupancy <= 0 ||
+    !Number.isFinite(baseDailyRate) ||
+    baseDailyRate < 0
+  ) {
     redirectWithStatus("create_missing_fields", "create");
   }
 
@@ -48,7 +60,7 @@ export async function createRoomAction(formData: FormData): Promise<void> {
       max_occupancy: maxOccupancy,
       base_daily_rate: baseDailyRate,
       status: status as "available" | "occupied" | "maintenance" | "blocked",
-      notes
+      notes,
     });
   } catch {
     redirectWithStatus("create_error", "create");
@@ -62,7 +74,9 @@ export async function updateRoomAction(formData: FormData): Promise<void> {
   const user = await getUserFromSession();
 
   if (!user || !user.permissions.includes(PERMISSIONS.ROOM_UPDATE)) {
-    const fallback = user?.permissions.includes(PERMISSIONS.ROOM_READ) ? "view" : "root";
+    const fallback = user?.permissions.includes(PERMISSIONS.ROOM_READ)
+      ? "view"
+      : "root";
     redirectWithStatus("forbidden", fallback);
   }
 
@@ -74,7 +88,13 @@ export async function updateRoomAction(formData: FormData): Promise<void> {
   const status = String(formData.get("status") || "available").trim();
   const notes = String(formData.get("notes") || "").trim() || null;
 
-  if (!id || !roomNumber || !roomType || !Number.isFinite(maxOccupancy) || !Number.isFinite(baseDailyRate)) {
+  if (
+    !id ||
+    !roomNumber ||
+    !roomType ||
+    !Number.isFinite(maxOccupancy) ||
+    !Number.isFinite(baseDailyRate)
+  ) {
     redirectWithStatus("update_missing_fields", "view");
   }
 
@@ -85,7 +105,7 @@ export async function updateRoomAction(formData: FormData): Promise<void> {
       max_occupancy: maxOccupancy,
       base_daily_rate: baseDailyRate,
       status: status as "available" | "occupied" | "maintenance" | "blocked",
-      notes
+      notes,
     });
   } catch {
     redirectWithStatus("update_error", "view");
@@ -99,7 +119,9 @@ export async function deleteRoomAction(formData: FormData): Promise<void> {
   const user = await getUserFromSession();
 
   if (!user || !user.permissions.includes(PERMISSIONS.ROOM_DELETE)) {
-    const fallback = user?.permissions.includes(PERMISSIONS.ROOM_READ) ? "view" : "root";
+    const fallback = user?.permissions.includes(PERMISSIONS.ROOM_READ)
+      ? "view"
+      : "root";
     redirectWithStatus("forbidden", fallback);
   }
 

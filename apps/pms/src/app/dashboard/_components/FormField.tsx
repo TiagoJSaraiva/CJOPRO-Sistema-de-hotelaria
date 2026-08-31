@@ -9,7 +9,13 @@ type FormFieldProps = {
   className?: string;
 };
 
-export function FormField({ label, htmlFor, children, fullWidth = false, className }: FormFieldProps) {
+export function FormField({
+  label,
+  htmlFor,
+  children,
+  fullWidth = false,
+  className,
+}: FormFieldProps) {
   return (
     <div className={getDashboardFormFieldClassName({ fullWidth, className })}>
       <label htmlFor={htmlFor}>{label}</label>

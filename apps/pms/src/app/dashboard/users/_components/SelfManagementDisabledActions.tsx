@@ -7,9 +7,13 @@ type SelfManagementDisabledActionsProps = {
   showDelete: boolean;
 };
 
-const tooltipMessage = "Você não pode gerenciar sua conta por aqui. Vá na página";
+const tooltipMessage =
+  "Você não pode gerenciar sua conta por aqui. Vá na página";
 
-export function SelfManagementDisabledActions({ showEdit, showDelete }: SelfManagementDisabledActionsProps) {
+export function SelfManagementDisabledActions({
+  showEdit,
+  showDelete,
+}: SelfManagementDisabledActionsProps) {
   const [isHovering, setIsHovering] = useState(false);
 
   if (!showEdit && !showDelete) {
@@ -48,7 +52,8 @@ export function SelfManagementDisabledActions({ showEdit, showDelete }: SelfMana
           className="absolute right-0 top-[calc(100%+0.5rem)] z-20 max-w-[360px] rounded-[10px] border border-[#d6dce7] bg-white px-[0.7rem] py-[0.55rem] text-[0.9rem] leading-[1.35] text-[#1f2937] shadow-[0_8px_20px_rgba(15,23,42,0.12)]"
           role="tooltip"
         >
-          {tooltipMessage} <strong>Início</strong> para mais opções de gerenciamento de conta.
+          {tooltipMessage} <strong>Início</strong> para mais opções de
+          gerenciamento de conta.
         </div>
       ) : null}
     </div>

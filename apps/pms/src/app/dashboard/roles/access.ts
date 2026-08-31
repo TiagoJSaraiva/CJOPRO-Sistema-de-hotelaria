@@ -16,11 +16,13 @@ export function getRolesAccess(user: UserLike): RolesAccess {
     canCreate: permissions.includes(PERMISSIONS.ROLE_CREATE),
     canRead: permissions.includes(PERMISSIONS.ROLE_READ),
     canUpdate: permissions.includes(PERMISSIONS.ROLE_UPDATE),
-    canDelete: permissions.includes(PERMISSIONS.ROLE_DELETE)
+    canDelete: permissions.includes(PERMISSIONS.ROLE_DELETE),
   };
 }
 
-export function getRolesDefaultRoute(access: RolesAccess): "/dashboard/roles/view" | "/dashboard/roles/create" | null {
+export function getRolesDefaultRoute(
+  access: RolesAccess,
+): "/dashboard/roles/view" | "/dashboard/roles/create" | null {
   if (access.canRead) {
     return "/dashboard/roles/view";
   }

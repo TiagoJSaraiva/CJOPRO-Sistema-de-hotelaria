@@ -6,7 +6,7 @@ import {
   listAccessibleHotels,
   listActiveHotelOptions,
   resolveActiveHotelForUser,
-  userCanAccessHotel
+  userCanAccessHotel,
 } from "../../../src/lib/activeHotel";
 
 function createUser(roleAssignments: AuthUser["roleAssignments"]): AuthUser {
@@ -17,40 +17,82 @@ function createUser(roleAssignments: AuthUser["roleAssignments"]): AuthUser {
     tenantId: null,
     roles: [],
     permissions: [],
-    roleAssignments
+    roleAssignments,
   };
 }
 
 describe("lib/activeHotel", () => {
   it("deduplica hoteis por id e ordena alfabeticamente", () => {
     const user = createUser([
-      { roleId: "r1", roleName: "Recepcao", roleType: "HOTEL_ROLE", hotelId: "h2", hotelName: "Zeta Hotel" },
-      { roleId: "r2", roleName: "Gerente", roleType: "HOTEL_ROLE", hotelId: "h1", hotelName: "Alpha Hotel" },
-      { roleId: "r3", roleName: "Owner", roleType: "HOTEL_ROLE", hotelId: "h2", hotelName: "Nome Ignorado" }
+      {
+        roleId: "r1",
+        roleName: "Recepcao",
+        roleType: "HOTEL_ROLE",
+        hotelId: "h2",
+        hotelName: "Zeta Hotel",
+      },
+      {
+        roleId: "r2",
+        roleName: "Gerente",
+        roleType: "HOTEL_ROLE",
+        hotelId: "h1",
+        hotelName: "Alpha Hotel",
+      },
+      {
+        roleId: "r3",
+        roleName: "Owner",
+        roleType: "HOTEL_ROLE",
+        hotelId: "h2",
+        hotelName: "Nome Ignorado",
+      },
     ]);
 
     expect(listAccessibleHotels(user)).toEqual([
       { id: "h1", name: "Alpha Hotel" },
-      { id: "h2", name: "Zeta Hotel" }
+      { id: "h2", name: "Zeta Hotel" },
     ]);
   });
 
   it("inclui opcao global quando usuario tem role global", () => {
     const user = createUser([
-      { roleId: "r0", roleName: "Root", roleType: "SYSTEM_ROLE", hotelId: null, hotelName: null },
-      { roleId: "r2", roleName: "Gerente", roleType: "HOTEL_ROLE", hotelId: "h1", hotelName: "Alpha Hotel" }
+      {
+        roleId: "r0",
+        roleName: "Root",
+        roleType: "SYSTEM_ROLE",
+        hotelId: null,
+        hotelName: null,
+      },
+      {
+        roleId: "r2",
+        roleName: "Gerente",
+        roleType: "HOTEL_ROLE",
+        hotelId: "h1",
+        hotelName: "Alpha Hotel",
+      },
     ]);
 
     expect(listActiveHotelOptions(user)).toEqual([
       { hotelId: null, label: "Sistema (todos os hotéis)" },
-      { hotelId: "h1", label: "Alpha Hotel" }
+      { hotelId: "h1", label: "Alpha Hotel" },
     ]);
   });
 
   it("resolve hotel ativo preferindo cookie valido", () => {
     const user = createUser([
-      { roleId: "r2", roleName: "Gerente", roleType: "HOTEL_ROLE", hotelId: "hotel-1", hotelName: "Alpha Hotel" },
-      { roleId: "r3", roleName: "Dono", roleType: "HOTEL_ROLE", hotelId: "hotel-2", hotelName: "Beta Hotel" }
+      {
+        roleId: "r2",
+        roleName: "Gerente",
+        roleType: "HOTEL_ROLE",
+        hotelId: "hotel-1",
+        hotelName: "Alpha Hotel",
+      },
+      {
+        roleId: "r3",
+        roleName: "Dono",
+        roleType: "HOTEL_ROLE",
+        hotelId: "hotel-2",
+        hotelName: "Beta Hotel",
+      },
     ]);
 
     expect(resolveActiveHotelForUser(user, "hotel-2")).toBe("hotel-2");
@@ -58,8 +100,20 @@ describe("lib/activeHotel", () => {
 
   it("resolve hotel ativo para o primeiro hotel quando usuario nao tem global", () => {
     const user = createUser([
-      { roleId: "r2", roleName: "Gerente", roleType: "HOTEL_ROLE", hotelId: "hotel-z", hotelName: "Zeta" },
-      { roleId: "r3", roleName: "Dono", roleType: "HOTEL_ROLE", hotelId: "hotel-a", hotelName: "Alpha" }
+      {
+        roleId: "r2",
+        roleName: "Gerente",
+        roleType: "HOTEL_ROLE",
+        hotelId: "hotel-z",
+        hotelName: "Zeta",
+      },
+      {
+        roleId: "r3",
+        roleName: "Dono",
+        roleType: "HOTEL_ROLE",
+        hotelId: "hotel-a",
+        hotelName: "Alpha",
+      },
     ]);
 
     expect(resolveActiveHotelForUser(user, undefined)).toBe("hotel-a");
@@ -68,8 +122,20 @@ describe("lib/activeHotel", () => {
 
   it("resolve hotel ativo para global quando usuario possui acesso global e cookie e invalido", () => {
     const user = createUser([
-      { roleId: "r0", roleName: "Root", roleType: "SYSTEM_ROLE", hotelId: null, hotelName: null },
-      { roleId: "r2", roleName: "Gerente", roleType: "HOTEL_ROLE", hotelId: "hotel-1", hotelName: "Alpha Hotel" }
+      {
+        roleId: "r0",
+        roleName: "Root",
+        roleType: "SYSTEM_ROLE",
+        hotelId: null,
+        hotelName: null,
+      },
+      {
+        roleId: "r2",
+        roleName: "Gerente",
+        roleType: "HOTEL_ROLE",
+        hotelId: "hotel-1",
+        hotelName: "Alpha Hotel",
+      },
     ]);
 
     expect(resolveActiveHotelForUser(user, "hotel-invalido")).toBeNull();
@@ -77,8 +143,20 @@ describe("lib/activeHotel", () => {
 
   it("valida acesso de hotel por role assignment", () => {
     const user = createUser([
-      { roleId: "r0", roleName: "Root", roleType: "SYSTEM_ROLE", hotelId: null, hotelName: null },
-      { roleId: "r2", roleName: "Gerente", roleType: "HOTEL_ROLE", hotelId: "hotel-1", hotelName: "Alpha Hotel" }
+      {
+        roleId: "r0",
+        roleName: "Root",
+        roleType: "SYSTEM_ROLE",
+        hotelId: null,
+        hotelName: null,
+      },
+      {
+        roleId: "r2",
+        roleName: "Gerente",
+        roleType: "HOTEL_ROLE",
+        hotelId: "hotel-1",
+        hotelName: "Alpha Hotel",
+      },
     ]);
 
     expect(userCanAccessHotel(user, null)).toBe(true);

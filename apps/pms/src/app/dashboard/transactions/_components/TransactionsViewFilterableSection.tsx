@@ -3,12 +3,15 @@
 import Link from "next/link";
 import { useMemo } from "react";
 import type { AdminFinancialTransaction } from "@hotel/shared";
-import { translateTransactionStatus, translateTransactionType } from "@hotel/shared";
+import {
+  translateTransactionStatus,
+  translateTransactionType,
+} from "@hotel/shared";
 import {
   DEFAULT_TRANSACTION_VIEW_FILTERS,
   applyTransactionViewFilters,
   countAppliedTransactionFilters,
-  type TransactionViewFilters
+  type TransactionViewFilters,
 } from "./transactionViewFilters";
 import { FinancialTransactionReportMenu } from "./FinancialTransactionReportMenu";
 import { buildFinancialTransactionInsights } from "./financialTransactionInsights";
@@ -16,7 +19,11 @@ import { TransactionListItem } from "./TransactionListItem";
 import { PermissionTabs } from "../../_components/PermissionTabs";
 import { shouldPlaceTabsInFilterBar } from "../../_components/DashboardEntityTabsLayout";
 import { useDashboardEntityTabs } from "../../_components/DashboardEntityTabsContext";
-import { ViewFiltersActionsBar, ViewFiltersModal, viewFiltersFieldClassName } from "../../_components/ViewFiltersBase";
+import {
+  ViewFiltersActionsBar,
+  ViewFiltersModal,
+  viewFiltersFieldClassName,
+} from "../../_components/ViewFiltersBase";
 import { useViewFiltersState } from "../../_components/useViewFiltersState";
 
 type TransactionsViewFilterableSectionProps = {
@@ -38,7 +45,7 @@ function formatMoney(amount: number, currency = "BRL"): string {
   try {
     return new Intl.NumberFormat("pt-BR", {
       style: "currency",
-      currency
+      currency,
     }).format(amount);
   } catch {
     return `${currency} ${amount.toFixed(2)}`;
@@ -51,7 +58,7 @@ function formatDate(value: string | null | undefined): string {
   return new Intl.DateTimeFormat("pt-BR", {
     day: "2-digit",
     month: "2-digit",
-    year: "numeric"
+    year: "numeric",
   }).format(new Date(value));
 }
 
@@ -59,7 +66,7 @@ function MetricCard({
   label,
   value,
   detail,
-  tone = "neutral"
+  tone = "neutral",
 }: {
   label: string;
   value: string;
@@ -70,26 +77,43 @@ function MetricCard({
     neutral: "border-[#d9dfe7] bg-white text-[#202939]",
     good: "border-[#b6e4cb] bg-[#f1fbf5] text-[#176c43]",
     danger: "border-[#f3b2b2] bg-[#fff5f5] text-[#b42318]",
-    warning: "border-[#f5d08a] bg-[#fff9eb] text-[#8a5a00]"
+    warning: "border-[#f5d08a] bg-[#fff9eb] text-[#8a5a00]",
   }[tone];
 
   return (
-    <article className={`rounded-lg border p-4 shadow-[0_1px_2px_rgba(16,24,40,0.04)] ${toneClassName}`}>
-      <span className="block text-[0.76rem] font-semibold uppercase tracking-[0.05em] text-[#52606d]">{label}</span>
-      <strong className="mt-2 block text-[1.45rem] leading-tight">{value}</strong>
+    <article
+      className={`rounded-lg border p-4 shadow-[0_1px_2px_rgba(16,24,40,0.04)] ${toneClassName}`}
+    >
+      <span className="block text-[0.76rem] font-semibold uppercase tracking-[0.05em] text-[#52606d]">
+        {label}
+      </span>
+      <strong className="mt-2 block text-[1.45rem] leading-tight">
+        {value}
+      </strong>
       <p className="mb-0 mt-2 text-[0.86rem] text-[#52606d]">{detail}</p>
     </article>
   );
 }
 
-function ExpenseCategoriesPanel({ transactions, referenceDate }: { transactions: AdminFinancialTransaction[]; referenceDate: Date }) {
-  const insights = buildFinancialTransactionInsights(transactions, referenceDate);
+function ExpenseCategoriesPanel({
+  transactions,
+  referenceDate,
+}: {
+  transactions: AdminFinancialTransaction[];
+  referenceDate: Date;
+}) {
+  const insights = buildFinancialTransactionInsights(
+    transactions,
+    referenceDate,
+  );
 
   return (
     <aside className="grid gap-4 rounded-lg border border-[#d9dfe7] bg-white p-4">
       <div>
         <h3 className="m-0 text-[1rem] text-[#121926]">Categorias de gasto</h3>
-        <p className="mb-0 mt-[0.25rem] text-[0.86rem] text-[#52606d]">Participação das principais despesas no recorte atual.</p>
+        <p className="mb-0 mt-[0.25rem] text-[0.86rem] text-[#52606d]">
+          Participação das principais despesas no recorte atual.
+        </p>
       </div>
 
       <div className="grid gap-3">
@@ -97,13 +121,22 @@ function ExpenseCategoriesPanel({ transactions, referenceDate }: { transactions:
           insights.topExpenseCategories.map((category) => (
             <div key={category.category} className="grid gap-[0.35rem]">
               <div className="flex items-center justify-between gap-3 text-[0.88rem]">
-                <strong className="truncate text-[#202939]">{category.category}</strong>
-                <span className="text-[#52606d]">{formatMoney(category.amount)}</span>
+                <strong className="truncate text-[#202939]">
+                  {category.category}
+                </strong>
+                <span className="text-[#52606d]">
+                  {formatMoney(category.amount)}
+                </span>
               </div>
               <div className="h-2 overflow-hidden rounded-full bg-[#eef2f6]">
-                <div className="h-full rounded-full bg-[#1b7a6c]" style={{ width: `${Math.max(category.share, 4)}%` }} />
+                <div
+                  className="h-full rounded-full bg-[#1b7a6c]"
+                  style={{ width: `${Math.max(category.share, 4)}%` }}
+                />
               </div>
-              <span className="text-[0.78rem] text-[#52606d]">{category.share}% em {category.count} lançamento(s)</span>
+              <span className="text-[0.78rem] text-[#52606d]">
+                {category.share}% em {category.count} lançamento(s)
+              </span>
             </div>
           ))
         ) : (
@@ -116,28 +149,54 @@ function ExpenseCategoriesPanel({ transactions, referenceDate }: { transactions:
   );
 }
 
-function UpcomingExpensesPanel({ transactions, referenceDate }: { transactions: AdminFinancialTransaction[]; referenceDate: Date }) {
-  const insights = buildFinancialTransactionInsights(transactions, referenceDate);
+function UpcomingExpensesPanel({
+  transactions,
+  referenceDate,
+}: {
+  transactions: AdminFinancialTransaction[];
+  referenceDate: Date;
+}) {
+  const insights = buildFinancialTransactionInsights(
+    transactions,
+    referenceDate,
+  );
 
   return (
     <aside className="grid gap-4 rounded-lg border border-[#d9dfe7] bg-white p-4">
       <div>
-        <h3 className="m-0 text-[1rem] text-[#121926]">Agenda de vencimentos</h3>
-        <p className="mb-0 mt-[0.25rem] text-[0.86rem] text-[#52606d]">Proximas despesas pendentes para acompanhamento.</p>
+        <h3 className="m-0 text-[1rem] text-[#121926]">
+          Agenda de vencimentos
+        </h3>
+        <p className="mb-0 mt-[0.25rem] text-[0.86rem] text-[#52606d]">
+          Proximas despesas pendentes para acompanhamento.
+        </p>
       </div>
 
       <div className="grid gap-2">
         {insights.upcomingExpenses.length ? (
           insights.upcomingExpenses.map((transaction) => (
-            <div key={transaction.id} className="rounded-lg border border-[#eef2f6] p-3">
+            <div
+              key={transaction.id}
+              className="rounded-lg border border-[#eef2f6] p-3"
+            >
               <div className="flex items-start justify-between gap-3">
                 <div className="min-w-0">
-                  <strong className="block truncate text-[0.9rem] text-[#202939]">{transaction.category}</strong>
-                  <span className="block truncate text-[0.8rem] text-[#52606d]">{transaction.counterparty || transaction.cost_center || "Sem fornecedor"}</span>
+                  <strong className="block truncate text-[0.9rem] text-[#202939]">
+                    {transaction.category}
+                  </strong>
+                  <span className="block truncate text-[0.8rem] text-[#52606d]">
+                    {transaction.counterparty ||
+                      transaction.cost_center ||
+                      "Sem fornecedor"}
+                  </span>
                 </div>
-                <span className="whitespace-nowrap text-[0.88rem] font-semibold text-[#b42318]">{formatMoney(transaction.amount, transaction.currency)}</span>
+                <span className="whitespace-nowrap text-[0.88rem] font-semibold text-[#b42318]">
+                  {formatMoney(transaction.amount, transaction.currency)}
+                </span>
               </div>
-              <span className="mt-2 block text-[0.78rem] text-[#52606d]">{formatDate(transaction.due_date)}</span>
+              <span className="mt-2 block text-[0.78rem] text-[#52606d]">
+                {formatDate(transaction.due_date)}
+              </span>
             </div>
           ))
         ) : (
@@ -158,13 +217,18 @@ export function TransactionsViewFilterableSection({
   canDelete,
   activeTransactionId,
   mode,
-  reportContext
+  reportContext,
 }: TransactionsViewFilterableSectionProps) {
   const referenceDate = useMemo(() => new Date(), []);
   const tabsContext = useDashboardEntityTabs();
-  const viewTabs = tabsContext && shouldPlaceTabsInFilterBar(tabsContext.activeTabKey) ? (
-    <PermissionTabs activeKey={tabsContext.activeTabKey} items={tabsContext.tabs} className="pms-entity-tabs-inline" />
-  ) : null;
+  const viewTabs =
+    tabsContext && shouldPlaceTabsInFilterBar(tabsContext.activeTabKey) ? (
+      <PermissionTabs
+        activeKey={tabsContext.activeTabKey}
+        items={tabsContext.tabs}
+        className="pms-entity-tabs-inline"
+      />
+    ) : null;
   const {
     isModalOpen,
     appliedFilters,
@@ -173,15 +237,21 @@ export function TransactionsViewFilterableSection({
     closeFilters,
     applyFilters,
     clearFilters,
-    updateDraftFilter
-  } = useViewFiltersState<TransactionViewFilters>(DEFAULT_TRANSACTION_VIEW_FILTERS);
+    updateDraftFilter,
+  } = useViewFiltersState<TransactionViewFilters>(
+    DEFAULT_TRANSACTION_VIEW_FILTERS,
+  );
 
   const filteredTransactions = useMemo(
-    () => applyTransactionViewFilters(transactions, appliedFilters, referenceDate),
-    [transactions, appliedFilters, referenceDate]
+    () =>
+      applyTransactionViewFilters(transactions, appliedFilters, referenceDate),
+    [transactions, appliedFilters, referenceDate],
   );
   const appliedFilterCount = countAppliedTransactionFilters(appliedFilters);
-  const insights = useMemo(() => buildFinancialTransactionInsights(transactions, referenceDate), [transactions, referenceDate]);
+  const insights = useMemo(
+    () => buildFinancialTransactionInsights(transactions, referenceDate),
+    [transactions, referenceDate],
+  );
 
   return (
     <section className="grid gap-4">
@@ -212,7 +282,11 @@ export function TransactionsViewFilterableSection({
         />
       </section>
 
-      <ViewFiltersActionsBar appliedFilterCount={appliedFilterCount} onOpen={openFilters} onClear={clearFilters}>
+      <ViewFiltersActionsBar
+        appliedFilterCount={appliedFilterCount}
+        onOpen={openFilters}
+        onClear={clearFilters}
+      >
         <div className="flex flex-wrap items-center gap-3">
           <div className="min-w-[220px] flex-1">{viewTabs}</div>
           <FinancialTransactionReportMenu
@@ -224,7 +298,10 @@ export function TransactionsViewFilterableSection({
             referenceDate={referenceDate}
           />
           {canCreate ? (
-            <Link href="/dashboard/transactions/create" className="rounded-lg border border-[#14564c] bg-[#1b7a6c] px-[0.75rem] py-[0.5rem] font-semibold text-white no-underline">
+            <Link
+              href="/dashboard/transactions/create"
+              className="rounded-lg border border-[#14564c] bg-[#1b7a6c] px-[0.75rem] py-[0.5rem] font-semibold text-white no-underline"
+            >
               Novo lançamento
             </Link>
           ) : null}
@@ -232,7 +309,8 @@ export function TransactionsViewFilterableSection({
       </ViewFiltersActionsBar>
 
       <p className="pms-status-muted">
-        Exibindo {filteredTransactions.length} de {transactions.length} lançamentos financeiros.
+        Exibindo {filteredTransactions.length} de {transactions.length}{" "}
+        lançamentos financeiros.
       </p>
 
       <section className="grid gap-4 xl:grid-cols-[minmax(0,1fr)_360px]">
@@ -245,30 +323,50 @@ export function TransactionsViewFilterableSection({
                 canRead={canRead}
                 canUpdate={canUpdate}
                 canDelete={canDelete}
-                isViewing={activeTransactionId === transaction.id && mode === "view"}
-                isEditing={activeTransactionId === transaction.id && mode === "edit"}
+                isViewing={
+                  activeTransactionId === transaction.id && mode === "view"
+                }
+                isEditing={
+                  activeTransactionId === transaction.id && mode === "edit"
+                }
               />
             ))
           ) : (
             <article className="pms-empty-state">
-              {appliedFilterCount ? "Nenhum lançamento corresponde aos filtros aplicados." : "Nenhum lançamento financeiro cadastrado até o momento."}
+              {appliedFilterCount
+                ? "Nenhum lançamento corresponde aos filtros aplicados."
+                : "Nenhum lançamento financeiro cadastrado até o momento."}
             </article>
           )}
         </div>
 
         <div className="grid content-start gap-4">
-          <ExpenseCategoriesPanel transactions={filteredTransactions} referenceDate={referenceDate} />
-          <UpcomingExpensesPanel transactions={filteredTransactions} referenceDate={referenceDate} />
+          <ExpenseCategoriesPanel
+            transactions={filteredTransactions}
+            referenceDate={referenceDate}
+          />
+          <UpcomingExpensesPanel
+            transactions={filteredTransactions}
+            referenceDate={referenceDate}
+          />
         </div>
       </section>
 
-      <ViewFiltersModal title="Filtros financeiros" open={isModalOpen} onClose={closeFilters} onApply={applyFilters} onClear={clearFilters}>
+      <ViewFiltersModal
+        title="Filtros financeiros"
+        open={isModalOpen}
+        onClose={closeFilters}
+        onApply={applyFilters}
+        onClear={clearFilters}
+      >
         <div className="grid grid-cols-1 gap-[0.75rem] md:grid-cols-2 xl:grid-cols-4">
           <label className="pms-field md:col-span-2">
             <span>Busca</span>
             <input
               value={draftFilters.search}
-              onChange={(event) => updateDraftFilter("search", event.target.value)}
+              onChange={(event) =>
+                updateDraftFilter("search", event.target.value)
+              }
               placeholder="Categoria, fornecedor, descrição ou referência"
               className={viewFiltersFieldClassName}
             />
@@ -278,13 +376,24 @@ export function TransactionsViewFilterableSection({
             <span>Tipo</span>
             <select
               value={draftFilters.type}
-              onChange={(event) => updateDraftFilter("type", event.target.value as TransactionViewFilters["type"])}
+              onChange={(event) =>
+                updateDraftFilter(
+                  "type",
+                  event.target.value as TransactionViewFilters["type"],
+                )
+              }
               className={viewFiltersFieldClassName}
             >
               <option value="all">Todos</option>
-              <option value="INCOME">{translateTransactionType("INCOME")}</option>
-              <option value="EXPENSE">{translateTransactionType("EXPENSE")}</option>
-              <option value="REFUND">{translateTransactionType("REFUND")}</option>
+              <option value="INCOME">
+                {translateTransactionType("INCOME")}
+              </option>
+              <option value="EXPENSE">
+                {translateTransactionType("EXPENSE")}
+              </option>
+              <option value="REFUND">
+                {translateTransactionType("REFUND")}
+              </option>
             </select>
           </label>
 
@@ -292,15 +401,30 @@ export function TransactionsViewFilterableSection({
             <span>Status</span>
             <select
               value={draftFilters.status}
-              onChange={(event) => updateDraftFilter("status", event.target.value as TransactionViewFilters["status"])}
+              onChange={(event) =>
+                updateDraftFilter(
+                  "status",
+                  event.target.value as TransactionViewFilters["status"],
+                )
+              }
               className={viewFiltersFieldClassName}
             >
               <option value="all">Todos</option>
-              <option value="PENDING">{translateTransactionStatus("PENDING")}</option>
-              <option value="COMPLETED">{translateTransactionStatus("COMPLETED")}</option>
-              <option value="FAILED">{translateTransactionStatus("FAILED")}</option>
-              <option value="CANCELLED">{translateTransactionStatus("CANCELLED")}</option>
-              <option value="REFUNDED">{translateTransactionStatus("REFUNDED")}</option>
+              <option value="PENDING">
+                {translateTransactionStatus("PENDING")}
+              </option>
+              <option value="COMPLETED">
+                {translateTransactionStatus("COMPLETED")}
+              </option>
+              <option value="FAILED">
+                {translateTransactionStatus("FAILED")}
+              </option>
+              <option value="CANCELLED">
+                {translateTransactionStatus("CANCELLED")}
+              </option>
+              <option value="REFUNDED">
+                {translateTransactionStatus("REFUNDED")}
+              </option>
             </select>
           </label>
 
@@ -308,7 +432,12 @@ export function TransactionsViewFilterableSection({
             <span>Situação</span>
             <select
               value={draftFilters.settlement}
-              onChange={(event) => updateDraftFilter("settlement", event.target.value as TransactionViewFilters["settlement"])}
+              onChange={(event) =>
+                updateDraftFilter(
+                  "settlement",
+                  event.target.value as TransactionViewFilters["settlement"],
+                )
+              }
               className={viewFiltersFieldClassName}
             >
               <option value="all">Todas</option>
@@ -323,7 +452,9 @@ export function TransactionsViewFilterableSection({
             <span>Centro de custo</span>
             <input
               value={draftFilters.costCenter}
-              onChange={(event) => updateDraftFilter("costCenter", event.target.value)}
+              onChange={(event) =>
+                updateDraftFilter("costCenter", event.target.value)
+              }
               className={viewFiltersFieldClassName}
             />
           </label>
@@ -332,7 +463,9 @@ export function TransactionsViewFilterableSection({
             <span>Metodo</span>
             <input
               value={draftFilters.paymentMethod}
-              onChange={(event) => updateDraftFilter("paymentMethod", event.target.value)}
+              onChange={(event) =>
+                updateDraftFilter("paymentMethod", event.target.value)
+              }
               className={viewFiltersFieldClassName}
             />
           </label>
@@ -342,7 +475,9 @@ export function TransactionsViewFilterableSection({
             <input
               type="date"
               value={draftFilters.dateFrom}
-              onChange={(event) => updateDraftFilter("dateFrom", event.target.value)}
+              onChange={(event) =>
+                updateDraftFilter("dateFrom", event.target.value)
+              }
               className={viewFiltersFieldClassName}
             />
           </label>
@@ -352,7 +487,9 @@ export function TransactionsViewFilterableSection({
             <input
               type="date"
               value={draftFilters.dateTo}
-              onChange={(event) => updateDraftFilter("dateTo", event.target.value)}
+              onChange={(event) =>
+                updateDraftFilter("dateTo", event.target.value)
+              }
               className={viewFiltersFieldClassName}
             />
           </label>
@@ -364,7 +501,9 @@ export function TransactionsViewFilterableSection({
               min={0}
               step="0.01"
               value={draftFilters.minAmount}
-              onChange={(event) => updateDraftFilter("minAmount", event.target.value)}
+              onChange={(event) =>
+                updateDraftFilter("minAmount", event.target.value)
+              }
               className={viewFiltersFieldClassName}
             />
           </label>
@@ -376,7 +515,9 @@ export function TransactionsViewFilterableSection({
               min={0}
               step="0.01"
               value={draftFilters.maxAmount}
-              onChange={(event) => updateDraftFilter("maxAmount", event.target.value)}
+              onChange={(event) =>
+                updateDraftFilter("maxAmount", event.target.value)
+              }
               className={viewFiltersFieldClassName}
             />
           </label>

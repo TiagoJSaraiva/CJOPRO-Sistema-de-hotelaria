@@ -15,7 +15,9 @@ type RoomsViewPageProps = {
   }>;
 };
 
-export default async function RoomsViewPage({ searchParams }: RoomsViewPageProps) {
+export default async function RoomsViewPage({
+  searchParams,
+}: RoomsViewPageProps) {
   const resolvedSearchParams = await searchParams;
   const user = await getUserFromSession();
   const access = getRoomsAccess(user);
@@ -27,7 +29,12 @@ export default async function RoomsViewPage({ searchParams }: RoomsViewPageProps
       redirect(fallback);
     }
 
-    return <DashboardAccessDeniedCard title="Quartos" message="Sem permissão para visualizar quartos." />;
+    return (
+      <DashboardAccessDeniedCard
+        title="Quartos"
+        message="Sem permissão para visualizar quartos."
+      />
+    );
   }
 
   const rooms = await listRooms();
@@ -39,10 +46,22 @@ export default async function RoomsViewPage({ searchParams }: RoomsViewPageProps
       title="Quartos"
       activeTabKey="view"
       tabs={[
-        { key: "create", label: "Criar quarto", href: "/dashboard/rooms/create", isVisible: access.canCreate },
-        { key: "view", label: "Ver quartos", href: "/dashboard/rooms/view", isVisible: access.canRead }
+        {
+          key: "create",
+          label: "Criar quarto",
+          href: "/dashboard/rooms/create",
+          isVisible: access.canCreate,
+        },
+        {
+          key: "view",
+          label: "Ver quartos",
+          href: "/dashboard/rooms/view",
+          isVisible: access.canRead,
+        },
       ]}
-      statusContent={<RoomStatusMessage status={resolvedSearchParams?.status} />}
+      statusContent={
+        <RoomStatusMessage status={resolvedSearchParams?.status} />
+      }
     >
       <RoomsViewFilterableSection
         rooms={rooms}

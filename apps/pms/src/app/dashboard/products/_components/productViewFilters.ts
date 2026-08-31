@@ -11,10 +11,12 @@ export const DEFAULT_PRODUCT_VIEW_FILTERS: ProductViewFilters = {
   search: "",
   status: "all",
   minPrice: "",
-  maxPrice: ""
+  maxPrice: "",
 };
 
-export function countAppliedProductFilters(filters: ProductViewFilters): number {
+export function countAppliedProductFilters(
+  filters: ProductViewFilters,
+): number {
   let total = 0;
 
   if (filters.search.trim()) total += 1;
@@ -25,14 +27,18 @@ export function countAppliedProductFilters(filters: ProductViewFilters): number 
   return total;
 }
 
-export function applyProductViewFilters(products: AdminProduct[], filters: ProductViewFilters): AdminProduct[] {
+export function applyProductViewFilters(
+  products: AdminProduct[],
+  filters: ProductViewFilters,
+): AdminProduct[] {
   const search = filters.search.trim().toLocaleLowerCase();
   const minPrice = Number(filters.minPrice || "");
   const maxPrice = Number(filters.maxPrice || "");
 
   return products.filter((product) => {
     if (search) {
-      const haystack = `${product.name} ${product.category || ""}`.toLocaleLowerCase();
+      const haystack =
+        `${product.name} ${product.category || ""}`.toLocaleLowerCase();
 
       if (!haystack.includes(search)) {
         return false;
@@ -43,11 +49,17 @@ export function applyProductViewFilters(products: AdminProduct[], filters: Produ
       return false;
     }
 
-    if (filters.minPrice.trim() && (!Number.isFinite(minPrice) || product.unit_price < minPrice)) {
+    if (
+      filters.minPrice.trim() &&
+      (!Number.isFinite(minPrice) || product.unit_price < minPrice)
+    ) {
       return false;
     }
 
-    if (filters.maxPrice.trim() && (!Number.isFinite(maxPrice) || product.unit_price > maxPrice)) {
+    if (
+      filters.maxPrice.trim() &&
+      (!Number.isFinite(maxPrice) || product.unit_price > maxPrice)
+    ) {
       return false;
     }
 
