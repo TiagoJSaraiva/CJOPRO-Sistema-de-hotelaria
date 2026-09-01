@@ -82,6 +82,8 @@ triggers, políticas ou dados, leia integralmente o
 - Testes devem ser determinísticos e independentes de serviços externos, exceto
   a suíte local de banco deliberadamente separada.
 - Atualize documentação e diagramas no mesmo diff da mudança que representam.
+- Ao final de toda implementação que altere código do repositório, execute
+  `pnpm exec prettier . --write` antes das demais validações finais.
 
 ### Proteção obrigatória de features e correções
 
