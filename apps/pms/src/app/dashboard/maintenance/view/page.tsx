@@ -84,6 +84,12 @@ export default async function MaintenanceViewPage({ searchParams }: PageProps) {
       isVisible: access.canRead,
     },
     {
+      key: "finance",
+      label: "Financeiro",
+      href: "/dashboard/maintenance/finance",
+      isVisible: access.canReadFinance,
+    },
+    {
       key: "report",
       label: "Registrar",
       href: "/dashboard/maintenance/report",

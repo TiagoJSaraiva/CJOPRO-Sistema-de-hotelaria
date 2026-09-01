@@ -21,6 +21,10 @@ const maintenancePermissions = [
   "inspect_maintenance",
   "confirm_damage_liability",
   "manage_maintenance_catalogs",
+  "read_maintenance_finance",
+  "propose_maintenance_finance",
+  "approve_maintenance_finance",
+  "settle_maintenance_finance",
 ];
 
 const user = {
@@ -393,6 +397,63 @@ const server = http.createServer(async (request, response) => {
       overdue: 1,
       awaiting_inspection: 1,
       blocked_rooms: 1,
+    });
+    return;
+  }
+
+  if (
+    method === "GET" &&
+    url.pathname === "/admin/maintenance/finance/summary"
+  ) {
+    sendJson(response, 200, {
+      currency: "BRL",
+      awaiting_approval: 1,
+      payable: 1,
+      receivable: 1,
+      overdue: 0,
+      settled: 2,
+      payable_amount: 1980,
+      receivable_amount: 100,
+    });
+    return;
+  }
+
+  if (method === "GET" && url.pathname === "/admin/maintenance/finance/items") {
+    sendJson(response, 200, {
+      page: 1,
+      page_size: 25,
+      total: 1,
+      items: [
+        {
+          id: "99000000-0000-4000-8000-000000000001",
+          occurrence_id: "97000000-0000-4000-8000-000000000001",
+          occurrence_code: "OCO-001001",
+          work_order_id: null,
+          kind: "material",
+          description: "Substituição do televisor danificado",
+          quantity: 1,
+          estimated_amount: 2200,
+          actual_amount: 1980,
+          currency: "BRL",
+          counterparty: "Fornecedor Demo",
+          due_date: "2026-09-10",
+          reference_code: "ORC-001",
+          approval_status: "submitted",
+          settlement_status: "not_posted",
+          created_by: "technician-e2e",
+          proposer_name: "Técnico Demo",
+          submitted_at: "2026-05-12T12:00:00.000Z",
+          approved_by: null,
+          approved_at: null,
+          decision_reason: null,
+          settled_amount: 0,
+          outstanding_amount: 1980,
+          settlements: [],
+          attachments: [],
+          created_at: "2026-05-12T10:00:00.000Z",
+          updated_at: "2026-05-12T12:00:00.000Z",
+        },
+      ],
     });
     return;
   }

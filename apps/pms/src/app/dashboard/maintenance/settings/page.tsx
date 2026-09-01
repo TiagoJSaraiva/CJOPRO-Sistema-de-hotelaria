@@ -33,6 +33,12 @@ export default async function MaintenanceSettingsPage() {
           isVisible: access.canCreate,
         },
         {
+          key: "finance",
+          label: "Financeiro",
+          href: "/dashboard/maintenance/finance",
+          isVisible: access.canReadFinance,
+        },
+        {
           key: "settings",
           label: "Configuração",
           href: "/dashboard/maintenance/settings",

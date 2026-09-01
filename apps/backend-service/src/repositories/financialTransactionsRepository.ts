@@ -12,7 +12,7 @@ import {
 } from "./supabaseError";
 
 const TRANSACTION_SELECT_FIELDS =
-  "id,hotel_id,type,category,amount,currency,description,status,stay_id,reservation_id,payment_method,paid_at,due_date,counterparty,cost_center,reference_code,created_by,created_at,updated_at";
+  "id,hotel_id,type,category,amount,currency,description,status,stay_id,reservation_id,payment_method,paid_at,due_date,counterparty,cost_center,reference_code,created_by,maintenance_cost_item_id,maintenance_recovery_id,created_at,updated_at";
 
 export type FinancialTransactionWriteResult = "ok" | "conflict" | "not-found";
 type FinancialTransactionCreate = Omit<

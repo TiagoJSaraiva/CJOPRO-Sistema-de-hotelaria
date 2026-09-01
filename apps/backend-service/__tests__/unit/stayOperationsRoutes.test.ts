@@ -22,6 +22,7 @@ type SupabaseMockOptions = {
   candidateStays?: Array<{ id: string; room_id: string; stay_status: string }>;
   panelStay?: Record<string, unknown> | null;
   reservationStays?: Array<{
+    id?: string;
     total_price_estimated: number | null;
     total_paid: number | null;
   }>;
@@ -129,10 +130,26 @@ function createSupabaseMock(options: SupabaseMockOptions = {}) {
       };
     }
 
-    if (table === "stays" && selected === "total_price_estimated,total_paid") {
+    if (
+      table === "stays" &&
+      selected === "id,reservation:reservation_id(hotel_id)"
+    ) {
+      return {
+        data:
+          filters.id === "stay-2"
+            ? [{ id: "stay-2", reservation: { hotel_id: "hotel-1" } }]
+            : [],
+        error: null,
+      };
+    }
+
+    if (
+      table === "stays" &&
+      selected === "id,total_price_estimated,total_paid"
+    ) {
       return {
         data: options.reservationStays || [
-          { total_price_estimated: 960, total_paid: 960 },
+          { id: "stay-2", total_price_estimated: 960, total_paid: 960 },
         ],
         error: null,
       };
@@ -143,6 +160,10 @@ function createSupabaseMock(options: SupabaseMockOptions = {}) {
         data: options.payments || [],
         error: null,
       };
+    }
+
+    if (table === "hotels") {
+      return { data: [{ currency: "BRL" }], error: null };
     }
 
     return { data: [], error: null };
@@ -168,6 +189,11 @@ function createSupabaseMock(options: SupabaseMockOptions = {}) {
       const result = resolve(table, selected, filters);
       const row = result.data[0] || null;
       return { data: row, error: row ? null : { code: "PGRST116" } };
+    });
+    builder.maybeSingle = vi.fn(async () => {
+      const result = resolve(table, selected, filters);
+      const row = result.data[0] || null;
+      return { data: row, error: null };
     });
     builder.then = (
       onFulfilled: (value: { data: unknown[]; error: null }) => unknown,

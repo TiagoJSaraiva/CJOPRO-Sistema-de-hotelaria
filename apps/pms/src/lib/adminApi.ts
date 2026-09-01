@@ -21,6 +21,7 @@ import {
   AdminReservationCalendarBookingCreateInput,
   AdminReservationCalendarBookingCreateResponse,
   AdminStayOperationalPanelResponse,
+  AdminStayFolioAllocationPreview,
   AdminStayPaymentCreateInput,
   AdminRoom,
   AdminRoomCreateInput,
@@ -46,6 +47,10 @@ import {
   AdminMaintenanceOccurrenceDetail,
   AdminMaintenanceReferenceData,
   AdminMaintenanceSummary,
+  AdminMaintenanceFinanceListResponse,
+  AdminMaintenanceFinanceOccurrence,
+  AdminMaintenanceFinanceSummary,
+  AdminStayFolioResponse,
 } from "@hotel/shared";
 import { getActiveHotelCookieValue } from "./activeHotel";
 
@@ -456,6 +461,31 @@ export function getMaintenanceSummary(): Promise<AdminMaintenanceSummary> {
   return requestMaintenanceEndpoint<AdminMaintenanceSummary>("summary", "GET");
 }
 
+export function getMaintenanceFinanceSummary(): Promise<AdminMaintenanceFinanceSummary> {
+  return requestMaintenanceEndpoint<AdminMaintenanceFinanceSummary>(
+    "finance/summary",
+    "GET",
+  );
+}
+
+export function getMaintenanceFinanceItems(
+  query = "",
+): Promise<AdminMaintenanceFinanceListResponse> {
+  return requestMaintenanceEndpoint<AdminMaintenanceFinanceListResponse>(
+    `finance/items${query ? `?${query}` : ""}`,
+    "GET",
+  );
+}
+
+export async function getMaintenanceOccurrenceFinance(
+  id: string,
+): Promise<AdminMaintenanceFinanceOccurrence> {
+  const response = await requestMaintenanceEndpoint<
+    AdminItemResponse<AdminMaintenanceFinanceOccurrence>
+  >(`occurrences/${id}/finance`, "GET");
+  return response.item;
+}
+
 export function simulateReservationsCalendarBooking(
   payload: AdminReservationCalendarBookingCreateInput,
 ): Promise<AdminReservationCalendarBookingCreateResponse> {
@@ -483,6 +513,28 @@ export async function getStayOperationalPanel(
     AdminItemResponse<AdminStayOperationalPanelResponse>
   >(`/admin/stays/${stayId}/panel`);
   return response.item;
+}
+
+export async function getStayFolio(
+  stayId: string,
+): Promise<AdminStayFolioResponse> {
+  const response = await getAdminData<
+    AdminItemResponse<AdminStayFolioResponse>
+  >(`/admin/stays/${stayId}/folio`);
+  return response.item;
+}
+
+export async function previewStayPaymentAllocation(
+  stayId: string,
+  amount: number,
+): Promise<AdminStayFolioAllocationPreview> {
+  const response = await requestAdmin<AdminStayFolioAllocationPreview>(
+    `/admin/stays/${stayId}/payments/allocation-preview`,
+    "POST",
+    { amount },
+  );
+  if (!response) throw new Error("Falha ao sugerir a alocação do pagamento.");
+  return response;
 }
 
 export async function getStayCheckoutCandidateByRoomNumber(
@@ -522,6 +574,7 @@ export function executeStayCheckout(
   stayId: string,
   payload: {
     maintenance_acknowledged_occurrence_ids?: string[];
+    maintenance_acknowledged_folio_entry_ids?: string[];
     maintenance_acknowledgement_note?: string;
   },
 ): Promise<AdminStayOperationalPanelResponse | null> {

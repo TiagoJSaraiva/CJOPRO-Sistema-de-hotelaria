@@ -349,6 +349,8 @@ export type AdminFinancialTransaction = {
   cost_center?: string | null;
   reference_code?: string | null;
   created_by?: string | null;
+  maintenance_cost_item_id?: string | null;
+  maintenance_recovery_id?: string | null;
   created_at?: string;
   updated_at?: string;
 };
@@ -563,6 +565,59 @@ export type AdminStayPaymentCreateInput = {
   method: string;
   note?: string | null;
   paid_at?: string | null;
+  allocations?: AdminStayFolioAllocationInput[];
+};
+
+export type StayFolioDirection = "debit" | "credit";
+export type StayFolioKind =
+  "lodging" | "maintenance_charge" | "payment" | "refund" | "adjustment";
+
+export type AdminStayFolioEntry = {
+  id: string;
+  stay_id: string;
+  reservation_id: string;
+  direction: StayFolioDirection;
+  kind: StayFolioKind;
+  amount: number;
+  currency: string;
+  description: string;
+  maintenance_occurrence_id: string | null;
+  financial_transaction_id: string | null;
+  reversed_entry_id: string | null;
+  allocated_amount: number;
+  open_amount: number;
+  posted_at: string;
+};
+
+export type AdminStayFolioAllocation = {
+  id: string;
+  credit_entry_id: string;
+  debit_entry_id: string;
+  amount: number;
+  created_at: string;
+};
+
+export type AdminStayFolioAllocationInput = {
+  debit_entry_id: string;
+  amount: number;
+};
+
+export type AdminStayFolioResponse = {
+  stay_id: string;
+  currency: string;
+  entries: AdminStayFolioEntry[];
+  allocations: AdminStayFolioAllocation[];
+  total_debits: number;
+  total_credits: number;
+  balance: number;
+  payment_status: AdminStayPaymentStatus;
+  pending_maintenance_entry_ids: string[];
+};
+
+export type AdminStayFolioAllocationPreview = {
+  amount: number;
+  allocations: AdminStayFolioAllocationInput[];
+  unallocated_amount: number;
 };
 
 export type AdminStayOperationalPanelResponse = {
@@ -609,8 +664,11 @@ export type AdminStayOperationalPanelResponse = {
     cancel_block_reason: string | null;
   };
   payments: AdminStayPayment[];
+  folio?: AdminStayFolioResponse;
   maintenance_occurrences?: AdminMaintenanceOccurrenceSummary[];
   maintenance_acknowledgement_required?: boolean;
+  maintenance_financial_acknowledgement_required?: boolean;
+  maintenance_pending_folio_entry_ids?: string[];
 };
 
 export type MaintenanceLocationKind = "area" | "equipment";
@@ -822,6 +880,149 @@ export type AdminMaintenanceReferenceData = {
 
 export type AdminMaintenanceOccurrenceListResponse = {
   items: AdminMaintenanceOccurrenceSummary[];
+  page: number;
+  page_size: number;
+  total: number;
+};
+
+export type MaintenanceCostKind =
+  "material" | "labor" | "external_service" | "other";
+export type MaintenanceFinanceApprovalStatus =
+  "draft" | "submitted" | "approved" | "rejected" | "canceled";
+export type MaintenanceFinanceSettlementStatus =
+  "not_posted" | "open" | "partially_settled" | "settled" | "reversed";
+
+export type AdminMaintenanceFinancialSettlement = {
+  id: string;
+  cost_item_id: string | null;
+  recovery_id: string | null;
+  financial_transaction_id: string;
+  amount: number;
+  created_by: string;
+  created_at: string;
+  reversal_of_id: string | null;
+};
+
+export type AdminMaintenanceFinancialAttachment = {
+  id: string;
+  occurrence_id: string;
+  cost_item_id: string | null;
+  recovery_id: string | null;
+  original_filename: string;
+  content_type: "image/jpeg" | "image/png" | "image/webp" | "application/pdf";
+  size_bytes: number;
+  uploaded_by: string;
+  created_at: string;
+  removed_at: string | null;
+};
+
+export type AdminMaintenanceCostItem = {
+  id: string;
+  occurrence_id: string;
+  occurrence_code?: string;
+  work_order_id: string | null;
+  kind: MaintenanceCostKind;
+  description: string;
+  quantity: number;
+  estimated_amount: number | null;
+  actual_amount: number | null;
+  currency: string;
+  counterparty: string | null;
+  due_date: string | null;
+  reference_code: string | null;
+  approval_status: MaintenanceFinanceApprovalStatus;
+  settlement_status: MaintenanceFinanceSettlementStatus;
+  created_by: string;
+  proposer_name?: string;
+  submitted_at: string | null;
+  approved_by: string | null;
+  approved_at: string | null;
+  decision_reason: string | null;
+  settled_amount: number;
+  outstanding_amount: number;
+  settlements?: AdminMaintenanceFinancialSettlement[];
+  attachments?: AdminMaintenanceFinancialAttachment[];
+  created_at: string;
+  updated_at: string;
+};
+
+export type AdminMaintenanceCostItemInput = {
+  work_order_id?: string | null;
+  kind: MaintenanceCostKind;
+  description: string;
+  quantity?: number;
+  estimated_amount?: number | null;
+  actual_amount?: number | null;
+  counterparty?: string | null;
+  due_date?: string | null;
+  reference_code?: string | null;
+};
+
+export type AdminMaintenanceRecovery = {
+  id: string;
+  occurrence_id: string;
+  occurrence_code?: string;
+  responsible_party: "guest" | "supplier";
+  stay_id: string | null;
+  debtor_name: string | null;
+  charge_amount: number;
+  waived_amount: number;
+  currency: string;
+  justification: string;
+  due_date: string | null;
+  approval_status: MaintenanceFinanceApprovalStatus;
+  settlement_status: MaintenanceFinanceSettlementStatus;
+  folio_entry_id: string | null;
+  created_by: string;
+  proposer_name?: string;
+  submitted_at: string | null;
+  approved_by: string | null;
+  approved_at: string | null;
+  decision_reason: string | null;
+  settled_amount: number;
+  outstanding_amount: number;
+  settlements?: AdminMaintenanceFinancialSettlement[];
+  attachments?: AdminMaintenanceFinancialAttachment[];
+  created_at: string;
+  updated_at: string;
+};
+
+export type AdminMaintenanceRecoveryInput = {
+  responsible_party: "guest" | "supplier";
+  stay_id?: string | null;
+  debtor_name?: string | null;
+  charge_amount: number;
+  waived_amount?: number;
+  justification: string;
+  due_date?: string | null;
+};
+
+export type AdminMaintenanceFinanceOccurrence = {
+  occurrence_id: string;
+  currency: string;
+  estimated_cost: number;
+  approved_cost: number;
+  settled_cost: number;
+  approved_recovery: number;
+  received_recovery: number;
+  net_result: number;
+  cost_items: AdminMaintenanceCostItem[];
+  recoveries: AdminMaintenanceRecovery[];
+};
+
+export type AdminMaintenanceFinanceSummary = {
+  currency: string;
+  awaiting_approval: number;
+  payable: number;
+  receivable: number;
+  overdue: number;
+  settled: number;
+  payable_amount: number;
+  receivable_amount: number;
+};
+
+export type AdminMaintenanceFinanceListResponse = {
+  items: Array<AdminMaintenanceCostItem | AdminMaintenanceRecovery>;
   page: number;
   page_size: number;
   total: number;

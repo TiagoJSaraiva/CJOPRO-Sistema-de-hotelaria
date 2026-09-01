@@ -90,12 +90,53 @@ novas interdições de manutenção são criadas somente em `room_blocks`.
 
 Evidências ficam no bucket privado `maintenance-evidence`; o navegador recebe
 apenas URLs assinadas temporárias e nunca credenciais administrativas. O módulo
-não cria transações financeiras, cobranças, despesas ou realocações.
+operacional não realoca hóspedes nem cria cobranças automaticamente.
 
 Fontes de verdade: migration `20260831010000_create_maintenance_core.sql`,
 `maintenanceRepository.ts`, `maintenanceRoutes.ts`, os contratos em
 `packages/shared/src/api-contract.ts` e as páginas em
 `apps/pms/src/app/dashboard/maintenance`.
+
+## Execução financeira de danos e manutenção
+
+O fólio é o razão operacional da estadia. Débitos e créditos postados são
+imutáveis, pagamentos podem ser alocados entre vários débitos e correções são
+novos lançamentos compensatórios. Os campos legados de total da estadia são
+mantidos como projeções de compatibilidade; saldo e situação de pagamento são
+derivados de `stay_folio_entries` e `stay_folio_allocations`.
+
+```mermaid
+flowchart LR
+  estimate[Orçamento de custo] --> actual[Custo real]
+  actual --> submit[Submissão]
+  submit --> approve{Aprovador diferente?}
+  approve -->|sim| payable[Obrigação a pagar]
+  approve -->|não| reject[Rejeição]
+  payable --> settlement[Pagamento parcial ou total]
+  settlement --> cash[Transação realizada]
+  cash -->|correção| reversal[Estorno compensatório]
+
+  liability[Responsabilidade confirmada] --> recovery[Recuperação manual]
+  recovery --> recoverApprove[Aprovação]
+  recoverApprove --> guest{Hóspede?}
+  guest -->|sim| folio[Débito no fólio]
+  guest -->|terceiro| receivable[Recebível independente]
+  folio --> receipt[Recebimento e alocação]
+  receivable --> receipt
+  recovery -.-> waiver[Dispensa justificada]
+```
+
+Proposta, aprovação e liquidação possuem permissões independentes, e o autor
+não aprova o próprio item. A conclusão operacional da ocorrência não depende da
+quitação financeira. Documentos ficam no bucket privado
+`maintenance-financial-documents`; valores e arquivos são expostos somente a
+usuários com permissão financeira. O checkout exige ciência dos débitos de dano
+em aberto, mas continua permitido.
+
+Fontes de verdade: migration `20260831020000_create_maintenance_finance.sql`,
+`maintenanceFinanceRepository.ts`, `maintenanceFinanceRoutes.ts`, contratos em
+`packages/shared/src/api-contract.ts` e a central
+`apps/pms/src/app/dashboard/maintenance/finance`.
 
 ## Pipeline de qualidade
 

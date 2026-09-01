@@ -33,7 +33,7 @@ describe("routes/users", () => {
   beforeAll(async () => {
     app = createApp();
     await app.ready();
-  });
+  }, 30_000);
 
   afterAll(async () => {
     await app.close();

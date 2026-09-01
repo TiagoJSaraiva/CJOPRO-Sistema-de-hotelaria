@@ -65,7 +65,7 @@ describe.sequential("Supabase local com Fastify real", () => {
     adminToken = await login("admin@hotelaria.local");
     managerAToken = await login("gerente.aurora@hotelaria.local");
     managerBToken = await login("gerente.horizonte@hotelaria.local");
-  });
+  }, 30_000);
 
   afterAll(async () => {
     await app?.close();
@@ -424,22 +424,18 @@ describe.sequential("Supabase local com Fastify real", () => {
       .eq("id", "80000000-0000-4000-8000-000000000002")
       .single();
     const inspectorId = "81000000-0000-4000-8000-000000000001";
-    await supabase
-      .from("users")
-      .insert({
-        id: inspectorId,
-        name: "Inspetor Local",
-        email: "inspetor@hotelaria.local",
-        password_hash: manager!.password_hash,
-        is_active: true,
-      });
-    await supabase
-      .from("user_roles")
-      .insert({
-        user_id: inspectorId,
-        role_id: "70000000-0000-4000-8000-000000000002",
-        hotel_id: HOTEL_A,
-      });
+    await supabase.from("users").insert({
+      id: inspectorId,
+      name: "Inspetor Local",
+      email: "inspetor@hotelaria.local",
+      password_hash: manager!.password_hash,
+      is_active: true,
+    });
+    await supabase.from("user_roles").insert({
+      user_id: inspectorId,
+      role_id: "70000000-0000-4000-8000-000000000002",
+      hotel_id: HOTEL_A,
+    });
     const inspectorToken = await login("inspetor@hotelaria.local");
 
     const created = await app.inject({
@@ -629,5 +625,124 @@ describe.sequential("Supabase local com Fastify real", () => {
       .select("id", { count: "exact", head: true })
       .eq("description", "Responsabilidade confirmada sem gerar cobrança");
     expect(financialCount).toBe(0);
+  });
+
+  it("executa aprovação, pagamento, recuperação parcial e estorno financeiro", async () => {
+    const headers = managerHeaders(managerAToken, HOTEL_A);
+    const approverId = "81000000-0000-4000-8000-000000000002";
+    const { data: manager } = await supabase
+      .from("users")
+      .select("password_hash")
+      .eq("id", "80000000-0000-4000-8000-000000000002")
+      .single();
+    await supabase.from("users").upsert({
+      id: approverId,
+      name: "Aprovador Financeiro Local",
+      email: "aprovador.financeiro@hotelaria.local",
+      password_hash: manager!.password_hash,
+      is_active: true,
+    });
+    await supabase.from("user_roles").upsert({
+      user_id: approverId,
+      role_id: "70000000-0000-4000-8000-000000000002",
+      hotel_id: HOTEL_A,
+    });
+    const approverToken = await login("aprovador.financeiro@hotelaria.local");
+    const approverHeaders = managerHeaders(approverToken, HOTEL_A);
+    const costId = "99000000-0000-4000-8000-000000000001";
+    const recoveryId = "99100000-0000-4000-8000-000000000001";
+
+    const selfApproval = await app.inject({
+      method: "POST",
+      url: `/admin/maintenance/cost-items/${costId}/transition`,
+      headers,
+      payload: { action: "approve" },
+    });
+    expect(selfApproval.statusCode).toBe(409);
+
+    const approval = await app.inject({
+      method: "POST",
+      url: `/admin/maintenance/cost-items/${costId}/transition`,
+      headers: approverHeaders,
+      payload: { action: "approve" },
+    });
+    expect(approval.statusCode).toBe(200);
+
+    const payment = await app.inject({
+      method: "POST",
+      url: `/admin/maintenance/cost-items/${costId}/settlements`,
+      headers,
+      payload: { amount: 80, method: "pix", note: "Pagamento parcial real" },
+    });
+    expect(payment.statusCode).toBe(200);
+    expect(payment.json().item.settlement_status).toBe("partially_settled");
+
+    const submittedRecovery = await app.inject({
+      method: "POST",
+      url: `/admin/maintenance/recoveries/${recoveryId}/transition`,
+      headers,
+      payload: { action: "submit" },
+    });
+    expect(submittedRecovery.statusCode).toBe(200);
+    const approvedRecovery = await app.inject({
+      method: "POST",
+      url: `/admin/maintenance/recoveries/${recoveryId}/transition`,
+      headers: approverHeaders,
+      payload: { action: "approve" },
+    });
+    expect(approvedRecovery.statusCode).toBe(200);
+    expect(approvedRecovery.json().item.folio_entry_id).toBeTruthy();
+
+    const receipt = await app.inject({
+      method: "POST",
+      url: `/admin/maintenance/recoveries/${recoveryId}/settlements`,
+      headers,
+      payload: { amount: 40, method: "pix", note: "Recebimento parcial real" },
+    });
+    expect(receipt.statusCode).toBe(200);
+    expect(receipt.json().item.settlement_status).toBe("partially_settled");
+
+    const financialDetail = await app.inject({
+      method: "GET",
+      url: "/admin/maintenance/occurrences/97000000-0000-4000-8000-000000000002/finance",
+      headers,
+    });
+    expect(financialDetail.statusCode).toBe(200);
+    expect(financialDetail.json().item).toMatchObject({
+      approved_cost: 180,
+      settled_cost: 80,
+      approved_recovery: 100,
+      received_recovery: 40,
+    });
+
+    const costSettlementId = financialDetail
+      .json()
+      .item.cost_items[0].settlements.find(
+        (settlement: { reversal_of_id: string | null }) =>
+          !settlement.reversal_of_id,
+      ).id as string;
+    const reversal = await app.inject({
+      method: "POST",
+      url: `/admin/maintenance/finance/settlements/${costSettlementId}/reverse`,
+      headers,
+      payload: { reason: "Pagamento registrado em duplicidade" },
+    });
+    expect(reversal.statusCode).toBe(200);
+    expect(reversal.json().item.settled_cost).toBe(0);
+
+    const generatedTransaction = await supabase
+      .from("financial_transactions")
+      .select("id")
+      .eq("maintenance_recovery_id", recoveryId)
+      .eq("type", "INCOME")
+      .limit(1)
+      .single();
+    const protectedUpdate = await app.inject({
+      method: "PUT",
+      url: `/admin/financial-transactions/${generatedTransaction.data!.id}`,
+      headers,
+      payload: { description: "Não pode alterar" },
+    });
+    expect(protectedUpdate.statusCode).toBe(409);
   });
 });

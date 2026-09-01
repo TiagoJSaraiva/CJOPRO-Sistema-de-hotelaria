@@ -466,7 +466,8 @@ export function ReservationsCalendarBoard({
       let payload: Record<string, unknown> = {};
       if (
         action === "checkout" &&
-        panelData?.maintenance_acknowledgement_required
+        (panelData?.maintenance_acknowledgement_required ||
+          panelData?.maintenance_financial_acknowledgement_required)
       ) {
         const acknowledged = window.confirm(
           "Esta estadia possui ocorrências de manutenção abertas. Confirma ciência antes de concluir o checkout?",
@@ -482,6 +483,8 @@ export function ReservationsCalendarBoard({
                 occurrence.status !== "canceled",
             )
             .map((occurrence) => occurrence.id),
+          maintenance_acknowledged_folio_entry_ids:
+            panelData?.maintenance_pending_folio_entry_ids || [],
         };
       }
       const panel = await postJson<AdminStayOperationalPanelResponse>(

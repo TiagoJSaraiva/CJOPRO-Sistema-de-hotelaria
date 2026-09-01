@@ -114,6 +114,16 @@ function TransactionDataPreview({
         <DetailItem label="Reserva" value={transaction.reservation_id || "-"} />
         <DetailItem label="Estadia" value={transaction.stay_id || "-"} />
         <DetailItem
+          label="Origem"
+          value={
+            transaction.maintenance_cost_item_id
+              ? "Custo de manutenção"
+              : transaction.maintenance_recovery_id
+                ? "Recuperação de dano"
+                : "Lançamento geral"
+          }
+        />
+        <DetailItem
           label="Criado em"
           value={formatDateTime(transaction.created_at)}
         />
@@ -322,6 +332,9 @@ export function TransactionListItem({
   const viewHref = `/dashboard/transactions/view?transactionId=${transaction.id}&mode=view`;
   const editHref = `/dashboard/transactions/view?transactionId=${transaction.id}&mode=edit`;
   const overdue = isFinancialTransactionOverdue(transaction);
+  const generatedByMaintenance = Boolean(
+    transaction.maintenance_cost_item_id || transaction.maintenance_recovery_id,
+  );
 
   return (
     <article className="rounded-lg border border-[#d9dfe7] bg-white p-4 shadow-[0_1px_2px_rgba(16,24,40,0.04)]">
@@ -341,6 +354,11 @@ export function TransactionListItem({
             {overdue ? (
               <span className="rounded-full border border-[#e67e22] bg-[#fff3e6] px-[0.55rem] py-[0.2rem] text-[0.76rem] font-semibold text-[#9a4b00]">
                 Vencido
+              </span>
+            ) : null}
+            {generatedByMaintenance ? (
+              <span className="rounded-full border border-violet-200 bg-violet-50 px-[0.55rem] py-[0.2rem] text-[0.76rem] font-semibold text-violet-700">
+                Manutenção · caixa realizado
               </span>
             ) : null}
           </div>
@@ -387,7 +405,7 @@ export function TransactionListItem({
             </Link>
           ) : null}
 
-          {canUpdate ? (
+          {canUpdate && !generatedByMaintenance ? (
             <Link
               href={editHref}
               scroll={false}
@@ -397,7 +415,7 @@ export function TransactionListItem({
             </Link>
           ) : null}
 
-          {canDelete ? (
+          {canDelete && !generatedByMaintenance ? (
             <form action={deleteTransactionAction}>
               <input type="hidden" name="id" value={transaction.id} />
               <button

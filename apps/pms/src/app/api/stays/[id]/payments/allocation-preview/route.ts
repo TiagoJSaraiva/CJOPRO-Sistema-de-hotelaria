@@ -1,5 +1,5 @@
 import { NextResponse } from "next/server";
-import { executeStayCheckout } from "../../../../../lib/adminApi";
+import { previewStayPaymentAllocation } from "../../../../../../lib/adminApi";
 
 type Params = {
   params: Promise<{
@@ -10,12 +10,8 @@ type Params = {
 export async function POST(request: Request, { params }: Params) {
   try {
     const { id } = await params;
-    const payload = (await request.json().catch(() => ({}))) as {
-      maintenance_acknowledged_occurrence_ids?: string[];
-      maintenance_acknowledged_folio_entry_ids?: string[];
-      maintenance_acknowledgement_note?: string;
-    };
-    const item = await executeStayCheckout(id, payload);
+    const payload = (await request.json()) as { amount?: number };
+    const item = await previewStayPaymentAllocation(id, Number(payload.amount));
     return NextResponse.json(item);
   } catch (error) {
     const parsedError = error as Error & {
@@ -24,7 +20,7 @@ export async function POST(request: Request, { params }: Params) {
     };
     return NextResponse.json(
       {
-        message: parsedError?.message || "Falha ao executar checkout.",
+        message: parsedError?.message || "Falha ao sugerir a alocação.",
         details: parsedError?.details || null,
       },
       { status: Number(parsedError?.statusCode || 400) },

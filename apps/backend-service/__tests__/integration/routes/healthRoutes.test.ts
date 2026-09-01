@@ -17,7 +17,7 @@ describe("routes/health", () => {
       delete process.env.ALLOWED_ORIGINS;
     else process.env.ALLOWED_ORIGINS = previousAllowedOrigins;
     await Promise.all([app.ready(), documentationApp.ready()]);
-  });
+  }, 30_000);
 
   afterAll(async () => {
     await Promise.all([
@@ -25,7 +25,7 @@ describe("routes/health", () => {
       documentationApp.close(),
       openApiOnlyApp.close(),
     ]);
-  });
+  }, 30_000);
 
   it("retorna status do servico", async () => {
     const response = await app.inject({

@@ -4,6 +4,8 @@ import type {
   AdminFinancialTransactionCreateInput,
   AdminHotelCreateInput,
   AdminMaintenanceOccurrenceCreateInput,
+  AdminMaintenanceCostItemInput,
+  AdminMaintenanceRecoveryInput,
   AdminMaintenanceWorkOrderCreateInput,
   AdminPermissionCreateInput,
   AdminProductCreateInput,
@@ -336,6 +338,17 @@ export const StayPaymentBodySchema = Type.Object(
     method: Type.String(),
     note: optionalNullable(Type.String()),
     paid_at: optionalNullable(dateTime()),
+    allocations: Type.Optional(
+      Type.Array(
+        Type.Object(
+          {
+            debit_entry_id: uuid(),
+            amount: Type.Number({ exclusiveMinimum: 0 }),
+          },
+          strict,
+        ),
+      ),
+    ),
   },
   { ...strict, $id: "StayPaymentCreateInput" },
 );
@@ -500,6 +513,8 @@ export const FinancialTransactionSchema = Type.Object(
     cost_center: optionalNullable(Type.String()),
     reference_code: optionalNullable(Type.String()),
     created_by: optionalNullable(uuid()),
+    maintenance_cost_item_id: optionalNullable(uuid()),
+    maintenance_recovery_id: optionalNullable(uuid()),
     ...timestamps,
   },
   { ...strict, $id: "FinancialTransaction" },
@@ -819,6 +834,168 @@ export const MaintenanceWorkOrderBodySchema = Type.Object(
   },
   { ...strict, $id: "MaintenanceWorkOrderCreateInput" },
 );
+const MaintenanceFinanceApprovalStatusSchema = Type.Union([
+  Type.Literal("draft"),
+  Type.Literal("submitted"),
+  Type.Literal("approved"),
+  Type.Literal("rejected"),
+  Type.Literal("canceled"),
+]);
+const MaintenanceFinanceSettlementStatusSchema = Type.Union([
+  Type.Literal("not_posted"),
+  Type.Literal("open"),
+  Type.Literal("partially_settled"),
+  Type.Literal("settled"),
+  Type.Literal("reversed"),
+]);
+const MaintenanceCostKindSchema = Type.Union([
+  Type.Literal("material"),
+  Type.Literal("labor"),
+  Type.Literal("external_service"),
+  Type.Literal("other"),
+]);
+export const MaintenanceCostItemBodySchema = Type.Object(
+  {
+    work_order_id: optionalNullable(uuid()),
+    kind: MaintenanceCostKindSchema,
+    description: Type.String({ minLength: 3, maxLength: 2000 }),
+    quantity: Type.Optional(Type.Number({ exclusiveMinimum: 0 })),
+    estimated_amount: optionalNullable(Type.Number({ minimum: 0 })),
+    actual_amount: optionalNullable(Type.Number({ exclusiveMinimum: 0 })),
+    counterparty: optionalNullable(Type.String({ maxLength: 240 })),
+    due_date: optionalNullable(date()),
+    reference_code: optionalNullable(Type.String({ maxLength: 240 })),
+  },
+  { ...strict, $id: "MaintenanceCostItemInput" },
+);
+export const MaintenanceRecoveryBodySchema = Type.Object(
+  {
+    responsible_party: Type.Union([
+      Type.Literal("guest"),
+      Type.Literal("supplier"),
+    ]),
+    stay_id: optionalNullable(uuid()),
+    debtor_name: optionalNullable(Type.String({ maxLength: 240 })),
+    charge_amount: Type.Number({ minimum: 0 }),
+    waived_amount: Type.Optional(Type.Number({ minimum: 0 })),
+    justification: Type.String({ minLength: 3, maxLength: 2000 }),
+    due_date: optionalNullable(date()),
+  },
+  { ...strict, $id: "MaintenanceRecoveryInput" },
+);
+const MaintenanceFinancialSettlementSchema = Type.Object(
+  {
+    id: uuid(),
+    cost_item_id: nullable(uuid()),
+    recovery_id: nullable(uuid()),
+    financial_transaction_id: uuid(),
+    amount: Type.Number(),
+    created_by: uuid(),
+    created_at: dateTime(),
+    reversal_of_id: nullable(uuid()),
+  },
+  strict,
+);
+const MaintenanceFinancialAttachmentSchema = Type.Object(
+  {
+    id: uuid(),
+    occurrence_id: uuid(),
+    cost_item_id: nullable(uuid()),
+    recovery_id: nullable(uuid()),
+    original_filename: Type.String(),
+    content_type: Type.Union([
+      Type.Literal("image/jpeg"),
+      Type.Literal("image/png"),
+      Type.Literal("image/webp"),
+      Type.Literal("application/pdf"),
+    ]),
+    size_bytes: Type.Integer(),
+    uploaded_by: uuid(),
+    created_at: dateTime(),
+    removed_at: nullable(dateTime()),
+  },
+  strict,
+);
+const MaintenanceFinanceCommonProperties = {
+  id: uuid(),
+  occurrence_id: uuid(),
+  occurrence_code: Type.Optional(Type.String()),
+  currency: Type.String(),
+  approval_status: MaintenanceFinanceApprovalStatusSchema,
+  settlement_status: MaintenanceFinanceSettlementStatusSchema,
+  created_by: uuid(),
+  proposer_name: Type.Optional(Type.String()),
+  submitted_at: nullable(dateTime()),
+  approved_by: nullable(uuid()),
+  approved_at: nullable(dateTime()),
+  decision_reason: nullable(Type.String()),
+  settled_amount: Type.Number(),
+  outstanding_amount: Type.Number(),
+  settlements: Type.Optional(Type.Array(MaintenanceFinancialSettlementSchema)),
+  attachments: Type.Optional(Type.Array(MaintenanceFinancialAttachmentSchema)),
+  created_at: dateTime(),
+  updated_at: dateTime(),
+};
+export const MaintenanceCostItemSchema = Type.Object(
+  {
+    ...MaintenanceFinanceCommonProperties,
+    work_order_id: nullable(uuid()),
+    kind: MaintenanceCostKindSchema,
+    description: Type.String(),
+    quantity: Type.Number(),
+    estimated_amount: nullable(Type.Number()),
+    actual_amount: nullable(Type.Number()),
+    counterparty: nullable(Type.String()),
+    due_date: nullable(date()),
+    reference_code: nullable(Type.String()),
+  },
+  { ...strict, $id: "MaintenanceCostItem" },
+);
+export const MaintenanceRecoverySchema = Type.Object(
+  {
+    ...MaintenanceFinanceCommonProperties,
+    responsible_party: Type.Union([
+      Type.Literal("guest"),
+      Type.Literal("supplier"),
+    ]),
+    stay_id: nullable(uuid()),
+    debtor_name: nullable(Type.String()),
+    charge_amount: Type.Number(),
+    waived_amount: Type.Number(),
+    justification: Type.String(),
+    due_date: nullable(date()),
+    folio_entry_id: nullable(uuid()),
+  },
+  { ...strict, $id: "MaintenanceRecovery" },
+);
+export const MaintenanceFinanceOccurrenceSchema = Type.Object(
+  {
+    occurrence_id: uuid(),
+    currency: Type.String(),
+    estimated_cost: Type.Number(),
+    approved_cost: Type.Number(),
+    settled_cost: Type.Number(),
+    approved_recovery: Type.Number(),
+    received_recovery: Type.Number(),
+    net_result: Type.Number(),
+    cost_items: Type.Array(Type.Ref("MaintenanceCostItem")),
+    recoveries: Type.Array(Type.Ref("MaintenanceRecovery")),
+  },
+  { ...strict, $id: "MaintenanceFinanceOccurrence" },
+);
+export const MaintenanceFinanceSummarySchema = Type.Object(
+  {
+    currency: Type.String(),
+    awaiting_approval: Type.Integer(),
+    payable: Type.Integer(),
+    receivable: Type.Integer(),
+    overdue: Type.Integer(),
+    settled: Type.Integer(),
+    payable_amount: Type.Number(),
+    receivable_amount: Type.Number(),
+  },
+  { ...strict, $id: "MaintenanceFinanceSummary" },
+);
 const MaintenanceCatalogBodySchema = Type.Object(
   {
     name: Type.String({ minLength: 1, maxLength: 120 }),
@@ -949,12 +1126,154 @@ const MaintenanceAttachmentFinalizeBodySchema = Type.Object(
   },
   strict,
 );
+const MaintenanceFinancialAttachmentIntentBodySchema = Type.Object(
+  {
+    target_type: Type.Union([
+      Type.Literal("cost_item"),
+      Type.Literal("recovery"),
+    ]),
+    target_id: uuid(),
+    files: Type.Array(
+      Type.Object(
+        {
+          filename: Type.String({ minLength: 1, maxLength: 255 }),
+          content_type: Type.Union([
+            Type.Literal("image/jpeg"),
+            Type.Literal("image/png"),
+            Type.Literal("image/webp"),
+            Type.Literal("application/pdf"),
+          ]),
+          size_bytes: Type.Integer({ minimum: 1, maximum: 10485760 }),
+        },
+        strict,
+      ),
+      { minItems: 1, maxItems: 5 },
+    ),
+  },
+  strict,
+);
+const MaintenanceFinancialAttachmentFinalizeBodySchema = Type.Object(
+  {
+    target_type: Type.Union([
+      Type.Literal("cost_item"),
+      Type.Literal("recovery"),
+    ]),
+    target_id: uuid(),
+    files: Type.Array(
+      Type.Object(
+        {
+          storage_path: Type.String(),
+          filename: Type.String(),
+          content_type: Type.String(),
+          size_bytes: Type.Integer(),
+        },
+        strict,
+      ),
+      { minItems: 1, maxItems: 5 },
+    ),
+  },
+  strict,
+);
 const StayCheckoutBodySchema = Type.Object(
   {
     maintenance_acknowledged_occurrence_ids: Type.Optional(Type.Array(uuid())),
+    maintenance_acknowledged_folio_entry_ids: Type.Optional(Type.Array(uuid())),
     maintenance_acknowledgement_note: Type.Optional(
       Type.String({ maxLength: 2000 }),
     ),
+  },
+  strict,
+);
+const StayFolioAllocationInputSchema = Type.Object(
+  { debit_entry_id: uuid(), amount: Type.Number({ exclusiveMinimum: 0 }) },
+  strict,
+);
+export const StayFolioSchema = Type.Object(
+  {
+    stay_id: uuid(),
+    currency: Type.String(),
+    entries: Type.Array(
+      Type.Object(
+        {
+          id: uuid(),
+          stay_id: uuid(),
+          reservation_id: uuid(),
+          direction: Type.Union([
+            Type.Literal("debit"),
+            Type.Literal("credit"),
+          ]),
+          kind: Type.Union([
+            Type.Literal("lodging"),
+            Type.Literal("maintenance_charge"),
+            Type.Literal("payment"),
+            Type.Literal("refund"),
+            Type.Literal("adjustment"),
+          ]),
+          amount: Type.Number(),
+          currency: Type.String(),
+          description: Type.String(),
+          maintenance_occurrence_id: nullable(uuid()),
+          financial_transaction_id: nullable(uuid()),
+          reversed_entry_id: nullable(uuid()),
+          allocated_amount: Type.Number(),
+          open_amount: Type.Number(),
+          posted_at: dateTime(),
+        },
+        strict,
+      ),
+    ),
+    allocations: Type.Array(
+      Type.Object(
+        {
+          id: uuid(),
+          credit_entry_id: uuid(),
+          debit_entry_id: uuid(),
+          amount: Type.Number(),
+          created_at: dateTime(),
+        },
+        strict,
+      ),
+    ),
+    total_debits: Type.Number(),
+    total_credits: Type.Number(),
+    balance: Type.Number(),
+    payment_status: PaymentStatusSchema,
+    pending_maintenance_entry_ids: Type.Array(uuid()),
+  },
+  { ...strict, $id: "StayFolio" },
+);
+const StayFolioPreviewBodySchema = Type.Object(
+  { amount: Type.Number({ exclusiveMinimum: 0 }) },
+  strict,
+);
+const StayFolioAllocationPreviewSchema = Type.Object(
+  {
+    amount: Type.Number(),
+    allocations: Type.Array(StayFolioAllocationInputSchema),
+    unallocated_amount: Type.Number(),
+  },
+  strict,
+);
+const MaintenanceFinanceTransitionBodySchema = Type.Object(
+  {
+    action: Type.Union([
+      Type.Literal("submit"),
+      Type.Literal("approve"),
+      Type.Literal("reject"),
+      Type.Literal("cancel"),
+    ]),
+    reason: Type.Optional(Type.String({ minLength: 3, maxLength: 2000 })),
+  },
+  strict,
+);
+const MaintenanceFinanceSettlementBodySchema = Type.Object(
+  {
+    amount: Type.Number({ exclusiveMinimum: 0 }),
+    method: Type.String({ minLength: 1, maxLength: 120 }),
+    settled_at: Type.Optional(dateTime()),
+    note: Type.Optional(Type.String({ maxLength: 2000 })),
+    reference_code: Type.Optional(Type.String({ maxLength: 240 })),
+    allocations: Type.Optional(Type.Array(StayFolioAllocationInputSchema)),
   },
   strict,
 );
@@ -1196,10 +1515,15 @@ export const StayPanelSchema = Type.Object(
       strict,
     ),
     payments: Type.Array(StayPaymentSchema),
+    folio: Type.Optional(Type.Ref("StayFolio")),
     maintenance_occurrences: Type.Optional(
       Type.Array(Type.Ref("MaintenanceOccurrenceSummary")),
     ),
     maintenance_acknowledgement_required: Type.Optional(Type.Boolean()),
+    maintenance_financial_acknowledgement_required: Type.Optional(
+      Type.Boolean(),
+    ),
+    maintenance_pending_folio_entry_ids: Type.Optional(Type.Array(uuid())),
   },
   { ...strict, $id: "StayPanel" },
 );
@@ -1233,6 +1557,18 @@ type ContractCompatibility = [
     >
   >,
   Assert<Compatible<typeof StayPaymentBodySchema, AdminStayPaymentCreateInput>>,
+  Assert<
+    Compatible<
+      typeof MaintenanceCostItemBodySchema,
+      AdminMaintenanceCostItemInput
+    >
+  >,
+  Assert<
+    Compatible<
+      typeof MaintenanceRecoveryBodySchema,
+      AdminMaintenanceRecoveryInput
+    >
+  >,
   Assert<
     Compatible<
       typeof MaintenanceOccurrenceBodySchema,
@@ -1273,8 +1609,11 @@ export const API_COMPONENT_SCHEMAS = [
   FinancialTransactionUpdateSchema,
   CalendarBookingBodySchema,
   StayPaymentBodySchema,
+  StayFolioSchema,
   MaintenanceOccurrenceBodySchema,
   MaintenanceWorkOrderBodySchema,
+  MaintenanceCostItemBodySchema,
+  MaintenanceRecoveryBodySchema,
   HotelSchema,
   UserSchema,
   RoleSchema,
@@ -1298,6 +1637,10 @@ export const API_COMPONENT_SCHEMAS = [
   MaintenanceOccurrenceSummarySchema,
   MaintenanceWorkOrderSchema,
   MaintenanceOccurrenceDetailSchema,
+  MaintenanceCostItemSchema,
+  MaintenanceRecoverySchema,
+  MaintenanceFinanceOccurrenceSchema,
+  MaintenanceFinanceSummarySchema,
 ] as const;
 
 const AuthHeadersSchema = Type.Object(
@@ -1775,6 +2118,159 @@ export const API_ROUTE_CONTRACTS: Readonly<Record<string, ApiRouteContract>> = {
     itemSchema(MaintenanceOccurrenceDetailSchema),
     { params: IdParamsSchema, body: MaintenanceReasonBodySchema },
   ),
+  "GET /admin/maintenance/finance/summary": admin(
+    "getMaintenanceFinanceSummary",
+    "Maintenance finance",
+    "Retorna contadores e saldos das filas financeiras de manutenção.",
+    MaintenanceFinanceSummarySchema,
+  ),
+  "GET /admin/maintenance/finance/items": admin(
+    "listMaintenanceFinanceItems",
+    "Maintenance finance",
+    "Lista custos e recuperações financeiras de manutenção.",
+    Type.Object(
+      {
+        items: Type.Array(
+          Type.Union([
+            Type.Ref("MaintenanceCostItem"),
+            Type.Ref("MaintenanceRecovery"),
+          ]),
+        ),
+        page: Type.Integer(),
+        page_size: Type.Integer(),
+        total: Type.Integer(),
+      },
+      strict,
+    ),
+    {
+      querystring: Type.Object(
+        {
+          page: Type.Optional(Type.String()),
+          page_size: Type.Optional(Type.String()),
+          queue: Type.Optional(Type.String()),
+          kind: Type.Optional(Type.String()),
+          occurrence_id: Type.Optional(Type.String()),
+        },
+        strict,
+      ),
+    },
+  ),
+  "GET /admin/maintenance/occurrences/:id/finance": admin(
+    "getMaintenanceOccurrenceFinance",
+    "Maintenance finance",
+    "Retorna custos e recuperações de uma ocorrência.",
+    itemSchema(MaintenanceFinanceOccurrenceSchema),
+    { params: IdParamsSchema },
+  ),
+  "POST /admin/maintenance/occurrences/:id/cost-items": route(
+    "createMaintenanceCostItem",
+    "Maintenance finance",
+    "Cria um custo em rascunho.",
+    {
+      headers: AuthHeadersSchema,
+      security: [{ bearerAuth: [] }],
+      params: IdParamsSchema,
+      body: MaintenanceCostItemBodySchema,
+      response: { 201: itemSchema(MaintenanceCostItemSchema), ...adminErrors },
+    },
+  ),
+  "PUT /admin/maintenance/cost-items/:id": admin(
+    "updateMaintenanceCostItem",
+    "Maintenance finance",
+    "Atualiza um custo ainda editável.",
+    itemSchema(MaintenanceCostItemSchema),
+    { params: IdParamsSchema, body: MaintenanceCostItemBodySchema },
+  ),
+  "POST /admin/maintenance/cost-items/:id/transition": admin(
+    "transitionMaintenanceCostItem",
+    "Maintenance finance",
+    "Submete, aprova, rejeita ou cancela um custo.",
+    itemSchema(MaintenanceCostItemSchema),
+    { params: IdParamsSchema, body: MaintenanceFinanceTransitionBodySchema },
+  ),
+  "POST /admin/maintenance/cost-items/:id/settlements": admin(
+    "settleMaintenanceCostItem",
+    "Maintenance finance",
+    "Registra pagamento parcial ou integral de um custo aprovado.",
+    itemSchema(MaintenanceCostItemSchema),
+    { params: IdParamsSchema, body: MaintenanceFinanceSettlementBodySchema },
+  ),
+  "POST /admin/maintenance/occurrences/:id/recoveries": route(
+    "createMaintenanceRecovery",
+    "Maintenance finance",
+    "Cria cobrança ou dispensa em rascunho.",
+    {
+      headers: AuthHeadersSchema,
+      security: [{ bearerAuth: [] }],
+      params: IdParamsSchema,
+      body: MaintenanceRecoveryBodySchema,
+      response: { 201: itemSchema(MaintenanceRecoverySchema), ...adminErrors },
+    },
+  ),
+  "PUT /admin/maintenance/recoveries/:id": admin(
+    "updateMaintenanceRecovery",
+    "Maintenance finance",
+    "Atualiza uma recuperação ainda editável.",
+    itemSchema(MaintenanceRecoverySchema),
+    { params: IdParamsSchema, body: MaintenanceRecoveryBodySchema },
+  ),
+  "POST /admin/maintenance/recoveries/:id/transition": admin(
+    "transitionMaintenanceRecovery",
+    "Maintenance finance",
+    "Submete, aprova, rejeita ou cancela uma recuperação.",
+    itemSchema(MaintenanceRecoverySchema),
+    { params: IdParamsSchema, body: MaintenanceFinanceTransitionBodySchema },
+  ),
+  "POST /admin/maintenance/recoveries/:id/settlements": admin(
+    "settleMaintenanceRecovery",
+    "Maintenance finance",
+    "Registra recebimento parcial ou integral.",
+    itemSchema(MaintenanceRecoverySchema),
+    { params: IdParamsSchema, body: MaintenanceFinanceSettlementBodySchema },
+  ),
+  "POST /admin/maintenance/finance/settlements/:id/reverse": admin(
+    "reverseMaintenanceFinancialSettlement",
+    "Maintenance finance",
+    "Estorna uma liquidação com lançamentos compensatórios.",
+    itemSchema(MaintenanceFinanceOccurrenceSchema),
+    { params: IdParamsSchema, body: MaintenanceReasonBodySchema },
+  ),
+  "POST /admin/maintenance/occurrences/:id/financial-attachments/upload-intents":
+    admin(
+      "createMaintenanceFinancialAttachmentUploadIntents",
+      "Maintenance finance",
+      "Gera autorizações temporárias para documentos financeiros.",
+      MaintenanceUploadIntentSchema,
+      {
+        params: IdParamsSchema,
+        body: MaintenanceFinancialAttachmentIntentBodySchema,
+      },
+    ),
+  "POST /admin/maintenance/occurrences/:id/financial-attachments/finalize":
+    admin(
+      "finalizeMaintenanceFinancialAttachments",
+      "Maintenance finance",
+      "Confirma documentos financeiros enviados.",
+      itemSchema(MaintenanceFinanceOccurrenceSchema),
+      {
+        params: IdParamsSchema,
+        body: MaintenanceFinancialAttachmentFinalizeBodySchema,
+      },
+    ),
+  "POST /admin/maintenance/financial-attachments/:id/access": admin(
+    "accessMaintenanceFinancialAttachment",
+    "Maintenance finance",
+    "Gera acesso temporário a um documento financeiro.",
+    MaintenanceAttachmentAccessSchema,
+    { params: IdParamsSchema },
+  ),
+  "POST /admin/maintenance/financial-attachments/:id/remove": admin(
+    "removeMaintenanceFinancialAttachment",
+    "Maintenance finance",
+    "Remove documento com justificativa auditada.",
+    itemSchema(MaintenanceFinanceOccurrenceSchema),
+    { params: IdParamsSchema, body: MaintenanceReasonBodySchema },
+  ),
   "GET /admin/reservations/calendar": admin(
     "getReservationCalendar",
     "Reservations",
@@ -1829,6 +2325,20 @@ export const API_ROUTE_CONTRACTS: Readonly<Record<string, ApiRouteContract>> = {
     "Retorna o painel operacional da estadia.",
     itemSchema(StayPanelSchema),
     { params: IdParamsSchema },
+  ),
+  "GET /admin/stays/:id/folio": admin(
+    "getStayFolio",
+    "Stays",
+    "Retorna o razão auditável e o saldo da estadia.",
+    itemSchema(StayFolioSchema),
+    { params: IdParamsSchema },
+  ),
+  "POST /admin/stays/:id/payments/allocation-preview": admin(
+    "previewStayPaymentAllocation",
+    "Stays",
+    "Sugere alocação FIFO para um novo pagamento.",
+    itemSchema(StayFolioAllocationPreviewSchema),
+    { params: IdParamsSchema, body: StayFolioPreviewBodySchema },
   ),
   "POST /admin/stays/:id/payments": admin(
     "createStayPayment",

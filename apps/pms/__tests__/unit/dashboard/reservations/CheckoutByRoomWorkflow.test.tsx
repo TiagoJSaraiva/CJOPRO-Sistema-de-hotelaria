@@ -12,8 +12,11 @@ type PanelOverrides = {
   hotel?: Partial<AdminStayOperationalPanelResponse["hotel"]>;
   eligibility?: Partial<AdminStayOperationalPanelResponse["eligibility"]>;
   payments?: AdminStayOperationalPanelResponse["payments"];
+  folio?: AdminStayOperationalPanelResponse["folio"];
   maintenance_occurrences?: AdminStayOperationalPanelResponse["maintenance_occurrences"];
   maintenance_acknowledgement_required?: boolean;
+  maintenance_financial_acknowledgement_required?: boolean;
+  maintenance_pending_folio_entry_ids?: string[];
 };
 
 function createPanel(
@@ -96,9 +99,14 @@ function createPanel(
       ...overrides.eligibility,
     },
     payments: overrides.payments ?? base.payments,
+    folio: overrides.folio,
     maintenance_occurrences: overrides.maintenance_occurrences,
     maintenance_acknowledgement_required:
       overrides.maintenance_acknowledgement_required,
+    maintenance_financial_acknowledgement_required:
+      overrides.maintenance_financial_acknowledgement_required,
+    maintenance_pending_folio_entry_ids:
+      overrides.maintenance_pending_folio_entry_ids,
   };
 }
 
@@ -230,6 +238,79 @@ describe("CheckoutByRoomWorkflow", () => {
     expect((screen.getByLabelText("Valor") as HTMLInputElement).value).toBe("");
   });
 
+  it("revisa a alocação FIFO antes de registrar pagamento no fólio", async () => {
+    const debitId = "99400000-0000-4000-8000-000000000001";
+    const partialPanel = createPanel({
+      stay: { total_paid: 600, stay_payment_status: "partial" },
+      reservation: { total_paid: 600, payment_status: "partial" },
+      folio: {
+        stay_id: "stay-2",
+        currency: "BRL",
+        entries: [
+          {
+            id: debitId,
+            stay_id: "stay-2",
+            reservation_id: "reservation-2",
+            direction: "debit",
+            kind: "lodging",
+            amount: 960,
+            currency: "BRL",
+            description: "Hospedagem",
+            maintenance_occurrence_id: null,
+            financial_transaction_id: null,
+            reversed_entry_id: null,
+            allocated_amount: 600,
+            open_amount: 360,
+            posted_at: "2026-05-15T12:00:00.000Z",
+          },
+        ],
+        allocations: [],
+        total_debits: 960,
+        total_credits: 600,
+        balance: 360,
+        payment_status: "partial",
+        pending_maintenance_entry_ids: [],
+      },
+    });
+    const preview = {
+      amount: 360,
+      allocations: [{ debit_entry_id: debitId, amount: 360 }],
+      unallocated_amount: 0,
+    };
+    const fetchMock = vi
+      .fn()
+      .mockResolvedValueOnce(jsonResponse(partialPanel))
+      .mockResolvedValueOnce(jsonResponse(preview))
+      .mockResolvedValueOnce(jsonResponse(createPanel()));
+    vi.stubGlobal("fetch", fetchMock);
+    const user = userEvent.setup();
+
+    render(<CheckoutByRoomWorkflow />);
+    await searchRoom(user);
+    const register = await screen.findByRole("button", {
+      name: "Registrar pagamento",
+    });
+    expect((register as HTMLButtonElement).disabled).toBe(true);
+    await user.click(
+      screen.getByRole("button", { name: "Revisar alocação FIFO" }),
+    );
+    expect(await screen.findByText(/Hospedagem:/)).toBeTruthy();
+    await user.click(register);
+
+    expect(fetchMock).toHaveBeenNthCalledWith(
+      3,
+      "/api/stays/stay-2/payments",
+      expect.objectContaining({
+        body: JSON.stringify({
+          amount: 360,
+          method: "pix",
+          note: null,
+          allocations: preview.allocations,
+        }),
+      }),
+    );
+  });
+
   it("confirma checkout e mostra status checked-out", async () => {
     const checkedOutPanel = createPanel({
       stay: {
@@ -318,6 +399,43 @@ describe("CheckoutByRoomWorkflow", () => {
       expect.objectContaining({
         body: JSON.stringify({
           maintenance_acknowledged_occurrence_ids: [openOccurrence.id],
+          maintenance_acknowledged_folio_entry_ids: [],
+        }),
+      }),
+    );
+  });
+
+  it("permite checkout com cobrança pendente após ciência sem revelar valores", async () => {
+    const entryId = "99500000-0000-4000-8000-000000000001";
+    const panel = createPanel({
+      maintenance_financial_acknowledgement_required: true,
+      maintenance_pending_folio_entry_ids: [entryId],
+    });
+    const fetchMock = vi
+      .fn()
+      .mockResolvedValueOnce(jsonResponse(panel))
+      .mockResolvedValueOnce(
+        jsonResponse(createPanel({ stay: { stay_status: "checked_out" } })),
+      );
+    vi.stubGlobal("fetch", fetchMock);
+    const user = userEvent.setup();
+    render(<CheckoutByRoomWorkflow />);
+    await searchRoom(user);
+    const checkout = await screen.findByRole("button", {
+      name: "Confirmar checkout",
+    });
+    expect((checkout as HTMLButtonElement).disabled).toBe(true);
+    expect(
+      screen.getByText(/valores exigem permissão financeira/i),
+    ).toBeTruthy();
+    await user.click(screen.getByLabelText(/Declaro ciência da cobrança/));
+    await user.click(checkout);
+    expect(fetchMock).toHaveBeenLastCalledWith(
+      "/api/stays/stay-2/checkout",
+      expect.objectContaining({
+        body: JSON.stringify({
+          maintenance_acknowledged_occurrence_ids: [],
+          maintenance_acknowledged_folio_entry_ids: [entryId],
         }),
       }),
     );

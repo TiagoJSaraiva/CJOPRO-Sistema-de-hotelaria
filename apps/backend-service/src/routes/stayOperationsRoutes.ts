@@ -15,6 +15,7 @@ import { requireActiveHotelId } from "../common/requireActiveHotelScope";
 import { createServerClient } from "../common/supabaseServer";
 import { normalizeOptionalText } from "../common/text";
 import { createMaintenanceRepository } from "../repositories/maintenanceRepository";
+import { createMaintenanceFinanceRepository } from "../repositories/maintenanceFinanceRepository";
 
 type StayWithRelationsRow = {
   id: string;
@@ -70,6 +71,7 @@ type CheckoutCandidateQuery = {
 
 type StayCheckoutBody = {
   maintenance_acknowledged_occurrence_ids?: string[];
+  maintenance_acknowledged_folio_entry_ids?: string[];
   maintenance_acknowledgement_note?: string;
 };
 
@@ -155,6 +157,7 @@ async function loadStayWithRelations(
 async function loadStayPanel(
   activeHotelId: string,
   stayId: string,
+  includeMaintenanceFinance = false,
 ): Promise<AdminStayOperationalPanelResponse | null> {
   const stay = await loadStayWithRelations(stayId);
   if (!stay) {
@@ -247,11 +250,12 @@ async function loadStayPanel(
 
   const supabase = createServerClient();
   const reservationId = stay.reservation_id;
-  const [reservationStaysResult, paymentsResult, maintenanceResult] =
+  const financeRepository = createMaintenanceFinanceRepository();
+  const [reservationStaysResult, paymentsResult, maintenanceResult, folio] =
     await Promise.all([
       supabase
         .from("stays")
-        .select("total_price_estimated,total_paid")
+        .select("id,total_price_estimated,total_paid")
         .eq("reservation_id", reservationId),
       supabase
         .from("financial_transactions")
@@ -265,6 +269,7 @@ async function loadStayPanel(
         .order("paid_at", { ascending: false })
         .order("created_at", { ascending: false }),
       createMaintenanceRepository().getStayMaintenance(activeHotelId, stay.id),
+      financeRepository.getStayFolio(activeHotelId, stay.id),
     ]);
 
   if (reservationStaysResult.error || paymentsResult.error) {
@@ -272,17 +277,35 @@ async function loadStayPanel(
   }
 
   const reservationRows = (reservationStaysResult.data || []) as Array<{
+    id: string;
     total_price_estimated: number | null;
     total_paid: number | null;
   }>;
-  const reservationTotalDue = reservationRows.reduce(
-    (sum, row) => sum + Number(row.total_price_estimated || 0),
-    0,
-  );
-  const reservationTotalPaid = reservationRows.reduce(
-    (sum, row) => sum + Number(row.total_paid || 0),
-    0,
-  );
+  const reservationFolios = includeMaintenanceFinance
+    ? await Promise.all(
+        reservationRows.map((row) =>
+          financeRepository.getStayFolio(activeHotelId, row.id),
+        ),
+      )
+    : [];
+  const reservationTotalDue = includeMaintenanceFinance
+    ? reservationFolios.reduce(
+        (sum, item) => sum + Number(item?.total_debits || 0),
+        0,
+      )
+    : reservationRows.reduce(
+        (sum, row) => sum + Number(row.total_price_estimated || 0),
+        0,
+      );
+  const reservationTotalPaid = includeMaintenanceFinance
+    ? reservationFolios.reduce(
+        (sum, item) => sum + Number(item?.total_credits || 0),
+        0,
+      )
+    : reservationRows.reduce(
+        (sum, row) => sum + Number(row.total_paid || 0),
+        0,
+      );
   const reservationPaymentStatus = derivePaymentStatus(
     reservationTotalPaid,
     reservationTotalDue,
@@ -290,7 +313,14 @@ async function loadStayPanel(
 
   const stayTotalDue = Number(stay.total_price_estimated || 0);
   const stayTotalPaid = Number(stay.total_paid || 0);
-  const stayPaymentStatus = derivePaymentStatus(stayTotalPaid, stayTotalDue);
+  const effectiveStayDue =
+    includeMaintenanceFinance && folio ? folio.total_debits : stayTotalDue;
+  const effectiveStayPaid =
+    includeMaintenanceFinance && folio ? folio.total_credits : stayTotalPaid;
+  const stayPaymentStatus = derivePaymentStatus(
+    effectiveStayPaid,
+    effectiveStayDue,
+  );
 
   const payments = ((paymentsResult.data || []) as StayPaymentRow[]).map(
     (payment) =>
@@ -324,8 +354,8 @@ async function loadStayPanel(
       checkout_date_actual: stay.checkout_date_actual
         ? String(stay.checkout_date_actual)
         : null,
-      total_price_estimated: stayTotalDue,
-      total_paid: stayTotalPaid,
+      total_price_estimated: effectiveStayDue,
+      total_paid: effectiveStayPaid,
       stay_payment_status: stayPaymentStatus,
     },
     reservation: {
@@ -354,9 +384,15 @@ async function loadStayPanel(
       cancel_block_reason: cancelBlockReason,
     },
     payments,
+    folio: includeMaintenanceFinance ? folio || undefined : undefined,
     maintenance_occurrences: maintenanceResult.occurrences,
     maintenance_acknowledgement_required:
       maintenanceResult.acknowledgementRequired,
+    maintenance_financial_acknowledgement_required: Boolean(
+      folio?.pending_maintenance_entry_ids.length,
+    ),
+    maintenance_pending_folio_entry_ids:
+      folio?.pending_maintenance_entry_ids || [],
   };
 }
 
@@ -472,6 +508,7 @@ export function registerStayOperationsRoutes(app: FastifyInstance): void {
       const panel = await loadStayPanel(
         activeHotelId,
         String(stays[0]!.id),
+        auth.session.permissions.includes(PERMISSIONS.MAINTENANCE_FINANCE_READ),
       ).catch((error) => {
         request.log.error(error);
         return null;
@@ -516,12 +553,14 @@ export function registerStayOperationsRoutes(app: FastifyInstance): void {
           );
       }
 
-      const panel = await loadStayPanel(activeHotelId, stayId).catch(
-        (error) => {
-          request.log.error(error);
-          return null;
-        },
-      );
+      const panel = await loadStayPanel(
+        activeHotelId,
+        stayId,
+        auth.session.permissions.includes(PERMISSIONS.MAINTENANCE_FINANCE_READ),
+      ).catch((error) => {
+        request.log.error(error);
+        return null;
+      });
 
       if (!panel) {
         return reply
@@ -586,98 +625,39 @@ export function registerStayOperationsRoutes(app: FastifyInstance): void {
         );
     }
 
-    const panelBefore = await loadStayPanel(activeHotelId, stayId);
-    if (!panelBefore) {
+    const paymentResult =
+      await createMaintenanceFinanceRepository().createStayPayment(
+        activeHotelId,
+        stayId,
+        auth.session.id,
+        {
+          amount,
+          method,
+          note,
+          paid_at: paidAt,
+          allocations: request.body?.allocations,
+        },
+      );
+    if (paymentResult.result !== "ok") {
       return reply
-        .status(404)
+        .status(paymentResult.result === "not-found" ? 404 : 409)
         .send(
           adminError(
-            ADMIN_ERROR_CODE.NOT_FOUND,
-            "Estadia nao encontrada para o hotel ativo.",
+            paymentResult.result === "not-found"
+              ? ADMIN_ERROR_CODE.NOT_FOUND
+              : ADMIN_ERROR_CODE.CONFLICT,
+            paymentResult.result === "not-found"
+              ? "Estadia nao encontrada para o hotel ativo."
+              : "Falha ao registrar ou alocar o pagamento.",
           ),
         );
     }
 
-    const supabase = createServerClient();
-    const { error: insertError } = await supabase
-      .from("financial_transactions")
-      .insert({
-        hotel_id: activeHotelId,
-        type: "INCOME",
-        category: "STAY_PAYMENT",
-        amount: Number(amount.toFixed(2)),
-        currency: "BRL",
-        description: note || null,
-        status: "COMPLETED",
-        stay_id: stayId,
-        reservation_id: panelBefore.stay.reservation_id,
-        payment_method: method,
-        paid_at: paidAt || new Date().toISOString(),
-        created_by: auth.session.id,
-      });
-
-    if (insertError) {
-      request.log.error(insertError);
-      return reply
-        .status(409)
-        .send(
-          adminError(
-            ADMIN_ERROR_CODE.CONFLICT,
-            "Falha ao registrar pagamento.",
-          ),
-        );
-    }
-
-    const paymentsSumResult = await supabase
-      .from("financial_transactions")
-      .select("amount,type,status")
-      .eq("hotel_id", activeHotelId)
-      .eq("stay_id", stayId)
-      .eq("category", "STAY_PAYMENT")
-      .in("status", ["COMPLETED", "REFUNDED"]);
-    if (paymentsSumResult.error) {
-      request.log.error(paymentsSumResult.error);
-      return reply
-        .status(500)
-        .send(
-          adminError(
-            ADMIN_ERROR_CODE.INTERNAL,
-            "Falha ao recalcular total pago da estadia.",
-          ),
-        );
-    }
-
-    const recalculatedTotalPaid = (
-      (paymentsSumResult.data || []) as Array<{
-        amount: number | null;
-        type: "INCOME" | "EXPENSE" | "REFUND";
-        status: string;
-      }>
-    ).reduce((sum, row) => {
-      const amountValue = Number(row.amount || 0);
-      if (row.type === "REFUND") {
-        return sum - amountValue;
-      }
-      return sum + amountValue;
-    }, 0);
-    const { error: updateStayError } = await supabase
-      .from("stays")
-      .update({ total_paid: Number(recalculatedTotalPaid.toFixed(2)) })
-      .eq("id", stayId);
-
-    if (updateStayError) {
-      request.log.error(updateStayError);
-      return reply
-        .status(409)
-        .send(
-          adminError(
-            ADMIN_ERROR_CODE.CONFLICT,
-            "Falha ao atualizar saldo da estadia.",
-          ),
-        );
-    }
-
-    const panel = await loadStayPanel(activeHotelId, stayId).catch((error) => {
+    const panel = await loadStayPanel(
+      activeHotelId,
+      stayId,
+      auth.session.permissions.includes(PERMISSIONS.MAINTENANCE_FINANCE_READ),
+    ).catch((error) => {
       request.log.error(error);
       return null;
     });
@@ -719,7 +699,11 @@ export function registerStayOperationsRoutes(app: FastifyInstance): void {
           );
       }
 
-      const panel = await loadStayPanel(activeHotelId, stayId);
+      const panel = await loadStayPanel(
+        activeHotelId,
+        stayId,
+        auth.session.permissions.includes(PERMISSIONS.MAINTENANCE_FINANCE_READ),
+      );
       if (!panel) {
         return reply
           .status(404)
@@ -762,7 +746,11 @@ export function registerStayOperationsRoutes(app: FastifyInstance): void {
           );
       }
 
-      const refreshed = await loadStayPanel(activeHotelId, stayId);
+      const refreshed = await loadStayPanel(
+        activeHotelId,
+        stayId,
+        auth.session.permissions.includes(PERMISSIONS.MAINTENANCE_FINANCE_READ),
+      );
       if (!refreshed) {
         return reply
           .status(500)
@@ -806,7 +794,11 @@ export function registerStayOperationsRoutes(app: FastifyInstance): void {
           );
       }
 
-      const panel = await loadStayPanel(activeHotelId, stayId);
+      const panel = await loadStayPanel(
+        activeHotelId,
+        stayId,
+        auth.session.permissions.includes(PERMISSIONS.MAINTENANCE_FINANCE_READ),
+      );
       if (!panel) {
         return reply
           .status(404)
@@ -832,6 +824,14 @@ export function registerStayOperationsRoutes(app: FastifyInstance): void {
       const acknowledgedIds = Array.from(
         new Set(request.body?.maintenance_acknowledged_occurrence_ids || []),
       );
+      const acknowledgedFolioEntryIds = Array.from(
+        new Set(request.body?.maintenance_acknowledged_folio_entry_ids || []),
+      );
+      const folio = await createMaintenanceFinanceRepository().getStayFolio(
+        activeHotelId,
+        stayId,
+      );
+      const pendingFolioEntryIds = folio?.pending_maintenance_entry_ids || [];
       const pendingOccurrenceIds = (panel.maintenance_occurrences || [])
         .filter(
           (occurrence) =>
@@ -852,15 +852,30 @@ export function registerStayOperationsRoutes(app: FastifyInstance): void {
             ),
           );
       }
+      if (
+        pendingFolioEntryIds.some(
+          (id) => !acknowledgedFolioEntryIds.includes(id),
+        )
+      ) {
+        return reply
+          .status(409)
+          .send(
+            adminError(
+              ADMIN_ERROR_CODE.CONFLICT,
+              "Registre ciência de todas as cobranças de dano pendentes antes do checkout.",
+            ),
+          );
+      }
 
       const supabase = createServerClient();
       const { data: checkedOut, error } = await supabase.rpc(
-        "checkout_stay_with_maintenance_acknowledgements",
+        "checkout_stay_with_financial_acknowledgements",
         {
           p_hotel_id: activeHotelId,
           p_stay_id: stayId,
           p_actor_id: auth.session.id,
           p_occurrence_ids: acknowledgedIds,
+          p_folio_entry_ids: acknowledgedFolioEntryIds,
           p_note:
             normalizeOptionalText(
               request.body?.maintenance_acknowledgement_note,
@@ -879,7 +894,11 @@ export function registerStayOperationsRoutes(app: FastifyInstance): void {
           );
       }
 
-      const refreshed = await loadStayPanel(activeHotelId, stayId);
+      const refreshed = await loadStayPanel(
+        activeHotelId,
+        stayId,
+        auth.session.permissions.includes(PERMISSIONS.MAINTENANCE_FINANCE_READ),
+      );
       if (!refreshed) {
         return reply
           .status(500)
@@ -918,7 +937,11 @@ export function registerStayOperationsRoutes(app: FastifyInstance): void {
           );
       }
 
-      const panel = await loadStayPanel(activeHotelId, stayId);
+      const panel = await loadStayPanel(
+        activeHotelId,
+        stayId,
+        auth.session.permissions.includes(PERMISSIONS.MAINTENANCE_FINANCE_READ),
+      );
       if (!panel) {
         return reply
           .status(404)
@@ -955,7 +978,11 @@ export function registerStayOperationsRoutes(app: FastifyInstance): void {
           );
       }
 
-      const refreshed = await loadStayPanel(activeHotelId, stayId);
+      const refreshed = await loadStayPanel(
+        activeHotelId,
+        stayId,
+        auth.session.permissions.includes(PERMISSIONS.MAINTENANCE_FINANCE_READ),
+      );
       if (!refreshed) {
         return reply
           .status(500)
@@ -994,7 +1021,11 @@ export function registerStayOperationsRoutes(app: FastifyInstance): void {
           );
       }
 
-      const panel = await loadStayPanel(activeHotelId, stayId);
+      const panel = await loadStayPanel(
+        activeHotelId,
+        stayId,
+        auth.session.permissions.includes(PERMISSIONS.MAINTENANCE_FINANCE_READ),
+      );
       if (!panel) {
         return reply
           .status(404)
@@ -1031,7 +1062,11 @@ export function registerStayOperationsRoutes(app: FastifyInstance): void {
           );
       }
 
-      const refreshed = await loadStayPanel(activeHotelId, stayId);
+      const refreshed = await loadStayPanel(
+        activeHotelId,
+        stayId,
+        auth.session.permissions.includes(PERMISSIONS.MAINTENANCE_FINANCE_READ),
+      );
       if (!refreshed) {
         return reply
           .status(500)

@@ -2,15 +2,18 @@ import { DashboardAccessDeniedCard } from "../../../_components/DashboardAccessD
 import { DashboardEntityPageShell } from "../../../_components/DashboardEntityPageShell";
 import {
   getMaintenanceOccurrence,
+  getMaintenanceOccurrenceFinance,
   getMaintenanceReferenceData,
 } from "../../../../../lib/adminApi";
 import { getUserFromSession } from "../../../../../lib/auth";
 import { MaintenanceOccurrenceWorkspace } from "../../_components/MaintenanceOccurrenceWorkspace";
+import { MaintenanceOccurrenceFinancePanel } from "../../_components/MaintenanceOccurrenceFinancePanel";
 import { getMaintenanceAccess } from "../../access";
 
 type Props = { params: Promise<{ id: string }> };
 export default async function MaintenanceOccurrencePage({ params }: Props) {
-  const access = getMaintenanceAccess(await getUserFromSession());
+  const user = await getUserFromSession();
+  const access = getMaintenanceAccess(user);
   if (!access.canEnter)
     return (
       <DashboardAccessDeniedCard
@@ -19,9 +22,12 @@ export default async function MaintenanceOccurrencePage({ params }: Props) {
       />
     );
   const { id } = await params;
-  const [item, referenceData] = await Promise.all([
+  const [item, referenceData, finance] = await Promise.all([
     getMaintenanceOccurrence(id),
     getMaintenanceReferenceData(),
+    access.canReadFinance
+      ? getMaintenanceOccurrenceFinance(id)
+      : Promise.resolve(null),
   ]);
   return (
     <DashboardEntityPageShell
@@ -41,6 +47,12 @@ export default async function MaintenanceOccurrencePage({ params }: Props) {
           isVisible: access.canCreate,
         },
         {
+          key: "finance",
+          label: "Financeiro",
+          href: "/dashboard/maintenance/finance",
+          isVisible: access.canReadFinance,
+        },
+        {
           key: "settings",
           label: "Configuração",
           href: "/dashboard/maintenance/settings",
@@ -53,6 +65,16 @@ export default async function MaintenanceOccurrencePage({ params }: Props) {
         referenceData={referenceData}
         access={access}
       />
+      {finance ? (
+        <div className="mt-4">
+          <MaintenanceOccurrenceFinancePanel
+            occurrenceId={item.id}
+            stayId={item.stay_id}
+            initial={finance}
+            canPropose={access.canProposeFinance}
+          />
+        </div>
+      ) : null}
     </DashboardEntityPageShell>
   );
 }

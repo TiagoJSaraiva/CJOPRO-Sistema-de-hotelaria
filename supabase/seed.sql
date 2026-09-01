@@ -204,3 +204,65 @@ insert into public.maintenance_events (
 ) values
   ('10000000-0000-4000-8000-000000000002', '97000000-0000-4000-8000-000000000001', null, '80000000-0000-4000-8000-000000000003', 'occurrence_reported', 'Ocorrência sintética'),
   ('10000000-0000-4000-8000-000000000002', '97000000-0000-4000-8000-000000000001', '98000000-0000-4000-8000-000000000001', '80000000-0000-4000-8000-000000000003', 'work_order_started', 'Ordem sintética em execução');
+
+select public.backfill_stay_folio();
+
+insert into public.maintenance_occurrences (
+  id, occurrence_number, hotel_id, category_id, room_id, stay_id, kind, priority,
+  status, description, discovered_at, reported_by, blocking_recommended,
+  liability_status, suspected_party, confirmed_party, liability_notes,
+  liability_decided_by, liability_decided_at, resolved_at
+)
+select
+  '97000000-0000-4000-8000-000000000002', 1002,
+  '10000000-0000-4000-8000-000000000001', c.id,
+  '20000000-0000-4000-8000-000000000102',
+  '91000000-0000-4000-8000-000000000002', 'damage', 'normal',
+  'resolved', 'Abajur danificado durante a hospedagem.',
+  now() - interval '1 day', '80000000-0000-4000-8000-000000000002', false,
+  'confirmed', 'guest', 'guest', 'Responsabilidade confirmada após vistoria.',
+  '80000000-0000-4000-8000-000000000001', now(), now()
+from public.maintenance_categories c
+where c.hotel_id = '10000000-0000-4000-8000-000000000001'
+  and c.name = 'Eletrônicos';
+
+insert into public.maintenance_cost_items (
+  id, hotel_id, occurrence_id, kind, description, quantity, estimated_amount,
+  actual_amount, currency, counterparty, due_date, approval_status,
+  settlement_status, created_by, submitted_at
+) values (
+  '99000000-0000-4000-8000-000000000001',
+  '10000000-0000-4000-8000-000000000001',
+  '97000000-0000-4000-8000-000000000002', 'material',
+  'Substituição do abajur danificado', 1, 200.00, 180.00, 'BRL',
+  'Fornecedor sintético', current_date + 7, 'submitted', 'not_posted',
+  '80000000-0000-4000-8000-000000000002', now()
+);
+
+insert into public.maintenance_recoveries (
+  id, hotel_id, occurrence_id, responsible_party, stay_id, charge_amount,
+  waived_amount, currency, justification, due_date, created_by
+) values (
+  '99100000-0000-4000-8000-000000000001',
+  '10000000-0000-4000-8000-000000000001',
+  '97000000-0000-4000-8000-000000000002', 'guest',
+  '91000000-0000-4000-8000-000000000002', 100.00, 20.00, 'BRL',
+  'Recuperação parcial com dispensa justificada.', current_date + 10,
+  '80000000-0000-4000-8000-000000000002'
+);
+
+insert into public.maintenance_events (
+  hotel_id, occurrence_id, actor_id, event_type, message, metadata
+) values (
+  '10000000-0000-4000-8000-000000000001',
+  '97000000-0000-4000-8000-000000000002',
+  '80000000-0000-4000-8000-000000000002',
+  'finance_cost_submitted', 'Custo sintético aguardando aprovação.',
+  jsonb_build_object('cost_item_id', '99000000-0000-4000-8000-000000000001')
+);
+
+select setval(
+  'public.maintenance_occurrence_number_seq',
+  (select max(occurrence_number) from public.maintenance_occurrences),
+  true
+);

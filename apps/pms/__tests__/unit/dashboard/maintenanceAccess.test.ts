@@ -23,4 +23,18 @@ describe("maintenance access", () => {
     expect(access.canConfirmLiability).toBe(true);
     expect(access.canManageBlocks).toBe(false);
   });
+
+  it("mantém proposta, aprovação e liquidação financeira independentes", () => {
+    const access = getMaintenanceAccess({
+      permissions: [
+        PERMISSIONS.MAINTENANCE_FINANCE_READ,
+        PERMISSIONS.MAINTENANCE_FINANCE_APPROVE,
+      ],
+    });
+    expect(access.canEnter).toBe(true);
+    expect(access.canReadFinance).toBe(true);
+    expect(access.canApproveFinance).toBe(true);
+    expect(access.canProposeFinance).toBe(false);
+    expect(access.canSettleFinance).toBe(false);
+  });
 });

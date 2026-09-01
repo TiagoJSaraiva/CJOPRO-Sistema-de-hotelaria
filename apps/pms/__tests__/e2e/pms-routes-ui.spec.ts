@@ -260,4 +260,28 @@ test.describe("PMS UI quality", () => {
       await expect(page).toHaveScreenshot("maintenance-center.png");
     },
   );
+
+  test(
+    "financeiro de manutenção",
+    { tag: TEST_TAGS },
+    async ({ page, context, baseURL, auditAccessibility }) => {
+      await preparePage(page);
+      await authenticate(
+        context,
+        baseURL || "http://127.0.0.1:3001",
+        "maintenance-e2e-token",
+      );
+      await page.goto("/dashboard/maintenance/finance?queue=approval");
+      await expect(
+        page.getByRole("heading", { name: "Financeiro de manutenção" }),
+      ).toBeVisible();
+      await expect(
+        page.getByText("Substituição do televisor danificado"),
+      ).toBeVisible();
+      await expect(page.getByRole("button", { name: "Aprovar" })).toBeEnabled();
+      await auditAccessibility("financeiro-manutencao");
+      await stabilizeVisualState(page);
+      await expect(page).toHaveScreenshot("maintenance-finance.png");
+    },
+  );
 });

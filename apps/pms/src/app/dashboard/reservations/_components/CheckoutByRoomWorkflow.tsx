@@ -1,7 +1,10 @@
 "use client";
 
 import { useMemo, useState, type FormEvent } from "react";
-import type { AdminStayOperationalPanelResponse } from "@hotel/shared";
+import type {
+  AdminStayFolioAllocationPreview,
+  AdminStayOperationalPanelResponse,
+} from "@hotel/shared";
 import {
   DetailItem,
   PanelSection,
@@ -83,6 +86,8 @@ export function CheckoutByRoomWorkflow() {
   const [paymentAmount, setPaymentAmount] = useState("");
   const [paymentMethod, setPaymentMethod] = useState("pix");
   const [paymentNote, setPaymentNote] = useState("");
+  const [allocationPreview, setAllocationPreview] =
+    useState<AdminStayFolioAllocationPreview | null>(null);
   const [isSearching, setIsSearching] = useState(false);
   const [isPending, setIsPending] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -98,7 +103,36 @@ export function CheckoutByRoomWorkflow() {
     setPanelData(panel);
     setPaymentAmount(formatPaymentInputValue(getStayBalance(panel)));
     setPaymentNote("");
+    setAllocationPreview(null);
     setMaintenanceAcknowledged(false);
+  }
+
+  async function handleAllocationPreview() {
+    if (!panelData) return;
+    const amount = Number(paymentAmount.replace(",", ".") || "0");
+    if (!Number.isFinite(amount) || amount <= 0) {
+      setError("Valor de pagamento invalido.");
+      return;
+    }
+    try {
+      setIsPending(true);
+      setError(null);
+      const preview = await postJson<AdminStayFolioAllocationPreview>(
+        `/api/stays/${panelData.stay.id}/payments/allocation-preview`,
+        { amount },
+        "Falha ao sugerir a alocação do pagamento.",
+      );
+      setAllocationPreview(preview);
+    } catch (requestError) {
+      setAllocationPreview(null);
+      setError(
+        requestError instanceof Error
+          ? requestError.message
+          : "Falha ao sugerir a alocação do pagamento.",
+      );
+    } finally {
+      setIsPending(false);
+    }
   }
 
   async function handleSearch(event: FormEvent<HTMLFormElement>) {
@@ -155,6 +189,10 @@ export function CheckoutByRoomWorkflow() {
           amount,
           method: paymentMethod,
           note: paymentNote || null,
+          allocations:
+            allocationPreview?.amount === amount
+              ? allocationPreview.allocations
+              : undefined,
         },
         "Falha ao registrar pagamento.",
       );
@@ -189,6 +227,8 @@ export function CheckoutByRoomWorkflow() {
                   occurrence.status !== "canceled",
               )
               .map((occurrence) => occurrence.id),
+            maintenance_acknowledged_folio_entry_ids:
+              panelData.maintenance_pending_folio_entry_ids || [],
           }
         : {};
       const panel = await postJson<AdminStayOperationalPanelResponse>(
@@ -258,6 +298,7 @@ export function CheckoutByRoomWorkflow() {
                 setPanelData(null);
                 setPaymentAmount("");
                 setPaymentNote("");
+                setAllocationPreview(null);
                 setError(null);
                 setSuccess(null);
               }}
@@ -406,7 +447,10 @@ export function CheckoutByRoomWorkflow() {
                   min={0}
                   step="0.01"
                   value={paymentAmount}
-                  onChange={(event) => setPaymentAmount(event.target.value)}
+                  onChange={(event) => {
+                    setPaymentAmount(event.target.value);
+                    setAllocationPreview(null);
+                  }}
                   placeholder="Valor"
                   className="pms-field-input w-full"
                 />
@@ -440,10 +484,55 @@ export function CheckoutByRoomWorkflow() {
                   className="pms-field-input w-full"
                 />
               </label>
+              {panelData.folio ? (
+                <button
+                  type="button"
+                  onClick={handleAllocationPreview}
+                  disabled={isPending || !paymentAmount}
+                  className={secondaryButtonClassName}
+                >
+                  Revisar alocação FIFO
+                </button>
+              ) : null}
+              {allocationPreview ? (
+                <div
+                  className="grid gap-1 rounded-lg border border-[#d9dfe7] bg-[#f8fafc] p-3 text-sm"
+                  aria-live="polite"
+                >
+                  <strong>Alocação sugerida</strong>
+                  {allocationPreview.allocations.map((allocation) => {
+                    const entry = panelData.folio?.entries.find(
+                      (candidate) => candidate.id === allocation.debit_entry_id,
+                    );
+                    return (
+                      <span key={allocation.debit_entry_id}>
+                        {entry?.description || "Débito do fólio"}:{" "}
+                        {new Intl.NumberFormat("pt-BR", {
+                          style: "currency",
+                          currency: panelData.folio?.currency || "BRL",
+                        }).format(allocation.amount)}
+                      </span>
+                    );
+                  })}
+                  {allocationPreview.unallocated_amount > 0 ? (
+                    <span>
+                      Crédito não alocado:{" "}
+                      {new Intl.NumberFormat("pt-BR", {
+                        style: "currency",
+                        currency: panelData.folio?.currency || "BRL",
+                      }).format(allocationPreview.unallocated_amount)}
+                    </span>
+                  ) : null}
+                </div>
+              ) : null}
               <button
                 type="button"
                 onClick={handleAddPayment}
-                disabled={isPending || !paymentAmount}
+                disabled={
+                  isPending ||
+                  !paymentAmount ||
+                  Boolean(panelData.folio && !allocationPreview)
+                }
                 className={secondaryButtonClassName}
               >
                 Registrar pagamento
@@ -477,6 +566,36 @@ export function CheckoutByRoomWorkflow() {
                   ) : null}
                 </div>
               ) : null}
+              {panelData.maintenance_financial_acknowledgement_required ? (
+                <div className="grid gap-2 rounded-lg border border-[#f5d08a] bg-[#fff9eb] p-3 text-[0.86rem]">
+                  <strong>Cobrança de dano pendente</strong>
+                  {panelData.folio ? (
+                    <p className="m-0">
+                      Saldo do fólio:{" "}
+                      {new Intl.NumberFormat("pt-BR", {
+                        style: "currency",
+                        currency: panelData.folio.currency,
+                      }).format(panelData.folio.balance)}
+                    </p>
+                  ) : (
+                    <p className="m-0">
+                      Existe uma pendência financeira vinculada; os valores
+                      exigem permissão financeira.
+                    </p>
+                  )}
+                  <label>
+                    <input
+                      type="checkbox"
+                      checked={maintenanceAcknowledged}
+                      onChange={(event) =>
+                        setMaintenanceAcknowledged(event.target.checked)
+                      }
+                    />{" "}
+                    Declaro ciência da cobrança pendente; o checkout continuará
+                    permitido.
+                  </label>
+                </div>
+              ) : null}
               {panelData.eligibility.can_checkout ? (
                 <p className="m-0 rounded-lg border border-[#b6e4cb] bg-[#f1fbf5] p-3 text-[0.86rem] text-[#176c43]">
                   Checkout liberado para esta estadia.
@@ -495,6 +614,10 @@ export function CheckoutByRoomWorkflow() {
                   !panelData.eligibility.can_checkout ||
                   Boolean(
                     panelData.maintenance_acknowledgement_required &&
+                    !maintenanceAcknowledged,
+                  ) ||
+                  Boolean(
+                    panelData.maintenance_financial_acknowledgement_required &&
                     !maintenanceAcknowledged,
                   )
                 }

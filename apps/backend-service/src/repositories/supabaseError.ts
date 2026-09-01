@@ -12,7 +12,7 @@ export function isSupabaseConflictError(error: unknown): boolean {
     typeof error === "object" &&
     error !== null &&
     "code" in error &&
-    (error as { code?: string }).code === "23505"
+    ["23505", "23514"].includes((error as { code?: string }).code || "")
   );
 }
 
