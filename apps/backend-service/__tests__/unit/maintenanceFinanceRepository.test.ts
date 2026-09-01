@@ -29,22 +29,22 @@ type QueryResult = {
 
 class FakeQuery implements PromiseLike<QueryResult> {
   constructor(private readonly result: QueryResult) {}
-  select(..._args: unknown[]) {
+  select() {
     return this;
   }
-  eq(..._args: unknown[]) {
+  eq() {
     return this;
   }
-  is(..._args: unknown[]) {
+  is() {
     return this;
   }
-  order(..._args: unknown[]) {
+  order() {
     return this;
   }
-  insert(..._args: unknown[]) {
+  insert() {
     return this;
   }
-  update(..._args: unknown[]) {
+  update() {
     return this;
   }
   async single() {
