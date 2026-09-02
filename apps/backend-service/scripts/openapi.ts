@@ -10,6 +10,7 @@ const workspaceRoot = path.resolve(
 );
 const outputPath = path.join(workspaceRoot, "docs", "openapi.json");
 const checkOnly = process.argv.includes("--check");
+const EXPECTED_OPERATION_COUNT = 135;
 const HTTP_METHODS = new Set([
   "get",
   "put",
@@ -106,9 +107,9 @@ function assertOperationContract(document: Record<string, unknown>): void {
     }
   }
 
-  if (operationCount !== 100) {
+  if (operationCount !== EXPECTED_OPERATION_COUNT) {
     throw new Error(
-      `OpenAPI inválido: esperadas 100 operações, encontradas ${operationCount}.`,
+      `OpenAPI inválido: esperadas ${EXPECTED_OPERATION_COUNT} operações, encontradas ${operationCount}.`,
     );
   }
 }
@@ -157,7 +158,7 @@ async function main(): Promise<void> {
       );
     }
     process.stdout.write(
-      "Contrato OpenAPI válido e sincronizado (100 operações).\n",
+      `Contrato OpenAPI válido e sincronizado (${EXPECTED_OPERATION_COUNT} operações).\n`,
     );
     return;
   }
@@ -165,7 +166,7 @@ async function main(): Promise<void> {
   await mkdir(path.dirname(outputPath), { recursive: true });
   await writeFile(outputPath, generated, "utf8");
   process.stdout.write(
-    `Contrato OpenAPI atualizado em ${path.relative(workspaceRoot, outputPath)} (100 operações).\n`,
+    `Contrato OpenAPI atualizado em ${path.relative(workspaceRoot, outputPath)} (${EXPECTED_OPERATION_COUNT} operações).\n`,
   );
 }
 

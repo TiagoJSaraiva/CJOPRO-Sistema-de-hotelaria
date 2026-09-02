@@ -6,6 +6,7 @@ import type {
   AdminMaintenanceCostItem,
   AdminMaintenanceFinanceOccurrence,
   AdminMaintenanceRecovery,
+  AdminMaintenanceSupplier,
 } from "@hotel/shared";
 
 type Props = {
@@ -13,6 +14,7 @@ type Props = {
   stayId: string | null;
   initial: AdminMaintenanceFinanceOccurrence;
   canPropose: boolean;
+  suppliers?: AdminMaintenanceSupplier[];
 };
 
 function format(value: number, currency: string) {
@@ -26,6 +28,7 @@ export function MaintenanceOccurrenceFinancePanel({
   stayId,
   initial,
   canPropose,
+  suppliers = [],
 }: Props) {
   const [finance, setFinance] = useState(initial);
   const [busy, setBusy] = useState(false);
@@ -312,6 +315,8 @@ export function MaintenanceOccurrenceFinancePanel({
                   : null,
                 due_date: data.get("due_date") || null,
                 counterparty: data.get("counterparty") || null,
+                supplier_id: data.get("supplier_id") || null,
+                contract_id: data.get("contract_id") || null,
               });
             }}
           >
@@ -361,6 +366,36 @@ export function MaintenanceOccurrenceFinancePanel({
               placeholder="Favorecido"
               className="pms-field-input"
             />
+            <select
+              name="supplier_id"
+              className="pms-field-input"
+              aria-label="Fornecedor cadastrado do custo"
+            >
+              <option value="">Sem fornecedor cadastrado</option>
+              {suppliers
+                .filter((supplier) => supplier.status === "active")
+                .map((supplier) => (
+                  <option key={supplier.id} value={supplier.id}>
+                    {supplier.name}
+                  </option>
+                ))}
+            </select>
+            <select
+              name="contract_id"
+              className="pms-field-input"
+              aria-label="Contrato do custo"
+            >
+              <option value="">Sem contrato</option>
+              {suppliers.flatMap((supplier) =>
+                (supplier.contracts || [])
+                  .filter((contract) => contract.status === "active")
+                  .map((contract) => (
+                    <option key={contract.id} value={contract.id}>
+                      {contract.contract_number}
+                    </option>
+                  )),
+              )}
+            </select>
             <input
               name="due_date"
               type="date"
@@ -385,6 +420,10 @@ export function MaintenanceOccurrenceFinancePanel({
                 stay_id: party === "guest" ? stayId : null,
                 debtor_name:
                   party === "supplier" ? data.get("debtor_name") || null : null,
+                supplier_id:
+                  party === "supplier" ? data.get("supplier_id") || null : null,
+                contract_id:
+                  party === "supplier" ? data.get("contract_id") || null : null,
                 charge_amount: Number(data.get("charge_amount") || 0),
                 waived_amount: Number(data.get("waived_amount") || 0),
                 justification: data.get("justification"),
@@ -402,6 +441,36 @@ export function MaintenanceOccurrenceFinancePanel({
               placeholder="Devedor terceiro"
               className="pms-field-input"
             />
+            <select
+              name="supplier_id"
+              className="pms-field-input"
+              aria-label="Fornecedor devedor cadastrado"
+            >
+              <option value="">Terceiro textual</option>
+              {suppliers
+                .filter((supplier) => supplier.status === "active")
+                .map((supplier) => (
+                  <option key={supplier.id} value={supplier.id}>
+                    {supplier.name}
+                  </option>
+                ))}
+            </select>
+            <select
+              name="contract_id"
+              className="pms-field-input"
+              aria-label="Contrato da recuperação"
+            >
+              <option value="">Sem contrato</option>
+              {suppliers.flatMap((supplier) =>
+                (supplier.contracts || [])
+                  .filter((contract) => contract.status === "active")
+                  .map((contract) => (
+                    <option key={contract.id} value={contract.id}>
+                      {contract.contract_number}
+                    </option>
+                  )),
+              )}
+            </select>
             <div className="grid grid-cols-2 gap-2">
               <input
                 name="charge_amount"

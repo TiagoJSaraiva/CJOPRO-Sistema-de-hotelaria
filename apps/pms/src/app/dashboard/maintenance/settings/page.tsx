@@ -4,10 +4,12 @@ import { getMaintenanceReferenceData } from "../../../../lib/adminApi";
 import { getUserFromSession } from "../../../../lib/auth";
 import { MaintenanceCatalogManager } from "../_components/MaintenanceCatalogManager";
 import { getMaintenanceAccess } from "../access";
+import { maintenanceTabs } from "../tabs";
+import Link from "next/link";
 
 export default async function MaintenanceSettingsPage() {
   const access = getMaintenanceAccess(await getUserFromSession());
-  if (!access.canManageCatalogs)
+  if (!access.canManageCatalogs && !access.canManageSla)
     return (
       <DashboardAccessDeniedCard
         title="Configuração de manutenção"
@@ -19,37 +21,24 @@ export default async function MaintenanceSettingsPage() {
     <DashboardEntityPageShell
       title="Configuração de manutenção"
       activeTabKey="settings"
-      tabs={[
-        {
-          key: "all",
-          label: "Todas",
-          href: "/dashboard/maintenance/view",
-          isVisible: access.canRead,
-        },
-        {
-          key: "report",
-          label: "Registrar",
-          href: "/dashboard/maintenance/report",
-          isVisible: access.canCreate,
-        },
-        {
-          key: "finance",
-          label: "Financeiro",
-          href: "/dashboard/maintenance/finance",
-          isVisible: access.canReadFinance,
-        },
-        {
-          key: "settings",
-          label: "Configuração",
-          href: "/dashboard/maintenance/settings",
-          isVisible: access.canManageCatalogs,
-        },
-      ]}
+      tabs={maintenanceTabs(access)}
     >
-      <MaintenanceCatalogManager
-        initialCategories={data.categories}
-        initialLocations={data.locations}
-      />
+      {access.canManageSla ? (
+        <div className="mb-4">
+          <Link
+            href="/dashboard/maintenance/sla"
+            className="rounded-lg border border-slate-300 bg-white px-4 py-2 text-sm font-medium no-underline"
+          >
+            Configurar SLA e precedência
+          </Link>
+        </div>
+      ) : null}
+      {access.canManageCatalogs ? (
+        <MaintenanceCatalogManager
+          initialCategories={data.categories}
+          initialLocations={data.locations}
+        />
+      ) : null}
     </DashboardEntityPageShell>
   );
 }

@@ -37,4 +37,19 @@ describe("maintenance access", () => {
     expect(access.canProposeFinance).toBe(false);
     expect(access.canSettleFinance).toBe(false);
   });
+
+  it("mantém planos, SLA, fornecedores e indicadores independentes de valores", () => {
+    const access = getMaintenanceAccess({
+      permissions: [
+        PERMISSIONS.MAINTENANCE_PLAN_MANAGE,
+        PERMISSIONS.MAINTENANCE_ANALYTICS_READ,
+      ],
+    });
+    expect(access.canEnter).toBe(true);
+    expect(access.canManagePlans).toBe(true);
+    expect(access.canReadAnalytics).toBe(true);
+    expect(access.canManageSla).toBe(false);
+    expect(access.canManageSuppliers).toBe(false);
+    expect(access.canReadFinance).toBe(false);
+  });
 });

@@ -4,11 +4,13 @@ import {
   getMaintenanceOccurrence,
   getMaintenanceOccurrenceFinance,
   getMaintenanceReferenceData,
+  getMaintenanceSuppliers,
 } from "../../../../../lib/adminApi";
 import { getUserFromSession } from "../../../../../lib/auth";
 import { MaintenanceOccurrenceWorkspace } from "../../_components/MaintenanceOccurrenceWorkspace";
 import { MaintenanceOccurrenceFinancePanel } from "../../_components/MaintenanceOccurrenceFinancePanel";
 import { getMaintenanceAccess } from "../../access";
+import { maintenanceTabs } from "../../tabs";
 
 type Props = { params: Promise<{ id: string }> };
 export default async function MaintenanceOccurrencePage({ params }: Props) {
@@ -22,48 +24,27 @@ export default async function MaintenanceOccurrencePage({ params }: Props) {
       />
     );
   const { id } = await params;
-  const [item, referenceData, finance] = await Promise.all([
+  const [item, referenceData, finance, suppliers] = await Promise.all([
     getMaintenanceOccurrence(id),
     getMaintenanceReferenceData(),
     access.canReadFinance
       ? getMaintenanceOccurrenceFinance(id)
       : Promise.resolve(null),
+    access.canManageSuppliers || access.canReadFinance
+      ? getMaintenanceSuppliers()
+      : Promise.resolve([]),
   ]);
   return (
     <DashboardEntityPageShell
       title={`Ocorrência ${item.code}`}
       activeTabKey="detail"
-      tabs={[
-        {
-          key: "all",
-          label: "Todas",
-          href: "/dashboard/maintenance/view",
-          isVisible: access.canRead,
-        },
-        {
-          key: "report",
-          label: "Registrar",
-          href: "/dashboard/maintenance/report",
-          isVisible: access.canCreate,
-        },
-        {
-          key: "finance",
-          label: "Financeiro",
-          href: "/dashboard/maintenance/finance",
-          isVisible: access.canReadFinance,
-        },
-        {
-          key: "settings",
-          label: "Configuração",
-          href: "/dashboard/maintenance/settings",
-          isVisible: access.canManageCatalogs,
-        },
-      ]}
+      tabs={maintenanceTabs(access)}
     >
       <MaintenanceOccurrenceWorkspace
         initial={item}
         referenceData={referenceData}
         access={access}
+        suppliers={suppliers}
       />
       {finance ? (
         <div className="mt-4">
@@ -72,6 +53,7 @@ export default async function MaintenanceOccurrencePage({ params }: Props) {
             stayId={item.stay_id}
             initial={finance}
             canPropose={access.canProposeFinance}
+            suppliers={suppliers}
           />
         </div>
       ) : null}

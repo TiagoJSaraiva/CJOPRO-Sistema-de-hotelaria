@@ -13,6 +13,7 @@ import { logoutAction, setActiveHotelAction } from "./actions";
 import { ActiveHotelSelector } from "./_components/ActiveHotelSelector";
 import { getRoomsAccess } from "./rooms/access";
 import { getMaintenanceAccess } from "./maintenance/access";
+import { getMaintenanceNotificationSummary } from "../../lib/adminApi";
 
 const NAME_CONNECTORS = new Set(["da", "de", "do", "das", "dos", "e"]);
 
@@ -95,6 +96,10 @@ export default async function DashboardLayout({
   const activeHotelOptions = listActiveHotelOptions(user);
   const preferredHotelId = await getActiveHotelCookieValue();
   const activeHotelId = resolveActiveHotelForUser(user, preferredHotelId);
+  const maintenanceNotifications =
+    maintenanceAccess.canEnter && activeHotelId
+      ? await getMaintenanceNotificationSummary().catch(() => ({ unread: 0 }))
+      : { unread: 0 };
   const navLinkClassName =
     "rounded-lg border border-[#d2d2d2] bg-white px-[0.7rem] py-[0.45rem] font-medium leading-none text-[#232323] no-underline";
 
@@ -144,6 +149,18 @@ export default async function DashboardLayout({
         </div>
 
         <div className="flex flex-wrap items-center justify-end gap-3">
+          {maintenanceAccess.canEnter ? (
+            <Link
+              href="/dashboard/maintenance/notifications"
+              aria-label={`Notificações de manutenção: ${maintenanceNotifications.unread} não lidas`}
+              className={navLinkClassName}
+            >
+              Alertas
+              {maintenanceNotifications.unread
+                ? ` (${maintenanceNotifications.unread})`
+                : ""}
+            </Link>
+          ) : null}
           {activeHotelOptions.length > 1 ? (
             <ActiveHotelSelector
               options={activeHotelOptions}

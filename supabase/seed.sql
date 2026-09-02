@@ -266,3 +266,83 @@ select setval(
   (select max(occurrence_number) from public.maintenance_occurrences),
   true
 );
+
+insert into public.maintenance_suppliers (
+  id, hotel_id, name, legal_name, tax_document, email, phone, specialties,
+  notes, created_by
+) values (
+  '99200000-0000-4000-8000-000000000001',
+  '10000000-0000-4000-8000-000000000001',
+  'Clima Local Serviços', 'Clima Local Serviços Técnicos Ltda.',
+  '00.000.000/0001-00', 'contato@climalocal.example', '(11) 3000-0000',
+  array['Climatização', 'Elétrica'], 'Fornecedor exclusivamente sintético.',
+  '80000000-0000-4000-8000-000000000002'
+);
+
+insert into public.maintenance_supplier_contacts (
+  id, hotel_id, supplier_id, name, role, email, phone, is_primary, created_by
+) values (
+  '99300000-0000-4000-8000-000000000001',
+  '10000000-0000-4000-8000-000000000001',
+  '99200000-0000-4000-8000-000000000001', 'Contato Técnico Sintético',
+  'Coordenação técnica', 'tecnico@climalocal.example', '(11) 3000-0001', true,
+  '80000000-0000-4000-8000-000000000002'
+);
+
+insert into public.maintenance_contracts (
+  id, hotel_id, supplier_id, contract_number, kind, status, starts_on, ends_on,
+  renewal_notice_on, scope_notes, response_hours, resolution_hours,
+  commercial_terms, contract_amount, currency, created_by
+) values (
+  '99400000-0000-4000-8000-000000000001',
+  '10000000-0000-4000-8000-000000000001',
+  '99200000-0000-4000-8000-000000000001', 'LOCAL-CLIMA-001', 'fixed', 'active',
+  current_date - 30, current_date + 30, current_date + 20,
+  'Atendimento sintético dos equipamentos de climatização.', 4, 24,
+  'Termos comerciais sintéticos para validação de redação por permissão.',
+  1200.00, 'BRL', '80000000-0000-4000-8000-000000000002'
+);
+
+insert into public.maintenance_locations (
+  id, hotel_id, parent_location_id, kind, name, description, display_order,
+  asset_tag, manufacturer, model, serial_number, installed_on, warranty_ends_on,
+  supplier_id, contract_id, lifecycle_status
+) values (
+  '99500000-0000-4000-8000-000000000001',
+  '10000000-0000-4000-8000-000000000001',
+  '96000000-0000-4000-8000-000000000001', 'equipment',
+  'Ar-condicionado da recepção', 'Equipamento patrimonial sintético.', 20,
+  'PAT-LOCAL-001', 'Fabricante Sintético', 'Modelo Local', 'SERIE-LOCAL-001',
+  current_date - 365, current_date + 30,
+  '99200000-0000-4000-8000-000000000001',
+  '99400000-0000-4000-8000-000000000001', 'active'
+);
+
+insert into public.maintenance_preventive_plans (
+  id, hotel_id, name, category_id, location_id, assigned_to, supplier_id,
+  contract_id, priority, instructions, requires_inspection,
+  blocking_recommended, recurrence_unit, recurrence_interval, recurrence_day,
+  starts_on, local_time, generation_lead_days, completion_due_hours,
+  next_due_date, created_by
+)
+select
+  '99600000-0000-4000-8000-000000000001',
+  '10000000-0000-4000-8000-000000000001',
+  'Revisão mensal do ar-condicionado da recepção', category.id,
+  '99500000-0000-4000-8000-000000000001',
+  '80000000-0000-4000-8000-000000000002',
+  '99200000-0000-4000-8000-000000000001',
+  '99400000-0000-4000-8000-000000000001', 'normal',
+  'Inspecionar filtros, alimentação e rendimento do equipamento.', true,
+  false, 'monthly', 1, extract(day from current_date)::integer,
+  current_date, '09:00', 1, 24, current_date,
+  '80000000-0000-4000-8000-000000000002'
+from public.maintenance_categories category
+where category.hotel_id = '10000000-0000-4000-8000-000000000001'
+  and category.name = 'Climatização';
+
+insert into public.maintenance_preventive_plan_tasks (
+  id, hotel_id, plan_id, position, description, is_required
+) values
+  ('99700000-0000-4000-8000-000000000001', '10000000-0000-4000-8000-000000000001', '99600000-0000-4000-8000-000000000001', 10, 'Verificar e higienizar filtros.', true),
+  ('99700000-0000-4000-8000-000000000002', '10000000-0000-4000-8000-000000000001', '99600000-0000-4000-8000-000000000001', 20, 'Registrar condição da unidade externa.', true);

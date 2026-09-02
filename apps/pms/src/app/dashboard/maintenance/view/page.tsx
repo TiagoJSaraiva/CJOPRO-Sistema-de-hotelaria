@@ -90,6 +90,30 @@ export default async function MaintenanceViewPage({ searchParams }: PageProps) {
       isVisible: access.canReadFinance,
     },
     {
+      key: "agenda",
+      label: "Minha agenda",
+      href: "/dashboard/maintenance/agenda",
+      isVisible: access.canExecute,
+    },
+    {
+      key: "preventive",
+      label: "Preventivas",
+      href: "/dashboard/maintenance/preventive",
+      isVisible: access.canManagePlans || access.canExecute,
+    },
+    {
+      key: "suppliers",
+      label: "Fornecedores",
+      href: "/dashboard/maintenance/suppliers",
+      isVisible: access.canManageSuppliers,
+    },
+    {
+      key: "analytics",
+      label: "Indicadores",
+      href: "/dashboard/maintenance/analytics",
+      isVisible: access.canReadAnalytics,
+    },
+    {
       key: "report",
       label: "Registrar",
       href: "/dashboard/maintenance/report",

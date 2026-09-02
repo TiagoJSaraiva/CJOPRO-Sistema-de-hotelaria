@@ -138,6 +138,50 @@ Fontes de verdade: migration `20260831020000_create_maintenance_finance.sql`,
 `packages/shared/src/api-contract.ts` e a central
 `apps/pms/src/app/dashboard/maintenance/finance`.
 
+## Gestão avançada de manutenção
+
+Planos preventivos geram ocorrências e ordens comuns, preservando o mesmo fluxo
+operacional e financeiro. Cada competência possui chave única por plano e data
+local; quando há uma execução anterior aberta, ela permanece adiada até uma
+decisão gerencial justificada. O checklist da ordem é um snapshot independente
+do template, de modo que edições posteriores no plano não alteram trabalho já
+emitido.
+
+```mermaid
+flowchart LR
+  cron[pg_cron a cada 15 min] --> cycle[Ciclo por hotel e data local]
+  cycle --> plans[Competências preventivas]
+  plans --> open{Execução anterior aberta?}
+  open -->|não| occurrence[Ocorrência + ordem + checklist]
+  open -->|sim| deferred[Competência adiada]
+  deferred --> decision[Gerar, ignorar ou reagendar]
+  cycle --> sla[Marcos de SLA]
+  cycle --> expiry[Garantias e contratos]
+  sla --> inbox[Notificações deduplicadas]
+  expiry --> inbox
+  occurrence --> analytics[Indicadores e exportações]
+```
+
+O SLA usa horas corridas e é copiado para a ocorrência no momento do registro.
+Pausas e esperas não suspendem o relógio, reaberturas mantêm os prazos originais
+e ocorrências anteriores à migration não recebem violações retroativas. O ciclo
+automático registra chave, duração, contadores e erro, permitindo reprocessamento
+idempotente pela interface administrativa.
+
+Fornecedores não substituem o responsável interno. Contratos e ativos podem
+especializar o contexto da ordem, mas não concluem trabalho nem geram obrigação
+financeira automaticamente. Termos comerciais, custos e métricas financeiras
+continuam protegidos pela permissão financeira. Documentos gerenciais ficam no
+bucket privado `maintenance-management-documents` e são acessados por URLs
+assinadas de curta duração.
+
+Fontes de verdade: migration
+`20260902010000_create_maintenance_management.sql`,
+`maintenanceManagementRepository.ts`, `maintenanceManagementRoutes.ts`, os
+contratos em `packages/shared/src/api-contract.ts`, o guia
+`docs/maintenance-management.md` e as páginas de gestão em
+`apps/pms/src/app/dashboard/maintenance`.
+
 ## Pipeline de qualidade
 
 ```mermaid

@@ -33,6 +33,15 @@ type CatalogBody = {
   is_active?: boolean;
   kind?: "area" | "equipment";
   parent_location_id?: string | null;
+  asset_tag?: string | null;
+  manufacturer?: string | null;
+  model?: string | null;
+  serial_number?: string | null;
+  installed_on?: string | null;
+  warranty_ends_on?: string | null;
+  supplier_id?: string | null;
+  contract_id?: string | null;
+  lifecycle_status?: "active" | "out_of_service" | "retired" | null;
 };
 type TriageBody = {
   category_id?: string;

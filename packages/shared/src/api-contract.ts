@@ -605,6 +605,7 @@ const MaintenanceOccurrenceKindSchema = Type.Union([
   Type.Literal("wear"),
   Type.Literal("safety_risk"),
   Type.Literal("special_cleaning"),
+  Type.Literal("preventive"),
   Type.Literal("other"),
 ]);
 const MaintenanceOccurrenceStatusSchema = Type.Union([
@@ -647,6 +648,23 @@ export const MaintenanceCategorySchema = Type.Object(
     description: nullable(Type.String()),
     display_order: Type.Integer(),
     is_active: Type.Boolean(),
+    asset_tag: Type.Optional(nullable(Type.String())),
+    manufacturer: Type.Optional(nullable(Type.String())),
+    model: Type.Optional(nullable(Type.String())),
+    serial_number: Type.Optional(nullable(Type.String())),
+    installed_on: Type.Optional(nullable(date())),
+    warranty_ends_on: Type.Optional(nullable(date())),
+    supplier_id: Type.Optional(nullable(uuid())),
+    contract_id: Type.Optional(nullable(uuid())),
+    lifecycle_status: Type.Optional(
+      nullable(
+        Type.Union([
+          Type.Literal("active"),
+          Type.Literal("out_of_service"),
+          Type.Literal("retired"),
+        ]),
+      ),
+    ),
     created_at: dateTime(),
     updated_at: dateTime(),
   },
@@ -690,6 +708,10 @@ export const MaintenanceOccurrenceSummarySchema = Type.Object(
     liability_status: MaintenanceLiabilityStatusSchema,
     active_block: Type.Boolean(),
     open_work_orders: Type.Integer(),
+    preventive_plan_id: Type.Optional(nullable(uuid())),
+    sla_response_due_at: Type.Optional(nullable(dateTime())),
+    sla_resolution_due_at: Type.Optional(nullable(dateTime())),
+    operational_resolved_at: Type.Optional(nullable(dateTime())),
     created_at: dateTime(),
     updated_at: dateTime(),
   },
@@ -863,6 +885,8 @@ export const MaintenanceCostItemBodySchema = Type.Object(
     estimated_amount: optionalNullable(Type.Number({ minimum: 0 })),
     actual_amount: optionalNullable(Type.Number({ exclusiveMinimum: 0 })),
     counterparty: optionalNullable(Type.String({ maxLength: 240 })),
+    supplier_id: optionalNullable(uuid()),
+    contract_id: optionalNullable(uuid()),
     due_date: optionalNullable(date()),
     reference_code: optionalNullable(Type.String({ maxLength: 240 })),
   },
@@ -876,6 +900,8 @@ export const MaintenanceRecoveryBodySchema = Type.Object(
     ]),
     stay_id: optionalNullable(uuid()),
     debtor_name: optionalNullable(Type.String({ maxLength: 240 })),
+    supplier_id: optionalNullable(uuid()),
+    contract_id: optionalNullable(uuid()),
     charge_amount: Type.Number({ minimum: 0 }),
     waived_amount: Type.Optional(Type.Number({ minimum: 0 })),
     justification: Type.String({ minLength: 3, maxLength: 2000 }),
@@ -946,6 +972,8 @@ export const MaintenanceCostItemSchema = Type.Object(
     estimated_amount: nullable(Type.Number()),
     actual_amount: nullable(Type.Number()),
     counterparty: nullable(Type.String()),
+    supplier_id: Type.Optional(nullable(uuid())),
+    contract_id: Type.Optional(nullable(uuid())),
     due_date: nullable(date()),
     reference_code: nullable(Type.String()),
   },
@@ -960,6 +988,8 @@ export const MaintenanceRecoverySchema = Type.Object(
     ]),
     stay_id: nullable(uuid()),
     debtor_name: nullable(Type.String()),
+    supplier_id: Type.Optional(nullable(uuid())),
+    contract_id: Type.Optional(nullable(uuid())),
     charge_amount: Type.Number(),
     waived_amount: Type.Number(),
     justification: Type.String(),
@@ -996,6 +1026,307 @@ export const MaintenanceFinanceSummarySchema = Type.Object(
   },
   { ...strict, $id: "MaintenanceFinanceSummary" },
 );
+const MaintenanceRecurrenceUnitSchema = Type.Union([
+  Type.Literal("daily"),
+  Type.Literal("weekly"),
+  Type.Literal("monthly"),
+  Type.Literal("yearly"),
+]);
+const MaintenanceChecklistTaskBodySchema = Type.Object(
+  {
+    id: Type.Optional(uuid()),
+    position: Type.Integer({ minimum: 0 }),
+    description: Type.String({ minLength: 2, maxLength: 500 }),
+    is_required: Type.Optional(Type.Boolean()),
+  },
+  strict,
+);
+export const MaintenancePreventivePlanBodySchema = Type.Object(
+  {
+    name: Type.String({ minLength: 3, maxLength: 160 }),
+    category_id: uuid(),
+    room_id: optionalNullable(uuid()),
+    location_id: optionalNullable(uuid()),
+    assigned_to: uuid(),
+    supplier_id: optionalNullable(uuid()),
+    contract_id: optionalNullable(uuid()),
+    priority: Type.Optional(MaintenancePrioritySchema),
+    instructions: Type.String({ minLength: 3, maxLength: 4000 }),
+    requires_inspection: Type.Optional(Type.Boolean()),
+    blocking_recommended: Type.Optional(Type.Boolean()),
+    recurrence_unit: MaintenanceRecurrenceUnitSchema,
+    recurrence_interval: Type.Optional(
+      Type.Integer({ minimum: 1, maximum: 365 }),
+    ),
+    starts_on: date(),
+    ends_on: optionalNullable(date()),
+    local_time: Type.String({
+      pattern: "^([01]\\d|2[0-3]):[0-5]\\d(:[0-5]\\d)?$",
+    }),
+    generation_lead_days: Type.Optional(
+      Type.Integer({ minimum: 0, maximum: 365 }),
+    ),
+    completion_due_hours: Type.Optional(Type.Integer({ minimum: 1 })),
+    tasks: Type.Array(MaintenanceChecklistTaskBodySchema, { maxItems: 100 }),
+  },
+  { ...strict, $id: "MaintenancePreventivePlanInput" },
+);
+export const MaintenancePreventivePlanSchema = Type.Intersect(
+  [
+    Type.Ref("MaintenancePreventivePlanInput"),
+    Type.Object(
+      {
+        id: uuid(),
+        hotel_id: uuid(),
+        recurrence_interval: Type.Integer(),
+        recurrence_day: Type.Integer(),
+        generation_lead_days: Type.Integer(),
+        completion_due_hours: Type.Integer(),
+        next_due_date: date(),
+        status: Type.Union([
+          Type.Literal("active"),
+          Type.Literal("paused"),
+          Type.Literal("inactive"),
+        ]),
+        category_name: Type.Optional(Type.String()),
+        target_name: Type.Optional(Type.String()),
+        assignee_name: Type.Optional(Type.String()),
+        supplier_name: Type.Optional(nullable(Type.String())),
+        contract_number: Type.Optional(nullable(Type.String())),
+        created_at: dateTime(),
+        updated_at: dateTime(),
+      },
+      strict,
+    ),
+  ],
+  { $id: "MaintenancePreventivePlan" },
+);
+export const MaintenancePreventiveRunSchema = Type.Object(
+  {
+    id: uuid(),
+    plan_id: uuid(),
+    scheduled_for: dateTime(),
+    scheduled_local_date: date(),
+    status: Type.Union([
+      Type.Literal("scheduled"),
+      Type.Literal("generated"),
+      Type.Literal("deferred"),
+      Type.Literal("skipped"),
+      Type.Literal("rescheduled"),
+    ]),
+    occurrence_id: nullable(uuid()),
+    work_order_id: nullable(uuid()),
+    snapshot: Type.Record(Type.String(), Type.Unknown()),
+    decision_reason: nullable(Type.String()),
+    rescheduled_for: nullable(date()),
+    created_at: dateTime(),
+  },
+  { ...strict, $id: "MaintenancePreventiveRun" },
+);
+export const MaintenanceSlaPolicySchema = Type.Object(
+  {
+    id: uuid(),
+    hotel_id: uuid(),
+    category_id: nullable(uuid()),
+    category_name: Type.Optional(nullable(Type.String())),
+    priority: MaintenancePrioritySchema,
+    name: Type.String(),
+    response_hours: Type.Integer(),
+    resolution_hours: Type.Integer(),
+    is_active: Type.Boolean(),
+    created_at: dateTime(),
+    updated_at: dateTime(),
+  },
+  { ...strict, $id: "MaintenanceSlaPolicy" },
+);
+export const MaintenanceSupplierContactSchema = Type.Object(
+  {
+    id: uuid(),
+    supplier_id: uuid(),
+    name: Type.String(),
+    role: nullable(Type.String()),
+    email: nullable(Type.String()),
+    phone: nullable(Type.String()),
+    is_primary: Type.Boolean(),
+    is_active: Type.Boolean(),
+  },
+  { ...strict, $id: "MaintenanceSupplierContact" },
+);
+export const MaintenanceContractSchema = Type.Object(
+  {
+    id: uuid(),
+    supplier_id: uuid(),
+    supplier_name: Type.Optional(Type.String()),
+    contract_number: Type.String(),
+    kind: Type.Union([
+      Type.Literal("fixed"),
+      Type.Literal("per_service"),
+      Type.Literal("warranty"),
+      Type.Literal("other"),
+    ]),
+    status: Type.Union([
+      Type.Literal("draft"),
+      Type.Literal("active"),
+      Type.Literal("expired"),
+      Type.Literal("terminated"),
+    ]),
+    starts_on: date(),
+    ends_on: nullable(date()),
+    renewal_notice_on: nullable(date()),
+    scope_notes: nullable(Type.String()),
+    response_hours: nullable(Type.Integer()),
+    resolution_hours: nullable(Type.Integer()),
+    commercial_terms: Type.Optional(nullable(Type.String())),
+    contract_amount: Type.Optional(nullable(Type.Number())),
+    currency: Type.Optional(nullable(Type.String())),
+    created_at: dateTime(),
+    updated_at: dateTime(),
+    category_ids: Type.Optional(Type.Array(uuid())),
+    location_ids: Type.Optional(Type.Array(uuid())),
+    documents: Type.Optional(
+      Type.Array(
+        Type.Object(
+          {
+            id: uuid(),
+            original_filename: Type.String(),
+            content_type: Type.String(),
+            size_bytes: Type.Integer(),
+            created_at: dateTime(),
+          },
+          strict,
+        ),
+      ),
+    ),
+  },
+  { ...strict, $id: "MaintenanceContract" },
+);
+export const MaintenanceSupplierSchema = Type.Object(
+  {
+    id: uuid(),
+    hotel_id: uuid(),
+    name: Type.String(),
+    legal_name: nullable(Type.String()),
+    tax_document: nullable(Type.String()),
+    email: nullable(Type.String()),
+    phone: nullable(Type.String()),
+    specialties: Type.Array(Type.String()),
+    notes: nullable(Type.String()),
+    status: Type.Union([Type.Literal("active"), Type.Literal("inactive")]),
+    contacts: Type.Optional(Type.Array(Type.Ref("MaintenanceSupplierContact"))),
+    contracts: Type.Optional(Type.Array(Type.Ref("MaintenanceContract"))),
+    documents: Type.Optional(
+      Type.Array(
+        Type.Object(
+          {
+            id: uuid(),
+            original_filename: Type.String(),
+            content_type: Type.String(),
+            size_bytes: Type.Integer(),
+            created_at: dateTime(),
+          },
+          strict,
+        ),
+      ),
+    ),
+    created_at: dateTime(),
+    updated_at: dateTime(),
+  },
+  { ...strict, $id: "MaintenanceSupplier" },
+);
+export const MaintenanceNotificationSchema = Type.Object(
+  {
+    id: uuid(),
+    kind: Type.String(),
+    severity: Type.Union([
+      Type.Literal("info"),
+      Type.Literal("warning"),
+      Type.Literal("critical"),
+    ]),
+    title: Type.String(),
+    message: Type.String(),
+    href: Type.String(),
+    entity_type: Type.String(),
+    entity_id: uuid(),
+    status: Type.Union([
+      Type.Literal("unread"),
+      Type.Literal("read"),
+      Type.Literal("dismissed"),
+    ]),
+    created_at: dateTime(),
+  },
+  { ...strict, $id: "MaintenanceNotification" },
+);
+export const MaintenanceAnalyticsSchema = Type.Object(
+  {
+    filters: Type.Record(Type.String(), Type.String()),
+    backlog: Type.Integer(),
+    critical_open: Type.Integer(),
+    average_triage_hours: Type.Number(),
+    average_resolution_hours: Type.Number(),
+    sla_compliance_rate: Type.Number(),
+    preventive_compliance_rate: Type.Number(),
+    recurring_occurrences: Type.Integer(),
+    blocked_room_days: Type.Number(),
+    supplier_completion_rate: Type.Number(),
+    aging: Type.Array(
+      Type.Object({ bucket: Type.String(), count: Type.Integer() }, strict),
+    ),
+    series: Type.Array(
+      Type.Object(
+        { date: date(), opened: Type.Integer(), resolved: Type.Integer() },
+        strict,
+      ),
+    ),
+    financial: Type.Optional(
+      Type.Object(
+        {
+          approved_cost: Type.Number(),
+          approved_recovery: Type.Number(),
+          net_result: Type.Number(),
+          currency: Type.String(),
+        },
+        strict,
+      ),
+    ),
+  },
+  { ...strict, $id: "MaintenanceAnalytics" },
+);
+const MaintenanceAnalyticsFilterSchema = Type.Object(
+  {
+    from: Type.Optional(date()),
+    to: Type.Optional(date()),
+    category_id: Type.Optional(uuid()),
+    priority: Type.Optional(MaintenancePrioritySchema),
+    status: Type.Optional(MaintenanceOccurrenceStatusSchema),
+    room_id: Type.Optional(uuid()),
+    location_id: Type.Optional(uuid()),
+    plan_id: Type.Optional(uuid()),
+    supplier_id: Type.Optional(uuid()),
+    format: Type.Optional(
+      Type.Union([Type.Literal("json"), Type.Literal("csv")]),
+    ),
+  },
+  strict,
+);
+export const MaintenanceAutomationRunSchema = Type.Object(
+  {
+    id: uuid(),
+    run_key: Type.String(),
+    status: Type.Union([
+      Type.Literal("running"),
+      Type.Literal("completed"),
+      Type.Literal("failed"),
+    ]),
+    trigger_kind: Type.String(),
+    local_date: nullable(date()),
+    started_at: dateTime(),
+    finished_at: nullable(dateTime()),
+    duration_ms: nullable(Type.Integer()),
+    counters: Type.Record(Type.String(), Type.Unknown()),
+    error_message: nullable(Type.String()),
+  },
+  { ...strict, $id: "MaintenanceAutomationRun" },
+);
 const MaintenanceCatalogBodySchema = Type.Object(
   {
     name: Type.String({ minLength: 1, maxLength: 120 }),
@@ -1006,6 +1337,21 @@ const MaintenanceCatalogBodySchema = Type.Object(
       Type.Union([Type.Literal("area"), Type.Literal("equipment")]),
     ),
     parent_location_id: optionalNullable(uuid()),
+    asset_tag: optionalNullable(Type.String({ maxLength: 120 })),
+    manufacturer: optionalNullable(Type.String({ maxLength: 160 })),
+    model: optionalNullable(Type.String({ maxLength: 160 })),
+    serial_number: optionalNullable(Type.String({ maxLength: 160 })),
+    installed_on: optionalNullable(date()),
+    warranty_ends_on: optionalNullable(date()),
+    supplier_id: optionalNullable(uuid()),
+    contract_id: optionalNullable(uuid()),
+    lifecycle_status: optionalNullable(
+      Type.Union([
+        Type.Literal("active"),
+        Type.Literal("out_of_service"),
+        Type.Literal("retired"),
+      ]),
+    ),
   },
   strict,
 );
@@ -1614,6 +1960,7 @@ export const API_COMPONENT_SCHEMAS = [
   MaintenanceWorkOrderBodySchema,
   MaintenanceCostItemBodySchema,
   MaintenanceRecoveryBodySchema,
+  MaintenancePreventivePlanBodySchema,
   HotelSchema,
   UserSchema,
   RoleSchema,
@@ -1641,6 +1988,15 @@ export const API_COMPONENT_SCHEMAS = [
   MaintenanceRecoverySchema,
   MaintenanceFinanceOccurrenceSchema,
   MaintenanceFinanceSummarySchema,
+  MaintenancePreventivePlanSchema,
+  MaintenancePreventiveRunSchema,
+  MaintenanceSlaPolicySchema,
+  MaintenanceSupplierContactSchema,
+  MaintenanceContractSchema,
+  MaintenanceSupplierSchema,
+  MaintenanceNotificationSchema,
+  MaintenanceAnalyticsSchema,
+  MaintenanceAutomationRunSchema,
 ] as const;
 
 const AuthHeadersSchema = Type.Object(
@@ -2117,6 +2473,501 @@ export const API_ROUTE_CONTRACTS: Readonly<Record<string, ApiRouteContract>> = {
     "Remove uma foto com justificativa auditada.",
     itemSchema(MaintenanceOccurrenceDetailSchema),
     { params: IdParamsSchema, body: MaintenanceReasonBodySchema },
+  ),
+  "GET /admin/maintenance/preventive-plans": admin(
+    "listMaintenancePreventivePlans",
+    "Maintenance management",
+    "Lista planos preventivos.",
+    listSchema(MaintenancePreventivePlanSchema),
+  ),
+  "POST /admin/maintenance/preventive-plans": route(
+    "createMaintenancePreventivePlan",
+    "Maintenance management",
+    "Cria um plano preventivo.",
+    {
+      headers: AuthHeadersSchema,
+      security: [{ bearerAuth: [] }],
+      body: MaintenancePreventivePlanBodySchema,
+      response: {
+        201: itemSchema(MaintenancePreventivePlanSchema),
+        ...adminErrors,
+      },
+    },
+  ),
+  "GET /admin/maintenance/preventive-plans/:id": admin(
+    "getMaintenancePreventivePlan",
+    "Maintenance management",
+    "Retorna um plano preventivo.",
+    itemSchema(MaintenancePreventivePlanSchema),
+    { params: IdParamsSchema },
+  ),
+  "PUT /admin/maintenance/preventive-plans/:id": admin(
+    "updateMaintenancePreventivePlan",
+    "Maintenance management",
+    "Atualiza somente competências futuras do plano.",
+    itemSchema(MaintenancePreventivePlanSchema),
+    { params: IdParamsSchema, body: MaintenancePreventivePlanBodySchema },
+  ),
+  "POST /admin/maintenance/preventive-plans/:id/pause": admin(
+    "pauseMaintenancePreventivePlan",
+    "Maintenance management",
+    "Pausa novas competências preventivas.",
+    itemSchema(MaintenancePreventivePlanSchema),
+    { params: IdParamsSchema, body: MaintenanceReasonBodySchema },
+  ),
+  "POST /admin/maintenance/preventive-plans/:id/resume": admin(
+    "resumeMaintenancePreventivePlan",
+    "Maintenance management",
+    "Retoma novas competências preventivas.",
+    itemSchema(MaintenancePreventivePlanSchema),
+    { params: IdParamsSchema, body: MaintenanceReasonBodySchema },
+  ),
+  "POST /admin/maintenance/preventive-plans/:id/deactivate": admin(
+    "deactivateMaintenancePreventivePlan",
+    "Maintenance management",
+    "Desativa definitivamente novas competências preventivas.",
+    itemSchema(MaintenancePreventivePlanSchema),
+    { params: IdParamsSchema, body: MaintenanceReasonBodySchema },
+  ),
+  "GET /admin/maintenance/preventive-plans/:id/runs": admin(
+    "listMaintenancePreventiveRuns",
+    "Maintenance management",
+    "Lista competências de um plano.",
+    listSchema(MaintenancePreventiveRunSchema),
+    { params: IdParamsSchema },
+  ),
+  "POST /admin/maintenance/preventive-runs/:id/generate": admin(
+    "generateMaintenancePreventiveRun",
+    "Maintenance management",
+    "Gera uma competência adiada com justificativa.",
+    itemSchema(MaintenancePreventiveRunSchema),
+    { params: IdParamsSchema, body: MaintenanceReasonBodySchema },
+  ),
+  "POST /admin/maintenance/preventive-runs/:id/skip": admin(
+    "skipMaintenancePreventiveRun",
+    "Maintenance management",
+    "Ignora uma competência adiada com justificativa.",
+    itemSchema(MaintenancePreventiveRunSchema),
+    { params: IdParamsSchema, body: MaintenanceReasonBodySchema },
+  ),
+  "POST /admin/maintenance/preventive-runs/:id/reschedule": admin(
+    "rescheduleMaintenancePreventiveRun",
+    "Maintenance management",
+    "Reagenda uma competência adiada.",
+    itemSchema(MaintenancePreventiveRunSchema),
+    {
+      params: IdParamsSchema,
+      body: Type.Object(
+        {
+          reason: Type.String({ minLength: 3, maxLength: 2000 }),
+          scheduled_for: date(),
+        },
+        strict,
+      ),
+    },
+  ),
+  "POST /admin/maintenance/work-orders/:id/checklist/:itemId/complete": admin(
+    "completeMaintenanceChecklist",
+    "Maintenance management",
+    "Conclui ou reabre um item do checklist.",
+    itemSchema(MaintenanceOccurrenceDetailSchema),
+    {
+      params: Type.Object({ id: uuid(), itemId: uuid() }, strict),
+      body: Type.Object(
+        {
+          completed: Type.Boolean(),
+          notes: Type.Optional(Type.String({ maxLength: 2000 })),
+        },
+        strict,
+      ),
+    },
+  ),
+  "POST /admin/maintenance/work-orders/:id/supplier-transition": admin(
+    "transitionMaintenanceSupplierWork",
+    "Maintenance management",
+    "Registra o andamento do fornecedor sem concluir a ordem interna.",
+    itemSchema(MaintenanceOccurrenceDetailSchema),
+    {
+      params: IdParamsSchema,
+      body: Type.Object(
+        {
+          action: Type.Union([
+            Type.Literal("send"),
+            Type.Literal("accept"),
+            Type.Literal("start"),
+            Type.Literal("complete"),
+            Type.Literal("cancel"),
+          ]),
+          supplier_id: optionalNullable(uuid()),
+          contract_id: optionalNullable(uuid()),
+          external_reference: Type.Optional(Type.String({ maxLength: 240 })),
+          notes: Type.Optional(Type.String({ maxLength: 2000 })),
+        },
+        strict,
+      ),
+    },
+  ),
+  "GET /admin/maintenance/sla-policies": admin(
+    "listMaintenanceSlaPolicies",
+    "Maintenance management",
+    "Lista políticas de SLA e sua precedência.",
+    listSchema(MaintenanceSlaPolicySchema),
+  ),
+  "POST /admin/maintenance/sla-policies": route(
+    "createMaintenanceSlaPolicy",
+    "Maintenance management",
+    "Cria uma política de SLA.",
+    {
+      headers: AuthHeadersSchema,
+      security: [{ bearerAuth: [] }],
+      body: Type.Object(
+        {
+          category_id: optionalNullable(uuid()),
+          priority: MaintenancePrioritySchema,
+          name: Type.String({ minLength: 2, maxLength: 120 }),
+          response_hours: Type.Integer({ minimum: 1 }),
+          resolution_hours: Type.Integer({ minimum: 1 }),
+        },
+        strict,
+      ),
+      response: { 201: itemSchema(MaintenanceSlaPolicySchema), ...adminErrors },
+    },
+  ),
+  "PUT /admin/maintenance/sla-policies/:id": admin(
+    "updateMaintenanceSlaPolicy",
+    "Maintenance management",
+    "Atualiza ou desativa uma política de SLA para ocorrências futuras.",
+    itemSchema(MaintenanceSlaPolicySchema),
+    {
+      params: IdParamsSchema,
+      body: Type.Object(
+        {
+          name: Type.Optional(Type.String({ minLength: 2, maxLength: 120 })),
+          response_hours: Type.Optional(Type.Integer({ minimum: 1 })),
+          resolution_hours: Type.Optional(Type.Integer({ minimum: 1 })),
+          is_active: Type.Optional(Type.Boolean()),
+        },
+        strict,
+      ),
+    },
+  ),
+  "GET /admin/maintenance/suppliers": admin(
+    "listMaintenanceSuppliers",
+    "Maintenance management",
+    "Lista fornecedores do hotel.",
+    listSchema(MaintenanceSupplierSchema),
+  ),
+  "POST /admin/maintenance/suppliers": route(
+    "createMaintenanceSupplier",
+    "Maintenance management",
+    "Cadastra fornecedor.",
+    {
+      headers: AuthHeadersSchema,
+      security: [{ bearerAuth: [] }],
+      body: Type.Object(
+        {
+          name: Type.String({ minLength: 2, maxLength: 160 }),
+          legal_name: optionalNullable(Type.String()),
+          tax_document: optionalNullable(Type.String()),
+          email: optionalNullable(Type.String()),
+          phone: optionalNullable(Type.String()),
+          specialties: Type.Optional(Type.Array(Type.String())),
+          notes: optionalNullable(Type.String()),
+        },
+        strict,
+      ),
+      response: { 201: itemSchema(MaintenanceSupplierSchema), ...adminErrors },
+    },
+  ),
+  "PUT /admin/maintenance/suppliers/:id": admin(
+    "updateMaintenanceSupplier",
+    "Maintenance management",
+    "Atualiza ou desativa fornecedor preservando histórico.",
+    itemSchema(MaintenanceSupplierSchema),
+    {
+      params: IdParamsSchema,
+      body: Type.Partial(
+        Type.Object(
+          {
+            name: Type.String({ minLength: 2, maxLength: 160 }),
+            legal_name: nullable(Type.String()),
+            tax_document: nullable(Type.String()),
+            email: nullable(Type.String()),
+            phone: nullable(Type.String()),
+            specialties: Type.Array(Type.String()),
+            notes: nullable(Type.String()),
+            status: Type.Union([
+              Type.Literal("active"),
+              Type.Literal("inactive"),
+            ]),
+          },
+          strict,
+        ),
+      ),
+    },
+  ),
+  "POST /admin/maintenance/suppliers/:id/contacts": route(
+    "createMaintenanceSupplierContact",
+    "Maintenance management",
+    "Cadastra contato do fornecedor.",
+    {
+      headers: AuthHeadersSchema,
+      security: [{ bearerAuth: [] }],
+      params: IdParamsSchema,
+      body: Type.Object(
+        {
+          name: Type.String({ minLength: 2 }),
+          role: optionalNullable(Type.String()),
+          email: optionalNullable(Type.String()),
+          phone: optionalNullable(Type.String()),
+          is_primary: Type.Optional(Type.Boolean()),
+        },
+        strict,
+      ),
+      response: {
+        201: itemSchema(MaintenanceSupplierContactSchema),
+        ...adminErrors,
+      },
+    },
+  ),
+  "PUT /admin/maintenance/supplier-contacts/:id": admin(
+    "updateMaintenanceSupplierContact",
+    "Maintenance management",
+    "Atualiza ou desativa contato preservando histórico.",
+    itemSchema(MaintenanceSupplierContactSchema),
+    {
+      params: IdParamsSchema,
+      body: Type.Partial(
+        Type.Object(
+          {
+            name: Type.String({ minLength: 2 }),
+            role: nullable(Type.String()),
+            email: nullable(Type.String()),
+            phone: nullable(Type.String()),
+            is_primary: Type.Boolean(),
+            is_active: Type.Boolean(),
+          },
+          strict,
+        ),
+      ),
+    },
+  ),
+  "POST /admin/maintenance/suppliers/:id/contracts": route(
+    "createMaintenanceContract",
+    "Maintenance management",
+    "Cadastra contrato do fornecedor sem gerar obrigação financeira.",
+    {
+      headers: AuthHeadersSchema,
+      security: [{ bearerAuth: [] }],
+      params: IdParamsSchema,
+      body: Type.Object(
+        {
+          contract_number: Type.String({ minLength: 1 }),
+          kind: Type.Union([
+            Type.Literal("fixed"),
+            Type.Literal("per_service"),
+            Type.Literal("warranty"),
+            Type.Literal("other"),
+          ]),
+          status: Type.Optional(
+            Type.Union([Type.Literal("draft"), Type.Literal("active")]),
+          ),
+          starts_on: date(),
+          ends_on: optionalNullable(date()),
+          renewal_notice_on: optionalNullable(date()),
+          scope_notes: optionalNullable(Type.String()),
+          response_hours: optionalNullable(Type.Integer({ minimum: 1 })),
+          resolution_hours: optionalNullable(Type.Integer({ minimum: 1 })),
+          commercial_terms: optionalNullable(Type.String()),
+          contract_amount: optionalNullable(Type.Number({ minimum: 0 })),
+          currency: optionalNullable(Type.String({ pattern: "^[A-Z]{3}$" })),
+          category_ids: Type.Optional(Type.Array(uuid())),
+          location_ids: Type.Optional(Type.Array(uuid())),
+        },
+        strict,
+      ),
+      response: { 201: itemSchema(MaintenanceContractSchema), ...adminErrors },
+    },
+  ),
+  "PUT /admin/maintenance/contracts/:id": admin(
+    "updateMaintenanceContract",
+    "Maintenance management",
+    "Atualiza ou encerra contrato com auditoria.",
+    itemSchema(MaintenanceContractSchema),
+    {
+      params: IdParamsSchema,
+      body: Type.Partial(
+        Type.Object(
+          {
+            status: Type.Union([
+              Type.Literal("draft"),
+              Type.Literal("active"),
+              Type.Literal("expired"),
+              Type.Literal("terminated"),
+            ]),
+            ends_on: nullable(date()),
+            renewal_notice_on: nullable(date()),
+            scope_notes: nullable(Type.String()),
+            commercial_terms: nullable(Type.String()),
+            category_ids: Type.Array(uuid()),
+            location_ids: Type.Array(uuid()),
+            termination_reason: Type.String({ minLength: 3 }),
+          },
+          strict,
+        ),
+      ),
+    },
+  ),
+  "POST /admin/maintenance/management-documents/upload-intents": admin(
+    "createMaintenanceManagementDocumentIntents",
+    "Maintenance management",
+    "Gera URLs temporárias para documentos de fornecedor ou contrato.",
+    MaintenanceUploadIntentSchema,
+    {
+      body: Type.Object(
+        {
+          target_type: Type.Union([
+            Type.Literal("supplier"),
+            Type.Literal("contract"),
+          ]),
+          target_id: uuid(),
+          files: Type.Array(
+            Type.Object(
+              {
+                filename: Type.String(),
+                content_type: Type.Union([
+                  Type.Literal("image/jpeg"),
+                  Type.Literal("image/png"),
+                  Type.Literal("image/webp"),
+                  Type.Literal("application/pdf"),
+                ]),
+                size_bytes: Type.Integer({ minimum: 1, maximum: 10485760 }),
+              },
+              strict,
+            ),
+            { minItems: 1, maxItems: 5 },
+          ),
+        },
+        strict,
+      ),
+    },
+  ),
+  "POST /admin/maintenance/management-documents/finalize": admin(
+    "finalizeMaintenanceManagementDocuments",
+    "Maintenance management",
+    "Confirma documentos gerenciais enviados.",
+    Type.Object({ ok: Type.Boolean() }, strict),
+    {
+      body: Type.Object(
+        {
+          target_type: Type.Union([
+            Type.Literal("supplier"),
+            Type.Literal("contract"),
+          ]),
+          target_id: uuid(),
+          files: Type.Array(
+            Type.Object(
+              {
+                storage_path: Type.String(),
+                filename: Type.String(),
+                content_type: Type.String(),
+                size_bytes: Type.Integer(),
+              },
+              strict,
+            ),
+            { minItems: 1, maxItems: 5 },
+          ),
+        },
+        strict,
+      ),
+    },
+  ),
+  "POST /admin/maintenance/management-documents/:id/access": admin(
+    "accessMaintenanceManagementDocument",
+    "Maintenance management",
+    "Gera acesso temporário a documento gerencial.",
+    MaintenanceAttachmentAccessSchema,
+    { params: IdParamsSchema },
+  ),
+  "POST /admin/maintenance/management-documents/:id/remove": admin(
+    "removeMaintenanceManagementDocument",
+    "Maintenance management",
+    "Remove documento gerencial com justificativa auditada.",
+    Type.Object({ ok: Type.Boolean() }, strict),
+    { params: IdParamsSchema, body: MaintenanceReasonBodySchema },
+  ),
+  "GET /admin/maintenance/notifications": admin(
+    "listMaintenanceNotifications",
+    "Maintenance management",
+    "Lista notificações do usuário atual.",
+    listSchema(MaintenanceNotificationSchema),
+    {
+      querystring: Type.Object(
+        {
+          status: Type.Optional(Type.String()),
+          kind: Type.Optional(Type.String()),
+        },
+        strict,
+      ),
+    },
+  ),
+  "GET /admin/maintenance/notifications/summary": admin(
+    "getMaintenanceNotificationSummary",
+    "Maintenance management",
+    "Retorna contagem de notificações não lidas.",
+    Type.Object({ unread: Type.Integer() }, strict),
+  ),
+  "POST /admin/maintenance/notifications/:id/status": admin(
+    "setMaintenanceNotificationStatus",
+    "Maintenance management",
+    "Marca notificação como lida, não lida ou dispensada.",
+    Type.Object({ ok: Type.Boolean() }, strict),
+    {
+      params: IdParamsSchema,
+      body: Type.Object(
+        {
+          status: Type.Union([
+            Type.Literal("unread"),
+            Type.Literal("read"),
+            Type.Literal("dismissed"),
+          ]),
+        },
+        strict,
+      ),
+    },
+  ),
+  "POST /admin/maintenance/notifications/read-all": admin(
+    "readAllMaintenanceNotifications",
+    "Maintenance management",
+    "Marca todas as notificações como lidas.",
+    Type.Object({ updated: Type.Integer() }, strict),
+  ),
+  "GET /admin/maintenance/analytics": admin(
+    "getMaintenanceAnalytics",
+    "Maintenance management",
+    "Retorna indicadores gerenciais com redação financeira por permissão.",
+    MaintenanceAnalyticsSchema,
+    { querystring: MaintenanceAnalyticsFilterSchema },
+  ),
+  "GET /admin/maintenance/analytics/export-data": admin(
+    "exportMaintenanceAnalytics",
+    "Maintenance management",
+    "Exporta o recorte gerencial em CSV ou PDF.",
+    Type.Any(),
+    { querystring: MaintenanceAnalyticsFilterSchema },
+  ),
+  "GET /admin/maintenance/automation-runs": admin(
+    "listMaintenanceAutomationRuns",
+    "Maintenance management",
+    "Lista execuções da automação.",
+    listSchema(MaintenanceAutomationRunSchema),
+  ),
+  "POST /admin/maintenance/automation/run": admin(
+    "runMaintenanceAutomation",
+    "Maintenance management",
+    "Reprocessa o ciclo de forma idempotente.",
+    Type.Object({ result: Type.Unknown() }, strict),
+    { body: Type.Object({}, strict) },
   ),
   "GET /admin/maintenance/finance/summary": admin(
     "getMaintenanceFinanceSummary",

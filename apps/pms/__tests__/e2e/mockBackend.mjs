@@ -25,6 +25,10 @@ const maintenancePermissions = [
   "propose_maintenance_finance",
   "approve_maintenance_finance",
   "settle_maintenance_finance",
+  "manage_maintenance_plans",
+  "manage_maintenance_sla",
+  "manage_maintenance_suppliers",
+  "read_maintenance_analytics",
 ];
 
 const user = {
@@ -398,6 +402,251 @@ const server = http.createServer(async (request, response) => {
       awaiting_inspection: 1,
       blocked_rooms: 1,
     });
+    return;
+  }
+
+  if (
+    method === "GET" &&
+    url.pathname === "/admin/maintenance/reference-data"
+  ) {
+    sendJson(response, 200, {
+      rooms: [{ id: "room-101", room_number: "101", status: "available" }],
+      locations: [
+        {
+          id: "location-equipment",
+          name: "Gerador principal",
+          kind: "equipment",
+          parent_location_id: null,
+          is_active: true,
+          asset_tag: "AT-001",
+          manufacturer: "Demo",
+          model: "GX",
+          serial_number: "SN-1",
+          installed_on: "2025-01-01",
+          warranty_ends_on: "2026-09-30",
+          supplier_id: "supplier-e2e",
+          contract_id: "contract-e2e",
+          lifecycle_status: "active",
+        },
+      ],
+      categories: [
+        {
+          id: "category-1",
+          name: "Elétrica",
+          description: null,
+          display_order: 1,
+          is_active: true,
+        },
+      ],
+      assignable_users: [
+        { id: "user-e2e", name: "Marina Costa", email: "marina@example.com" },
+      ],
+    });
+    return;
+  }
+
+  if (
+    method === "GET" &&
+    url.pathname === "/admin/maintenance/preventive-plans"
+  ) {
+    sendJson(response, 200, {
+      items: [
+        {
+          id: "plan-e2e",
+          hotel_id: "hotel-e2e",
+          name: "Revisão mensal do gerador",
+          category_id: "category-1",
+          room_id: null,
+          location_id: "location-equipment",
+          assigned_to: "user-e2e",
+          supplier_id: "supplier-e2e",
+          contract_id: "contract-e2e",
+          priority: "high",
+          instructions: "Verificar alimentação e partida.",
+          requires_inspection: true,
+          blocking_recommended: false,
+          recurrence_unit: "monthly",
+          recurrence_interval: 1,
+          starts_on: "2026-05-01",
+          ends_on: null,
+          local_time: "09:00:00",
+          generation_lead_days: 2,
+          completion_due_hours: 24,
+          tasks: [
+            {
+              id: "task-e2e",
+              position: 0,
+              description: "Testar partida",
+              is_required: true,
+            },
+          ],
+          recurrence_day: 1,
+          next_due_date: "2026-06-01",
+          status: "active",
+          category_name: "Elétrica",
+          target_name: "Gerador principal",
+          assignee_name: "Marina Costa",
+          supplier_name: "Manutenção Demo",
+          contract_number: "CT-001",
+          created_at: "2026-05-01T10:00:00.000Z",
+          updated_at: "2026-05-01T10:00:00.000Z",
+        },
+      ],
+    });
+    return;
+  }
+
+  if (
+    method === "GET" &&
+    url.pathname === "/admin/maintenance/preventive-plans/plan-e2e/runs"
+  ) {
+    sendJson(response, 200, {
+      items: [
+        {
+          id: "run-e2e",
+          plan_id: "plan-e2e",
+          scheduled_for: "2026-05-01T12:00:00.000Z",
+          scheduled_local_date: "2026-05-01",
+          status: "deferred",
+          occurrence_id: null,
+          work_order_id: null,
+          snapshot: {},
+          decision_reason: null,
+          rescheduled_for: null,
+          created_at: "2026-05-01T07:00:00.000Z",
+        },
+      ],
+    });
+    return;
+  }
+
+  if (method === "GET" && url.pathname === "/admin/maintenance/suppliers") {
+    sendJson(response, 200, {
+      items: [
+        {
+          id: "supplier-e2e",
+          hotel_id: "hotel-e2e",
+          name: "Manutenção Demo",
+          legal_name: null,
+          tax_document: null,
+          email: "contato@example.com",
+          phone: null,
+          specialties: ["Elétrica"],
+          notes: null,
+          status: "active",
+          contacts: [],
+          contracts: [
+            {
+              id: "contract-e2e",
+              supplier_id: "supplier-e2e",
+              contract_number: "CT-001",
+              kind: "fixed",
+              status: "active",
+              starts_on: "2026-01-01",
+              ends_on: "2026-12-31",
+              renewal_notice_on: null,
+              scope_notes: "Gerador",
+              response_hours: 4,
+              resolution_hours: 24,
+              commercial_terms: "Mensal",
+              contract_amount: 500,
+              currency: "BRL",
+              category_ids: ["category-1"],
+              location_ids: ["location-equipment"],
+              documents: [],
+              created_at: "2026-01-01T10:00:00.000Z",
+              updated_at: "2026-01-01T10:00:00.000Z",
+            },
+          ],
+          documents: [],
+          created_at: "2026-01-01T10:00:00.000Z",
+          updated_at: "2026-01-01T10:00:00.000Z",
+        },
+      ],
+    });
+    return;
+  }
+
+  if (method === "GET" && url.pathname === "/admin/maintenance/analytics") {
+    sendJson(response, 200, {
+      filters: Object.fromEntries(url.searchParams),
+      backlog: 3,
+      critical_open: 1,
+      average_triage_hours: 1.5,
+      average_resolution_hours: 18,
+      sla_compliance_rate: 80,
+      preventive_compliance_rate: 90,
+      recurring_occurrences: 1,
+      blocked_room_days: 2.5,
+      supplier_completion_rate: 75,
+      aging: [
+        { bucket: "0-1 dia", count: 2 },
+        { bucket: "2-7 dias", count: 1 },
+      ],
+      series: [{ date: "2026-05-12", opened: 2, resolved: 1 }],
+      financial: {
+        approved_cost: 1980,
+        approved_recovery: 100,
+        net_result: -1880,
+        currency: "BRL",
+      },
+    });
+    return;
+  }
+
+  if (
+    method === "GET" &&
+    url.pathname === "/admin/maintenance/analytics/export-data"
+  ) {
+    sendJson(response, 200, {
+      items: [
+        {
+          code: "OCO-001001",
+          kind: "preventive",
+          priority: "high",
+          status: "in_progress",
+          category: "Elétrica",
+          target: "Gerador principal",
+        },
+      ],
+    });
+    return;
+  }
+
+  if (
+    method === "GET" &&
+    url.pathname === "/admin/maintenance/notifications/summary"
+  ) {
+    sendJson(response, 200, { unread: 2 });
+    return;
+  }
+
+  if (method === "GET" && url.pathname === "/admin/maintenance/notifications") {
+    sendJson(response, 200, {
+      items: [
+        {
+          id: "notification-e2e",
+          kind: "sla_resolution",
+          severity: "critical",
+          title: "SLA de resolução violado",
+          message: "A ocorrência OCO-001001 ultrapassou o prazo.",
+          href: "/dashboard/maintenance/occurrences/97000000-0000-4000-8000-000000000001",
+          entity_type: "occurrence",
+          entity_id: "97000000-0000-4000-8000-000000000001",
+          status: "unread",
+          created_at: "2026-05-12T14:00:00.000Z",
+        },
+      ],
+    });
+    return;
+  }
+
+  if (
+    method === "POST" &&
+    (url.pathname.includes("/admin/maintenance/preventive-runs/") ||
+      url.pathname.includes("/admin/maintenance/notifications/"))
+  ) {
+    sendJson(response, 200, { item: {}, ok: true, updated: 1 });
     return;
   }
 

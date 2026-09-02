@@ -121,6 +121,8 @@ export type AdminHotelUpdateInput = {
   zip_code?: string | null;
   timezone?: string | null;
   currency?: string | null;
+  category_ids?: string[];
+  location_ids?: string[];
   checkin_time_start?: string | null;
   checkin_time_limit?: string | null;
   checkout_time_start?: string | null;
@@ -673,7 +675,13 @@ export type AdminStayOperationalPanelResponse = {
 
 export type MaintenanceLocationKind = "area" | "equipment";
 export type MaintenanceOccurrenceKind =
-  "damage" | "defect" | "wear" | "safety_risk" | "special_cleaning" | "other";
+  | "damage"
+  | "defect"
+  | "wear"
+  | "safety_risk"
+  | "special_cleaning"
+  | "preventive"
+  | "other";
 export type MaintenancePriority = "low" | "normal" | "high" | "critical";
 export type MaintenanceOccurrenceStatus =
   | "reported"
@@ -720,6 +728,15 @@ export type AdminMaintenanceLocation = {
   description: string | null;
   display_order: number;
   is_active: boolean;
+  asset_tag?: string | null;
+  manufacturer?: string | null;
+  model?: string | null;
+  serial_number?: string | null;
+  installed_on?: string | null;
+  warranty_ends_on?: string | null;
+  supplier_id?: string | null;
+  contract_id?: string | null;
+  lifecycle_status?: "active" | "out_of_service" | "retired" | null;
   created_at: string;
   updated_at: string;
 };
@@ -745,6 +762,10 @@ export type AdminMaintenanceOccurrenceSummary = {
   liability_status: MaintenanceLiabilityStatus;
   active_block: boolean;
   open_work_orders: number;
+  preventive_plan_id?: string | null;
+  sla_response_due_at?: string | null;
+  sla_resolution_due_at?: string | null;
+  operational_resolved_at?: string | null;
   created_at: string;
   updated_at: string;
 };
@@ -766,6 +787,13 @@ export type AdminMaintenanceWorkOrder = {
   resolution_notes: string | null;
   started_at: string | null;
   completed_at: string | null;
+  supplier_id?: string | null;
+  supplier_name?: string | null;
+  contract_id?: string | null;
+  contract_number?: string | null;
+  supplier_status?: MaintenanceSupplierWorkStatus;
+  supplier_external_reference?: string | null;
+  checklist?: AdminMaintenanceChecklistItem[];
   created_at: string;
   updated_at: string;
 };
@@ -928,6 +956,8 @@ export type AdminMaintenanceCostItem = {
   actual_amount: number | null;
   currency: string;
   counterparty: string | null;
+  supplier_id?: string | null;
+  contract_id?: string | null;
   due_date: string | null;
   reference_code: string | null;
   approval_status: MaintenanceFinanceApprovalStatus;
@@ -954,6 +984,8 @@ export type AdminMaintenanceCostItemInput = {
   estimated_amount?: number | null;
   actual_amount?: number | null;
   counterparty?: string | null;
+  supplier_id?: string | null;
+  contract_id?: string | null;
   due_date?: string | null;
   reference_code?: string | null;
 };
@@ -965,6 +997,8 @@ export type AdminMaintenanceRecovery = {
   responsible_party: "guest" | "supplier";
   stay_id: string | null;
   debtor_name: string | null;
+  supplier_id?: string | null;
+  contract_id?: string | null;
   charge_amount: number;
   waived_amount: number;
   currency: string;
@@ -991,6 +1025,8 @@ export type AdminMaintenanceRecoveryInput = {
   responsible_party: "guest" | "supplier";
   stay_id?: string | null;
   debtor_name?: string | null;
+  supplier_id?: string | null;
+  contract_id?: string | null;
   charge_amount: number;
   waived_amount?: number;
   justification: string;
@@ -1026,4 +1062,210 @@ export type AdminMaintenanceFinanceListResponse = {
   page: number;
   page_size: number;
   total: number;
+};
+
+export type MaintenanceRecurrenceUnit =
+  "daily" | "weekly" | "monthly" | "yearly";
+export type MaintenancePreventivePlanStatus = "active" | "paused" | "inactive";
+export type MaintenancePreventiveRunStatus =
+  "scheduled" | "generated" | "deferred" | "skipped" | "rescheduled";
+export type MaintenanceSupplierWorkStatus =
+  "not_sent" | "sent" | "accepted" | "in_service" | "completed" | "canceled";
+
+export type AdminMaintenanceChecklistItem = {
+  id: string;
+  work_order_id: string;
+  position: number;
+  description: string;
+  is_required: boolean;
+  completed_by: string | null;
+  completed_at: string | null;
+  completion_notes: string | null;
+};
+
+export type AdminMaintenanceSlaPolicy = {
+  id: string;
+  hotel_id: string;
+  category_id: string | null;
+  category_name?: string | null;
+  priority: MaintenancePriority;
+  name: string;
+  response_hours: number;
+  resolution_hours: number;
+  is_active: boolean;
+  created_at: string;
+  updated_at: string;
+};
+
+export type AdminMaintenancePreventiveTaskInput = {
+  id?: string;
+  position: number;
+  description: string;
+  is_required?: boolean;
+};
+
+export type AdminMaintenancePreventivePlanInput = {
+  name: string;
+  category_id: string;
+  room_id?: string | null;
+  location_id?: string | null;
+  assigned_to: string;
+  supplier_id?: string | null;
+  contract_id?: string | null;
+  priority?: MaintenancePriority;
+  instructions: string;
+  requires_inspection?: boolean;
+  blocking_recommended?: boolean;
+  recurrence_unit: MaintenanceRecurrenceUnit;
+  recurrence_interval?: number;
+  starts_on: string;
+  ends_on?: string | null;
+  local_time: string;
+  generation_lead_days?: number;
+  completion_due_hours?: number;
+  tasks: AdminMaintenancePreventiveTaskInput[];
+};
+
+export type AdminMaintenancePreventivePlan =
+  AdminMaintenancePreventivePlanInput & {
+    id: string;
+    hotel_id: string;
+    recurrence_interval: number;
+    recurrence_day: number;
+    generation_lead_days: number;
+    completion_due_hours: number;
+    next_due_date: string;
+    status: MaintenancePreventivePlanStatus;
+    category_name?: string;
+    target_name?: string;
+    assignee_name?: string;
+    supplier_name?: string | null;
+    contract_number?: string | null;
+    created_at: string;
+    updated_at: string;
+  };
+
+export type AdminMaintenancePreventiveRun = {
+  id: string;
+  plan_id: string;
+  scheduled_for: string;
+  scheduled_local_date: string;
+  status: MaintenancePreventiveRunStatus;
+  occurrence_id: string | null;
+  work_order_id: string | null;
+  snapshot: Record<string, unknown>;
+  decision_reason: string | null;
+  rescheduled_for: string | null;
+  created_at: string;
+};
+
+export type AdminMaintenanceSupplierContact = {
+  id: string;
+  supplier_id: string;
+  name: string;
+  role: string | null;
+  email: string | null;
+  phone: string | null;
+  is_primary: boolean;
+  is_active: boolean;
+};
+
+export type AdminMaintenanceContract = {
+  id: string;
+  supplier_id: string;
+  supplier_name?: string;
+  contract_number: string;
+  kind: "fixed" | "per_service" | "warranty" | "other";
+  status: "draft" | "active" | "expired" | "terminated";
+  starts_on: string;
+  ends_on: string | null;
+  renewal_notice_on: string | null;
+  scope_notes: string | null;
+  response_hours: number | null;
+  resolution_hours: number | null;
+  commercial_terms?: string | null;
+  contract_amount?: number | null;
+  currency?: string | null;
+  category_ids?: string[];
+  location_ids?: string[];
+  documents?: Array<{
+    id: string;
+    original_filename: string;
+    content_type: string;
+    size_bytes: number;
+    created_at: string;
+  }>;
+  created_at: string;
+  updated_at: string;
+};
+
+export type AdminMaintenanceSupplier = {
+  id: string;
+  hotel_id: string;
+  name: string;
+  legal_name: string | null;
+  tax_document: string | null;
+  email: string | null;
+  phone: string | null;
+  specialties: string[];
+  notes: string | null;
+  status: "active" | "inactive";
+  contacts?: AdminMaintenanceSupplierContact[];
+  contracts?: AdminMaintenanceContract[];
+  documents?: Array<{
+    id: string;
+    original_filename: string;
+    content_type: string;
+    size_bytes: number;
+    created_at: string;
+  }>;
+  created_at: string;
+  updated_at: string;
+};
+
+export type AdminMaintenanceNotification = {
+  id: string;
+  kind: string;
+  severity: "info" | "warning" | "critical";
+  title: string;
+  message: string;
+  href: string;
+  entity_type: string;
+  entity_id: string;
+  status: "unread" | "read" | "dismissed";
+  created_at: string;
+};
+
+export type AdminMaintenanceAnalytics = {
+  filters: Record<string, string | undefined>;
+  backlog: number;
+  critical_open: number;
+  average_triage_hours: number;
+  average_resolution_hours: number;
+  sla_compliance_rate: number;
+  preventive_compliance_rate: number;
+  recurring_occurrences: number;
+  blocked_room_days: number;
+  supplier_completion_rate: number;
+  aging: Array<{ bucket: string; count: number }>;
+  series: Array<{ date: string; opened: number; resolved: number }>;
+  financial?: {
+    approved_cost: number;
+    approved_recovery: number;
+    net_result: number;
+    currency: string;
+  };
+};
+
+export type AdminMaintenanceAutomationRun = {
+  id: string;
+  run_key: string;
+  status: "running" | "completed" | "failed";
+  trigger_kind: string;
+  local_date: string | null;
+  started_at: string;
+  finished_at: string | null;
+  duration_ms: number | null;
+  counters: Record<string, unknown>;
+  error_message: string | null;
 };

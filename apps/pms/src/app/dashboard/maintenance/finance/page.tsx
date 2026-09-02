@@ -50,6 +50,30 @@ export default async function MaintenanceFinancePage({ searchParams }: Props) {
       isVisible: true,
     },
     {
+      key: "agenda",
+      label: "Minha agenda",
+      href: "/dashboard/maintenance/agenda",
+      isVisible: access.canExecute,
+    },
+    {
+      key: "preventive",
+      label: "Preventivas",
+      href: "/dashboard/maintenance/preventive",
+      isVisible: access.canManagePlans || access.canExecute,
+    },
+    {
+      key: "suppliers",
+      label: "Fornecedores",
+      href: "/dashboard/maintenance/suppliers",
+      isVisible: access.canManageSuppliers,
+    },
+    {
+      key: "analytics",
+      label: "Indicadores",
+      href: "/dashboard/maintenance/analytics",
+      isVisible: access.canReadAnalytics,
+    },
+    {
       key: "payable",
       label: `A pagar (${summary.payable})`,
       href: "/dashboard/maintenance/finance?queue=payable",

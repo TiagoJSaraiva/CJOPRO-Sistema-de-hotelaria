@@ -1,6 +1,6 @@
 begin;
 
-select plan(85);
+select plan(110);
 
 select ok(to_regclass('public.room_blocks') is not null, 'room_blocks exists');
 
@@ -78,14 +78,14 @@ select is((select count(*)::integer from public.hotels), 2, 'seed has two hotels
 select is((select count(*)::integer from public.rooms), 6, 'seed has six rooms');
 select is((select count(*)::integer from public.customers), 4, 'seed has four customers');
 select is((select count(*)::integer from public.products), 4, 'seed has four products');
-select is((select count(*)::integer from public.permissions), 57, 'seed matches all canonical application permissions');
+select is((select count(*)::integer from public.permissions), 61, 'seed matches all canonical application permissions');
 select is((select count(*)::integer from public.roles), 3, 'seed has one global role and two hotel roles');
 select is((select count(*)::integer from public.users), 3, 'seed has three local users');
 select is((select count(*)::integer from public.reservations), 4, 'seed has four reservations');
 select is((select count(distinct stay_status)::integer from public.stays), 3, 'seed has confirmed, checked-in and checked-out stays');
 select is((select count(*)::integer from public.room_blocks), 2, 'seed has two room blocks');
 select is((select count(*)::integer from public.maintenance_categories), 20, 'every seeded hotel receives the ten default maintenance categories');
-select is((select count(*)::integer from public.maintenance_locations), 2, 'seed has configurable maintenance locations');
+select is((select count(*)::integer from public.maintenance_locations), 3, 'seed has configurable maintenance locations and equipment assets');
 select is((select count(*)::integer from public.maintenance_occurrences), 2, 'seed has operational and financial maintenance occurrences');
 select is((select count(*)::integer from public.maintenance_work_orders), 1, 'seed has one maintenance work order');
 
@@ -217,13 +217,13 @@ select is(
 
 select is(
   (select count(*)::integer from public.role_permissions where role_id = '70000000-0000-4000-8000-000000000002'),
-  41,
+  45,
   'Aurora manager role has every hotel permission'
 );
 
 select is(
   (select count(*)::integer from public.role_permissions where role_id = '70000000-0000-4000-8000-000000000003'),
-  41,
+  45,
   'Horizonte manager role has every hotel permission'
 );
 
@@ -546,6 +546,169 @@ select throws_ok(
   ) $$,
   '23514', null,
   'maintenance finance rejects cross-hotel records'
+);
+
+select ok(
+  to_regclass('public.maintenance_preventive_plans') is not null
+    and to_regclass('public.maintenance_sla_policies') is not null
+    and to_regclass('public.maintenance_suppliers') is not null
+    and to_regclass('public.maintenance_notifications') is not null
+    and to_regclass('public.maintenance_automation_runs') is not null,
+  'advanced maintenance creates preventive, SLA, supplier, notification and automation tables'
+);
+
+select ok(
+  (select bool_and(relrowsecurity) from pg_class where oid = any(array[
+    'public.maintenance_sla_policies'::regclass, 'public.maintenance_preventive_plans'::regclass,
+    'public.maintenance_preventive_plan_tasks'::regclass, 'public.maintenance_preventive_runs'::regclass,
+    'public.maintenance_work_order_checklist_items'::regclass, 'public.maintenance_suppliers'::regclass,
+    'public.maintenance_supplier_contacts'::regclass, 'public.maintenance_contracts'::regclass,
+    'public.maintenance_notifications'::regclass, 'public.maintenance_automation_runs'::regclass
+  ])),
+  'RLS is enabled on advanced maintenance tables'
+);
+
+select is(
+  (select count(*)::integer from public.permissions where name in (
+    'manage_maintenance_plans', 'manage_maintenance_sla',
+    'manage_maintenance_suppliers', 'read_maintenance_analytics'
+  )), 4, 'advanced maintenance permissions are independent'
+);
+
+select ok(
+  exists (select 1 from storage.buckets where id = 'maintenance-management-documents' and not public and file_size_limit = 10485760),
+  'management documents use a private 10 MB bucket'
+);
+
+select is((select count(*)::integer from public.maintenance_sla_policies), 8, 'four default SLA policies are provisioned for every hotel');
+select is((select count(*)::integer from public.maintenance_suppliers), 1, 'seed has one synthetic supplier');
+select is((select count(*)::integer from public.maintenance_contracts), 1, 'seed has one synthetic contract');
+select is((select count(*)::integer from public.maintenance_preventive_plans), 1, 'seed has one preventive plan');
+
+select is(
+  public.next_maintenance_preventive_date('2027-01-31', 'monthly', 1, 31),
+  '2027-02-28'::date,
+  'monthly recurrence clamps nonexistent dates to the last day'
+);
+
+select is(
+  public.next_maintenance_preventive_date('2024-02-29', 'yearly', 1, 29),
+  '2025-02-28'::date,
+  'yearly recurrence clamps leap day in non-leap years'
+);
+
+select throws_ok(
+  $$ update public.maintenance_preventive_plans
+     set assigned_to = '80000000-0000-4000-8000-000000000003'
+     where id = '99600000-0000-4000-8000-000000000001' $$,
+  '23514', null,
+  'preventive plans reject cross-hotel assignees'
+);
+
+select lives_ok(
+  $$ select public.process_maintenance_management_cycle(now(), '10000000-0000-4000-8000-000000000001', true) $$,
+  'manual automation cycle is reprocessable'
+);
+
+select is(
+  (select count(*)::integer from public.maintenance_preventive_runs where plan_id = '99600000-0000-4000-8000-000000000001' and status = 'generated'),
+  1, 'automation generates exactly one run for the due competence'
+);
+
+select is(
+  (select count(*)::integer from public.maintenance_occurrences where preventive_plan_id = '99600000-0000-4000-8000-000000000001' and kind = 'preventive'),
+  1, 'a preventive run creates one preventive occurrence'
+);
+
+select is(
+  (select count(*)::integer from public.maintenance_work_order_checklist_items checklist
+    join public.maintenance_preventive_runs run on run.work_order_id = checklist.work_order_id
+    where run.plan_id = '99600000-0000-4000-8000-000000000001'),
+  2, 'generated checklist is an independent snapshot of the plan tasks'
+);
+
+select ok(
+  (select work_order.assigned_to is not null from public.maintenance_work_orders work_order
+    join public.maintenance_preventive_runs run on run.work_order_id = work_order.id
+    where run.plan_id = '99600000-0000-4000-8000-000000000001'),
+  'supplier linkage never replaces the required internal assignee'
+);
+
+select lives_ok(
+  $$ select public.transition_maintenance_work_order(
+    '10000000-0000-4000-8000-000000000001',
+    (select work_order_id from public.maintenance_preventive_runs where plan_id = '99600000-0000-4000-8000-000000000001'),
+    '80000000-0000-4000-8000-000000000002', 'start'
+  ) $$,
+  'generated preventive work can start'
+);
+
+select throws_ok(
+  $$ select public.transition_maintenance_work_order(
+    '10000000-0000-4000-8000-000000000001',
+    (select work_order_id from public.maintenance_preventive_runs where plan_id = '99600000-0000-4000-8000-000000000001'),
+    '80000000-0000-4000-8000-000000000002', 'complete'
+  ) $$,
+  '23514', null,
+  'required checklist items block premature completion'
+);
+
+select lives_ok(
+  $$ select public.complete_maintenance_checklist_item(
+      checklist.hotel_id, checklist.work_order_id, checklist.id,
+      '80000000-0000-4000-8000-000000000002', true, 'Conferido no pgTAP'
+    ) from public.maintenance_work_order_checklist_items checklist
+    join public.maintenance_preventive_runs run on run.work_order_id = checklist.work_order_id
+    where run.plan_id = '99600000-0000-4000-8000-000000000001' $$,
+  'all checklist items can be completed atomically with audit events'
+);
+
+select lives_ok(
+  $$ select public.transition_maintenance_work_order(
+    '10000000-0000-4000-8000-000000000001',
+    (select work_order_id from public.maintenance_preventive_runs where plan_id = '99600000-0000-4000-8000-000000000001'),
+    '80000000-0000-4000-8000-000000000002', 'complete', null, null,
+    'Preventiva concluída com checklist', 'Equipamento revisado'
+  ) $$,
+  'preventive work completes after its required checklist'
+);
+
+select lives_ok(
+  $$ select public.process_maintenance_sla_alerts(
+    '10000000-0000-4000-8000-000000000002',
+    (select sla_resolution_due_at from public.maintenance_occurrences where id = '97000000-0000-4000-8000-000000000001')
+  ) $$,
+  'SLA emits the initial breach alert at the exact due time'
+);
+
+select ok(
+  exists (select 1 from public.maintenance_notifications
+    where entity_id = '97000000-0000-4000-8000-000000000001'
+      and kind = 'sla_resolution' and threshold = 'resolution-breach:0'),
+  'initial SLA breach uses the zero-day threshold'
+);
+
+select lives_ok(
+  $$ select public.process_maintenance_sla_alerts(
+    '10000000-0000-4000-8000-000000000002',
+    (select sla_resolution_due_at + interval '23 hours' from public.maintenance_occurrences where id = '97000000-0000-4000-8000-000000000001')
+  ) $$,
+  'SLA processing remains idempotent before the next 24-hour threshold'
+);
+
+select lives_ok(
+  $$ select public.process_maintenance_sla_alerts(
+    '10000000-0000-4000-8000-000000000002',
+    (select sla_resolution_due_at + interval '24 hours' from public.maintenance_occurrences where id = '97000000-0000-4000-8000-000000000001')
+  ) $$,
+  'SLA emits another alert after each complete 24 hours of violation'
+);
+
+select ok(
+  exists (select 1 from public.maintenance_notifications
+    where entity_id = '97000000-0000-4000-8000-000000000001'
+      and kind = 'sla_resolution' and threshold = 'resolution-breach:1'),
+  'repeated SLA breach advances exactly at the 24-hour threshold'
 );
 
 select * from finish();

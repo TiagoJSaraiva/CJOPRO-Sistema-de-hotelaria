@@ -284,4 +284,42 @@ test.describe("PMS UI quality", () => {
       await expect(page).toHaveScreenshot("maintenance-finance.png");
     },
   );
+
+  test(
+    "gestão preventiva, alertas e indicadores",
+    { tag: ["@a11y"] },
+    async ({ page, context, baseURL, auditAccessibility }) => {
+      await preparePage(page);
+      await authenticate(
+        context,
+        baseURL || "http://127.0.0.1:3001",
+        "maintenance-e2e-token",
+      );
+      await page.goto("/dashboard/maintenance/preventive");
+      await expect(
+        page.getByRole("heading", { name: "Manutenção preventiva" }),
+      ).toBeVisible();
+      await expect(
+        page.getByRole("heading", { name: "Revisão mensal do gerador" }),
+      ).toBeVisible();
+      await expect(
+        page.getByRole("heading", { name: "Competências adiadas" }),
+      ).toBeVisible();
+      await auditAccessibility("gestao-preventiva");
+
+      await page.goto("/dashboard/maintenance/notifications");
+      await expect(page.getByText("SLA de resolução violado")).toBeVisible();
+      await auditAccessibility("notificacoes-manutencao");
+
+      await page.goto("/dashboard/maintenance/analytics");
+      await expect(
+        page.getByRole("heading", { name: "Indicadores de manutenção" }),
+      ).toBeVisible();
+      await expect(page.getByText("80%")).toBeVisible();
+      await expect(
+        page.getByRole("button", { name: "Exportar CSV detalhado" }),
+      ).toBeEnabled();
+      await auditAccessibility("indicadores-manutencao");
+    },
+  );
 });

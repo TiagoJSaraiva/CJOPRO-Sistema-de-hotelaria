@@ -67,6 +67,32 @@ export function MaintenanceCatalogManager({
                 name: data.get("name"),
                 description: data.get("description"),
                 display_order: Number(data.get("display_order")),
+                asset_tag:
+                  data.get("kind") === "equipment"
+                    ? data.get("asset_tag") || null
+                    : null,
+                manufacturer:
+                  data.get("kind") === "equipment"
+                    ? data.get("manufacturer") || null
+                    : null,
+                model:
+                  data.get("kind") === "equipment"
+                    ? data.get("model") || null
+                    : null,
+                serial_number:
+                  data.get("kind") === "equipment"
+                    ? data.get("serial_number") || null
+                    : null,
+                installed_on:
+                  data.get("kind") === "equipment"
+                    ? data.get("installed_on") || null
+                    : null,
+                warranty_ends_on:
+                  data.get("kind") === "equipment"
+                    ? data.get("warranty_ends_on") || null
+                    : null,
+                lifecycle_status:
+                  data.get("kind") === "equipment" ? "active" : null,
               },
               (item) => setCategories((current) => upsert(current, item)),
             );
@@ -90,6 +116,47 @@ export function MaintenanceCatalogManager({
             defaultValue="0"
             className="pms-field-input"
           />
+          <fieldset className="grid gap-2 rounded-lg border border-slate-200 p-3">
+            <legend className="px-1 text-sm font-semibold">
+              Patrimônio (somente equipamentos)
+            </legend>
+            <input
+              name="asset_tag"
+              placeholder="Etiqueta patrimonial"
+              className="pms-field-input"
+            />
+            <input
+              name="manufacturer"
+              placeholder="Fabricante"
+              className="pms-field-input"
+            />
+            <input
+              name="model"
+              placeholder="Modelo"
+              className="pms-field-input"
+            />
+            <input
+              name="serial_number"
+              placeholder="Número de série"
+              className="pms-field-input"
+            />
+            <label className="grid gap-1 text-sm">
+              Instalação
+              <input
+                name="installed_on"
+                type="date"
+                className="pms-field-input"
+              />
+            </label>
+            <label className="grid gap-1 text-sm">
+              Fim da garantia
+              <input
+                name="warranty_ends_on"
+                type="date"
+                className="pms-field-input"
+              />
+            </label>
+          </fieldset>
           <button className="rounded bg-[#102a43] px-3 py-2 text-white">
             Criar categoria
           </button>
@@ -188,6 +255,12 @@ export function MaintenanceCatalogManager({
                 {location.kind === "area" ? "Área" : "Equipamento"} ·{" "}
                 {location.name}
                 {location.parent_name ? ` · ${location.parent_name}` : ""}
+                {location.asset_tag
+                  ? ` · patrimônio ${location.asset_tag}`
+                  : ""}
+                {location.warranty_ends_on
+                  ? ` · garantia até ${location.warranty_ends_on}`
+                  : ""}
                 {location.is_active ? "" : " · inativo"}
               </span>
               <button

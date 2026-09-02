@@ -51,6 +51,13 @@ import {
   AdminMaintenanceFinanceOccurrence,
   AdminMaintenanceFinanceSummary,
   AdminStayFolioResponse,
+  AdminMaintenancePreventivePlan,
+  AdminMaintenancePreventiveRun,
+  AdminMaintenanceSupplier,
+  AdminMaintenanceSlaPolicy,
+  AdminMaintenanceNotification,
+  AdminMaintenanceAnalytics,
+  AdminMaintenanceAutomationRun,
 } from "@hotel/shared";
 import { getActiveHotelCookieValue } from "./activeHotel";
 
@@ -484,6 +491,84 @@ export async function getMaintenanceOccurrenceFinance(
     AdminItemResponse<AdminMaintenanceFinanceOccurrence>
   >(`occurrences/${id}/finance`, "GET");
   return response.item;
+}
+
+export function getMaintenancePreventivePlans(): Promise<
+  AdminMaintenancePreventivePlan[]
+> {
+  return requestMaintenanceEndpoint<{
+    items: AdminMaintenancePreventivePlan[];
+  }>("preventive-plans", "GET").then((response) => response.items);
+}
+
+export function getMaintenancePreventiveRuns(
+  planId: string,
+): Promise<AdminMaintenancePreventiveRun[]> {
+  return requestMaintenanceEndpoint<{ items: AdminMaintenancePreventiveRun[] }>(
+    `preventive-plans/${planId}/runs`,
+    "GET",
+  ).then((response) => response.items);
+}
+
+export function getMaintenanceSuppliers(): Promise<AdminMaintenanceSupplier[]> {
+  return requestMaintenanceEndpoint<{ items: AdminMaintenanceSupplier[] }>(
+    "suppliers",
+    "GET",
+  ).then((response) => response.items);
+}
+
+export function getMaintenanceSlaPolicies(): Promise<
+  AdminMaintenanceSlaPolicy[]
+> {
+  return requestMaintenanceEndpoint<{ items: AdminMaintenanceSlaPolicy[] }>(
+    "sla-policies",
+    "GET",
+  ).then((response) => response.items);
+}
+
+export function getMaintenanceNotifications(
+  query = "",
+): Promise<AdminMaintenanceNotification[]> {
+  return requestMaintenanceEndpoint<{ items: AdminMaintenanceNotification[] }>(
+    `notifications${query ? `?${query}` : ""}`,
+    "GET",
+  ).then((response) => response.items);
+}
+
+export function getMaintenanceNotificationSummary(): Promise<{
+  unread: number;
+}> {
+  return requestMaintenanceEndpoint<{ unread: number }>(
+    "notifications/summary",
+    "GET",
+  );
+}
+
+export function getMaintenanceAnalytics(
+  query = "",
+): Promise<AdminMaintenanceAnalytics> {
+  return requestMaintenanceEndpoint<AdminMaintenanceAnalytics>(
+    `analytics${query ? `?${query}` : ""}`,
+    "GET",
+  );
+}
+
+export function getMaintenanceAnalyticsRows(
+  query = "",
+): Promise<Array<Record<string, unknown>>> {
+  return requestMaintenanceEndpoint<{ items: Array<Record<string, unknown>> }>(
+    `analytics/export-data${query ? `?${query}` : ""}`,
+    "GET",
+  ).then((response) => response.items);
+}
+
+export function getMaintenanceAutomationRuns(): Promise<
+  AdminMaintenanceAutomationRun[]
+> {
+  return requestMaintenanceEndpoint<{ items: AdminMaintenanceAutomationRun[] }>(
+    "automation-runs",
+    "GET",
+  ).then((response) => response.items);
 }
 
 export function simulateReservationsCalendarBooking(

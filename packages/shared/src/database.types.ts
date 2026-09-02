@@ -357,6 +357,59 @@ export type Database = {
           },
         ]
       }
+      maintenance_automation_runs: {
+        Row: {
+          counters: Json
+          created_at: string
+          duration_ms: number | null
+          error_message: string | null
+          finished_at: string | null
+          hotel_id: string | null
+          id: string
+          local_date: string | null
+          run_key: string
+          started_at: string
+          status: Database["public"]["Enums"]["maintenance_automation_status"]
+          trigger_kind: string
+        }
+        Insert: {
+          counters?: Json
+          created_at?: string
+          duration_ms?: number | null
+          error_message?: string | null
+          finished_at?: string | null
+          hotel_id?: string | null
+          id?: string
+          local_date?: string | null
+          run_key: string
+          started_at?: string
+          status?: Database["public"]["Enums"]["maintenance_automation_status"]
+          trigger_kind: string
+        }
+        Update: {
+          counters?: Json
+          created_at?: string
+          duration_ms?: number | null
+          error_message?: string | null
+          finished_at?: string | null
+          hotel_id?: string | null
+          id?: string
+          local_date?: string | null
+          run_key?: string
+          started_at?: string
+          status?: Database["public"]["Enums"]["maintenance_automation_status"]
+          trigger_kind?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "maintenance_automation_runs_hotel_id_fkey"
+            columns: ["hotel_id"]
+            isOneToOne: false
+            referencedRelation: "hotels"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       maintenance_categories: {
         Row: {
           created_at: string
@@ -457,6 +510,199 @@ export type Database = {
           },
         ]
       }
+      maintenance_contract_categories: {
+        Row: {
+          category_id: string
+          contract_id: string
+          hotel_id: string
+          id: string
+          is_active: boolean
+        }
+        Insert: {
+          category_id: string
+          contract_id: string
+          hotel_id: string
+          id?: string
+          is_active?: boolean
+        }
+        Update: {
+          category_id?: string
+          contract_id?: string
+          hotel_id?: string
+          id?: string
+          is_active?: boolean
+        }
+        Relationships: [
+          {
+            foreignKeyName: "maintenance_contract_categories_category_id_fkey"
+            columns: ["category_id"]
+            isOneToOne: false
+            referencedRelation: "maintenance_categories"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "maintenance_contract_categories_contract_id_fkey"
+            columns: ["contract_id"]
+            isOneToOne: false
+            referencedRelation: "maintenance_contracts"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "maintenance_contract_categories_hotel_id_fkey"
+            columns: ["hotel_id"]
+            isOneToOne: false
+            referencedRelation: "hotels"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      maintenance_contract_locations: {
+        Row: {
+          contract_id: string
+          hotel_id: string
+          id: string
+          is_active: boolean
+          location_id: string
+        }
+        Insert: {
+          contract_id: string
+          hotel_id: string
+          id?: string
+          is_active?: boolean
+          location_id: string
+        }
+        Update: {
+          contract_id?: string
+          hotel_id?: string
+          id?: string
+          is_active?: boolean
+          location_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "maintenance_contract_locations_contract_id_fkey"
+            columns: ["contract_id"]
+            isOneToOne: false
+            referencedRelation: "maintenance_contracts"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "maintenance_contract_locations_hotel_id_fkey"
+            columns: ["hotel_id"]
+            isOneToOne: false
+            referencedRelation: "hotels"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "maintenance_contract_locations_location_id_fkey"
+            columns: ["location_id"]
+            isOneToOne: false
+            referencedRelation: "maintenance_locations"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      maintenance_contracts: {
+        Row: {
+          commercial_terms: string | null
+          contract_amount: number | null
+          contract_number: string
+          created_at: string
+          created_by: string
+          currency: string | null
+          ends_on: string | null
+          hotel_id: string
+          id: string
+          kind: Database["public"]["Enums"]["maintenance_contract_kind"]
+          renewal_notice_on: string | null
+          resolution_hours: number | null
+          response_hours: number | null
+          scope_notes: string | null
+          starts_on: string
+          status: Database["public"]["Enums"]["maintenance_contract_status"]
+          supplier_id: string
+          terminated_at: string | null
+          terminated_by: string | null
+          termination_reason: string | null
+          updated_at: string
+        }
+        Insert: {
+          commercial_terms?: string | null
+          contract_amount?: number | null
+          contract_number: string
+          created_at?: string
+          created_by: string
+          currency?: string | null
+          ends_on?: string | null
+          hotel_id: string
+          id?: string
+          kind?: Database["public"]["Enums"]["maintenance_contract_kind"]
+          renewal_notice_on?: string | null
+          resolution_hours?: number | null
+          response_hours?: number | null
+          scope_notes?: string | null
+          starts_on: string
+          status?: Database["public"]["Enums"]["maintenance_contract_status"]
+          supplier_id: string
+          terminated_at?: string | null
+          terminated_by?: string | null
+          termination_reason?: string | null
+          updated_at?: string
+        }
+        Update: {
+          commercial_terms?: string | null
+          contract_amount?: number | null
+          contract_number?: string
+          created_at?: string
+          created_by?: string
+          currency?: string | null
+          ends_on?: string | null
+          hotel_id?: string
+          id?: string
+          kind?: Database["public"]["Enums"]["maintenance_contract_kind"]
+          renewal_notice_on?: string | null
+          resolution_hours?: number | null
+          response_hours?: number | null
+          scope_notes?: string | null
+          starts_on?: string
+          status?: Database["public"]["Enums"]["maintenance_contract_status"]
+          supplier_id?: string
+          terminated_at?: string | null
+          terminated_by?: string | null
+          termination_reason?: string | null
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "maintenance_contracts_created_by_fkey"
+            columns: ["created_by"]
+            isOneToOne: false
+            referencedRelation: "users"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "maintenance_contracts_hotel_id_fkey"
+            columns: ["hotel_id"]
+            isOneToOne: false
+            referencedRelation: "hotels"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "maintenance_contracts_supplier_id_fkey"
+            columns: ["supplier_id"]
+            isOneToOne: false
+            referencedRelation: "maintenance_suppliers"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "maintenance_contracts_terminated_by_fkey"
+            columns: ["terminated_by"]
+            isOneToOne: false
+            referencedRelation: "users"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       maintenance_cost_items: {
         Row: {
           actual_amount: number | null
@@ -465,6 +711,7 @@ export type Database = {
           approved_by: string | null
           canceled_at: string | null
           canceled_by: string | null
+          contract_id: string | null
           counterparty: string | null
           created_at: string
           created_by: string
@@ -483,6 +730,7 @@ export type Database = {
           rejected_by: string | null
           settlement_status: Database["public"]["Enums"]["maintenance_finance_settlement_status"]
           submitted_at: string | null
+          supplier_id: string | null
           updated_at: string
           work_order_id: string | null
         }
@@ -493,6 +741,7 @@ export type Database = {
           approved_by?: string | null
           canceled_at?: string | null
           canceled_by?: string | null
+          contract_id?: string | null
           counterparty?: string | null
           created_at?: string
           created_by: string
@@ -511,6 +760,7 @@ export type Database = {
           rejected_by?: string | null
           settlement_status?: Database["public"]["Enums"]["maintenance_finance_settlement_status"]
           submitted_at?: string | null
+          supplier_id?: string | null
           updated_at?: string
           work_order_id?: string | null
         }
@@ -521,6 +771,7 @@ export type Database = {
           approved_by?: string | null
           canceled_at?: string | null
           canceled_by?: string | null
+          contract_id?: string | null
           counterparty?: string | null
           created_at?: string
           created_by?: string
@@ -539,6 +790,7 @@ export type Database = {
           rejected_by?: string | null
           settlement_status?: Database["public"]["Enums"]["maintenance_finance_settlement_status"]
           submitted_at?: string | null
+          supplier_id?: string | null
           updated_at?: string
           work_order_id?: string | null
         }
@@ -555,6 +807,13 @@ export type Database = {
             columns: ["canceled_by"]
             isOneToOne: false
             referencedRelation: "users"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "maintenance_cost_items_contract_id_fkey"
+            columns: ["contract_id"]
+            isOneToOne: false
+            referencedRelation: "maintenance_contracts"
             referencedColumns: ["id"]
           },
           {
@@ -583,6 +842,13 @@ export type Database = {
             columns: ["rejected_by"]
             isOneToOne: false
             referencedRelation: "users"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "maintenance_cost_items_supplier_id_fkey"
+            columns: ["supplier_id"]
+            isOneToOne: false
+            referencedRelation: "maintenance_suppliers"
             referencedColumns: ["id"]
           },
           {
@@ -945,42 +1211,82 @@ export type Database = {
       }
       maintenance_locations: {
         Row: {
+          asset_tag: string | null
+          contract_id: string | null
           created_at: string
           description: string | null
           display_order: number
           hotel_id: string
           id: string
+          installed_on: string | null
           is_active: boolean
           kind: Database["public"]["Enums"]["maintenance_location_kind"]
+          lifecycle_status:
+            | Database["public"]["Enums"]["maintenance_asset_lifecycle"]
+            | null
+          manufacturer: string | null
+          model: string | null
           name: string
           parent_location_id: string | null
+          serial_number: string | null
+          supplier_id: string | null
           updated_at: string
+          warranty_ends_on: string | null
         }
         Insert: {
+          asset_tag?: string | null
+          contract_id?: string | null
           created_at?: string
           description?: string | null
           display_order?: number
           hotel_id: string
           id?: string
+          installed_on?: string | null
           is_active?: boolean
           kind: Database["public"]["Enums"]["maintenance_location_kind"]
+          lifecycle_status?:
+            | Database["public"]["Enums"]["maintenance_asset_lifecycle"]
+            | null
+          manufacturer?: string | null
+          model?: string | null
           name: string
           parent_location_id?: string | null
+          serial_number?: string | null
+          supplier_id?: string | null
           updated_at?: string
+          warranty_ends_on?: string | null
         }
         Update: {
+          asset_tag?: string | null
+          contract_id?: string | null
           created_at?: string
           description?: string | null
           display_order?: number
           hotel_id?: string
           id?: string
+          installed_on?: string | null
           is_active?: boolean
           kind?: Database["public"]["Enums"]["maintenance_location_kind"]
+          lifecycle_status?:
+            | Database["public"]["Enums"]["maintenance_asset_lifecycle"]
+            | null
+          manufacturer?: string | null
+          model?: string | null
           name?: string
           parent_location_id?: string | null
+          serial_number?: string | null
+          supplier_id?: string | null
           updated_at?: string
+          warranty_ends_on?: string | null
         }
         Relationships: [
+          {
+            foreignKeyName: "maintenance_locations_contract_id_fkey"
+            columns: ["contract_id"]
+            isOneToOne: false
+            referencedRelation: "maintenance_contracts"
+            referencedColumns: ["id"]
+          },
           {
             foreignKeyName: "maintenance_locations_hotel_id_fkey"
             columns: ["hotel_id"]
@@ -993,6 +1299,166 @@ export type Database = {
             columns: ["parent_location_id"]
             isOneToOne: false
             referencedRelation: "maintenance_locations"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "maintenance_locations_supplier_id_fkey"
+            columns: ["supplier_id"]
+            isOneToOne: false
+            referencedRelation: "maintenance_suppliers"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      maintenance_management_attachments: {
+        Row: {
+          content_type: string
+          contract_id: string | null
+          created_at: string
+          hotel_id: string
+          id: string
+          original_filename: string
+          removal_reason: string | null
+          removed_at: string | null
+          removed_by: string | null
+          size_bytes: number
+          storage_path: string
+          supplier_id: string | null
+          uploaded_by: string
+        }
+        Insert: {
+          content_type: string
+          contract_id?: string | null
+          created_at?: string
+          hotel_id: string
+          id?: string
+          original_filename: string
+          removal_reason?: string | null
+          removed_at?: string | null
+          removed_by?: string | null
+          size_bytes: number
+          storage_path: string
+          supplier_id?: string | null
+          uploaded_by: string
+        }
+        Update: {
+          content_type?: string
+          contract_id?: string | null
+          created_at?: string
+          hotel_id?: string
+          id?: string
+          original_filename?: string
+          removal_reason?: string | null
+          removed_at?: string | null
+          removed_by?: string | null
+          size_bytes?: number
+          storage_path?: string
+          supplier_id?: string | null
+          uploaded_by?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "maintenance_management_attachments_contract_id_fkey"
+            columns: ["contract_id"]
+            isOneToOne: false
+            referencedRelation: "maintenance_contracts"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "maintenance_management_attachments_hotel_id_fkey"
+            columns: ["hotel_id"]
+            isOneToOne: false
+            referencedRelation: "hotels"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "maintenance_management_attachments_removed_by_fkey"
+            columns: ["removed_by"]
+            isOneToOne: false
+            referencedRelation: "users"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "maintenance_management_attachments_supplier_id_fkey"
+            columns: ["supplier_id"]
+            isOneToOne: false
+            referencedRelation: "maintenance_suppliers"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "maintenance_management_attachments_uploaded_by_fkey"
+            columns: ["uploaded_by"]
+            isOneToOne: false
+            referencedRelation: "users"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      maintenance_notifications: {
+        Row: {
+          created_at: string
+          dismissed_at: string | null
+          entity_id: string
+          entity_type: string
+          hotel_id: string
+          href: string
+          id: string
+          kind: string
+          message: string
+          read_at: string | null
+          recipient_id: string
+          severity: string
+          status: Database["public"]["Enums"]["maintenance_notification_status"]
+          threshold: string
+          title: string
+        }
+        Insert: {
+          created_at?: string
+          dismissed_at?: string | null
+          entity_id: string
+          entity_type: string
+          hotel_id: string
+          href: string
+          id?: string
+          kind: string
+          message: string
+          read_at?: string | null
+          recipient_id: string
+          severity?: string
+          status?: Database["public"]["Enums"]["maintenance_notification_status"]
+          threshold: string
+          title: string
+        }
+        Update: {
+          created_at?: string
+          dismissed_at?: string | null
+          entity_id?: string
+          entity_type?: string
+          hotel_id?: string
+          href?: string
+          id?: string
+          kind?: string
+          message?: string
+          read_at?: string | null
+          recipient_id?: string
+          severity?: string
+          status?: Database["public"]["Enums"]["maintenance_notification_status"]
+          threshold?: string
+          title?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "maintenance_notifications_hotel_id_fkey"
+            columns: ["hotel_id"]
+            isOneToOne: false
+            referencedRelation: "hotels"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "maintenance_notifications_recipient_id_fkey"
+            columns: ["recipient_id"]
+            isOneToOne: false
+            referencedRelation: "users"
             referencedColumns: ["id"]
           },
         ]
@@ -1018,10 +1484,17 @@ export type Database = {
           liability_status: Database["public"]["Enums"]["maintenance_liability_status"]
           location_id: string | null
           occurrence_number: number
+          operational_resolved_at: string | null
+          preventive_plan_id: string | null
+          preventive_run_id: string | null
           priority: Database["public"]["Enums"]["maintenance_priority"]
           reported_by: string
           resolved_at: string | null
           room_id: string | null
+          sla_policy_id: string | null
+          sla_resolution_due_at: string | null
+          sla_response_due_at: string | null
+          sla_snapshot: Json | null
           status: Database["public"]["Enums"]["maintenance_occurrence_status"]
           stay_id: string | null
           suspected_party:
@@ -1051,10 +1524,17 @@ export type Database = {
           liability_status?: Database["public"]["Enums"]["maintenance_liability_status"]
           location_id?: string | null
           occurrence_number?: number
+          operational_resolved_at?: string | null
+          preventive_plan_id?: string | null
+          preventive_run_id?: string | null
           priority?: Database["public"]["Enums"]["maintenance_priority"]
           reported_by: string
           resolved_at?: string | null
           room_id?: string | null
+          sla_policy_id?: string | null
+          sla_resolution_due_at?: string | null
+          sla_response_due_at?: string | null
+          sla_snapshot?: Json | null
           status?: Database["public"]["Enums"]["maintenance_occurrence_status"]
           stay_id?: string | null
           suspected_party?:
@@ -1084,10 +1564,17 @@ export type Database = {
           liability_status?: Database["public"]["Enums"]["maintenance_liability_status"]
           location_id?: string | null
           occurrence_number?: number
+          operational_resolved_at?: string | null
+          preventive_plan_id?: string | null
+          preventive_run_id?: string | null
           priority?: Database["public"]["Enums"]["maintenance_priority"]
           reported_by?: string
           resolved_at?: string | null
           room_id?: string | null
+          sla_policy_id?: string | null
+          sla_resolution_due_at?: string | null
+          sla_response_due_at?: string | null
+          sla_snapshot?: Json | null
           status?: Database["public"]["Enums"]["maintenance_occurrence_status"]
           stay_id?: string | null
           suspected_party?:
@@ -1134,6 +1621,20 @@ export type Database = {
             referencedColumns: ["id"]
           },
           {
+            foreignKeyName: "maintenance_occurrences_preventive_plan_id_fkey"
+            columns: ["preventive_plan_id"]
+            isOneToOne: false
+            referencedRelation: "maintenance_preventive_plans"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "maintenance_occurrences_preventive_run_id_fkey"
+            columns: ["preventive_run_id"]
+            isOneToOne: false
+            referencedRelation: "maintenance_preventive_runs"
+            referencedColumns: ["id"]
+          },
+          {
             foreignKeyName: "maintenance_occurrences_reported_by_fkey"
             columns: ["reported_by"]
             isOneToOne: false
@@ -1145,6 +1646,13 @@ export type Database = {
             columns: ["room_id"]
             isOneToOne: false
             referencedRelation: "rooms"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "maintenance_occurrences_sla_policy_id_fkey"
+            columns: ["sla_policy_id"]
+            isOneToOne: false
+            referencedRelation: "maintenance_sla_policies"
             referencedColumns: ["id"]
           },
           {
@@ -1163,6 +1671,314 @@ export type Database = {
           },
         ]
       }
+      maintenance_preventive_plan_tasks: {
+        Row: {
+          created_at: string
+          description: string
+          hotel_id: string
+          id: string
+          is_active: boolean
+          is_required: boolean
+          plan_id: string
+          position: number
+        }
+        Insert: {
+          created_at?: string
+          description: string
+          hotel_id: string
+          id?: string
+          is_active?: boolean
+          is_required?: boolean
+          plan_id: string
+          position: number
+        }
+        Update: {
+          created_at?: string
+          description?: string
+          hotel_id?: string
+          id?: string
+          is_active?: boolean
+          is_required?: boolean
+          plan_id?: string
+          position?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "maintenance_preventive_plan_tasks_hotel_id_fkey"
+            columns: ["hotel_id"]
+            isOneToOne: false
+            referencedRelation: "hotels"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "maintenance_preventive_plan_tasks_plan_id_fkey"
+            columns: ["plan_id"]
+            isOneToOne: false
+            referencedRelation: "maintenance_preventive_plans"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      maintenance_preventive_plans: {
+        Row: {
+          assigned_to: string
+          blocking_recommended: boolean
+          category_id: string
+          completion_due_hours: number
+          contract_id: string | null
+          created_at: string
+          created_by: string
+          deactivated_at: string | null
+          deactivated_by: string | null
+          ends_on: string | null
+          generation_lead_days: number
+          hotel_id: string
+          id: string
+          instructions: string
+          local_time: string
+          location_id: string | null
+          name: string
+          next_due_date: string
+          paused_at: string | null
+          paused_by: string | null
+          priority: Database["public"]["Enums"]["maintenance_priority"]
+          recurrence_day: number
+          recurrence_interval: number
+          recurrence_unit: Database["public"]["Enums"]["maintenance_recurrence_unit"]
+          requires_inspection: boolean
+          room_id: string | null
+          starts_on: string
+          status: Database["public"]["Enums"]["maintenance_preventive_plan_status"]
+          supplier_id: string | null
+          updated_at: string
+        }
+        Insert: {
+          assigned_to: string
+          blocking_recommended?: boolean
+          category_id: string
+          completion_due_hours?: number
+          contract_id?: string | null
+          created_at?: string
+          created_by: string
+          deactivated_at?: string | null
+          deactivated_by?: string | null
+          ends_on?: string | null
+          generation_lead_days?: number
+          hotel_id: string
+          id?: string
+          instructions: string
+          local_time?: string
+          location_id?: string | null
+          name: string
+          next_due_date: string
+          paused_at?: string | null
+          paused_by?: string | null
+          priority?: Database["public"]["Enums"]["maintenance_priority"]
+          recurrence_day: number
+          recurrence_interval?: number
+          recurrence_unit: Database["public"]["Enums"]["maintenance_recurrence_unit"]
+          requires_inspection?: boolean
+          room_id?: string | null
+          starts_on: string
+          status?: Database["public"]["Enums"]["maintenance_preventive_plan_status"]
+          supplier_id?: string | null
+          updated_at?: string
+        }
+        Update: {
+          assigned_to?: string
+          blocking_recommended?: boolean
+          category_id?: string
+          completion_due_hours?: number
+          contract_id?: string | null
+          created_at?: string
+          created_by?: string
+          deactivated_at?: string | null
+          deactivated_by?: string | null
+          ends_on?: string | null
+          generation_lead_days?: number
+          hotel_id?: string
+          id?: string
+          instructions?: string
+          local_time?: string
+          location_id?: string | null
+          name?: string
+          next_due_date?: string
+          paused_at?: string | null
+          paused_by?: string | null
+          priority?: Database["public"]["Enums"]["maintenance_priority"]
+          recurrence_day?: number
+          recurrence_interval?: number
+          recurrence_unit?: Database["public"]["Enums"]["maintenance_recurrence_unit"]
+          requires_inspection?: boolean
+          room_id?: string | null
+          starts_on?: string
+          status?: Database["public"]["Enums"]["maintenance_preventive_plan_status"]
+          supplier_id?: string | null
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "maintenance_preventive_plans_assigned_to_fkey"
+            columns: ["assigned_to"]
+            isOneToOne: false
+            referencedRelation: "users"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "maintenance_preventive_plans_category_id_fkey"
+            columns: ["category_id"]
+            isOneToOne: false
+            referencedRelation: "maintenance_categories"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "maintenance_preventive_plans_contract_id_fkey"
+            columns: ["contract_id"]
+            isOneToOne: false
+            referencedRelation: "maintenance_contracts"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "maintenance_preventive_plans_created_by_fkey"
+            columns: ["created_by"]
+            isOneToOne: false
+            referencedRelation: "users"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "maintenance_preventive_plans_deactivated_by_fkey"
+            columns: ["deactivated_by"]
+            isOneToOne: false
+            referencedRelation: "users"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "maintenance_preventive_plans_hotel_id_fkey"
+            columns: ["hotel_id"]
+            isOneToOne: false
+            referencedRelation: "hotels"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "maintenance_preventive_plans_location_id_fkey"
+            columns: ["location_id"]
+            isOneToOne: false
+            referencedRelation: "maintenance_locations"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "maintenance_preventive_plans_paused_by_fkey"
+            columns: ["paused_by"]
+            isOneToOne: false
+            referencedRelation: "users"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "maintenance_preventive_plans_room_id_fkey"
+            columns: ["room_id"]
+            isOneToOne: false
+            referencedRelation: "rooms"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "maintenance_preventive_plans_supplier_id_fkey"
+            columns: ["supplier_id"]
+            isOneToOne: false
+            referencedRelation: "maintenance_suppliers"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      maintenance_preventive_runs: {
+        Row: {
+          created_at: string
+          decided_at: string | null
+          decided_by: string | null
+          decision_reason: string | null
+          hotel_id: string
+          id: string
+          occurrence_id: string | null
+          plan_id: string
+          rescheduled_for: string | null
+          scheduled_for: string
+          scheduled_local_date: string
+          snapshot: Json
+          status: Database["public"]["Enums"]["maintenance_preventive_run_status"]
+          updated_at: string
+          work_order_id: string | null
+        }
+        Insert: {
+          created_at?: string
+          decided_at?: string | null
+          decided_by?: string | null
+          decision_reason?: string | null
+          hotel_id: string
+          id?: string
+          occurrence_id?: string | null
+          plan_id: string
+          rescheduled_for?: string | null
+          scheduled_for: string
+          scheduled_local_date: string
+          snapshot: Json
+          status?: Database["public"]["Enums"]["maintenance_preventive_run_status"]
+          updated_at?: string
+          work_order_id?: string | null
+        }
+        Update: {
+          created_at?: string
+          decided_at?: string | null
+          decided_by?: string | null
+          decision_reason?: string | null
+          hotel_id?: string
+          id?: string
+          occurrence_id?: string | null
+          plan_id?: string
+          rescheduled_for?: string | null
+          scheduled_for?: string
+          scheduled_local_date?: string
+          snapshot?: Json
+          status?: Database["public"]["Enums"]["maintenance_preventive_run_status"]
+          updated_at?: string
+          work_order_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "maintenance_preventive_runs_decided_by_fkey"
+            columns: ["decided_by"]
+            isOneToOne: false
+            referencedRelation: "users"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "maintenance_preventive_runs_hotel_id_fkey"
+            columns: ["hotel_id"]
+            isOneToOne: false
+            referencedRelation: "hotels"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "maintenance_preventive_runs_occurrence_id_fkey"
+            columns: ["occurrence_id"]
+            isOneToOne: false
+            referencedRelation: "maintenance_occurrences"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "maintenance_preventive_runs_plan_id_fkey"
+            columns: ["plan_id"]
+            isOneToOne: false
+            referencedRelation: "maintenance_preventive_plans"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "maintenance_preventive_runs_work_order_id_fkey"
+            columns: ["work_order_id"]
+            isOneToOne: false
+            referencedRelation: "maintenance_work_orders"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       maintenance_recoveries: {
         Row: {
           approval_status: Database["public"]["Enums"]["maintenance_finance_approval_status"]
@@ -1171,6 +1987,7 @@ export type Database = {
           canceled_at: string | null
           canceled_by: string | null
           charge_amount: number
+          contract_id: string | null
           created_at: string
           created_by: string
           currency: string
@@ -1188,6 +2005,7 @@ export type Database = {
           settlement_status: Database["public"]["Enums"]["maintenance_finance_settlement_status"]
           stay_id: string | null
           submitted_at: string | null
+          supplier_id: string | null
           updated_at: string
           waived_amount: number
         }
@@ -1198,6 +2016,7 @@ export type Database = {
           canceled_at?: string | null
           canceled_by?: string | null
           charge_amount?: number
+          contract_id?: string | null
           created_at?: string
           created_by: string
           currency: string
@@ -1215,6 +2034,7 @@ export type Database = {
           settlement_status?: Database["public"]["Enums"]["maintenance_finance_settlement_status"]
           stay_id?: string | null
           submitted_at?: string | null
+          supplier_id?: string | null
           updated_at?: string
           waived_amount?: number
         }
@@ -1225,6 +2045,7 @@ export type Database = {
           canceled_at?: string | null
           canceled_by?: string | null
           charge_amount?: number
+          contract_id?: string | null
           created_at?: string
           created_by?: string
           currency?: string
@@ -1242,6 +2063,7 @@ export type Database = {
           settlement_status?: Database["public"]["Enums"]["maintenance_finance_settlement_status"]
           stay_id?: string | null
           submitted_at?: string | null
+          supplier_id?: string | null
           updated_at?: string
           waived_amount?: number
         }
@@ -1258,6 +2080,13 @@ export type Database = {
             columns: ["canceled_by"]
             isOneToOne: false
             referencedRelation: "users"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "maintenance_recoveries_contract_id_fkey"
+            columns: ["contract_id"]
+            isOneToOne: false
+            referencedRelation: "maintenance_contracts"
             referencedColumns: ["id"]
           },
           {
@@ -1302,12 +2131,285 @@ export type Database = {
             referencedRelation: "stays"
             referencedColumns: ["id"]
           },
+          {
+            foreignKeyName: "maintenance_recoveries_supplier_id_fkey"
+            columns: ["supplier_id"]
+            isOneToOne: false
+            referencedRelation: "maintenance_suppliers"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      maintenance_sla_policies: {
+        Row: {
+          category_id: string | null
+          created_at: string
+          created_by: string | null
+          hotel_id: string
+          id: string
+          is_active: boolean
+          name: string
+          priority: Database["public"]["Enums"]["maintenance_priority"]
+          resolution_hours: number
+          response_hours: number
+          updated_at: string
+        }
+        Insert: {
+          category_id?: string | null
+          created_at?: string
+          created_by?: string | null
+          hotel_id: string
+          id?: string
+          is_active?: boolean
+          name: string
+          priority: Database["public"]["Enums"]["maintenance_priority"]
+          resolution_hours: number
+          response_hours: number
+          updated_at?: string
+        }
+        Update: {
+          category_id?: string | null
+          created_at?: string
+          created_by?: string | null
+          hotel_id?: string
+          id?: string
+          is_active?: boolean
+          name?: string
+          priority?: Database["public"]["Enums"]["maintenance_priority"]
+          resolution_hours?: number
+          response_hours?: number
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "maintenance_sla_policies_category_id_fkey"
+            columns: ["category_id"]
+            isOneToOne: false
+            referencedRelation: "maintenance_categories"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "maintenance_sla_policies_created_by_fkey"
+            columns: ["created_by"]
+            isOneToOne: false
+            referencedRelation: "users"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "maintenance_sla_policies_hotel_id_fkey"
+            columns: ["hotel_id"]
+            isOneToOne: false
+            referencedRelation: "hotels"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      maintenance_supplier_contacts: {
+        Row: {
+          created_at: string
+          created_by: string
+          email: string | null
+          hotel_id: string
+          id: string
+          is_active: boolean
+          is_primary: boolean
+          name: string
+          phone: string | null
+          role: string | null
+          supplier_id: string
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          created_by: string
+          email?: string | null
+          hotel_id: string
+          id?: string
+          is_active?: boolean
+          is_primary?: boolean
+          name: string
+          phone?: string | null
+          role?: string | null
+          supplier_id: string
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          created_by?: string
+          email?: string | null
+          hotel_id?: string
+          id?: string
+          is_active?: boolean
+          is_primary?: boolean
+          name?: string
+          phone?: string | null
+          role?: string | null
+          supplier_id?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "maintenance_supplier_contacts_created_by_fkey"
+            columns: ["created_by"]
+            isOneToOne: false
+            referencedRelation: "users"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "maintenance_supplier_contacts_hotel_id_fkey"
+            columns: ["hotel_id"]
+            isOneToOne: false
+            referencedRelation: "hotels"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "maintenance_supplier_contacts_supplier_id_fkey"
+            columns: ["supplier_id"]
+            isOneToOne: false
+            referencedRelation: "maintenance_suppliers"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      maintenance_suppliers: {
+        Row: {
+          created_at: string
+          created_by: string
+          email: string | null
+          hotel_id: string
+          id: string
+          legal_name: string | null
+          name: string
+          notes: string | null
+          phone: string | null
+          specialties: string[]
+          status: Database["public"]["Enums"]["maintenance_supplier_status"]
+          tax_document: string | null
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          created_by: string
+          email?: string | null
+          hotel_id: string
+          id?: string
+          legal_name?: string | null
+          name: string
+          notes?: string | null
+          phone?: string | null
+          specialties?: string[]
+          status?: Database["public"]["Enums"]["maintenance_supplier_status"]
+          tax_document?: string | null
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          created_by?: string
+          email?: string | null
+          hotel_id?: string
+          id?: string
+          legal_name?: string | null
+          name?: string
+          notes?: string | null
+          phone?: string | null
+          specialties?: string[]
+          status?: Database["public"]["Enums"]["maintenance_supplier_status"]
+          tax_document?: string | null
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "maintenance_suppliers_created_by_fkey"
+            columns: ["created_by"]
+            isOneToOne: false
+            referencedRelation: "users"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "maintenance_suppliers_hotel_id_fkey"
+            columns: ["hotel_id"]
+            isOneToOne: false
+            referencedRelation: "hotels"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      maintenance_work_order_checklist_items: {
+        Row: {
+          completed_at: string | null
+          completed_by: string | null
+          completion_notes: string | null
+          created_at: string
+          description: string
+          hotel_id: string
+          id: string
+          is_required: boolean
+          position: number
+          source_task_id: string | null
+          work_order_id: string
+        }
+        Insert: {
+          completed_at?: string | null
+          completed_by?: string | null
+          completion_notes?: string | null
+          created_at?: string
+          description: string
+          hotel_id: string
+          id?: string
+          is_required?: boolean
+          position: number
+          source_task_id?: string | null
+          work_order_id: string
+        }
+        Update: {
+          completed_at?: string | null
+          completed_by?: string | null
+          completion_notes?: string | null
+          created_at?: string
+          description?: string
+          hotel_id?: string
+          id?: string
+          is_required?: boolean
+          position?: number
+          source_task_id?: string | null
+          work_order_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "maintenance_work_order_checklist_items_completed_by_fkey"
+            columns: ["completed_by"]
+            isOneToOne: false
+            referencedRelation: "users"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "maintenance_work_order_checklist_items_hotel_id_fkey"
+            columns: ["hotel_id"]
+            isOneToOne: false
+            referencedRelation: "hotels"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "maintenance_work_order_checklist_items_source_task_id_fkey"
+            columns: ["source_task_id"]
+            isOneToOne: false
+            referencedRelation: "maintenance_preventive_plan_tasks"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "maintenance_work_order_checklist_items_work_order_id_fkey"
+            columns: ["work_order_id"]
+            isOneToOne: false
+            referencedRelation: "maintenance_work_orders"
+            referencedColumns: ["id"]
+          },
         ]
       }
       maintenance_work_orders: {
         Row: {
           assigned_to: string | null
           completed_at: string | null
+          contract_id: string | null
           created_at: string
           created_by: string
           diagnosis: string | null
@@ -1321,6 +2423,12 @@ export type Database = {
           resolution_notes: string | null
           started_at: string | null
           status: Database["public"]["Enums"]["maintenance_work_order_status"]
+          supplier_accepted_at: string | null
+          supplier_completed_at: string | null
+          supplier_external_reference: string | null
+          supplier_id: string | null
+          supplier_sent_at: string | null
+          supplier_status: Database["public"]["Enums"]["maintenance_supplier_work_status"]
           title: string
           updated_at: string
           waiting_notes: string | null
@@ -1331,6 +2439,7 @@ export type Database = {
         Insert: {
           assigned_to?: string | null
           completed_at?: string | null
+          contract_id?: string | null
           created_at?: string
           created_by: string
           diagnosis?: string | null
@@ -1344,6 +2453,12 @@ export type Database = {
           resolution_notes?: string | null
           started_at?: string | null
           status?: Database["public"]["Enums"]["maintenance_work_order_status"]
+          supplier_accepted_at?: string | null
+          supplier_completed_at?: string | null
+          supplier_external_reference?: string | null
+          supplier_id?: string | null
+          supplier_sent_at?: string | null
+          supplier_status?: Database["public"]["Enums"]["maintenance_supplier_work_status"]
           title: string
           updated_at?: string
           waiting_notes?: string | null
@@ -1354,6 +2469,7 @@ export type Database = {
         Update: {
           assigned_to?: string | null
           completed_at?: string | null
+          contract_id?: string | null
           created_at?: string
           created_by?: string
           diagnosis?: string | null
@@ -1367,6 +2483,12 @@ export type Database = {
           resolution_notes?: string | null
           started_at?: string | null
           status?: Database["public"]["Enums"]["maintenance_work_order_status"]
+          supplier_accepted_at?: string | null
+          supplier_completed_at?: string | null
+          supplier_external_reference?: string | null
+          supplier_id?: string | null
+          supplier_sent_at?: string | null
+          supplier_status?: Database["public"]["Enums"]["maintenance_supplier_work_status"]
           title?: string
           updated_at?: string
           waiting_notes?: string | null
@@ -1380,6 +2502,13 @@ export type Database = {
             columns: ["assigned_to"]
             isOneToOne: false
             referencedRelation: "users"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "maintenance_work_orders_contract_id_fkey"
+            columns: ["contract_id"]
+            isOneToOne: false
+            referencedRelation: "maintenance_contracts"
             referencedColumns: ["id"]
           },
           {
@@ -1401,6 +2530,13 @@ export type Database = {
             columns: ["occurrence_id"]
             isOneToOne: false
             referencedRelation: "maintenance_occurrences"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "maintenance_work_orders_supplier_id_fkey"
+            columns: ["supplier_id"]
+            isOneToOne: false
+            referencedRelation: "maintenance_suppliers"
             referencedColumns: ["id"]
           },
         ]
@@ -2283,7 +3419,22 @@ export type Database = {
         }
         Returns: boolean
       }
+      complete_maintenance_checklist_item: {
+        Args: {
+          p_actor_id: string
+          p_completed: boolean
+          p_hotel_id: string
+          p_item_id: string
+          p_notes?: string
+          p_work_order_id: string
+        }
+        Returns: string
+      }
       create_default_maintenance_categories: {
+        Args: { p_hotel_id: string }
+        Returns: undefined
+      }
+      create_default_maintenance_sla_policies: {
         Args: { p_hotel_id: string }
         Returns: undefined
       }
@@ -2395,6 +3546,27 @@ export type Database = {
               result: string
             }[]
           }
+      decide_maintenance_preventive_run: {
+        Args: {
+          p_action: string
+          p_actor_id: string
+          p_hotel_id: string
+          p_reason: string
+          p_rescheduled_for?: string
+          p_run_id: string
+        }
+        Returns: string
+      }
+      generate_maintenance_preventive_run: {
+        Args: {
+          p_actor_id: string
+          p_force?: boolean
+          p_hotel_id: string
+          p_reason?: string
+          p_run_id: string
+        }
+        Returns: string
+      }
       inspect_maintenance_work_order: {
         Args: {
           p_actor_id: string
@@ -2408,6 +3580,64 @@ export type Database = {
       maintenance_user_has_hotel_scope: {
         Args: { p_hotel_id: string; p_user_id: string }
         Returns: boolean
+      }
+      mark_all_maintenance_notifications_read: {
+        Args: { p_hotel_id: string; p_recipient_id: string }
+        Returns: number
+      }
+      next_maintenance_preventive_date: {
+        Args: {
+          p_current: string
+          p_interval: number
+          p_recurrence_day: number
+          p_unit: Database["public"]["Enums"]["maintenance_recurrence_unit"]
+        }
+        Returns: string
+      }
+      notify_maintenance_managers: {
+        Args: {
+          p_entity_id: string
+          p_entity_type: string
+          p_hotel_id: string
+          p_href: string
+          p_kind: string
+          p_message: string
+          p_severity: string
+          p_threshold: string
+          p_title: string
+        }
+        Returns: number
+      }
+      notify_maintenance_recipient: {
+        Args: {
+          p_entity_id: string
+          p_entity_type: string
+          p_hotel_id: string
+          p_href: string
+          p_kind: string
+          p_message: string
+          p_recipient_id: string
+          p_severity: string
+          p_threshold: string
+          p_title: string
+        }
+        Returns: boolean
+      }
+      process_maintenance_expiry_alerts: {
+        Args: { p_hotel_id: string; p_local_date: string }
+        Returns: number
+      }
+      process_maintenance_management_cycle: {
+        Args: { p_force?: boolean; p_hotel_id?: string; p_now?: string }
+        Returns: Json
+      }
+      process_maintenance_preventive_plans: {
+        Args: { p_hotel_id: string; p_now?: string }
+        Returns: Json
+      }
+      process_maintenance_sla_alerts: {
+        Args: { p_hotel_id: string; p_now?: string }
+        Returns: number
       }
       recompute_maintenance_occurrence_status: {
         Args: { p_occurrence_id: string }
@@ -2431,6 +3661,15 @@ export type Database = {
           p_settlement_id: string
         }
         Returns: string
+      }
+      set_maintenance_notification_status: {
+        Args: {
+          p_hotel_id: string
+          p_notification_id: string
+          p_recipient_id: string
+          p_status: Database["public"]["Enums"]["maintenance_notification_status"]
+        }
+        Returns: boolean
       }
       settle_maintenance_cost_item: {
         Args: {
@@ -2476,6 +3715,19 @@ export type Database = {
           p_hotel_id: string
           p_reason?: string
           p_recovery_id: string
+        }
+        Returns: string
+      }
+      transition_maintenance_supplier_work: {
+        Args: {
+          p_action: string
+          p_actor_id: string
+          p_contract_id?: string
+          p_external_reference?: string
+          p_hotel_id: string
+          p_notes?: string
+          p_supplier_id?: string
+          p_work_order_id: string
         }
         Returns: string
       }
@@ -2529,12 +3781,67 @@ export type Database = {
               result: string
             }[]
           }
+      upsert_maintenance_contract: {
+        Args: {
+          p_actor_id: string
+          p_category_ids: string[]
+          p_commercial_terms: string
+          p_contract_amount: number
+          p_contract_id: string
+          p_contract_number: string
+          p_currency: string
+          p_ends_on: string
+          p_hotel_id: string
+          p_kind: Database["public"]["Enums"]["maintenance_contract_kind"]
+          p_location_ids: string[]
+          p_renewal_notice_on: string
+          p_resolution_hours: number
+          p_response_hours: number
+          p_scope_notes: string
+          p_starts_on: string
+          p_status: Database["public"]["Enums"]["maintenance_contract_status"]
+          p_supplier_id: string
+          p_termination_reason?: string
+        }
+        Returns: string
+      }
+      upsert_maintenance_preventive_plan: {
+        Args: {
+          p_actor_id: string
+          p_assigned_to: string
+          p_blocking_recommended: boolean
+          p_category_id: string
+          p_completion_due_hours: number
+          p_contract_id: string
+          p_ends_on: string
+          p_generation_lead_days: number
+          p_hotel_id: string
+          p_instructions: string
+          p_local_time: string
+          p_location_id: string
+          p_name: string
+          p_plan_id: string
+          p_priority: Database["public"]["Enums"]["maintenance_priority"]
+          p_recurrence_interval: number
+          p_recurrence_unit: Database["public"]["Enums"]["maintenance_recurrence_unit"]
+          p_requires_inspection: boolean
+          p_room_id: string
+          p_starts_on: string
+          p_supplier_id: string
+          p_tasks: Json
+        }
+        Returns: string
+      }
       validate_reservation_capacity: {
         Args: { p_reservation_id: string }
         Returns: undefined
       }
     }
     Enums: {
+      maintenance_asset_lifecycle: "active" | "out_of_service" | "retired"
+      maintenance_automation_status: "running" | "completed" | "failed"
+      maintenance_contract_kind: "fixed" | "per_service" | "warranty" | "other"
+      maintenance_contract_status: "draft" | "active" | "expired" | "terminated"
       maintenance_cost_kind: "material" | "labor" | "external_service" | "other"
       maintenance_finance_approval_status:
         | "draft"
@@ -2556,6 +3863,7 @@ export type Database = {
         | "confirmed"
         | "dismissed"
       maintenance_location_kind: "area" | "equipment"
+      maintenance_notification_status: "unread" | "read" | "dismissed"
       maintenance_occurrence_kind:
         | "damage"
         | "defect"
@@ -2563,6 +3871,7 @@ export type Database = {
         | "safety_risk"
         | "special_cleaning"
         | "other"
+        | "preventive"
       maintenance_occurrence_status:
         | "reported"
         | "triaged"
@@ -2571,12 +3880,28 @@ export type Database = {
         | "awaiting_liability"
         | "resolved"
         | "canceled"
+      maintenance_preventive_plan_status: "active" | "paused" | "inactive"
+      maintenance_preventive_run_status:
+        | "scheduled"
+        | "generated"
+        | "deferred"
+        | "skipped"
+        | "rescheduled"
       maintenance_priority: "low" | "normal" | "high" | "critical"
+      maintenance_recurrence_unit: "daily" | "weekly" | "monthly" | "yearly"
       maintenance_responsible_party:
         | "guest"
         | "hotel"
         | "supplier"
         | "normal_wear"
+      maintenance_supplier_status: "active" | "inactive"
+      maintenance_supplier_work_status:
+        | "not_sent"
+        | "sent"
+        | "accepted"
+        | "in_service"
+        | "completed"
+        | "canceled"
       maintenance_waiting_reason:
         | "parts"
         | "vendor"
@@ -2754,6 +4079,10 @@ export type CompositeTypes<
 export const Constants = {
   public: {
     Enums: {
+      maintenance_asset_lifecycle: ["active", "out_of_service", "retired"],
+      maintenance_automation_status: ["running", "completed", "failed"],
+      maintenance_contract_kind: ["fixed", "per_service", "warranty", "other"],
+      maintenance_contract_status: ["draft", "active", "expired", "terminated"],
       maintenance_cost_kind: ["material", "labor", "external_service", "other"],
       maintenance_finance_approval_status: [
         "draft",
@@ -2778,6 +4107,7 @@ export const Constants = {
         "dismissed",
       ],
       maintenance_location_kind: ["area", "equipment"],
+      maintenance_notification_status: ["unread", "read", "dismissed"],
       maintenance_occurrence_kind: [
         "damage",
         "defect",
@@ -2785,6 +4115,7 @@ export const Constants = {
         "safety_risk",
         "special_cleaning",
         "other",
+        "preventive",
       ],
       maintenance_occurrence_status: [
         "reported",
@@ -2795,12 +4126,30 @@ export const Constants = {
         "resolved",
         "canceled",
       ],
+      maintenance_preventive_plan_status: ["active", "paused", "inactive"],
+      maintenance_preventive_run_status: [
+        "scheduled",
+        "generated",
+        "deferred",
+        "skipped",
+        "rescheduled",
+      ],
       maintenance_priority: ["low", "normal", "high", "critical"],
+      maintenance_recurrence_unit: ["daily", "weekly", "monthly", "yearly"],
       maintenance_responsible_party: [
         "guest",
         "hotel",
         "supplier",
         "normal_wear",
+      ],
+      maintenance_supplier_status: ["active", "inactive"],
+      maintenance_supplier_work_status: [
+        "not_sent",
+        "sent",
+        "accepted",
+        "in_service",
+        "completed",
+        "canceled",
       ],
       maintenance_waiting_reason: [
         "parts",

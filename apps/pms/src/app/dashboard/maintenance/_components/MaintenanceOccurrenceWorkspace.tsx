@@ -4,6 +4,7 @@ import type {
   AdminItemResponse,
   AdminMaintenanceOccurrenceDetail,
   AdminMaintenanceReferenceData,
+  AdminMaintenanceSupplier,
 } from "@hotel/shared";
 import { useState } from "react";
 
@@ -14,11 +15,13 @@ type Access = {
   canManageBlocks: boolean;
   canInspect: boolean;
   canConfirmLiability: boolean;
+  canManageSuppliers: boolean;
 };
 type Props = {
   initial: AdminMaintenanceOccurrenceDetail;
   referenceData: AdminMaintenanceReferenceData;
   access: Access;
+  suppliers?: AdminMaintenanceSupplier[];
 };
 
 const statusLabels: Record<string, string> = {
@@ -40,6 +43,7 @@ export function MaintenanceOccurrenceWorkspace({
   initial,
   referenceData,
   access,
+  suppliers = [],
 }: Props) {
   const [item, setItem] = useState(initial);
   const [pending, setPending] = useState(false);
@@ -183,6 +187,20 @@ export function MaintenanceOccurrenceWorkspace({
           <dd>{item.stay_id || "Não vinculada"}</dd>
           <dt>Bloqueio</dt>
           <dd>{item.active_block ? "Ativo" : "Não"}</dd>
+          <dt>Origem</dt>
+          <dd>{item.preventive_plan_id ? "Preventiva" : "Corretiva"}</dd>
+          <dt>SLA de resposta</dt>
+          <dd>
+            {item.sla_response_due_at
+              ? new Date(item.sla_response_due_at).toLocaleString("pt-BR")
+              : "Não acompanhado"}
+          </dd>
+          <dt>SLA de resolução</dt>
+          <dd>
+            {item.sla_resolution_due_at
+              ? new Date(item.sla_resolution_due_at).toLocaleString("pt-BR")
+              : "Não acompanhado"}
+          </dd>
         </dl>
       </section>
       {message ? (
@@ -213,6 +231,179 @@ export function MaintenanceOccurrenceWorkspace({
                 Inspeção:{" "}
                 {order.requires_inspection ? "obrigatória" : "não obrigatória"}
               </p>
+              {order.supplier_id ? (
+                <p className="text-sm text-[#52606d]">
+                  Fornecedor: {order.supplier_name || "Vinculado"} · situação
+                  externa: {order.supplier_status}
+                  {order.contract_number
+                    ? ` · contrato ${order.contract_number}`
+                    : ""}
+                </p>
+              ) : null}
+              {(access.canExecute || access.canManageSuppliers) &&
+              order.supplier_id &&
+              !["completed", "canceled"].includes(
+                order.supplier_status || "",
+              ) ? (
+                <div className="mb-3 flex flex-wrap gap-2">
+                  {order.supplier_status === "sent" ? (
+                    <button
+                      type="button"
+                      disabled={pending}
+                      onClick={() =>
+                        void mutate(
+                          `work-orders/${order.id}/supplier-transition`,
+                          {
+                            action: "accept",
+                            notes:
+                              "Aceite do fornecedor registrado pela equipe interna",
+                          },
+                        )
+                      }
+                      className="rounded border px-3 py-2 text-sm"
+                    >
+                      Registrar aceite
+                    </button>
+                  ) : null}
+                  {["sent", "accepted"].includes(
+                    order.supplier_status || "",
+                  ) ? (
+                    <button
+                      type="button"
+                      disabled={pending}
+                      onClick={() =>
+                        void mutate(
+                          `work-orders/${order.id}/supplier-transition`,
+                          {
+                            action: "start",
+                            notes:
+                              "Início externo registrado pela equipe interna",
+                          },
+                        )
+                      }
+                      className="rounded border px-3 py-2 text-sm"
+                    >
+                      Registrar início externo
+                    </button>
+                  ) : null}
+                  {order.supplier_status === "in_service" ? (
+                    <button
+                      type="button"
+                      disabled={pending}
+                      onClick={() =>
+                        void mutate(
+                          `work-orders/${order.id}/supplier-transition`,
+                          {
+                            action: "complete",
+                            notes:
+                              "Conclusão externa informada; ordem interna permanece independente",
+                          },
+                        )
+                      }
+                      className="rounded border px-3 py-2 text-sm"
+                    >
+                      Registrar conclusão externa
+                    </button>
+                  ) : null}
+                </div>
+              ) : null}
+              {access.canManageSuppliers &&
+              !order.supplier_id &&
+              suppliers.length ? (
+                <form
+                  className="mb-3 flex flex-wrap items-end gap-2"
+                  onSubmit={(event) => {
+                    event.preventDefault();
+                    const data = new FormData(event.currentTarget);
+                    void mutate(`work-orders/${order.id}/supplier-transition`, {
+                      action: "send",
+                      supplier_id: data.get("supplier_id"),
+                      contract_id: data.get("contract_id") || null,
+                      external_reference: data.get("external_reference"),
+                      notes: "Ordem enviada ao fornecedor pela equipe interna",
+                    });
+                  }}
+                >
+                  <label className="grid gap-1 text-sm">
+                    Fornecedor
+                    <select
+                      required
+                      name="supplier_id"
+                      className="pms-field-input"
+                    >
+                      <option value="">Selecione</option>
+                      {suppliers
+                        .filter((supplier) => supplier.status === "active")
+                        .map((supplier) => (
+                          <option key={supplier.id} value={supplier.id}>
+                            {supplier.name}
+                          </option>
+                        ))}
+                    </select>
+                  </label>
+                  <label className="grid gap-1 text-sm">
+                    Contrato
+                    <select name="contract_id" className="pms-field-input">
+                      <option value="">Sem contrato</option>
+                      {suppliers.flatMap((supplier) =>
+                        (supplier.contracts || [])
+                          .filter((contract) => contract.status === "active")
+                          .map((contract) => (
+                            <option key={contract.id} value={contract.id}>
+                              {contract.contract_number}
+                            </option>
+                          )),
+                      )}
+                    </select>
+                  </label>
+                  <label className="grid gap-1 text-sm">
+                    Referência externa
+                    <input
+                      name="external_reference"
+                      className="pms-field-input"
+                    />
+                  </label>
+                  <button className="rounded border px-3 py-2 text-sm">
+                    Enviar ao fornecedor
+                  </button>
+                </form>
+              ) : null}
+              {order.checklist?.length ? (
+                <fieldset className="my-3 rounded-lg border border-slate-200 p-3">
+                  <legend className="px-1 text-sm font-semibold">
+                    Checklist
+                  </legend>
+                  <div className="grid gap-2">
+                    {order.checklist.map((check) => (
+                      <label
+                        key={check.id}
+                        className="flex items-start gap-2 text-sm"
+                      >
+                        <input
+                          type="checkbox"
+                          checked={Boolean(check.completed_at)}
+                          disabled={pending || !access.canExecute}
+                          onChange={(event) =>
+                            void mutate(
+                              `work-orders/${order.id}/checklist/${check.id}/complete`,
+                              {
+                                completed: event.target.checked,
+                                notes: event.target.checked
+                                  ? "Item conferido na execução"
+                                  : "Item reaberto para conferência",
+                              },
+                            )
+                          }
+                        />
+                        <span>
+                          {check.description}
+                          {check.is_required ? " *" : ""}
+                        </span>
+                      </label>
+                    ))}
+                  </div>
+                </fieldset>
+              ) : null}
               {access.canExecute &&
               !["completed", "canceled", "awaiting_inspection"].includes(
                 order.status,

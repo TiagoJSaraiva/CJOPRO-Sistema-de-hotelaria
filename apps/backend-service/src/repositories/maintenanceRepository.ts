@@ -19,7 +19,7 @@ import type {
 import { createServerClient } from "../common/supabaseServer";
 
 const OCCURRENCE_SELECT =
-  "id,occurrence_number,hotel_id,category_id,room_id,location_id,stay_id,kind,priority,status,description,discovered_at,reported_by,blocking_recommended,triaged_by,triaged_at,liability_status,suspected_party,confirmed_party,liability_notes,duplicate_of_id,canceled_reason,resolved_at,created_at,updated_at,category:category_id(name),room:room_id(room_number),location:location_id(name),reporter:reported_by(name),maintenance_work_orders(id,status,due_at),room_blocks(id,released_at)";
+  "id,occurrence_number,hotel_id,category_id,room_id,location_id,stay_id,kind,priority,status,description,discovered_at,reported_by,blocking_recommended,triaged_by,triaged_at,liability_status,suspected_party,confirmed_party,liability_notes,duplicate_of_id,canceled_reason,resolved_at,preventive_plan_id,sla_response_due_at,sla_resolution_due_at,operational_resolved_at,created_at,updated_at,category:category_id(name),room:room_id(room_number),location:location_id(name),reporter:reported_by(name),maintenance_work_orders(id,status,due_at),room_blocks(id,released_at)";
 
 type OccurrenceRow = Record<string, any>;
 type WorkOrderRow = Record<string, any>;
@@ -87,6 +87,18 @@ function mapOccurrenceSummary(
     open_work_orders: workOrders.filter(
       (order) => order.status !== "completed" && order.status !== "canceled",
     ).length,
+    preventive_plan_id: row.preventive_plan_id
+      ? String(row.preventive_plan_id)
+      : null,
+    sla_response_due_at: row.sla_response_due_at
+      ? String(row.sla_response_due_at)
+      : null,
+    sla_resolution_due_at: row.sla_resolution_due_at
+      ? String(row.sla_resolution_due_at)
+      : null,
+    operational_resolved_at: row.operational_resolved_at
+      ? String(row.operational_resolved_at)
+      : null,
     created_at: String(row.created_at),
     updated_at: String(row.updated_at),
   };
@@ -114,6 +126,30 @@ function mapWorkOrder(row: WorkOrderRow): AdminMaintenanceWorkOrder {
       : null,
     started_at: row.started_at ? String(row.started_at) : null,
     completed_at: row.completed_at ? String(row.completed_at) : null,
+    supplier_id: row.supplier_id ? String(row.supplier_id) : null,
+    supplier_name: relation(row.supplier)?.name
+      ? String(relation(row.supplier)?.name)
+      : null,
+    contract_id: row.contract_id ? String(row.contract_id) : null,
+    contract_number: relation(row.contract)?.contract_number
+      ? String(relation(row.contract)?.contract_number)
+      : null,
+    supplier_status: row.supplier_status,
+    supplier_external_reference: row.supplier_external_reference
+      ? String(row.supplier_external_reference)
+      : null,
+    checklist: (row.checklist || []).map((item: Record<string, unknown>) => ({
+      id: String(item.id),
+      work_order_id: String(item.work_order_id),
+      position: Number(item.position),
+      description: String(item.description),
+      is_required: Boolean(item.is_required),
+      completed_by: item.completed_by ? String(item.completed_by) : null,
+      completed_at: item.completed_at ? String(item.completed_at) : null,
+      completion_notes: item.completion_notes
+        ? String(item.completion_notes)
+        : null,
+    })),
     created_at: String(row.created_at),
     updated_at: String(row.updated_at),
   };
@@ -388,7 +424,7 @@ class SupabaseMaintenanceRepository implements MaintenanceRepository {
       supabase
         .from("maintenance_work_orders")
         .select(
-          "id,occurrence_id,title,instructions,priority,status,assigned_to,due_at,waiting_reason,waiting_notes,requires_inspection,diagnosis,resolution_notes,started_at,completed_at,created_at,updated_at,assignee:assigned_to(name)",
+          "id,occurrence_id,title,instructions,priority,status,assigned_to,due_at,waiting_reason,waiting_notes,requires_inspection,diagnosis,resolution_notes,started_at,completed_at,supplier_id,contract_id,supplier_status,supplier_external_reference,created_at,updated_at,assignee:assigned_to(name),supplier:supplier_id(name),contract:contract_id(contract_number),checklist:maintenance_work_order_checklist_items(id,work_order_id,position,description,is_required,completed_by,completed_at,completion_notes)",
         )
         .eq("hotel_id", hotelId)
         .eq("occurrence_id", id)
@@ -820,7 +856,7 @@ class SupabaseMaintenanceRepository implements MaintenanceRepository {
     const { data, error } = await createServerClient()
       .from("maintenance_locations")
       .select(
-        "id,hotel_id,parent_location_id,kind,name,description,display_order,is_active,created_at,updated_at,parent:parent_location_id(name)",
+        "id,hotel_id,parent_location_id,kind,name,description,display_order,is_active,asset_tag,manufacturer,model,serial_number,installed_on,warranty_ends_on,supplier_id,contract_id,lifecycle_status,created_at,updated_at,parent:parent_location_id(name)",
       )
       .eq("hotel_id", hotelId)
       .order("display_order")
