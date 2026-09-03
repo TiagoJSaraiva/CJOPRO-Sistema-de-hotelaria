@@ -10,6 +10,7 @@ import { getUserFromSession } from "../../../../lib/auth";
 import { getMaintenanceAccess } from "../access";
 import { MaintenancePreventiveManager } from "../_components/MaintenancePreventiveManager";
 import { maintenanceTabs } from "../tabs";
+import { maintenancePreventiveGuide } from "../usageGuides";
 
 export default async function MaintenancePreventivePage() {
   const access = getMaintenanceAccess(await getUserFromSession());
@@ -37,6 +38,7 @@ export default async function MaintenancePreventivePage() {
       title="Manutenção preventiva"
       activeTabKey="preventive"
       tabs={maintenanceTabs(access)}
+      usageGuide={maintenancePreventiveGuide}
     >
       <MaintenancePreventiveManager
         plans={plans}

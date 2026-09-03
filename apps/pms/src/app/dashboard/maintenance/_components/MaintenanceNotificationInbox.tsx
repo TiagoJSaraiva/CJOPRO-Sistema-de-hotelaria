@@ -50,7 +50,10 @@ export function MaintenanceNotificationInbox({
   return (
     <div aria-live="polite">
       <p className="sr-only">{announcement}</p>
-      <div className="mb-4 flex flex-wrap items-end gap-3">
+      <div
+        className="mb-4 flex flex-wrap items-end gap-3"
+        data-usage-guide="maintenance-notifications-filters"
+      >
         <label className="grid gap-1 text-sm">
           Filtrar
           <select
@@ -76,7 +79,10 @@ export function MaintenanceNotificationInbox({
           Marcar todas como lidas
         </button>
       </div>
-      <div className="grid gap-3">
+      <div
+        className="grid gap-3"
+        data-usage-guide="maintenance-notifications-list"
+      >
         {visible.length ? (
           visible.map((item) => (
             <article

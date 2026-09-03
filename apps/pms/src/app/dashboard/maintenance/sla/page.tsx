@@ -8,6 +8,7 @@ import { getUserFromSession } from "../../../../lib/auth";
 import { getMaintenanceAccess } from "../access";
 import { MaintenanceSlaManager } from "../_components/MaintenanceSlaManager";
 import { maintenanceTabs } from "../tabs";
+import { getMaintenanceSlaGuide } from "../usageGuides";
 
 export default async function MaintenanceSlaPage() {
   const access = getMaintenanceAccess(await getUserFromSession());
@@ -27,6 +28,7 @@ export default async function MaintenanceSlaPage() {
       title="SLA de manutenção"
       activeTabKey="settings"
       tabs={maintenanceTabs(access)}
+      usageGuide={getMaintenanceSlaGuide(access.canManageSla)}
     >
       <MaintenanceSlaManager
         policies={policies}

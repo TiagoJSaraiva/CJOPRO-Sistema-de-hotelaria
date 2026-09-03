@@ -1,6 +1,7 @@
 "use client";
 
 import { useMemo, useState } from "react";
+import { ContextHelp } from "../../_components/ContextHelp";
 import { useRouter } from "next/navigation";
 import type {
   AdminMaintenancePreventivePlan,
@@ -187,7 +188,11 @@ export function MaintenancePreventiveManager({
       className="grid gap-6 lg:grid-cols-[minmax(0,1fr)_minmax(22rem,0.8fr)]"
       aria-live="polite"
     >
-      <section className="space-y-3" aria-labelledby="preventive-list-title">
+      <section
+        className="space-y-3"
+        aria-labelledby="preventive-list-title"
+        data-usage-guide="maintenance-preventive-plans"
+      >
         <h2 id="preventive-list-title" className="text-lg font-semibold">
           Planos e próximas competências
         </h2>
@@ -259,8 +264,17 @@ export function MaintenancePreventiveManager({
             Nenhum plano cadastrado.
           </p>
         )}
-        <div className="pt-3">
-          <h2 className="text-lg font-semibold">Competências adiadas</h2>
+        <div
+          className="pt-3"
+          data-usage-guide="maintenance-preventive-deferred"
+        >
+          <h2 className="text-lg font-semibold">
+            Competências adiadas
+            <ContextHelp label="Competência preventiva adiada">
+              O sistema adia a nova competência quando a execução anterior do
+              plano ainda está aberta. A decisão gerencial exige justificativa.
+            </ContextHelp>
+          </h2>
           {deferred.length ? (
             deferred.map((run) => (
               <article
@@ -312,6 +326,7 @@ export function MaintenancePreventiveManager({
       {canManage ? (
         <form
           id="preventive-plan-form"
+          data-usage-guide="maintenance-preventive-form"
           key={editing?.id || "new"}
           className="h-fit rounded-xl border border-slate-200 bg-white p-5"
           onSubmit={(event) => {

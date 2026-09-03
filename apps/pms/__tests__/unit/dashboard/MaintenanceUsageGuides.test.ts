@@ -1,6 +1,7 @@
 import { describe, expect, it } from "vitest";
 import { validateUsageGuideDefinition } from "../../../src/app/dashboard/_components/UsageGuide";
 import {
+  advancedMaintenanceGuides,
   financialMaintenanceGuides,
   getMaintenanceOccurrenceGuide,
   operationalMaintenanceGuides,
@@ -27,5 +28,11 @@ describe("guias operacionais de manutenção", () => {
         (step) => step.id === "finance",
       ),
     ).toBe(true);
+  });
+
+  it("mantém válidos os guias das páginas avançadas", () => {
+    for (const guide of advancedMaintenanceGuides) {
+      expect(validateUsageGuideDefinition(guide), guide.id).toEqual([]);
+    }
   });
 });

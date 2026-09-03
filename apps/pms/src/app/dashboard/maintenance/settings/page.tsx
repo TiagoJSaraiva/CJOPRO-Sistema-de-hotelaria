@@ -6,6 +6,7 @@ import { MaintenanceCatalogManager } from "../_components/MaintenanceCatalogMana
 import { getMaintenanceAccess } from "../access";
 import { maintenanceTabs } from "../tabs";
 import Link from "next/link";
+import { maintenanceSettingsGuide } from "../usageGuides";
 
 export default async function MaintenanceSettingsPage() {
   const access = getMaintenanceAccess(await getUserFromSession());
@@ -22,9 +23,10 @@ export default async function MaintenanceSettingsPage() {
       title="Configuração de manutenção"
       activeTabKey="settings"
       tabs={maintenanceTabs(access)}
+      usageGuide={maintenanceSettingsGuide}
     >
       {access.canManageSla ? (
-        <div className="mb-4">
+        <div className="mb-4" data-usage-guide="maintenance-settings-sla-link">
           <Link
             href="/dashboard/maintenance/sla"
             className="rounded-lg border border-slate-300 bg-white px-4 py-2 text-sm font-medium no-underline"

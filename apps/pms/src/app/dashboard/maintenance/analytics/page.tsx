@@ -11,6 +11,8 @@ import { getUserFromSession } from "../../../../lib/auth";
 import { getMaintenanceAccess } from "../access";
 import { MaintenanceAnalyticsExports } from "../_components/MaintenanceAnalyticsExports";
 import { maintenanceTabs } from "../tabs";
+import { getMaintenanceAnalyticsGuide } from "../usageGuides";
+import { ContextHelp } from "../../_components/ContextHelp";
 
 type Props = {
   searchParams?: Promise<Record<string, string | string[] | undefined>>;
@@ -66,10 +68,12 @@ export default async function MaintenanceAnalyticsPage({
       title="Indicadores de manutenção"
       activeTabKey="analytics"
       tabs={maintenanceTabs(access)}
+      usageGuide={getMaintenanceAnalyticsGuide(access.canReadFinance)}
     >
       <form
         className="mb-5 grid gap-3 rounded-xl border border-slate-200 bg-white p-4 sm:grid-cols-2 lg:grid-cols-4"
         role="search"
+        data-usage-guide="maintenance-analytics-filters"
       >
         <label className="grid gap-1 text-sm">
           De
@@ -192,6 +196,7 @@ export default async function MaintenanceAnalyticsPage({
       <div
         className="mb-5 grid gap-3 sm:grid-cols-2 lg:grid-cols-6"
         aria-label="Resumo gerencial"
+        data-usage-guide="maintenance-analytics-summary"
       >
         {cards.map(([label, value]) => (
           <div
@@ -209,9 +214,14 @@ export default async function MaintenanceAnalyticsPage({
         <section
           className="mb-5 rounded-xl border border-slate-200 bg-white p-4"
           aria-labelledby="analytics-finance"
+          data-usage-guide="maintenance-analytics-finance"
         >
           <h2 id="analytics-finance" className="mt-0 text-lg font-semibold">
             Resultado financeiro autorizado
+            <ContextHelp label="Valores dos indicadores">
+              Valores financeiros só são consultados e exportados quando seu
+              perfil possui a permissão financeira de manutenção.
+            </ContextHelp>
           </h2>
           <div className="grid gap-3 sm:grid-cols-3">
             <span>
@@ -238,7 +248,10 @@ export default async function MaintenanceAnalyticsPage({
           </div>
         </section>
       ) : null}
-      <div className="mb-5 grid gap-5 lg:grid-cols-2">
+      <div
+        className="mb-5 grid gap-5 lg:grid-cols-2"
+        data-usage-guide="maintenance-analytics-performance"
+      >
         <section className="rounded-xl border border-slate-200 bg-white p-5">
           <h2 className="mt-0 text-lg font-semibold">
             Envelhecimento do backlog
@@ -278,7 +291,9 @@ export default async function MaintenanceAnalyticsPage({
           </dl>
         </section>
       </div>
-      <MaintenanceAnalyticsExports analytics={analytics} rows={rows} />
+      <div data-usage-guide="maintenance-analytics-exports">
+        <MaintenanceAnalyticsExports analytics={analytics} rows={rows} />
+      </div>
     </DashboardEntityPageShell>
   );
 }

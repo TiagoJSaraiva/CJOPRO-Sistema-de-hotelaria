@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
+import { ContextHelp } from "../../_components/ContextHelp";
 import type {
   AdminMaintenanceCategory,
   AdminMaintenanceLocation,
@@ -217,7 +218,11 @@ export function MaintenanceSupplierManager({
       className="grid gap-6 lg:grid-cols-[minmax(0,1fr)_22rem]"
       aria-live="polite"
     >
-      <section className="grid gap-3" aria-label="Fornecedores cadastrados">
+      <section
+        className="grid gap-3"
+        aria-label="Fornecedores cadastrados"
+        data-usage-guide="maintenance-suppliers-list"
+      >
         {suppliers.length ? (
           suppliers.map((supplier) => (
             <article
@@ -231,6 +236,11 @@ export function MaintenanceSupplierManager({
                   </span>
                   <h2 className="my-1 text-lg font-semibold">
                     {supplier.name}
+                    <ContextHelp label="Fornecedor da manutenção">
+                      O fornecedor registra a execução externa, mas não
+                      substitui o responsável interno nem conclui a ordem
+                      automaticamente.
+                    </ContextHelp>
                   </h2>
                   <p className="m-0 text-sm text-slate-600">
                     {supplier.specialties.join(" · ") || "Sem especialidades"} ·{" "}
@@ -532,6 +542,7 @@ export function MaintenanceSupplierManager({
       </section>
       <form
         className="h-fit rounded-xl border border-slate-200 bg-white p-5"
+        data-usage-guide="maintenance-suppliers-form"
         onSubmit={(event) => {
           event.preventDefault();
           void create(event.currentTarget);

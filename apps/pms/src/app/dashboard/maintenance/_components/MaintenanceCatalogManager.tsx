@@ -53,7 +53,10 @@ export function MaintenanceCatalogManager({
           {message}
         </p>
       ) : null}
-      <section className="rounded-xl border border-[#d7dce2] bg-white p-5">
+      <section
+        className="rounded-xl border border-[#d7dce2] bg-white p-5"
+        data-usage-guide="maintenance-settings-categories"
+      >
         <h2 className="mt-0">Categorias</h2>
         <form
           className="grid gap-2"
@@ -113,6 +116,7 @@ export function MaintenanceCatalogManager({
           <input
             name="display_order"
             type="number"
+            aria-label="Ordem de exibição da categoria"
             defaultValue="0"
             className="pms-field-input"
           />
@@ -188,7 +192,10 @@ export function MaintenanceCatalogManager({
           ))}
         </ul>
       </section>
-      <section className="rounded-xl border border-[#d7dce2] bg-white p-5">
+      <section
+        className="rounded-xl border border-[#d7dce2] bg-white p-5"
+        data-usage-guide="maintenance-settings-locations"
+      >
         <h2 className="mt-0">Áreas e equipamentos</h2>
         <form
           className="grid gap-2"
@@ -216,11 +223,19 @@ export function MaintenanceCatalogManager({
             placeholder="Nome"
             className="pms-field-input"
           />
-          <select name="kind" className="pms-field-input">
+          <select
+            name="kind"
+            aria-label="Tipo do local"
+            className="pms-field-input"
+          >
             <option value="area">Área</option>
             <option value="equipment">Equipamento</option>
           </select>
-          <select name="parent_location_id" className="pms-field-input">
+          <select
+            name="parent_location_id"
+            aria-label="Área pai"
+            className="pms-field-input"
+          >
             <option value="">Sem área pai</option>
             {locations
               .filter((item) => item.kind === "area")
@@ -238,6 +253,7 @@ export function MaintenanceCatalogManager({
           <input
             name="display_order"
             type="number"
+            aria-label="Ordem de exibição do local"
             defaultValue="0"
             className="pms-field-input"
           />

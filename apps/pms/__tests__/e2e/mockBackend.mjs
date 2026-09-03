@@ -438,6 +438,14 @@ const server = http.createServer(async (request, response) => {
           is_active: true,
         },
       ],
+      stays: [
+        {
+          id: "stay-2",
+          room_id: "room-101",
+          reservation_code: "RES-1002",
+          customer_name: "Bruno Lima",
+        },
+      ],
       assignable_users: [
         { id: "user-e2e", name: "Marina Costa", email: "marina@example.com" },
       ],
@@ -490,6 +498,27 @@ const server = http.createServer(async (request, response) => {
           contract_number: "CT-001",
           created_at: "2026-05-01T10:00:00.000Z",
           updated_at: "2026-05-01T10:00:00.000Z",
+        },
+      ],
+    });
+    return;
+  }
+
+  if (method === "GET" && url.pathname === "/admin/maintenance/sla-policies") {
+    sendJson(response, 200, {
+      items: [
+        {
+          id: "sla-e2e",
+          hotel_id: "hotel-e2e",
+          category_id: null,
+          category_name: null,
+          priority: "critical",
+          name: "Crítica padrão",
+          response_hours: 1,
+          resolution_hours: 8,
+          is_active: true,
+          created_at: "2026-01-01T10:00:00.000Z",
+          updated_at: "2026-01-01T10:00:00.000Z",
         },
       ],
     });
@@ -703,6 +732,77 @@ const server = http.createServer(async (request, response) => {
           updated_at: "2026-05-12T12:00:00.000Z",
         },
       ],
+    });
+    return;
+  }
+
+  const maintenanceOccurrenceFinanceMatch = url.pathname.match(
+    /^\/admin\/maintenance\/occurrences\/([^/]+)\/finance$/,
+  );
+  if (method === "GET" && maintenanceOccurrenceFinanceMatch) {
+    sendJson(response, 200, {
+      item: {
+        occurrence_id: maintenanceOccurrenceFinanceMatch[1],
+        currency: "BRL",
+        estimated_cost: 1980,
+        approved_cost: 1980,
+        settled_cost: 0,
+        approved_recovery: 100,
+        received_recovery: 0,
+        net_result: -1880,
+        cost_items: [],
+        recoveries: [],
+      },
+    });
+    return;
+  }
+
+  const maintenanceOccurrenceMatch = url.pathname.match(
+    /^\/admin\/maintenance\/occurrences\/([^/]+)$/,
+  );
+  if (method === "GET" && maintenanceOccurrenceMatch) {
+    sendJson(response, 200, {
+      item: {
+        id: maintenanceOccurrenceMatch[1],
+        occurrence_number: 1001,
+        code: "OCO-001001",
+        kind: "damage",
+        priority: "critical",
+        status: "awaiting_inspection",
+        description: "Televisor com a tela danificada",
+        category_id: "category-1",
+        category_name: "Eletrônicos",
+        room_id: "room-102",
+        room_number: "102",
+        location_id: null,
+        location_name: null,
+        stay_id: "stay-2",
+        reported_by: "user-e2e",
+        reporter_name: "Marina Costa",
+        blocking_recommended: true,
+        liability_status: "suspected",
+        active_block: true,
+        open_work_orders: 0,
+        created_at: "2026-05-12T10:00:00.000Z",
+        updated_at: "2026-05-12T11:00:00.000Z",
+        discovered_at: "2026-05-12T10:00:00.000Z",
+        triaged_by: "user-e2e",
+        triaged_at: "2026-05-12T10:30:00.000Z",
+        suspected_party: "guest",
+        confirmed_party: null,
+        liability_notes: "Aguardando apuração.",
+        duplicate_of_id: null,
+        canceled_reason: null,
+        resolved_at: null,
+        sla_response_due_at: "2026-05-12T11:00:00.000Z",
+        sla_resolution_due_at: "2026-05-13T10:00:00.000Z",
+        preventive_plan_id: null,
+        work_orders: [],
+        inspections: [],
+        events: [],
+        attachments: [],
+        room_blocks: [],
+      },
     });
     return;
   }

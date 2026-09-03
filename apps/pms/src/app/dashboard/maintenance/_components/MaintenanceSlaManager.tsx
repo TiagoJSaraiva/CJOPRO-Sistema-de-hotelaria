@@ -6,6 +6,7 @@ import type {
   AdminMaintenanceCategory,
   AdminMaintenanceSlaPolicy,
 } from "@hotel/shared";
+import { ContextHelp } from "../../_components/ContextHelp";
 
 export function MaintenanceSlaManager({
   policies,
@@ -44,8 +45,14 @@ export function MaintenanceSlaManager({
   }
   return (
     <div className="grid gap-6 lg:grid-cols-[1fr_22rem]" aria-live="polite">
-      <section>
-        <h2 className="text-lg font-semibold">Precedência efetiva</h2>
+      <section data-usage-guide="maintenance-sla-precedence">
+        <h2 className="text-lg font-semibold">
+          Precedência efetiva
+          <ContextHelp label="Precedência de SLA">
+            A regra de categoria e prioridade é a mais específica. Depois vem a
+            prioridade geral e, por último, o padrão do hotel.
+          </ContextHelp>
+        </h2>
         <p className="text-sm text-slate-600">
           Categoria + prioridade prevalece sobre a política padrão da
           prioridade. Ocorrências existentes preservam o snapshot original.
@@ -85,6 +92,7 @@ export function MaintenanceSlaManager({
       {canManage ? (
         <form
           className="h-fit rounded-xl border border-slate-200 bg-white p-5"
+          data-usage-guide="maintenance-sla-form"
           onSubmit={(event) => {
             event.preventDefault();
             void create(event.currentTarget);

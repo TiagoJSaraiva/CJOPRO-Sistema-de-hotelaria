@@ -5,6 +5,7 @@ import { getUserFromSession } from "../../../../lib/auth";
 import { getMaintenanceAccess } from "../access";
 import { MaintenanceNotificationInbox } from "../_components/MaintenanceNotificationInbox";
 import { maintenanceTabs } from "../tabs";
+import { maintenanceNotificationsGuide } from "../usageGuides";
 
 export default async function MaintenanceNotificationsPage() {
   const access = getMaintenanceAccess(await getUserFromSession());
@@ -20,6 +21,7 @@ export default async function MaintenanceNotificationsPage() {
       title="Alertas de manutenção"
       activeTabKey="notifications"
       tabs={maintenanceTabs(access)}
+      usageGuide={maintenanceNotificationsGuide}
     >
       <MaintenanceNotificationInbox
         initialItems={await getMaintenanceNotifications()}

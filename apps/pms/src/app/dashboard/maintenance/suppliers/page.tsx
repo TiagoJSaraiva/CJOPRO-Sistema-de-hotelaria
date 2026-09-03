@@ -8,6 +8,7 @@ import { getUserFromSession } from "../../../../lib/auth";
 import { getMaintenanceAccess } from "../access";
 import { MaintenanceSupplierManager } from "../_components/MaintenanceSupplierManager";
 import { maintenanceTabs } from "../tabs";
+import { maintenanceSuppliersGuide } from "../usageGuides";
 
 export default async function MaintenanceSuppliersPage() {
   const access = getMaintenanceAccess(await getUserFromSession());
@@ -27,6 +28,7 @@ export default async function MaintenanceSuppliersPage() {
       title="Fornecedores e contratos"
       activeTabKey="suppliers"
       tabs={maintenanceTabs(access)}
+      usageGuide={maintenanceSuppliersGuide}
     >
       <MaintenanceSupplierManager
         suppliers={suppliers}

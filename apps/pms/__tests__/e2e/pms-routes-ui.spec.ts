@@ -255,6 +255,23 @@ test.describe("PMS UI quality", () => {
       await page.getByLabel("Situação").selectOption("triaged");
       await page.getByRole("button", { name: "Filtrar" }).click();
       await expect(page).toHaveURL(/status=triaged/);
+
+      const guideTrigger = page.getByRole("button", {
+        name: "Guia desta página",
+      });
+      await guideTrigger.click();
+      const guide = page.getByRole("dialog", {
+        name: "Navegue pela manutenção",
+      });
+      await expect(guide).toBeVisible();
+      await expect(page.getByRole("button", { name: "Fechar" })).toBeFocused();
+      await auditAccessibility("central-manutencao-guia");
+      await stabilizeVisualState(page);
+      await expect(page).toHaveScreenshot("maintenance-guide.png");
+      await page.getByRole("button", { name: "Fechar" }).click();
+      await expect(guide).toBeHidden();
+      await expect(guideTrigger).toBeFocused();
+
       await auditAccessibility("central-manutencao");
       await stabilizeVisualState(page);
       await expect(page).toHaveScreenshot("maintenance-center.png");
@@ -320,6 +337,74 @@ test.describe("PMS UI quality", () => {
         page.getByRole("button", { name: "Exportar CSV detalhado" }),
       ).toBeEnabled();
       await auditAccessibility("indicadores-manutencao");
+    },
+  );
+
+  test(
+    "guias em todas as páginas de manutenção",
+    { tag: ["@a11y"] },
+    async ({ page, context, baseURL, auditAccessibility }) => {
+      test.setTimeout(120_000);
+      await preparePage(page);
+      await authenticate(
+        context,
+        baseURL || "http://127.0.0.1:3001",
+        "maintenance-e2e-token",
+      );
+
+      const pages = [
+        ["/dashboard/maintenance/view", "Navegue pela manutenção"],
+        ["/dashboard/maintenance/report", "Registre o problema"],
+        [
+          "/dashboard/maintenance/occurrences/97000000-0000-4000-8000-000000000001",
+          "Acompanhe uma ocorrência",
+        ],
+        [
+          "/dashboard/maintenance/finance?queue=approval",
+          "Trabalhe pelas filas financeiras",
+        ],
+        ["/dashboard/maintenance/agenda", "Acompanhe suas ordens"],
+        ["/dashboard/maintenance/preventive", "Antecipe manutenções"],
+        ["/dashboard/maintenance/suppliers", "Organize o atendimento externo"],
+        ["/dashboard/maintenance/settings", "Prepare os dados operacionais"],
+        ["/dashboard/maintenance/sla", "Defina compromissos de atendimento"],
+        [
+          "/dashboard/maintenance/notifications",
+          "Acompanhe exceções e vencimentos",
+        ],
+        ["/dashboard/maintenance/analytics", "Analise o desempenho"],
+        ["/dashboard/reservations/checkout", "Revise a saída por quarto"],
+      ] as const;
+
+      for (const [path, firstStep] of pages) {
+        await page.goto(path);
+        const trigger = page.getByRole("button", {
+          name: "Guia desta página",
+        });
+        await expect(trigger).toBeVisible();
+        await trigger.click();
+        const dialog = page.getByRole("dialog", { name: firstStep });
+        await expect(dialog).toBeVisible();
+        await auditAccessibility(`guia-${path.replaceAll(/[^a-z]+/gi, "-")}`);
+        await page.keyboard.press("Escape");
+        await expect(dialog).toBeHidden();
+        await expect(trigger).toBeFocused();
+      }
+
+      await page.goto(
+        "/dashboard/maintenance/occurrences/97000000-0000-4000-8000-000000000001",
+      );
+      const contextualHelp = page.getByRole("button", {
+        name: "Ajuda: Bloqueio do quarto",
+      });
+      await contextualHelp.focus();
+      await expect(page.getByRole("tooltip")).toContainText(
+        "não libera o quarto automaticamente",
+      );
+      await auditAccessibility("ajuda-contextual-manutencao");
+      await page.keyboard.press("Escape");
+      await expect(page.getByRole("tooltip")).toBeHidden();
+      await expect(contextualHelp).toBeFocused();
     },
   );
 });

@@ -511,7 +511,11 @@ export function MaintenanceOccurrenceWorkspace({
               placeholder="Instruções"
               className="pms-field-input"
             />
-            <select name="assigned_to" className="pms-field-input">
+            <select
+              name="assigned_to"
+              aria-label="Responsável pela nova ordem"
+              className="pms-field-input"
+            >
               <option value="">Sem responsável</option>
               {referenceData.assignable_users.map((user) => (
                 <option key={user.id} value={user.id}>
@@ -521,6 +525,7 @@ export function MaintenanceOccurrenceWorkspace({
             </select>
             <select
               name="priority"
+              aria-label="Prioridade da nova ordem"
               defaultValue={item.priority}
               className="pms-field-input"
             >

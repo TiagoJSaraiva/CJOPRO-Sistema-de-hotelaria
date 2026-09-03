@@ -8,6 +8,7 @@ import {
 import { getUserFromSession } from "../../../../lib/auth";
 import { getMaintenanceAccess } from "../access";
 import { maintenanceTabs } from "../tabs";
+import { maintenanceAgendaGuide } from "../usageGuides";
 
 export default async function MaintenanceAgendaPage() {
   const user = await getUserFromSession();
@@ -58,12 +59,13 @@ export default async function MaintenanceAgendaPage() {
       title="Minha agenda de manutenção"
       activeTabKey="agenda"
       tabs={maintenanceTabs(access)}
+      usageGuide={maintenanceAgendaGuide}
     >
       <p className="mb-5 text-sm text-slate-600">
         Tarefas priorizadas por prazo. Checklists e controles ficam no detalhe
         da ocorrência.
       </p>
-      <div className="grid gap-6">
+      <div className="grid gap-6" data-usage-guide="maintenance-agenda-groups">
         {groups.map((group) => (
           <section key={group.label} aria-labelledby={`agenda-${group.label}`}>
             <h2

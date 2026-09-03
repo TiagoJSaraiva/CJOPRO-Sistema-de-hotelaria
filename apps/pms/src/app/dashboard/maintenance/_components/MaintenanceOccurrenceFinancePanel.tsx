@@ -328,7 +328,11 @@ export function MaintenanceOccurrenceFinancePanel({
             }}
           >
             <h3 className="m-0">Novo custo</h3>
-            <select name="kind" className="pms-field-input">
+            <select
+              name="kind"
+              aria-label="Tipo do novo custo"
+              className="pms-field-input"
+            >
               <option value="material">Material</option>
               <option value="labor">Mão de obra</option>
               <option value="external_service">Serviço externo</option>
@@ -439,7 +443,11 @@ export function MaintenanceOccurrenceFinancePanel({
             }}
           >
             <h3 className="m-0">Nova recuperação ou dispensa</h3>
-            <select name="responsible_party" className="pms-field-input">
+            <select
+              name="responsible_party"
+              aria-label="Responsável pela recuperação"
+              className="pms-field-input"
+            >
               <option value="guest">Hóspede</option>
               <option value="supplier">Fornecedor/terceiro</option>
             </select>
