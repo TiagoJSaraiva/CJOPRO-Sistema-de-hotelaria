@@ -31,10 +31,14 @@ export function DashboardEntityPageShell({
         <section
           data-usage-guide={usageGuide ? `${usageGuide.id}-header` : undefined}
         >
-          <div className="flex flex-wrap items-center justify-between gap-3">
+          {usageGuide ? (
+            <div className="flex flex-wrap items-center justify-between gap-3">
+              <h1 className="pms-page-title">{title}</h1>
+              <UsageGuide definition={usageGuide} />
+            </div>
+          ) : (
             <h1 className="pms-page-title">{title}</h1>
-            {usageGuide ? <UsageGuide definition={usageGuide} /> : null}
-          </div>
+          )}
           {placeTabsInFilterBar ? null : (
             <PermissionTabs
               activeKey={activeTabKey}
