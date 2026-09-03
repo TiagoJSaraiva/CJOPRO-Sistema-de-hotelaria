@@ -7,6 +7,7 @@ import type {
 } from "@hotel/shared";
 import { useRouter } from "next/navigation";
 import { useMemo, useState } from "react";
+import { ContextHelp } from "../../_components/ContextHelp";
 
 type Props = { referenceData: AdminMaintenanceReferenceData };
 
@@ -126,7 +127,10 @@ export function MaintenanceReportForm({ referenceData }: Props) {
       action={submit}
       className="grid gap-4 rounded-xl border border-[#d7dce2] bg-white p-4 sm:p-6"
     >
-      <fieldset className="grid gap-2">
+      <fieldset
+        className="grid gap-2"
+        data-usage-guide="maintenance-report-target"
+      >
         <legend className="font-semibold">Alvo</legend>
         <div className="flex gap-4">
           <label>
@@ -164,9 +168,21 @@ export function MaintenanceReportForm({ referenceData }: Props) {
               ))}
             </select>
           </label>
-          <label className="grid gap-1">
-            Estadia relacionada (opcional)
-            <select name="stay_id" className="pms-field-input">
+          <div className="grid gap-1">
+            <span>
+              <label htmlFor="maintenance-report-stay">
+                Estadia relacionada (opcional)
+              </label>
+              <ContextHelp label="Estadia relacionada">
+                Vincule a estadia quando o problema foi identificado durante a
+                hospedagem. Isso preserva o contexto para apuração e checkout.
+              </ContextHelp>
+            </span>
+            <select
+              id="maintenance-report-stay"
+              name="stay_id"
+              className="pms-field-input"
+            >
               <option value="">Nenhuma</option>
               {stays.map((stay) => (
                 <option key={stay.id} value={stay.id}>
@@ -175,7 +191,7 @@ export function MaintenanceReportForm({ referenceData }: Props) {
                 </option>
               ))}
             </select>
-          </label>
+          </div>
         </>
       ) : (
         <label className="grid gap-1">
@@ -191,7 +207,10 @@ export function MaintenanceReportForm({ referenceData }: Props) {
           </select>
         </label>
       )}
-      <div className="grid gap-4 sm:grid-cols-3">
+      <div
+        className="grid gap-4 sm:grid-cols-3"
+        data-usage-guide="maintenance-report-classification"
+      >
         <label className="grid gap-1">
           Tipo
           <select name="kind" className="pms-field-input">
@@ -225,22 +244,34 @@ export function MaintenanceReportForm({ referenceData }: Props) {
           </select>
         </label>
       </div>
-      <label className="grid gap-1">
-        Descrição
-        <textarea
-          name="description"
-          required
-          minLength={5}
-          maxLength={4000}
-          rows={5}
-          className="pms-field-input"
-        />
-      </label>
-      <label>
-        <input name="blocking_recommended" type="checkbox" /> Recomendar
-        bloqueio do quarto
-      </label>
-      <label className="grid gap-1">
+      <div className="grid gap-3" data-usage-guide="maintenance-report-details">
+        <label className="grid gap-1">
+          Descrição
+          <textarea
+            name="description"
+            required
+            minLength={5}
+            maxLength={4000}
+            rows={5}
+            className="pms-field-input"
+          />
+        </label>
+        <div className="flex flex-wrap items-center gap-1">
+          <label>
+            <input name="blocking_recommended" type="checkbox" /> Recomendar
+            bloqueio do quarto
+          </label>
+          <ContextHelp label="Recomendação de bloqueio">
+            A recomendação sinaliza risco para a triagem, mas não retira o
+            quarto da disponibilidade. O bloqueio efetivo exige confirmação de
+            um usuário autorizado.
+          </ContextHelp>
+        </div>
+      </div>
+      <label
+        className="grid gap-1"
+        data-usage-guide="maintenance-report-evidence"
+      >
         Fotos opcionais (até 5, JPEG, PNG ou WebP, 10 MB cada)
         <input
           type="file"
@@ -258,6 +289,7 @@ export function MaintenanceReportForm({ referenceData }: Props) {
       ) : null}
       <button
         disabled={pending}
+        data-usage-guide="maintenance-report-submit"
         className="rounded-lg bg-[#102a43] px-4 py-3 font-semibold text-white disabled:opacity-60"
       >
         {pending ? "Registrando…" : "Registrar ocorrência"}

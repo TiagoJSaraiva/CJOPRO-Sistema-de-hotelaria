@@ -4,6 +4,7 @@ import { getMaintenanceReferenceData } from "../../../../lib/adminApi";
 import { getUserFromSession } from "../../../../lib/auth";
 import { MaintenanceReportForm } from "../_components/MaintenanceReportForm";
 import { getMaintenanceAccess } from "../access";
+import { maintenanceReportGuide } from "../usageGuides";
 
 export default async function MaintenanceReportPage() {
   const access = getMaintenanceAccess(await getUserFromSession());
@@ -19,6 +20,7 @@ export default async function MaintenanceReportPage() {
     <DashboardEntityPageShell
       title="Registrar ocorrência"
       activeTabKey="report"
+      usageGuide={maintenanceReportGuide}
       tabs={[
         {
           key: "all",

@@ -7,6 +7,7 @@ import {
 } from "../../../../lib/adminApi";
 import { getUserFromSession } from "../../../../lib/auth";
 import { getMaintenanceAccess } from "../access";
+import { maintenanceOverviewGuide } from "../usageGuides";
 
 type PageProps = {
   searchParams?: Promise<Record<string, string | string[] | undefined>>;
@@ -141,10 +142,12 @@ export default async function MaintenanceViewPage({ searchParams }: PageProps) {
       title="Manutenção"
       activeTabKey={activeTabKey}
       tabs={tabs}
+      usageGuide={maintenanceOverviewGuide}
     >
       <div
         className="grid gap-3 sm:grid-cols-2 lg:grid-cols-6"
         aria-label="Resumo de manutenção"
+        data-usage-guide="maintenance-overview-summary"
       >
         {[
           ["Abertas", summary.open],
@@ -166,6 +169,7 @@ export default async function MaintenanceViewPage({ searchParams }: PageProps) {
       <form
         className="mt-4 flex flex-wrap gap-3 rounded-xl border border-[#d7dce2] bg-white p-4"
         role="search"
+        data-usage-guide="maintenance-overview-filters"
       >
         <label className="grid gap-1 text-sm">
           Buscar
@@ -217,7 +221,10 @@ export default async function MaintenanceViewPage({ searchParams }: PageProps) {
           Filtrar
         </button>
       </form>
-      <div className="mt-4 grid gap-3">
+      <div
+        className="mt-4 grid gap-3"
+        data-usage-guide="maintenance-overview-list"
+      >
         {data.items.length ? (
           data.items.map((item) => (
             <Link

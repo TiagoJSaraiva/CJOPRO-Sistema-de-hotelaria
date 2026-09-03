@@ -28,7 +28,9 @@ export function DashboardEntityPageShell({
   return (
     <DashboardEntityTabsProvider value={{ activeTabKey, tabs }}>
       <section className="pms-page-stack">
-        <section>
+        <section
+          data-usage-guide={usageGuide ? `${usageGuide.id}-header` : undefined}
+        >
           <div className="flex flex-wrap items-center justify-between gap-3">
             <h1 className="pms-page-title">{title}</h1>
             {usageGuide ? <UsageGuide definition={usageGuide} /> : null}

@@ -7,6 +7,7 @@ import type {
   AdminMaintenanceSupplier,
 } from "@hotel/shared";
 import { useState } from "react";
+import { ContextHelp } from "../../_components/ContextHelp";
 
 type Access = {
   canCreate: boolean;
@@ -164,7 +165,10 @@ export function MaintenanceOccurrenceWorkspace({
 
   return (
     <div className="grid gap-4">
-      <section className="grid gap-3 rounded-xl border border-[#d7dce2] bg-white p-5 lg:grid-cols-[2fr_1fr]">
+      <section
+        className="grid gap-3 rounded-xl border border-[#d7dce2] bg-white p-5 lg:grid-cols-[2fr_1fr]"
+        data-usage-guide="maintenance-occurrence-summary"
+      >
         <div>
           <p className="m-0 text-sm text-[#52606d]">
             {item.code} · {item.category_name}
@@ -213,8 +217,17 @@ export function MaintenanceOccurrenceWorkspace({
         </p>
       ) : null}
 
-      <section className="rounded-xl border border-[#d7dce2] bg-white p-5">
-        <h2 className="mt-0">Ordens de trabalho</h2>
+      <section
+        className="rounded-xl border border-[#d7dce2] bg-white p-5"
+        data-usage-guide="maintenance-occurrence-orders"
+      >
+        <h2 className="mt-0">
+          Ordens de trabalho
+          <ContextHelp label="Inspeção de ordem">
+            Quando uma ordem exige inspeção, sua conclusão fica pendente até a
+            revisão por outro usuário autorizado.
+          </ContextHelp>
+        </h2>
         <div className="grid gap-3">
           {item.work_orders.map((order) => (
             <article
@@ -531,8 +544,18 @@ export function MaintenanceOccurrenceWorkspace({
       </section>
 
       <div className="grid gap-4 lg:grid-cols-2">
-        <section className="rounded-xl border border-[#d7dce2] bg-white p-5">
-          <h2 className="mt-0">Bloqueio do quarto</h2>
+        <section
+          className="rounded-xl border border-[#d7dce2] bg-white p-5"
+          data-usage-guide="maintenance-occurrence-block"
+        >
+          <h2 className="mt-0">
+            Bloqueio do quarto
+            <ContextHelp label="Bloqueio do quarto">
+              O bloqueio efetivo impede novas reservas e só termina com uma
+              liberação explícita. A data final planejada não libera o quarto
+              automaticamente.
+            </ContextHelp>
+          </h2>
           {item.room_blocks.map((block) => (
             <div key={block.id} className="mb-3 rounded-lg border p-3">
               {block.start_date} a {block.planned_end_date}
@@ -593,8 +616,18 @@ export function MaintenanceOccurrenceWorkspace({
             </form>
           ) : null}
         </section>
-        <section className="rounded-xl border border-[#d7dce2] bg-white p-5">
-          <h2 className="mt-0">Responsabilidade</h2>
+        <section
+          className="rounded-xl border border-[#d7dce2] bg-white p-5"
+          data-usage-guide="maintenance-occurrence-liability"
+        >
+          <h2 className="mt-0">
+            Responsabilidade
+            <ContextHelp label="Apuração de responsabilidade">
+              Uma suspeita não é uma cobrança. A responsabilidade deve ser
+              confirmada ou descartada por um usuário autorizado após a
+              apuração.
+            </ContextHelp>
+          </h2>
           <p>{item.liability_notes || "Sem observações."}</p>
           {access.canTriage &&
           item.kind === "damage" &&
@@ -645,7 +678,10 @@ export function MaintenanceOccurrenceWorkspace({
         </section>
       </div>
 
-      <section className="rounded-xl border border-[#d7dce2] bg-white p-5">
+      <section
+        className="rounded-xl border border-[#d7dce2] bg-white p-5"
+        data-usage-guide="maintenance-occurrence-evidence"
+      >
         <h2 className="mt-0">Fotos</h2>
         <div className="flex flex-wrap gap-2">
           {item.attachments.length ? (
@@ -696,7 +732,10 @@ export function MaintenanceOccurrenceWorkspace({
           </label>
         ) : null}
       </section>
-      <section className="rounded-xl border border-[#d7dce2] bg-white p-5">
+      <section
+        className="rounded-xl border border-[#d7dce2] bg-white p-5"
+        data-usage-guide="maintenance-occurrence-history"
+      >
         <h2 className="mt-0">Comentários e histórico</h2>
         <form
           className="mb-4 flex gap-2"
