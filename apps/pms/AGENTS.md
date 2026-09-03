@@ -15,5 +15,8 @@ Estas regras complementam o `AGENTS.md` raiz. Consulte a
   acionador.
 - Cubra lógica e componentes com Vitest/Testing Library. Mudanças nas superfícies
   E2E exigem Playwright funcional, visual e axe.
+- Toda nova `feat` visível deve seguir o padrão de tour e ajuda contextual de
+  [guias de uso](../../docs/usage-guides.md), respeitando permissões e estados
+  realmente renderizados.
 - Não atualize snapshots para tornar um teste verde. Inspecione expected, actual
   e diff e use `pnpm test:visual:update` apenas para mudanças deliberadas.

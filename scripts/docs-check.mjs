@@ -17,6 +17,7 @@ const REQUIRED_FILES = [
   "docs/development-guide.md",
   "docs/testing-strategy.md",
   "docs/ui-quality.md",
+  "docs/usage-guides.md",
   "AGENTS.md",
   ".github/AGENTS.md",
   "apps/backend-service/AGENTS.md",

@@ -2,6 +2,7 @@ import type { ReactNode } from "react";
 import { PermissionTabs, type PermissionTabItem } from "./PermissionTabs";
 import { DashboardEntityTabsProvider } from "./DashboardEntityTabsContext";
 import { shouldPlaceTabsInFilterBar } from "./DashboardEntityTabsLayout";
+import { UsageGuide, type UsageGuideDefinition } from "./UsageGuide";
 
 type DashboardEntityPageShellProps = {
   title: string;
@@ -9,6 +10,7 @@ type DashboardEntityPageShellProps = {
   tabs: PermissionTabItem[];
   status?: string;
   statusContent?: ReactNode;
+  usageGuide?: UsageGuideDefinition;
   children: ReactNode;
 };
 
@@ -18,6 +20,7 @@ export function DashboardEntityPageShell({
   tabs,
   status,
   statusContent,
+  usageGuide,
   children,
 }: DashboardEntityPageShellProps) {
   const placeTabsInFilterBar = shouldPlaceTabsInFilterBar(activeTabKey);
@@ -26,7 +29,10 @@ export function DashboardEntityPageShell({
     <DashboardEntityTabsProvider value={{ activeTabKey, tabs }}>
       <section className="pms-page-stack">
         <section>
-          <h1 className="pms-page-title">{title}</h1>
+          <div className="flex flex-wrap items-center justify-between gap-3">
+            <h1 className="pms-page-title">{title}</h1>
+            {usageGuide ? <UsageGuide definition={usageGuide} /> : null}
+          </div>
           {placeTabsInFilterBar ? null : (
             <PermissionTabs
               activeKey={activeTabKey}

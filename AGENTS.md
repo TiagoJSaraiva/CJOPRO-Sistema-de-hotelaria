@@ -100,6 +100,14 @@ eventuais contratos, tipos, migrations ou snapshots impactados.
 A matriz obrigatória e o conteúdo mínimo da seção estão na
 [política para novas features e correções](docs/testing-strategy.md#política-para-novas-features-e-correções).
 
+### Guia de uso obrigatório em features
+
+Toda `feat` com impacto visível no PMS deve conter uma seção **Guia de uso** no
+planejamento e entregar a orientação correspondente na própria interface.
+Features sem impacto em UI devem manter a seção com justificativa explícita de
+não aplicabilidade. Siga o conteúdo mínimo, os critérios de escolha e a proteção
+definidos em [guias de uso nas features do PMS](docs/usage-guides.md).
+
 Execute validações proporcionais conforme o
 [guia de contribuição](CONTRIBUTING.md). `pnpm check` é a gate mínima normal;
 mudanças visuais, de banco, dependências ou CI exigem as suítes adicionais do
@@ -110,5 +118,6 @@ mudanças visuais, de banco, dependências ou CI exigem as suítes adicionais do
 - comportamento solicitado implementado e coberto por testes relevantes;
 - lint, typecheck, build e checks de drift aplicáveis verdes;
 - nenhuma regressão de cobertura, segurança, visual ou acessibilidade;
+- guia de uso entregue ou não aplicabilidade justificada para toda `feat`;
 - diff revisado, sem artefatos temporários ou mudanças não relacionadas;
 - limitações, ações destrutivas locais e validações não executadas comunicadas.
