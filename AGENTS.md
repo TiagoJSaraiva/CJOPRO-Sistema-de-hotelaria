@@ -12,8 +12,7 @@ Leia também o [índice técnico](docs/README.md) e o
 3. Inspecione código, testes e configurações antes de escolher a solução.
 4. Preserve mudanças do usuário e mantenha o diff restrito ao pedido.
 
-Não faça commit, push, deploy, publicação ou alteração remota sem autorização
-explícita. Não apague arquivos, descarte mudanças ou reescreva histórico para
+Não apague arquivos, descarte mudanças ou reescreva histórico para
 resolver conflitos de escopo.
 
 ## Commits durante implementações
@@ -22,11 +21,6 @@ resolver conflitos de escopo.
   preferencialmente seguindo Conventional Commits.
 - Não é necessário criar commits para cada pequena alteração. Crie um ponto de
   commit quando um módulo de uma etapa estiver concluído e validado.
-- Antes de qualquer commit, apresente a mensagem proposta e peça autorização
-  explícita ao usuário. A autorização para implementar não autoriza o commit.
-- Quando o comando local `commit` estiver disponível, ele pode ser usado no
-  formato `commit "mensagem de commit"`; esse helper abstrai a inclusão das
-  mudanças e a criação do commit.
 - Uma anotação `.txt` incidental pode acompanhar o commit sem exigir separação,
   desde que não contenha segredo, dado pessoal ou conteúdo destrutivo.
 - A permissão para criar um commit não autoriza `push`, merge, rebase, deploy,
