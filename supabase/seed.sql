@@ -42,11 +42,17 @@ insert into public.customers (
   ('30000000-0000-4000-8000-000000000003', '10000000-0000-4000-8000-000000000002', 'Carla Exemplo', '33333333333', 'CPF', 'carla@guest.local', '+5511988880003', '1992-08-15', 'Brasileira', 'Cliente sintetico'),
   ('30000000-0000-4000-8000-000000000004', '10000000-0000-4000-8000-000000000002', 'Diego Exemplo', '44444444444', 'CPF', 'diego@guest.local', '+5511988880004', '1978-12-03', 'Brasileira', 'Cliente sintetico');
 
-insert into public.products (id, hotel_id, name, category, unit_price, status) values
-  ('40000000-0000-4000-8000-000000000001', '10000000-0000-4000-8000-000000000001', 'Agua mineral', 'Frigobar', 8.00, 'active'),
-  ('40000000-0000-4000-8000-000000000002', '10000000-0000-4000-8000-000000000001', 'Cafe da manha', 'Alimentacao', 45.00, 'active'),
-  ('40000000-0000-4000-8000-000000000003', '10000000-0000-4000-8000-000000000002', 'Agua de coco', 'Frigobar', 12.00, 'active'),
-  ('40000000-0000-4000-8000-000000000004', '10000000-0000-4000-8000-000000000002', 'Estacionamento', 'Servico', 35.00, 'active');
+insert into public.product_categories (id, hotel_id, name, display_order, is_active) values
+  ('41000000-0000-4000-8000-000000000001', '10000000-0000-4000-8000-000000000001', 'Frigobar', 1, true),
+  ('41000000-0000-4000-8000-000000000002', '10000000-0000-4000-8000-000000000001', 'Alimentacao', 2, true),
+  ('41000000-0000-4000-8000-000000000003', '10000000-0000-4000-8000-000000000002', 'Frigobar', 1, true),
+  ('41000000-0000-4000-8000-000000000004', '10000000-0000-4000-8000-000000000002', 'Servico', 2, true);
+
+insert into public.products (id, hotel_id, name, category_id, description, internal_code, kind, sales_unit, unit_price, status) values
+  ('40000000-0000-4000-8000-000000000001', '10000000-0000-4000-8000-000000000001', 'Agua mineral', '41000000-0000-4000-8000-000000000001', null, 'AGUA-001', 'physical', 'unit', 8.00, 'active'),
+  ('40000000-0000-4000-8000-000000000002', '10000000-0000-4000-8000-000000000001', 'Cafe da manha', '41000000-0000-4000-8000-000000000002', null, 'CAFE-001', 'service', 'person', 45.00, 'active'),
+  ('40000000-0000-4000-8000-000000000003', '10000000-0000-4000-8000-000000000002', 'Agua de coco', '41000000-0000-4000-8000-000000000003', null, 'COCO-001', 'physical', 'unit', 12.00, 'active'),
+  ('40000000-0000-4000-8000-000000000004', '10000000-0000-4000-8000-000000000002', 'Estacionamento', '41000000-0000-4000-8000-000000000004', null, 'ESTAC-001', 'service', 'daily', 35.00, 'active');
 
 insert into public.seasons (id, hotel_id, name, start_date, end_date, is_active) values
   ('50000000-0000-4000-8000-000000000001', '10000000-0000-4000-8000-000000000001', 'Temporada local Aurora', current_date - 30, current_date + 90, true),

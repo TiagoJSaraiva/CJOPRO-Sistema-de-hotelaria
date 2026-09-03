@@ -379,20 +379,62 @@ export type AdminFinancialTransactionUpdateInput =
 
 export type ProductStatus = "active" | "inactive";
 
+export type ProductKind = "physical" | "service";
+export type ProductSalesUnit =
+  "unit" | "portion" | "person" | "hour" | "daily" | "service";
+
+export type AdminProductCategory = {
+  id: string;
+  hotel_id: string;
+  name: string;
+  display_order: number;
+  is_active: boolean;
+  archived_at: string | null;
+  created_at?: string;
+  updated_at?: string;
+};
+
+export type AdminProductCategoryInput = {
+  name: string;
+  display_order?: number;
+  is_active?: boolean;
+};
+
+export type AdminCatalogAuditEvent = {
+  id: string;
+  hotel_id: string;
+  entity_type: "product" | "product_category";
+  entity_id: string;
+  actor_id: string | null;
+  actor_name: string | null;
+  action: string;
+  changes: Record<string, unknown>;
+  created_at: string;
+};
+
 export type AdminProduct = {
   id: string;
   hotel_id: string;
   name: string;
-  category: string | null;
+  category: AdminProductCategory;
+  description: string | null;
+  internal_code: string | null;
+  kind: ProductKind;
+  sales_unit: ProductSalesUnit;
   unit_price: number;
   status: ProductStatus;
+  archived_at: string | null;
   created_at?: string;
   updated_at?: string;
 };
 
 export type AdminProductCreateInput = {
   name: string;
-  category?: string | null;
+  category_id: string;
+  description?: string | null;
+  internal_code?: string | null;
+  kind: ProductKind;
+  sales_unit: ProductSalesUnit;
   unit_price: number;
   status?: ProductStatus;
 };

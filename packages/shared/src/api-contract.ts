@@ -208,10 +208,40 @@ const ProductStatusSchema = Type.Union([
   Type.Literal("active"),
   Type.Literal("inactive"),
 ]);
+const ProductKindSchema = Type.Union([
+  Type.Literal("physical"),
+  Type.Literal("service"),
+]);
+const ProductSalesUnitSchema = Type.Union([
+  Type.Literal("unit"),
+  Type.Literal("portion"),
+  Type.Literal("person"),
+  Type.Literal("hour"),
+  Type.Literal("daily"),
+  Type.Literal("service"),
+]);
+export const ProductCategoryBodySchema = Type.Object(
+  {
+    name: Type.String({ minLength: 1, maxLength: 120 }),
+    display_order: Type.Optional(Type.Integer({ minimum: 0 })),
+    is_active: Type.Optional(Type.Boolean()),
+  },
+  { ...strict, $id: "ProductCategoryInput" },
+);
+export const ProductCategoryUpdateSchema = Type.Partial(
+  ProductCategoryBodySchema,
+  { $id: "ProductCategoryUpdateInput" },
+);
 export const ProductBodySchema = Type.Object(
   {
-    name: Type.String(),
-    category: optionalNullable(Type.String()),
+    name: Type.String({ minLength: 1, maxLength: 160 }),
+    category_id: uuid(),
+    description: optionalNullable(Type.String({ maxLength: 1000 })),
+    internal_code: optionalNullable(
+      Type.String({ minLength: 1, maxLength: 80 }),
+    ),
+    kind: ProductKindSchema,
+    sales_unit: ProductSalesUnitSchema,
     unit_price: Type.Number({ minimum: 0 }),
     status: Type.Optional(ProductStatusSchema),
   },
@@ -464,12 +494,46 @@ export const ProductSchema = Type.Object(
     id: uuid(),
     hotel_id: uuid(),
     name: Type.String(),
-    category: nullable(Type.String()),
+    category: Type.Ref("ProductCategory"),
+    description: nullable(Type.String()),
+    internal_code: nullable(Type.String()),
+    kind: ProductKindSchema,
+    sales_unit: ProductSalesUnitSchema,
     unit_price: Type.Number(),
     status: ProductStatusSchema,
+    archived_at: nullable(dateTime()),
     ...timestamps,
   },
   { ...strict, $id: "Product" },
+);
+export const ProductCategorySchema = Type.Object(
+  {
+    id: uuid(),
+    hotel_id: uuid(),
+    name: Type.String(),
+    display_order: Type.Integer(),
+    is_active: Type.Boolean(),
+    archived_at: nullable(dateTime()),
+    ...timestamps,
+  },
+  { ...strict, $id: "ProductCategory" },
+);
+export const CatalogAuditEventSchema = Type.Object(
+  {
+    id: uuid(),
+    hotel_id: uuid(),
+    entity_type: Type.Union([
+      Type.Literal("product"),
+      Type.Literal("product_category"),
+    ]),
+    entity_id: uuid(),
+    actor_id: nullable(uuid()),
+    actor_name: nullable(Type.String()),
+    action: Type.String(),
+    changes: Type.Record(Type.String(), Type.Unknown()),
+    created_at: dateTime(),
+  },
+  { ...strict, $id: "CatalogAuditEvent" },
 );
 export const SeasonSchema = Type.Object(
   {
@@ -1947,6 +2011,8 @@ export const API_COMPONENT_SCHEMAS = [
   CustomerUpdateSchema,
   ProductBodySchema,
   ProductUpdateSchema,
+  ProductCategoryBodySchema,
+  ProductCategoryUpdateSchema,
   SeasonBodySchema,
   SeasonUpdateSchema,
   SeasonRoomRateBodySchema,
@@ -1968,6 +2034,8 @@ export const API_COMPONENT_SCHEMAS = [
   RoomSchema,
   CustomerSchema,
   ProductSchema,
+  ProductCategorySchema,
+  CatalogAuditEventSchema,
   SeasonSchema,
   SeasonRoomRateSchema,
   FinancialTransactionSchema,
@@ -2008,6 +2076,10 @@ const AuthHeadersSchema = Type.Object(
 );
 const IdParamsSchema = Type.Object({ id: uuid() }, strict);
 const OkSchema = Type.Object({ ok: Type.Boolean() }, strict);
+const IncludeArchivedQuerySchema = Type.Object(
+  { include_archived: Type.Optional(Type.Boolean()) },
+  strict,
+);
 const listSchema = (item: TSchema) =>
   Type.Object({ items: Type.Array(item) }, strict);
 const itemSchema = (item: TSchema) => Type.Object({ item }, strict);
@@ -2200,13 +2272,90 @@ export const API_ROUTE_CONTRACTS: Readonly<Record<string, ApiRouteContract>> = {
     CustomerBodySchema,
     CustomerUpdateSchema,
   ),
-  ...crud(
-    "Product",
+  "GET /admin/products": admin(
+    "listProducts",
     "Products",
-    "/admin/products",
-    ProductSchema,
-    ProductBodySchema,
-    ProductUpdateSchema,
+    "Lista produtos e serviços do catálogo do hotel ativo.",
+    listSchema(ProductSchema),
+    { querystring: IncludeArchivedQuerySchema },
+  ),
+  "POST /admin/products": route(
+    "createProduct",
+    "Products",
+    "Cria um produto ou serviço no catálogo do hotel ativo.",
+    {
+      headers: AuthHeadersSchema,
+      security: [{ bearerAuth: [] }],
+      body: ProductBodySchema,
+      response: { 201: itemSchema(ProductSchema), ...adminErrors },
+    },
+  ),
+  "PUT /admin/products/:id": admin(
+    "updateProduct",
+    "Products",
+    "Atualiza um produto ou serviço do hotel ativo.",
+    itemSchema(ProductSchema),
+    { params: IdParamsSchema, body: ProductUpdateSchema },
+  ),
+  "POST /admin/products/:id/archive": admin(
+    "archiveProduct",
+    "Products",
+    "Arquiva logicamente um item preservando seu histórico.",
+    itemSchema(ProductSchema),
+    { params: IdParamsSchema },
+  ),
+  "POST /admin/products/:id/restore": admin(
+    "restoreProduct",
+    "Products",
+    "Restaura um item previamente arquivado.",
+    itemSchema(ProductSchema),
+    { params: IdParamsSchema },
+  ),
+  "GET /admin/products/:id/history": admin(
+    "listProductHistory",
+    "Products",
+    "Lista a trilha imutável de alterações do item.",
+    listSchema(CatalogAuditEventSchema),
+    { params: IdParamsSchema },
+  ),
+  "GET /admin/product-categories": admin(
+    "listProductCategories",
+    "Products",
+    "Lista categorias do catálogo do hotel ativo.",
+    listSchema(ProductCategorySchema),
+    { querystring: IncludeArchivedQuerySchema },
+  ),
+  "POST /admin/product-categories": route(
+    "createProductCategory",
+    "Products",
+    "Cria uma categoria no catálogo do hotel ativo.",
+    {
+      headers: AuthHeadersSchema,
+      security: [{ bearerAuth: [] }],
+      body: ProductCategoryBodySchema,
+      response: { 201: itemSchema(ProductCategorySchema), ...adminErrors },
+    },
+  ),
+  "PUT /admin/product-categories/:id": admin(
+    "updateProductCategory",
+    "Products",
+    "Atualiza nome, ordem ou situação de uma categoria.",
+    itemSchema(ProductCategorySchema),
+    { params: IdParamsSchema, body: ProductCategoryUpdateSchema },
+  ),
+  "POST /admin/product-categories/:id/archive": admin(
+    "archiveProductCategory",
+    "Products",
+    "Arquiva logicamente uma categoria.",
+    itemSchema(ProductCategorySchema),
+    { params: IdParamsSchema },
+  ),
+  "POST /admin/product-categories/:id/restore": admin(
+    "restoreProductCategory",
+    "Products",
+    "Restaura uma categoria previamente arquivada.",
+    itemSchema(ProductCategorySchema),
+    { params: IdParamsSchema },
   ),
   ...crud(
     "Season",

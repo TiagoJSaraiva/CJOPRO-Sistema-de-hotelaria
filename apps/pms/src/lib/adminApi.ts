@@ -12,6 +12,9 @@ import {
   AdminPermissionCreateInput,
   AdminPermissionUpdateInput,
   AdminProduct,
+  AdminProductCategory,
+  AdminProductCategoryInput,
+  AdminCatalogAuditEvent,
   AdminProductCreateInput,
   AdminProductUpdateInput,
   AdminFinancialTransaction,
@@ -723,8 +726,49 @@ export function deleteFinancialTransaction(id: string): Promise<null> {
   return requestAdmin<never>(`/admin/financial-transactions/${id}`, "DELETE");
 }
 
-export function listProducts(): Promise<AdminProduct[]> {
-  return getAdminList<AdminProduct>("/admin/products");
+export function listProducts(includeArchived = false): Promise<AdminProduct[]> {
+  return getAdminList<AdminProduct>(
+    `/admin/products${includeArchived ? "?include_archived=true" : ""}`,
+  );
+}
+
+export function listProductCategories(
+  includeArchived = false,
+): Promise<AdminProductCategory[]> {
+  return getAdminList<AdminProductCategory>(
+    `/admin/product-categories${includeArchived ? "?include_archived=true" : ""}`,
+  );
+}
+
+export function createProductCategory(
+  payload: AdminProductCategoryInput,
+): Promise<AdminProductCategory | null> {
+  return requestAdmin<AdminProductCategory>(
+    "/admin/product-categories",
+    "POST",
+    payload,
+  );
+}
+
+export function updateProductCategory(
+  id: string,
+  payload: Partial<AdminProductCategoryInput>,
+): Promise<AdminProductCategory | null> {
+  return requestAdmin<AdminProductCategory>(
+    `/admin/product-categories/${id}`,
+    "PUT",
+    payload,
+  );
+}
+
+export function archiveProductCategory(
+  id: string,
+  archived: boolean,
+): Promise<AdminProductCategory | null> {
+  return requestAdmin<AdminProductCategory>(
+    `/admin/product-categories/${id}/${archived ? "archive" : "restore"}`,
+    "POST",
+  );
 }
 
 export function createProduct(
@@ -740,8 +784,20 @@ export function updateProduct(
   return requestAdmin<AdminProduct>(`/admin/products/${id}`, "PUT", payload);
 }
 
-export function deleteProduct(id: string): Promise<null> {
-  return requestAdmin<never>(`/admin/products/${id}`, "DELETE");
+export function setProductArchived(
+  id: string,
+  archived: boolean,
+): Promise<AdminProduct | null> {
+  return requestAdmin<AdminProduct>(
+    `/admin/products/${id}/${archived ? "archive" : "restore"}`,
+    "POST",
+  );
+}
+
+export function listProductHistory(
+  id: string,
+): Promise<AdminCatalogAuditEvent[]> {
+  return getAdminList<AdminCatalogAuditEvent>(`/admin/products/${id}/history`);
 }
 
 export function listSeasons(): Promise<AdminSeason[]> {

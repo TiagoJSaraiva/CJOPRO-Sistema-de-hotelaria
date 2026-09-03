@@ -1,6 +1,6 @@
 begin;
 
-select plan(110);
+select plan(117);
 
 select ok(to_regclass('public.room_blocks') is not null, 'room_blocks exists');
 
@@ -709,6 +709,26 @@ select ok(
     where entity_id = '97000000-0000-4000-8000-000000000001'
       and kind = 'sla_resolution' and threshold = 'resolution-breach:1'),
   'repeated SLA breach advances exactly at the 24-hour threshold'
+);
+
+select ok(to_regclass('public.product_categories') is not null and to_regclass('public.catalog_audit_events') is not null, 'catalog tables exist');
+select is((select count(*)::integer from public.products where category_id is null), 0, 'every product has a controlled category');
+select throws_ok(
+  $$ insert into public.product_categories(hotel_id, name) values ('10000000-0000-4000-8000-000000000001', 'frigobar') $$,
+  '23505', null, 'categories are unique without case sensitivity per hotel'
+);
+select throws_ok(
+  $$ update public.products set category_id = '41000000-0000-4000-8000-000000000003' where id = '40000000-0000-4000-8000-000000000001' $$,
+  '23514', null, 'products reject a category from another hotel'
+);
+select throws_ok(
+  $$ delete from public.products where id = '40000000-0000-4000-8000-000000000001' $$,
+  '23514', null, 'products cannot be hard deleted'
+);
+select ok(exists(select 1 from public.catalog_audit_events where entity_type = 'product' and entity_id = '40000000-0000-4000-8000-000000000001'), 'seed product has an immutable audit event');
+select throws_ok(
+  $$ update public.catalog_audit_events set action = 'altered' where id = (select id from public.catalog_audit_events limit 1) $$,
+  '23514', null, 'catalog audit events are immutable'
 );
 
 select * from finish();

@@ -1,11 +1,16 @@
 import { redirect } from "next/navigation";
 import { DashboardAccessDeniedCard } from "../../_components/DashboardAccessDeniedCard";
 import { DashboardEntityPageShell } from "../../_components/DashboardEntityPageShell";
-import { listProducts } from "../../../../lib/adminApi";
+import {
+  listProductCategories,
+  listProductHistory,
+  listProducts,
+} from "../../../../lib/adminApi";
 import { getUserFromSession } from "../../../../lib/auth";
 import { getProductsAccess, getProductsDefaultRoute } from "../access";
 import { ProductsViewFilterableSection } from "../_components/ProductsViewFilterableSection";
 import { ProductStatusMessage } from "../_components/ProductStatusMessage";
+import { productsCatalogGuide } from "../usageGuides";
 
 type ProductsViewPageProps = {
   searchParams?: Promise<{
@@ -37,25 +42,38 @@ export default async function ProductsViewPage({
     );
   }
 
-  const products = await listProducts();
+  const products = await listProducts(true);
+  const categories = await listProductCategories(true);
   const activeProductId = String(resolvedSearchParams?.productId || "").trim();
   const mode = resolvedSearchParams?.mode === "edit" ? "edit" : "view";
+
+  const history =
+    activeProductId && access.canRead
+      ? await listProductHistory(activeProductId)
+      : [];
 
   return (
     <DashboardEntityPageShell
       title="Produtos"
       activeTabKey="view"
+      usageGuide={productsCatalogGuide}
       tabs={[
         {
           key: "create",
-          label: "Criar produto",
+          label: "Novo item",
           href: "/dashboard/products/create",
           isVisible: access.canCreate,
         },
         {
           key: "view",
-          label: "Ver produtos",
+          label: "Catálogo",
           href: "/dashboard/products/view",
+          isVisible: access.canRead,
+        },
+        {
+          key: "categories",
+          label: "Categorias",
+          href: "/dashboard/products/categories",
           isVisible: access.canRead,
         },
       ]}
@@ -65,6 +83,8 @@ export default async function ProductsViewPage({
     >
       <ProductsViewFilterableSection
         products={products}
+        categories={categories}
+        history={history}
         canRead={access.canRead}
         canUpdate={access.canUpdate}
         canDelete={access.canDelete}

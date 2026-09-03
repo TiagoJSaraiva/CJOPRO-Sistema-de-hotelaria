@@ -10,6 +10,10 @@ const permissions = [
   "read_transactions",
   "update_transactions",
   "delete_transactions",
+  "create_product",
+  "read_product",
+  "update_product",
+  "delete_product",
 ];
 const maintenancePermissions = [
   ...permissions,
@@ -88,6 +92,76 @@ const customers = [
     notes: null,
     created_at: "2026-05-02T10:00:00.000Z",
     updated_at: "2026-05-02T10:00:00.000Z",
+  },
+];
+
+const productCategories = [
+  {
+    id: "category-frigobar",
+    hotel_id: "hotel-e2e",
+    name: "Frigobar",
+    display_order: 1,
+    is_active: true,
+    archived_at: null,
+    created_at: "2026-05-01T10:00:00.000Z",
+    updated_at: "2026-05-01T10:00:00.000Z",
+  },
+  {
+    id: "category-wellness",
+    hotel_id: "hotel-e2e",
+    name: "Bem-estar",
+    display_order: 2,
+    is_active: true,
+    archived_at: null,
+    created_at: "2026-05-01T10:00:00.000Z",
+    updated_at: "2026-05-01T10:00:00.000Z",
+  },
+];
+
+const products = [
+  {
+    id: "product-coffee",
+    hotel_id: "hotel-e2e",
+    name: "Café espresso",
+    category: productCategories[0],
+    description: "Café preparado na hora.",
+    internal_code: "CAF-001",
+    kind: "physical",
+    sales_unit: "unit",
+    unit_price: 8,
+    status: "active",
+    archived_at: null,
+    created_at: "2026-05-01T10:00:00.000Z",
+    updated_at: "2026-05-02T10:00:00.000Z",
+  },
+  {
+    id: "product-massage",
+    hotel_id: "hotel-e2e",
+    name: "Massagem relaxante",
+    category: productCategories[1],
+    description: "Sessão de cinquenta minutos fornecida pelo hotel.",
+    internal_code: "SPA-050",
+    kind: "service",
+    sales_unit: "service",
+    unit_price: 180,
+    status: "active",
+    archived_at: null,
+    created_at: "2026-05-01T10:00:00.000Z",
+    updated_at: "2026-05-01T10:00:00.000Z",
+  },
+];
+
+const productHistory = [
+  {
+    id: "history-product-coffee",
+    hotel_id: "hotel-e2e",
+    entity_type: "product",
+    entity_id: "product-coffee",
+    actor_id: "user-e2e",
+    actor_name: "Marina Costa",
+    action: "updated",
+    changes: { before: { unit_price: 7 }, after: { unit_price: 8 } },
+    created_at: "2026-05-02T10:00:00.000Z",
   },
 ];
 
@@ -385,6 +459,24 @@ const server = http.createServer(async (request, response) => {
 
   if (method === "GET" && url.pathname === "/admin/customers") {
     sendJson(response, 200, { items: customers });
+    return;
+  }
+
+  if (method === "GET" && url.pathname === "/admin/products") {
+    sendJson(response, 200, { items: products });
+    return;
+  }
+
+  if (method === "GET" && url.pathname === "/admin/product-categories") {
+    sendJson(response, 200, { items: productCategories });
+    return;
+  }
+
+  if (
+    method === "GET" &&
+    url.pathname === "/admin/products/product-coffee/history"
+  ) {
+    sendJson(response, 200, { items: productHistory });
     return;
   }
 

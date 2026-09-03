@@ -1,7 +1,11 @@
 "use client";
 
 import { useMemo } from "react";
-import type { AdminProduct } from "@hotel/shared";
+import type {
+  AdminCatalogAuditEvent,
+  AdminProduct,
+  AdminProductCategory,
+} from "@hotel/shared";
 import {
   DEFAULT_PRODUCT_VIEW_FILTERS,
   applyProductViewFilters,
@@ -15,6 +19,8 @@ import { ProductListItem } from "./ProductListItem";
 
 type ProductsViewFilterableSectionProps = {
   products: AdminProduct[];
+  categories: AdminProductCategory[];
+  history: AdminCatalogAuditEvent[];
   canRead: boolean;
   canUpdate: boolean;
   canDelete: boolean;
@@ -25,6 +31,8 @@ type ProductsViewFilterableSectionProps = {
 
 export function ProductsViewFilterableSection({
   products,
+  categories,
+  history,
   canRead,
   canUpdate,
   canDelete,
@@ -67,6 +75,8 @@ export function ProductsViewFilterableSection({
       renderItem={(product) => (
         <ProductListItem
           product={product}
+          categories={categories}
+          history={activeProductId === product.id ? history : []}
           canRead={canRead}
           canUpdate={canUpdate}
           canDelete={canDelete}
@@ -75,9 +85,12 @@ export function ProductsViewFilterableSection({
         />
       )}
       filters={
-        <div className="grid grid-cols-1 gap-[0.75rem] md:grid-cols-2 xl:grid-cols-4">
+        <div
+          className="grid grid-cols-1 gap-[0.75rem] md:grid-cols-2 xl:grid-cols-4"
+          data-usage-guide="products-filters"
+        >
           <label className="pms-field">
-            <span>Nome ou categoria</span>
+            <span>Nome, código ou categoria</span>
             <input
               value={draftFilters.search}
               onChange={(event) =>
@@ -86,6 +99,58 @@ export function ProductsViewFilterableSection({
               placeholder="Ex.: cafe, frigobar"
               className={viewFiltersFieldClassName}
             />
+          </label>
+
+          <label className="pms-field">
+            <span>Categoria</span>
+            <select
+              value={draftFilters.categoryId}
+              onChange={(event) =>
+                updateDraftFilter("categoryId", event.target.value)
+              }
+              className={viewFiltersFieldClassName}
+            >
+              <option value="">Todas</option>
+              {categories.map((category) => (
+                <option key={category.id} value={category.id}>
+                  {category.name}
+                </option>
+              ))}
+            </select>
+          </label>
+          <label className="pms-field">
+            <span>Tipo</span>
+            <select
+              value={draftFilters.kind}
+              onChange={(event) =>
+                updateDraftFilter(
+                  "kind",
+                  event.target.value as ProductViewFilters["kind"],
+                )
+              }
+              className={viewFiltersFieldClassName}
+            >
+              <option value="all">Todos</option>
+              <option value="physical">Produto físico</option>
+              <option value="service">Serviço</option>
+            </select>
+          </label>
+          <label className="pms-field">
+            <span>Arquivamento</span>
+            <select
+              value={draftFilters.archived}
+              onChange={(event) =>
+                updateDraftFilter(
+                  "archived",
+                  event.target.value as ProductViewFilters["archived"],
+                )
+              }
+              className={viewFiltersFieldClassName}
+            >
+              <option value="active">Não arquivados</option>
+              <option value="archived">Arquivados</option>
+              <option value="all">Todos</option>
+            </select>
           </label>
 
           <label className="pms-field">

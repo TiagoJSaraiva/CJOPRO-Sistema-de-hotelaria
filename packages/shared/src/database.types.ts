@@ -9,6 +9,54 @@ export type Json =
 export type Database = {
   public: {
     Tables: {
+      catalog_audit_events: {
+        Row: {
+          action: string
+          actor_id: string | null
+          changes: Json
+          created_at: string
+          entity_id: string
+          entity_type: Database["public"]["Enums"]["catalog_audit_entity"]
+          hotel_id: string
+          id: string
+        }
+        Insert: {
+          action: string
+          actor_id?: string | null
+          changes?: Json
+          created_at?: string
+          entity_id: string
+          entity_type: Database["public"]["Enums"]["catalog_audit_entity"]
+          hotel_id: string
+          id?: string
+        }
+        Update: {
+          action?: string
+          actor_id?: string | null
+          changes?: Json
+          created_at?: string
+          entity_id?: string
+          entity_type?: Database["public"]["Enums"]["catalog_audit_entity"]
+          hotel_id?: string
+          id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "catalog_audit_events_actor_id_fkey"
+            columns: ["actor_id"]
+            isOneToOne: false
+            referencedRelation: "users"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "catalog_audit_events_hotel_id_fkey"
+            columns: ["hotel_id"]
+            isOneToOne: false
+            referencedRelation: "hotels"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       customers: {
         Row: {
           birth_date: string
@@ -2559,43 +2607,126 @@ export type Database = {
         }
         Relationships: []
       }
-      products: {
+      product_categories: {
         Row: {
-          category: string | null
+          archived_at: string | null
           created_at: string
+          display_order: number
           hotel_id: string
           id: string
+          is_active: boolean
+          last_changed_by: string | null
           name: string
+          updated_at: string
+        }
+        Insert: {
+          archived_at?: string | null
+          created_at?: string
+          display_order?: number
+          hotel_id: string
+          id?: string
+          is_active?: boolean
+          last_changed_by?: string | null
+          name: string
+          updated_at?: string
+        }
+        Update: {
+          archived_at?: string | null
+          created_at?: string
+          display_order?: number
+          hotel_id?: string
+          id?: string
+          is_active?: boolean
+          last_changed_by?: string | null
+          name?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "product_categories_hotel_id_fkey"
+            columns: ["hotel_id"]
+            isOneToOne: false
+            referencedRelation: "hotels"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "product_categories_last_changed_by_fkey"
+            columns: ["last_changed_by"]
+            isOneToOne: false
+            referencedRelation: "users"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      products: {
+        Row: {
+          archived_at: string | null
+          category_id: string
+          created_at: string
+          description: string | null
+          hotel_id: string
+          id: string
+          internal_code: string | null
+          kind: Database["public"]["Enums"]["product_kind"]
+          last_changed_by: string | null
+          name: string
+          sales_unit: Database["public"]["Enums"]["product_sales_unit"]
           status: Database["public"]["Enums"]["product_status"]
           unit_price: number
           updated_at: string
         }
         Insert: {
-          category?: string | null
+          archived_at?: string | null
+          category_id: string
           created_at?: string
+          description?: string | null
           hotel_id: string
           id?: string
+          internal_code?: string | null
+          kind?: Database["public"]["Enums"]["product_kind"]
+          last_changed_by?: string | null
           name: string
+          sales_unit?: Database["public"]["Enums"]["product_sales_unit"]
           status?: Database["public"]["Enums"]["product_status"]
           unit_price: number
           updated_at?: string
         }
         Update: {
-          category?: string | null
+          archived_at?: string | null
+          category_id?: string
           created_at?: string
+          description?: string | null
           hotel_id?: string
           id?: string
+          internal_code?: string | null
+          kind?: Database["public"]["Enums"]["product_kind"]
+          last_changed_by?: string | null
           name?: string
+          sales_unit?: Database["public"]["Enums"]["product_sales_unit"]
           status?: Database["public"]["Enums"]["product_status"]
           unit_price?: number
           updated_at?: string
         }
         Relationships: [
           {
+            foreignKeyName: "products_category_hotel_fkey"
+            columns: ["category_id", "hotel_id"]
+            isOneToOne: false
+            referencedRelation: "product_categories"
+            referencedColumns: ["id", "hotel_id"]
+          },
+          {
             foreignKeyName: "products_hotel_id_fkey"
             columns: ["hotel_id"]
             isOneToOne: false
             referencedRelation: "hotels"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "products_last_changed_by_fkey"
+            columns: ["last_changed_by"]
+            isOneToOne: false
+            referencedRelation: "users"
             referencedColumns: ["id"]
           },
         ]
@@ -3838,6 +3969,7 @@ export type Database = {
       }
     }
     Enums: {
+      catalog_audit_entity: "product" | "product_category"
       maintenance_asset_lifecycle: "active" | "out_of_service" | "retired"
       maintenance_automation_status: "running" | "completed" | "failed"
       maintenance_contract_kind: "fixed" | "per_service" | "warranty" | "other"
@@ -3918,6 +4050,14 @@ export type Database = {
         | "completed"
         | "canceled"
       payment_status: "pending" | "partial" | "paid" | "refunded"
+      product_kind: "physical" | "service"
+      product_sales_unit:
+        | "unit"
+        | "portion"
+        | "person"
+        | "hour"
+        | "daily"
+        | "service"
       product_status: "active" | "inactive"
       reservation_source: "front_desk" | "website" | "phone" | "agency"
       reservation_status:
@@ -4079,6 +4219,7 @@ export type CompositeTypes<
 export const Constants = {
   public: {
     Enums: {
+      catalog_audit_entity: ["product", "product_category"],
       maintenance_asset_lifecycle: ["active", "out_of_service", "retired"],
       maintenance_automation_status: ["running", "completed", "failed"],
       maintenance_contract_kind: ["fixed", "per_service", "warranty", "other"],
@@ -4169,6 +4310,15 @@ export const Constants = {
         "canceled",
       ],
       payment_status: ["pending", "partial", "paid", "refunded"],
+      product_kind: ["physical", "service"],
+      product_sales_unit: [
+        "unit",
+        "portion",
+        "person",
+        "hour",
+        "daily",
+        "service",
+      ],
       product_status: ["active", "inactive"],
       reservation_source: ["front_desk", "website", "phone", "agency"],
       reservation_status: [

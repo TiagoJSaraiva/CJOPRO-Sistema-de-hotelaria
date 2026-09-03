@@ -16,6 +16,7 @@ type DashboardEntityActionButtonsProps = {
   editDisabledTitle?: string;
   deleteDisabled?: boolean;
   deleteDisabledTitle?: string;
+  deleteLabel?: string;
 };
 
 const baseButtonClassName = "rounded-lg px-[0.65rem] py-[0.45rem]";
@@ -34,6 +35,7 @@ export function DashboardEntityActionButtons({
   editDisabledTitle,
   deleteDisabled = false,
   deleteDisabledTitle,
+  deleteLabel = "Apagar dados",
 }: DashboardEntityActionButtonsProps) {
   return (
     <>
@@ -83,7 +85,7 @@ export function DashboardEntityActionButtons({
             type="submit"
             className={`${baseButtonClassName} border border-[#c83a3a] bg-white text-[#b00020]`}
           >
-            Apagar dados
+            {deleteLabel}
           </button>
         </form>
       ) : null}
@@ -95,7 +97,7 @@ export function DashboardEntityActionButtons({
           title={deleteDisabledTitle}
           className={`${baseButtonClassName} cursor-not-allowed border border-[#f1a1a1] bg-[#fff6f6] text-[#b45353]`}
         >
-          Apagar dados
+          {deleteLabel}
         </button>
       ) : null}
     </>

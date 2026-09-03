@@ -233,6 +233,63 @@ test.describe("PMS UI quality", () => {
   );
 
   test(
+    "catálogo próprio e categorias",
+    { tag: TEST_TAGS },
+    async ({ page, context, baseURL, auditAccessibility }) => {
+      const browserErrors: string[] = [];
+      page.on("console", (message) => {
+        if (message.type() === "error") browserErrors.push(message.text());
+      });
+      page.on("pageerror", (error) => browserErrors.push(error.message));
+      await preparePage(page);
+      await authenticate(context, baseURL || "http://127.0.0.1:3001");
+      await page.goto(
+        "/dashboard/products/view?productId=product-coffee&mode=view",
+      );
+
+      await expect(
+        page.getByRole("heading", { name: "Produtos" }),
+      ).toBeVisible();
+      await expect(page.getByText("Café espresso")).toBeVisible();
+      await expect(page.getByText(/CAF-001/)).toBeVisible();
+      await page.getByRole("tab", { name: "Informações" }).focus();
+      await page.keyboard.press("ArrowRight");
+      await expect(page.getByRole("tab", { name: "Preço" })).toBeFocused();
+      await page.keyboard.press("ArrowRight");
+      await expect(page.getByRole("tab", { name: "Histórico" })).toBeFocused();
+      await expect(
+        page.getByRole("listitem").filter({ hasText: "Marina Costa" }),
+      ).toBeVisible();
+
+      const filterTrigger = page.getByRole("button", { name: "Filtrar dados" });
+      await filterTrigger.focus();
+      await page.keyboard.press("Enter");
+      const dialog = page.getByRole("dialog", { name: "Filtros de produtos" });
+      await expect(dialog).toBeVisible();
+      await page.getByLabel("Tipo").selectOption("service");
+      await page.getByRole("button", { name: "Aplicar filtros" }).click();
+      await expect(page.getByText("Massagem relaxante")).toBeVisible();
+      await expect(page.getByText("Café espresso")).toBeHidden();
+
+      await auditAccessibility("catalogo-proprio");
+      await stabilizeVisualState(page);
+      await expect(page).toHaveScreenshot("products-catalog.png");
+
+      await page.getByRole("link", { name: "Categorias" }).click();
+      await expect(
+        page.getByRole("heading", { name: "Categorias de produtos" }),
+      ).toBeVisible();
+      await expect(
+        page.locator('input[name="name"][value="Frigobar"]'),
+      ).toBeVisible();
+      await auditAccessibility("categorias-produtos");
+      expect(browserErrors).toEqual([]);
+      await stabilizeVisualState(page);
+      await expect(page).toHaveScreenshot("product-categories.png");
+    },
+  );
+
+  test(
     "central de manutenção",
     { tag: TEST_TAGS },
     async ({ page, context, baseURL, auditAccessibility }) => {

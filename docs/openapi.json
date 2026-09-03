@@ -244,12 +244,81 @@
       "def-14": {
         "additionalProperties": false,
         "properties": {
-          "category": {
+          "category_id": {
+            "format": "uuid",
+            "type": "string"
+          },
+          "description": {
+            "maxLength": 1000,
             "nullable": true,
             "type": "string"
           },
-          "name": {
+          "internal_code": {
+            "maxLength": 80,
+            "minLength": 1,
+            "nullable": true,
             "type": "string"
+          },
+          "kind": {
+            "anyOf": [
+              {
+                "enum": [
+                  "physical"
+                ],
+                "type": "string"
+              },
+              {
+                "enum": [
+                  "service"
+                ],
+                "type": "string"
+              }
+            ]
+          },
+          "name": {
+            "maxLength": 160,
+            "minLength": 1,
+            "type": "string"
+          },
+          "sales_unit": {
+            "anyOf": [
+              {
+                "enum": [
+                  "unit"
+                ],
+                "type": "string"
+              },
+              {
+                "enum": [
+                  "portion"
+                ],
+                "type": "string"
+              },
+              {
+                "enum": [
+                  "person"
+                ],
+                "type": "string"
+              },
+              {
+                "enum": [
+                  "hour"
+                ],
+                "type": "string"
+              },
+              {
+                "enum": [
+                  "daily"
+                ],
+                "type": "string"
+              },
+              {
+                "enum": [
+                  "service"
+                ],
+                "type": "string"
+              }
+            ]
           },
           "status": {
             "anyOf": [
@@ -274,6 +343,9 @@
         },
         "required": [
           "name",
+          "category_id",
+          "kind",
+          "sales_unit",
           "unit_price"
         ],
         "title": "ProductCreateInput",
@@ -281,12 +353,81 @@
       },
       "def-15": {
         "properties": {
-          "category": {
+          "category_id": {
+            "format": "uuid",
+            "type": "string"
+          },
+          "description": {
+            "maxLength": 1000,
             "nullable": true,
             "type": "string"
           },
-          "name": {
+          "internal_code": {
+            "maxLength": 80,
+            "minLength": 1,
+            "nullable": true,
             "type": "string"
+          },
+          "kind": {
+            "anyOf": [
+              {
+                "enum": [
+                  "physical"
+                ],
+                "type": "string"
+              },
+              {
+                "enum": [
+                  "service"
+                ],
+                "type": "string"
+              }
+            ]
+          },
+          "name": {
+            "maxLength": 160,
+            "minLength": 1,
+            "type": "string"
+          },
+          "sales_unit": {
+            "anyOf": [
+              {
+                "enum": [
+                  "unit"
+                ],
+                "type": "string"
+              },
+              {
+                "enum": [
+                  "portion"
+                ],
+                "type": "string"
+              },
+              {
+                "enum": [
+                  "person"
+                ],
+                "type": "string"
+              },
+              {
+                "enum": [
+                  "hour"
+                ],
+                "type": "string"
+              },
+              {
+                "enum": [
+                  "daily"
+                ],
+                "type": "string"
+              },
+              {
+                "enum": [
+                  "service"
+                ],
+                "type": "string"
+              }
+            ]
           },
           "status": {
             "anyOf": [
@@ -315,6 +456,46 @@
       "def-16": {
         "additionalProperties": false,
         "properties": {
+          "display_order": {
+            "minimum": 0,
+            "type": "integer"
+          },
+          "is_active": {
+            "type": "boolean"
+          },
+          "name": {
+            "maxLength": 120,
+            "minLength": 1,
+            "type": "string"
+          }
+        },
+        "required": [
+          "name"
+        ],
+        "title": "ProductCategoryInput",
+        "type": "object"
+      },
+      "def-17": {
+        "properties": {
+          "display_order": {
+            "minimum": 0,
+            "type": "integer"
+          },
+          "is_active": {
+            "type": "boolean"
+          },
+          "name": {
+            "maxLength": 120,
+            "minLength": 1,
+            "type": "string"
+          }
+        },
+        "title": "ProductCategoryUpdateInput",
+        "type": "object"
+      },
+      "def-18": {
+        "additionalProperties": false,
+        "properties": {
           "end_date": {
             "format": "date",
             "type": "string"
@@ -338,7 +519,7 @@
         "title": "SeasonCreateInput",
         "type": "object"
       },
-      "def-17": {
+      "def-19": {
         "properties": {
           "end_date": {
             "format": "date",
@@ -356,46 +537,6 @@
           }
         },
         "title": "SeasonUpdateInput",
-        "type": "object"
-      },
-      "def-18": {
-        "additionalProperties": false,
-        "properties": {
-          "daily_rate": {
-            "minimum": 0,
-            "type": "number"
-          },
-          "room_type": {
-            "type": "string"
-          },
-          "season_id": {
-            "format": "uuid",
-            "type": "string"
-          }
-        },
-        "required": [
-          "season_id",
-          "room_type",
-          "daily_rate"
-        ],
-        "title": "SeasonRoomRateCreateInput",
-        "type": "object"
-      },
-      "def-19": {
-        "properties": {
-          "daily_rate": {
-            "minimum": 0,
-            "type": "number"
-          },
-          "room_type": {
-            "type": "string"
-          },
-          "season_id": {
-            "format": "uuid",
-            "type": "string"
-          }
-        },
-        "title": "SeasonRoomRateUpdateInput",
         "type": "object"
       },
       "def-2": {
@@ -492,6 +633,46 @@
         "type": "object"
       },
       "def-20": {
+        "additionalProperties": false,
+        "properties": {
+          "daily_rate": {
+            "minimum": 0,
+            "type": "number"
+          },
+          "room_type": {
+            "type": "string"
+          },
+          "season_id": {
+            "format": "uuid",
+            "type": "string"
+          }
+        },
+        "required": [
+          "season_id",
+          "room_type",
+          "daily_rate"
+        ],
+        "title": "SeasonRoomRateCreateInput",
+        "type": "object"
+      },
+      "def-21": {
+        "properties": {
+          "daily_rate": {
+            "minimum": 0,
+            "type": "number"
+          },
+          "room_type": {
+            "type": "string"
+          },
+          "season_id": {
+            "format": "uuid",
+            "type": "string"
+          }
+        },
+        "title": "SeasonRoomRateUpdateInput",
+        "type": "object"
+      },
+      "def-22": {
         "additionalProperties": false,
         "properties": {
           "amount": {
@@ -609,7 +790,7 @@
         "title": "FinancialTransactionCreateInput",
         "type": "object"
       },
-      "def-21": {
+      "def-23": {
         "properties": {
           "amount": {
             "minimum": 0,
@@ -721,7 +902,7 @@
         "title": "FinancialTransactionUpdateInput",
         "type": "object"
       },
-      "def-22": {
+      "def-24": {
         "additionalProperties": false,
         "properties": {
           "booking_customer": {
@@ -887,7 +1068,7 @@
         "title": "CalendarBookingCreateInput",
         "type": "object"
       },
-      "def-23": {
+      "def-25": {
         "additionalProperties": false,
         "properties": {
           "allocations": {
@@ -937,7 +1118,7 @@
         "title": "StayPaymentCreateInput",
         "type": "object"
       },
-      "def-24": {
+      "def-26": {
         "additionalProperties": false,
         "properties": {
           "allocations": {
@@ -1156,7 +1337,7 @@
         "title": "StayFolio",
         "type": "object"
       },
-      "def-25": {
+      "def-27": {
         "additionalProperties": false,
         "properties": {
           "blocking_recommended": {
@@ -1273,7 +1454,7 @@
         "title": "MaintenanceOccurrenceCreateInput",
         "type": "object"
       },
-      "def-26": {
+      "def-28": {
         "additionalProperties": false,
         "properties": {
           "assigned_to": {
@@ -1335,7 +1516,7 @@
         "title": "MaintenanceWorkOrderCreateInput",
         "type": "object"
       },
-      "def-27": {
+      "def-29": {
         "additionalProperties": false,
         "properties": {
           "actual_amount": {
@@ -1425,7 +1606,93 @@
         "title": "MaintenanceCostItemInput",
         "type": "object"
       },
-      "def-28": {
+      "def-3": {
+        "properties": {
+          "address_complement": {
+            "nullable": true,
+            "type": "string"
+          },
+          "address_line": {
+            "nullable": true,
+            "type": "string"
+          },
+          "address_number": {
+            "nullable": true,
+            "type": "string"
+          },
+          "checkin_time_limit": {
+            "nullable": true,
+            "type": "string"
+          },
+          "checkin_time_start": {
+            "nullable": true,
+            "type": "string"
+          },
+          "checkout_time_limit": {
+            "nullable": true,
+            "type": "string"
+          },
+          "checkout_time_start": {
+            "nullable": true,
+            "type": "string"
+          },
+          "city": {
+            "nullable": true,
+            "type": "string"
+          },
+          "country": {
+            "nullable": true,
+            "type": "string"
+          },
+          "currency": {
+            "nullable": true,
+            "type": "string"
+          },
+          "district": {
+            "nullable": true,
+            "type": "string"
+          },
+          "email": {
+            "format": "email",
+            "nullable": true,
+            "type": "string"
+          },
+          "is_active": {
+            "type": "boolean"
+          },
+          "legal_name": {
+            "type": "string"
+          },
+          "name": {
+            "type": "string"
+          },
+          "phone": {
+            "nullable": true,
+            "type": "string"
+          },
+          "slug": {
+            "type": "string"
+          },
+          "state": {
+            "nullable": true,
+            "type": "string"
+          },
+          "tax_id": {
+            "type": "string"
+          },
+          "timezone": {
+            "nullable": true,
+            "type": "string"
+          },
+          "zip_code": {
+            "nullable": true,
+            "type": "string"
+          }
+        },
+        "title": "HotelUpdateInput",
+        "type": "object"
+      },
+      "def-30": {
         "additionalProperties": false,
         "properties": {
           "charge_amount": {
@@ -1491,7 +1758,7 @@
         "title": "MaintenanceRecoveryInput",
         "type": "object"
       },
-      "def-29": {
+      "def-31": {
         "additionalProperties": false,
         "properties": {
           "assigned_to": {
@@ -1665,93 +1932,7 @@
         "title": "MaintenancePreventivePlanInput",
         "type": "object"
       },
-      "def-3": {
-        "properties": {
-          "address_complement": {
-            "nullable": true,
-            "type": "string"
-          },
-          "address_line": {
-            "nullable": true,
-            "type": "string"
-          },
-          "address_number": {
-            "nullable": true,
-            "type": "string"
-          },
-          "checkin_time_limit": {
-            "nullable": true,
-            "type": "string"
-          },
-          "checkin_time_start": {
-            "nullable": true,
-            "type": "string"
-          },
-          "checkout_time_limit": {
-            "nullable": true,
-            "type": "string"
-          },
-          "checkout_time_start": {
-            "nullable": true,
-            "type": "string"
-          },
-          "city": {
-            "nullable": true,
-            "type": "string"
-          },
-          "country": {
-            "nullable": true,
-            "type": "string"
-          },
-          "currency": {
-            "nullable": true,
-            "type": "string"
-          },
-          "district": {
-            "nullable": true,
-            "type": "string"
-          },
-          "email": {
-            "format": "email",
-            "nullable": true,
-            "type": "string"
-          },
-          "is_active": {
-            "type": "boolean"
-          },
-          "legal_name": {
-            "type": "string"
-          },
-          "name": {
-            "type": "string"
-          },
-          "phone": {
-            "nullable": true,
-            "type": "string"
-          },
-          "slug": {
-            "type": "string"
-          },
-          "state": {
-            "nullable": true,
-            "type": "string"
-          },
-          "tax_id": {
-            "type": "string"
-          },
-          "timezone": {
-            "nullable": true,
-            "type": "string"
-          },
-          "zip_code": {
-            "nullable": true,
-            "type": "string"
-          }
-        },
-        "title": "HotelUpdateInput",
-        "type": "object"
-      },
-      "def-30": {
+      "def-32": {
         "additionalProperties": false,
         "properties": {
           "address_complement": {
@@ -1869,7 +2050,7 @@
         "title": "Hotel",
         "type": "object"
       },
-      "def-31": {
+      "def-33": {
         "additionalProperties": false,
         "properties": {
           "created_at": {
@@ -1961,7 +2142,7 @@
         "title": "User",
         "type": "object"
       },
-      "def-32": {
+      "def-34": {
         "additionalProperties": false,
         "properties": {
           "hotel_id": {
@@ -2045,7 +2226,7 @@
         "title": "Role",
         "type": "object"
       },
-      "def-33": {
+      "def-35": {
         "additionalProperties": false,
         "properties": {
           "id": {
@@ -2080,7 +2261,7 @@
         "title": "Permission",
         "type": "object"
       },
-      "def-34": {
+      "def-36": {
         "additionalProperties": false,
         "properties": {
           "base_daily_rate": {
@@ -2155,7 +2336,7 @@
         "title": "Room",
         "type": "object"
       },
-      "def-35": {
+      "def-37": {
         "additionalProperties": false,
         "properties": {
           "birth_date": {
@@ -2222,14 +2403,62 @@
         "title": "Customer",
         "type": "object"
       },
-      "def-36": {
+      "def-38": {
         "additionalProperties": false,
         "properties": {
-          "category": {
+          "archived_at": {
+            "format": "date-time",
             "nullable": true,
             "type": "string"
           },
+          "category": {
+            "additionalProperties": false,
+            "properties": {
+              "archived_at": {
+                "format": "date-time",
+                "nullable": true,
+                "type": "string"
+              },
+              "created_at": {
+                "type": "string"
+              },
+              "display_order": {
+                "type": "integer"
+              },
+              "hotel_id": {
+                "format": "uuid",
+                "type": "string"
+              },
+              "id": {
+                "format": "uuid",
+                "type": "string"
+              },
+              "is_active": {
+                "type": "boolean"
+              },
+              "name": {
+                "type": "string"
+              },
+              "updated_at": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "id",
+              "hotel_id",
+              "name",
+              "display_order",
+              "is_active",
+              "archived_at"
+            ],
+            "title": "ProductCategory",
+            "type": "object"
+          },
           "created_at": {
+            "type": "string"
+          },
+          "description": {
+            "nullable": true,
             "type": "string"
           },
           "hotel_id": {
@@ -2240,8 +2469,68 @@
             "format": "uuid",
             "type": "string"
           },
+          "internal_code": {
+            "nullable": true,
+            "type": "string"
+          },
+          "kind": {
+            "anyOf": [
+              {
+                "enum": [
+                  "physical"
+                ],
+                "type": "string"
+              },
+              {
+                "enum": [
+                  "service"
+                ],
+                "type": "string"
+              }
+            ]
+          },
           "name": {
             "type": "string"
+          },
+          "sales_unit": {
+            "anyOf": [
+              {
+                "enum": [
+                  "unit"
+                ],
+                "type": "string"
+              },
+              {
+                "enum": [
+                  "portion"
+                ],
+                "type": "string"
+              },
+              {
+                "enum": [
+                  "person"
+                ],
+                "type": "string"
+              },
+              {
+                "enum": [
+                  "hour"
+                ],
+                "type": "string"
+              },
+              {
+                "enum": [
+                  "daily"
+                ],
+                "type": "string"
+              },
+              {
+                "enum": [
+                  "service"
+                ],
+                "type": "string"
+              }
+            ]
           },
           "status": {
             "anyOf": [
@@ -2271,13 +2560,173 @@
           "hotel_id",
           "name",
           "category",
+          "description",
+          "internal_code",
+          "kind",
+          "sales_unit",
           "unit_price",
-          "status"
+          "status",
+          "archived_at"
         ],
         "title": "Product",
         "type": "object"
       },
-      "def-37": {
+      "def-39": {
+        "additionalProperties": false,
+        "properties": {
+          "archived_at": {
+            "format": "date-time",
+            "nullable": true,
+            "type": "string"
+          },
+          "created_at": {
+            "type": "string"
+          },
+          "display_order": {
+            "type": "integer"
+          },
+          "hotel_id": {
+            "format": "uuid",
+            "type": "string"
+          },
+          "id": {
+            "format": "uuid",
+            "type": "string"
+          },
+          "is_active": {
+            "type": "boolean"
+          },
+          "name": {
+            "type": "string"
+          },
+          "updated_at": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "id",
+          "hotel_id",
+          "name",
+          "display_order",
+          "is_active",
+          "archived_at"
+        ],
+        "title": "ProductCategory",
+        "type": "object"
+      },
+      "def-4": {
+        "additionalProperties": false,
+        "properties": {
+          "email": {
+            "format": "email",
+            "type": "string"
+          },
+          "name": {
+            "type": "string"
+          },
+          "password_hash": {
+            "minLength": 1,
+            "type": "string"
+          },
+          "role_assignments": {
+            "items": {
+              "additionalProperties": false,
+              "properties": {
+                "hotel_id": {
+                  "format": "uuid",
+                  "nullable": true,
+                  "type": "string"
+                },
+                "role_id": {
+                  "format": "uuid",
+                  "type": "string"
+                }
+              },
+              "required": [
+                "role_id",
+                "hotel_id"
+              ],
+              "type": "object"
+            },
+            "type": "array"
+          }
+        },
+        "required": [
+          "name",
+          "email",
+          "password_hash",
+          "role_assignments"
+        ],
+        "title": "UserCreateInput",
+        "type": "object"
+      },
+      "def-40": {
+        "additionalProperties": false,
+        "properties": {
+          "action": {
+            "type": "string"
+          },
+          "actor_id": {
+            "format": "uuid",
+            "nullable": true,
+            "type": "string"
+          },
+          "actor_name": {
+            "nullable": true,
+            "type": "string"
+          },
+          "changes": {
+            "additionalProperties": {},
+            "type": "object"
+          },
+          "created_at": {
+            "format": "date-time",
+            "type": "string"
+          },
+          "entity_id": {
+            "format": "uuid",
+            "type": "string"
+          },
+          "entity_type": {
+            "anyOf": [
+              {
+                "enum": [
+                  "product"
+                ],
+                "type": "string"
+              },
+              {
+                "enum": [
+                  "product_category"
+                ],
+                "type": "string"
+              }
+            ]
+          },
+          "hotel_id": {
+            "format": "uuid",
+            "type": "string"
+          },
+          "id": {
+            "format": "uuid",
+            "type": "string"
+          }
+        },
+        "required": [
+          "id",
+          "hotel_id",
+          "entity_type",
+          "entity_id",
+          "actor_id",
+          "actor_name",
+          "action",
+          "changes",
+          "created_at"
+        ],
+        "title": "CatalogAuditEvent",
+        "type": "object"
+      },
+      "def-41": {
         "additionalProperties": false,
         "properties": {
           "created_at": {
@@ -2320,7 +2769,7 @@
         "title": "Season",
         "type": "object"
       },
-      "def-38": {
+      "def-42": {
         "additionalProperties": false,
         "properties": {
           "created_at": {
@@ -2358,7 +2807,7 @@
         "title": "SeasonRoomRate",
         "type": "object"
       },
-      "def-39": {
+      "def-43": {
         "additionalProperties": false,
         "properties": {
           "amount": {
@@ -2508,53 +2957,7 @@
         "title": "FinancialTransaction",
         "type": "object"
       },
-      "def-4": {
-        "additionalProperties": false,
-        "properties": {
-          "email": {
-            "format": "email",
-            "type": "string"
-          },
-          "name": {
-            "type": "string"
-          },
-          "password_hash": {
-            "minLength": 1,
-            "type": "string"
-          },
-          "role_assignments": {
-            "items": {
-              "additionalProperties": false,
-              "properties": {
-                "hotel_id": {
-                  "format": "uuid",
-                  "nullable": true,
-                  "type": "string"
-                },
-                "role_id": {
-                  "format": "uuid",
-                  "type": "string"
-                }
-              },
-              "required": [
-                "role_id",
-                "hotel_id"
-              ],
-              "type": "object"
-            },
-            "type": "array"
-          }
-        },
-        "required": [
-          "name",
-          "email",
-          "password_hash",
-          "role_assignments"
-        ],
-        "title": "UserCreateInput",
-        "type": "object"
-      },
-      "def-40": {
+      "def-44": {
         "additionalProperties": false,
         "properties": {
           "email": {
@@ -2647,7 +3050,7 @@
         "title": "AuthUser",
         "type": "object"
       },
-      "def-41": {
+      "def-45": {
         "additionalProperties": false,
         "properties": {
           "expiresIn": {
@@ -2757,7 +3160,7 @@
         "title": "LoginResponse",
         "type": "object"
       },
-      "def-42": {
+      "def-46": {
         "additionalProperties": false,
         "properties": {
           "user": {
@@ -2859,7 +3262,7 @@
         "title": "MeResponse",
         "type": "object"
       },
-      "def-43": {
+      "def-47": {
         "additionalProperties": false,
         "properties": {
           "hotels": {
@@ -2938,7 +3341,7 @@
         "title": "UserReferenceData",
         "type": "object"
       },
-      "def-44": {
+      "def-48": {
         "additionalProperties": false,
         "properties": {
           "hotels": {
@@ -3006,7 +3409,7 @@
         "title": "RoleReferenceData",
         "type": "object"
       },
-      "def-45": {
+      "def-49": {
         "additionalProperties": false,
         "properties": {
           "breakdown": {
@@ -3087,7 +3490,49 @@
         "title": "CalendarBookingResponse",
         "type": "object"
       },
-      "def-46": {
+      "def-5": {
+        "properties": {
+          "email": {
+            "format": "email",
+            "type": "string"
+          },
+          "is_active": {
+            "type": "boolean"
+          },
+          "name": {
+            "type": "string"
+          },
+          "password_hash": {
+            "minLength": 1,
+            "type": "string"
+          },
+          "role_assignments": {
+            "items": {
+              "additionalProperties": false,
+              "properties": {
+                "hotel_id": {
+                  "format": "uuid",
+                  "nullable": true,
+                  "type": "string"
+                },
+                "role_id": {
+                  "format": "uuid",
+                  "type": "string"
+                }
+              },
+              "required": [
+                "role_id",
+                "hotel_id"
+              ],
+              "type": "object"
+            },
+            "type": "array"
+          }
+        },
+        "title": "UserUpdateInput",
+        "type": "object"
+      },
+      "def-50": {
         "additionalProperties": false,
         "properties": {
           "blocks": {
@@ -3404,7 +3849,7 @@
         "title": "ReservationCalendar",
         "type": "object"
       },
-      "def-47": {
+      "def-51": {
         "additionalProperties": false,
         "properties": {
           "eligibility": {
@@ -4236,7 +4681,7 @@
         "title": "StayPanel",
         "type": "object"
       },
-      "def-48": {
+      "def-52": {
         "additionalProperties": false,
         "properties": {
           "asset_tag": {
@@ -4341,7 +4786,7 @@
         "title": "MaintenanceCategory",
         "type": "object"
       },
-      "def-49": {
+      "def-53": {
         "additionalProperties": false,
         "properties": {
           "created_at": {
@@ -4414,49 +4859,7 @@
         "title": "MaintenanceLocation",
         "type": "object"
       },
-      "def-5": {
-        "properties": {
-          "email": {
-            "format": "email",
-            "type": "string"
-          },
-          "is_active": {
-            "type": "boolean"
-          },
-          "name": {
-            "type": "string"
-          },
-          "password_hash": {
-            "minLength": 1,
-            "type": "string"
-          },
-          "role_assignments": {
-            "items": {
-              "additionalProperties": false,
-              "properties": {
-                "hotel_id": {
-                  "format": "uuid",
-                  "nullable": true,
-                  "type": "string"
-                },
-                "role_id": {
-                  "format": "uuid",
-                  "type": "string"
-                }
-              },
-              "required": [
-                "role_id",
-                "hotel_id"
-              ],
-              "type": "object"
-            },
-            "type": "array"
-          }
-        },
-        "title": "UserUpdateInput",
-        "type": "object"
-      },
-      "def-50": {
+      "def-54": {
         "additionalProperties": false,
         "properties": {
           "active_block": {
@@ -4728,7 +5131,7 @@
         "title": "MaintenanceOccurrenceSummary",
         "type": "object"
       },
-      "def-51": {
+      "def-55": {
         "additionalProperties": false,
         "properties": {
           "assigned_to": {
@@ -4931,7 +5334,7 @@
         "title": "MaintenanceWorkOrder",
         "type": "object"
       },
-      "def-52": {
+      "def-56": {
         "allOf": [
           {
             "additionalProperties": false,
@@ -5778,7 +6181,7 @@
         ],
         "title": "MaintenanceOccurrenceDetail"
       },
-      "def-53": {
+      "def-57": {
         "additionalProperties": false,
         "properties": {
           "actual_amount": {
@@ -6141,7 +6544,7 @@
         "title": "MaintenanceCostItem",
         "type": "object"
       },
-      "def-54": {
+      "def-58": {
         "additionalProperties": false,
         "properties": {
           "approval_status": {
@@ -6487,7 +6890,7 @@
         "title": "MaintenanceRecovery",
         "type": "object"
       },
-      "def-55": {
+      "def-59": {
         "additionalProperties": false,
         "properties": {
           "approved_cost": {
@@ -7246,7 +7649,51 @@
         "title": "MaintenanceFinanceOccurrence",
         "type": "object"
       },
-      "def-56": {
+      "def-6": {
+        "additionalProperties": false,
+        "properties": {
+          "hotel_id": {
+            "format": "uuid",
+            "nullable": true,
+            "type": "string"
+          },
+          "name": {
+            "type": "string"
+          },
+          "permission_ids": {
+            "items": {
+              "format": "uuid",
+              "type": "string"
+            },
+            "type": "array"
+          },
+          "role_type": {
+            "anyOf": [
+              {
+                "enum": [
+                  "SYSTEM_ROLE"
+                ],
+                "type": "string"
+              },
+              {
+                "enum": [
+                  "HOTEL_ROLE"
+                ],
+                "type": "string"
+              }
+            ]
+          }
+        },
+        "required": [
+          "name",
+          "role_type",
+          "hotel_id",
+          "permission_ids"
+        ],
+        "title": "RoleCreateInput",
+        "type": "object"
+      },
+      "def-60": {
         "additionalProperties": false,
         "properties": {
           "awaiting_approval": {
@@ -7287,7 +7734,7 @@
         "title": "MaintenanceFinanceSummary",
         "type": "object"
       },
-      "def-57": {
+      "def-61": {
         "allOf": [
           {
             "additionalProperties": false,
@@ -7555,7 +8002,7 @@
         ],
         "title": "MaintenancePreventivePlan"
       },
-      "def-58": {
+      "def-62": {
         "additionalProperties": false,
         "properties": {
           "created_at": {
@@ -7652,7 +8099,7 @@
         "title": "MaintenancePreventiveRun",
         "type": "object"
       },
-      "def-59": {
+      "def-63": {
         "additionalProperties": false,
         "properties": {
           "category_id": {
@@ -7736,51 +8183,7 @@
         "title": "MaintenanceSlaPolicy",
         "type": "object"
       },
-      "def-6": {
-        "additionalProperties": false,
-        "properties": {
-          "hotel_id": {
-            "format": "uuid",
-            "nullable": true,
-            "type": "string"
-          },
-          "name": {
-            "type": "string"
-          },
-          "permission_ids": {
-            "items": {
-              "format": "uuid",
-              "type": "string"
-            },
-            "type": "array"
-          },
-          "role_type": {
-            "anyOf": [
-              {
-                "enum": [
-                  "SYSTEM_ROLE"
-                ],
-                "type": "string"
-              },
-              {
-                "enum": [
-                  "HOTEL_ROLE"
-                ],
-                "type": "string"
-              }
-            ]
-          }
-        },
-        "required": [
-          "name",
-          "role_type",
-          "hotel_id",
-          "permission_ids"
-        ],
-        "title": "RoleCreateInput",
-        "type": "object"
-      },
-      "def-60": {
+      "def-64": {
         "additionalProperties": false,
         "properties": {
           "email": {
@@ -7826,7 +8229,7 @@
         "title": "MaintenanceSupplierContact",
         "type": "object"
       },
-      "def-61": {
+      "def-65": {
         "additionalProperties": false,
         "properties": {
           "category_ids": {
@@ -8011,7 +8414,7 @@
         "title": "MaintenanceContract",
         "type": "object"
       },
-      "def-62": {
+      "def-66": {
         "additionalProperties": false,
         "properties": {
           "contacts": {
@@ -8363,7 +8766,7 @@
         "title": "MaintenanceSupplier",
         "type": "object"
       },
-      "def-63": {
+      "def-67": {
         "additionalProperties": false,
         "properties": {
           "created_at": {
@@ -8453,7 +8856,7 @@
         "title": "MaintenanceNotification",
         "type": "object"
       },
-      "def-64": {
+      "def-68": {
         "additionalProperties": false,
         "properties": {
           "aging": {
@@ -8574,7 +8977,7 @@
         "title": "MaintenanceAnalytics",
         "type": "object"
       },
-      "def-65": {
+      "def-69": {
         "additionalProperties": false,
         "properties": {
           "counters": {
@@ -62525,11 +62928,19 @@
         ]
       }
     },
-    "/admin/products": {
+    "/admin/product-categories": {
       "get": {
-        "description": "Lista products.",
-        "operationId": "listProduct",
+        "description": "Lista categorias do catálogo do hotel ativo.",
+        "operationId": "listProductCategories",
         "parameters": [
+          {
+            "in": "query",
+            "name": "include_archived",
+            "required": false,
+            "schema": {
+              "type": "boolean"
+            }
+          },
           {
             "in": "header",
             "name": "x-active-hotel-id",
@@ -62550,12 +62961,16 @@
                       "items": {
                         "additionalProperties": false,
                         "properties": {
-                          "category": {
+                          "archived_at": {
+                            "format": "date-time",
                             "nullable": true,
                             "type": "string"
                           },
                           "created_at": {
                             "type": "string"
+                          },
+                          "display_order": {
+                            "type": "integer"
                           },
                           "hotel_id": {
                             "format": "uuid",
@@ -62565,27 +62980,11 @@
                             "format": "uuid",
                             "type": "string"
                           },
+                          "is_active": {
+                            "type": "boolean"
+                          },
                           "name": {
                             "type": "string"
-                          },
-                          "status": {
-                            "anyOf": [
-                              {
-                                "enum": [
-                                  "active"
-                                ],
-                                "type": "string"
-                              },
-                              {
-                                "enum": [
-                                  "inactive"
-                                ],
-                                "type": "string"
-                              }
-                            ]
-                          },
-                          "unit_price": {
-                            "type": "number"
                           },
                           "updated_at": {
                             "type": "string"
@@ -62595,9 +62994,9 @@
                           "id",
                           "hotel_id",
                           "name",
-                          "category",
-                          "unit_price",
-                          "status"
+                          "display_order",
+                          "is_active",
+                          "archived_at"
                         ],
                         "type": "object"
                       },
@@ -62798,7 +63197,1510 @@
         ]
       },
       "post": {
-        "description": "Cria um registro de products.",
+        "description": "Cria uma categoria no catálogo do hotel ativo.",
+        "operationId": "createProductCategory",
+        "parameters": [
+          {
+            "in": "header",
+            "name": "x-active-hotel-id",
+            "required": false,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "additionalProperties": false,
+                "properties": {
+                  "display_order": {
+                    "minimum": 0,
+                    "type": "integer"
+                  },
+                  "is_active": {
+                    "type": "boolean"
+                  },
+                  "name": {
+                    "maxLength": 120,
+                    "minLength": 1,
+                    "type": "string"
+                  }
+                },
+                "required": [
+                  "name"
+                ],
+                "type": "object"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "201": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "additionalProperties": false,
+                  "properties": {
+                    "item": {
+                      "additionalProperties": false,
+                      "properties": {
+                        "archived_at": {
+                          "format": "date-time",
+                          "nullable": true,
+                          "type": "string"
+                        },
+                        "created_at": {
+                          "type": "string"
+                        },
+                        "display_order": {
+                          "type": "integer"
+                        },
+                        "hotel_id": {
+                          "format": "uuid",
+                          "type": "string"
+                        },
+                        "id": {
+                          "format": "uuid",
+                          "type": "string"
+                        },
+                        "is_active": {
+                          "type": "boolean"
+                        },
+                        "name": {
+                          "type": "string"
+                        },
+                        "updated_at": {
+                          "type": "string"
+                        }
+                      },
+                      "required": [
+                        "id",
+                        "hotel_id",
+                        "name",
+                        "display_order",
+                        "is_active",
+                        "archived_at"
+                      ],
+                      "type": "object"
+                    }
+                  },
+                  "required": [
+                    "item"
+                  ],
+                  "type": "object"
+                }
+              }
+            },
+            "description": "Default Response"
+          },
+          "400": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "additionalProperties": false,
+                  "properties": {
+                    "code": {
+                      "type": "string"
+                    },
+                    "details": {
+                      "type": "string"
+                    },
+                    "message": {
+                      "type": "string"
+                    },
+                    "retryAfterSeconds": {
+                      "minimum": 1,
+                      "type": "integer"
+                    }
+                  },
+                  "required": [
+                    "message"
+                  ],
+                  "type": "object"
+                }
+              }
+            },
+            "description": "Default Response"
+          },
+          "401": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "additionalProperties": false,
+                  "properties": {
+                    "code": {
+                      "type": "string"
+                    },
+                    "details": {
+                      "type": "string"
+                    },
+                    "message": {
+                      "type": "string"
+                    },
+                    "retryAfterSeconds": {
+                      "minimum": 1,
+                      "type": "integer"
+                    }
+                  },
+                  "required": [
+                    "message"
+                  ],
+                  "type": "object"
+                }
+              }
+            },
+            "description": "Default Response"
+          },
+          "403": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "additionalProperties": false,
+                  "properties": {
+                    "code": {
+                      "type": "string"
+                    },
+                    "details": {
+                      "type": "string"
+                    },
+                    "message": {
+                      "type": "string"
+                    },
+                    "retryAfterSeconds": {
+                      "minimum": 1,
+                      "type": "integer"
+                    }
+                  },
+                  "required": [
+                    "message"
+                  ],
+                  "type": "object"
+                }
+              }
+            },
+            "description": "Default Response"
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "additionalProperties": false,
+                  "properties": {
+                    "code": {
+                      "type": "string"
+                    },
+                    "details": {
+                      "type": "string"
+                    },
+                    "message": {
+                      "type": "string"
+                    },
+                    "retryAfterSeconds": {
+                      "minimum": 1,
+                      "type": "integer"
+                    }
+                  },
+                  "required": [
+                    "message"
+                  ],
+                  "type": "object"
+                }
+              }
+            },
+            "description": "Default Response"
+          },
+          "409": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "additionalProperties": false,
+                  "properties": {
+                    "code": {
+                      "type": "string"
+                    },
+                    "details": {
+                      "type": "string"
+                    },
+                    "message": {
+                      "type": "string"
+                    },
+                    "retryAfterSeconds": {
+                      "minimum": 1,
+                      "type": "integer"
+                    }
+                  },
+                  "required": [
+                    "message"
+                  ],
+                  "type": "object"
+                }
+              }
+            },
+            "description": "Default Response"
+          },
+          "500": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "additionalProperties": false,
+                  "properties": {
+                    "code": {
+                      "type": "string"
+                    },
+                    "details": {
+                      "type": "string"
+                    },
+                    "message": {
+                      "type": "string"
+                    },
+                    "retryAfterSeconds": {
+                      "minimum": 1,
+                      "type": "integer"
+                    }
+                  },
+                  "required": [
+                    "message"
+                  ],
+                  "type": "object"
+                }
+              }
+            },
+            "description": "Default Response"
+          }
+        },
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "tags": [
+          "Products"
+        ]
+      }
+    },
+    "/admin/product-categories/{id}": {
+      "put": {
+        "description": "Atualiza nome, ordem ou situação de uma categoria.",
+        "operationId": "updateProductCategory",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "type": "string"
+            }
+          },
+          {
+            "in": "header",
+            "name": "x-active-hotel-id",
+            "required": false,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "properties": {
+                  "display_order": {
+                    "minimum": 0,
+                    "type": "integer"
+                  },
+                  "is_active": {
+                    "type": "boolean"
+                  },
+                  "name": {
+                    "maxLength": 120,
+                    "minLength": 1,
+                    "type": "string"
+                  }
+                },
+                "type": "object"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "additionalProperties": false,
+                  "properties": {
+                    "item": {
+                      "additionalProperties": false,
+                      "properties": {
+                        "archived_at": {
+                          "format": "date-time",
+                          "nullable": true,
+                          "type": "string"
+                        },
+                        "created_at": {
+                          "type": "string"
+                        },
+                        "display_order": {
+                          "type": "integer"
+                        },
+                        "hotel_id": {
+                          "format": "uuid",
+                          "type": "string"
+                        },
+                        "id": {
+                          "format": "uuid",
+                          "type": "string"
+                        },
+                        "is_active": {
+                          "type": "boolean"
+                        },
+                        "name": {
+                          "type": "string"
+                        },
+                        "updated_at": {
+                          "type": "string"
+                        }
+                      },
+                      "required": [
+                        "id",
+                        "hotel_id",
+                        "name",
+                        "display_order",
+                        "is_active",
+                        "archived_at"
+                      ],
+                      "type": "object"
+                    }
+                  },
+                  "required": [
+                    "item"
+                  ],
+                  "type": "object"
+                }
+              }
+            },
+            "description": "Default Response"
+          },
+          "400": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "additionalProperties": false,
+                  "properties": {
+                    "code": {
+                      "type": "string"
+                    },
+                    "details": {
+                      "type": "string"
+                    },
+                    "message": {
+                      "type": "string"
+                    },
+                    "retryAfterSeconds": {
+                      "minimum": 1,
+                      "type": "integer"
+                    }
+                  },
+                  "required": [
+                    "message"
+                  ],
+                  "type": "object"
+                }
+              }
+            },
+            "description": "Default Response"
+          },
+          "401": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "additionalProperties": false,
+                  "properties": {
+                    "code": {
+                      "type": "string"
+                    },
+                    "details": {
+                      "type": "string"
+                    },
+                    "message": {
+                      "type": "string"
+                    },
+                    "retryAfterSeconds": {
+                      "minimum": 1,
+                      "type": "integer"
+                    }
+                  },
+                  "required": [
+                    "message"
+                  ],
+                  "type": "object"
+                }
+              }
+            },
+            "description": "Default Response"
+          },
+          "403": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "additionalProperties": false,
+                  "properties": {
+                    "code": {
+                      "type": "string"
+                    },
+                    "details": {
+                      "type": "string"
+                    },
+                    "message": {
+                      "type": "string"
+                    },
+                    "retryAfterSeconds": {
+                      "minimum": 1,
+                      "type": "integer"
+                    }
+                  },
+                  "required": [
+                    "message"
+                  ],
+                  "type": "object"
+                }
+              }
+            },
+            "description": "Default Response"
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "additionalProperties": false,
+                  "properties": {
+                    "code": {
+                      "type": "string"
+                    },
+                    "details": {
+                      "type": "string"
+                    },
+                    "message": {
+                      "type": "string"
+                    },
+                    "retryAfterSeconds": {
+                      "minimum": 1,
+                      "type": "integer"
+                    }
+                  },
+                  "required": [
+                    "message"
+                  ],
+                  "type": "object"
+                }
+              }
+            },
+            "description": "Default Response"
+          },
+          "409": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "additionalProperties": false,
+                  "properties": {
+                    "code": {
+                      "type": "string"
+                    },
+                    "details": {
+                      "type": "string"
+                    },
+                    "message": {
+                      "type": "string"
+                    },
+                    "retryAfterSeconds": {
+                      "minimum": 1,
+                      "type": "integer"
+                    }
+                  },
+                  "required": [
+                    "message"
+                  ],
+                  "type": "object"
+                }
+              }
+            },
+            "description": "Default Response"
+          },
+          "500": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "additionalProperties": false,
+                  "properties": {
+                    "code": {
+                      "type": "string"
+                    },
+                    "details": {
+                      "type": "string"
+                    },
+                    "message": {
+                      "type": "string"
+                    },
+                    "retryAfterSeconds": {
+                      "minimum": 1,
+                      "type": "integer"
+                    }
+                  },
+                  "required": [
+                    "message"
+                  ],
+                  "type": "object"
+                }
+              }
+            },
+            "description": "Default Response"
+          }
+        },
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "tags": [
+          "Products"
+        ]
+      }
+    },
+    "/admin/product-categories/{id}/archive": {
+      "post": {
+        "description": "Arquiva logicamente uma categoria.",
+        "operationId": "archiveProductCategory",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "type": "string"
+            }
+          },
+          {
+            "in": "header",
+            "name": "x-active-hotel-id",
+            "required": false,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "additionalProperties": false,
+                  "properties": {
+                    "item": {
+                      "additionalProperties": false,
+                      "properties": {
+                        "archived_at": {
+                          "format": "date-time",
+                          "nullable": true,
+                          "type": "string"
+                        },
+                        "created_at": {
+                          "type": "string"
+                        },
+                        "display_order": {
+                          "type": "integer"
+                        },
+                        "hotel_id": {
+                          "format": "uuid",
+                          "type": "string"
+                        },
+                        "id": {
+                          "format": "uuid",
+                          "type": "string"
+                        },
+                        "is_active": {
+                          "type": "boolean"
+                        },
+                        "name": {
+                          "type": "string"
+                        },
+                        "updated_at": {
+                          "type": "string"
+                        }
+                      },
+                      "required": [
+                        "id",
+                        "hotel_id",
+                        "name",
+                        "display_order",
+                        "is_active",
+                        "archived_at"
+                      ],
+                      "type": "object"
+                    }
+                  },
+                  "required": [
+                    "item"
+                  ],
+                  "type": "object"
+                }
+              }
+            },
+            "description": "Default Response"
+          },
+          "400": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "additionalProperties": false,
+                  "properties": {
+                    "code": {
+                      "type": "string"
+                    },
+                    "details": {
+                      "type": "string"
+                    },
+                    "message": {
+                      "type": "string"
+                    },
+                    "retryAfterSeconds": {
+                      "minimum": 1,
+                      "type": "integer"
+                    }
+                  },
+                  "required": [
+                    "message"
+                  ],
+                  "type": "object"
+                }
+              }
+            },
+            "description": "Default Response"
+          },
+          "401": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "additionalProperties": false,
+                  "properties": {
+                    "code": {
+                      "type": "string"
+                    },
+                    "details": {
+                      "type": "string"
+                    },
+                    "message": {
+                      "type": "string"
+                    },
+                    "retryAfterSeconds": {
+                      "minimum": 1,
+                      "type": "integer"
+                    }
+                  },
+                  "required": [
+                    "message"
+                  ],
+                  "type": "object"
+                }
+              }
+            },
+            "description": "Default Response"
+          },
+          "403": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "additionalProperties": false,
+                  "properties": {
+                    "code": {
+                      "type": "string"
+                    },
+                    "details": {
+                      "type": "string"
+                    },
+                    "message": {
+                      "type": "string"
+                    },
+                    "retryAfterSeconds": {
+                      "minimum": 1,
+                      "type": "integer"
+                    }
+                  },
+                  "required": [
+                    "message"
+                  ],
+                  "type": "object"
+                }
+              }
+            },
+            "description": "Default Response"
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "additionalProperties": false,
+                  "properties": {
+                    "code": {
+                      "type": "string"
+                    },
+                    "details": {
+                      "type": "string"
+                    },
+                    "message": {
+                      "type": "string"
+                    },
+                    "retryAfterSeconds": {
+                      "minimum": 1,
+                      "type": "integer"
+                    }
+                  },
+                  "required": [
+                    "message"
+                  ],
+                  "type": "object"
+                }
+              }
+            },
+            "description": "Default Response"
+          },
+          "409": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "additionalProperties": false,
+                  "properties": {
+                    "code": {
+                      "type": "string"
+                    },
+                    "details": {
+                      "type": "string"
+                    },
+                    "message": {
+                      "type": "string"
+                    },
+                    "retryAfterSeconds": {
+                      "minimum": 1,
+                      "type": "integer"
+                    }
+                  },
+                  "required": [
+                    "message"
+                  ],
+                  "type": "object"
+                }
+              }
+            },
+            "description": "Default Response"
+          },
+          "500": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "additionalProperties": false,
+                  "properties": {
+                    "code": {
+                      "type": "string"
+                    },
+                    "details": {
+                      "type": "string"
+                    },
+                    "message": {
+                      "type": "string"
+                    },
+                    "retryAfterSeconds": {
+                      "minimum": 1,
+                      "type": "integer"
+                    }
+                  },
+                  "required": [
+                    "message"
+                  ],
+                  "type": "object"
+                }
+              }
+            },
+            "description": "Default Response"
+          }
+        },
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "tags": [
+          "Products"
+        ]
+      }
+    },
+    "/admin/product-categories/{id}/restore": {
+      "post": {
+        "description": "Restaura uma categoria previamente arquivada.",
+        "operationId": "restoreProductCategory",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "type": "string"
+            }
+          },
+          {
+            "in": "header",
+            "name": "x-active-hotel-id",
+            "required": false,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "additionalProperties": false,
+                  "properties": {
+                    "item": {
+                      "additionalProperties": false,
+                      "properties": {
+                        "archived_at": {
+                          "format": "date-time",
+                          "nullable": true,
+                          "type": "string"
+                        },
+                        "created_at": {
+                          "type": "string"
+                        },
+                        "display_order": {
+                          "type": "integer"
+                        },
+                        "hotel_id": {
+                          "format": "uuid",
+                          "type": "string"
+                        },
+                        "id": {
+                          "format": "uuid",
+                          "type": "string"
+                        },
+                        "is_active": {
+                          "type": "boolean"
+                        },
+                        "name": {
+                          "type": "string"
+                        },
+                        "updated_at": {
+                          "type": "string"
+                        }
+                      },
+                      "required": [
+                        "id",
+                        "hotel_id",
+                        "name",
+                        "display_order",
+                        "is_active",
+                        "archived_at"
+                      ],
+                      "type": "object"
+                    }
+                  },
+                  "required": [
+                    "item"
+                  ],
+                  "type": "object"
+                }
+              }
+            },
+            "description": "Default Response"
+          },
+          "400": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "additionalProperties": false,
+                  "properties": {
+                    "code": {
+                      "type": "string"
+                    },
+                    "details": {
+                      "type": "string"
+                    },
+                    "message": {
+                      "type": "string"
+                    },
+                    "retryAfterSeconds": {
+                      "minimum": 1,
+                      "type": "integer"
+                    }
+                  },
+                  "required": [
+                    "message"
+                  ],
+                  "type": "object"
+                }
+              }
+            },
+            "description": "Default Response"
+          },
+          "401": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "additionalProperties": false,
+                  "properties": {
+                    "code": {
+                      "type": "string"
+                    },
+                    "details": {
+                      "type": "string"
+                    },
+                    "message": {
+                      "type": "string"
+                    },
+                    "retryAfterSeconds": {
+                      "minimum": 1,
+                      "type": "integer"
+                    }
+                  },
+                  "required": [
+                    "message"
+                  ],
+                  "type": "object"
+                }
+              }
+            },
+            "description": "Default Response"
+          },
+          "403": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "additionalProperties": false,
+                  "properties": {
+                    "code": {
+                      "type": "string"
+                    },
+                    "details": {
+                      "type": "string"
+                    },
+                    "message": {
+                      "type": "string"
+                    },
+                    "retryAfterSeconds": {
+                      "minimum": 1,
+                      "type": "integer"
+                    }
+                  },
+                  "required": [
+                    "message"
+                  ],
+                  "type": "object"
+                }
+              }
+            },
+            "description": "Default Response"
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "additionalProperties": false,
+                  "properties": {
+                    "code": {
+                      "type": "string"
+                    },
+                    "details": {
+                      "type": "string"
+                    },
+                    "message": {
+                      "type": "string"
+                    },
+                    "retryAfterSeconds": {
+                      "minimum": 1,
+                      "type": "integer"
+                    }
+                  },
+                  "required": [
+                    "message"
+                  ],
+                  "type": "object"
+                }
+              }
+            },
+            "description": "Default Response"
+          },
+          "409": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "additionalProperties": false,
+                  "properties": {
+                    "code": {
+                      "type": "string"
+                    },
+                    "details": {
+                      "type": "string"
+                    },
+                    "message": {
+                      "type": "string"
+                    },
+                    "retryAfterSeconds": {
+                      "minimum": 1,
+                      "type": "integer"
+                    }
+                  },
+                  "required": [
+                    "message"
+                  ],
+                  "type": "object"
+                }
+              }
+            },
+            "description": "Default Response"
+          },
+          "500": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "additionalProperties": false,
+                  "properties": {
+                    "code": {
+                      "type": "string"
+                    },
+                    "details": {
+                      "type": "string"
+                    },
+                    "message": {
+                      "type": "string"
+                    },
+                    "retryAfterSeconds": {
+                      "minimum": 1,
+                      "type": "integer"
+                    }
+                  },
+                  "required": [
+                    "message"
+                  ],
+                  "type": "object"
+                }
+              }
+            },
+            "description": "Default Response"
+          }
+        },
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "tags": [
+          "Products"
+        ]
+      }
+    },
+    "/admin/products": {
+      "get": {
+        "description": "Lista produtos e serviços do catálogo do hotel ativo.",
+        "operationId": "listProducts",
+        "parameters": [
+          {
+            "in": "query",
+            "name": "include_archived",
+            "required": false,
+            "schema": {
+              "type": "boolean"
+            }
+          },
+          {
+            "in": "header",
+            "name": "x-active-hotel-id",
+            "required": false,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "additionalProperties": false,
+                  "properties": {
+                    "items": {
+                      "items": {
+                        "additionalProperties": false,
+                        "properties": {
+                          "archived_at": {
+                            "format": "date-time",
+                            "nullable": true,
+                            "type": "string"
+                          },
+                          "category": {
+                            "additionalProperties": false,
+                            "properties": {
+                              "archived_at": {
+                                "format": "date-time",
+                                "nullable": true,
+                                "type": "string"
+                              },
+                              "created_at": {
+                                "type": "string"
+                              },
+                              "display_order": {
+                                "type": "integer"
+                              },
+                              "hotel_id": {
+                                "format": "uuid",
+                                "type": "string"
+                              },
+                              "id": {
+                                "format": "uuid",
+                                "type": "string"
+                              },
+                              "is_active": {
+                                "type": "boolean"
+                              },
+                              "name": {
+                                "type": "string"
+                              },
+                              "updated_at": {
+                                "type": "string"
+                              }
+                            },
+                            "required": [
+                              "id",
+                              "hotel_id",
+                              "name",
+                              "display_order",
+                              "is_active",
+                              "archived_at"
+                            ],
+                            "title": "ProductCategory",
+                            "type": "object"
+                          },
+                          "created_at": {
+                            "type": "string"
+                          },
+                          "description": {
+                            "nullable": true,
+                            "type": "string"
+                          },
+                          "hotel_id": {
+                            "format": "uuid",
+                            "type": "string"
+                          },
+                          "id": {
+                            "format": "uuid",
+                            "type": "string"
+                          },
+                          "internal_code": {
+                            "nullable": true,
+                            "type": "string"
+                          },
+                          "kind": {
+                            "anyOf": [
+                              {
+                                "enum": [
+                                  "physical"
+                                ],
+                                "type": "string"
+                              },
+                              {
+                                "enum": [
+                                  "service"
+                                ],
+                                "type": "string"
+                              }
+                            ]
+                          },
+                          "name": {
+                            "type": "string"
+                          },
+                          "sales_unit": {
+                            "anyOf": [
+                              {
+                                "enum": [
+                                  "unit"
+                                ],
+                                "type": "string"
+                              },
+                              {
+                                "enum": [
+                                  "portion"
+                                ],
+                                "type": "string"
+                              },
+                              {
+                                "enum": [
+                                  "person"
+                                ],
+                                "type": "string"
+                              },
+                              {
+                                "enum": [
+                                  "hour"
+                                ],
+                                "type": "string"
+                              },
+                              {
+                                "enum": [
+                                  "daily"
+                                ],
+                                "type": "string"
+                              },
+                              {
+                                "enum": [
+                                  "service"
+                                ],
+                                "type": "string"
+                              }
+                            ]
+                          },
+                          "status": {
+                            "anyOf": [
+                              {
+                                "enum": [
+                                  "active"
+                                ],
+                                "type": "string"
+                              },
+                              {
+                                "enum": [
+                                  "inactive"
+                                ],
+                                "type": "string"
+                              }
+                            ]
+                          },
+                          "unit_price": {
+                            "type": "number"
+                          },
+                          "updated_at": {
+                            "type": "string"
+                          }
+                        },
+                        "required": [
+                          "id",
+                          "hotel_id",
+                          "name",
+                          "category",
+                          "description",
+                          "internal_code",
+                          "kind",
+                          "sales_unit",
+                          "unit_price",
+                          "status",
+                          "archived_at"
+                        ],
+                        "type": "object"
+                      },
+                      "type": "array"
+                    }
+                  },
+                  "required": [
+                    "items"
+                  ],
+                  "type": "object"
+                }
+              }
+            },
+            "description": "Default Response"
+          },
+          "400": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "additionalProperties": false,
+                  "properties": {
+                    "code": {
+                      "type": "string"
+                    },
+                    "details": {
+                      "type": "string"
+                    },
+                    "message": {
+                      "type": "string"
+                    },
+                    "retryAfterSeconds": {
+                      "minimum": 1,
+                      "type": "integer"
+                    }
+                  },
+                  "required": [
+                    "message"
+                  ],
+                  "type": "object"
+                }
+              }
+            },
+            "description": "Default Response"
+          },
+          "401": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "additionalProperties": false,
+                  "properties": {
+                    "code": {
+                      "type": "string"
+                    },
+                    "details": {
+                      "type": "string"
+                    },
+                    "message": {
+                      "type": "string"
+                    },
+                    "retryAfterSeconds": {
+                      "minimum": 1,
+                      "type": "integer"
+                    }
+                  },
+                  "required": [
+                    "message"
+                  ],
+                  "type": "object"
+                }
+              }
+            },
+            "description": "Default Response"
+          },
+          "403": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "additionalProperties": false,
+                  "properties": {
+                    "code": {
+                      "type": "string"
+                    },
+                    "details": {
+                      "type": "string"
+                    },
+                    "message": {
+                      "type": "string"
+                    },
+                    "retryAfterSeconds": {
+                      "minimum": 1,
+                      "type": "integer"
+                    }
+                  },
+                  "required": [
+                    "message"
+                  ],
+                  "type": "object"
+                }
+              }
+            },
+            "description": "Default Response"
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "additionalProperties": false,
+                  "properties": {
+                    "code": {
+                      "type": "string"
+                    },
+                    "details": {
+                      "type": "string"
+                    },
+                    "message": {
+                      "type": "string"
+                    },
+                    "retryAfterSeconds": {
+                      "minimum": 1,
+                      "type": "integer"
+                    }
+                  },
+                  "required": [
+                    "message"
+                  ],
+                  "type": "object"
+                }
+              }
+            },
+            "description": "Default Response"
+          },
+          "409": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "additionalProperties": false,
+                  "properties": {
+                    "code": {
+                      "type": "string"
+                    },
+                    "details": {
+                      "type": "string"
+                    },
+                    "message": {
+                      "type": "string"
+                    },
+                    "retryAfterSeconds": {
+                      "minimum": 1,
+                      "type": "integer"
+                    }
+                  },
+                  "required": [
+                    "message"
+                  ],
+                  "type": "object"
+                }
+              }
+            },
+            "description": "Default Response"
+          },
+          "500": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "additionalProperties": false,
+                  "properties": {
+                    "code": {
+                      "type": "string"
+                    },
+                    "details": {
+                      "type": "string"
+                    },
+                    "message": {
+                      "type": "string"
+                    },
+                    "retryAfterSeconds": {
+                      "minimum": 1,
+                      "type": "integer"
+                    }
+                  },
+                  "required": [
+                    "message"
+                  ],
+                  "type": "object"
+                }
+              }
+            },
+            "description": "Default Response"
+          }
+        },
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "tags": [
+          "Products"
+        ]
+      },
+      "post": {
+        "description": "Cria um produto ou serviço no catálogo do hotel ativo.",
         "operationId": "createProduct",
         "parameters": [
           {
@@ -62816,12 +64718,81 @@
               "schema": {
                 "additionalProperties": false,
                 "properties": {
-                  "category": {
+                  "category_id": {
+                    "format": "uuid",
+                    "type": "string"
+                  },
+                  "description": {
+                    "maxLength": 1000,
                     "nullable": true,
                     "type": "string"
                   },
-                  "name": {
+                  "internal_code": {
+                    "maxLength": 80,
+                    "minLength": 1,
+                    "nullable": true,
                     "type": "string"
+                  },
+                  "kind": {
+                    "anyOf": [
+                      {
+                        "enum": [
+                          "physical"
+                        ],
+                        "type": "string"
+                      },
+                      {
+                        "enum": [
+                          "service"
+                        ],
+                        "type": "string"
+                      }
+                    ]
+                  },
+                  "name": {
+                    "maxLength": 160,
+                    "minLength": 1,
+                    "type": "string"
+                  },
+                  "sales_unit": {
+                    "anyOf": [
+                      {
+                        "enum": [
+                          "unit"
+                        ],
+                        "type": "string"
+                      },
+                      {
+                        "enum": [
+                          "portion"
+                        ],
+                        "type": "string"
+                      },
+                      {
+                        "enum": [
+                          "person"
+                        ],
+                        "type": "string"
+                      },
+                      {
+                        "enum": [
+                          "hour"
+                        ],
+                        "type": "string"
+                      },
+                      {
+                        "enum": [
+                          "daily"
+                        ],
+                        "type": "string"
+                      },
+                      {
+                        "enum": [
+                          "service"
+                        ],
+                        "type": "string"
+                      }
+                    ]
                   },
                   "status": {
                     "anyOf": [
@@ -62846,6 +64817,9 @@
                 },
                 "required": [
                   "name",
+                  "category_id",
+                  "kind",
+                  "sales_unit",
                   "unit_price"
                 ],
                 "type": "object"
@@ -62864,11 +64838,59 @@
                     "item": {
                       "additionalProperties": false,
                       "properties": {
-                        "category": {
+                        "archived_at": {
+                          "format": "date-time",
                           "nullable": true,
                           "type": "string"
                         },
+                        "category": {
+                          "additionalProperties": false,
+                          "properties": {
+                            "archived_at": {
+                              "format": "date-time",
+                              "nullable": true,
+                              "type": "string"
+                            },
+                            "created_at": {
+                              "type": "string"
+                            },
+                            "display_order": {
+                              "type": "integer"
+                            },
+                            "hotel_id": {
+                              "format": "uuid",
+                              "type": "string"
+                            },
+                            "id": {
+                              "format": "uuid",
+                              "type": "string"
+                            },
+                            "is_active": {
+                              "type": "boolean"
+                            },
+                            "name": {
+                              "type": "string"
+                            },
+                            "updated_at": {
+                              "type": "string"
+                            }
+                          },
+                          "required": [
+                            "id",
+                            "hotel_id",
+                            "name",
+                            "display_order",
+                            "is_active",
+                            "archived_at"
+                          ],
+                          "title": "ProductCategory",
+                          "type": "object"
+                        },
                         "created_at": {
+                          "type": "string"
+                        },
+                        "description": {
+                          "nullable": true,
                           "type": "string"
                         },
                         "hotel_id": {
@@ -62879,8 +64901,68 @@
                           "format": "uuid",
                           "type": "string"
                         },
+                        "internal_code": {
+                          "nullable": true,
+                          "type": "string"
+                        },
+                        "kind": {
+                          "anyOf": [
+                            {
+                              "enum": [
+                                "physical"
+                              ],
+                              "type": "string"
+                            },
+                            {
+                              "enum": [
+                                "service"
+                              ],
+                              "type": "string"
+                            }
+                          ]
+                        },
                         "name": {
                           "type": "string"
+                        },
+                        "sales_unit": {
+                          "anyOf": [
+                            {
+                              "enum": [
+                                "unit"
+                              ],
+                              "type": "string"
+                            },
+                            {
+                              "enum": [
+                                "portion"
+                              ],
+                              "type": "string"
+                            },
+                            {
+                              "enum": [
+                                "person"
+                              ],
+                              "type": "string"
+                            },
+                            {
+                              "enum": [
+                                "hour"
+                              ],
+                              "type": "string"
+                            },
+                            {
+                              "enum": [
+                                "daily"
+                              ],
+                              "type": "string"
+                            },
+                            {
+                              "enum": [
+                                "service"
+                              ],
+                              "type": "string"
+                            }
+                          ]
                         },
                         "status": {
                           "anyOf": [
@@ -62910,8 +64992,13 @@
                         "hotel_id",
                         "name",
                         "category",
+                        "description",
+                        "internal_code",
+                        "kind",
+                        "sales_unit",
                         "unit_price",
-                        "status"
+                        "status",
+                        "archived_at"
                       ],
                       "type": "object"
                     }
@@ -63111,9 +65198,9 @@
       }
     },
     "/admin/products/{id}": {
-      "delete": {
-        "description": "Remove um registro de products.",
-        "operationId": "deleteProduct",
+      "put": {
+        "description": "Atualiza um produto ou serviço do hotel ativo.",
+        "operationId": "updateProduct",
         "parameters": [
           {
             "in": "path",
@@ -63133,6 +65220,114 @@
             }
           }
         ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "properties": {
+                  "category_id": {
+                    "format": "uuid",
+                    "type": "string"
+                  },
+                  "description": {
+                    "maxLength": 1000,
+                    "nullable": true,
+                    "type": "string"
+                  },
+                  "internal_code": {
+                    "maxLength": 80,
+                    "minLength": 1,
+                    "nullable": true,
+                    "type": "string"
+                  },
+                  "kind": {
+                    "anyOf": [
+                      {
+                        "enum": [
+                          "physical"
+                        ],
+                        "type": "string"
+                      },
+                      {
+                        "enum": [
+                          "service"
+                        ],
+                        "type": "string"
+                      }
+                    ]
+                  },
+                  "name": {
+                    "maxLength": 160,
+                    "minLength": 1,
+                    "type": "string"
+                  },
+                  "sales_unit": {
+                    "anyOf": [
+                      {
+                        "enum": [
+                          "unit"
+                        ],
+                        "type": "string"
+                      },
+                      {
+                        "enum": [
+                          "portion"
+                        ],
+                        "type": "string"
+                      },
+                      {
+                        "enum": [
+                          "person"
+                        ],
+                        "type": "string"
+                      },
+                      {
+                        "enum": [
+                          "hour"
+                        ],
+                        "type": "string"
+                      },
+                      {
+                        "enum": [
+                          "daily"
+                        ],
+                        "type": "string"
+                      },
+                      {
+                        "enum": [
+                          "service"
+                        ],
+                        "type": "string"
+                      }
+                    ]
+                  },
+                  "status": {
+                    "anyOf": [
+                      {
+                        "enum": [
+                          "active"
+                        ],
+                        "type": "string"
+                      },
+                      {
+                        "enum": [
+                          "inactive"
+                        ],
+                        "type": "string"
+                      }
+                    ]
+                  },
+                  "unit_price": {
+                    "minimum": 0,
+                    "type": "number"
+                  }
+                },
+                "type": "object"
+              }
+            }
+          },
+          "required": true
+        },
         "responses": {
           "200": {
             "content": {
@@ -63140,12 +65335,176 @@
                 "schema": {
                   "additionalProperties": false,
                   "properties": {
-                    "ok": {
-                      "type": "boolean"
+                    "item": {
+                      "additionalProperties": false,
+                      "properties": {
+                        "archived_at": {
+                          "format": "date-time",
+                          "nullable": true,
+                          "type": "string"
+                        },
+                        "category": {
+                          "additionalProperties": false,
+                          "properties": {
+                            "archived_at": {
+                              "format": "date-time",
+                              "nullable": true,
+                              "type": "string"
+                            },
+                            "created_at": {
+                              "type": "string"
+                            },
+                            "display_order": {
+                              "type": "integer"
+                            },
+                            "hotel_id": {
+                              "format": "uuid",
+                              "type": "string"
+                            },
+                            "id": {
+                              "format": "uuid",
+                              "type": "string"
+                            },
+                            "is_active": {
+                              "type": "boolean"
+                            },
+                            "name": {
+                              "type": "string"
+                            },
+                            "updated_at": {
+                              "type": "string"
+                            }
+                          },
+                          "required": [
+                            "id",
+                            "hotel_id",
+                            "name",
+                            "display_order",
+                            "is_active",
+                            "archived_at"
+                          ],
+                          "title": "ProductCategory",
+                          "type": "object"
+                        },
+                        "created_at": {
+                          "type": "string"
+                        },
+                        "description": {
+                          "nullable": true,
+                          "type": "string"
+                        },
+                        "hotel_id": {
+                          "format": "uuid",
+                          "type": "string"
+                        },
+                        "id": {
+                          "format": "uuid",
+                          "type": "string"
+                        },
+                        "internal_code": {
+                          "nullable": true,
+                          "type": "string"
+                        },
+                        "kind": {
+                          "anyOf": [
+                            {
+                              "enum": [
+                                "physical"
+                              ],
+                              "type": "string"
+                            },
+                            {
+                              "enum": [
+                                "service"
+                              ],
+                              "type": "string"
+                            }
+                          ]
+                        },
+                        "name": {
+                          "type": "string"
+                        },
+                        "sales_unit": {
+                          "anyOf": [
+                            {
+                              "enum": [
+                                "unit"
+                              ],
+                              "type": "string"
+                            },
+                            {
+                              "enum": [
+                                "portion"
+                              ],
+                              "type": "string"
+                            },
+                            {
+                              "enum": [
+                                "person"
+                              ],
+                              "type": "string"
+                            },
+                            {
+                              "enum": [
+                                "hour"
+                              ],
+                              "type": "string"
+                            },
+                            {
+                              "enum": [
+                                "daily"
+                              ],
+                              "type": "string"
+                            },
+                            {
+                              "enum": [
+                                "service"
+                              ],
+                              "type": "string"
+                            }
+                          ]
+                        },
+                        "status": {
+                          "anyOf": [
+                            {
+                              "enum": [
+                                "active"
+                              ],
+                              "type": "string"
+                            },
+                            {
+                              "enum": [
+                                "inactive"
+                              ],
+                              "type": "string"
+                            }
+                          ]
+                        },
+                        "unit_price": {
+                          "type": "number"
+                        },
+                        "updated_at": {
+                          "type": "string"
+                        }
+                      },
+                      "required": [
+                        "id",
+                        "hotel_id",
+                        "name",
+                        "category",
+                        "description",
+                        "internal_code",
+                        "kind",
+                        "sales_unit",
+                        "unit_price",
+                        "status",
+                        "archived_at"
+                      ],
+                      "type": "object"
                     }
                   },
                   "required": [
-                    "ok"
+                    "item"
                   ],
                   "type": "object"
                 }
@@ -63336,10 +65695,12 @@
         "tags": [
           "Products"
         ]
-      },
-      "put": {
-        "description": "Atualiza um registro de products.",
-        "operationId": "updateProduct",
+      }
+    },
+    "/admin/products/{id}/archive": {
+      "post": {
+        "description": "Arquiva logicamente um item preservando seu histórico.",
+        "operationId": "archiveProduct",
         "parameters": [
           {
             "in": "path",
@@ -63359,45 +65720,6 @@
             }
           }
         ],
-        "requestBody": {
-          "content": {
-            "application/json": {
-              "schema": {
-                "properties": {
-                  "category": {
-                    "nullable": true,
-                    "type": "string"
-                  },
-                  "name": {
-                    "type": "string"
-                  },
-                  "status": {
-                    "anyOf": [
-                      {
-                        "enum": [
-                          "active"
-                        ],
-                        "type": "string"
-                      },
-                      {
-                        "enum": [
-                          "inactive"
-                        ],
-                        "type": "string"
-                      }
-                    ]
-                  },
-                  "unit_price": {
-                    "minimum": 0,
-                    "type": "number"
-                  }
-                },
-                "type": "object"
-              }
-            }
-          },
-          "required": true
-        },
         "responses": {
           "200": {
             "content": {
@@ -63408,11 +65730,59 @@
                     "item": {
                       "additionalProperties": false,
                       "properties": {
-                        "category": {
+                        "archived_at": {
+                          "format": "date-time",
                           "nullable": true,
                           "type": "string"
                         },
+                        "category": {
+                          "additionalProperties": false,
+                          "properties": {
+                            "archived_at": {
+                              "format": "date-time",
+                              "nullable": true,
+                              "type": "string"
+                            },
+                            "created_at": {
+                              "type": "string"
+                            },
+                            "display_order": {
+                              "type": "integer"
+                            },
+                            "hotel_id": {
+                              "format": "uuid",
+                              "type": "string"
+                            },
+                            "id": {
+                              "format": "uuid",
+                              "type": "string"
+                            },
+                            "is_active": {
+                              "type": "boolean"
+                            },
+                            "name": {
+                              "type": "string"
+                            },
+                            "updated_at": {
+                              "type": "string"
+                            }
+                          },
+                          "required": [
+                            "id",
+                            "hotel_id",
+                            "name",
+                            "display_order",
+                            "is_active",
+                            "archived_at"
+                          ],
+                          "title": "ProductCategory",
+                          "type": "object"
+                        },
                         "created_at": {
+                          "type": "string"
+                        },
+                        "description": {
+                          "nullable": true,
                           "type": "string"
                         },
                         "hotel_id": {
@@ -63423,8 +65793,68 @@
                           "format": "uuid",
                           "type": "string"
                         },
+                        "internal_code": {
+                          "nullable": true,
+                          "type": "string"
+                        },
+                        "kind": {
+                          "anyOf": [
+                            {
+                              "enum": [
+                                "physical"
+                              ],
+                              "type": "string"
+                            },
+                            {
+                              "enum": [
+                                "service"
+                              ],
+                              "type": "string"
+                            }
+                          ]
+                        },
                         "name": {
                           "type": "string"
+                        },
+                        "sales_unit": {
+                          "anyOf": [
+                            {
+                              "enum": [
+                                "unit"
+                              ],
+                              "type": "string"
+                            },
+                            {
+                              "enum": [
+                                "portion"
+                              ],
+                              "type": "string"
+                            },
+                            {
+                              "enum": [
+                                "person"
+                              ],
+                              "type": "string"
+                            },
+                            {
+                              "enum": [
+                                "hour"
+                              ],
+                              "type": "string"
+                            },
+                            {
+                              "enum": [
+                                "daily"
+                              ],
+                              "type": "string"
+                            },
+                            {
+                              "enum": [
+                                "service"
+                              ],
+                              "type": "string"
+                            }
+                          ]
                         },
                         "status": {
                           "anyOf": [
@@ -63454,8 +65884,698 @@
                         "hotel_id",
                         "name",
                         "category",
+                        "description",
+                        "internal_code",
+                        "kind",
+                        "sales_unit",
                         "unit_price",
-                        "status"
+                        "status",
+                        "archived_at"
+                      ],
+                      "type": "object"
+                    }
+                  },
+                  "required": [
+                    "item"
+                  ],
+                  "type": "object"
+                }
+              }
+            },
+            "description": "Default Response"
+          },
+          "400": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "additionalProperties": false,
+                  "properties": {
+                    "code": {
+                      "type": "string"
+                    },
+                    "details": {
+                      "type": "string"
+                    },
+                    "message": {
+                      "type": "string"
+                    },
+                    "retryAfterSeconds": {
+                      "minimum": 1,
+                      "type": "integer"
+                    }
+                  },
+                  "required": [
+                    "message"
+                  ],
+                  "type": "object"
+                }
+              }
+            },
+            "description": "Default Response"
+          },
+          "401": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "additionalProperties": false,
+                  "properties": {
+                    "code": {
+                      "type": "string"
+                    },
+                    "details": {
+                      "type": "string"
+                    },
+                    "message": {
+                      "type": "string"
+                    },
+                    "retryAfterSeconds": {
+                      "minimum": 1,
+                      "type": "integer"
+                    }
+                  },
+                  "required": [
+                    "message"
+                  ],
+                  "type": "object"
+                }
+              }
+            },
+            "description": "Default Response"
+          },
+          "403": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "additionalProperties": false,
+                  "properties": {
+                    "code": {
+                      "type": "string"
+                    },
+                    "details": {
+                      "type": "string"
+                    },
+                    "message": {
+                      "type": "string"
+                    },
+                    "retryAfterSeconds": {
+                      "minimum": 1,
+                      "type": "integer"
+                    }
+                  },
+                  "required": [
+                    "message"
+                  ],
+                  "type": "object"
+                }
+              }
+            },
+            "description": "Default Response"
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "additionalProperties": false,
+                  "properties": {
+                    "code": {
+                      "type": "string"
+                    },
+                    "details": {
+                      "type": "string"
+                    },
+                    "message": {
+                      "type": "string"
+                    },
+                    "retryAfterSeconds": {
+                      "minimum": 1,
+                      "type": "integer"
+                    }
+                  },
+                  "required": [
+                    "message"
+                  ],
+                  "type": "object"
+                }
+              }
+            },
+            "description": "Default Response"
+          },
+          "409": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "additionalProperties": false,
+                  "properties": {
+                    "code": {
+                      "type": "string"
+                    },
+                    "details": {
+                      "type": "string"
+                    },
+                    "message": {
+                      "type": "string"
+                    },
+                    "retryAfterSeconds": {
+                      "minimum": 1,
+                      "type": "integer"
+                    }
+                  },
+                  "required": [
+                    "message"
+                  ],
+                  "type": "object"
+                }
+              }
+            },
+            "description": "Default Response"
+          },
+          "500": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "additionalProperties": false,
+                  "properties": {
+                    "code": {
+                      "type": "string"
+                    },
+                    "details": {
+                      "type": "string"
+                    },
+                    "message": {
+                      "type": "string"
+                    },
+                    "retryAfterSeconds": {
+                      "minimum": 1,
+                      "type": "integer"
+                    }
+                  },
+                  "required": [
+                    "message"
+                  ],
+                  "type": "object"
+                }
+              }
+            },
+            "description": "Default Response"
+          }
+        },
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "tags": [
+          "Products"
+        ]
+      }
+    },
+    "/admin/products/{id}/history": {
+      "get": {
+        "description": "Lista a trilha imutável de alterações do item.",
+        "operationId": "listProductHistory",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "type": "string"
+            }
+          },
+          {
+            "in": "header",
+            "name": "x-active-hotel-id",
+            "required": false,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "additionalProperties": false,
+                  "properties": {
+                    "items": {
+                      "items": {
+                        "additionalProperties": false,
+                        "properties": {
+                          "action": {
+                            "type": "string"
+                          },
+                          "actor_id": {
+                            "format": "uuid",
+                            "nullable": true,
+                            "type": "string"
+                          },
+                          "actor_name": {
+                            "nullable": true,
+                            "type": "string"
+                          },
+                          "changes": {
+                            "additionalProperties": {},
+                            "type": "object"
+                          },
+                          "created_at": {
+                            "format": "date-time",
+                            "type": "string"
+                          },
+                          "entity_id": {
+                            "format": "uuid",
+                            "type": "string"
+                          },
+                          "entity_type": {
+                            "anyOf": [
+                              {
+                                "enum": [
+                                  "product"
+                                ],
+                                "type": "string"
+                              },
+                              {
+                                "enum": [
+                                  "product_category"
+                                ],
+                                "type": "string"
+                              }
+                            ]
+                          },
+                          "hotel_id": {
+                            "format": "uuid",
+                            "type": "string"
+                          },
+                          "id": {
+                            "format": "uuid",
+                            "type": "string"
+                          }
+                        },
+                        "required": [
+                          "id",
+                          "hotel_id",
+                          "entity_type",
+                          "entity_id",
+                          "actor_id",
+                          "actor_name",
+                          "action",
+                          "changes",
+                          "created_at"
+                        ],
+                        "type": "object"
+                      },
+                      "type": "array"
+                    }
+                  },
+                  "required": [
+                    "items"
+                  ],
+                  "type": "object"
+                }
+              }
+            },
+            "description": "Default Response"
+          },
+          "400": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "additionalProperties": false,
+                  "properties": {
+                    "code": {
+                      "type": "string"
+                    },
+                    "details": {
+                      "type": "string"
+                    },
+                    "message": {
+                      "type": "string"
+                    },
+                    "retryAfterSeconds": {
+                      "minimum": 1,
+                      "type": "integer"
+                    }
+                  },
+                  "required": [
+                    "message"
+                  ],
+                  "type": "object"
+                }
+              }
+            },
+            "description": "Default Response"
+          },
+          "401": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "additionalProperties": false,
+                  "properties": {
+                    "code": {
+                      "type": "string"
+                    },
+                    "details": {
+                      "type": "string"
+                    },
+                    "message": {
+                      "type": "string"
+                    },
+                    "retryAfterSeconds": {
+                      "minimum": 1,
+                      "type": "integer"
+                    }
+                  },
+                  "required": [
+                    "message"
+                  ],
+                  "type": "object"
+                }
+              }
+            },
+            "description": "Default Response"
+          },
+          "403": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "additionalProperties": false,
+                  "properties": {
+                    "code": {
+                      "type": "string"
+                    },
+                    "details": {
+                      "type": "string"
+                    },
+                    "message": {
+                      "type": "string"
+                    },
+                    "retryAfterSeconds": {
+                      "minimum": 1,
+                      "type": "integer"
+                    }
+                  },
+                  "required": [
+                    "message"
+                  ],
+                  "type": "object"
+                }
+              }
+            },
+            "description": "Default Response"
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "additionalProperties": false,
+                  "properties": {
+                    "code": {
+                      "type": "string"
+                    },
+                    "details": {
+                      "type": "string"
+                    },
+                    "message": {
+                      "type": "string"
+                    },
+                    "retryAfterSeconds": {
+                      "minimum": 1,
+                      "type": "integer"
+                    }
+                  },
+                  "required": [
+                    "message"
+                  ],
+                  "type": "object"
+                }
+              }
+            },
+            "description": "Default Response"
+          },
+          "409": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "additionalProperties": false,
+                  "properties": {
+                    "code": {
+                      "type": "string"
+                    },
+                    "details": {
+                      "type": "string"
+                    },
+                    "message": {
+                      "type": "string"
+                    },
+                    "retryAfterSeconds": {
+                      "minimum": 1,
+                      "type": "integer"
+                    }
+                  },
+                  "required": [
+                    "message"
+                  ],
+                  "type": "object"
+                }
+              }
+            },
+            "description": "Default Response"
+          },
+          "500": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "additionalProperties": false,
+                  "properties": {
+                    "code": {
+                      "type": "string"
+                    },
+                    "details": {
+                      "type": "string"
+                    },
+                    "message": {
+                      "type": "string"
+                    },
+                    "retryAfterSeconds": {
+                      "minimum": 1,
+                      "type": "integer"
+                    }
+                  },
+                  "required": [
+                    "message"
+                  ],
+                  "type": "object"
+                }
+              }
+            },
+            "description": "Default Response"
+          }
+        },
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "tags": [
+          "Products"
+        ]
+      }
+    },
+    "/admin/products/{id}/restore": {
+      "post": {
+        "description": "Restaura um item previamente arquivado.",
+        "operationId": "restoreProduct",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "type": "string"
+            }
+          },
+          {
+            "in": "header",
+            "name": "x-active-hotel-id",
+            "required": false,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "additionalProperties": false,
+                  "properties": {
+                    "item": {
+                      "additionalProperties": false,
+                      "properties": {
+                        "archived_at": {
+                          "format": "date-time",
+                          "nullable": true,
+                          "type": "string"
+                        },
+                        "category": {
+                          "additionalProperties": false,
+                          "properties": {
+                            "archived_at": {
+                              "format": "date-time",
+                              "nullable": true,
+                              "type": "string"
+                            },
+                            "created_at": {
+                              "type": "string"
+                            },
+                            "display_order": {
+                              "type": "integer"
+                            },
+                            "hotel_id": {
+                              "format": "uuid",
+                              "type": "string"
+                            },
+                            "id": {
+                              "format": "uuid",
+                              "type": "string"
+                            },
+                            "is_active": {
+                              "type": "boolean"
+                            },
+                            "name": {
+                              "type": "string"
+                            },
+                            "updated_at": {
+                              "type": "string"
+                            }
+                          },
+                          "required": [
+                            "id",
+                            "hotel_id",
+                            "name",
+                            "display_order",
+                            "is_active",
+                            "archived_at"
+                          ],
+                          "title": "ProductCategory",
+                          "type": "object"
+                        },
+                        "created_at": {
+                          "type": "string"
+                        },
+                        "description": {
+                          "nullable": true,
+                          "type": "string"
+                        },
+                        "hotel_id": {
+                          "format": "uuid",
+                          "type": "string"
+                        },
+                        "id": {
+                          "format": "uuid",
+                          "type": "string"
+                        },
+                        "internal_code": {
+                          "nullable": true,
+                          "type": "string"
+                        },
+                        "kind": {
+                          "anyOf": [
+                            {
+                              "enum": [
+                                "physical"
+                              ],
+                              "type": "string"
+                            },
+                            {
+                              "enum": [
+                                "service"
+                              ],
+                              "type": "string"
+                            }
+                          ]
+                        },
+                        "name": {
+                          "type": "string"
+                        },
+                        "sales_unit": {
+                          "anyOf": [
+                            {
+                              "enum": [
+                                "unit"
+                              ],
+                              "type": "string"
+                            },
+                            {
+                              "enum": [
+                                "portion"
+                              ],
+                              "type": "string"
+                            },
+                            {
+                              "enum": [
+                                "person"
+                              ],
+                              "type": "string"
+                            },
+                            {
+                              "enum": [
+                                "hour"
+                              ],
+                              "type": "string"
+                            },
+                            {
+                              "enum": [
+                                "daily"
+                              ],
+                              "type": "string"
+                            },
+                            {
+                              "enum": [
+                                "service"
+                              ],
+                              "type": "string"
+                            }
+                          ]
+                        },
+                        "status": {
+                          "anyOf": [
+                            {
+                              "enum": [
+                                "active"
+                              ],
+                              "type": "string"
+                            },
+                            {
+                              "enum": [
+                                "inactive"
+                              ],
+                              "type": "string"
+                            }
+                          ]
+                        },
+                        "unit_price": {
+                          "type": "number"
+                        },
+                        "updated_at": {
+                          "type": "string"
+                        }
+                      },
+                      "required": [
+                        "id",
+                        "hotel_id",
+                        "name",
+                        "category",
+                        "description",
+                        "internal_code",
+                        "kind",
+                        "sales_unit",
+                        "unit_price",
+                        "status",
+                        "archived_at"
                       ],
                       "type": "object"
                     }

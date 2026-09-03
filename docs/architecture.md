@@ -27,6 +27,13 @@ flowchart LR
 
 Fontes de verdade: `apps/pms/src`, `apps/backend-service/src`, `apps/booking-engine-service/src`, `packages/shared/src` e `supabase/migrations`. Atualize este diagrama ao adicionar um serviço, uma integração entre componentes ou um novo armazenamento.
 
+## Catálogo comercial
+
+Produtos e serviços próprios pertencem ao hotel ativo. O catálogo usa categorias
+controladas por hotel, arquivamento lógico e trilha imutável de criação, edição,
+ativação e arquivamento. Estoque, cobrança, parceiros e vendas permanecem em
+fluxos separados: o catálogo é a referência comercial estável para essas etapas.
+
 ## Requisição autenticada e hotel ativo
 
 ```mermaid
