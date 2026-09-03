@@ -11,7 +11,7 @@ import { MaintenanceOccurrenceWorkspace } from "../../_components/MaintenanceOcc
 import { MaintenanceOccurrenceFinancePanel } from "../../_components/MaintenanceOccurrenceFinancePanel";
 import { getMaintenanceAccess } from "../../access";
 import { maintenanceTabs } from "../../tabs";
-import { maintenanceOccurrenceGuide } from "../../usageGuides";
+import { getMaintenanceOccurrenceGuide } from "../../usageGuides";
 
 type Props = { params: Promise<{ id: string }> };
 export default async function MaintenanceOccurrencePage({ params }: Props) {
@@ -40,7 +40,7 @@ export default async function MaintenanceOccurrencePage({ params }: Props) {
       title={`Ocorrência ${item.code}`}
       activeTabKey="detail"
       tabs={maintenanceTabs(access)}
-      usageGuide={maintenanceOccurrenceGuide}
+      usageGuide={getMaintenanceOccurrenceGuide(access.canReadFinance)}
     >
       <MaintenanceOccurrenceWorkspace
         initial={item}

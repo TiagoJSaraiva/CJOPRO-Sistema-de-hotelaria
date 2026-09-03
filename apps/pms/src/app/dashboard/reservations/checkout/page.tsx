@@ -7,6 +7,7 @@ import {
   getReservationsCalendarDefaultRoute,
 } from "../access";
 import { CheckoutByRoomWorkflow } from "../_components/CheckoutByRoomWorkflow";
+import { maintenanceCheckoutGuide } from "../../maintenance/usageGuides";
 
 export default async function ReservationsCheckoutPage() {
   const user = await getUserFromSession();
@@ -29,6 +30,7 @@ export default async function ReservationsCheckoutPage() {
     <DashboardEntityPageShell
       title="Calendario de Reservas"
       activeTabKey="checkout"
+      usageGuide={maintenanceCheckoutGuide}
       tabs={[
         {
           key: "calendar",

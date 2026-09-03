@@ -7,6 +7,7 @@ import type {
   AdminMaintenanceFinanceListResponse,
   AdminMaintenanceRecovery,
 } from "@hotel/shared";
+import { ContextHelp } from "../../_components/ContextHelp";
 
 type Props = {
   data: AdminMaintenanceFinanceListResponse;
@@ -124,6 +125,11 @@ export function MaintenanceFinanceBoard({
                 </p>
                 <p className="text-xs text-slate-500">
                   {item.approval_status} · {item.settlement_status}
+                  <ContextHelp label="Aprovação e liquidação">
+                    Propor, aprovar e liquidar são etapas separadas. O autor não
+                    pode aprovar o próprio item; pagar ou receber exige a
+                    permissão de liquidação.
+                  </ContextHelp>
                 </p>
               </div>
             </div>

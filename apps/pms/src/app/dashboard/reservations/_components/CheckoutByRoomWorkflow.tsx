@@ -5,6 +5,7 @@ import type {
   AdminStayFolioAllocationPreview,
   AdminStayOperationalPanelResponse,
 } from "@hotel/shared";
+import { ContextHelp } from "../../_components/ContextHelp";
 import {
   DetailItem,
   PanelSection,
@@ -253,7 +254,10 @@ export function CheckoutByRoomWorkflow() {
 
   return (
     <section className="grid gap-4" data-testid="checkout-by-room-workflow">
-      <section className="rounded-lg border border-[#d9dfe7] bg-white p-4 shadow-[0_1px_2px_rgba(16,24,40,0.04)]">
+      <section
+        className="rounded-lg border border-[#d9dfe7] bg-white p-4 shadow-[0_1px_2px_rgba(16,24,40,0.04)]"
+        data-usage-guide="maintenance-checkout-search"
+      >
         <div className="flex flex-wrap items-start justify-between gap-3">
           <div>
             <h2 className="m-0 text-[1.05rem] font-semibold text-[#121926]">
@@ -322,7 +326,10 @@ export function CheckoutByRoomWorkflow() {
       ) : null}
 
       {panelData ? (
-        <section className="grid gap-4 xl:grid-cols-[minmax(0,1fr)_360px]">
+        <section
+          className="grid gap-4 xl:grid-cols-[minmax(0,1fr)_360px]"
+          data-usage-guide="maintenance-checkout-stay"
+        >
           <div className="grid gap-4">
             <PanelSection title="Dados da estadia">
               <div className="flex flex-wrap items-center gap-2">
@@ -438,7 +445,10 @@ export function CheckoutByRoomWorkflow() {
             ) : null}
           </div>
 
-          <aside className="grid content-start gap-4">
+          <aside
+            className="grid content-start gap-4"
+            data-usage-guide="maintenance-checkout-actions"
+          >
             <PanelSection title="Registrar pagamento">
               <label className="pms-field">
                 <span>Valor</span>
@@ -540,6 +550,22 @@ export function CheckoutByRoomWorkflow() {
             </PanelSection>
 
             <PanelSection title="Checkout">
+              {Boolean(
+                (panelData.maintenance_occurrences || []).length ||
+                panelData.maintenance_financial_acknowledgement_required,
+              ) ? (
+                <div
+                  className="flex items-center gap-1 text-sm font-semibold text-[#8a5a00]"
+                  data-usage-guide="maintenance-checkout-acknowledgement"
+                >
+                  Ciência de manutenção
+                  <ContextHelp label="Ciência de manutenção no checkout">
+                    Declarar ciência não atribui responsabilidade, não registra
+                    pagamento e não encerra a ocorrência. A pendência permanece
+                    acompanhada após o checkout.
+                  </ContextHelp>
+                </div>
+              ) : null}
               {(panelData.maintenance_occurrences || []).length ? (
                 <div className="grid gap-2 rounded-lg border border-[#f5d08a] bg-[#fff9eb] p-3 text-[0.86rem]">
                   <strong>Ocorrências e danos vinculados</strong>

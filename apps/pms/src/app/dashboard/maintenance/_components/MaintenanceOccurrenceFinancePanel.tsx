@@ -8,6 +8,7 @@ import type {
   AdminMaintenanceRecovery,
   AdminMaintenanceSupplier,
 } from "@hotel/shared";
+import { ContextHelp } from "../../_components/ContextHelp";
 
 type Props = {
   occurrenceId: string;
@@ -175,9 +176,15 @@ export function MaintenanceOccurrenceFinancePanel({
     <section
       className="rounded-xl border border-[#d7dce2] bg-white p-5"
       aria-labelledby="maintenance-finance-title"
+      data-usage-guide="maintenance-occurrence-finance"
     >
       <h2 id="maintenance-finance-title" className="mt-0">
         Financeiro
+        <ContextHelp label="Financeiro da ocorrência">
+          Custos e recuperações começam como propostas. Aprovação e liquidação
+          dependem de permissões separadas e não alteram a conclusão operacional
+          da ocorrência.
+        </ContextHelp>
       </h2>
       <div className="grid gap-3 sm:grid-cols-3 lg:grid-cols-6">
         {[

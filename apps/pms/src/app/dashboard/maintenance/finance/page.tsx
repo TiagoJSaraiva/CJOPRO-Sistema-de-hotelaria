@@ -7,6 +7,7 @@ import {
 } from "../../../../lib/adminApi";
 import { getMaintenanceAccess } from "../access";
 import { MaintenanceFinanceBoard } from "../_components/MaintenanceFinanceBoard";
+import { maintenanceFinanceGuide } from "../usageGuides";
 
 type Props = {
   searchParams?: Promise<Record<string, string | string[] | undefined>>;
@@ -115,8 +116,12 @@ export default async function MaintenanceFinancePage({ searchParams }: Props) {
       title="Financeiro de manutenção"
       activeTabKey={queue}
       tabs={tabs}
+      usageGuide={maintenanceFinanceGuide}
     >
-      <div className="mb-5 grid gap-3 sm:grid-cols-2">
+      <div
+        className="mb-5 grid gap-3 sm:grid-cols-2"
+        data-usage-guide="maintenance-finance-summary"
+      >
         <div className="rounded-xl border border-slate-200 bg-white p-4">
           <p className="text-xs uppercase tracking-wide text-slate-500">
             Contas a pagar
@@ -134,12 +139,14 @@ export default async function MaintenanceFinancePage({ searchParams }: Props) {
           </p>
         </div>
       </div>
-      <MaintenanceFinanceBoard
-        data={data}
-        currentUserId={user?.id || ""}
-        canApprove={access.canApproveFinance}
-        canSettle={access.canSettleFinance}
-      />
+      <div data-usage-guide="maintenance-finance-items">
+        <MaintenanceFinanceBoard
+          data={data}
+          currentUserId={user?.id || ""}
+          canApprove={access.canApproveFinance}
+          canSettle={access.canSettleFinance}
+        />
+      </div>
     </DashboardEntityPageShell>
   );
 }

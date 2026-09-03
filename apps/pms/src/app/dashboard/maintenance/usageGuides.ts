@@ -84,7 +84,7 @@ export const maintenanceReportGuide: UsageGuideDefinition = {
   ],
 };
 
-export const maintenanceOccurrenceGuide: UsageGuideDefinition = {
+const maintenanceOccurrenceBaseGuide: UsageGuideDefinition = {
   id: "maintenance-occurrence",
   title: "Detalhe da ocorrência",
   steps: [
@@ -140,8 +140,105 @@ export const maintenanceOccurrenceGuide: UsageGuideDefinition = {
   ],
 };
 
+export function getMaintenanceOccurrenceGuide(
+  canReadFinance: boolean,
+): UsageGuideDefinition {
+  if (!canReadFinance) return maintenanceOccurrenceBaseGuide;
+  const financeStep = {
+    id: "finance",
+    target: "maintenance-occurrence-finance",
+    title: "Acompanhe custos e recuperações",
+    description:
+      "Valores, documentos, propostas e estados financeiros aparecem somente para perfis autorizados.",
+  };
+  return {
+    ...maintenanceOccurrenceBaseGuide,
+    steps: [
+      ...maintenanceOccurrenceBaseGuide.steps.slice(0, 5),
+      financeStep,
+      ...maintenanceOccurrenceBaseGuide.steps.slice(5),
+    ],
+  };
+}
+
+export const maintenanceFinanceGuide: UsageGuideDefinition = {
+  id: "maintenance-finance",
+  title: "Financeiro de manutenção",
+  steps: [
+    {
+      id: "navigation",
+      target: "maintenance-finance-header",
+      title: "Trabalhe pelas filas financeiras",
+      description:
+        "As abas separam aprovação, contas a pagar, recuperações a receber, vencidos e itens já liquidados.",
+    },
+    {
+      id: "summary",
+      target: "maintenance-finance-summary",
+      title: "Confira a exposição financeira",
+      description:
+        "Os totais mostram os valores ainda a pagar e a receber no hotel ativo.",
+    },
+    {
+      id: "items",
+      target: "maintenance-finance-items",
+      title: "Aprove ou liquide conforme sua função",
+      description:
+        "A proposta, a aprovação e a liquidação são etapas independentes. O autor não pode aprovar o próprio item.",
+    },
+  ],
+};
+
+export const maintenanceCheckoutGuide: UsageGuideDefinition = {
+  id: "maintenance-checkout",
+  title: "Checkout e manutenção",
+  steps: [
+    {
+      id: "navigation",
+      target: "maintenance-checkout-header",
+      title: "Revise a saída por quarto",
+      description:
+        "O checkout reúne estadia, pagamentos e pendências de manutenção vinculadas ao quarto pesquisado.",
+    },
+    {
+      id: "search",
+      target: "maintenance-checkout-search",
+      title: "Localize a estadia",
+      description:
+        "Pesquise o quarto em check-in para carregar os dados operacionais e financeiros disponíveis ao seu perfil.",
+    },
+    {
+      id: "stay",
+      target: "maintenance-checkout-stay",
+      title: "Confira a estadia",
+      description:
+        "Antes de confirmar, valide hóspede, reserva, datas, situação financeira e elegibilidade.",
+    },
+    {
+      id: "acknowledgement",
+      target: "maintenance-checkout-acknowledgement",
+      title: "Registre ciência das pendências",
+      description:
+        "A ciência confirma que ocorrências ou cobranças foram revisadas. Ela não atribui responsabilidade, não quita valores e não resolve a ocorrência.",
+    },
+    {
+      id: "actions",
+      target: "maintenance-checkout-actions",
+      title: "Finalize com segurança",
+      description:
+        "Revise pagamentos e condições de saída. Depois da ciência exigida, pendências de dano continuam registradas, mas não impedem o checkout.",
+    },
+  ],
+};
+
 export const operationalMaintenanceGuides = [
   maintenanceOverviewGuide,
   maintenanceReportGuide,
-  maintenanceOccurrenceGuide,
+  getMaintenanceOccurrenceGuide(false),
+];
+
+export const financialMaintenanceGuides = [
+  maintenanceFinanceGuide,
+  maintenanceCheckoutGuide,
+  getMaintenanceOccurrenceGuide(true),
 ];
