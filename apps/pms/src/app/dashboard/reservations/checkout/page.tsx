@@ -9,7 +9,12 @@ import {
 import { CheckoutByRoomWorkflow } from "../_components/CheckoutByRoomWorkflow";
 import { maintenanceCheckoutGuide } from "../../maintenance/usageGuides";
 
-export default async function ReservationsCheckoutPage() {
+export default async function ReservationsCheckoutPage({
+  searchParams,
+}: {
+  searchParams?: Promise<{ room_number?: string }>;
+}) {
+  const params = await searchParams;
   const user = await getUserFromSession();
   const access = getReservationsCalendarAccess(user);
 
@@ -46,7 +51,7 @@ export default async function ReservationsCheckoutPage() {
         },
       ]}
     >
-      <CheckoutByRoomWorkflow />
+      <CheckoutByRoomWorkflow initialRoomNumber={params?.room_number || ""} />
     </DashboardEntityPageShell>
   );
 }

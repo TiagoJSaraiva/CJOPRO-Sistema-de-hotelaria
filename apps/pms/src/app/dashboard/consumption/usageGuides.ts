@@ -153,3 +153,38 @@ export const commercialAgreementsGuide: UsageGuideDefinition = {
     },
   ],
 };
+
+export const consumptionAdjustmentsGuide: UsageGuideDefinition = {
+  id: "consumption-adjustments",
+  title: "Revisar ajustes e reembolsos",
+  steps: [
+    {
+      id: "filters",
+      target: "consumption-adjustment-filters",
+      title: "Acompanhe a fila",
+      description:
+        "Filtre solicitações pendentes, concluídas ou que ainda aguardam reembolso.",
+    },
+    {
+      id: "queue",
+      target: "consumption-adjustment-queue",
+      title: "Compare o impacto",
+      description:
+        "Confira o valor redutor, o motivo, o solicitante e a versão da conta.",
+    },
+    {
+      id: "decision",
+      target: "consumption-adjustment-decision",
+      title: "Decida com segregação",
+      description:
+        "Aprovação precisa ser feita por outra pessoa. Rejeições exigem justificativa.",
+    },
+    {
+      id: "partner-refund",
+      target: "consumption-partner-refund",
+      title: "Confirme o reembolso externo",
+      description:
+        "Em pagamento direto, registre a confirmação do parceiro sem movimentar o caixa do hotel.",
+    },
+  ],
+};

@@ -18,6 +18,8 @@ describe("consumption access", () => {
       canPost: false,
       canReceivePayment: false,
       canGrantCourtesy: false,
+      canVoid: false,
+      canApproveAdjustments: false,
     });
     expect(
       getConsumptionAccess({
@@ -32,6 +34,8 @@ describe("consumption access", () => {
       canPost: false,
       canReceivePayment: false,
       canGrantCourtesy: false,
+      canVoid: false,
+      canApproveAdjustments: false,
     });
   });
 
@@ -46,6 +50,8 @@ describe("consumption access", () => {
         canPost: false,
         canReceivePayment: false,
         canGrantCourtesy: false,
+        canVoid: false,
+        canApproveAdjustments: false,
       }),
     ).toBe("/dashboard/consumption/points");
     expect(
@@ -58,6 +64,8 @@ describe("consumption access", () => {
         canPost: false,
         canReceivePayment: false,
         canGrantCourtesy: false,
+        canVoid: false,
+        canApproveAdjustments: false,
       }),
     ).toBeNull();
     expect(
@@ -70,6 +78,8 @@ describe("consumption access", () => {
         canPost: false,
         canReceivePayment: false,
         canGrantCourtesy: false,
+        canVoid: false,
+        canApproveAdjustments: false,
       }),
     ).toBe("/dashboard/consumption/partners");
   });

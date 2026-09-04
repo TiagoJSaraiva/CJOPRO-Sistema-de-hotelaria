@@ -51,6 +51,12 @@ export default async function ConsumptionOffersPage({
           isVisible: access.canRead,
         },
         {
+          key: "adjustments",
+          label: "Ajustes",
+          href: "/dashboard/consumption/adjustments",
+          isVisible: access.canApproveAdjustments,
+        },
+        {
           key: "points",
           label: "Pontos de consumo",
           href: "/dashboard/consumption/points",

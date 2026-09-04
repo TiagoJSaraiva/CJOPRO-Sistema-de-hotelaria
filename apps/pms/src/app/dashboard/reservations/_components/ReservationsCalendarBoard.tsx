@@ -1090,6 +1090,13 @@ export function ReservationsCalendarBoard({
 
                   <PanelSection title="Ações operacionais">
                     <div className="grid grid-cols-2 gap-2">
+                      <Link
+                        href={`/dashboard/reservations/account?stay_id=${panelData.stay.id}`}
+                        className={`${panelActionButtonClassName} col-span-2 text-center no-underline`}
+                        data-usage-guide="stay-account-link"
+                      >
+                        Ver conta
+                      </Link>
                       {canPostConsumption &&
                       panelData.stay.stay_status === "checked_in" ? (
                         <Link

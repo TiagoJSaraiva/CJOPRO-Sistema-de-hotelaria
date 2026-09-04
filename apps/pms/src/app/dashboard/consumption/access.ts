@@ -11,6 +11,8 @@ export type ConsumptionAccess = {
   canPost: boolean;
   canReceivePayment: boolean;
   canGrantCourtesy: boolean;
+  canVoid: boolean;
+  canApproveAdjustments: boolean;
 };
 
 export function getConsumptionAccess(user: UserLike): ConsumptionAccess {
@@ -33,6 +35,10 @@ export function getConsumptionAccess(user: UserLike): ConsumptionAccess {
     ),
     canGrantCourtesy: permissions.includes(
       PERMISSIONS.CONSUMPTION_COURTESY_GRANT,
+    ),
+    canVoid: permissions.includes(PERMISSIONS.CONSUMPTION_VOID),
+    canApproveAdjustments: permissions.includes(
+      PERMISSIONS.CONSUMPTION_ADJUSTMENT_APPROVE,
     ),
   };
 }

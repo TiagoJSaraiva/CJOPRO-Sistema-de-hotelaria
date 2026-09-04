@@ -82,11 +82,44 @@ para repetições idênticas e rejeita payload divergente.
 
 `stay_folio` cria um débito agregado; `hotel_immediate` cria débito, transação,
 crédito e alocação integral; `partner_direct` registra somente o recebimento
-externo confirmado; cortesia registra desconto integral. Débitos abertos de
-`consumption_charge` bloqueiam checkout. O antigo `stay_consumption` é migrado
-para comandas `legacy_unclassified`, sem gerar dívida ou pagamento retroativo.
-Comandas, itens, eventos e vínculos financeiros são imutáveis; cancelamentos e
-ajustes serão operações compensatórias em uma etapa posterior.
+externo confirmado; cortesia registra desconto integral. O antigo
+`stay_consumption` é migrado para comandas `legacy_unclassified`, sem gerar
+dívida ou pagamento retroativo. Comandas, itens, eventos e vínculos financeiros
+são imutáveis; correções redutoras usam lançamentos compensatórios.
+
+## Conta da estadia e fechamento
+
+Cada estadia mantém uma conta própria, versionada a cada mutação financeira. A
+visão consolidada agrupa hospedagem, consumos, danos, pagamentos, ajustes e
+reembolsos, mas preserva cada lançamento original. Pagamentos parciais ou
+multimeios formam um lote atômico e são alocados no servidor; nunca podem
+exceder o saldo.
+
+```mermaid
+flowchart LR
+  folio[Conta versionada da estadia] --> review[Revisão de débitos e créditos]
+  review --> correction[Correção redutora]
+  correction --> approval[Aprovação por outra pessoa]
+  approval --> refund[Reembolso quando já pago]
+  review --> tenders[Lote de pagamento multimeios]
+  tenders --> close[Checkout atômico]
+  refund --> close
+  close --> snapshot[Fechamento original imutável]
+  snapshot --> later[Correções posteriores separadas]
+```
+
+Ajustes parciais e anulações nunca alteram comandas. Correções pagas somente
+terminam depois do reembolso do hotel ou da confirmação externa do parceiro.
+Após checkout, apenas correções redutoras podem criar crédito, sem reabrir a
+estadia. O fechamento exige hospedagem e consumo quitados, nenhum crédito ou
+correção pendente e ciência explícita das cobranças de dano aceitas como
+exceção. O snapshot original alimenta o extrato HTML não fiscal e não muda com
+correções posteriores.
+
+Fontes de verdade: migration `20260906010000_finalize_stay_accounts.sql`,
+`stayAccountsRepository.ts`, `stayAccountRoutes.ts`, contratos em
+`packages/shared/src/api-contract.ts` e a jornada em
+`apps/pms/src/app/dashboard/reservations/checkout`.
 
 ## Requisição autenticada e hotel ativo
 

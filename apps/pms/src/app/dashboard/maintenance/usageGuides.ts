@@ -191,7 +191,7 @@ export const maintenanceFinanceGuide: UsageGuideDefinition = {
 
 export const maintenanceCheckoutGuide: UsageGuideDefinition = {
   id: "maintenance-checkout",
-  title: "Checkout e manutenção",
+  title: "Conta da estadia e checkout",
   steps: [
     {
       id: "navigation",
@@ -215,6 +215,20 @@ export const maintenanceCheckoutGuide: UsageGuideDefinition = {
         "Antes de confirmar, valide hóspede, reserva, datas, situação financeira e elegibilidade.",
     },
     {
+      id: "account",
+      target: "stay-account-summary",
+      title: "Revise a conta consolidada",
+      description:
+        "Hospedagem, consumos, manutenção, pagamentos, créditos e reembolsos permanecem separados e auditáveis.",
+    },
+    {
+      id: "tenders",
+      target: "stay-account-tenders",
+      title: "Divida o pagamento",
+      description:
+        "Use um ou mais meios e preencha o restante. A soma precisa quitar exatamente o saldo no fechamento.",
+    },
+    {
       id: "acknowledgement",
       target: "maintenance-checkout-acknowledgement",
       title: "Registre ciência das pendências",
@@ -227,6 +241,48 @@ export const maintenanceCheckoutGuide: UsageGuideDefinition = {
       title: "Finalize com segurança",
       description:
         "Revise pagamentos e condições de saída. Depois da ciência exigida, pendências de dano continuam registradas, mas não impedem o checkout.",
+    },
+    {
+      id: "statement",
+      target: "stay-account-statement",
+      title: "Guarde o extrato",
+      description:
+        "Depois do fechamento, imprima o extrato não fiscal e acompanhe separadamente qualquer correção posterior.",
+    },
+  ],
+};
+
+export const stayAccountGuide: UsageGuideDefinition = {
+  id: "stay-account",
+  title: "Conta e extrato da estadia",
+  steps: [
+    {
+      id: "summary",
+      target: "stay-account-summary",
+      title: "Confira a posição da conta",
+      description:
+        "Hospedagem, consumos e o saldo pagável são consolidados por estadia e atualizados a cada movimentação.",
+    },
+    {
+      id: "lines",
+      target: "stay-account-lines",
+      title: "Revise débitos e créditos",
+      description:
+        "O razão preserva cobranças, pagamentos, ajustes e reembolsos. Valores em aberto determinam o que ainda precisa ser resolvido.",
+    },
+    {
+      id: "refund",
+      target: "stay-account-refund",
+      title: "Conclua reembolsos pendentes",
+      description:
+        "Uma correção paga só termina após registrar o reembolso. Trocar o meio original exige justificativa operacional.",
+    },
+    {
+      id: "statement",
+      target: "stay-account-statement",
+      title: "Consulte e imprima o fechamento",
+      description:
+        "O fechamento original é imutável; correções posteriores aparecem separadas no extrato operacional não fiscal.",
     },
   ],
 };

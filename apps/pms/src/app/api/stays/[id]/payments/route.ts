@@ -1,5 +1,5 @@
 import { NextResponse } from "next/server";
-import { createStayPayment } from "../../../../../lib/adminApi";
+import { createStayPayment, getStayAccount } from "../../../../../lib/adminApi";
 
 type Params = {
   params: Promise<{
@@ -12,7 +12,9 @@ export async function POST(request: Request, { params }: Params) {
     const { id } = await params;
     const payload = await request.json();
     const item = await createStayPayment(id, payload);
-    return NextResponse.json(item);
+    return NextResponse.json(
+      item ? { ...item, account: await getStayAccount(id) } : item,
+    );
   } catch (error) {
     const parsedError = error as Error & {
       statusCode?: number;

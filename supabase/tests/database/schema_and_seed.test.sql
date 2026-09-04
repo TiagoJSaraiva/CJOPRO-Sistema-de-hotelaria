@@ -1,6 +1,6 @@
 begin;
 
-select plan(179);
+select plan(200);
 
 select ok(to_regclass('public.room_blocks') is not null, 'room_blocks exists');
 
@@ -517,14 +517,15 @@ select throws_ok(
   'checkout rejects an unacknowledged maintenance charge'
 );
 
-select lives_ok(
+select throws_ok(
   $$ select public.checkout_stay_with_financial_acknowledgements(
     '10000000-0000-4000-8000-000000000001', '91000000-0000-4000-8000-000000000002',
     '80000000-0000-4000-8000-000000000002', array['97200000-0000-4000-8000-000000000001']::uuid[],
     array[(select folio_entry_id from public.maintenance_recoveries where id = '98300000-0000-4000-8000-000000000001')]::uuid[],
     'Ciência operacional e financeira'
   ) $$,
-  'checkout accepts explicit financial acknowledgement'
+  '23514', null,
+  'legacy checkout cannot bypass the general open-account protection'
 );
 
 select throws_ok(
@@ -1259,6 +1260,208 @@ select ok(
     where order_id = (select id from public.consumption_orders
       where idempotency_key = 'c1000000-0000-4000-8000-000000000002')),
   'consumption posting creates an immutable audit event'
+);
+
+select ok(
+  to_regclass('public.stay_payment_batches') is not null
+    and to_regclass('public.consumption_corrections') is not null
+    and to_regclass('public.stay_refunds') is not null
+    and to_regclass('public.stay_checkout_records') is not null,
+  'stay account, correction, refund and checkout tables exist'
+);
+select throws_ok(
+  $$ insert into public.stay_account_events(hotel_id,stay_id,entity_type,action)
+    values ('10000000-0000-4000-8000-000000000001','91000000-0000-4000-8000-000000000004','test','cross_hotel') $$,
+  '23514', null, 'stay account events reject cross-hotel relationships'
+);
+select is(
+  (select count(*)::integer from public.stay_payment_batches where kind = 'legacy'),
+  2,
+  'existing payments are backfilled into one-tender legacy batches'
+);
+select ok(
+  (select account_version > 0 from public.stays where id = '91000000-0000-4000-8000-000000000002'),
+  'financial mutations maintain a monotonic stay account version'
+);
+select is(
+  (public.create_stay_payment_batch(
+    '10000000-0000-4000-8000-000000000001',
+    '91000000-0000-4000-8000-000000000002',
+    '80000000-0000-4000-8000-000000000002',
+    jsonb_build_array(
+      jsonb_build_object('payment_method', 'pix', 'amount', round((select coalesce(sum(entry.open_amount),0) from (
+        select folio.amount - coalesce(sum(allocation.amount),0) open_amount
+        from public.stay_folio_entries folio
+        left join public.stay_folio_allocations allocation on allocation.debit_entry_id=folio.id
+        where folio.stay_id='91000000-0000-4000-8000-000000000002' and folio.direction='debit'
+          and folio.kind <> 'maintenance_charge' group by folio.id
+        having folio.amount > coalesce(sum(allocation.amount),0)
+      ) entry) / 2, 2)),
+      jsonb_build_object('payment_method', 'cash', 'amount', (select coalesce(sum(entry.open_amount),0) from (
+        select folio.amount - coalesce(sum(allocation.amount),0) open_amount
+        from public.stay_folio_entries folio
+        left join public.stay_folio_allocations allocation on allocation.debit_entry_id=folio.id
+        where folio.stay_id='91000000-0000-4000-8000-000000000002' and folio.direction='debit'
+          and folio.kind <> 'maintenance_charge' group by folio.id
+        having folio.amount > coalesce(sum(allocation.amount),0)
+      ) entry) - round((select coalesce(sum(entry.open_amount),0) from (
+        select folio.amount - coalesce(sum(allocation.amount),0) open_amount
+        from public.stay_folio_entries folio
+        left join public.stay_folio_allocations allocation on allocation.debit_entry_id=folio.id
+        where folio.stay_id='91000000-0000-4000-8000-000000000002' and folio.direction='debit'
+          and folio.kind <> 'maintenance_charge' group by folio.id
+        having folio.amount > coalesce(sum(allocation.amount),0)
+      ) entry) / 2, 2))
+    ), 'd1000000-0000-4000-8000-000000000001',
+    (select account_version from public.stays where id='91000000-0000-4000-8000-000000000002')
+  ))->>'result',
+  'ok',
+  'a multi-tender payment is posted atomically at the current account version'
+);
+select is(
+  (select count(*)::integer from public.stay_payment_batch_tenders
+    where batch_id=(select id from public.stay_payment_batches
+      where idempotency_key='d1000000-0000-4000-8000-000000000001')),
+  2,
+  'the batch preserves each payment tender'
+);
+select is(
+  (public.create_stay_payment_batch(
+    '10000000-0000-4000-8000-000000000001',
+    '91000000-0000-4000-8000-000000000002',
+    '80000000-0000-4000-8000-000000000002',
+    (select jsonb_agg(jsonb_build_object('payment_method', payment_method, 'amount', amount)
+      order by display_order) from public.stay_payment_batch_tenders
+      where batch_id=(select id from public.stay_payment_batches
+        where idempotency_key='d1000000-0000-4000-8000-000000000001')),
+    'd1000000-0000-4000-8000-000000000001', 0
+  ))->>'result',
+  'ok',
+  'an identical payment retry returns the existing batch before version validation'
+);
+select throws_ok(
+  $$ delete from public.stay_payment_batches
+    where idempotency_key='d1000000-0000-4000-8000-000000000001' $$,
+  '23514', null, 'payment batches cannot be hard deleted'
+);
+select is(
+  (public.create_stay_refund(
+    '10000000-0000-4000-8000-000000000001',
+    '91000000-0000-4000-8000-000000000002',
+    '80000000-0000-4000-8000-000000000002', 1, 'cash',
+    'Estorno parcial do pagamento', 'd1000000-0000-4000-8000-000000000004',
+    (select account_version from public.stays where id='91000000-0000-4000-8000-000000000002'),
+    p_original_tender_id => (select id from public.stay_payment_batch_tenders where batch_id=(
+      select id from public.stay_payment_batches where idempotency_key='d1000000-0000-4000-8000-000000000001'
+    ) and payment_method='cash')
+  ))->>'result',
+  'ok',
+  'a payment tender can be partially reversed before checkout'
+);
+select ok(
+  exists(select 1 from public.stay_folio_entries entry
+    where entry.kind='refund' and entry.amount=1 and entry.source_key like 'stay-refund:%'
+      and entry.stay_id='91000000-0000-4000-8000-000000000002'),
+  'payment reversal creates a compensating open debit'
+);
+select is(
+  (public.create_stay_payment_batch(
+    '10000000-0000-4000-8000-000000000001',
+    '91000000-0000-4000-8000-000000000002',
+    '80000000-0000-4000-8000-000000000002',
+    jsonb_build_array(jsonb_build_object('payment_method','cash','amount',1)),
+    'd1000000-0000-4000-8000-000000000005',
+    (select account_version from public.stays where id='91000000-0000-4000-8000-000000000002')
+  ))->>'result',
+  'ok',
+  'the reopened balance can be settled again without rewriting the original payment'
+);
+select is(
+  (public.request_consumption_correction(
+    '10000000-0000-4000-8000-000000000001',
+    (select id from public.consumption_orders where idempotency_key='c1000000-0000-4000-8000-000000000001'),
+    '80000000-0000-4000-8000-000000000002', 'partial_adjustment', 'Item não consumido',
+    jsonb_build_array(jsonb_build_object(
+      'order_item_id', (select id from public.consumption_order_items where order_id=(
+        select id from public.consumption_orders where idempotency_key='c1000000-0000-4000-8000-000000000001')),
+      'resulting_quantity', 1, 'additional_discount', 0
+    )), (select account_version from public.stays where id='91000000-0000-4000-8000-000000000002')
+  ))->>'result',
+  'ok',
+  'a partial correction records original and resulting item values'
+);
+select is(
+  (public.decide_consumption_correction(
+    '10000000-0000-4000-8000-000000000001',
+    (select id from public.consumption_corrections order by requested_at desc limit 1),
+    '80000000-0000-4000-8000-000000000002', 'approve'
+  ))->>'result',
+  'self_approval',
+  'a correction requester cannot approve their own request'
+);
+select is(
+  (public.decide_consumption_correction(
+    '10000000-0000-4000-8000-000000000001',
+    (select id from public.consumption_corrections order by requested_at desc limit 1),
+    '80000000-0000-4000-8000-000000000001', 'approve'
+  ))->>'status',
+  'awaiting_refund',
+  'a paid folio correction waits for refund after approval by another user'
+);
+select is(
+  (public.create_stay_refund(
+    '10000000-0000-4000-8000-000000000001',
+    '91000000-0000-4000-8000-000000000002',
+    '80000000-0000-4000-8000-000000000002',
+    (select net_reduction from public.consumption_corrections order by requested_at desc limit 1),
+    'pix', 'Reembolso do ajuste aprovado', 'd1000000-0000-4000-8000-000000000002',
+    (select account_version from public.stays where id='91000000-0000-4000-8000-000000000002'),
+    (select id from public.consumption_corrections order by requested_at desc limit 1)
+  ))->>'result',
+  'ok',
+  'an approved paid correction completes only with a recorded hotel refund'
+);
+select is(
+  (select status::text from public.consumption_corrections order by requested_at desc limit 1),
+  'completed',
+  'the refunded correction is completed without changing the original order'
+);
+select ok(
+  exists(select 1 from public.financial_transactions where type='REFUND' and stay_refund_id is not null),
+  'hotel refunds create compensating financial transactions'
+);
+select throws_ok(
+  $$ update public.stay_account_events set action=action $$,
+  '23514', null, 'stay account events are immutable'
+);
+update public.stays set checkout_date_expected = current_date + time '12:00'
+  where id='91000000-0000-4000-8000-000000000002';
+update public.hotels set checkout_time_start = time '00:00', checkout_time_limit = time '23:59:59'
+  where id='10000000-0000-4000-8000-000000000001';
+select is(
+  (public.checkout_stay_account(
+    '10000000-0000-4000-8000-000000000001',
+    '91000000-0000-4000-8000-000000000002',
+    '80000000-0000-4000-8000-000000000002',
+    (select account_version from public.stays where id='91000000-0000-4000-8000-000000000002'),
+    '[]'::jsonb, 'd1000000-0000-4000-8000-000000000003',
+    array(select id from public.maintenance_occurrences where hotel_id='10000000-0000-4000-8000-000000000001'
+      and stay_id='91000000-0000-4000-8000-000000000002' and status not in ('resolved','canceled')),
+    array(select id from public.stay_folio_entries where stay_id='91000000-0000-4000-8000-000000000002'
+      and kind='maintenance_charge' and direction='debit')
+  ))->>'result',
+  'ok',
+  'checkout closes a financially settled stay in one transaction'
+);
+select is(
+  (select stay_status::text from public.stays where id='91000000-0000-4000-8000-000000000002'),
+  'checked_out',
+  'atomic checkout updates the stay status'
+);
+select ok(
+  exists(select 1 from public.stay_checkout_records
+    where stay_id='91000000-0000-4000-8000-000000000002' and kind='operational'),
+  'checkout stores an immutable contemporary statement snapshot'
 );
 
 select * from finish();

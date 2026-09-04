@@ -209,6 +209,32 @@ insert into public.financial_transactions (
   ('94000000-0000-4000-8000-000000000002', '10000000-0000-4000-8000-000000000001', 'INCOME', 'STAY_PAYMENT', 456.00, 'BRL', 'Pagamento encerrado sintetico', 'COMPLETED', '91000000-0000-4000-8000-000000000003', '90000000-0000-4000-8000-000000000003', 'pix', now() - interval '8 days', '80000000-0000-4000-8000-000000000002', 'LOCAL-PAY-002'),
   ('94000000-0000-4000-8000-000000000003', '10000000-0000-4000-8000-000000000002', 'EXPENSE', 'MAINTENANCE', 120.00, 'BRL', 'Manutencao sintetica', 'COMPLETED', null, null, 'bank_transfer', now(), '80000000-0000-4000-8000-000000000003', 'LOCAL-EXP-001');
 
+insert into public.stay_payment_batches (
+  id, hotel_id, stay_id, reservation_id, kind, amount, currency, note, created_by, created_at
+)
+select transaction.id, transaction.hotel_id, transaction.stay_id, transaction.reservation_id,
+  'legacy', transaction.amount, transaction.currency, 'Pagamento sintético migrado',
+  transaction.created_by, transaction.created_at
+from public.financial_transactions transaction
+where transaction.id in (
+  '94000000-0000-4000-8000-000000000001',
+  '94000000-0000-4000-8000-000000000002'
+);
+
+insert into public.stay_payment_batch_tenders (
+  hotel_id, batch_id, payment_method, amount, reference_code,
+  financial_transaction_id, folio_credit_entry_id, display_order
+)
+select transaction.hotel_id, transaction.id,
+  transaction.payment_method::public.consumption_payment_method,
+  transaction.amount, transaction.reference_code, transaction.id, entry.id, 0
+from public.financial_transactions transaction
+join public.stay_folio_entries entry on entry.financial_transaction_id = transaction.id
+where transaction.id in (
+  '94000000-0000-4000-8000-000000000001',
+  '94000000-0000-4000-8000-000000000002'
+);
+
 insert into public.room_blocks (id, hotel_id, room_id, status, label, start_date, end_date) values
   ('95000000-0000-4000-8000-000000000001', '10000000-0000-4000-8000-000000000001', '20000000-0000-4000-8000-000000000103', 'blocked', 'Limpeza programada', current_date + 1, current_date + 2),
   ('95000000-0000-4000-8000-000000000002', '10000000-0000-4000-8000-000000000002', '20000000-0000-4000-8000-000000000203', 'maintenance', 'Manutencao preventiva', current_date - 2, current_date + 1);

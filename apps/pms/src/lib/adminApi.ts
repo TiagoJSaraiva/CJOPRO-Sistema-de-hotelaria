@@ -47,6 +47,15 @@ import {
   AdminReservationCalendarBookingCreateResponse,
   AdminStayOperationalPanelResponse,
   AdminStayFolioAllocationPreview,
+  AdminStayAccount,
+  AdminStayPaymentBatchInput,
+  AdminStayRefundInput,
+  AdminStayCheckoutInput,
+  AdminStayCheckoutRecord,
+  AdminConsumptionCorrection,
+  AdminConsumptionCorrectionCreateInput,
+  AdminConsumptionCorrectionDecisionInput,
+  AdminPartnerRefundConfirmationInput,
   AdminStayPaymentCreateInput,
   AdminRoom,
   AdminRoomCreateInput,
@@ -694,6 +703,46 @@ export async function getStayFolio(
   return response.item;
 }
 
+export async function getStayAccount(
+  stayId: string,
+): Promise<AdminStayAccount> {
+  const response = await getAdminData<AdminItemResponse<AdminStayAccount>>(
+    `/admin/stays/${stayId}/account`,
+  );
+  return response.item;
+}
+
+export function createStayPaymentBatch(
+  stayId: string,
+  payload: AdminStayPaymentBatchInput,
+): Promise<AdminStayAccount | null> {
+  return requestAdmin<AdminStayAccount>(
+    `/admin/stays/${stayId}/payment-batches`,
+    "POST",
+    payload,
+  );
+}
+
+export function createStayRefund(
+  stayId: string,
+  payload: AdminStayRefundInput,
+): Promise<AdminStayAccount | null> {
+  return requestAdmin<AdminStayAccount>(
+    `/admin/stays/${stayId}/refunds`,
+    "POST",
+    payload,
+  );
+}
+
+export async function getStayCheckoutRecord(
+  stayId: string,
+): Promise<AdminStayCheckoutRecord> {
+  const response = await getAdminData<
+    AdminItemResponse<AdminStayCheckoutRecord>
+  >(`/admin/stays/${stayId}/checkout-record`);
+  return response.item;
+}
+
 export async function previewStayPaymentAllocation(
   stayId: string,
   amount: number,
@@ -742,14 +791,51 @@ export function executeStayCheckin(
 
 export function executeStayCheckout(
   stayId: string,
-  payload: {
-    maintenance_acknowledged_occurrence_ids?: string[];
-    maintenance_acknowledged_folio_entry_ids?: string[];
-    maintenance_acknowledgement_note?: string;
-  },
-): Promise<AdminStayOperationalPanelResponse | null> {
-  return requestAdmin<AdminStayOperationalPanelResponse>(
+  payload: AdminStayCheckoutInput,
+): Promise<AdminStayAccount | null> {
+  return requestAdmin<AdminStayAccount>(
     `/admin/stays/${stayId}/checkout`,
+    "POST",
+    payload,
+  );
+}
+
+export function requestConsumptionCorrection(
+  orderId: string,
+  payload: AdminConsumptionCorrectionCreateInput,
+): Promise<AdminConsumptionCorrection | null> {
+  return requestAdmin<AdminConsumptionCorrection>(
+    `/admin/consumption-orders/${orderId}/corrections`,
+    "POST",
+    payload,
+  );
+}
+
+export async function listConsumptionCorrections(
+  query = "",
+): Promise<AdminConsumptionCorrection[]> {
+  return getAdminList<AdminConsumptionCorrection>(
+    `/admin/consumption-corrections${query ? `?${query}` : ""}`,
+  );
+}
+
+export function decideConsumptionCorrection(
+  correctionId: string,
+  payload: AdminConsumptionCorrectionDecisionInput,
+): Promise<AdminConsumptionCorrection | null> {
+  return requestAdmin<AdminConsumptionCorrection>(
+    `/admin/consumption-corrections/${correctionId}/decision`,
+    "POST",
+    payload,
+  );
+}
+
+export function confirmPartnerCorrectionRefund(
+  correctionId: string,
+  payload: AdminPartnerRefundConfirmationInput,
+): Promise<AdminConsumptionCorrection | null> {
+  return requestAdmin<AdminConsumptionCorrection>(
+    `/admin/consumption-corrections/${correctionId}/partner-refund-confirmation`,
     "POST",
     payload,
   );

@@ -2,8 +2,10 @@
 
 import { useMemo, useState, type FormEvent } from "react";
 import type {
+  AdminStayAccount,
   AdminStayFolioAllocationPreview,
   AdminStayOperationalPanelResponse,
+  ConsumptionPaymentMethod,
 } from "@hotel/shared";
 import { ContextHelp } from "../../_components/ContextHelp";
 import {
@@ -21,6 +23,9 @@ type ApiErrorPayload = {
   message?: string;
   details?: string | null;
 };
+type PanelWithAccount = AdminStayOperationalPanelResponse & {
+  account?: AdminStayAccount;
+};
 
 const primaryButtonClassName =
   "cursor-pointer rounded-lg border border-[#14564c] bg-[#1b7a6c] px-[0.85rem] py-[0.58rem] font-semibold text-white disabled:cursor-not-allowed disabled:border-[#d2d6db] disabled:bg-[#eef2f6] disabled:text-[#98a2b3]";
@@ -32,7 +37,11 @@ async function parseApiError(
   fallback: string,
 ): Promise<Error> {
   const payload = (await response.json().catch(() => ({}))) as ApiErrorPayload;
-  return new Error(payload.message || fallback);
+  const error = new Error(payload.message || fallback) as Error & {
+    details?: string | null;
+  };
+  error.details = payload.details;
+  return error;
 }
 
 async function getJson<T>(url: string, fallback: string): Promise<T> {
@@ -80,8 +89,51 @@ function formatPaymentInputValue(value: number): string {
   return value > 0 ? value.toFixed(2) : "";
 }
 
-export function CheckoutByRoomWorkflow() {
-  const [roomNumber, setRoomNumber] = useState("");
+function accountFromPanel(
+  panel: AdminStayOperationalPanelResponse,
+): AdminStayAccount {
+  const checkoutBalance = getStayBalance(panel);
+  const folio = panel.folio || {
+    stay_id: panel.stay.id,
+    currency: "BRL",
+    entries: [],
+    allocations: [],
+    total_debits: panel.stay.total_price_estimated,
+    total_credits: panel.stay.total_paid,
+    balance: checkoutBalance,
+    payment_status: panel.stay.stay_payment_status,
+    pending_maintenance_entry_ids: [],
+  };
+  return {
+    stay_id: panel.stay.id,
+    reservation_id: panel.stay.reservation_id,
+    reservation_code: panel.stay.reservation_code,
+    room_number: panel.stay.room_number,
+    guest_name: panel.stay.customer_name,
+    stay_status: panel.stay.stay_status,
+    currency: folio.currency,
+    version: panel.stay.account_version || 0,
+    status:
+      panel.stay.stay_status === "checked_out"
+        ? "closed"
+        : checkoutBalance === 0
+          ? "ready_to_checkout"
+          : "open",
+    folio: { ...folio, checkout_balance: checkoutBalance },
+    consumption_orders: [],
+    corrections: [],
+    payment_batches: [],
+    refunds: [],
+    checkout_record: null,
+  };
+}
+
+export function CheckoutByRoomWorkflow({
+  initialRoomNumber = "",
+}: {
+  initialRoomNumber?: string;
+}) {
+  const [roomNumber, setRoomNumber] = useState(initialRoomNumber);
   const [panelData, setPanelData] =
     useState<AdminStayOperationalPanelResponse | null>(null);
   const [paymentAmount, setPaymentAmount] = useState("");
@@ -94,10 +146,42 @@ export function CheckoutByRoomWorkflow() {
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState<string | null>(null);
   const [maintenanceAcknowledged, setMaintenanceAcknowledged] = useState(false);
+  const [accountData, setAccountData] = useState<AdminStayAccount | null>(null);
+  const [checkoutTenders, setCheckoutTenders] = useState<
+    Array<{
+      payment_method: ConsumptionPaymentMethod;
+      amount: string;
+      reference_code: string;
+    }>
+  >([{ payment_method: "pix", amount: "", reference_code: "" }]);
 
   const balance = useMemo(
-    () => (panelData ? getStayBalance(panelData) : 0),
-    [panelData],
+    () =>
+      accountData
+        ? Number(accountData.folio.checkout_balance || 0)
+        : panelData
+          ? getStayBalance(panelData)
+          : 0,
+    [accountData, panelData],
+  );
+  const checkoutTenderTotal = useMemo(
+    () =>
+      Number(
+        checkoutTenders
+          .reduce((sum, tender) => sum + Number(tender.amount || 0), 0)
+          .toFixed(2),
+      ),
+    [checkoutTenders],
+  );
+  const hasPendingAccountAction = Boolean(
+    accountData?.corrections.some((correction) =>
+      [
+        "pending",
+        "approved",
+        "awaiting_refund",
+        "awaiting_partner_refund",
+      ].includes(correction.status),
+    ),
   );
 
   function applyPanel(panel: AdminStayOperationalPanelResponse) {
@@ -106,6 +190,40 @@ export function CheckoutByRoomWorkflow() {
     setPaymentNote("");
     setAllocationPreview(null);
     setMaintenanceAcknowledged(false);
+  }
+
+  function applyAccount(account: AdminStayAccount) {
+    setAccountData(account);
+    if (account.stay_status === "checked_out") {
+      setPanelData((current) =>
+        current
+          ? {
+              ...current,
+              stay: {
+                ...current.stay,
+                stay_status: "checked_out",
+                checkout_date_actual:
+                  account.checkout_record?.checked_out_at ||
+                  current.stay.checkout_date_actual,
+              },
+              eligibility: {
+                ...current.eligibility,
+                can_checkout: false,
+                checkout_block_reason:
+                  "A estadia precisa estar em checked_in para checkout.",
+              },
+            }
+          : current,
+      );
+    }
+    const outstanding = Number(account.folio.checkout_balance || 0);
+    setCheckoutTenders([
+      {
+        payment_method: "pix",
+        amount: formatPaymentInputValue(outstanding),
+        reference_code: "",
+      },
+    ]);
   }
 
   async function handleAllocationPreview() {
@@ -152,13 +270,15 @@ export function CheckoutByRoomWorkflow() {
       setError(null);
       setSuccess(null);
       const query = new URLSearchParams({ room_number: normalizedRoomNumber });
-      const panel = await getJson<AdminStayOperationalPanelResponse>(
+      const panel = await getJson<PanelWithAccount>(
         `/api/stays/checkout-candidate?${query.toString()}`,
         "Falha ao localizar estadia para checkout.",
       );
       applyPanel(panel);
+      applyAccount(panel.account || accountFromPanel(panel));
     } catch (requestError) {
       setPanelData(null);
+      setAccountData(null);
       setPaymentAmount("");
       setError(
         requestError instanceof Error
@@ -171,7 +291,7 @@ export function CheckoutByRoomWorkflow() {
   }
 
   async function handleAddPayment() {
-    if (!panelData) return;
+    if (!panelData || !accountData) return;
 
     const amount = Number(paymentAmount.replace(",", ".") || "0");
     if (!Number.isFinite(amount) || amount <= 0) {
@@ -184,22 +304,34 @@ export function CheckoutByRoomWorkflow() {
       setIsPending(true);
       setError(null);
       setSuccess(null);
-      const panel = await postJson<AdminStayOperationalPanelResponse>(
-        `/api/stays/${panelData.stay.id}/payments`,
+      const account = await postJson<AdminStayAccount>(
+        `/api/stays/${panelData.stay.id}/payment-batches`,
         {
-          amount,
-          method: paymentMethod,
+          tenders: [{ payment_method: paymentMethod, amount }],
+          expected_version: accountData.version,
+          idempotency_key: crypto.randomUUID(),
           note: paymentNote || null,
-          allocations:
-            allocationPreview?.amount === amount
-              ? allocationPreview.allocations
-              : undefined,
         },
         "Falha ao registrar pagamento.",
       );
-      applyPanel(panel);
+      applyAccount(account);
+      setPaymentAmount("");
+      setPaymentNote("");
+      setAllocationPreview(null);
       setSuccess("Pagamento registrado.");
     } catch (requestError) {
+      if (
+        accountData &&
+        requestError instanceof Error &&
+        (requestError as Error & { details?: string }).details ===
+          "version_conflict"
+      ) {
+        const refreshed = await getJson<AdminStayAccount>(
+          `/api/stays/${accountData.stay_id}/account`,
+          "Falha ao atualizar a conta.",
+        ).catch(() => null);
+        if (refreshed) setAccountData(refreshed);
+      }
       setError(
         requestError instanceof Error
           ? requestError.message
@@ -217,31 +349,69 @@ export function CheckoutByRoomWorkflow() {
       setIsPending(true);
       setError(null);
       setSuccess(null);
-      const checkoutPayload = maintenanceAcknowledged
-        ? {
-            maintenance_acknowledged_occurrence_ids: (
-              panelData.maintenance_occurrences || []
-            )
-              .filter(
-                (occurrence) =>
-                  occurrence.status !== "resolved" &&
-                  occurrence.status !== "canceled",
+      if (!accountData) throw new Error("Conta da estadia não carregada.");
+      if (balance > 0 && checkoutTenderTotal !== balance)
+        throw new Error("A soma dos meios deve quitar exatamente o saldo.");
+      const checkoutPayload = {
+        expected_version: accountData.version,
+        idempotency_key: crypto.randomUUID(),
+        tenders:
+          balance > 0
+            ? checkoutTenders.map((tender) => ({
+                payment_method: tender.payment_method,
+                amount: Number(tender.amount),
+                reference_code: tender.reference_code || null,
+              }))
+            : [],
+        ...(maintenanceAcknowledged
+          ? {
+              maintenance_acknowledged_occurrence_ids: (
+                panelData.maintenance_occurrences || []
               )
-              .map((occurrence) => occurrence.id),
-            maintenance_acknowledged_folio_entry_ids:
-              panelData.maintenance_pending_folio_entry_ids || [],
-          }
-        : {};
-      const panel = await postJson<AdminStayOperationalPanelResponse>(
+                .filter(
+                  (occurrence) =>
+                    occurrence.status !== "resolved" &&
+                    occurrence.status !== "canceled",
+                )
+                .map((occurrence) => occurrence.id),
+              maintenance_acknowledged_folio_entry_ids:
+                panelData.maintenance_pending_folio_entry_ids || [],
+            }
+          : {}),
+      };
+      const checkoutResult = await postJson<
+        AdminStayAccount | AdminStayOperationalPanelResponse
+      >(
         `/api/stays/${panelData.stay.id}/checkout`,
         checkoutPayload,
         "Falha ao executar checkout.",
       );
-      applyPanel(panel);
-      setSuccess(
-        `Checkout confirmado para o quarto ${panel.stay.room_number}.`,
-      );
+      const account =
+        "stay_id" in checkoutResult
+          ? checkoutResult
+          : accountFromPanel(checkoutResult);
+      if (!("stay_id" in checkoutResult)) applyPanel(checkoutResult);
+      applyAccount(account);
+      setSuccess(`Checkout confirmado para o quarto ${account.room_number}.`);
     } catch (requestError) {
+      if (
+        accountData &&
+        requestError instanceof Error &&
+        (requestError as Error & { details?: string }).details ===
+          "version_conflict"
+      ) {
+        const refreshed = await getJson<AdminStayAccount>(
+          `/api/stays/${accountData.stay_id}/account`,
+          "Falha ao atualizar a conta.",
+        ).catch(() => null);
+        if (refreshed) {
+          setAccountData(refreshed);
+          setError(
+            "A conta mudou. Os meios informados foram preservados; revise os novos valores e confirme novamente.",
+          );
+          return;
+        }
+      }
       setError(
         requestError instanceof Error
           ? requestError.message
@@ -300,6 +470,7 @@ export function CheckoutByRoomWorkflow() {
               onClick={() => {
                 setRoomNumber("");
                 setPanelData(null);
+                setAccountData(null);
                 setPaymentAmount("");
                 setPaymentNote("");
                 setAllocationPreview(null);
@@ -418,6 +589,79 @@ export function CheckoutByRoomWorkflow() {
                 />
               </div>
             </PanelSection>
+
+            {accountData ? (
+              <PanelSection title="Conta detalhada">
+                <div
+                  className="grid grid-cols-2 gap-2 md:grid-cols-3"
+                  data-usage-guide="stay-account-summary"
+                >
+                  <PaymentSummaryCard
+                    label="Hospedagem"
+                    value={formatMoney(accountData.folio.lodging_total || 0)}
+                    detail="Incluído no checkout"
+                  />
+                  <PaymentSummaryCard
+                    label="Consumos"
+                    value={formatMoney(
+                      accountData.folio.consumption_total || 0,
+                    )}
+                    detail={`${accountData.consumption_orders.length} comanda(s)`}
+                  />
+                  <PaymentSummaryCard
+                    label="Manutenção"
+                    value={formatMoney(
+                      accountData.folio.maintenance_total || 0,
+                    )}
+                    detail="Exceção mediante ciência"
+                  />
+                  <PaymentSummaryCard
+                    label="Crédito a reembolsar"
+                    value={formatMoney(
+                      accountData.folio.refundable_credit || 0,
+                    )}
+                    detail="Bloqueia o fechamento"
+                    tone={
+                      Number(accountData.folio.refundable_credit || 0) > 0
+                        ? "danger"
+                        : "good"
+                    }
+                  />
+                </div>
+                <div
+                  className="overflow-x-auto"
+                  data-usage-guide="stay-account-lines"
+                  tabIndex={0}
+                  role="region"
+                  aria-label="Lançamentos da conta"
+                >
+                  <table className="w-full min-w-[560px] text-left text-sm">
+                    <thead>
+                      <tr>
+                        <th>Grupo</th>
+                        <th>Descrição</th>
+                        <th className="text-right">Valor</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {accountData.folio.entries.map((entry) => (
+                        <tr
+                          className="border-t border-slate-100"
+                          key={entry.id}
+                        >
+                          <td className="py-2">{entry.kind}</td>
+                          <td>{entry.description}</td>
+                          <td className="text-right">
+                            {entry.direction === "credit" ? "− " : ""}
+                            {formatMoney(entry.amount)}
+                          </td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+              </PanelSection>
+            ) : null}
 
             {panelData.payments.length ? (
               <PanelSection title="Historico de pagamentos">
@@ -550,6 +794,139 @@ export function CheckoutByRoomWorkflow() {
             </PanelSection>
 
             <PanelSection title="Checkout">
+              {accountData && balance > 0 ? (
+                <div
+                  className="grid gap-3"
+                  data-usage-guide="stay-account-tenders"
+                >
+                  <div>
+                    <strong>Pagamento multimeios</strong>
+                    <p className="m-0 text-sm text-slate-600">
+                      Divida o saldo em até dez parcelas. A soma deve ser exata.
+                    </p>
+                  </div>
+                  {checkoutTenders.map((tender, index) => (
+                    <div
+                      className="grid grid-cols-[1fr_1fr_auto] gap-2"
+                      key={index}
+                    >
+                      <select
+                        aria-label={`Meio ${index + 1}`}
+                        className="pms-field-input"
+                        value={tender.payment_method}
+                        onChange={(event) =>
+                          setCheckoutTenders((current) =>
+                            current.map((item, itemIndex) =>
+                              itemIndex === index
+                                ? {
+                                    ...item,
+                                    payment_method: event.target
+                                      .value as ConsumptionPaymentMethod,
+                                  }
+                                : item,
+                            ),
+                          )
+                        }
+                      >
+                        {(
+                          [
+                            "cash",
+                            "pix",
+                            "credit_card",
+                            "debit_card",
+                            "bank_transfer",
+                          ] as const
+                        ).map((method) => (
+                          <option value={method} key={method}>
+                            {paymentMethodLabel(method)}
+                          </option>
+                        ))}
+                      </select>
+                      <input
+                        aria-label={`Valor ${index + 1}`}
+                        className="pms-field-input"
+                        type="number"
+                        min="0.01"
+                        step="0.01"
+                        value={tender.amount}
+                        onChange={(event) =>
+                          setCheckoutTenders((current) =>
+                            current.map((item, itemIndex) =>
+                              itemIndex === index
+                                ? { ...item, amount: event.target.value }
+                                : item,
+                            ),
+                          )
+                        }
+                      />
+                      <button
+                        type="button"
+                        className={secondaryButtonClassName}
+                        disabled={checkoutTenders.length === 1}
+                        onClick={() =>
+                          setCheckoutTenders((current) =>
+                            current.filter(
+                              (_, itemIndex) => itemIndex !== index,
+                            ),
+                          )
+                        }
+                        aria-label={`Remover meio ${index + 1}`}
+                      >
+                        ×
+                      </button>
+                    </div>
+                  ))}
+                  <div className="flex flex-wrap gap-2">
+                    <button
+                      type="button"
+                      className={secondaryButtonClassName}
+                      disabled={checkoutTenders.length >= 10}
+                      onClick={() =>
+                        setCheckoutTenders((current) => [
+                          ...current,
+                          {
+                            payment_method: "cash",
+                            amount: "",
+                            reference_code: "",
+                          },
+                        ])
+                      }
+                    >
+                      Adicionar meio
+                    </button>
+                    <button
+                      type="button"
+                      className={secondaryButtonClassName}
+                      onClick={() => {
+                        const other = checkoutTenders
+                          .slice(0, -1)
+                          .reduce(
+                            (sum, item) => sum + Number(item.amount || 0),
+                            0,
+                          );
+                        setCheckoutTenders((current) =>
+                          current.map((item, index) =>
+                            index === current.length - 1
+                              ? {
+                                  ...item,
+                                  amount: formatPaymentInputValue(
+                                    Math.max(balance - other, 0),
+                                  ),
+                                }
+                              : item,
+                          ),
+                        );
+                      }}
+                    >
+                      Preencher restante
+                    </button>
+                  </div>
+                  <p className="m-0 text-sm font-semibold" aria-live="polite">
+                    Informado {formatMoney(checkoutTenderTotal)} · Restante{" "}
+                    {formatMoney(Math.max(balance - checkoutTenderTotal, 0))}
+                  </p>
+                </div>
+              ) : null}
               {Boolean(
                 (panelData.maintenance_occurrences || []).length ||
                 panelData.maintenance_financial_acknowledgement_required,
@@ -632,6 +1009,14 @@ export function CheckoutByRoomWorkflow() {
                     "Checkout nao permitido para esta estadia."}
                 </p>
               )}
+              {hasPendingAccountAction ? (
+                <p
+                  className="m-0 rounded-lg border border-[#f5d08a] bg-[#fff9eb] p-3 text-[0.86rem] text-[#8a5a00]"
+                  role="status"
+                >
+                  Resolva os ajustes ou reembolsos pendentes antes do checkout.
+                </p>
+              ) : null}
               <button
                 type="button"
                 onClick={handleCheckout}
@@ -645,7 +1030,12 @@ export function CheckoutByRoomWorkflow() {
                   Boolean(
                     panelData.maintenance_financial_acknowledgement_required &&
                     !maintenanceAcknowledged,
-                  )
+                  ) ||
+                  Boolean(balance > 0 && checkoutTenderTotal !== balance) ||
+                  Boolean(
+                    Number(accountData?.folio.refundable_credit || 0) > 0,
+                  ) ||
+                  hasPendingAccountAction
                 }
                 className={primaryButtonClassName}
               >
@@ -653,6 +1043,111 @@ export function CheckoutByRoomWorkflow() {
               </button>
             </PanelSection>
           </aside>
+        </section>
+      ) : null}
+      {accountData?.checkout_record ? (
+        <section
+          className="pms-surface-card grid gap-4 print:border-0 print:shadow-none"
+          data-usage-guide="stay-account-statement"
+          aria-label="Extrato não fiscal"
+        >
+          <div className="flex items-start justify-between gap-3 print:hidden">
+            <div>
+              <h2 className="m-0 text-xl">Extrato não fiscal</h2>
+              <p className="m-0 text-sm text-slate-600">
+                Fechamento original imutável da estadia.
+              </p>
+            </div>
+            <button
+              type="button"
+              className={secondaryButtonClassName}
+              onClick={() => window.print()}
+            >
+              Imprimir extrato
+            </button>
+          </div>
+          <header>
+            <strong>Quarto {accountData.room_number}</strong>
+            <p className="m-0">
+              Reserva{" "}
+              {accountData.reservation_code || accountData.reservation_id} ·{" "}
+              {accountData.guest_name || "Hóspede não informado"}
+            </p>
+            <p className="m-0 text-sm">
+              Fechado em{" "}
+              {new Date(
+                accountData.checkout_record.checked_out_at,
+              ).toLocaleString("pt-BR")}
+            </p>
+          </header>
+          <table className="w-full text-left text-sm">
+            <thead>
+              <tr>
+                <th>Descrição</th>
+                <th className="text-right">Valor</th>
+              </tr>
+            </thead>
+            <tbody>
+              {accountData.folio.entries.map((entry) => (
+                <tr className="border-t border-slate-200" key={entry.id}>
+                  <td className="py-2">{entry.description}</td>
+                  <td className="text-right">
+                    {entry.direction === "credit" ? "− " : ""}
+                    {formatMoney(entry.amount)}
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+          <div className="grid gap-1 text-sm sm:grid-cols-2">
+            <span>
+              Hospedagem:{" "}
+              {formatMoney(accountData.checkout_record.lodging_total)}
+            </span>
+            <span>
+              Consumos:{" "}
+              {formatMoney(accountData.checkout_record.consumption_total)}
+            </span>
+            <span>
+              Pagamentos:{" "}
+              {formatMoney(accountData.checkout_record.payment_total)}
+            </span>
+            <span>
+              Cortesias:{" "}
+              {formatMoney(accountData.checkout_record.courtesy_total)}
+            </span>
+            <span>
+              Descontos:{" "}
+              {formatMoney(accountData.checkout_record.discount_total)}
+            </span>
+            <span>
+              Exceções reconhecidas:{" "}
+              {accountData.checkout_record.exception_folio_entry_ids.length}
+            </span>
+          </div>
+          {accountData.corrections.some(
+            (item) =>
+              item.requested_at > accountData.checkout_record!.checked_out_at,
+          ) ? (
+            <section>
+              <h3>Correções após checkout</h3>
+              <ul>
+                {accountData.corrections
+                  .filter(
+                    (item) =>
+                      item.requested_at >
+                      accountData.checkout_record!.checked_out_at,
+                  )
+                  .map((item) => (
+                    <li key={item.id}>
+                      {item.reason} · {item.status} · −
+                      {formatMoney(item.net_reduction)}
+                    </li>
+                  ))}
+              </ul>
+            </section>
+          ) : null}
+          <small>Documento operacional sem valor fiscal.</small>
         </section>
       ) : null}
     </section>

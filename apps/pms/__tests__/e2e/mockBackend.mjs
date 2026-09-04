@@ -294,6 +294,8 @@ const consumptionOffers = [
   },
 ];
 const consumptionOrders = [];
+let stayTwoPaid = 600;
+let stayTwoCheckedOut = false;
 
 const transactions = [
   {
@@ -543,6 +545,88 @@ function buildPanel(stayId, options = {}) {
   };
 }
 
+function buildStayAccount(stayId = "stay-2") {
+  const panel = buildPanel(stayId, {
+    paid: stayTwoPaid,
+    status: stayTwoCheckedOut ? "checked_out" : "checked_in",
+  });
+  const balance = Math.max(panel.stay.total_price_estimated - stayTwoPaid, 0);
+  return {
+    stay_id: stayId,
+    reservation_id: panel.stay.reservation_id,
+    reservation_code: panel.stay.reservation_code,
+    room_number: panel.stay.room_number,
+    guest_name: panel.stay.customer_name,
+    stay_status: panel.stay.stay_status,
+    currency: "BRL",
+    version: stayTwoPaid === 600 ? 7 : 8,
+    status: stayTwoCheckedOut
+      ? "closed"
+      : balance === 0
+        ? "ready_to_checkout"
+        : "open",
+    folio: {
+      stay_id: stayId,
+      currency: "BRL",
+      entries: [
+        {
+          id: "folio-lodging-2",
+          stay_id: stayId,
+          reservation_id: panel.stay.reservation_id,
+          direction: "debit",
+          kind: "lodging",
+          amount: 960,
+          currency: "BRL",
+          description: "Hospedagem",
+          maintenance_occurrence_id: null,
+          consumption_order_id: null,
+          financial_transaction_id: null,
+          reversed_entry_id: null,
+          allocated_amount: stayTwoPaid,
+          open_amount: balance,
+          posted_at: "2026-05-15T14:30:00.000Z",
+        },
+      ],
+      allocations: [],
+      total_debits: 960,
+      total_credits: stayTwoPaid,
+      balance,
+      payment_status: balance === 0 ? "paid" : "partial",
+      pending_maintenance_entry_ids: [],
+      lodging_total: 960,
+      consumption_total: 0,
+      maintenance_total: 0,
+      available_credit: 0,
+      checkout_balance: balance,
+      refundable_credit: 0,
+    },
+    consumption_orders: [],
+    corrections: [],
+    payment_batches: [],
+    refunds: [],
+    checkout_record: stayTwoCheckedOut
+      ? {
+          id: "checkout-record-2",
+          kind: "operational",
+          account_version: 9,
+          currency: "BRL",
+          lodging_total: 960,
+          consumption_total: 0,
+          maintenance_total: 0,
+          payment_total: 960,
+          partner_direct_total: 0,
+          courtesy_total: 0,
+          discount_total: 0,
+          voided_total: 0,
+          exception_folio_entry_ids: [],
+          statement_snapshot: {},
+          checked_out_by: "user-e2e",
+          checked_out_at: "2026-05-18T11:20:00.000Z",
+        }
+      : null,
+  };
+}
+
 async function parseBody(request) {
   const chunks = [];
   for await (const chunk of request) {
@@ -586,6 +670,13 @@ const server = http.createServer(async (request, response) => {
     commercialPartners.splice(0);
     commercialAgreements.splice(0);
     commercialHistory.splice(0);
+    sendJson(response, 200, { ok: true });
+    return;
+  }
+
+  if (method === "POST" && url.pathname === "/test/reset-stay-account") {
+    stayTwoPaid = 600;
+    stayTwoCheckedOut = false;
     sendJson(response, 200, { ok: true });
     return;
   }
@@ -1672,6 +1763,33 @@ const server = http.createServer(async (request, response) => {
     return;
   }
 
+  const stayAccountMatch = url.pathname.match(
+    /^\/admin\/stays\/([^/]+)\/account$/,
+  );
+  if (method === "GET" && stayAccountMatch) {
+    sendJson(response, 200, { item: buildStayAccount(stayAccountMatch[1]) });
+    return;
+  }
+
+  const stayPaymentBatchMatch = url.pathname.match(
+    /^\/admin\/stays\/([^/]+)\/payment-batches$/,
+  );
+  if (method === "POST" && stayPaymentBatchMatch) {
+    const body = await parseBody(request);
+    stayTwoPaid = Math.min(
+      960,
+      stayTwoPaid +
+        (body.tenders || []).reduce(
+          (sum, tender) => sum + Number(tender.amount || 0),
+          0,
+        ),
+    );
+    sendJson(response, 201, {
+      item: buildStayAccount(stayPaymentBatchMatch[1]),
+    });
+    return;
+  }
+
   if (
     method === "POST" &&
     url.pathname === "/admin/reservations/calendar/booking/simulate"
@@ -1741,8 +1859,10 @@ const server = http.createServer(async (request, response) => {
       return;
     }
     if (action === "checkout") {
+      stayTwoCheckedOut = true;
+      stayTwoPaid = total;
       sendJson(response, 200, {
-        item: buildPanel(stayId, { paid: total, status: "checked_out" }),
+        item: buildStayAccount(stayId),
       });
       return;
     }

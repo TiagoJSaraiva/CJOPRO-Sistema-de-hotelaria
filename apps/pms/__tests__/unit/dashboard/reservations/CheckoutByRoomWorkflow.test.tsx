@@ -3,7 +3,10 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { cleanup, render, screen } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
-import type { AdminStayOperationalPanelResponse } from "@hotel/shared";
+import type {
+  AdminStayAccount,
+  AdminStayOperationalPanelResponse,
+} from "@hotel/shared";
 import { CheckoutByRoomWorkflow } from "../../../../src/app/dashboard/reservations/_components/CheckoutByRoomWorkflow";
 
 type PanelOverrides = {
@@ -119,6 +122,40 @@ function jsonResponse(payload: unknown, status = 200) {
   });
 }
 
+function createAccount(
+  panel: AdminStayOperationalPanelResponse,
+  checkoutBalance: number,
+): AdminStayAccount {
+  return {
+    stay_id: panel.stay.id,
+    reservation_id: panel.stay.reservation_id,
+    reservation_code: panel.stay.reservation_code,
+    room_number: panel.stay.room_number,
+    guest_name: panel.stay.customer_name,
+    stay_status: panel.stay.stay_status,
+    currency: "BRL",
+    version: 7,
+    status: checkoutBalance ? "open" : "ready_to_checkout",
+    folio: {
+      stay_id: panel.stay.id,
+      currency: "BRL",
+      entries: [],
+      allocations: [],
+      total_debits: panel.stay.total_price_estimated,
+      total_credits: panel.stay.total_paid,
+      balance: checkoutBalance,
+      checkout_balance: checkoutBalance,
+      payment_status: checkoutBalance ? "partial" : "paid",
+      pending_maintenance_entry_ids: [],
+    },
+    consumption_orders: [],
+    corrections: [],
+    payment_batches: [],
+    refunds: [],
+    checkout_record: null,
+  };
+}
+
 async function searchRoom(
   user: ReturnType<typeof userEvent.setup>,
   roomNumber = "102",
@@ -209,7 +246,7 @@ describe("CheckoutByRoomWorkflow", () => {
     const fetchMock = vi
       .fn()
       .mockResolvedValueOnce(jsonResponse(partialPanel))
-      .mockResolvedValueOnce(jsonResponse(paidPanel));
+      .mockResolvedValueOnce(jsonResponse(createAccount(paidPanel, 0)));
     vi.stubGlobal("fetch", fetchMock);
     const user = userEvent.setup();
 
@@ -223,17 +260,19 @@ describe("CheckoutByRoomWorkflow", () => {
       screen.getByRole("button", { name: "Registrar pagamento" }),
     );
 
-    expect(fetchMock).toHaveBeenLastCalledWith("/api/stays/stay-2/payments", {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify({
-        amount: 360,
-        method: "pix",
-        note: null,
-      }),
+    expect(fetchMock).toHaveBeenLastCalledWith(
+      "/api/stays/stay-2/payment-batches",
+      expect.objectContaining({ method: "POST" }),
+    );
+    const paymentBody = JSON.parse(
+      String(fetchMock.mock.calls.at(-1)?.[1]?.body),
+    );
+    expect(paymentBody).toMatchObject({
+      tenders: [{ payment_method: "pix", amount: 360 }],
+      expected_version: 0,
+      note: null,
     });
+    expect(paymentBody.idempotency_key).toEqual(expect.any(String));
     expect(await screen.findByText("Pagamento registrado.")).toBeTruthy();
     expect((screen.getByLabelText("Valor") as HTMLInputElement).value).toBe("");
   });
@@ -281,7 +320,7 @@ describe("CheckoutByRoomWorkflow", () => {
       .fn()
       .mockResolvedValueOnce(jsonResponse(partialPanel))
       .mockResolvedValueOnce(jsonResponse(preview))
-      .mockResolvedValueOnce(jsonResponse(createPanel()));
+      .mockResolvedValueOnce(jsonResponse(createAccount(createPanel(), 0)));
     vi.stubGlobal("fetch", fetchMock);
     const user = userEvent.setup();
 
@@ -299,16 +338,18 @@ describe("CheckoutByRoomWorkflow", () => {
 
     expect(fetchMock).toHaveBeenNthCalledWith(
       3,
-      "/api/stays/stay-2/payments",
+      "/api/stays/stay-2/payment-batches",
       expect.objectContaining({
-        body: JSON.stringify({
-          amount: 360,
-          method: "pix",
-          note: null,
-          allocations: preview.allocations,
-        }),
+        method: "POST",
       }),
     );
+    expect(
+      JSON.parse(String(fetchMock.mock.calls[2]?.[1]?.body)),
+    ).toMatchObject({
+      tenders: [{ payment_method: "pix", amount: 360 }],
+      expected_version: 0,
+      note: null,
+    });
   });
 
   it("confirma checkout e mostra status checked-out", async () => {
@@ -336,13 +377,10 @@ describe("CheckoutByRoomWorkflow", () => {
       await screen.findByRole("button", { name: "Confirmar checkout" }),
     );
 
-    expect(fetchMock).toHaveBeenLastCalledWith("/api/stays/stay-2/checkout", {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify({}),
-    });
+    expect(fetchMock.mock.lastCall?.[0]).toBe("/api/stays/stay-2/checkout");
+    expect(
+      JSON.parse(String(fetchMock.mock.lastCall?.[1]?.body)),
+    ).toMatchObject({ expected_version: 0, tenders: [] });
     expect(
       await screen.findByText("Checkout confirmado para o quarto 102."),
     ).toBeTruthy();
@@ -394,15 +432,15 @@ describe("CheckoutByRoomWorkflow", () => {
     expect((checkout as HTMLButtonElement).disabled).toBe(true);
     await user.click(screen.getByLabelText(/Declaro ciência/));
     await user.click(checkout);
-    expect(fetchMock).toHaveBeenLastCalledWith(
-      "/api/stays/stay-2/checkout",
-      expect.objectContaining({
-        body: JSON.stringify({
-          maintenance_acknowledged_occurrence_ids: [openOccurrence.id],
-          maintenance_acknowledged_folio_entry_ids: [],
-        }),
-      }),
-    );
+    expect(fetchMock.mock.lastCall?.[0]).toBe("/api/stays/stay-2/checkout");
+    expect(
+      JSON.parse(String(fetchMock.mock.lastCall?.[1]?.body)),
+    ).toMatchObject({
+      expected_version: 0,
+      tenders: [],
+      maintenance_acknowledged_occurrence_ids: [openOccurrence.id],
+      maintenance_acknowledged_folio_entry_ids: [],
+    });
   });
 
   it("permite checkout com cobrança pendente após ciência sem revelar valores", async () => {
@@ -430,14 +468,51 @@ describe("CheckoutByRoomWorkflow", () => {
     ).toBeTruthy();
     await user.click(screen.getByLabelText(/Declaro ciência da cobrança/));
     await user.click(checkout);
-    expect(fetchMock).toHaveBeenLastCalledWith(
-      "/api/stays/stay-2/checkout",
-      expect.objectContaining({
-        body: JSON.stringify({
-          maintenance_acknowledged_occurrence_ids: [],
-          maintenance_acknowledged_folio_entry_ids: [entryId],
-        }),
-      }),
+    expect(fetchMock.mock.lastCall?.[0]).toBe("/api/stays/stay-2/checkout");
+    expect(
+      JSON.parse(String(fetchMock.mock.lastCall?.[1]?.body)),
+    ).toMatchObject({
+      expected_version: 0,
+      tenders: [],
+      maintenance_acknowledged_occurrence_ids: [],
+      maintenance_acknowledged_folio_entry_ids: [entryId],
+    });
+  });
+
+  it("divide o saldo em dois meios e preserva a versão da conta", async () => {
+    const panel = createPanel({
+      stay: { total_paid: 600, stay_payment_status: "partial" },
+      reservation: { total_paid: 600, payment_status: "partial" },
+    });
+    const account = createAccount(panel, 360);
+    const fetchMock = vi
+      .fn()
+      .mockResolvedValueOnce(jsonResponse({ ...panel, account }))
+      .mockResolvedValueOnce(
+        jsonResponse({ ...account, stay_status: "checked_out" }),
+      );
+    vi.stubGlobal("fetch", fetchMock);
+    const user = userEvent.setup();
+    render(<CheckoutByRoomWorkflow />);
+    await searchRoom(user);
+    const firstAmount = await screen.findByLabelText("Valor 1");
+    await user.clear(firstAmount);
+    await user.type(firstAmount, "200");
+    await user.click(screen.getByRole("button", { name: "Adicionar meio" }));
+    await user.click(
+      screen.getByRole("button", { name: "Preencher restante" }),
     );
+    await user.click(
+      screen.getByRole("button", { name: "Confirmar checkout" }),
+    );
+    const payload = JSON.parse(String(fetchMock.mock.lastCall?.[1]?.body));
+    expect(payload).toMatchObject({
+      expected_version: 7,
+      tenders: [
+        { payment_method: "pix", amount: 200 },
+        { payment_method: "cash", amount: 160 },
+      ],
+    });
+    expect(payload.idempotency_key).toMatch(/^[0-9a-f-]{36}$/);
   });
 });

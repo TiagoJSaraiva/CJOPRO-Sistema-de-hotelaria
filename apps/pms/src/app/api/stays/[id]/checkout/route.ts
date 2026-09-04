@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 import { executeStayCheckout } from "../../../../../lib/adminApi";
+import type { AdminStayCheckoutInput } from "@hotel/shared";
 
 type Params = {
   params: Promise<{
@@ -10,11 +11,7 @@ type Params = {
 export async function POST(request: Request, { params }: Params) {
   try {
     const { id } = await params;
-    const payload = (await request.json().catch(() => ({}))) as {
-      maintenance_acknowledged_occurrence_ids?: string[];
-      maintenance_acknowledged_folio_entry_ids?: string[];
-      maintenance_acknowledgement_note?: string;
-    };
+    const payload = (await request.json()) as AdminStayCheckoutInput;
     const item = await executeStayCheckout(id, payload);
     return NextResponse.json(item);
   } catch (error) {

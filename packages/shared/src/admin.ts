@@ -822,6 +822,9 @@ export type AdminConsumptionOrderItem = {
   gross_amount: number;
   discount_amount: number;
   net_amount: number;
+  effective_quantity?: number;
+  effective_discount?: number;
+  effective_net_amount?: number;
   product_name: string;
   product_code: string | null;
   category_name: string;
@@ -865,6 +868,17 @@ export type AdminConsumptionOrder = {
   gross_amount: number;
   discount_amount: number;
   net_amount: number;
+  effective_gross_amount?: number;
+  effective_discount_amount?: number;
+  effective_net_amount?: number;
+  effective_status?:
+    | "active"
+    | "correction_pending"
+    | "refund_pending"
+    | "partner_refund_pending"
+    | "adjusted"
+    | "voided"
+    | "legacy";
   reservation_code: string | null;
   room_number: string | null;
   guest_name: string | null;
@@ -876,6 +890,7 @@ export type AdminConsumptionOrder = {
   posted_by: string | null;
   operator_name: string | null;
   is_legacy: boolean;
+  account_version?: number;
   items: AdminConsumptionOrderItem[];
   events?: AdminConsumptionOrderEvent[];
   folio_entry_ids?: string[];
@@ -1108,12 +1123,195 @@ export type AdminStayFolioResponse = {
   balance: number;
   payment_status: AdminStayPaymentStatus;
   pending_maintenance_entry_ids: string[];
+  lodging_total?: number;
+  consumption_total?: number;
+  maintenance_total?: number;
+  available_credit?: number;
+  checkout_balance?: number;
+  refundable_credit?: number;
 };
 
 export type AdminStayFolioAllocationPreview = {
   amount: number;
   allocations: AdminStayFolioAllocationInput[];
   unallocated_amount: number;
+};
+
+export type StayAccountStatus =
+  | "open"
+  | "ready_to_checkout"
+  | "closed"
+  | "closed_with_exception"
+  | "closed_with_pending_refund";
+
+export type AdminStayPaymentTenderInput = {
+  payment_method: ConsumptionPaymentMethod;
+  amount: number;
+  reference_code?: string | null;
+};
+
+export type AdminStayPaymentBatchInput = {
+  tenders: AdminStayPaymentTenderInput[];
+  expected_version: number;
+  idempotency_key: string;
+  note?: string | null;
+};
+
+export type AdminStayPaymentTender = AdminStayPaymentTenderInput & {
+  id: string;
+  financial_transaction_id: string;
+  folio_credit_entry_id: string;
+  display_order: number;
+};
+
+export type AdminStayPaymentBatch = {
+  id: string;
+  kind: "regular" | "checkout" | "legacy";
+  amount: number;
+  currency: string;
+  note: string | null;
+  created_by: string | null;
+  created_at: string;
+  tenders: AdminStayPaymentTender[];
+};
+
+export type ConsumptionCorrectionKind = "partial_adjustment" | "full_void";
+export type ConsumptionCorrectionStatus =
+  | "pending"
+  | "approved"
+  | "rejected"
+  | "awaiting_refund"
+  | "awaiting_partner_refund"
+  | "completed";
+
+export type AdminConsumptionCorrectionItemInput = {
+  order_item_id: string;
+  resulting_quantity: number;
+  additional_discount: number;
+};
+
+export type AdminConsumptionCorrectionCreateInput = {
+  kind: ConsumptionCorrectionKind;
+  reason: string;
+  expected_version: number;
+  items?: AdminConsumptionCorrectionItemInput[];
+};
+
+export type AdminConsumptionCorrectionDecisionInput = {
+  decision: "approve" | "reject";
+  reason?: string | null;
+};
+
+export type AdminConsumptionCorrectionItem =
+  AdminConsumptionCorrectionItemInput & {
+    id: string;
+    previous_quantity: number;
+    previous_discount: number;
+    previous_net: number;
+    resulting_net: number;
+  };
+
+export type AdminConsumptionCorrection = {
+  id: string;
+  hotel_id: string;
+  order_id: string;
+  stay_id: string | null;
+  kind: ConsumptionCorrectionKind;
+  status: ConsumptionCorrectionStatus;
+  reason: string;
+  account_version: number;
+  gross_reduction: number;
+  discount_increase: number;
+  net_reduction: number;
+  refundable_amount: number;
+  requested_by: string;
+  requested_by_name?: string | null;
+  requested_at: string;
+  decided_by: string | null;
+  decided_by_name?: string | null;
+  decided_at: string | null;
+  decision_reason: string | null;
+  completed_at: string | null;
+  reservation_code?: string | null;
+  room_number?: string | null;
+  point_name?: string | null;
+  items: AdminConsumptionCorrectionItem[];
+};
+
+export type AdminStayRefundInput = {
+  amount: number;
+  payment_method: ConsumptionPaymentMethod;
+  reason: string;
+  idempotency_key: string;
+  expected_version: number;
+  correction_id?: string | null;
+  original_tender_id?: string | null;
+  reference_code?: string | null;
+  method_override_reason?: string | null;
+};
+
+export type AdminPartnerRefundConfirmationInput = {
+  reference_code?: string | null;
+};
+
+export type AdminStayRefund = {
+  id: string;
+  amount: number;
+  currency: string;
+  payment_method: ConsumptionPaymentMethod;
+  original_payment_method: ConsumptionPaymentMethod | null;
+  method_override_reason: string | null;
+  reference_code: string | null;
+  reason: string;
+  correction_id: string | null;
+  created_by: string;
+  created_at: string;
+};
+
+export type AdminStayCheckoutRecord = {
+  id: string;
+  kind: "operational" | "legacy";
+  account_version: number;
+  currency: string;
+  lodging_total: number;
+  consumption_total: number;
+  maintenance_total: number;
+  payment_total: number;
+  partner_direct_total: number;
+  courtesy_total: number;
+  discount_total: number;
+  voided_total: number;
+  exception_folio_entry_ids: string[];
+  statement_snapshot: Record<string, unknown>;
+  checked_out_by: string | null;
+  checked_out_at: string;
+};
+
+export type AdminStayAccount = {
+  stay_id: string;
+  reservation_id: string;
+  reservation_code: string | null;
+  room_number: string;
+  guest_name: string | null;
+  stay_status: ReservationStatus;
+  currency: string;
+  version: number;
+  status: StayAccountStatus;
+  folio: AdminStayFolioResponse;
+  consumption_orders: AdminConsumptionOrder[];
+  corrections: AdminConsumptionCorrection[];
+  payment_batches: AdminStayPaymentBatch[];
+  refunds: AdminStayRefund[];
+  checkout_record: AdminStayCheckoutRecord | null;
+};
+
+export type AdminStayCheckoutInput = {
+  expected_version: number;
+  idempotency_key: string;
+  tenders: AdminStayPaymentTenderInput[];
+  maintenance_acknowledged_occurrence_ids?: string[];
+  maintenance_acknowledged_folio_entry_ids?: string[];
+  maintenance_acknowledgement_note?: string | null;
 };
 
 export type AdminStayOperationalPanelResponse = {
@@ -1133,6 +1331,7 @@ export type AdminStayOperationalPanelResponse = {
     total_price_estimated: number;
     total_paid: number;
     stay_payment_status: AdminStayPaymentStatus;
+    account_version?: number;
   };
   reservation: {
     id: string;

@@ -20,6 +20,9 @@ import type {
   AdminRoomCreateInput,
   AdminSeasonCreateInput,
   AdminSeasonRoomRateCreateInput,
+  AdminStayRefundInput,
+  AdminConsumptionCorrectionDecisionInput,
+  AdminPartnerRefundConfirmationInput,
   AdminStayPaymentCreateInput,
   AdminUserCreateInput,
   LoginRequest,
@@ -487,7 +490,7 @@ const ConsumptionOrderDispositionInputSchema = Type.Union([
   Type.Literal("charged"),
   Type.Literal("courtesy"),
 ]);
-const ConsumptionPaymentMethodSchema = Type.Union([
+export const ConsumptionPaymentMethodSchema = Type.Union([
   Type.Literal("cash"),
   Type.Literal("pix"),
   Type.Literal("credit_card"),
@@ -658,6 +661,102 @@ export const StayPaymentBodySchema = Type.Object(
     ),
   },
   { ...strict, $id: "StayPaymentCreateInput" },
+);
+
+export const StayPaymentTenderBodySchema = Type.Object(
+  {
+    payment_method: ConsumptionPaymentMethodSchema,
+    amount: Type.Number({ exclusiveMinimum: 0, maximum: 9999999999.99 }),
+    reference_code: optionalNullable(
+      Type.String({ minLength: 1, maxLength: 200 }),
+    ),
+  },
+  { ...strict, $id: "StayPaymentTenderInput" },
+);
+export const StayPaymentBatchBodySchema = Type.Object(
+  {
+    tenders: Type.Array(Type.Ref("StayPaymentTenderInput"), {
+      minItems: 1,
+      maxItems: 10,
+    }),
+    expected_version: Type.Integer({ minimum: 0 }),
+    idempotency_key: uuid(),
+    note: optionalNullable(Type.String({ minLength: 1, maxLength: 1000 })),
+  },
+  { ...strict, $id: "StayPaymentBatchInput" },
+);
+export const StayPaymentBatchPreviewSchema = Type.Object(
+  {
+    currency: Type.String(),
+    balance: Type.Number(),
+    total: Type.Number(),
+    remaining: Type.Number(),
+    allocations: Type.Array(
+      Type.Object(
+        { debit_entry_id: uuid(), amount: Type.Number({ minimum: 0 }) },
+        strict,
+      ),
+    ),
+  },
+  { ...strict, $id: "StayPaymentBatchPreview" },
+);
+export const ConsumptionCorrectionItemBodySchema = Type.Object(
+  {
+    order_item_id: uuid(),
+    resulting_quantity: Type.Number({ minimum: 0, maximum: 9999 }),
+    additional_discount: Type.Number({ minimum: 0, maximum: 9999999999.99 }),
+  },
+  { ...strict, $id: "ConsumptionCorrectionItemInput" },
+);
+export const ConsumptionCorrectionBodySchema = Type.Object(
+  {
+    kind: Type.Union([
+      Type.Literal("partial_adjustment"),
+      Type.Literal("full_void"),
+    ]),
+    reason: Type.String({ minLength: 3, maxLength: 1000 }),
+    expected_version: Type.Integer({ minimum: 0 }),
+    items: Type.Optional(
+      Type.Array(Type.Ref("ConsumptionCorrectionItemInput"), {
+        minItems: 1,
+        maxItems: 100,
+      }),
+    ),
+  },
+  { ...strict, $id: "ConsumptionCorrectionCreateInput" },
+);
+export const ConsumptionCorrectionDecisionBodySchema = Type.Object(
+  {
+    decision: Type.Union([Type.Literal("approve"), Type.Literal("reject")]),
+    reason: optionalNullable(Type.String({ minLength: 3, maxLength: 1000 })),
+  },
+  { ...strict, $id: "ConsumptionCorrectionDecisionInput" },
+);
+export const StayRefundBodySchema = Type.Object(
+  {
+    amount: Type.Number({ exclusiveMinimum: 0, maximum: 9999999999.99 }),
+    payment_method: ConsumptionPaymentMethodSchema,
+    reason: Type.String({ minLength: 3, maxLength: 1000 }),
+    idempotency_key: uuid(),
+    expected_version: Type.Integer({ minimum: 0 }),
+    correction_id: optionalNullable(uuid()),
+    original_tender_id: optionalNullable(uuid()),
+    reference_code: optionalNullable(
+      Type.String({ minLength: 1, maxLength: 200 }),
+    ),
+    method_override_reason: optionalNullable(
+      Type.String({ minLength: 3, maxLength: 1000 }),
+    ),
+  },
+  { ...strict, $id: "StayRefundInput" },
+);
+export const PartnerRefundConfirmationBodySchema = Type.Object(
+  {
+    reference_code: optionalNullable(
+      Type.String({ minLength: 1, maxLength: 200 }),
+    ),
+  },
+  { ...strict, $id: "PartnerRefundConfirmationInput" },
 );
 
 const timestamps = {
@@ -1137,6 +1236,9 @@ export const ConsumptionOrderItemSchema = Type.Object(
     gross_amount: Type.Number(),
     discount_amount: Type.Number(),
     net_amount: Type.Number(),
+    effective_quantity: Type.Optional(Type.Number()),
+    effective_discount: Type.Optional(Type.Number()),
+    effective_net_amount: Type.Optional(Type.Number()),
     product_name: Type.String(),
     product_code: nullable(Type.String()),
     category_name: Type.String(),
@@ -1186,6 +1288,20 @@ export const ConsumptionOrderSchema = Type.Object(
     gross_amount: Type.Number(),
     discount_amount: Type.Number(),
     net_amount: Type.Number(),
+    effective_gross_amount: Type.Optional(Type.Number()),
+    effective_discount_amount: Type.Optional(Type.Number()),
+    effective_net_amount: Type.Optional(Type.Number()),
+    effective_status: Type.Optional(
+      Type.Union([
+        Type.Literal("active"),
+        Type.Literal("correction_pending"),
+        Type.Literal("refund_pending"),
+        Type.Literal("partner_refund_pending"),
+        Type.Literal("adjusted"),
+        Type.Literal("voided"),
+        Type.Literal("legacy"),
+      ]),
+    ),
     reservation_code: nullable(Type.String()),
     room_number: nullable(Type.String()),
     guest_name: nullable(Type.String()),
@@ -1197,6 +1313,7 @@ export const ConsumptionOrderSchema = Type.Object(
     posted_by: nullable(uuid()),
     operator_name: nullable(Type.String()),
     is_legacy: Type.Boolean(),
+    account_version: Type.Optional(Type.Integer({ minimum: 0 })),
     items: Type.Array(Type.Ref("ConsumptionOrderItem")),
     events: Type.Optional(Type.Array(Type.Ref("ConsumptionOrderEvent"))),
     folio_entry_ids: Type.Optional(Type.Array(uuid())),
@@ -2260,8 +2377,13 @@ const MaintenanceFinancialAttachmentFinalizeBodySchema = Type.Object(
   },
   strict,
 );
-const StayCheckoutBodySchema = Type.Object(
+export const StayCheckoutBodySchema = Type.Object(
   {
+    expected_version: Type.Optional(Type.Integer({ minimum: 0 })),
+    idempotency_key: Type.Optional(uuid()),
+    tenders: Type.Optional(
+      Type.Array(Type.Ref("StayPaymentTenderInput"), { maxItems: 10 }),
+    ),
     maintenance_acknowledged_occurrence_ids: Type.Optional(Type.Array(uuid())),
     maintenance_acknowledged_folio_entry_ids: Type.Optional(Type.Array(uuid())),
     maintenance_acknowledgement_note: Type.Optional(
@@ -2327,8 +2449,184 @@ export const StayFolioSchema = Type.Object(
     balance: Type.Number(),
     payment_status: PaymentStatusSchema,
     pending_maintenance_entry_ids: Type.Array(uuid()),
+    lodging_total: Type.Optional(Type.Number()),
+    consumption_total: Type.Optional(Type.Number()),
+    maintenance_total: Type.Optional(Type.Number()),
+    available_credit: Type.Optional(Type.Number()),
+    checkout_balance: Type.Optional(Type.Number()),
+    refundable_credit: Type.Optional(Type.Number()),
   },
   { ...strict, $id: "StayFolio" },
+);
+const StayPaymentTenderSchema = Type.Object(
+  {
+    id: uuid(),
+    payment_method: ConsumptionPaymentMethodSchema,
+    amount: Type.Number(),
+    reference_code: nullable(Type.String()),
+    financial_transaction_id: uuid(),
+    folio_credit_entry_id: uuid(),
+    display_order: Type.Integer(),
+  },
+  strict,
+);
+export const StayPaymentBatchSchema = Type.Object(
+  {
+    id: uuid(),
+    kind: Type.Union([
+      Type.Literal("regular"),
+      Type.Literal("checkout"),
+      Type.Literal("legacy"),
+    ]),
+    amount: Type.Number(),
+    currency: Type.String(),
+    note: nullable(Type.String()),
+    created_by: nullable(uuid()),
+    created_at: dateTime(),
+    tenders: Type.Array(StayPaymentTenderSchema),
+  },
+  { ...strict, $id: "StayPaymentBatch" },
+);
+const ConsumptionCorrectionStatusSchema = Type.Union([
+  Type.Literal("pending"),
+  Type.Literal("approved"),
+  Type.Literal("rejected"),
+  Type.Literal("awaiting_refund"),
+  Type.Literal("awaiting_partner_refund"),
+  Type.Literal("completed"),
+]);
+const ConsumptionCorrectionItemSchema = Type.Object(
+  {
+    id: uuid(),
+    order_item_id: uuid(),
+    resulting_quantity: Type.Number(),
+    additional_discount: Type.Number(),
+    previous_quantity: Type.Number(),
+    previous_discount: Type.Number(),
+    previous_net: Type.Number(),
+    resulting_net: Type.Number(),
+  },
+  strict,
+);
+export const ConsumptionCorrectionSchema = Type.Object(
+  {
+    id: uuid(),
+    hotel_id: uuid(),
+    order_id: uuid(),
+    stay_id: nullable(uuid()),
+    kind: Type.Union([
+      Type.Literal("partial_adjustment"),
+      Type.Literal("full_void"),
+    ]),
+    status: ConsumptionCorrectionStatusSchema,
+    reason: Type.String(),
+    account_version: Type.Integer(),
+    gross_reduction: Type.Number(),
+    discount_increase: Type.Number(),
+    net_reduction: Type.Number(),
+    refundable_amount: Type.Number(),
+    requested_by: uuid(),
+    requested_by_name: optionalNullable(Type.String()),
+    requested_at: dateTime(),
+    decided_by: nullable(uuid()),
+    decided_by_name: optionalNullable(Type.String()),
+    decided_at: nullable(dateTime()),
+    decision_reason: nullable(Type.String()),
+    completed_at: nullable(dateTime()),
+    reservation_code: optionalNullable(Type.String()),
+    room_number: optionalNullable(Type.String()),
+    point_name: optionalNullable(Type.String()),
+    items: Type.Array(ConsumptionCorrectionItemSchema),
+  },
+  { ...strict, $id: "ConsumptionCorrection" },
+);
+export const StayRefundSchema = Type.Object(
+  {
+    id: uuid(),
+    amount: Type.Number(),
+    currency: Type.String(),
+    payment_method: ConsumptionPaymentMethodSchema,
+    original_payment_method: nullable(ConsumptionPaymentMethodSchema),
+    method_override_reason: nullable(Type.String()),
+    reference_code: nullable(Type.String()),
+    reason: Type.String(),
+    correction_id: nullable(uuid()),
+    created_by: uuid(),
+    created_at: dateTime(),
+  },
+  { ...strict, $id: "StayRefund" },
+);
+export const StayCheckoutRecordSchema = Type.Object(
+  {
+    id: uuid(),
+    kind: Type.Union([Type.Literal("operational"), Type.Literal("legacy")]),
+    account_version: Type.Integer(),
+    currency: Type.String(),
+    lodging_total: Type.Number(),
+    consumption_total: Type.Number(),
+    maintenance_total: Type.Number(),
+    payment_total: Type.Number(),
+    partner_direct_total: Type.Number(),
+    courtesy_total: Type.Number(),
+    discount_total: Type.Number(),
+    voided_total: Type.Number(),
+    exception_folio_entry_ids: Type.Array(uuid()),
+    statement_snapshot: Type.Record(Type.String(), Type.Unknown()),
+    checked_out_by: nullable(uuid()),
+    checked_out_at: dateTime(),
+  },
+  { ...strict, $id: "StayCheckoutRecord" },
+);
+export const StayAccountSchema = Type.Object(
+  {
+    stay_id: uuid(),
+    reservation_id: uuid(),
+    reservation_code: nullable(Type.String()),
+    room_number: Type.String(),
+    guest_name: nullable(Type.String()),
+    stay_status: ReservationStatusSchema,
+    currency: Type.String(),
+    version: Type.Integer(),
+    status: Type.Union([
+      Type.Literal("open"),
+      Type.Literal("ready_to_checkout"),
+      Type.Literal("closed"),
+      Type.Literal("closed_with_exception"),
+      Type.Literal("closed_with_pending_refund"),
+    ]),
+    folio: Type.Ref("StayFolio"),
+    consumption_orders: Type.Array(Type.Ref("ConsumptionOrder")),
+    corrections: Type.Array(Type.Ref("ConsumptionCorrection")),
+    payment_batches: Type.Array(Type.Ref("StayPaymentBatch")),
+    refunds: Type.Array(Type.Ref("StayRefund")),
+    checkout_record: nullable(
+      Type.Object(
+        {
+          id: uuid(),
+          kind: Type.Union([
+            Type.Literal("operational"),
+            Type.Literal("legacy"),
+          ]),
+          account_version: Type.Integer(),
+          currency: Type.String(),
+          lodging_total: Type.Number(),
+          consumption_total: Type.Number(),
+          maintenance_total: Type.Number(),
+          payment_total: Type.Number(),
+          partner_direct_total: Type.Number(),
+          courtesy_total: Type.Number(),
+          discount_total: Type.Number(),
+          voided_total: Type.Number(),
+          exception_folio_entry_ids: Type.Array(uuid()),
+          statement_snapshot: Type.Record(Type.String(), Type.Unknown()),
+          checked_out_by: nullable(uuid()),
+          checked_out_at: dateTime(),
+        },
+        strict,
+      ),
+    ),
+  },
+  { ...strict, $id: "StayAccount" },
 );
 const StayFolioPreviewBodySchema = Type.Object(
   { amount: Type.Number({ exclusiveMinimum: 0 }) },
@@ -2680,6 +2978,19 @@ type ContractCompatibility = [
   Assert<Compatible<typeof StayPaymentBodySchema, AdminStayPaymentCreateInput>>,
   Assert<
     Compatible<
+      typeof ConsumptionCorrectionDecisionBodySchema,
+      AdminConsumptionCorrectionDecisionInput
+    >
+  >,
+  Assert<Compatible<typeof StayRefundBodySchema, AdminStayRefundInput>>,
+  Assert<
+    Compatible<
+      typeof PartnerRefundConfirmationBodySchema,
+      AdminPartnerRefundConfirmationInput
+    >
+  >,
+  Assert<
+    Compatible<
       typeof MaintenanceCostItemBodySchema,
       AdminMaintenanceCostItemInput
     >
@@ -2751,7 +3062,20 @@ export const API_COMPONENT_SCHEMAS = [
   FinancialTransactionUpdateSchema,
   CalendarBookingBodySchema,
   StayPaymentBodySchema,
+  StayPaymentTenderBodySchema,
+  StayPaymentBatchBodySchema,
+  StayPaymentBatchPreviewSchema,
+  ConsumptionCorrectionItemBodySchema,
+  ConsumptionCorrectionBodySchema,
+  ConsumptionCorrectionDecisionBodySchema,
+  StayRefundBodySchema,
+  PartnerRefundConfirmationBodySchema,
   StayFolioSchema,
+  StayPaymentBatchSchema,
+  ConsumptionCorrectionSchema,
+  StayRefundSchema,
+  StayCheckoutRecordSchema,
+  StayAccountSchema,
   MaintenanceOccurrenceBodySchema,
   MaintenanceWorkOrderBodySchema,
   MaintenanceCostItemBodySchema,
@@ -3473,6 +3797,52 @@ export const API_ROUTE_CONTRACTS: Readonly<Record<string, ApiRouteContract>> = {
     "Consulta a ficha, recibo, eventos e vínculos financeiros da comanda.",
     itemSchema(ConsumptionOrderSchema),
     { params: IdParamsSchema },
+  ),
+  "POST /admin/consumption-orders/:id/corrections": admin(
+    "requestConsumptionCorrection",
+    "Stay accounts",
+    "Solicita um ajuste redutor ou anula uma comanda elegível.",
+    itemSchema(ConsumptionCorrectionSchema),
+    { params: IdParamsSchema, body: ConsumptionCorrectionBodySchema },
+  ),
+  "GET /admin/consumption-corrections": admin(
+    "listConsumptionCorrections",
+    "Stay accounts",
+    "Lista a fila gerencial de correções de consumo.",
+    listSchema(ConsumptionCorrectionSchema),
+    {
+      querystring: Type.Object(
+        {
+          status: Type.Optional(ConsumptionCorrectionStatusSchema),
+          stay_id: Type.Optional(uuid()),
+        },
+        strict,
+      ),
+    },
+  ),
+  "POST /admin/consumption-corrections/:id/decision": admin(
+    "decideConsumptionCorrection",
+    "Stay accounts",
+    "Aprova ou rejeita uma correção solicitada por outro usuário.",
+    itemSchema(ConsumptionCorrectionSchema),
+    {
+      params: IdParamsSchema,
+      body: ConsumptionCorrectionDecisionBodySchema,
+    },
+  ),
+  "POST /admin/consumption-corrections/:id/refund": admin(
+    "refundConsumptionCorrection",
+    "Stay accounts",
+    "Registra o reembolso do hotel necessário para concluir uma correção.",
+    itemSchema(ConsumptionCorrectionSchema),
+    { params: IdParamsSchema, body: StayRefundBodySchema },
+  ),
+  "POST /admin/consumption-corrections/:id/partner-refund-confirmation": admin(
+    "confirmPartnerCorrectionRefund",
+    "Stay accounts",
+    "Confirma o reembolso externo efetuado pelo parceiro.",
+    itemSchema(ConsumptionCorrectionSchema),
+    { params: IdParamsSchema, body: PartnerRefundConfirmationBodySchema },
   ),
   ...crud(
     "Season",
@@ -4450,6 +4820,41 @@ export const API_ROUTE_CONTRACTS: Readonly<Record<string, ApiRouteContract>> = {
     itemSchema(StayFolioSchema),
     { params: IdParamsSchema },
   ),
+  "GET /admin/stays/:id/account": admin(
+    "getStayAccount",
+    "Stay accounts",
+    "Retorna a conta consolidada, correções, pagamentos e fechamento da estadia.",
+    itemSchema(StayAccountSchema),
+    { params: IdParamsSchema },
+  ),
+  "POST /admin/stays/:id/payment-batches/preview": admin(
+    "previewStayPaymentBatch",
+    "Stay accounts",
+    "Valida parcelas e mostra a alocação prevista sem movimentar a conta.",
+    itemSchema(StayPaymentBatchPreviewSchema),
+    { params: IdParamsSchema, body: StayPaymentBatchBodySchema },
+  ),
+  "POST /admin/stays/:id/payment-batches": admin(
+    "createStayPaymentBatch",
+    "Stay accounts",
+    "Registra atomicamente um pagamento parcial ou dividido em vários meios.",
+    itemSchema(StayAccountSchema),
+    { params: IdParamsSchema, body: StayPaymentBatchBodySchema },
+  ),
+  "POST /admin/stays/:id/refunds": admin(
+    "createStayRefund",
+    "Stay accounts",
+    "Registra um reembolso operacional e seus lançamentos compensatórios.",
+    itemSchema(StayAccountSchema),
+    { params: IdParamsSchema, body: StayRefundBodySchema },
+  ),
+  "GET /admin/stays/:id/checkout-record": admin(
+    "getStayCheckoutRecord",
+    "Stay accounts",
+    "Consulta o snapshot imutável e o extrato não fiscal do fechamento.",
+    itemSchema(StayCheckoutRecordSchema),
+    { params: IdParamsSchema },
+  ),
   "POST /admin/stays/:id/payments/allocation-preview": admin(
     "previewStayPaymentAllocation",
     "Stays",
@@ -4473,9 +4878,9 @@ export const API_ROUTE_CONTRACTS: Readonly<Record<string, ApiRouteContract>> = {
   ),
   "POST /admin/stays/:id/checkout": admin(
     "checkOutStay",
-    "Stays",
-    "Realiza o checkout da estadia.",
-    itemSchema(StayPanelSchema),
+    "Stay accounts",
+    "Quita o saldo, reconhece exceções e fecha a conta atomicamente.",
+    itemSchema(StayAccountSchema),
     { params: IdParamsSchema, body: StayCheckoutBodySchema },
   ),
   "POST /admin/stays/:id/no-show": admin(

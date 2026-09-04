@@ -121,6 +121,7 @@ test.describe("PMS UI quality", () => {
     async ({ page, context, baseURL, auditAccessibility }) => {
       await preparePage(page);
       await authenticate(context, baseURL || "http://127.0.0.1:3001");
+      await page.request.post(`${MOCK_BACKEND_URL}/test/reset-stay-account`);
       await page.goto("/dashboard/reservations/checkout");
 
       await expect(
@@ -135,13 +136,15 @@ test.describe("PMS UI quality", () => {
       await expect(page.getByTestId("checkout-by-room-workflow")).toContainText(
         "RES-1002",
       );
-      await expect(page.getByLabel("Valor")).toHaveValue("360.00");
+      await expect(page.getByLabel("Valor", { exact: true })).toHaveValue(
+        "360.00",
+      );
 
       await page.getByRole("button", { name: "Registrar pagamento" }).click();
       await expect(page.getByTestId("checkout-by-room-workflow")).toContainText(
         "Pagamento registrado.",
       );
-      await expect(page.getByLabel("Valor")).toHaveValue("");
+      await expect(page.getByLabel("Valor", { exact: true })).toHaveValue("");
 
       await page.getByRole("button", { name: "Confirmar checkout" }).click();
       await expect(page.getByTestId("checkout-by-room-workflow")).toContainText(
@@ -251,7 +254,9 @@ test.describe("PMS UI quality", () => {
       await expect(
         page.getByRole("heading", { name: "Produtos" }),
       ).toBeVisible();
-      await expect(page.getByText("Café espresso")).toBeVisible();
+      await expect(
+        page.getByText("Café espresso", { exact: true }).last(),
+      ).toBeVisible();
       await expect(page.getByText(/CAF-001/)).toBeVisible();
       await page.getByRole("tab", { name: "Informações" }).focus();
       await page.keyboard.press("ArrowRight");
@@ -415,7 +420,9 @@ test.describe("PMS UI quality", () => {
       await expect(page).toHaveScreenshot("consumption-order-receipt.png");
 
       await page.getByRole("link", { name: "Abrir ficha completa" }).click();
-      await expect(page.getByText("Café espresso")).toBeVisible();
+      await expect(
+        page.getByText("Café espresso", { exact: true }).last(),
+      ).toBeVisible();
       await expect(page.getByText("Lançamento no fólio").first()).toBeVisible();
       await auditAccessibility("historico-consumo");
       await stabilizeVisualState(page);

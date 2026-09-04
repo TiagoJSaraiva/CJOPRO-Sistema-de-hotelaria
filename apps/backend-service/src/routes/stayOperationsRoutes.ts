@@ -1,8 +1,10 @@
 import type { FastifyInstance } from "fastify";
+import { randomUUID } from "node:crypto";
 import {
   ADMIN_ERROR_CODE,
   PERMISSIONS,
   type AdminStayOperationalPanelResponse,
+  type AdminStayCheckoutInput,
   type AdminStayPayment,
   type AdminStayPaymentCreateInput,
   type AdminStayPaymentStatus,
@@ -16,6 +18,7 @@ import { createServerClient } from "../common/supabaseServer";
 import { normalizeOptionalText } from "../common/text";
 import { createMaintenanceRepository } from "../repositories/maintenanceRepository";
 import { createMaintenanceFinanceRepository } from "../repositories/maintenanceFinanceRepository";
+import { createStayAccountsRepository } from "../repositories/stayAccountsRepository";
 
 type StayWithRelationsRow = {
   id: string;
@@ -28,6 +31,7 @@ type StayWithRelationsRow = {
   checkout_date_actual: string | null;
   total_price_estimated: number | null;
   total_paid: number | null;
+  account_version: number;
   reservations?: {
     id?: string;
     hotel_id?: string;
@@ -69,11 +73,7 @@ type CheckoutCandidateQuery = {
   room_number?: string;
 };
 
-type StayCheckoutBody = {
-  maintenance_acknowledged_occurrence_ids?: string[];
-  maintenance_acknowledged_folio_entry_ids?: string[];
-  maintenance_acknowledgement_note?: string;
-};
+type StayCheckoutBody = Partial<AdminStayCheckoutInput>;
 
 function toIsoDate(value: string): string {
   return new Date(value).toISOString().slice(0, 10);
@@ -142,7 +142,7 @@ async function loadStayWithRelations(
   const { data, error } = await supabase
     .from("stays")
     .select(
-      "id,reservation_id,room_id,stay_status,checkin_date_expected,checkout_date_expected,checkin_date_actual,checkout_date_actual,total_price_estimated,total_paid,reservations:reservation_id(id,hotel_id,reservation_code,customers:booking_customer_id(full_name)),rooms:room_id(id,hotel_id,room_number,room_type,hotels:hotel_id(id,timezone,checkin_time_start,checkin_time_limit,checkout_time_start,checkout_time_limit))",
+      "id,reservation_id,room_id,stay_status,account_version,checkin_date_expected,checkout_date_expected,checkin_date_actual,checkout_date_actual,total_price_estimated,total_paid,reservations:reservation_id(id,hotel_id,reservation_code,customers:booking_customer_id(full_name)),rooms:room_id(id,hotel_id,room_number,room_type,hotels:hotel_id(id,timezone,checkin_time_start,checkin_time_limit,checkout_time_start,checkout_time_limit))",
     )
     .eq("id", stayId)
     .single();
@@ -347,11 +347,6 @@ async function loadStayPanel(
       .reduce((sum, entry) => sum + entry.open_amount, 0)
       .toFixed(2),
   );
-  if (pendingConsumptionBalance > 0) {
-    canCheckout = false;
-    checkoutBlockReason = `Existem ${pendingConsumptionEntries.length} consumo(s) pendente(s) no fólio (${pendingConsumptionBalance.toFixed(2)}).`;
-  }
-
   return {
     stay: {
       id: String(stay.id),
@@ -373,6 +368,7 @@ async function loadStayPanel(
       total_price_estimated: effectiveStayDue,
       total_paid: effectiveStayPaid,
       stay_payment_status: stayPaymentStatus,
+      account_version: Number(stay.account_version),
     },
     reservation: {
       id: String(reservationId),
@@ -646,28 +642,56 @@ export function registerStayOperationsRoutes(app: FastifyInstance): void {
         );
     }
 
-    const paymentResult =
-      await createMaintenanceFinanceRepository().createStayPayment(
-        activeHotelId,
-        stayId,
-        auth.session.id,
-        {
-          amount,
-          method,
-          note,
-          paid_at: paidAt,
-          allocations: request.body?.allocations,
-        },
-      );
-    if (paymentResult.result !== "ok") {
+    const supportedMethods = [
+      "cash",
+      "pix",
+      "credit_card",
+      "debit_card",
+      "bank_transfer",
+    ] as const;
+    if (!supportedMethods.includes(method as (typeof supportedMethods)[number]))
       return reply
-        .status(paymentResult.result === "not-found" ? 404 : 409)
+        .status(400)
         .send(
           adminError(
-            paymentResult.result === "not-found"
+            ADMIN_ERROR_CODE.VALIDATION,
+            "Método de pagamento não suportado.",
+          ),
+        );
+    const accountRepository = createStayAccountsRepository();
+    const account = await accountRepository.getAccount(
+      activeHotelId,
+      stayId,
+      false,
+    );
+    const paymentResult = account
+      ? await accountRepository.createPaymentBatch(
+          activeHotelId,
+          stayId,
+          auth.session.id,
+          {
+            tenders: [
+              {
+                payment_method: method as (typeof supportedMethods)[number],
+                amount,
+              },
+            ],
+            expected_version: account.version,
+            idempotency_key: randomUUID(),
+            note: note || (paidAt ? `Pagamento informado em ${paidAt}` : null),
+          },
+          false,
+        )
+      : { result: "not_found" as const };
+    if (paymentResult.result !== "ok") {
+      return reply
+        .status(paymentResult.result === "not_found" ? 404 : 409)
+        .send(
+          adminError(
+            paymentResult.result === "not_found"
               ? ADMIN_ERROR_CODE.NOT_FOUND
               : ADMIN_ERROR_CODE.CONFLICT,
-            paymentResult.result === "not-found"
+            paymentResult.result === "not_found"
               ? "Estadia nao encontrada para o hotel ativo."
               : "Falha ao registrar ou alocar o pagamento.",
           ),
@@ -888,49 +912,54 @@ export function registerStayOperationsRoutes(app: FastifyInstance): void {
           );
       }
 
-      const supabase = createServerClient();
-      const { data: checkedOut, error } = await supabase.rpc(
-        "checkout_stay_with_financial_acknowledgements",
+      const accountRepository = createStayAccountsRepository();
+      const account = await accountRepository.getAccount(
+        activeHotelId,
+        stayId,
+        auth.session.permissions.includes(
+          PERMISSIONS.COMMERCIAL_AGREEMENTS_MANAGE,
+        ),
+      );
+      if (!account)
+        return reply
+          .status(404)
+          .send(
+            adminError(
+              ADMIN_ERROR_CODE.NOT_FOUND,
+              "Conta da estadia não encontrada.",
+            ),
+          );
+      const tenders = request.body?.tenders || [];
+      const result = await accountRepository.checkout(
+        activeHotelId,
+        stayId,
+        auth.session.id,
         {
-          p_hotel_id: activeHotelId,
-          p_stay_id: stayId,
-          p_actor_id: auth.session.id,
-          p_occurrence_ids: acknowledgedIds,
-          p_folio_entry_ids: acknowledgedFolioEntryIds,
-          p_note:
+          expected_version: request.body?.expected_version ?? account.version,
+          idempotency_key: request.body?.idempotency_key || randomUUID(),
+          tenders,
+          maintenance_acknowledged_occurrence_ids: acknowledgedIds,
+          maintenance_acknowledged_folio_entry_ids: acknowledgedFolioEntryIds,
+          maintenance_acknowledgement_note:
             normalizeOptionalText(
               request.body?.maintenance_acknowledgement_note,
-            ) || undefined,
+            ) || null,
         },
+        auth.session.permissions.includes(
+          PERMISSIONS.COMMERCIAL_AGREEMENTS_MANAGE,
+        ),
       );
-      if (error || !checkedOut) {
-        request.log.error(error);
+      if (!("item" in result))
         return reply
           .status(409)
           .send(
             adminError(
               ADMIN_ERROR_CODE.CONFLICT,
-              error?.message || "Falha ao executar checkout.",
+              "A conta mudou ou ainda possui pendências para checkout.",
+              result.result,
             ),
           );
-      }
-
-      const refreshed = await loadStayPanel(
-        activeHotelId,
-        stayId,
-        auth.session.permissions.includes(PERMISSIONS.MAINTENANCE_FINANCE_READ),
-      );
-      if (!refreshed) {
-        return reply
-          .status(500)
-          .send(
-            adminError(
-              ADMIN_ERROR_CODE.INTERNAL,
-              "Falha ao recarregar painel da estadia.",
-            ),
-          );
-      }
-      return reply.send({ item: refreshed });
+      return reply.send({ item: result.item });
     },
   );
 

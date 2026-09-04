@@ -1,12 +1,16 @@
 import { NextResponse } from "next/server";
-import { getStayCheckoutCandidateByRoomNumber } from "../../../../lib/adminApi";
+import {
+  getStayAccount,
+  getStayCheckoutCandidateByRoomNumber,
+} from "../../../../lib/adminApi";
 
 export async function GET(request: Request) {
   try {
     const url = new URL(request.url);
     const roomNumber = url.searchParams.get("room_number") || "";
     const item = await getStayCheckoutCandidateByRoomNumber(roomNumber);
-    return NextResponse.json(item);
+    const account = await getStayAccount(item.stay.id);
+    return NextResponse.json({ ...item, account });
   } catch (error) {
     const parsedError = error as Error & {
       statusCode?: number;

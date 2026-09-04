@@ -34,7 +34,18 @@ export type ConsumptionOrderFilters = {
 type OrderRow = Tables<"consumption_orders"> & {
   operator?: { name: string } | null;
 };
-type ItemRow = Tables<"consumption_order_items">;
+type ItemRow = Tables<"consumption_order_items"> & {
+  effective_quantity?: number | null;
+  effective_discount?: number | null;
+  effective_net_amount?: number | null;
+};
+type EffectiveOrderRow = {
+  id: string;
+  effective_gross_amount: number | null;
+  effective_discount_amount: number | null;
+  effective_net_amount: number | null;
+  effective_status: string | null;
+};
 type EventRow = Tables<"consumption_order_events"> & {
   actor?: { name: string } | null;
 };
@@ -62,6 +73,9 @@ function mapItem(
     gross_amount: money(row.item_total_amount),
     discount_amount: money(row.discount_amount),
     net_amount: money(row.net_amount),
+    effective_quantity: Number(row.effective_quantity ?? row.quantity),
+    effective_discount: money(row.effective_discount ?? row.discount_amount),
+    effective_net_amount: money(row.effective_net_amount ?? row.net_amount),
     product_name: row.product_name_snapshot,
     product_code: row.product_internal_code_snapshot,
     category_name: row.category_name_snapshot,
@@ -90,6 +104,8 @@ function mapOrder(
   includeTerms = false,
   folioEntryIds: string[] = [],
   transactionIds: string[] = [],
+  effective?: EffectiveOrderRow | null,
+  accountVersion?: number,
 ): AdminConsumptionOrder {
   return {
     id: row.id,
@@ -107,6 +123,19 @@ function mapOrder(
     gross_amount: money(row.gross_amount),
     discount_amount: money(row.discount_amount),
     net_amount: money(row.net_amount),
+    effective_gross_amount: money(
+      effective?.effective_gross_amount ?? row.gross_amount,
+    ),
+    effective_discount_amount: money(
+      effective?.effective_discount_amount ?? row.discount_amount,
+    ),
+    effective_net_amount: money(
+      effective?.effective_net_amount ?? row.net_amount,
+    ),
+    effective_status: (effective?.effective_status ||
+      (row.is_legacy ? "legacy" : "active")) as NonNullable<
+      AdminConsumptionOrder["effective_status"]
+    >,
     reservation_code: row.reservation_code_snapshot,
     room_number: row.room_number_snapshot,
     guest_name: row.guest_name_snapshot,
@@ -118,6 +147,7 @@ function mapOrder(
     posted_by: row.posted_by,
     operator_name: row.operator?.name || null,
     is_legacy: row.is_legacy,
+    ...(accountVersion == null ? {} : { account_version: accountVersion }),
     items: items.map((item) => mapItem(item, includeTerms)),
     events: events.map((event) => ({
       id: event.id,
@@ -292,15 +322,30 @@ class SupabaseConsumptionOrdersRepository implements ConsumptionOrdersRepository
     const rows = (data || []) as OrderRow[];
     const page = rows.slice(0, filters.limit);
     const ids = page.map((row) => row.id);
-    const { data: itemData, error: itemError } = ids.length
-      ? await supabase
-          .from("consumption_order_items")
-          .select("*")
-          .eq("hotel_id", hotelId)
-          .in("order_id", ids)
-      : { data: [], error: null };
-    if (itemError) throw itemError;
+    const [itemResult, effectiveResult] = ids.length
+      ? await Promise.all([
+          supabase
+            .from("consumption_order_item_effective")
+            .select("*")
+            .eq("hotel_id", hotelId)
+            .in("order_id", ids),
+          supabase
+            .from("consumption_order_effective")
+            .select(
+              "id,effective_gross_amount,effective_discount_amount,effective_net_amount,effective_status",
+            )
+            .eq("hotel_id", hotelId)
+            .in("id", ids),
+        ])
+      : [
+          { data: [], error: null },
+          { data: [], error: null },
+        ];
+    if (itemResult.error) throw itemResult.error;
+    if (effectiveResult.error) throw effectiveResult.error;
+    const itemData = itemResult.data;
     const allItems = (itemData || []) as ItemRow[];
+    const effectiveRows = (effectiveResult.data || []) as EffectiveOrderRow[];
     const filtered = filters.providerType
       ? page.filter((order) =>
           allItems.some(
@@ -315,6 +360,11 @@ class SupabaseConsumptionOrdersRepository implements ConsumptionOrdersRepository
         mapOrder(
           row,
           allItems.filter((item) => item.order_id === row.id),
+          [],
+          false,
+          [],
+          [],
+          effectiveRows.find((effective) => effective.id === row.id),
         ),
       ),
       next_cursor:
@@ -332,6 +382,7 @@ class SupabaseConsumptionOrdersRepository implements ConsumptionOrdersRepository
       eventResult,
       folioResult,
       transactionResult,
+      effectiveResult,
     ] = await Promise.all([
       supabase
         .from("consumption_orders")
@@ -340,7 +391,7 @@ class SupabaseConsumptionOrdersRepository implements ConsumptionOrdersRepository
         .eq("id", id)
         .maybeSingle(),
       supabase
-        .from("consumption_order_items")
+        .from("consumption_order_item_effective")
         .select("*")
         .eq("hotel_id", hotelId)
         .eq("order_id", id)
@@ -361,6 +412,14 @@ class SupabaseConsumptionOrdersRepository implements ConsumptionOrdersRepository
         .select("id")
         .eq("hotel_id", hotelId)
         .eq("consumption_order_id", id),
+      supabase
+        .from("consumption_order_effective")
+        .select(
+          "id,effective_gross_amount,effective_discount_amount,effective_net_amount,effective_status",
+        )
+        .eq("hotel_id", hotelId)
+        .eq("id", id)
+        .maybeSingle(),
     ]);
     if (orderResult.error) throw orderResult.error;
     if (!orderResult.data) return null;
@@ -369,8 +428,17 @@ class SupabaseConsumptionOrdersRepository implements ConsumptionOrdersRepository
       eventResult,
       folioResult,
       transactionResult,
+      effectiveResult,
     ])
       if (result.error) throw result.error;
+    const { data: stayData, error: stayError } = orderResult.data.stay_id
+      ? await supabase
+          .from("stays")
+          .select("account_version")
+          .eq("id", orderResult.data.stay_id)
+          .maybeSingle()
+      : { data: null, error: null };
+    if (stayError) throw stayError;
     return mapOrder(
       orderResult.data as OrderRow,
       (itemResult.data || []) as ItemRow[],
@@ -378,6 +446,8 @@ class SupabaseConsumptionOrdersRepository implements ConsumptionOrdersRepository
       includeTerms,
       (folioResult.data || []).map((entry) => entry.id),
       (transactionResult.data || []).map((entry) => entry.id),
+      effectiveResult.data as EffectiveOrderRow | null,
+      stayData == null ? undefined : Number(stayData.account_version),
     );
   }
 }

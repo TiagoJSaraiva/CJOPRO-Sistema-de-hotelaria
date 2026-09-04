@@ -517,6 +517,186 @@ export type Database = {
           },
         ]
       }
+      consumption_correction_items: {
+        Row: {
+          additional_discount: number
+          correction_id: string
+          created_at: string
+          hotel_id: string
+          id: string
+          order_item_id: string
+          previous_discount: number
+          previous_net: number
+          previous_quantity: number
+          resulting_net: number
+          resulting_quantity: number
+        }
+        Insert: {
+          additional_discount: number
+          correction_id: string
+          created_at?: string
+          hotel_id: string
+          id?: string
+          order_item_id: string
+          previous_discount: number
+          previous_net: number
+          previous_quantity: number
+          resulting_net: number
+          resulting_quantity: number
+        }
+        Update: {
+          additional_discount?: number
+          correction_id?: string
+          created_at?: string
+          hotel_id?: string
+          id?: string
+          order_item_id?: string
+          previous_discount?: number
+          previous_net?: number
+          previous_quantity?: number
+          resulting_net?: number
+          resulting_quantity?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "consumption_correction_items_correction_hotel_fkey"
+            columns: ["correction_id", "hotel_id"]
+            isOneToOne: false
+            referencedRelation: "consumption_corrections"
+            referencedColumns: ["id", "hotel_id"]
+          },
+          {
+            foreignKeyName: "consumption_correction_items_hotel_id_fkey"
+            columns: ["hotel_id"]
+            isOneToOne: false
+            referencedRelation: "hotels"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "consumption_correction_items_order_item_hotel_fkey"
+            columns: ["order_item_id", "hotel_id"]
+            isOneToOne: false
+            referencedRelation: "consumption_order_item_effective"
+            referencedColumns: ["id", "hotel_id"]
+          },
+          {
+            foreignKeyName: "consumption_correction_items_order_item_hotel_fkey"
+            columns: ["order_item_id", "hotel_id"]
+            isOneToOne: false
+            referencedRelation: "consumption_order_items"
+            referencedColumns: ["id", "hotel_id"]
+          },
+        ]
+      }
+      consumption_corrections: {
+        Row: {
+          account_version: number
+          completed_at: string | null
+          completed_by: string | null
+          created_at: string
+          decided_at: string | null
+          decided_by: string | null
+          decision_reason: string | null
+          discount_increase: number
+          gross_reduction: number
+          hotel_id: string
+          id: string
+          kind: Database["public"]["Enums"]["consumption_correction_kind"]
+          net_reduction: number
+          order_id: string
+          reason: string
+          requested_at: string
+          requested_by: string
+          status: Database["public"]["Enums"]["consumption_correction_status"]
+          stay_id: string | null
+        }
+        Insert: {
+          account_version: number
+          completed_at?: string | null
+          completed_by?: string | null
+          created_at?: string
+          decided_at?: string | null
+          decided_by?: string | null
+          decision_reason?: string | null
+          discount_increase: number
+          gross_reduction: number
+          hotel_id: string
+          id?: string
+          kind: Database["public"]["Enums"]["consumption_correction_kind"]
+          net_reduction: number
+          order_id: string
+          reason: string
+          requested_at?: string
+          requested_by: string
+          status: Database["public"]["Enums"]["consumption_correction_status"]
+          stay_id?: string | null
+        }
+        Update: {
+          account_version?: number
+          completed_at?: string | null
+          completed_by?: string | null
+          created_at?: string
+          decided_at?: string | null
+          decided_by?: string | null
+          decision_reason?: string | null
+          discount_increase?: number
+          gross_reduction?: number
+          hotel_id?: string
+          id?: string
+          kind?: Database["public"]["Enums"]["consumption_correction_kind"]
+          net_reduction?: number
+          order_id?: string
+          reason?: string
+          requested_at?: string
+          requested_by?: string
+          status?: Database["public"]["Enums"]["consumption_correction_status"]
+          stay_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "consumption_corrections_completed_by_fkey"
+            columns: ["completed_by"]
+            isOneToOne: false
+            referencedRelation: "users"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "consumption_corrections_decided_by_fkey"
+            columns: ["decided_by"]
+            isOneToOne: false
+            referencedRelation: "users"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "consumption_corrections_hotel_id_fkey"
+            columns: ["hotel_id"]
+            isOneToOne: false
+            referencedRelation: "hotels"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "consumption_corrections_order_hotel_fkey"
+            columns: ["order_id", "hotel_id"]
+            isOneToOne: false
+            referencedRelation: "consumption_order_effective"
+            referencedColumns: ["id", "hotel_id"]
+          },
+          {
+            foreignKeyName: "consumption_corrections_order_hotel_fkey"
+            columns: ["order_id", "hotel_id"]
+            isOneToOne: false
+            referencedRelation: "consumption_orders"
+            referencedColumns: ["id", "hotel_id"]
+          },
+          {
+            foreignKeyName: "consumption_corrections_requested_by_fkey"
+            columns: ["requested_by"]
+            isOneToOne: false
+            referencedRelation: "users"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       consumption_offers: {
         Row: {
           allowed_billing_modes:
@@ -663,6 +843,13 @@ export type Database = {
             foreignKeyName: "consumption_order_events_order_hotel_fkey"
             columns: ["order_id", "hotel_id"]
             isOneToOne: false
+            referencedRelation: "consumption_order_effective"
+            referencedColumns: ["id", "hotel_id"]
+          },
+          {
+            foreignKeyName: "consumption_order_events_order_hotel_fkey"
+            columns: ["order_id", "hotel_id"]
+            isOneToOne: false
             referencedRelation: "consumption_orders"
             referencedColumns: ["id", "hotel_id"]
           },
@@ -786,6 +973,13 @@ export type Database = {
             columns: ["offer_id", "hotel_id"]
             isOneToOne: false
             referencedRelation: "consumption_offers"
+            referencedColumns: ["id", "hotel_id"]
+          },
+          {
+            foreignKeyName: "consumption_order_items_order_hotel_fkey"
+            columns: ["order_id", "hotel_id"]
+            isOneToOne: false
+            referencedRelation: "consumption_order_effective"
             referencedColumns: ["id", "hotel_id"]
           },
           {
@@ -1125,6 +1319,7 @@ export type Database = {
           reservation_id: string | null
           status: Database["public"]["Enums"]["transaction_status"]
           stay_id: string | null
+          stay_refund_id: string | null
           type: Database["public"]["Enums"]["transaction_type"]
           updated_at: string
         }
@@ -1149,6 +1344,7 @@ export type Database = {
           reservation_id?: string | null
           status?: Database["public"]["Enums"]["transaction_status"]
           stay_id?: string | null
+          stay_refund_id?: string | null
           type: Database["public"]["Enums"]["transaction_type"]
           updated_at?: string
         }
@@ -1173,10 +1369,18 @@ export type Database = {
           reservation_id?: string | null
           status?: Database["public"]["Enums"]["transaction_status"]
           stay_id?: string | null
+          stay_refund_id?: string | null
           type?: Database["public"]["Enums"]["transaction_type"]
           updated_at?: string
         }
         Relationships: [
+          {
+            foreignKeyName: "financial_transactions_consumption_order_fkey"
+            columns: ["consumption_order_id", "hotel_id"]
+            isOneToOne: false
+            referencedRelation: "consumption_order_effective"
+            referencedColumns: ["id", "hotel_id"]
+          },
           {
             foreignKeyName: "financial_transactions_consumption_order_fkey"
             columns: ["consumption_order_id", "hotel_id"]
@@ -1204,6 +1408,13 @@ export type Database = {
             isOneToOne: false
             referencedRelation: "maintenance_recoveries"
             referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "financial_transactions_refund_hotel_fkey"
+            columns: ["stay_refund_id", "hotel_id"]
+            isOneToOne: false
+            referencedRelation: "stay_refunds"
+            referencedColumns: ["id", "hotel_id"]
           },
           {
             foreignKeyName: "financial_transactions_reservation_id_fkey"
@@ -4101,6 +4312,182 @@ export type Database = {
           },
         ]
       }
+      stay_account_events: {
+        Row: {
+          action: string
+          actor_id: string | null
+          created_at: string
+          details: Json
+          entity_id: string | null
+          entity_type: string
+          hotel_id: string
+          id: string
+          stay_id: string
+        }
+        Insert: {
+          action: string
+          actor_id?: string | null
+          created_at?: string
+          details?: Json
+          entity_id?: string | null
+          entity_type: string
+          hotel_id: string
+          id?: string
+          stay_id: string
+        }
+        Update: {
+          action?: string
+          actor_id?: string | null
+          created_at?: string
+          details?: Json
+          entity_id?: string | null
+          entity_type?: string
+          hotel_id?: string
+          id?: string
+          stay_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "stay_account_events_actor_id_fkey"
+            columns: ["actor_id"]
+            isOneToOne: false
+            referencedRelation: "users"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "stay_account_events_hotel_id_fkey"
+            columns: ["hotel_id"]
+            isOneToOne: false
+            referencedRelation: "hotels"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "stay_account_events_stay_id_fkey"
+            columns: ["stay_id"]
+            isOneToOne: false
+            referencedRelation: "stays"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      stay_checkout_records: {
+        Row: {
+          account_version: number
+          checked_out_at: string
+          checked_out_by: string | null
+          consumption_total: number
+          courtesy_total: number
+          created_at: string
+          currency: string
+          discount_total: number
+          exception_folio_entry_ids: string[]
+          hotel_id: string
+          id: string
+          idempotency_key: string | null
+          kind: Database["public"]["Enums"]["stay_checkout_record_kind"]
+          lodging_total: number
+          maintenance_total: number
+          partner_direct_total: number
+          payment_total: number
+          request_fingerprint: string | null
+          reservation_id: string
+          statement_snapshot: Json
+          stay_id: string
+          voided_total: number
+        }
+        Insert: {
+          account_version: number
+          checked_out_at: string
+          checked_out_by?: string | null
+          consumption_total?: number
+          courtesy_total?: number
+          created_at?: string
+          currency: string
+          discount_total?: number
+          exception_folio_entry_ids?: string[]
+          hotel_id: string
+          id?: string
+          idempotency_key?: string | null
+          kind: Database["public"]["Enums"]["stay_checkout_record_kind"]
+          lodging_total?: number
+          maintenance_total?: number
+          partner_direct_total?: number
+          payment_total?: number
+          request_fingerprint?: string | null
+          reservation_id: string
+          statement_snapshot: Json
+          stay_id: string
+          voided_total?: number
+        }
+        Update: {
+          account_version?: number
+          checked_out_at?: string
+          checked_out_by?: string | null
+          consumption_total?: number
+          courtesy_total?: number
+          created_at?: string
+          currency?: string
+          discount_total?: number
+          exception_folio_entry_ids?: string[]
+          hotel_id?: string
+          id?: string
+          idempotency_key?: string | null
+          kind?: Database["public"]["Enums"]["stay_checkout_record_kind"]
+          lodging_total?: number
+          maintenance_total?: number
+          partner_direct_total?: number
+          payment_total?: number
+          request_fingerprint?: string | null
+          reservation_id?: string
+          statement_snapshot?: Json
+          stay_id?: string
+          voided_total?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "stay_checkout_records_checked_out_by_fkey"
+            columns: ["checked_out_by"]
+            isOneToOne: false
+            referencedRelation: "users"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "stay_checkout_records_hotel_id_fkey"
+            columns: ["hotel_id"]
+            isOneToOne: false
+            referencedRelation: "hotels"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "stay_checkout_records_reservation_hotel_fkey"
+            columns: ["reservation_id", "hotel_id"]
+            isOneToOne: false
+            referencedRelation: "reservations"
+            referencedColumns: ["id", "hotel_id"]
+          },
+          {
+            foreignKeyName: "stay_checkout_records_reservation_id_fkey"
+            columns: ["reservation_id"]
+            isOneToOne: false
+            referencedRelation: "reservations"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "stay_checkout_records_stay_id_fkey"
+            columns: ["stay_id"]
+            isOneToOne: true
+            referencedRelation: "stays"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "stay_checkout_records_stay_reservation_fkey"
+            columns: ["stay_id", "reservation_id"]
+            isOneToOne: false
+            referencedRelation: "stays"
+            referencedColumns: ["id", "reservation_id"]
+          },
+        ]
+      }
       stay_customers: {
         Row: {
           created_at: string
@@ -4212,6 +4599,7 @@ export type Database = {
       stay_folio_entries: {
         Row: {
           amount: number
+          consumption_correction_id: string | null
           consumption_order_id: string | null
           created_at: string
           currency: string
@@ -4231,6 +4619,7 @@ export type Database = {
         }
         Insert: {
           amount: number
+          consumption_correction_id?: string | null
           consumption_order_id?: string | null
           created_at?: string
           currency: string
@@ -4250,6 +4639,7 @@ export type Database = {
         }
         Update: {
           amount?: number
+          consumption_correction_id?: string | null
           consumption_order_id?: string | null
           created_at?: string
           currency?: string
@@ -4272,7 +4662,21 @@ export type Database = {
             foreignKeyName: "stay_folio_entries_consumption_order_fkey"
             columns: ["consumption_order_id", "hotel_id"]
             isOneToOne: false
+            referencedRelation: "consumption_order_effective"
+            referencedColumns: ["id", "hotel_id"]
+          },
+          {
+            foreignKeyName: "stay_folio_entries_consumption_order_fkey"
+            columns: ["consumption_order_id", "hotel_id"]
+            isOneToOne: false
             referencedRelation: "consumption_orders"
+            referencedColumns: ["id", "hotel_id"]
+          },
+          {
+            foreignKeyName: "stay_folio_entries_correction_hotel_fkey"
+            columns: ["consumption_correction_id", "hotel_id"]
+            isOneToOne: false
+            referencedRelation: "consumption_corrections"
             referencedColumns: ["id", "hotel_id"]
           },
           {
@@ -4326,8 +4730,308 @@ export type Database = {
           },
         ]
       }
+      stay_payment_batch_tenders: {
+        Row: {
+          amount: number
+          batch_id: string
+          created_at: string
+          display_order: number
+          financial_transaction_id: string
+          folio_credit_entry_id: string
+          hotel_id: string
+          id: string
+          payment_method: Database["public"]["Enums"]["consumption_payment_method"]
+          reference_code: string | null
+        }
+        Insert: {
+          amount: number
+          batch_id: string
+          created_at?: string
+          display_order: number
+          financial_transaction_id: string
+          folio_credit_entry_id: string
+          hotel_id: string
+          id?: string
+          payment_method: Database["public"]["Enums"]["consumption_payment_method"]
+          reference_code?: string | null
+        }
+        Update: {
+          amount?: number
+          batch_id?: string
+          created_at?: string
+          display_order?: number
+          financial_transaction_id?: string
+          folio_credit_entry_id?: string
+          hotel_id?: string
+          id?: string
+          payment_method?: Database["public"]["Enums"]["consumption_payment_method"]
+          reference_code?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "stay_payment_batch_tenders_batch_hotel_fkey"
+            columns: ["batch_id", "hotel_id"]
+            isOneToOne: false
+            referencedRelation: "stay_payment_batches"
+            referencedColumns: ["id", "hotel_id"]
+          },
+          {
+            foreignKeyName: "stay_payment_batch_tenders_folio_hotel_fkey"
+            columns: ["folio_credit_entry_id", "hotel_id"]
+            isOneToOne: false
+            referencedRelation: "stay_folio_entries"
+            referencedColumns: ["id", "hotel_id"]
+          },
+          {
+            foreignKeyName: "stay_payment_batch_tenders_hotel_id_fkey"
+            columns: ["hotel_id"]
+            isOneToOne: false
+            referencedRelation: "hotels"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "stay_payment_batch_tenders_transaction_hotel_fkey"
+            columns: ["financial_transaction_id", "hotel_id"]
+            isOneToOne: false
+            referencedRelation: "financial_transactions"
+            referencedColumns: ["id", "hotel_id"]
+          },
+        ]
+      }
+      stay_payment_batches: {
+        Row: {
+          amount: number
+          created_at: string
+          created_by: string | null
+          currency: string
+          hotel_id: string
+          id: string
+          idempotency_key: string | null
+          kind: Database["public"]["Enums"]["stay_payment_batch_kind"]
+          note: string | null
+          request_fingerprint: string | null
+          reservation_id: string
+          stay_id: string
+        }
+        Insert: {
+          amount: number
+          created_at?: string
+          created_by?: string | null
+          currency: string
+          hotel_id: string
+          id?: string
+          idempotency_key?: string | null
+          kind?: Database["public"]["Enums"]["stay_payment_batch_kind"]
+          note?: string | null
+          request_fingerprint?: string | null
+          reservation_id: string
+          stay_id: string
+        }
+        Update: {
+          amount?: number
+          created_at?: string
+          created_by?: string | null
+          currency?: string
+          hotel_id?: string
+          id?: string
+          idempotency_key?: string | null
+          kind?: Database["public"]["Enums"]["stay_payment_batch_kind"]
+          note?: string | null
+          request_fingerprint?: string | null
+          reservation_id?: string
+          stay_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "stay_payment_batches_created_by_fkey"
+            columns: ["created_by"]
+            isOneToOne: false
+            referencedRelation: "users"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "stay_payment_batches_hotel_id_fkey"
+            columns: ["hotel_id"]
+            isOneToOne: false
+            referencedRelation: "hotels"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "stay_payment_batches_reservation_hotel_fkey"
+            columns: ["reservation_id", "hotel_id"]
+            isOneToOne: false
+            referencedRelation: "reservations"
+            referencedColumns: ["id", "hotel_id"]
+          },
+          {
+            foreignKeyName: "stay_payment_batches_reservation_id_fkey"
+            columns: ["reservation_id"]
+            isOneToOne: false
+            referencedRelation: "reservations"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "stay_payment_batches_stay_id_fkey"
+            columns: ["stay_id"]
+            isOneToOne: false
+            referencedRelation: "stays"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "stay_payment_batches_stay_reservation_fkey"
+            columns: ["stay_id", "reservation_id"]
+            isOneToOne: false
+            referencedRelation: "stays"
+            referencedColumns: ["id", "reservation_id"]
+          },
+        ]
+      }
+      stay_refunds: {
+        Row: {
+          amount: number
+          correction_id: string | null
+          created_at: string
+          created_by: string
+          currency: string
+          financial_transaction_id: string
+          folio_debit_entry_id: string
+          hotel_id: string
+          id: string
+          idempotency_key: string
+          method_override_reason: string | null
+          original_payment_method:
+            | Database["public"]["Enums"]["consumption_payment_method"]
+            | null
+          original_tender_id: string | null
+          payment_method: Database["public"]["Enums"]["consumption_payment_method"]
+          reason: string
+          reference_code: string | null
+          request_fingerprint: string
+          reservation_id: string
+          stay_id: string
+        }
+        Insert: {
+          amount: number
+          correction_id?: string | null
+          created_at?: string
+          created_by: string
+          currency: string
+          financial_transaction_id: string
+          folio_debit_entry_id: string
+          hotel_id: string
+          id?: string
+          idempotency_key: string
+          method_override_reason?: string | null
+          original_payment_method?:
+            | Database["public"]["Enums"]["consumption_payment_method"]
+            | null
+          original_tender_id?: string | null
+          payment_method: Database["public"]["Enums"]["consumption_payment_method"]
+          reason: string
+          reference_code?: string | null
+          request_fingerprint: string
+          reservation_id: string
+          stay_id: string
+        }
+        Update: {
+          amount?: number
+          correction_id?: string | null
+          created_at?: string
+          created_by?: string
+          currency?: string
+          financial_transaction_id?: string
+          folio_debit_entry_id?: string
+          hotel_id?: string
+          id?: string
+          idempotency_key?: string
+          method_override_reason?: string | null
+          original_payment_method?:
+            | Database["public"]["Enums"]["consumption_payment_method"]
+            | null
+          original_tender_id?: string | null
+          payment_method?: Database["public"]["Enums"]["consumption_payment_method"]
+          reason?: string
+          reference_code?: string | null
+          request_fingerprint?: string
+          reservation_id?: string
+          stay_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "stay_refunds_correction_hotel_fkey"
+            columns: ["correction_id", "hotel_id"]
+            isOneToOne: false
+            referencedRelation: "consumption_corrections"
+            referencedColumns: ["id", "hotel_id"]
+          },
+          {
+            foreignKeyName: "stay_refunds_created_by_fkey"
+            columns: ["created_by"]
+            isOneToOne: false
+            referencedRelation: "users"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "stay_refunds_folio_hotel_fkey"
+            columns: ["folio_debit_entry_id", "hotel_id"]
+            isOneToOne: false
+            referencedRelation: "stay_folio_entries"
+            referencedColumns: ["id", "hotel_id"]
+          },
+          {
+            foreignKeyName: "stay_refunds_hotel_id_fkey"
+            columns: ["hotel_id"]
+            isOneToOne: false
+            referencedRelation: "hotels"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "stay_refunds_original_tender_id_fkey"
+            columns: ["original_tender_id"]
+            isOneToOne: false
+            referencedRelation: "stay_payment_batch_tenders"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "stay_refunds_reservation_hotel_fkey"
+            columns: ["reservation_id", "hotel_id"]
+            isOneToOne: false
+            referencedRelation: "reservations"
+            referencedColumns: ["id", "hotel_id"]
+          },
+          {
+            foreignKeyName: "stay_refunds_reservation_id_fkey"
+            columns: ["reservation_id"]
+            isOneToOne: false
+            referencedRelation: "reservations"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "stay_refunds_stay_id_fkey"
+            columns: ["stay_id"]
+            isOneToOne: false
+            referencedRelation: "stays"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "stay_refunds_stay_reservation_fkey"
+            columns: ["stay_id", "reservation_id"]
+            isOneToOne: false
+            referencedRelation: "stays"
+            referencedColumns: ["id", "reservation_id"]
+          },
+          {
+            foreignKeyName: "stay_refunds_transaction_hotel_fkey"
+            columns: ["financial_transaction_id", "hotel_id"]
+            isOneToOne: false
+            referencedRelation: "financial_transactions"
+            referencedColumns: ["id", "hotel_id"]
+          },
+        ]
+      }
       stays: {
         Row: {
+          account_version: number
           applied_daily_rate: number
           checkin_date_actual: string | null
           checkin_date_expected: string
@@ -4343,6 +5047,7 @@ export type Database = {
           updated_at: string
         }
         Insert: {
+          account_version?: number
           applied_daily_rate: number
           checkin_date_actual?: string | null
           checkin_date_expected: string
@@ -4358,6 +5063,7 @@ export type Database = {
           updated_at?: string
         }
         Update: {
+          account_version?: number
           applied_daily_rate?: number
           checkin_date_actual?: string | null
           checkin_date_expected?: string
@@ -4473,12 +5179,162 @@ export type Database = {
       }
     }
     Views: {
-      [_ in never]: never
+      consumption_order_effective: {
+        Row: {
+          billing_mode:
+            | Database["public"]["Enums"]["consumption_billing_mode"]
+            | null
+          disposition:
+            | Database["public"]["Enums"]["consumption_order_disposition"]
+            | null
+          effective_discount_amount: number | null
+          effective_gross_amount: number | null
+          effective_net_amount: number | null
+          effective_status: string | null
+          hotel_id: string | null
+          id: string | null
+          original_discount_amount: number | null
+          original_gross_amount: number | null
+          original_net_amount: number | null
+          stay_id: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "consumption_orders_hotel_id_fkey"
+            columns: ["hotel_id"]
+            isOneToOne: false
+            referencedRelation: "hotels"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "consumption_orders_stay_id_fkey"
+            columns: ["stay_id"]
+            isOneToOne: false
+            referencedRelation: "stays"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      consumption_order_item_effective: {
+        Row: {
+          agreement_number_snapshot: string | null
+          billing_policy_snapshot: Json | null
+          category_id: string | null
+          category_name_snapshot: string | null
+          charged_unit_price: number | null
+          commercial_agreement_id: string | null
+          commercial_partner_id: string | null
+          commercial_revision_id: string | null
+          commercial_revision_version_snapshot: number | null
+          commercial_terms_snapshot: Json | null
+          created_at: string | null
+          discount_amount: number | null
+          effective_discount: number | null
+          effective_net_amount: number | null
+          effective_quantity: number | null
+          hotel_id: string | null
+          id: string | null
+          item_total_amount: number | null
+          net_amount: number | null
+          notes: string | null
+          offer_id: string | null
+          order_id: string | null
+          partner_name_snapshot: string | null
+          product_id: string | null
+          product_internal_code_snapshot: string | null
+          product_kind_snapshot:
+            | Database["public"]["Enums"]["product_kind"]
+            | null
+          product_name_snapshot: string | null
+          provider_type_snapshot:
+            | Database["public"]["Enums"]["product_provider_type"]
+            | null
+          quantity: number | null
+          sales_unit_snapshot:
+            | Database["public"]["Enums"]["product_sales_unit"]
+            | null
+          version_token: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "consumption_order_items_agreement_hotel_fkey"
+            columns: ["commercial_agreement_id", "hotel_id"]
+            isOneToOne: false
+            referencedRelation: "commercial_agreements"
+            referencedColumns: ["id", "hotel_id"]
+          },
+          {
+            foreignKeyName: "consumption_order_items_category_hotel_fkey"
+            columns: ["category_id", "hotel_id"]
+            isOneToOne: false
+            referencedRelation: "product_categories"
+            referencedColumns: ["id", "hotel_id"]
+          },
+          {
+            foreignKeyName: "consumption_order_items_hotel_id_fkey"
+            columns: ["hotel_id"]
+            isOneToOne: false
+            referencedRelation: "hotels"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "consumption_order_items_offer_hotel_fkey"
+            columns: ["offer_id", "hotel_id"]
+            isOneToOne: false
+            referencedRelation: "consumption_offers"
+            referencedColumns: ["id", "hotel_id"]
+          },
+          {
+            foreignKeyName: "consumption_order_items_order_hotel_fkey"
+            columns: ["order_id", "hotel_id"]
+            isOneToOne: false
+            referencedRelation: "consumption_order_effective"
+            referencedColumns: ["id", "hotel_id"]
+          },
+          {
+            foreignKeyName: "consumption_order_items_order_hotel_fkey"
+            columns: ["order_id", "hotel_id"]
+            isOneToOne: false
+            referencedRelation: "consumption_orders"
+            referencedColumns: ["id", "hotel_id"]
+          },
+          {
+            foreignKeyName: "consumption_order_items_partner_hotel_fkey"
+            columns: ["commercial_partner_id", "hotel_id"]
+            isOneToOne: false
+            referencedRelation: "commercial_partners"
+            referencedColumns: ["id", "hotel_id"]
+          },
+          {
+            foreignKeyName: "consumption_order_items_product_hotel_fkey"
+            columns: ["product_id", "hotel_id"]
+            isOneToOne: false
+            referencedRelation: "products"
+            referencedColumns: ["id", "hotel_id"]
+          },
+          {
+            foreignKeyName: "consumption_order_items_revision_hotel_fkey"
+            columns: ["commercial_revision_id", "hotel_id"]
+            isOneToOne: false
+            referencedRelation: "commercial_agreement_revisions"
+            referencedColumns: ["id", "hotel_id"]
+          },
+        ]
+      }
     }
     Functions: {
       activate_commercial_agreement_revision: {
         Args: { p_actor_id: string; p_hotel_id: string; p_revision_id: string }
         Returns: string
+      }
+      allocate_stay_account_credit: {
+        Args: {
+          p_actor_id: string
+          p_credit_entry_id: string
+          p_hotel_id: string
+          p_stay_id: string
+        }
+        Returns: number
       }
       allocate_stay_folio_credit: {
         Args: {
@@ -4502,6 +5358,20 @@ export type Database = {
         Returns: boolean
       }
       backfill_stay_folio: { Args: never; Returns: undefined }
+      checkout_stay_account: {
+        Args: {
+          p_actor_id: string
+          p_expected_version: number
+          p_hotel_id: string
+          p_idempotency_key: string
+          p_maintenance_folio_entry_ids?: string[]
+          p_note?: string
+          p_occurrence_ids?: string[]
+          p_stay_id: string
+          p_tenders: Json
+        }
+        Returns: Json
+      }
       checkout_stay_with_financial_acknowledgements: {
         Args: {
           p_actor_id: string
@@ -4533,6 +5403,15 @@ export type Database = {
           p_work_order_id: string
         }
         Returns: string
+      }
+      complete_partner_correction_refund: {
+        Args: {
+          p_actor_id: string
+          p_correction_id: string
+          p_hotel_id: string
+          p_reference?: string
+        }
+        Returns: Json
       }
       create_commercial_agreement: {
         Args: {
@@ -4660,6 +5539,36 @@ export type Database = {
         }
         Returns: string
       }
+      create_stay_payment_batch: {
+        Args: {
+          p_actor_id: string
+          p_expected_version: number
+          p_hotel_id: string
+          p_idempotency_key: string
+          p_kind?: Database["public"]["Enums"]["stay_payment_batch_kind"]
+          p_note?: string
+          p_stay_id: string
+          p_tenders: Json
+        }
+        Returns: Json
+      }
+      create_stay_refund: {
+        Args: {
+          p_actor_id: string
+          p_amount: number
+          p_correction_id?: string
+          p_expected_version: number
+          p_hotel_id: string
+          p_idempotency_key: string
+          p_method_override_reason?: string
+          p_original_tender_id?: string
+          p_payment_method: Database["public"]["Enums"]["consumption_payment_method"]
+          p_reason: string
+          p_reference?: string
+          p_stay_id: string
+        }
+        Returns: Json
+      }
       create_user_with_roles:
         | {
             Args: {
@@ -4687,6 +5596,16 @@ export type Database = {
               result: string
             }[]
           }
+      decide_consumption_correction: {
+        Args: {
+          p_actor_id: string
+          p_correction_id: string
+          p_decision: string
+          p_hotel_id: string
+          p_reason?: string
+        }
+        Returns: Json
+      }
       decide_maintenance_preventive_run: {
         Args: {
           p_action: string
@@ -4829,6 +5748,18 @@ export type Database = {
       reorder_consumption_points: {
         Args: { p_actor_id: string; p_hotel_id: string; p_ids: string[] }
         Returns: string
+      }
+      request_consumption_correction: {
+        Args: {
+          p_actor_id: string
+          p_expected_version: number
+          p_hotel_id: string
+          p_items: Json
+          p_kind: Database["public"]["Enums"]["consumption_correction_kind"]
+          p_order_id: string
+          p_reason: string
+        }
+        Returns: Json
       }
       resolve_consumption_offer_snapshot: {
         Args: { p_hotel_id: string; p_occurred_at: string; p_offer_id: string }
@@ -5061,6 +5992,14 @@ export type Database = {
       consumption_configuration_entity:
         | "consumption_point"
         | "consumption_offer"
+      consumption_correction_kind: "partial_adjustment" | "full_void"
+      consumption_correction_status:
+        | "pending"
+        | "approved"
+        | "rejected"
+        | "awaiting_refund"
+        | "awaiting_partner_refund"
+        | "completed"
       consumption_order_disposition:
         | "charged"
         | "courtesy"
@@ -5172,6 +6111,7 @@ export type Database = {
         | "no_show"
       room_block_status: "blocked" | "maintenance"
       room_status: "available" | "occupied" | "maintenance" | "blocked"
+      stay_checkout_record_kind: "operational" | "legacy"
       stay_folio_direction: "debit" | "credit"
       stay_folio_kind:
         | "lodging"
@@ -5180,6 +6120,7 @@ export type Database = {
         | "payment"
         | "refund"
         | "adjustment"
+      stay_payment_batch_kind: "regular" | "checkout" | "legacy"
       stay_status:
         | "checked_in"
         | "checked_out"
@@ -5345,6 +6286,15 @@ export const Constants = {
         "consumption_point",
         "consumption_offer",
       ],
+      consumption_correction_kind: ["partial_adjustment", "full_void"],
+      consumption_correction_status: [
+        "pending",
+        "approved",
+        "rejected",
+        "awaiting_refund",
+        "awaiting_partner_refund",
+        "completed",
+      ],
       consumption_order_disposition: [
         "charged",
         "courtesy",
@@ -5470,6 +6420,7 @@ export const Constants = {
       ],
       room_block_status: ["blocked", "maintenance"],
       room_status: ["available", "occupied", "maintenance", "blocked"],
+      stay_checkout_record_kind: ["operational", "legacy"],
       stay_folio_direction: ["debit", "credit"],
       stay_folio_kind: [
         "lodging",
@@ -5479,6 +6430,7 @@ export const Constants = {
         "refund",
         "adjustment",
       ],
+      stay_payment_batch_kind: ["regular", "checkout", "legacy"],
       stay_status: [
         "checked_in",
         "checked_out",

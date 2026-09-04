@@ -9,6 +9,7 @@ import { getUserFromSession } from "../../../../lib/auth";
 import { getConsumptionAccess } from "../access";
 import { billingModeLabel } from "../_components/BillingModeFields";
 import { consumptionHistoryGuide } from "../usageGuides";
+import { requestConsumptionCorrectionAction } from "../accountActions";
 
 function money(value: number, currency: string) {
   return new Intl.NumberFormat("pt-BR", { style: "currency", currency }).format(
@@ -56,6 +57,12 @@ export default async function ConsumptionHistoryPage({
       label: "Histórico",
       href: "/dashboard/consumption/history",
       isVisible: access.canRead,
+    },
+    {
+      key: "adjustments",
+      label: "Ajustes",
+      href: "/dashboard/consumption/adjustments",
+      isVisible: access.canApproveAdjustments,
     },
     {
       key: "points",
@@ -238,6 +245,12 @@ export default async function ConsumptionHistoryPage({
                   Lançado {new Date(selected.posted_at).toLocaleString("pt-BR")}
                 </dd>
               </div>
+              <div>
+                <dt className="text-sm text-slate-600">Situação efetiva</dt>
+                <dd className="m-0 font-semibold">
+                  {selected.effective_status || "active"}
+                </dd>
+              </div>
             </dl>
             <ul className="m-0 grid gap-2 p-0">
               {selected.items.map((item) => (
@@ -247,9 +260,15 @@ export default async function ConsumptionHistoryPage({
                 >
                   <div className="flex justify-between gap-3">
                     <strong>
-                      {item.quantity} × {item.product_name}
+                      {item.effective_quantity ?? item.quantity} ×{" "}
+                      {item.product_name}
                     </strong>
-                    <strong>{money(item.net_amount, selected.currency)}</strong>
+                    <strong>
+                      {money(
+                        item.effective_net_amount ?? item.net_amount,
+                        selected.currency,
+                      )}
+                    </strong>
                   </div>
                   <p className="mb-0 text-sm text-slate-600">
                     {item.category_name} ·{" "}
@@ -265,9 +284,108 @@ export default async function ConsumptionHistoryPage({
                 Desconto {money(selected.discount_amount, selected.currency)}
               </span>
               <strong className="text-xl">
-                Líquido {money(selected.net_amount, selected.currency)}
+                Líquido{" "}
+                {money(
+                  selected.effective_net_amount ?? selected.net_amount,
+                  selected.currency,
+                )}
               </strong>
             </div>
+            {!selected.is_legacy && selected.stay_id && access.canPost ? (
+              <form
+                action={requestConsumptionCorrectionAction}
+                className="grid gap-3 rounded-lg border border-slate-200 p-4"
+                data-usage-guide="consumption-correction-form"
+              >
+                <input type="hidden" name="order_id" value={selected.id} />
+                <input type="hidden" name="stay_id" value={selected.stay_id} />
+                <input
+                  type="hidden"
+                  name="expected_version"
+                  value={selected.account_version || 0}
+                />
+                <h3 className="m-0 text-base">Solicitar ajuste redutor</h3>
+                {selected.items.map((item) => (
+                  <div className="grid gap-2 sm:grid-cols-3" key={item.id}>
+                    <input type="hidden" name="order_item_id" value={item.id} />
+                    <span className="self-end font-medium">
+                      {item.product_name}
+                    </span>
+                    <label className="pms-field">
+                      <span>Nova quantidade</span>
+                      <input
+                        className="pms-field-input"
+                        type="number"
+                        min="0"
+                        max={item.effective_quantity ?? item.quantity}
+                        step={item.sales_unit === "hour" ? "0.001" : "1"}
+                        name="resulting_quantity"
+                        defaultValue={item.effective_quantity ?? item.quantity}
+                        required
+                      />
+                    </label>
+                    <label className="pms-field">
+                      <span>Desconto adicional</span>
+                      <input
+                        className="pms-field-input"
+                        type="number"
+                        min="0"
+                        step="0.01"
+                        name="additional_discount"
+                        defaultValue="0"
+                        required
+                      />
+                    </label>
+                  </div>
+                ))}
+                <label className="pms-field">
+                  <span>Motivo</span>
+                  <textarea
+                    className="pms-field-input"
+                    name="reason"
+                    minLength={3}
+                    required
+                  />
+                </label>
+                <button
+                  className="pms-button-secondary"
+                  name="kind"
+                  value="partial_adjustment"
+                >
+                  Enviar para aprovação
+                </button>
+              </form>
+            ) : null}
+            {!selected.is_legacy && selected.stay_id && access.canVoid ? (
+              <form
+                action={requestConsumptionCorrectionAction}
+                className="flex flex-wrap items-end gap-2 rounded-lg border border-red-200 p-4"
+              >
+                <input type="hidden" name="order_id" value={selected.id} />
+                <input type="hidden" name="stay_id" value={selected.stay_id} />
+                <input
+                  type="hidden"
+                  name="expected_version"
+                  value={selected.account_version || 0}
+                />
+                <label className="pms-field flex-1">
+                  <span>Motivo da anulação integral</span>
+                  <input
+                    className="pms-field-input"
+                    name="reason"
+                    minLength={3}
+                    required
+                  />
+                </label>
+                <button
+                  className="pms-button-secondary"
+                  name="kind"
+                  value="full_void"
+                >
+                  Anular comanda
+                </button>
+              </form>
+            ) : null}
           </section>
         ) : null}
 
@@ -315,7 +433,10 @@ export default async function ConsumptionHistoryPage({
                           : "—"}
                   </td>
                   <td className="p-2 font-semibold">
-                    {money(order.net_amount, order.currency)}
+                    {money(
+                      order.effective_net_amount ?? order.net_amount,
+                      order.currency,
+                    )}
                   </td>
                   <td className="p-2">{order.operator_name || "Sistema"}</td>
                   <td className="p-2">

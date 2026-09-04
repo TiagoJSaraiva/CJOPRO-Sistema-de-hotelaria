@@ -27,6 +27,7 @@ import { registerSeasonRoutes } from "./routes/seasonRoutes";
 import { registerSeasonRoomRateRoutes } from "./routes/seasonRoomRateRoutes";
 import { registerFinancialTransactionRoutes } from "./routes/financialTransactionRoutes";
 import { registerStayOperationsRoutes } from "./routes/stayOperationsRoutes";
+import { registerStayAccountRoutes } from "./routes/stayAccountRoutes";
 import { registerMaintenanceRoutes } from "./routes/maintenanceRoutes";
 import { registerMaintenanceFinanceRoutes } from "./routes/maintenanceFinanceRoutes";
 import { registerMaintenanceManagementRoutes } from "./routes/maintenanceManagementRoutes";
@@ -159,6 +160,7 @@ export function createApp(options: CreateAppOptions = {}): FastifyInstance {
     registerCustomerRoutes(routes);
     registerReservationsCalendarRoutes(routes);
     registerStayOperationsRoutes(routes);
+    registerStayAccountRoutes(routes);
     registerProductRoutes(routes);
     registerConsumptionSettingsRoutes(routes);
     registerConsumptionOrderRoutes(routes);
