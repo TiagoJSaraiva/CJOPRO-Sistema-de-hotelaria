@@ -240,6 +240,18 @@ export default async function CommercialAgreementsPage({
       usageGuide={commercialAgreementsGuide}
       tabs={[
         {
+          key: "launch",
+          label: "Lançar consumo",
+          href: "/dashboard/consumption/launch",
+          isVisible: access.canPost,
+        },
+        {
+          key: "history",
+          label: "Histórico",
+          href: "/dashboard/consumption/history",
+          isVisible: access.canRead,
+        },
+        {
           key: "points",
           label: "Pontos de consumo",
           href: "/dashboard/consumption/points",

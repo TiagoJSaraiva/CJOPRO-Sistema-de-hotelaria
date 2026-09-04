@@ -1,5 +1,61 @@
 import type { UsageGuideDefinition } from "../_components/UsageGuide";
 
+export const consumptionLaunchGuide: UsageGuideDefinition = {
+  id: "consumption-launch",
+  title: "Lançar uma comanda",
+  steps: [
+    {
+      id: "stay",
+      target: "consumption-stay-search",
+      title: "Localize a estadia",
+      description:
+        "Busque pelo quarto, código da reserva ou nome do hóspede com check-in.",
+    },
+    {
+      id: "cart",
+      target: "consumption-cart",
+      title: "Monte o carrinho",
+      description:
+        "Escolha um ponto e informe as quantidades. Produtos indisponíveis explicam o motivo.",
+    },
+    {
+      id: "billing",
+      target: "consumption-billing",
+      title: "Defina o desfecho",
+      description:
+        "Lance no fólio, receba no hotel, confirme o parceiro ou conceda cortesia conforme sua permissão.",
+    },
+    {
+      id: "review",
+      target: "consumption-review",
+      title: "Revise e confirme",
+      description:
+        "Confira valores e confirme. O preço e a regra comercial são validados novamente no servidor.",
+    },
+  ],
+};
+
+export const consumptionHistoryGuide: UsageGuideDefinition = {
+  id: "consumption-history",
+  title: "Consultar comandas",
+  steps: [
+    {
+      id: "filters",
+      target: "consumption-history-filters",
+      title: "Encontre o lançamento",
+      description:
+        "Filtre por período, estadia, ponto, cobrança, disposição ou fornecedor.",
+    },
+    {
+      id: "list",
+      target: "consumption-history-list",
+      title: "Abra o recibo",
+      description:
+        "Consulte os snapshots preservados e os vínculos financeiros permitidos.",
+    },
+  ],
+};
+
 export const consumptionPointsGuide: UsageGuideDefinition = {
   id: "consumption-points",
   title: "Configurar pontos de consumo",

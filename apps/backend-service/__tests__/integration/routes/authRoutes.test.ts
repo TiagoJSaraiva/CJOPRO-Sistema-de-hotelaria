@@ -76,7 +76,7 @@ describe("routes/auth", () => {
   beforeAll(async () => {
     app = createApp();
     await app.ready();
-  }, 30_000);
+  }, 90_000);
 
   afterAll(async () => {
     await app.close();

@@ -15,6 +15,9 @@ describe("consumption access", () => {
       canReadCommercial: false,
       canManagePartners: false,
       canManageAgreements: false,
+      canPost: false,
+      canReceivePayment: false,
+      canGrantCourtesy: false,
     });
     expect(
       getConsumptionAccess({
@@ -26,6 +29,9 @@ describe("consumption access", () => {
       canReadCommercial: false,
       canManagePartners: false,
       canManageAgreements: false,
+      canPost: false,
+      canReceivePayment: false,
+      canGrantCourtesy: false,
     });
   });
 
@@ -37,6 +43,9 @@ describe("consumption access", () => {
         canReadCommercial: false,
         canManagePartners: false,
         canManageAgreements: false,
+        canPost: false,
+        canReceivePayment: false,
+        canGrantCourtesy: false,
       }),
     ).toBe("/dashboard/consumption/points");
     expect(
@@ -46,6 +55,9 @@ describe("consumption access", () => {
         canReadCommercial: false,
         canManagePartners: false,
         canManageAgreements: false,
+        canPost: false,
+        canReceivePayment: false,
+        canGrantCourtesy: false,
       }),
     ).toBeNull();
     expect(
@@ -55,6 +67,9 @@ describe("consumption access", () => {
         canReadCommercial: true,
         canManagePartners: false,
         canManageAgreements: false,
+        canPost: false,
+        canReceivePayment: false,
+        canGrantCourtesy: false,
       }),
     ).toBe("/dashboard/consumption/partners");
   });
@@ -72,5 +87,23 @@ describe("consumption access", () => {
       canManagePartners: false,
       canManageAgreements: true,
     });
+  });
+
+  it("prioritizes the operational launch for authorized operators", () => {
+    const access = getConsumptionAccess({
+      permissions: [
+        PERMISSIONS.CONSUMPTION_POST,
+        PERMISSIONS.CONSUMPTION_PAYMENT_RECEIVE,
+        PERMISSIONS.CONSUMPTION_COURTESY_GRANT,
+      ],
+    });
+    expect(access).toMatchObject({
+      canPost: true,
+      canReceivePayment: true,
+      canGrantCourtesy: true,
+    });
+    expect(getConsumptionDefaultRoute(access)).toBe(
+      "/dashboard/consumption/launch",
+    );
   });
 });

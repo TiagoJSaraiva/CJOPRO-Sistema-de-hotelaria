@@ -616,6 +616,374 @@ export type Database = {
           },
         ]
       }
+      consumption_order_events: {
+        Row: {
+          action: string
+          actor_id: string | null
+          created_at: string
+          details: Json
+          hotel_id: string
+          id: string
+          order_id: string
+        }
+        Insert: {
+          action: string
+          actor_id?: string | null
+          created_at?: string
+          details?: Json
+          hotel_id: string
+          id?: string
+          order_id: string
+        }
+        Update: {
+          action?: string
+          actor_id?: string | null
+          created_at?: string
+          details?: Json
+          hotel_id?: string
+          id?: string
+          order_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "consumption_order_events_actor_id_fkey"
+            columns: ["actor_id"]
+            isOneToOne: false
+            referencedRelation: "users"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "consumption_order_events_hotel_id_fkey"
+            columns: ["hotel_id"]
+            isOneToOne: false
+            referencedRelation: "hotels"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "consumption_order_events_order_hotel_fkey"
+            columns: ["order_id", "hotel_id"]
+            isOneToOne: false
+            referencedRelation: "consumption_orders"
+            referencedColumns: ["id", "hotel_id"]
+          },
+        ]
+      }
+      consumption_order_items: {
+        Row: {
+          agreement_number_snapshot: string | null
+          billing_policy_snapshot: Json
+          category_id: string | null
+          category_name_snapshot: string
+          charged_unit_price: number
+          commercial_agreement_id: string | null
+          commercial_partner_id: string | null
+          commercial_revision_id: string | null
+          commercial_revision_version_snapshot: number | null
+          commercial_terms_snapshot: Json | null
+          created_at: string
+          discount_amount: number
+          hotel_id: string
+          id: string
+          item_total_amount: number | null
+          net_amount: number | null
+          notes: string | null
+          offer_id: string | null
+          order_id: string
+          partner_name_snapshot: string | null
+          product_id: string
+          product_internal_code_snapshot: string | null
+          product_kind_snapshot: Database["public"]["Enums"]["product_kind"]
+          product_name_snapshot: string
+          provider_type_snapshot: Database["public"]["Enums"]["product_provider_type"]
+          quantity: number
+          sales_unit_snapshot: Database["public"]["Enums"]["product_sales_unit"]
+          version_token: string
+        }
+        Insert: {
+          agreement_number_snapshot?: string | null
+          billing_policy_snapshot: Json
+          category_id?: string | null
+          category_name_snapshot: string
+          charged_unit_price: number
+          commercial_agreement_id?: string | null
+          commercial_partner_id?: string | null
+          commercial_revision_id?: string | null
+          commercial_revision_version_snapshot?: number | null
+          commercial_terms_snapshot?: Json | null
+          created_at?: string
+          discount_amount?: number
+          hotel_id: string
+          id?: string
+          item_total_amount?: number | null
+          net_amount?: number | null
+          notes?: string | null
+          offer_id?: string | null
+          order_id: string
+          partner_name_snapshot?: string | null
+          product_id: string
+          product_internal_code_snapshot?: string | null
+          product_kind_snapshot: Database["public"]["Enums"]["product_kind"]
+          product_name_snapshot: string
+          provider_type_snapshot: Database["public"]["Enums"]["product_provider_type"]
+          quantity: number
+          sales_unit_snapshot: Database["public"]["Enums"]["product_sales_unit"]
+          version_token: string
+        }
+        Update: {
+          agreement_number_snapshot?: string | null
+          billing_policy_snapshot?: Json
+          category_id?: string | null
+          category_name_snapshot?: string
+          charged_unit_price?: number
+          commercial_agreement_id?: string | null
+          commercial_partner_id?: string | null
+          commercial_revision_id?: string | null
+          commercial_revision_version_snapshot?: number | null
+          commercial_terms_snapshot?: Json | null
+          created_at?: string
+          discount_amount?: number
+          hotel_id?: string
+          id?: string
+          item_total_amount?: number | null
+          net_amount?: number | null
+          notes?: string | null
+          offer_id?: string | null
+          order_id?: string
+          partner_name_snapshot?: string | null
+          product_id?: string
+          product_internal_code_snapshot?: string | null
+          product_kind_snapshot?: Database["public"]["Enums"]["product_kind"]
+          product_name_snapshot?: string
+          provider_type_snapshot?: Database["public"]["Enums"]["product_provider_type"]
+          quantity?: number
+          sales_unit_snapshot?: Database["public"]["Enums"]["product_sales_unit"]
+          version_token?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "consumption_order_items_agreement_hotel_fkey"
+            columns: ["commercial_agreement_id", "hotel_id"]
+            isOneToOne: false
+            referencedRelation: "commercial_agreements"
+            referencedColumns: ["id", "hotel_id"]
+          },
+          {
+            foreignKeyName: "consumption_order_items_category_hotel_fkey"
+            columns: ["category_id", "hotel_id"]
+            isOneToOne: false
+            referencedRelation: "product_categories"
+            referencedColumns: ["id", "hotel_id"]
+          },
+          {
+            foreignKeyName: "consumption_order_items_hotel_id_fkey"
+            columns: ["hotel_id"]
+            isOneToOne: false
+            referencedRelation: "hotels"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "consumption_order_items_offer_hotel_fkey"
+            columns: ["offer_id", "hotel_id"]
+            isOneToOne: false
+            referencedRelation: "consumption_offers"
+            referencedColumns: ["id", "hotel_id"]
+          },
+          {
+            foreignKeyName: "consumption_order_items_order_hotel_fkey"
+            columns: ["order_id", "hotel_id"]
+            isOneToOne: false
+            referencedRelation: "consumption_orders"
+            referencedColumns: ["id", "hotel_id"]
+          },
+          {
+            foreignKeyName: "consumption_order_items_partner_hotel_fkey"
+            columns: ["commercial_partner_id", "hotel_id"]
+            isOneToOne: false
+            referencedRelation: "commercial_partners"
+            referencedColumns: ["id", "hotel_id"]
+          },
+          {
+            foreignKeyName: "consumption_order_items_product_hotel_fkey"
+            columns: ["product_id", "hotel_id"]
+            isOneToOne: false
+            referencedRelation: "products"
+            referencedColumns: ["id", "hotel_id"]
+          },
+          {
+            foreignKeyName: "consumption_order_items_revision_hotel_fkey"
+            columns: ["commercial_revision_id", "hotel_id"]
+            isOneToOne: false
+            referencedRelation: "commercial_agreement_revisions"
+            referencedColumns: ["id", "hotel_id"]
+          },
+        ]
+      }
+      consumption_orders: {
+        Row: {
+          billing_mode:
+            | Database["public"]["Enums"]["consumption_billing_mode"]
+            | null
+          courtesy_reason: string | null
+          currency: string
+          discount_amount: number
+          disposition: Database["public"]["Enums"]["consumption_order_disposition"]
+          gross_amount: number
+          guest_customer_id: string | null
+          guest_name_snapshot: string | null
+          hotel_id: string
+          id: string
+          idempotency_key: string | null
+          is_legacy: boolean
+          net_amount: number
+          notes: string | null
+          occurred_at: string
+          partner_receipt_confirmed: boolean
+          payment_method:
+            | Database["public"]["Enums"]["consumption_payment_method"]
+            | null
+          payment_reference: string | null
+          point_id: string | null
+          point_name_snapshot: string | null
+          posted_at: string
+          posted_by: string | null
+          request_fingerprint: string
+          reservation_code_snapshot: string | null
+          reservation_id: string | null
+          room_number_snapshot: string | null
+          stay_id: string | null
+        }
+        Insert: {
+          billing_mode?:
+            | Database["public"]["Enums"]["consumption_billing_mode"]
+            | null
+          courtesy_reason?: string | null
+          currency: string
+          discount_amount?: number
+          disposition: Database["public"]["Enums"]["consumption_order_disposition"]
+          gross_amount: number
+          guest_customer_id?: string | null
+          guest_name_snapshot?: string | null
+          hotel_id: string
+          id?: string
+          idempotency_key?: string | null
+          is_legacy?: boolean
+          net_amount: number
+          notes?: string | null
+          occurred_at: string
+          partner_receipt_confirmed?: boolean
+          payment_method?:
+            | Database["public"]["Enums"]["consumption_payment_method"]
+            | null
+          payment_reference?: string | null
+          point_id?: string | null
+          point_name_snapshot?: string | null
+          posted_at?: string
+          posted_by?: string | null
+          request_fingerprint: string
+          reservation_code_snapshot?: string | null
+          reservation_id?: string | null
+          room_number_snapshot?: string | null
+          stay_id?: string | null
+        }
+        Update: {
+          billing_mode?:
+            | Database["public"]["Enums"]["consumption_billing_mode"]
+            | null
+          courtesy_reason?: string | null
+          currency?: string
+          discount_amount?: number
+          disposition?: Database["public"]["Enums"]["consumption_order_disposition"]
+          gross_amount?: number
+          guest_customer_id?: string | null
+          guest_name_snapshot?: string | null
+          hotel_id?: string
+          id?: string
+          idempotency_key?: string | null
+          is_legacy?: boolean
+          net_amount?: number
+          notes?: string | null
+          occurred_at?: string
+          partner_receipt_confirmed?: boolean
+          payment_method?:
+            | Database["public"]["Enums"]["consumption_payment_method"]
+            | null
+          payment_reference?: string | null
+          point_id?: string | null
+          point_name_snapshot?: string | null
+          posted_at?: string
+          posted_by?: string | null
+          request_fingerprint?: string
+          reservation_code_snapshot?: string | null
+          reservation_id?: string | null
+          room_number_snapshot?: string | null
+          stay_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "consumption_orders_guest_customer_id_fkey"
+            columns: ["guest_customer_id"]
+            isOneToOne: false
+            referencedRelation: "customers"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "consumption_orders_guest_hotel_fkey"
+            columns: ["guest_customer_id", "hotel_id"]
+            isOneToOne: false
+            referencedRelation: "customers"
+            referencedColumns: ["id", "hotel_id"]
+          },
+          {
+            foreignKeyName: "consumption_orders_hotel_id_fkey"
+            columns: ["hotel_id"]
+            isOneToOne: false
+            referencedRelation: "hotels"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "consumption_orders_point_hotel_fkey"
+            columns: ["point_id", "hotel_id"]
+            isOneToOne: false
+            referencedRelation: "consumption_points"
+            referencedColumns: ["id", "hotel_id"]
+          },
+          {
+            foreignKeyName: "consumption_orders_posted_by_fkey"
+            columns: ["posted_by"]
+            isOneToOne: false
+            referencedRelation: "users"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "consumption_orders_reservation_hotel_fkey"
+            columns: ["reservation_id", "hotel_id"]
+            isOneToOne: false
+            referencedRelation: "reservations"
+            referencedColumns: ["id", "hotel_id"]
+          },
+          {
+            foreignKeyName: "consumption_orders_reservation_id_fkey"
+            columns: ["reservation_id"]
+            isOneToOne: false
+            referencedRelation: "reservations"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "consumption_orders_stay_id_fkey"
+            columns: ["stay_id"]
+            isOneToOne: false
+            referencedRelation: "stays"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "consumption_orders_stay_reservation_fkey"
+            columns: ["stay_id", "reservation_id"]
+            isOneToOne: false
+            referencedRelation: "stays"
+            referencedColumns: ["id", "reservation_id"]
+          },
+        ]
+      }
       consumption_points: {
         Row: {
           archived_at: string | null
@@ -739,6 +1107,7 @@ export type Database = {
         Row: {
           amount: number
           category: string
+          consumption_order_id: string | null
           cost_center: string | null
           counterparty: string | null
           created_at: string
@@ -762,6 +1131,7 @@ export type Database = {
         Insert: {
           amount: number
           category: string
+          consumption_order_id?: string | null
           cost_center?: string | null
           counterparty?: string | null
           created_at?: string
@@ -785,6 +1155,7 @@ export type Database = {
         Update: {
           amount?: number
           category?: string
+          consumption_order_id?: string | null
           cost_center?: string | null
           counterparty?: string | null
           created_at?: string
@@ -806,6 +1177,13 @@ export type Database = {
           updated_at?: string
         }
         Relationships: [
+          {
+            foreignKeyName: "financial_transactions_consumption_order_fkey"
+            columns: ["consumption_order_id", "hotel_id"]
+            isOneToOne: false
+            referencedRelation: "consumption_orders"
+            referencedColumns: ["id", "hotel_id"]
+          },
           {
             foreignKeyName: "financial_transactions_created_by_fkey"
             columns: ["created_by"]
@@ -3723,60 +4101,6 @@ export type Database = {
           },
         ]
       }
-      stay_consumption: {
-        Row: {
-          charged_unit_price: number
-          consumption_date: string | null
-          created_at: string
-          id: string
-          item_total_amount: number | null
-          notes: string | null
-          product_id: string
-          quantity: number
-          stay_id: string | null
-          updated_at: string
-        }
-        Insert: {
-          charged_unit_price: number
-          consumption_date?: string | null
-          created_at?: string
-          id?: string
-          item_total_amount?: number | null
-          notes?: string | null
-          product_id: string
-          quantity: number
-          stay_id?: string | null
-          updated_at?: string
-        }
-        Update: {
-          charged_unit_price?: number
-          consumption_date?: string | null
-          created_at?: string
-          id?: string
-          item_total_amount?: number | null
-          notes?: string | null
-          product_id?: string
-          quantity?: number
-          stay_id?: string | null
-          updated_at?: string
-        }
-        Relationships: [
-          {
-            foreignKeyName: "reservation_consumption_product_id_fkey"
-            columns: ["product_id"]
-            isOneToOne: false
-            referencedRelation: "products"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "stay_consumption_stay_id_fkey"
-            columns: ["stay_id"]
-            isOneToOne: false
-            referencedRelation: "stays"
-            referencedColumns: ["id"]
-          },
-        ]
-      }
       stay_customers: {
         Row: {
           created_at: string
@@ -3888,6 +4212,7 @@ export type Database = {
       stay_folio_entries: {
         Row: {
           amount: number
+          consumption_order_id: string | null
           created_at: string
           currency: string
           description: string
@@ -3906,6 +4231,7 @@ export type Database = {
         }
         Insert: {
           amount: number
+          consumption_order_id?: string | null
           created_at?: string
           currency: string
           description: string
@@ -3924,6 +4250,7 @@ export type Database = {
         }
         Update: {
           amount?: number
+          consumption_order_id?: string | null
           created_at?: string
           currency?: string
           description?: string
@@ -3941,6 +4268,13 @@ export type Database = {
           stay_id?: string
         }
         Relationships: [
+          {
+            foreignKeyName: "stay_folio_entries_consumption_order_fkey"
+            columns: ["consumption_order_id", "hotel_id"]
+            isOneToOne: false
+            referencedRelation: "consumption_orders"
+            referencedColumns: ["id", "hotel_id"]
+          },
           {
             foreignKeyName: "stay_folio_entries_financial_transaction_id_fkey"
             columns: ["financial_transaction_id"]
@@ -4374,6 +4708,10 @@ export type Database = {
         }
         Returns: string
       }
+      get_consumption_operational_context: {
+        Args: { p_hotel_id: string; p_occurred_at?: string; p_stay_id: string }
+        Returns: Json
+      }
       inspect_maintenance_work_order: {
         Args: {
           p_actor_id: string
@@ -4430,6 +4768,26 @@ export type Database = {
         }
         Returns: boolean
       }
+      post_consumption_order: {
+        Args: {
+          p_actor_id: string
+          p_billing_mode: Database["public"]["Enums"]["consumption_billing_mode"]
+          p_courtesy_reason?: string
+          p_disposition: Database["public"]["Enums"]["consumption_order_disposition"]
+          p_guest_customer_id?: string
+          p_hotel_id: string
+          p_idempotency_key: string
+          p_items: Json
+          p_notes?: string
+          p_occurred_at: string
+          p_partner_receipt_confirmed?: boolean
+          p_payment_method?: Database["public"]["Enums"]["consumption_payment_method"]
+          p_payment_reference?: string
+          p_point_id: string
+          p_stay_id: string
+        }
+        Returns: Json
+      }
       process_maintenance_expiry_alerts: {
         Args: { p_hotel_id: string; p_local_date: string }
         Returns: number
@@ -4471,6 +4829,10 @@ export type Database = {
       reorder_consumption_points: {
         Args: { p_actor_id: string; p_hotel_id: string; p_ids: string[] }
         Returns: string
+      }
+      resolve_consumption_offer_snapshot: {
+        Args: { p_hotel_id: string; p_occurred_at: string; p_offer_id: string }
+        Returns: Json
       }
       reverse_maintenance_financial_settlement: {
         Args: {
@@ -4699,6 +5061,16 @@ export type Database = {
       consumption_configuration_entity:
         | "consumption_point"
         | "consumption_offer"
+      consumption_order_disposition:
+        | "charged"
+        | "courtesy"
+        | "legacy_unclassified"
+      consumption_payment_method:
+        | "cash"
+        | "pix"
+        | "credit_card"
+        | "debit_card"
+        | "bank_transfer"
       consumption_policy_source: "inherit" | "override"
       maintenance_asset_lifecycle: "active" | "out_of_service" | "retired"
       maintenance_automation_status: "running" | "completed" | "failed"
@@ -4804,6 +5176,7 @@ export type Database = {
       stay_folio_kind:
         | "lodging"
         | "maintenance_charge"
+        | "consumption_charge"
         | "payment"
         | "refund"
         | "adjustment"
@@ -4972,6 +5345,18 @@ export const Constants = {
         "consumption_point",
         "consumption_offer",
       ],
+      consumption_order_disposition: [
+        "charged",
+        "courtesy",
+        "legacy_unclassified",
+      ],
+      consumption_payment_method: [
+        "cash",
+        "pix",
+        "credit_card",
+        "debit_card",
+        "bank_transfer",
+      ],
       consumption_policy_source: ["inherit", "override"],
       maintenance_asset_lifecycle: ["active", "out_of_service", "retired"],
       maintenance_automation_status: ["running", "completed", "failed"],
@@ -5089,6 +5474,7 @@ export const Constants = {
       stay_folio_kind: [
         "lodging",
         "maintenance_charge",
+        "consumption_charge",
         "payment",
         "refund",
         "adjustment",

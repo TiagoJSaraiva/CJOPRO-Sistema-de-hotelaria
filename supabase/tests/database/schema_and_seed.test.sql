@@ -1,6 +1,6 @@
 begin;
 
-select plan(158);
+select plan(179);
 
 select ok(to_regclass('public.room_blocks') is not null, 'room_blocks exists');
 
@@ -1041,6 +1041,224 @@ select is(
 select throws_ok(
   $$ delete from public.commercial_agreements where internal_number = 'AC-001' $$,
   '23514', null, 'commercial agreements cannot be hard deleted'
+);
+
+-- The maintenance section above deliberately completes this stay. Restore the
+-- synthetic checked-in fixture before exercising the independent consumption flow.
+update public.stays
+set stay_status = 'checked_in', checkout_date_actual = null
+where id = '91000000-0000-4000-8000-000000000002';
+
+select ok(
+  to_regclass('public.consumption_orders') is not null
+    and to_regclass('public.consumption_order_items') is not null
+    and to_regclass('public.consumption_order_events') is not null,
+  'consumption operation tables exist'
+);
+select is(
+  (select array_agg(enumlabel order by enumsortorder)::text from pg_enum
+    where enumtypid = 'public.consumption_order_disposition'::regtype),
+  '{charged,courtesy,legacy_unclassified}',
+  'consumption order disposition is explicit'
+);
+select is(
+  (select count(*)::integer from public.consumption_orders where is_legacy),
+  2,
+  'legacy seed consumptions are preserved as historical orders'
+);
+select is(
+  (select count(*)::integer from public.stay_folio_entries entry
+    join public.consumption_orders orders on orders.id = entry.consumption_order_id
+    where orders.is_legacy),
+  0,
+  'legacy consumption creates no retroactive folio entries'
+);
+select ok(
+  (public.resolve_consumption_offer_snapshot(
+    '10000000-0000-4000-8000-000000000001',
+    'a2000000-0000-4000-8000-000000000001', now()
+  )->>'available')::boolean,
+  'operational resolver exposes an available same-hotel offer'
+);
+select is(
+  (public.post_consumption_order(
+    '10000000-0000-4000-8000-000000000001',
+    '91000000-0000-4000-8000-000000000002',
+    'a1000000-0000-4000-8000-000000000001',
+    '80000000-0000-4000-8000-000000000002', now(), 'charged', 'stay_folio',
+    jsonb_build_array(jsonb_build_object(
+      'offer_id', 'a2000000-0000-4000-8000-000000000001', 'quantity', 2,
+      'version_token', public.resolve_consumption_offer_snapshot(
+        '10000000-0000-4000-8000-000000000001',
+        'a2000000-0000-4000-8000-000000000001', now()
+      )->>'version_token'
+    )), 'c1000000-0000-4000-8000-000000000001'
+  ))->>'result',
+  'ok',
+  'folio consumption is posted atomically'
+);
+select is(
+  (select gross_amount from public.consumption_orders
+    where idempotency_key = 'c1000000-0000-4000-8000-000000000001'),
+  16.00::numeric,
+  'server catalog price determines the order total'
+);
+select is(
+  (select count(*)::integer from public.stay_folio_entries
+    where kind = 'consumption_charge' and consumption_order_id = (
+      select id from public.consumption_orders
+      where idempotency_key = 'c1000000-0000-4000-8000-000000000001')),
+  1,
+  'folio mode creates one aggregated consumption debit'
+);
+select throws_ok(
+  $$ update public.stays set stay_status = 'checked_out'
+    where id = '91000000-0000-4000-8000-000000000002' $$,
+  '23514', null, 'open consumption debit blocks checkout'
+);
+select is(
+  (public.post_consumption_order(
+    '10000000-0000-4000-8000-000000000001',
+    '91000000-0000-4000-8000-000000000002',
+    'a1000000-0000-4000-8000-000000000001',
+    '80000000-0000-4000-8000-000000000002',
+    (select occurred_at from public.consumption_orders where idempotency_key = 'c1000000-0000-4000-8000-000000000001'),
+    'charged', 'stay_folio',
+    jsonb_build_array(jsonb_build_object(
+      'offer_id', 'a2000000-0000-4000-8000-000000000001', 'quantity', 2,
+      'version_token', (select version_token from public.consumption_order_items where order_id = (
+        select id from public.consumption_orders where idempotency_key = 'c1000000-0000-4000-8000-000000000001'))
+    )), 'c1000000-0000-4000-8000-000000000001'
+  ))->>'result',
+  'ok',
+  'identical idempotent replay returns the existing order'
+);
+select is(
+  (select count(*)::integer from public.consumption_orders
+    where idempotency_key = 'c1000000-0000-4000-8000-000000000001'),
+  1,
+  'idempotent replay does not duplicate the order'
+);
+select is(
+  (public.post_consumption_order(
+    '10000000-0000-4000-8000-000000000001',
+    '91000000-0000-4000-8000-000000000002',
+    'a1000000-0000-4000-8000-000000000001',
+    '80000000-0000-4000-8000-000000000002', now(), 'charged', 'stay_folio',
+    jsonb_build_array(jsonb_build_object(
+      'offer_id', 'a2000000-0000-4000-8000-000000000001', 'quantity', 3,
+      'version_token', public.resolve_consumption_offer_snapshot(
+        '10000000-0000-4000-8000-000000000001',
+        'a2000000-0000-4000-8000-000000000001', now()
+      )->>'version_token'
+    )), 'c1000000-0000-4000-8000-000000000001'
+  ))->>'result',
+  'idempotency_conflict',
+  'idempotency key cannot be reused with a different payload'
+);
+select is(
+  (public.post_consumption_order(
+    '10000000-0000-4000-8000-000000000001',
+    '91000000-0000-4000-8000-000000000002',
+    'a1000000-0000-4000-8000-000000000001',
+    '80000000-0000-4000-8000-000000000002', now(), 'courtesy', null,
+    jsonb_build_array(jsonb_build_object(
+      'offer_id', 'a2000000-0000-4000-8000-000000000001', 'quantity', 1,
+      'version_token', public.resolve_consumption_offer_snapshot(
+        '10000000-0000-4000-8000-000000000001',
+        'a2000000-0000-4000-8000-000000000001', now()
+      )->>'version_token'
+    )), 'c1000000-0000-4000-8000-000000000002',
+    p_courtesy_reason => 'Cortesia autorizada no teste'
+  ))->>'result',
+  'ok',
+  'full courtesy is posted with a reason'
+);
+select ok(
+  (select net_amount = 0 and discount_amount = gross_amount
+    from public.consumption_orders
+    where idempotency_key = 'c1000000-0000-4000-8000-000000000002')
+  and not exists (
+    select 1 from public.stay_folio_entries where consumption_order_id = (
+      select id from public.consumption_orders
+      where idempotency_key = 'c1000000-0000-4000-8000-000000000002')),
+  'courtesy records full discount without financial movement'
+);
+select is(
+  (public.post_consumption_order(
+    '10000000-0000-4000-8000-000000000001',
+    '91000000-0000-4000-8000-000000000002',
+    'a1000000-0000-4000-8000-000000000001',
+    '80000000-0000-4000-8000-000000000002', now(), 'charged', 'hotel_immediate',
+    jsonb_build_array(jsonb_build_object(
+      'offer_id', 'a2000000-0000-4000-8000-000000000001', 'quantity', 1,
+      'version_token', public.resolve_consumption_offer_snapshot(
+        '10000000-0000-4000-8000-000000000001',
+        'a2000000-0000-4000-8000-000000000001', now()
+      )->>'version_token'
+    )), 'c1000000-0000-4000-8000-000000000003',
+    p_payment_method => 'pix'
+  ))->>'result',
+  'ok',
+  'immediate hotel payment is posted atomically'
+);
+select ok(
+  exists (
+    select 1 from public.stay_folio_allocations allocation
+    join public.stay_folio_entries debit on debit.id = allocation.debit_entry_id
+    join public.stay_folio_entries credit on credit.id = allocation.credit_entry_id
+    where debit.consumption_order_id = (
+      select id from public.consumption_orders
+      where idempotency_key = 'c1000000-0000-4000-8000-000000000003')
+      and debit.amount = allocation.amount and credit.amount = allocation.amount
+  ),
+  'immediate payment fully allocates its credit to the consumption debit'
+);
+select is(
+  (public.post_consumption_order(
+    '10000000-0000-4000-8000-000000000001',
+    '91000000-0000-4000-8000-000000000002',
+    'a1000000-0000-4000-8000-000000000001',
+    '80000000-0000-4000-8000-000000000002', now(), 'charged', 'partner_direct',
+    jsonb_build_array(jsonb_build_object(
+      'offer_id', 'b5000000-0000-4000-8000-000000000001', 'quantity', 1,
+      'version_token', public.resolve_consumption_offer_snapshot(
+        '10000000-0000-4000-8000-000000000001',
+        'b5000000-0000-4000-8000-000000000001', now()
+      )->>'version_token'
+    )), 'c1000000-0000-4000-8000-000000000004',
+    p_partner_receipt_confirmed => true
+  ))->>'result',
+  'ok',
+  'eligible partner direct payment is posted with external confirmation'
+);
+select ok(
+  not exists (
+    select 1 from public.stay_folio_entries where consumption_order_id = (
+      select id from public.consumption_orders
+      where idempotency_key = 'c1000000-0000-4000-8000-000000000004'))
+  and not exists (
+    select 1 from public.financial_transactions where consumption_order_id = (
+      select id from public.consumption_orders
+      where idempotency_key = 'c1000000-0000-4000-8000-000000000004')),
+  'partner direct payment never moves hotel folio or cash'
+);
+select throws_ok(
+  $$ delete from public.consumption_orders
+    where idempotency_key = 'c1000000-0000-4000-8000-000000000002' $$,
+  '23514', null, 'posted consumption orders cannot be deleted'
+);
+select throws_ok(
+  $$ update public.consumption_order_items set quantity = quantity
+    where order_id = (select id from public.consumption_orders
+      where idempotency_key = 'c1000000-0000-4000-8000-000000000002') $$,
+  '23514', null, 'consumption item snapshots are immutable'
+);
+select ok(
+  exists (select 1 from public.consumption_order_events
+    where order_id = (select id from public.consumption_orders
+      where idempotency_key = 'c1000000-0000-4000-8000-000000000002')),
+  'consumption posting creates an immutable audit event'
 );
 
 select * from finish();

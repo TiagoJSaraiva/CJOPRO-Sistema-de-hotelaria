@@ -152,11 +152,54 @@ insert into public.stay_customers (id, stay_id, customer_id) values
   ('92000000-0000-4000-8000-000000000004', '91000000-0000-4000-8000-000000000004', '30000000-0000-4000-8000-000000000003'),
   ('92000000-0000-4000-8000-000000000005', '91000000-0000-4000-8000-000000000004', '30000000-0000-4000-8000-000000000004');
 
-insert into public.stay_consumption (
-  id, stay_id, product_id, quantity, charged_unit_price, consumption_date, notes
+insert into public.consumption_orders (
+  id, hotel_id, stay_id, reservation_id, disposition, currency, gross_amount,
+  discount_amount, net_amount, reservation_code_snapshot, room_number_snapshot,
+  notes, occurred_at, posted_at, request_fingerprint, is_legacy
 ) values
-  ('93000000-0000-4000-8000-000000000001', '91000000-0000-4000-8000-000000000002', '40000000-0000-4000-8000-000000000001', 2, 8.00, now(), 'Consumo sintetico'),
-  ('93000000-0000-4000-8000-000000000002', '91000000-0000-4000-8000-000000000003', '40000000-0000-4000-8000-000000000001', 2, 8.00, now() - interval '9 days', 'Consumo sintetico');
+  (
+    '93000000-0000-4000-8000-000000000001', '10000000-0000-4000-8000-000000000001',
+    '91000000-0000-4000-8000-000000000002', '90000000-0000-4000-8000-000000000002',
+    'legacy_unclassified', 'BRL', 16.00, 0, 16.00, 'LOCAL-AUR-002', '102',
+    'Consumo sintetico migrado sem forma de cobranca', now(), now(),
+    'seed:legacy:93000000-0000-4000-8000-000000000001', true
+  ),
+  (
+    '93000000-0000-4000-8000-000000000002', '10000000-0000-4000-8000-000000000001',
+    '91000000-0000-4000-8000-000000000003', '90000000-0000-4000-8000-000000000003',
+    'legacy_unclassified', 'BRL', 16.00, 0, 16.00, 'LOCAL-AUR-003', '101',
+    'Consumo sintetico migrado sem forma de cobranca', now() - interval '9 days', now() - interval '9 days',
+    'seed:legacy:93000000-0000-4000-8000-000000000002', true
+  );
+
+insert into public.consumption_order_items (
+  id, hotel_id, order_id, product_id, quantity, charged_unit_price,
+  discount_amount, product_name_snapshot, product_internal_code_snapshot,
+  category_name_snapshot, product_kind_snapshot, sales_unit_snapshot,
+  provider_type_snapshot, billing_policy_snapshot, version_token, notes
+)
+select
+  orders.id, orders.hotel_id, orders.id, product.id, 2, 8.00, 0,
+  product.name, product.internal_code, category.name, product.kind,
+  product.sales_unit, product.provider_type, '{}'::jsonb,
+  'seed:legacy:' || orders.id::text, 'Consumo sintetico'
+from public.consumption_orders orders
+join public.products product on product.id = '40000000-0000-4000-8000-000000000001'
+join public.product_categories category on category.id = product.category_id
+where orders.id in (
+  '93000000-0000-4000-8000-000000000001',
+  '93000000-0000-4000-8000-000000000002'
+);
+
+insert into public.consumption_order_events (
+  hotel_id, order_id, action, details, created_at
+)
+select hotel_id, id, 'legacy_migrated', jsonb_build_object('source', 'seed'), occurred_at
+from public.consumption_orders
+where id in (
+  '93000000-0000-4000-8000-000000000001',
+  '93000000-0000-4000-8000-000000000002'
+);
 
 insert into public.financial_transactions (
   id, hotel_id, type, category, amount, currency, description, status, stay_id,

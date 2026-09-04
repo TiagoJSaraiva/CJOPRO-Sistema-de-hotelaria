@@ -50,10 +50,12 @@ flowchart LR
   catalog[Catálogo único] --> offer[Oferta produto–ponto]
   point[Ponto de consumo] -->|política padrão| offer
   offer --> resolved[Política e disponibilidade resolvidas]
-  resolved -.-> futureSale[Lançamento futuro de consumo]
-  futureSale -.-> immediate[Pagamento imediato ao hotel]
-  futureSale -.-> folio[Débito no fólio]
-  futureSale -.-> partnerPayment[Pagamento direto ao parceiro]
+  resolved --> order[Comanda de uma estadia e um ponto]
+  order --> snapshot[Itens e termos em snapshots imutáveis]
+  order --> immediate[Débito + crédito imediato no fólio]
+  order --> folio[Débito pendente no fólio]
+  order --> partnerPayment[Confirmação de pagamento ao parceiro]
+  order --> courtesy[Cortesia integral sem caixa]
 ```
 
 Ponto, oferta, produto e categoria precisam estar ativos e não arquivados para
@@ -68,13 +70,23 @@ O acordo possui identidade estável e revisões numeradas. Revisões ativadas s�
 imutáveis; uma nova revisão encerra atomicamente a anterior e não pode se
 sobrepor a outro acordo do mesmo parceiro no mesmo ponto. Os modelos são
 aluguel fixo, comissão sobre venda líquida operacional e híbrido com mínimo
-garantido opcional. Esta camada apenas configura os termos: ainda não calcula
-aluguel/comissão, recebe pagamento, faz split, repasse ou liquidação.
+garantido opcional. Os termos são preservados nos itens para a apuração futura,
+mas esta camada ainda não calcula aluguel/comissão, faz split, repasse ou
+liquidação.
 
-Somente uma estadia em `checked_in` poderá receber lançamentos, e débitos de
-consumo no fólio deverão impedir o checkout enquanto não forem quitados. Essas
-regras serão aplicadas nos fluxos operacionais posteriores; esta etapa não
-altera `stay_consumption`, pagamentos ou checkout.
+Somente uma estadia em `checked_in` recebe novas comandas. O servidor resolve
+preço, oferta, política e revisão contratual para o horário informado, compara
+tokens de versão e grava cabeçalho, itens, auditoria e efeitos financeiros em
+uma única transação PostgreSQL. A chave idempotente devolve a mesma comanda
+para repetições idênticas e rejeita payload divergente.
+
+`stay_folio` cria um débito agregado; `hotel_immediate` cria débito, transação,
+crédito e alocação integral; `partner_direct` registra somente o recebimento
+externo confirmado; cortesia registra desconto integral. Débitos abertos de
+`consumption_charge` bloqueiam checkout. O antigo `stay_consumption` é migrado
+para comandas `legacy_unclassified`, sem gerar dívida ou pagamento retroativo.
+Comandas, itens, eventos e vínculos financeiros são imutáveis; cancelamentos e
+ajustes serão operações compensatórias em uma etapa posterior.
 
 ## Requisição autenticada e hotel ativo
 

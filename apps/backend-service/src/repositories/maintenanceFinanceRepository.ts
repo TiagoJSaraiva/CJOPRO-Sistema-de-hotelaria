@@ -242,6 +242,7 @@ class SupabaseMaintenanceFinanceRepository implements MaintenanceFinanceReposito
         currency: entry.currency,
         description: entry.description,
         maintenance_occurrence_id: entry.maintenance_occurrence_id,
+        consumption_order_id: entry.consumption_order_id,
         financial_transaction_id: entry.financial_transaction_id,
         reversed_entry_id: entry.reversed_entry_id,
         allocated_amount: allocatedAmount,

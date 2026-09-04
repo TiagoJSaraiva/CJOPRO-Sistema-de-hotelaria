@@ -335,6 +335,22 @@ async function loadStayPanel(
         created_by: payment.created_by ? String(payment.created_by) : null,
       }) satisfies AdminStayPayment,
   );
+  const pendingConsumptionEntries =
+    folio?.entries.filter(
+      (entry) =>
+        entry.kind === "consumption_charge" &&
+        entry.direction === "debit" &&
+        entry.open_amount > 0,
+    ) || [];
+  const pendingConsumptionBalance = Number(
+    pendingConsumptionEntries
+      .reduce((sum, entry) => sum + entry.open_amount, 0)
+      .toFixed(2),
+  );
+  if (pendingConsumptionBalance > 0) {
+    canCheckout = false;
+    checkoutBlockReason = `Existem ${pendingConsumptionEntries.length} consumo(s) pendente(s) no fólio (${pendingConsumptionBalance.toFixed(2)}).`;
+  }
 
   return {
     stay: {
@@ -393,6 +409,11 @@ async function loadStayPanel(
     ),
     maintenance_pending_folio_entry_ids:
       folio?.pending_maintenance_entry_ids || [],
+    pending_consumption_count: pendingConsumptionEntries.length,
+    pending_consumption_balance: pendingConsumptionBalance,
+    pending_consumption_folio_entry_ids: pendingConsumptionEntries.map(
+      (entry) => entry.id,
+    ),
   };
 }
 

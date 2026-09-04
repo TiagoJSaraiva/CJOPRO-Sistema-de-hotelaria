@@ -711,6 +711,182 @@ export type AdminConsumptionConfigurationAuditEvent = {
   created_at: string;
 };
 
+export type ConsumptionOrderDisposition =
+  "charged" | "courtesy" | "legacy_unclassified";
+export type ConsumptionPaymentMethod =
+  "cash" | "pix" | "credit_card" | "debit_card" | "bank_transfer";
+export type ConsumptionOrderConflictReason =
+  | "stay_not_checked_in"
+  | "invalid_occurred_at"
+  | "offer_unavailable"
+  | "billing_mode_incompatible"
+  | "price_changed"
+  | "revision_changed"
+  | "different_partners"
+  | "financial_permission_required"
+  | "idempotency_conflict";
+
+export type AdminConsumptionEligibleStay = {
+  id: string;
+  reservation_id: string;
+  reservation_code: string;
+  room_number: string;
+  room_type: string;
+  primary_guest_name: string;
+  checkin_date_actual: string;
+};
+
+export type AdminConsumptionContextGuest = {
+  id: string;
+  full_name: string;
+};
+
+export type AdminConsumptionContextOffer = {
+  id: string;
+  point_id: string;
+  point_name: string;
+  product_id: string;
+  product_name: string;
+  product_code: string | null;
+  product_kind: ProductKind;
+  sales_unit: ProductSalesUnit;
+  category_id: string;
+  category_name: string;
+  unit_price: number;
+  currency: string;
+  provider_type: ProductProviderType;
+  partner_id: string | null;
+  partner_name: string | null;
+  agreement_id: string | null;
+  agreement_number: string | null;
+  revision: {
+    id: string;
+    version: number;
+    starts_on: string;
+    ends_on: string | null;
+    commercial_model: CommercialModel;
+    fixed_rent: number | null;
+    rent_frequency: CommercialRentFrequency | null;
+    commission_percentage: number | null;
+    minimum_guarantee: number | null;
+    payment_recipient: CommercialPaymentRecipient;
+    currency: string;
+  } | null;
+  allowed_modes: ConsumptionBillingMode[];
+  default_mode: ConsumptionBillingMode | null;
+  policy_source: ConsumptionPolicySource;
+  available: boolean;
+  reasons: ConsumptionUnavailableReason[];
+  version_token: string;
+};
+
+export type AdminConsumptionOperationalContext = {
+  stay: AdminConsumptionEligibleStay & {
+    stay_status: "checked_in";
+    room_id: string;
+    checkout_date_expected: string;
+  };
+  guests: AdminConsumptionContextGuest[];
+  offers: AdminConsumptionContextOffer[];
+  occurred_at: string;
+};
+
+export type AdminConsumptionOrderLineInput = {
+  offer_id: string;
+  quantity: number;
+  version_token: string;
+};
+
+export type AdminConsumptionOrderCreateInput = {
+  stay_id: string;
+  point_id: string;
+  guest_customer_id?: string | null;
+  occurred_at: string;
+  disposition: Exclude<ConsumptionOrderDisposition, "legacy_unclassified">;
+  billing_mode?: ConsumptionBillingMode | null;
+  payment_method?: ConsumptionPaymentMethod | null;
+  payment_reference?: string | null;
+  partner_receipt_confirmed?: boolean;
+  courtesy_reason?: string | null;
+  notes?: string | null;
+  idempotency_key: string;
+  lines: AdminConsumptionOrderLineInput[];
+};
+
+export type AdminConsumptionOrderItem = {
+  id: string;
+  offer_id: string | null;
+  product_id: string;
+  quantity: number;
+  charged_unit_price: number;
+  gross_amount: number;
+  discount_amount: number;
+  net_amount: number;
+  product_name: string;
+  product_code: string | null;
+  category_name: string;
+  product_kind: ProductKind;
+  sales_unit: ProductSalesUnit;
+  provider_type: ProductProviderType;
+  partner_id: string | null;
+  partner_name: string | null;
+  agreement_id: string | null;
+  agreement_number: string | null;
+  commercial_revision_id: string | null;
+  commercial_revision_version: number | null;
+  commercial_terms?: Record<string, unknown> | null;
+  billing_policy: Record<string, unknown>;
+  version_token: string;
+  notes: string | null;
+};
+
+export type AdminConsumptionOrderEvent = {
+  id: string;
+  action: string;
+  actor_id: string | null;
+  actor_name: string | null;
+  details: Record<string, unknown>;
+  created_at: string;
+};
+
+export type AdminConsumptionOrder = {
+  id: string;
+  hotel_id: string;
+  stay_id: string | null;
+  reservation_id: string | null;
+  point_id: string | null;
+  guest_customer_id: string | null;
+  disposition: ConsumptionOrderDisposition;
+  billing_mode: ConsumptionBillingMode | null;
+  payment_method: ConsumptionPaymentMethod | null;
+  payment_reference: string | null;
+  partner_receipt_confirmed: boolean;
+  currency: string;
+  gross_amount: number;
+  discount_amount: number;
+  net_amount: number;
+  reservation_code: string | null;
+  room_number: string | null;
+  guest_name: string | null;
+  point_name: string | null;
+  notes: string | null;
+  courtesy_reason: string | null;
+  occurred_at: string;
+  posted_at: string;
+  posted_by: string | null;
+  operator_name: string | null;
+  is_legacy: boolean;
+  items: AdminConsumptionOrderItem[];
+  events?: AdminConsumptionOrderEvent[];
+  folio_entry_ids?: string[];
+  financial_transaction_ids?: string[];
+};
+
+export type AdminConsumptionOrderHistory = {
+  items: AdminConsumptionOrder[];
+  next_cursor: string | null;
+};
+
 export type AdminSeason = {
   id: string;
   hotel_id: string;
@@ -884,7 +1060,12 @@ export type AdminStayPaymentCreateInput = {
 
 export type StayFolioDirection = "debit" | "credit";
 export type StayFolioKind =
-  "lodging" | "maintenance_charge" | "payment" | "refund" | "adjustment";
+  | "lodging"
+  | "maintenance_charge"
+  | "consumption_charge"
+  | "payment"
+  | "refund"
+  | "adjustment";
 
 export type AdminStayFolioEntry = {
   id: string;
@@ -896,6 +1077,7 @@ export type AdminStayFolioEntry = {
   currency: string;
   description: string;
   maintenance_occurrence_id: string | null;
+  consumption_order_id?: string | null;
   financial_transaction_id: string | null;
   reversed_entry_id: string | null;
   allocated_amount: number;
@@ -983,6 +1165,9 @@ export type AdminStayOperationalPanelResponse = {
   maintenance_acknowledgement_required?: boolean;
   maintenance_financial_acknowledgement_required?: boolean;
   maintenance_pending_folio_entry_ids?: string[];
+  pending_consumption_count?: number;
+  pending_consumption_balance?: number;
+  pending_consumption_folio_entry_ids?: string[];
 };
 
 export type MaintenanceLocationKind = "area" | "equipment";

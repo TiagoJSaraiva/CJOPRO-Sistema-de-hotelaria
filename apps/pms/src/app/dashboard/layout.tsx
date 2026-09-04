@@ -72,7 +72,9 @@ export default async function DashboardLayout({
       user.permissions.includes(PERMISSIONS.PRODUCT_READ) ||
       user.permissions.includes(PERMISSIONS.PRODUCT_CREATE),
     "/dashboard/consumption":
+      user.permissions.includes(PERMISSIONS.CONSUMPTION_POST) ||
       user.permissions.includes(PERMISSIONS.CONSUMPTION_READ) ||
+      user.permissions.includes(PERMISSIONS.CONSUMPTION_SETTINGS_MANAGE) ||
       user.permissions.includes(PERMISSIONS.COMMERCIAL_PARTNERS_READ),
     "/dashboard/seasons":
       user.permissions.includes(PERMISSIONS.SEASON_READ) ||

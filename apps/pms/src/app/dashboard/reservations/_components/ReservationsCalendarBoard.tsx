@@ -37,6 +37,7 @@ type ReservationsCalendarBoardProps = {
   data: AdminReservationCalendarResponse;
   startDate: string;
   customers: AdminCustomer[];
+  canPostConsumption: boolean;
 };
 
 const CELL_WIDTH = 44;
@@ -137,6 +138,7 @@ export function ReservationsCalendarBoard({
   data,
   startDate,
   customers,
+  canPostConsumption,
 }: ReservationsCalendarBoardProps) {
   const router = useRouter();
   const [selectedStayId, setSelectedStayId] = useState<string | null>(null);
@@ -958,6 +960,23 @@ export function ReservationsCalendarBoard({
                   ) : null}
 
                   <PanelSection title="Financeiro">
+                    {(panelData.pending_consumption_count || 0) > 0 ? (
+                      <div
+                        className="mb-3 rounded-lg border border-amber-300 bg-amber-50 p-3 text-sm text-amber-950"
+                        role="status"
+                      >
+                        <strong>
+                          {panelData.pending_consumption_count} consumo(s)
+                          pendente(s)
+                        </strong>
+                        <span className="block">
+                          Saldo que bloqueia checkout:{" "}
+                          {formatMoney(
+                            panelData.pending_consumption_balance || 0,
+                          )}
+                        </span>
+                      </div>
+                    ) : null}
                     <div className="grid grid-cols-2 gap-2">
                       <PaymentSummaryCard
                         label="Total estadia"
@@ -1071,6 +1090,15 @@ export function ReservationsCalendarBoard({
 
                   <PanelSection title="Ações operacionais">
                     <div className="grid grid-cols-2 gap-2">
+                      {canPostConsumption &&
+                      panelData.stay.stay_status === "checked_in" ? (
+                        <Link
+                          href={`/dashboard/consumption/launch?stay_id=${panelData.stay.id}`}
+                          className={`${panelActionButtonClassName} col-span-2 text-center no-underline`}
+                        >
+                          Lançar consumo
+                        </Link>
+                      ) : null}
                       <button
                         type="button"
                         onClick={() => handleStayAction("checkin")}

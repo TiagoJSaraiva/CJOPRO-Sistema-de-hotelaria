@@ -22,6 +22,11 @@ import {
   AdminConsumptionPoint,
   AdminConsumptionPointInput,
   AdminConsumptionReorderInput,
+  AdminConsumptionEligibleStay,
+  AdminConsumptionOperationalContext,
+  AdminConsumptionOrder,
+  AdminConsumptionOrderCreateInput,
+  AdminConsumptionOrderHistory,
   AdminCommercialPartner,
   AdminCommercialPartnerInput,
   AdminCommercialPartnerContact,
@@ -1146,6 +1151,58 @@ export function listConsumptionConfigurationHistory(
   return getAdminList<AdminConsumptionConfigurationAuditEvent>(
     `/admin/${entity}/${id}/history`,
   );
+}
+
+export function listConsumptionEligibleStays(
+  search = "",
+): Promise<AdminConsumptionEligibleStay[]> {
+  const query = search ? `?search=${encodeURIComponent(search)}` : "";
+  return getAdminList<AdminConsumptionEligibleStay>(
+    `/admin/consumption-orders/eligible-stays${query}`,
+  );
+}
+
+export function getConsumptionOperationalContext(
+  stayId: string,
+  occurredAt?: string,
+): Promise<AdminConsumptionOperationalContext> {
+  const params = new URLSearchParams({ stay_id: stayId });
+  if (occurredAt) params.set("occurred_at", occurredAt);
+  return getAdminData<AdminItemResponse<AdminConsumptionOperationalContext>>(
+    `/admin/consumption-orders/context?${params}`,
+  ).then((payload) => payload.item);
+}
+
+export function postConsumptionOrder(
+  input: AdminConsumptionOrderCreateInput,
+): Promise<AdminConsumptionOrder | null> {
+  return requestAdmin<AdminConsumptionOrder>(
+    "/admin/consumption-orders",
+    "POST",
+    input,
+  );
+}
+
+export function listConsumptionOrders(
+  filters: Record<string, string | undefined> = {},
+): Promise<AdminConsumptionOrderHistory> {
+  const params = new URLSearchParams();
+  for (const [key, value] of Object.entries(filters))
+    if (value) params.set(key, value);
+  const suffix = params.size ? `?${params}` : "";
+  return getAdminData<AdminConsumptionOrderHistory>(
+    `/admin/consumption-orders${suffix}`,
+  ).catch(() => ({ items: [], next_cursor: null }));
+}
+
+export function getConsumptionOrder(
+  id: string,
+): Promise<AdminConsumptionOrder | null> {
+  return getAdminData<AdminItemResponse<AdminConsumptionOrder>>(
+    `/admin/consumption-orders/${id}`,
+  )
+    .then((payload) => payload.item)
+    .catch(() => null);
 }
 
 export function listSeasons(): Promise<AdminSeason[]> {

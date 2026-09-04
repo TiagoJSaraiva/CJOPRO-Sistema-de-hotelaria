@@ -374,6 +374,56 @@ test.describe("PMS UI quality", () => {
   );
 
   test(
+    "lança consumo no fólio e consulta o recibo",
+    { tag: TEST_TAGS },
+    async ({ page, context, baseURL, auditAccessibility }) => {
+      await preparePage(page);
+      await authenticate(
+        context,
+        baseURL || "http://127.0.0.1:3001",
+        "consumption-e2e-token",
+      );
+      await page.goto("/dashboard/consumption/launch?stay_id=stay-2");
+
+      await expect(
+        page.getByRole("heading", { name: "1. Localize a estadia" }),
+      ).toBeVisible();
+      await stabilizeVisualState(page);
+      await expect(page).toHaveScreenshot("consumption-order-launch.png");
+      await page.getByRole("button", { name: "Guia desta página" }).click();
+      await expect(
+        page.getByRole("dialog", { name: "Localize a estadia" }),
+      ).toBeVisible();
+      await page.keyboard.press("Escape");
+      await page
+        .getByRole("spinbutton", { name: "Quantidade de Café espresso" })
+        .fill("2");
+      await expect(
+        page.getByRole("radio", { name: "Lançamento no fólio" }),
+      ).toBeChecked();
+      await page.getByRole("button", { name: "Revisar comanda" }).click();
+      await expect(
+        page.getByRole("dialog", { name: "Confirmar comanda" }),
+      ).toBeVisible();
+      await auditAccessibility("confirmacao-consumo");
+      await stabilizeVisualState(page);
+      await expect(page).toHaveScreenshot("consumption-order-confirmation.png");
+      await page.getByRole("button", { name: "Confirmar lançamento" }).click();
+      await expect(page.getByText("Comanda lançada")).toBeVisible();
+      await auditAccessibility("recibo-consumo");
+      await stabilizeVisualState(page);
+      await expect(page).toHaveScreenshot("consumption-order-receipt.png");
+
+      await page.getByRole("link", { name: "Abrir ficha completa" }).click();
+      await expect(page.getByText("Café espresso")).toBeVisible();
+      await expect(page.getByText("Lançamento no fólio").first()).toBeVisible();
+      await auditAccessibility("historico-consumo");
+      await stabilizeVisualState(page);
+      await expect(page).toHaveScreenshot("consumption-order-history.png");
+    },
+  );
+
+  test(
     "configura parceiro, acordo e oferta terceirizada",
     { tag: TEST_TAGS },
     async ({ page, context, baseURL, auditAccessibility }) => {

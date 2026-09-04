@@ -12,6 +12,7 @@ import {
 } from "../access";
 import { ReservationsCalendarBoard } from "../_components/ReservationsCalendarBoard";
 import { CALENDAR_WINDOW_DAYS } from "../_components/calendarUtils";
+import { PERMISSIONS } from "@hotel/shared";
 
 type ReservationsCalendarViewPageProps = {
   searchParams?: Promise<{
@@ -76,6 +77,9 @@ export default async function ReservationsCalendarViewPage({
         data={data}
         startDate={startDate}
         customers={customers}
+        canPostConsumption={
+          user?.permissions.includes(PERMISSIONS.CONSUMPTION_POST) || false
+        }
       />
     </DashboardEntityPageShell>
   );

@@ -8,6 +8,9 @@ export type ConsumptionAccess = {
   canReadCommercial: boolean;
   canManagePartners: boolean;
   canManageAgreements: boolean;
+  canPost: boolean;
+  canReceivePayment: boolean;
+  canGrantCourtesy: boolean;
 };
 
 export function getConsumptionAccess(user: UserLike): ConsumptionAccess {
@@ -24,10 +27,18 @@ export function getConsumptionAccess(user: UserLike): ConsumptionAccess {
     canManageAgreements: permissions.includes(
       PERMISSIONS.COMMERCIAL_AGREEMENTS_MANAGE,
     ),
+    canPost: permissions.includes(PERMISSIONS.CONSUMPTION_POST),
+    canReceivePayment: permissions.includes(
+      PERMISSIONS.CONSUMPTION_PAYMENT_RECEIVE,
+    ),
+    canGrantCourtesy: permissions.includes(
+      PERMISSIONS.CONSUMPTION_COURTESY_GRANT,
+    ),
   };
 }
 
 export function getConsumptionDefaultRoute(access: ConsumptionAccess) {
+  if (access.canPost) return "/dashboard/consumption/launch";
   if (access.canRead) return "/dashboard/consumption/points";
   return access.canReadCommercial ? "/dashboard/consumption/partners" : null;
 }

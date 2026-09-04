@@ -1,6 +1,8 @@
 import http from "node:http";
 
 const port = Number(process.env.PMS_E2E_BACKEND_PORT || 4334);
+const consumptionOccurredAt = "2026-09-04T17:32:00.000Z";
+const consumptionPostedAt = "2026-09-04T17:32:49.000Z";
 const permissions = [
   "read_hotel",
   "read_room",
@@ -291,6 +293,7 @@ const consumptionOffers = [
     updated_at: "2026-05-01T10:00:00.000Z",
   },
 ];
+const consumptionOrders = [];
 
 const transactions = [
   {
@@ -807,6 +810,170 @@ const server = http.createServer(async (request, response) => {
   );
   if (method === "GET" && agreementHistoryMatch) {
     sendJson(response, 200, { items: [] });
+    return;
+  }
+
+  if (
+    method === "GET" &&
+    url.pathname === "/admin/consumption-orders/eligible-stays"
+  ) {
+    sendJson(response, 200, {
+      items: [
+        {
+          id: "stay-2",
+          reservation_id: "reservation-2",
+          reservation_code: "RES-1002",
+          room_number: "102",
+          room_type: "Standard",
+          primary_guest_name: "Bruno Lima",
+          checkin_date_actual: "2026-05-11T14:00:00.000Z",
+        },
+      ],
+    });
+    return;
+  }
+
+  if (
+    method === "GET" &&
+    url.pathname === "/admin/consumption-orders/context"
+  ) {
+    sendJson(response, 200, {
+      item: {
+        stay: {
+          id: "stay-2",
+          reservation_id: "reservation-2",
+          reservation_code: "RES-1002",
+          room_id: "room-102",
+          room_number: "102",
+          room_type: "Standard",
+          primary_guest_name: "Bruno Lima",
+          checkin_date_actual: "2026-05-11T14:00:00.000Z",
+          checkout_date_expected: "2026-09-05T11:00:00.000Z",
+          stay_status: "checked_in",
+        },
+        guests: [{ id: "customer-2", full_name: "Bruno Lima" }],
+        occurred_at: consumptionOccurredAt,
+        offers: consumptionOffers.map((offer) => ({
+          id: offer.id,
+          point_id: offer.point.id,
+          point_name: offer.point.name,
+          product_id: offer.product.id,
+          product_name: offer.product.name,
+          product_code: offer.product.internal_code,
+          product_kind: offer.product.kind,
+          sales_unit: offer.product.sales_unit,
+          category_id: offer.product.category.id,
+          category_name: offer.product.category.name,
+          unit_price: offer.product.unit_price,
+          currency: "BRL",
+          provider_type: offer.product.provider.type,
+          partner_id: offer.product.provider.partner?.id || null,
+          partner_name: offer.product.provider.partner?.trade_name || null,
+          agreement_id: offer.commercial_agreement?.id || null,
+          agreement_number: offer.commercial_agreement?.internal_number || null,
+          revision: null,
+          allowed_modes: offer.resolved_policy.allowed_modes,
+          default_mode: offer.resolved_policy.default_mode,
+          policy_source: offer.resolved_policy.source,
+          available: offer.effective_available,
+          reasons: offer.unavailable_reasons,
+          version_token: `version-${offer.id}`,
+        })),
+      },
+    });
+    return;
+  }
+
+  if (method === "POST" && url.pathname === "/admin/consumption-orders") {
+    const body = await parseBody(request);
+    const selectedOffers = body.lines.map((line) => ({
+      line,
+      offer: consumptionOffers.find((item) => item.id === line.offer_id),
+    }));
+    const gross = selectedOffers.reduce(
+      (sum, item) => sum + item.offer.product.unit_price * item.line.quantity,
+      0,
+    );
+    const courtesy = body.disposition === "courtesy";
+    const created = {
+      id: `consumption-order-${consumptionOrders.length + 1}`,
+      hotel_id: "hotel-e2e",
+      stay_id: "stay-2",
+      reservation_id: "reservation-2",
+      point_id: body.point_id,
+      guest_customer_id: body.guest_customer_id || null,
+      disposition: body.disposition,
+      billing_mode: body.billing_mode || null,
+      payment_method: body.payment_method || null,
+      payment_reference: body.payment_reference || null,
+      partner_receipt_confirmed: body.partner_receipt_confirmed || false,
+      currency: "BRL",
+      gross_amount: gross,
+      discount_amount: courtesy ? gross : 0,
+      net_amount: courtesy ? 0 : gross,
+      reservation_code: "RES-1002",
+      room_number: "102",
+      guest_name: "Bruno Lima",
+      point_name:
+        consumptionPoints.find((point) => point.id === body.point_id)?.name ||
+        "Recepção",
+      notes: body.notes || null,
+      courtesy_reason: body.courtesy_reason || null,
+      occurred_at: body.occurred_at,
+      posted_at: consumptionPostedAt,
+      posted_by: "user-e2e",
+      operator_name: "Marina Costa",
+      is_legacy: false,
+      items: selectedOffers.map(({ line, offer }, index) => ({
+        id: `consumption-item-${index + 1}`,
+        offer_id: offer.id,
+        product_id: offer.product.id,
+        quantity: line.quantity,
+        charged_unit_price: offer.product.unit_price,
+        gross_amount: offer.product.unit_price * line.quantity,
+        discount_amount: courtesy
+          ? offer.product.unit_price * line.quantity
+          : 0,
+        net_amount: courtesy ? 0 : offer.product.unit_price * line.quantity,
+        product_name: offer.product.name,
+        product_code: offer.product.internal_code,
+        category_name: offer.product.category.name,
+        product_kind: offer.product.kind,
+        sales_unit: offer.product.sales_unit,
+        provider_type: offer.product.provider.type,
+        partner_id: null,
+        partner_name: null,
+        agreement_id: null,
+        agreement_number: null,
+        commercial_revision_id: null,
+        commercial_revision_version: null,
+        billing_policy: {},
+        version_token: line.version_token,
+        notes: null,
+      })),
+    };
+    consumptionOrders.unshift(created);
+    sendJson(response, 201, { item: created });
+    return;
+  }
+
+  if (method === "GET" && url.pathname === "/admin/consumption-orders") {
+    sendJson(response, 200, { items: consumptionOrders, next_cursor: null });
+    return;
+  }
+
+  const consumptionOrderMatch = url.pathname.match(
+    /^\/admin\/consumption-orders\/([^/]+)$/,
+  );
+  if (method === "GET" && consumptionOrderMatch) {
+    const order = consumptionOrders.find(
+      (item) => item.id === consumptionOrderMatch[1],
+    );
+    sendJson(
+      response,
+      order ? 200 : 404,
+      order ? { item: order } : { message: "Comanda não encontrada" },
+    );
     return;
   }
 

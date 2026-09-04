@@ -483,6 +483,51 @@ export const ConsumptionReorderBodySchema = Type.Object(
   { ...strict, $id: "ConsumptionReorderInput" },
 );
 
+const ConsumptionOrderDispositionInputSchema = Type.Union([
+  Type.Literal("charged"),
+  Type.Literal("courtesy"),
+]);
+const ConsumptionPaymentMethodSchema = Type.Union([
+  Type.Literal("cash"),
+  Type.Literal("pix"),
+  Type.Literal("credit_card"),
+  Type.Literal("debit_card"),
+  Type.Literal("bank_transfer"),
+]);
+export const ConsumptionOrderLineBodySchema = Type.Object(
+  {
+    offer_id: uuid(),
+    quantity: Type.Number({ exclusiveMinimum: 0, maximum: 9999 }),
+    version_token: Type.String({ minLength: 1, maxLength: 128 }),
+  },
+  { ...strict, $id: "ConsumptionOrderLineInput" },
+);
+export const ConsumptionOrderBodySchema = Type.Object(
+  {
+    stay_id: uuid(),
+    point_id: uuid(),
+    guest_customer_id: optionalNullable(uuid()),
+    occurred_at: dateTime(),
+    disposition: ConsumptionOrderDispositionInputSchema,
+    billing_mode: Type.Optional(nullable(ConsumptionBillingModeSchema)),
+    payment_method: Type.Optional(nullable(ConsumptionPaymentMethodSchema)),
+    payment_reference: optionalNullable(
+      Type.String({ minLength: 1, maxLength: 120 }),
+    ),
+    partner_receipt_confirmed: Type.Optional(Type.Boolean()),
+    courtesy_reason: optionalNullable(
+      Type.String({ minLength: 3, maxLength: 1000 }),
+    ),
+    notes: optionalNullable(Type.String({ minLength: 1, maxLength: 1000 })),
+    idempotency_key: uuid(),
+    lines: Type.Array(ConsumptionOrderLineBodySchema, {
+      minItems: 1,
+      maxItems: 100,
+    }),
+  },
+  { ...strict, $id: "ConsumptionOrderCreateInput" },
+);
+
 export const SeasonBodySchema = Type.Object(
   {
     name: Type.String(),
@@ -878,7 +923,24 @@ export const CommercialAgreementEligibilitySchema = Type.Object(
     internal_number: Type.String(),
     eligible: Type.Boolean(),
     reason: nullable(Type.String()),
-    revision: nullable(Type.Ref("CommercialAgreementRevision")),
+    revision: nullable(
+      Type.Object(
+        {
+          id: uuid(),
+          version: Type.Integer(),
+          starts_on: date(),
+          ends_on: nullable(date()),
+          commercial_model: CommercialModelSchema,
+          fixed_rent: nullable(Type.Number()),
+          rent_frequency: nullable(CommercialRentFrequencySchema),
+          commission_percentage: nullable(Type.Number()),
+          minimum_guarantee: nullable(Type.Number()),
+          payment_recipient: CommercialPaymentRecipientSchema,
+          currency: Type.String(),
+        },
+        strict,
+      ),
+    ),
   },
   { ...strict, $id: "CommercialAgreementEligibility" },
 );
@@ -989,6 +1051,165 @@ export const ConsumptionConfigurationAuditEventSchema = Type.Object(
     created_at: dateTime(),
   },
   { ...strict, $id: "ConsumptionConfigurationAuditEvent" },
+);
+
+export const ConsumptionEligibleStaySchema = Type.Object(
+  {
+    id: uuid(),
+    reservation_id: uuid(),
+    reservation_code: Type.String(),
+    room_number: Type.String(),
+    room_type: Type.String(),
+    primary_guest_name: Type.String(),
+    checkin_date_actual: dateTime(),
+  },
+  { ...strict, $id: "ConsumptionEligibleStay" },
+);
+export const ConsumptionContextGuestSchema = Type.Object(
+  { id: uuid(), full_name: Type.String() },
+  { ...strict, $id: "ConsumptionContextGuest" },
+);
+export const ConsumptionContextOfferSchema = Type.Object(
+  {
+    id: uuid(),
+    point_id: uuid(),
+    point_name: Type.String(),
+    product_id: uuid(),
+    product_name: Type.String(),
+    product_code: nullable(Type.String()),
+    product_kind: ProductKindSchema,
+    sales_unit: ProductSalesUnitSchema,
+    category_id: uuid(),
+    category_name: Type.String(),
+    unit_price: Type.Number(),
+    currency: Type.String(),
+    provider_type: ProductProviderSchema,
+    partner_id: nullable(uuid()),
+    partner_name: nullable(Type.String()),
+    agreement_id: nullable(uuid()),
+    agreement_number: nullable(Type.String()),
+    revision: nullable(Type.Ref("CommercialAgreementRevision")),
+    allowed_modes: Type.Array(ConsumptionBillingModeSchema),
+    default_mode: nullable(ConsumptionBillingModeSchema),
+    policy_source: ConsumptionPolicySourceSchema,
+    available: Type.Boolean(),
+    reasons: Type.Array(ConsumptionUnavailableReasonSchema),
+    version_token: Type.String(),
+  },
+  { ...strict, $id: "ConsumptionContextOffer" },
+);
+export const ConsumptionOperationalContextSchema = Type.Object(
+  {
+    stay: Type.Object(
+      {
+        id: uuid(),
+        reservation_id: uuid(),
+        reservation_code: Type.String(),
+        room_id: uuid(),
+        room_number: Type.String(),
+        room_type: Type.String(),
+        primary_guest_name: Type.String(),
+        checkin_date_actual: dateTime(),
+        checkout_date_expected: dateTime(),
+        stay_status: Type.Literal("checked_in"),
+      },
+      strict,
+    ),
+    guests: Type.Array(Type.Ref("ConsumptionContextGuest")),
+    offers: Type.Array(Type.Ref("ConsumptionContextOffer")),
+    occurred_at: dateTime(),
+  },
+  { ...strict, $id: "ConsumptionOperationalContext" },
+);
+
+const ConsumptionOrderDispositionSchema = Type.Union([
+  Type.Literal("charged"),
+  Type.Literal("courtesy"),
+  Type.Literal("legacy_unclassified"),
+]);
+export const ConsumptionOrderItemSchema = Type.Object(
+  {
+    id: uuid(),
+    offer_id: nullable(uuid()),
+    product_id: uuid(),
+    quantity: Type.Number(),
+    charged_unit_price: Type.Number(),
+    gross_amount: Type.Number(),
+    discount_amount: Type.Number(),
+    net_amount: Type.Number(),
+    product_name: Type.String(),
+    product_code: nullable(Type.String()),
+    category_name: Type.String(),
+    product_kind: ProductKindSchema,
+    sales_unit: ProductSalesUnitSchema,
+    provider_type: ProductProviderSchema,
+    partner_id: nullable(uuid()),
+    partner_name: nullable(Type.String()),
+    agreement_id: nullable(uuid()),
+    agreement_number: nullable(Type.String()),
+    commercial_revision_id: nullable(uuid()),
+    commercial_revision_version: nullable(Type.Integer()),
+    commercial_terms: Type.Optional(
+      nullable(Type.Record(Type.String(), Type.Unknown())),
+    ),
+    billing_policy: Type.Record(Type.String(), Type.Unknown()),
+    version_token: Type.String(),
+    notes: nullable(Type.String()),
+  },
+  { ...strict, $id: "ConsumptionOrderItem" },
+);
+export const ConsumptionOrderEventSchema = Type.Object(
+  {
+    id: uuid(),
+    action: Type.String(),
+    actor_id: nullable(uuid()),
+    actor_name: nullable(Type.String()),
+    details: Type.Record(Type.String(), Type.Unknown()),
+    created_at: dateTime(),
+  },
+  { ...strict, $id: "ConsumptionOrderEvent" },
+);
+export const ConsumptionOrderSchema = Type.Object(
+  {
+    id: uuid(),
+    hotel_id: uuid(),
+    stay_id: nullable(uuid()),
+    reservation_id: nullable(uuid()),
+    point_id: nullable(uuid()),
+    guest_customer_id: nullable(uuid()),
+    disposition: ConsumptionOrderDispositionSchema,
+    billing_mode: nullable(ConsumptionBillingModeSchema),
+    payment_method: nullable(ConsumptionPaymentMethodSchema),
+    payment_reference: nullable(Type.String()),
+    partner_receipt_confirmed: Type.Boolean(),
+    currency: Type.String(),
+    gross_amount: Type.Number(),
+    discount_amount: Type.Number(),
+    net_amount: Type.Number(),
+    reservation_code: nullable(Type.String()),
+    room_number: nullable(Type.String()),
+    guest_name: nullable(Type.String()),
+    point_name: nullable(Type.String()),
+    notes: nullable(Type.String()),
+    courtesy_reason: nullable(Type.String()),
+    occurred_at: dateTime(),
+    posted_at: dateTime(),
+    posted_by: nullable(uuid()),
+    operator_name: nullable(Type.String()),
+    is_legacy: Type.Boolean(),
+    items: Type.Array(Type.Ref("ConsumptionOrderItem")),
+    events: Type.Optional(Type.Array(Type.Ref("ConsumptionOrderEvent"))),
+    folio_entry_ids: Type.Optional(Type.Array(uuid())),
+    financial_transaction_ids: Type.Optional(Type.Array(uuid())),
+  },
+  { ...strict, $id: "ConsumptionOrder" },
+);
+export const ConsumptionOrderHistorySchema = Type.Object(
+  {
+    items: Type.Array(Type.Ref("ConsumptionOrder")),
+    next_cursor: nullable(dateTime()),
+  },
+  { ...strict, $id: "ConsumptionOrderHistory" },
 );
 export const SeasonSchema = Type.Object(
   {
@@ -2070,6 +2291,7 @@ export const StayFolioSchema = Type.Object(
           kind: Type.Union([
             Type.Literal("lodging"),
             Type.Literal("maintenance_charge"),
+            Type.Literal("consumption_charge"),
             Type.Literal("payment"),
             Type.Literal("refund"),
             Type.Literal("adjustment"),
@@ -2078,6 +2300,7 @@ export const StayFolioSchema = Type.Object(
           currency: Type.String(),
           description: Type.String(),
           maintenance_occurrence_id: nullable(uuid()),
+          consumption_order_id: Type.Optional(nullable(uuid())),
           financial_transaction_id: nullable(uuid()),
           reversed_entry_id: nullable(uuid()),
           allocated_amount: Type.Number(),
@@ -2389,6 +2612,9 @@ export const StayPanelSchema = Type.Object(
       Type.Boolean(),
     ),
     maintenance_pending_folio_entry_ids: Type.Optional(Type.Array(uuid())),
+    pending_consumption_count: Type.Optional(Type.Integer({ minimum: 0 })),
+    pending_consumption_balance: Type.Optional(Type.Number({ minimum: 0 })),
+    pending_consumption_folio_entry_ids: Type.Optional(Type.Array(uuid())),
   },
   { ...strict, $id: "StayPanel" },
 );
@@ -2515,6 +2741,8 @@ export const API_COMPONENT_SCHEMAS = [
   ConsumptionOfferBatchBodySchema,
   ConsumptionOfferUpdateSchema,
   ConsumptionReorderBodySchema,
+  ConsumptionOrderLineBodySchema,
+  ConsumptionOrderBodySchema,
   SeasonBodySchema,
   SeasonUpdateSchema,
   SeasonRoomRateBodySchema,
@@ -2549,6 +2777,14 @@ export const API_COMPONENT_SCHEMAS = [
   ConsumptionPointSchema,
   ConsumptionOfferSchema,
   ConsumptionConfigurationAuditEventSchema,
+  ConsumptionEligibleStaySchema,
+  ConsumptionContextGuestSchema,
+  ConsumptionContextOfferSchema,
+  ConsumptionOperationalContextSchema,
+  ConsumptionOrderItemSchema,
+  ConsumptionOrderEventSchema,
+  ConsumptionOrderSchema,
+  ConsumptionOrderHistorySchema,
   SeasonSchema,
   SeasonRoomRateSchema,
   FinancialTransactionSchema,
@@ -3167,6 +3403,75 @@ export const API_ROUTE_CONTRACTS: Readonly<Record<string, ApiRouteContract>> = {
     "Consumption settings",
     "Lista o histórico imutável de uma oferta.",
     listSchema(ConsumptionConfigurationAuditEventSchema),
+    { params: IdParamsSchema },
+  ),
+  "GET /admin/consumption-orders/eligible-stays": admin(
+    "listConsumptionEligibleStays",
+    "Consumption operations",
+    "Localiza até vinte estadias em check-in por quarto, reserva ou hóspede.",
+    listSchema(ConsumptionEligibleStaySchema),
+    {
+      querystring: Type.Object(
+        { search: Type.Optional(Type.String({ maxLength: 120 })) },
+        strict,
+      ),
+    },
+  ),
+  "GET /admin/consumption-orders/context": admin(
+    "getConsumptionOperationalContext",
+    "Consumption operations",
+    "Resolve hóspedes, ofertas, preços, políticas e versões da comanda.",
+    itemSchema(ConsumptionOperationalContextSchema),
+    {
+      querystring: Type.Object(
+        { stay_id: uuid(), occurred_at: Type.Optional(dateTime()) },
+        strict,
+      ),
+    },
+  ),
+  "POST /admin/consumption-orders": route(
+    "postConsumptionOrder",
+    "Consumption operations",
+    "Valida e lança uma comanda de consumo atomicamente.",
+    {
+      headers: AuthHeadersSchema,
+      security: [{ bearerAuth: [] }],
+      body: ConsumptionOrderBodySchema,
+      response: {
+        200: itemSchema(ConsumptionOrderSchema),
+        201: itemSchema(ConsumptionOrderSchema),
+        ...adminErrors,
+      },
+    },
+  ),
+  "GET /admin/consumption-orders": admin(
+    "listConsumptionOrders",
+    "Consumption operations",
+    "Lista o histórico paginado e filtrável de comandas.",
+    ConsumptionOrderHistorySchema,
+    {
+      querystring: Type.Object(
+        {
+          cursor: Type.Optional(dateTime()),
+          limit: Type.Optional(Type.Integer({ minimum: 1, maximum: 100 })),
+          from: Type.Optional(dateTime()),
+          to: Type.Optional(dateTime()),
+          search: Type.Optional(Type.String({ maxLength: 120 })),
+          point_id: Type.Optional(uuid()),
+          billing_mode: Type.Optional(ConsumptionBillingModeSchema),
+          disposition: Type.Optional(ConsumptionOrderDispositionSchema),
+          provider_type: Type.Optional(ProductProviderSchema),
+          operator_id: Type.Optional(uuid()),
+        },
+        strict,
+      ),
+    },
+  ),
+  "GET /admin/consumption-orders/:id": admin(
+    "getConsumptionOrder",
+    "Consumption operations",
+    "Consulta a ficha, recibo, eventos e vínculos financeiros da comanda.",
+    itemSchema(ConsumptionOrderSchema),
     { params: IdParamsSchema },
   ),
   ...crud(
