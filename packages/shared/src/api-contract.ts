@@ -1,6 +1,9 @@
 import { Type, type Static, type TSchema } from "typebox";
 import type {
   AdminCustomerCreateInput,
+  AdminConsumptionOfferBatchInput,
+  AdminConsumptionPointInput,
+  AdminConsumptionReorderInput,
   AdminFinancialTransactionCreateInput,
   AdminHotelCreateInput,
   AdminMaintenanceOccurrenceCreateInput,
@@ -250,6 +253,82 @@ export const ProductBodySchema = Type.Object(
 export const ProductUpdateSchema = Type.Partial(ProductBodySchema, {
   $id: "ProductUpdateInput",
 });
+
+const ConsumptionBillingModeSchema = Type.Union([
+  Type.Literal("hotel_immediate"),
+  Type.Literal("stay_folio"),
+  Type.Literal("partner_direct"),
+]);
+const ConsumptionPolicySourceSchema = Type.Union([
+  Type.Literal("inherit"),
+  Type.Literal("override"),
+]);
+export const ConsumptionBillingPolicySchema = Type.Object(
+  {
+    allowed_modes: Type.Array(ConsumptionBillingModeSchema, {
+      minItems: 1,
+      uniqueItems: true,
+    }),
+    default_mode: ConsumptionBillingModeSchema,
+  },
+  { ...strict, $id: "ConsumptionBillingPolicy" },
+);
+export const ConsumptionPointBodySchema = Type.Object(
+  {
+    name: Type.String({ minLength: 1, maxLength: 120 }),
+    internal_code: optionalNullable(
+      Type.String({ minLength: 1, maxLength: 80 }),
+    ),
+    description: optionalNullable(Type.String({ maxLength: 1000 })),
+    display_order: Type.Optional(Type.Integer({ minimum: 0 })),
+    is_active: Type.Optional(Type.Boolean()),
+    default_policy: ConsumptionBillingPolicySchema,
+  },
+  { ...strict, $id: "ConsumptionPointInput" },
+);
+export const ConsumptionPointUpdateSchema = Type.Partial(
+  ConsumptionPointBodySchema,
+  { $id: "ConsumptionPointUpdateInput" },
+);
+export const ConsumptionOfferPolicySchema = Type.Union(
+  [
+    Type.Object({ source: Type.Literal("inherit") }, strict),
+    Type.Object(
+      {
+        source: Type.Literal("override"),
+        allowed_modes: Type.Array(ConsumptionBillingModeSchema, {
+          minItems: 1,
+          uniqueItems: true,
+        }),
+        default_mode: ConsumptionBillingModeSchema,
+      },
+      strict,
+    ),
+  ],
+  { $id: "ConsumptionOfferPolicyInput" },
+);
+export const ConsumptionOfferBatchBodySchema = Type.Object(
+  {
+    product_ids: Type.Array(uuid(), { minItems: 1, uniqueItems: true }),
+    policy: ConsumptionOfferPolicySchema,
+  },
+  { ...strict, $id: "ConsumptionOfferBatchInput" },
+);
+export const ConsumptionOfferUpdateSchema = Type.Partial(
+  Type.Object(
+    {
+      display_order: Type.Integer({ minimum: 0 }),
+      is_active: Type.Boolean(),
+      policy: ConsumptionOfferPolicySchema,
+    },
+    strict,
+  ),
+  { $id: "ConsumptionOfferUpdateInput" },
+);
+export const ConsumptionReorderBodySchema = Type.Object(
+  { ids: Type.Array(uuid(), { uniqueItems: true }) },
+  { ...strict, $id: "ConsumptionReorderInput" },
+);
 
 export const SeasonBodySchema = Type.Object(
   {
@@ -534,6 +613,80 @@ export const CatalogAuditEventSchema = Type.Object(
     created_at: dateTime(),
   },
   { ...strict, $id: "CatalogAuditEvent" },
+);
+export const ConsumptionPointSchema = Type.Object(
+  {
+    id: uuid(),
+    hotel_id: uuid(),
+    name: Type.String(),
+    internal_code: nullable(Type.String()),
+    description: nullable(Type.String()),
+    display_order: Type.Integer(),
+    is_active: Type.Boolean(),
+    default_policy: Type.Ref("ConsumptionBillingPolicy"),
+    inherited_offers_count: Type.Integer(),
+    offers_count: Type.Integer(),
+    archived_at: nullable(dateTime()),
+    ...timestamps,
+  },
+  { ...strict, $id: "ConsumptionPoint" },
+);
+const ConsumptionPointSummarySchema = Type.Object(
+  {
+    id: uuid(),
+    name: Type.String(),
+    internal_code: nullable(Type.String()),
+    is_active: Type.Boolean(),
+    archived_at: nullable(dateTime()),
+  },
+  strict,
+);
+const ConsumptionUnavailableReasonSchema = Type.Union([
+  Type.Literal("point_inactive"),
+  Type.Literal("point_archived"),
+  Type.Literal("offer_inactive"),
+  Type.Literal("offer_archived"),
+  Type.Literal("product_inactive"),
+  Type.Literal("product_archived"),
+  Type.Literal("category_inactive"),
+  Type.Literal("category_archived"),
+]);
+export const ConsumptionOfferSchema = Type.Object(
+  {
+    id: uuid(),
+    hotel_id: uuid(),
+    point: ConsumptionPointSummarySchema,
+    product: Type.Ref("Product"),
+    display_order: Type.Integer(),
+    is_active: Type.Boolean(),
+    policy: Type.Ref("ConsumptionOfferPolicyInput"),
+    resolved_policy: Type.Intersect([
+      Type.Ref("ConsumptionBillingPolicy"),
+      Type.Object({ source: ConsumptionPolicySourceSchema }, strict),
+    ]),
+    effective_available: Type.Boolean(),
+    unavailable_reasons: Type.Array(ConsumptionUnavailableReasonSchema),
+    archived_at: nullable(dateTime()),
+    ...timestamps,
+  },
+  { ...strict, $id: "ConsumptionOffer" },
+);
+export const ConsumptionConfigurationAuditEventSchema = Type.Object(
+  {
+    id: uuid(),
+    hotel_id: uuid(),
+    entity_type: Type.Union([
+      Type.Literal("consumption_point"),
+      Type.Literal("consumption_offer"),
+    ]),
+    entity_id: uuid(),
+    actor_id: nullable(uuid()),
+    actor_name: nullable(Type.String()),
+    action: Type.String(),
+    changes: Type.Record(Type.String(), Type.Unknown()),
+    created_at: dateTime(),
+  },
+  { ...strict, $id: "ConsumptionConfigurationAuditEvent" },
 );
 export const SeasonSchema = Type.Object(
   {
@@ -1950,6 +2103,21 @@ type ContractCompatibility = [
   Assert<Compatible<typeof RoomBodySchema, AdminRoomCreateInput>>,
   Assert<Compatible<typeof CustomerBodySchema, AdminCustomerCreateInput>>,
   Assert<Compatible<typeof ProductBodySchema, AdminProductCreateInput>>,
+  Assert<
+    Compatible<typeof ConsumptionPointBodySchema, AdminConsumptionPointInput>
+  >,
+  Assert<
+    Compatible<
+      typeof ConsumptionOfferBatchBodySchema,
+      AdminConsumptionOfferBatchInput
+    >
+  >,
+  Assert<
+    Compatible<
+      typeof ConsumptionReorderBodySchema,
+      AdminConsumptionReorderInput
+    >
+  >,
   Assert<Compatible<typeof SeasonBodySchema, AdminSeasonCreateInput>>,
   Assert<
     Compatible<typeof SeasonRoomRateBodySchema, AdminSeasonRoomRateCreateInput>
@@ -2013,6 +2181,13 @@ export const API_COMPONENT_SCHEMAS = [
   ProductUpdateSchema,
   ProductCategoryBodySchema,
   ProductCategoryUpdateSchema,
+  ConsumptionBillingPolicySchema,
+  ConsumptionPointBodySchema,
+  ConsumptionPointUpdateSchema,
+  ConsumptionOfferPolicySchema,
+  ConsumptionOfferBatchBodySchema,
+  ConsumptionOfferUpdateSchema,
+  ConsumptionReorderBodySchema,
   SeasonBodySchema,
   SeasonUpdateSchema,
   SeasonRoomRateBodySchema,
@@ -2036,6 +2211,9 @@ export const API_COMPONENT_SCHEMAS = [
   ProductSchema,
   ProductCategorySchema,
   CatalogAuditEventSchema,
+  ConsumptionPointSchema,
+  ConsumptionOfferSchema,
+  ConsumptionConfigurationAuditEventSchema,
   SeasonSchema,
   SeasonRoomRateSchema,
   FinancialTransactionSchema,
@@ -2355,6 +2533,122 @@ export const API_ROUTE_CONTRACTS: Readonly<Record<string, ApiRouteContract>> = {
     "Products",
     "Restaura uma categoria previamente arquivada.",
     itemSchema(ProductCategorySchema),
+    { params: IdParamsSchema },
+  ),
+  "GET /admin/consumption-points": admin(
+    "listConsumptionPoints",
+    "Consumption settings",
+    "Lista os pontos de consumo do hotel ativo.",
+    listSchema(ConsumptionPointSchema),
+    { querystring: IncludeArchivedQuerySchema },
+  ),
+  "POST /admin/consumption-points": route(
+    "createConsumptionPoint",
+    "Consumption settings",
+    "Cria um ponto de consumo no hotel ativo.",
+    {
+      headers: AuthHeadersSchema,
+      security: [{ bearerAuth: [] }],
+      body: ConsumptionPointBodySchema,
+      response: { 201: itemSchema(ConsumptionPointSchema), ...adminErrors },
+    },
+  ),
+  "PUT /admin/consumption-points/order": admin(
+    "reorderConsumptionPoints",
+    "Consumption settings",
+    "Reordena atomicamente todos os pontos não arquivados.",
+    OkSchema,
+    { body: ConsumptionReorderBodySchema },
+  ),
+  "PUT /admin/consumption-points/:id": admin(
+    "updateConsumptionPoint",
+    "Consumption settings",
+    "Atualiza um ponto e sua política padrão.",
+    itemSchema(ConsumptionPointSchema),
+    { params: IdParamsSchema, body: ConsumptionPointUpdateSchema },
+  ),
+  "POST /admin/consumption-points/:id/archive": admin(
+    "archiveConsumptionPoint",
+    "Consumption settings",
+    "Arquiva um ponto sem alterar suas ofertas.",
+    itemSchema(ConsumptionPointSchema),
+    { params: IdParamsSchema },
+  ),
+  "POST /admin/consumption-points/:id/restore": admin(
+    "restoreConsumptionPoint",
+    "Consumption settings",
+    "Restaura um ponto e preserva os estados de suas ofertas.",
+    itemSchema(ConsumptionPointSchema),
+    { params: IdParamsSchema },
+  ),
+  "GET /admin/consumption-points/:id/history": admin(
+    "listConsumptionPointHistory",
+    "Consumption settings",
+    "Lista o histórico imutável de um ponto.",
+    listSchema(ConsumptionConfigurationAuditEventSchema),
+    { params: IdParamsSchema },
+  ),
+  "GET /admin/consumption-offers": admin(
+    "listConsumptionOffers",
+    "Consumption settings",
+    "Lista ofertas e suas políticas e disponibilidades resolvidas.",
+    listSchema(ConsumptionOfferSchema),
+    {
+      querystring: Type.Object(
+        {
+          include_archived: Type.Optional(Type.Boolean()),
+          point_id: Type.Optional(uuid()),
+          product_id: Type.Optional(uuid()),
+        },
+        strict,
+      ),
+    },
+  ),
+  "POST /admin/consumption-points/:id/offers": route(
+    "createConsumptionOffers",
+    "Consumption settings",
+    "Vincula atomicamente um ou mais produtos ao ponto.",
+    {
+      headers: AuthHeadersSchema,
+      security: [{ bearerAuth: [] }],
+      params: IdParamsSchema,
+      body: ConsumptionOfferBatchBodySchema,
+      response: { 201: listSchema(ConsumptionOfferSchema), ...adminErrors },
+    },
+  ),
+  "PUT /admin/consumption-points/:id/offers/order": admin(
+    "reorderConsumptionOffers",
+    "Consumption settings",
+    "Reordena atomicamente as ofertas não arquivadas do ponto.",
+    OkSchema,
+    { params: IdParamsSchema, body: ConsumptionReorderBodySchema },
+  ),
+  "PUT /admin/consumption-offers/:id": admin(
+    "updateConsumptionOffer",
+    "Consumption settings",
+    "Atualiza estado, ordem ou política de uma oferta.",
+    itemSchema(ConsumptionOfferSchema),
+    { params: IdParamsSchema, body: ConsumptionOfferUpdateSchema },
+  ),
+  "POST /admin/consumption-offers/:id/archive": admin(
+    "archiveConsumptionOffer",
+    "Consumption settings",
+    "Arquiva uma oferta preservando sua configuração.",
+    itemSchema(ConsumptionOfferSchema),
+    { params: IdParamsSchema },
+  ),
+  "POST /admin/consumption-offers/:id/restore": admin(
+    "restoreConsumptionOffer",
+    "Consumption settings",
+    "Restaura uma oferta previamente arquivada.",
+    itemSchema(ConsumptionOfferSchema),
+    { params: IdParamsSchema },
+  ),
+  "GET /admin/consumption-offers/:id/history": admin(
+    "listConsumptionOfferHistory",
+    "Consumption settings",
+    "Lista o histórico imutável de uma oferta.",
+    listSchema(ConsumptionConfigurationAuditEventSchema),
     { params: IdParamsSchema },
   ),
   ...crud(

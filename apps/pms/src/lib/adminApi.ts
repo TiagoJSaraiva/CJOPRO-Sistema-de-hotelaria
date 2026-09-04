@@ -15,6 +15,13 @@ import {
   AdminProductCategory,
   AdminProductCategoryInput,
   AdminCatalogAuditEvent,
+  AdminConsumptionConfigurationAuditEvent,
+  AdminConsumptionOffer,
+  AdminConsumptionOfferBatchInput,
+  AdminConsumptionOfferUpdateInput,
+  AdminConsumptionPoint,
+  AdminConsumptionPointInput,
+  AdminConsumptionReorderInput,
   AdminProductCreateInput,
   AdminProductUpdateInput,
   AdminFinancialTransaction,
@@ -178,6 +185,66 @@ async function requestAdmin<T>(
 
   const payload = (await response.json()) as AdminItemResponse<T>;
   return payload.item;
+}
+
+async function requestAdminItems<T>(
+  path: string,
+  method: "POST" | "PUT",
+  body: unknown,
+): Promise<T[]> {
+  const token = await getSessionToken();
+  if (!token) throw new Error("Sessão inválida. Faça login novamente.");
+  const activeHotelHeaderValue = await getActiveHotelHeaderValue();
+  const headers: Record<string, string> = {
+    Authorization: `Bearer ${token}`,
+    "Content-Type": "application/json",
+  };
+  if (activeHotelHeaderValue !== null)
+    headers[ACTIVE_HOTEL_HEADER_NAME] = activeHotelHeaderValue;
+  const response = await fetch(`${getBackendUrl()}${path}`, {
+    method,
+    cache: "no-store",
+    headers,
+    body: JSON.stringify(body),
+  });
+  if (!response.ok) {
+    const payload = (await response
+      .json()
+      .catch(() => ({}))) as AdminErrorResponse;
+    throw new Error(payload.message || "Falha na operação administrativa.");
+  }
+  const payload = (await response.json()) as AdminListResponse<T>;
+  return payload.items || [];
+}
+
+async function requestAdminOk(
+  path: string,
+  method: "POST" | "PUT",
+  body: unknown,
+): Promise<boolean> {
+  const token = await getSessionToken();
+  if (!token) throw new Error("Sessão inválida. Faça login novamente.");
+  const activeHotelHeaderValue = await getActiveHotelHeaderValue();
+  const headers: Record<string, string> = {
+    Authorization: `Bearer ${token}`,
+    "Content-Type": "application/json",
+  };
+  if (activeHotelHeaderValue !== null)
+    headers[ACTIVE_HOTEL_HEADER_NAME] = activeHotelHeaderValue;
+  const response = await fetch(`${getBackendUrl()}${path}`, {
+    method,
+    cache: "no-store",
+    headers,
+    body: JSON.stringify(body),
+  });
+  if (!response.ok) {
+    const payload = (await response
+      .json()
+      .catch(() => ({}))) as AdminErrorResponse;
+    throw new Error(payload.message || "Falha na operação administrativa.");
+  }
+  const payload = (await response.json()) as { ok?: boolean };
+  return payload.ok === true;
 }
 
 async function getAdminData<T>(path: string): Promise<T> {
@@ -798,6 +865,118 @@ export function listProductHistory(
   id: string,
 ): Promise<AdminCatalogAuditEvent[]> {
   return getAdminList<AdminCatalogAuditEvent>(`/admin/products/${id}/history`);
+}
+
+export function listConsumptionPoints(
+  includeArchived = false,
+): Promise<AdminConsumptionPoint[]> {
+  return getAdminList<AdminConsumptionPoint>(
+    `/admin/consumption-points${includeArchived ? "?include_archived=true" : ""}`,
+  );
+}
+
+export function createConsumptionPoint(
+  payload: AdminConsumptionPointInput,
+): Promise<AdminConsumptionPoint | null> {
+  return requestAdmin<AdminConsumptionPoint>(
+    "/admin/consumption-points",
+    "POST",
+    payload,
+  );
+}
+
+export function updateConsumptionPoint(
+  id: string,
+  payload: Partial<AdminConsumptionPointInput>,
+): Promise<AdminConsumptionPoint | null> {
+  return requestAdmin<AdminConsumptionPoint>(
+    `/admin/consumption-points/${id}`,
+    "PUT",
+    payload,
+  );
+}
+
+export function setConsumptionPointArchived(
+  id: string,
+  archived: boolean,
+): Promise<AdminConsumptionPoint | null> {
+  return requestAdmin<AdminConsumptionPoint>(
+    `/admin/consumption-points/${id}/${archived ? "archive" : "restore"}`,
+    "POST",
+  );
+}
+
+export function reorderConsumptionPoints(
+  payload: AdminConsumptionReorderInput,
+): Promise<boolean> {
+  return requestAdminOk("/admin/consumption-points/order", "PUT", payload);
+}
+
+export function listConsumptionOffers(options?: {
+  includeArchived?: boolean;
+  pointId?: string;
+  productId?: string;
+}): Promise<AdminConsumptionOffer[]> {
+  const query = new URLSearchParams();
+  if (options?.includeArchived) query.set("include_archived", "true");
+  if (options?.pointId) query.set("point_id", options.pointId);
+  if (options?.productId) query.set("product_id", options.productId);
+  const suffix = query.size ? `?${query.toString()}` : "";
+  return getAdminList<AdminConsumptionOffer>(
+    `/admin/consumption-offers${suffix}`,
+  );
+}
+
+export function createConsumptionOffers(
+  pointId: string,
+  payload: AdminConsumptionOfferBatchInput,
+): Promise<AdminConsumptionOffer[]> {
+  return requestAdminItems<AdminConsumptionOffer>(
+    `/admin/consumption-points/${pointId}/offers`,
+    "POST",
+    payload,
+  );
+}
+
+export function updateConsumptionOffer(
+  id: string,
+  payload: AdminConsumptionOfferUpdateInput,
+): Promise<AdminConsumptionOffer | null> {
+  return requestAdmin<AdminConsumptionOffer>(
+    `/admin/consumption-offers/${id}`,
+    "PUT",
+    payload,
+  );
+}
+
+export function reorderConsumptionOffers(
+  pointId: string,
+  payload: AdminConsumptionReorderInput,
+): Promise<boolean> {
+  return requestAdminOk(
+    `/admin/consumption-points/${pointId}/offers/order`,
+    "PUT",
+    payload,
+  );
+}
+
+export function setConsumptionOfferArchived(
+  id: string,
+  archived: boolean,
+): Promise<AdminConsumptionOffer | null> {
+  return requestAdmin<AdminConsumptionOffer>(
+    `/admin/consumption-offers/${id}/${archived ? "archive" : "restore"}`,
+    "POST",
+  );
+}
+
+export function listConsumptionConfigurationHistory(
+  entity: "consumption-points" | "consumption-offers",
+  id: string,
+): Promise<AdminConsumptionConfigurationAuditEvent[]> {
+  return getAdminList<AdminConsumptionConfigurationAuditEvent>(
+    `/admin/${entity}/${id}/history`,
+  );
 }
 
 export function listSeasons(): Promise<AdminSeason[]> {

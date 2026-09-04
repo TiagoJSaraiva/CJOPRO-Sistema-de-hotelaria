@@ -5,12 +5,14 @@ import {
   listProductCategories,
   listProductHistory,
   listProducts,
+  listConsumptionOffers,
 } from "../../../../lib/adminApi";
 import { getUserFromSession } from "../../../../lib/auth";
 import { getProductsAccess, getProductsDefaultRoute } from "../access";
 import { ProductsViewFilterableSection } from "../_components/ProductsViewFilterableSection";
 import { ProductStatusMessage } from "../_components/ProductStatusMessage";
 import { productsCatalogGuide } from "../usageGuides";
+import { PERMISSIONS } from "@hotel/shared";
 
 type ProductsViewPageProps = {
   searchParams?: Promise<{
@@ -51,6 +53,15 @@ export default async function ProductsViewPage({
     activeProductId && access.canRead
       ? await listProductHistory(activeProductId)
       : [];
+  const canReadConsumption =
+    user?.permissions.includes(PERMISSIONS.CONSUMPTION_READ) || false;
+  const consumptionOffers =
+    activeProductId && canReadConsumption
+      ? await listConsumptionOffers({
+          productId: activeProductId,
+          includeArchived: true,
+        })
+      : [];
 
   return (
     <DashboardEntityPageShell
@@ -85,6 +96,8 @@ export default async function ProductsViewPage({
         products={products}
         categories={categories}
         history={history}
+        consumptionOffers={consumptionOffers}
+        canReadConsumption={canReadConsumption}
         canRead={access.canRead}
         canUpdate={access.canUpdate}
         canDelete={access.canDelete}

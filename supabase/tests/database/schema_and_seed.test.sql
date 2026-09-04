@@ -1,6 +1,6 @@
 begin;
 
-select plan(117);
+select plan(132);
 
 select ok(to_regclass('public.room_blocks') is not null, 'room_blocks exists');
 
@@ -78,7 +78,7 @@ select is((select count(*)::integer from public.hotels), 2, 'seed has two hotels
 select is((select count(*)::integer from public.rooms), 6, 'seed has six rooms');
 select is((select count(*)::integer from public.customers), 4, 'seed has four customers');
 select is((select count(*)::integer from public.products), 4, 'seed has four products');
-select is((select count(*)::integer from public.permissions), 61, 'seed matches all canonical application permissions');
+select is((select count(*)::integer from public.permissions), 68, 'seed matches all canonical application permissions');
 select is((select count(*)::integer from public.roles), 3, 'seed has one global role and two hotel roles');
 select is((select count(*)::integer from public.users), 3, 'seed has three local users');
 select is((select count(*)::integer from public.reservations), 4, 'seed has four reservations');
@@ -217,13 +217,13 @@ select is(
 
 select is(
   (select count(*)::integer from public.role_permissions where role_id = '70000000-0000-4000-8000-000000000002'),
-  45,
+  52,
   'Aurora manager role has every hotel permission'
 );
 
 select is(
   (select count(*)::integer from public.role_permissions where role_id = '70000000-0000-4000-8000-000000000003'),
-  45,
+  52,
   'Horizonte manager role has every hotel permission'
 );
 
@@ -729,6 +729,116 @@ select ok(exists(select 1 from public.catalog_audit_events where entity_type = '
 select throws_ok(
   $$ update public.catalog_audit_events set action = 'altered' where id = (select id from public.catalog_audit_events limit 1) $$,
   '23514', null, 'catalog audit events are immutable'
+);
+
+select ok(
+  to_regclass('public.consumption_points') is not null
+    and to_regclass('public.consumption_offers') is not null
+    and to_regclass('public.consumption_configuration_audit_events') is not null,
+  'consumption configuration tables exist'
+);
+select is(
+  (select array_agg(enumlabel order by enumsortorder)::text from pg_enum
+    where enumtypid = 'public.consumption_billing_mode'::regtype),
+  '{hotel_immediate,stay_folio,partner_direct}',
+  'billing modes reserve the future partner mode'
+);
+select ok(
+  (select bool_and(relrowsecurity) from pg_class
+    where oid in ('public.consumption_points'::regclass, 'public.consumption_offers'::regclass,
+      'public.consumption_configuration_audit_events'::regclass)),
+  'RLS is enabled on consumption configuration'
+);
+select is(
+  (select count(*)::integer from public.permissions where name in (
+    'read_consumption', 'manage_consumption_settings', 'post_consumption',
+    'receive_consumption_payment', 'grant_consumption_courtesy',
+    'void_consumption', 'approve_consumption_adjustment'
+  )),
+  7,
+  'all consumption permissions are registered'
+);
+select lives_ok(
+  $$ insert into public.consumption_points(
+      id, hotel_id, name, internal_code, default_allowed_billing_modes,
+      default_billing_mode, last_changed_by
+    ) values (
+      'a1000000-0000-4000-8000-000000000001', '10000000-0000-4000-8000-000000000001',
+      'Recepção', 'REC', array['hotel_immediate', 'stay_folio']::public.consumption_billing_mode[],
+      'stay_folio', '80000000-0000-4000-8000-000000000002'
+    ) $$,
+  'a scoped consumption point can be created'
+);
+select lives_ok(
+  $$ insert into public.consumption_offers(
+      id, hotel_id, point_id, product_id, policy_source, last_changed_by
+    ) values (
+      'a2000000-0000-4000-8000-000000000001', '10000000-0000-4000-8000-000000000001',
+      'a1000000-0000-4000-8000-000000000001', '40000000-0000-4000-8000-000000000001',
+      'inherit', '80000000-0000-4000-8000-000000000002'
+    ) $$,
+  'a product can inherit its point billing policy'
+);
+select throws_ok(
+  $$ insert into public.consumption_points(
+      hotel_id, name, default_allowed_billing_modes, default_billing_mode
+    ) values (
+      '10000000-0000-4000-8000-000000000001', 'recepção',
+      array['stay_folio']::public.consumption_billing_mode[], 'stay_folio'
+    ) $$,
+  '23505', null, 'point names are unique without case sensitivity per hotel'
+);
+select throws_ok(
+  $$ insert into public.consumption_offers(
+      hotel_id, point_id, product_id, policy_source
+    ) values (
+      '10000000-0000-4000-8000-000000000001',
+      'a1000000-0000-4000-8000-000000000001', '40000000-0000-4000-8000-000000000003', 'inherit'
+    ) $$,
+  '23514', null, 'offers reject products from another hotel'
+);
+select throws_ok(
+  $$ insert into public.consumption_points(
+      hotel_id, name, default_allowed_billing_modes, default_billing_mode
+    ) values (
+      '10000000-0000-4000-8000-000000000001', 'Parceiro futuro',
+      array['partner_direct']::public.consumption_billing_mode[], 'partner_direct'
+    ) $$,
+  '23514', null, 'partner direct payment remains unavailable before stage three'
+);
+select throws_ok(
+  $$ update public.consumption_points
+    set default_allowed_billing_modes = array['hotel_immediate']::public.consumption_billing_mode[],
+      default_billing_mode = 'stay_folio'
+    where id = 'a1000000-0000-4000-8000-000000000001' $$,
+  '23514', null, 'point default mode must be allowed'
+);
+select throws_ok(
+  $$ delete from public.consumption_points where id = 'a1000000-0000-4000-8000-000000000001' $$,
+  '23514', null, 'consumption points cannot be hard deleted'
+);
+select throws_ok(
+  $$ delete from public.consumption_offers where id = 'a2000000-0000-4000-8000-000000000001' $$,
+  '23514', null, 'consumption offers cannot be hard deleted'
+);
+select ok(
+  exists(select 1 from public.consumption_configuration_audit_events
+    where entity_id in ('a1000000-0000-4000-8000-000000000001', 'a2000000-0000-4000-8000-000000000001')),
+  'consumption configuration writes create audit events'
+);
+select throws_ok(
+  $$ update public.consumption_configuration_audit_events set action = 'altered'
+    where entity_id = 'a1000000-0000-4000-8000-000000000001' $$,
+  '23514', null, 'consumption configuration audit is immutable'
+);
+select is(
+  public.reorder_consumption_points(
+    '10000000-0000-4000-8000-000000000001',
+    '80000000-0000-4000-8000-000000000002',
+    array['a1000000-0000-4000-8000-000000000001']::uuid[]
+  ),
+  'ok',
+  'point ordering validates the complete non-archived list'
 );
 
 select * from finish();

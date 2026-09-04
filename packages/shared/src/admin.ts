@@ -441,6 +441,103 @@ export type AdminProductCreateInput = {
 
 export type AdminProductUpdateInput = Partial<AdminProductCreateInput>;
 
+export type ConsumptionBillingMode =
+  "hotel_immediate" | "stay_folio" | "partner_direct";
+export type ConsumptionPolicySource = "inherit" | "override";
+export type ConsumptionUnavailableReason =
+  | "point_inactive"
+  | "point_archived"
+  | "offer_inactive"
+  | "offer_archived"
+  | "product_inactive"
+  | "product_archived"
+  | "category_inactive"
+  | "category_archived";
+
+export type AdminConsumptionBillingPolicy = {
+  allowed_modes: ConsumptionBillingMode[];
+  default_mode: ConsumptionBillingMode;
+};
+
+export type AdminConsumptionPoint = {
+  id: string;
+  hotel_id: string;
+  name: string;
+  internal_code: string | null;
+  description: string | null;
+  display_order: number;
+  is_active: boolean;
+  default_policy: AdminConsumptionBillingPolicy;
+  inherited_offers_count: number;
+  offers_count: number;
+  archived_at: string | null;
+  created_at?: string;
+  updated_at?: string;
+};
+
+export type AdminConsumptionPointInput = {
+  name: string;
+  internal_code?: string | null;
+  description?: string | null;
+  display_order?: number;
+  is_active?: boolean;
+  default_policy: AdminConsumptionBillingPolicy;
+};
+
+export type AdminConsumptionOfferPolicyInput =
+  | { source: "inherit" }
+  | {
+      source: "override";
+      allowed_modes: ConsumptionBillingMode[];
+      default_mode: ConsumptionBillingMode;
+    };
+
+export type AdminConsumptionOffer = {
+  id: string;
+  hotel_id: string;
+  point: Pick<
+    AdminConsumptionPoint,
+    "id" | "name" | "internal_code" | "is_active" | "archived_at"
+  >;
+  product: AdminProduct;
+  display_order: number;
+  is_active: boolean;
+  policy: AdminConsumptionOfferPolicyInput;
+  resolved_policy: AdminConsumptionBillingPolicy & {
+    source: ConsumptionPolicySource;
+  };
+  effective_available: boolean;
+  unavailable_reasons: ConsumptionUnavailableReason[];
+  archived_at: string | null;
+  created_at?: string;
+  updated_at?: string;
+};
+
+export type AdminConsumptionOfferBatchInput = {
+  product_ids: string[];
+  policy: AdminConsumptionOfferPolicyInput;
+};
+
+export type AdminConsumptionOfferUpdateInput = {
+  display_order?: number;
+  is_active?: boolean;
+  policy?: AdminConsumptionOfferPolicyInput;
+};
+
+export type AdminConsumptionReorderInput = { ids: string[] };
+
+export type AdminConsumptionConfigurationAuditEvent = {
+  id: string;
+  hotel_id: string;
+  entity_type: "consumption_point" | "consumption_offer";
+  entity_id: string;
+  actor_id: string | null;
+  actor_name: string | null;
+  action: string;
+  changes: Record<string, unknown>;
+  created_at: string;
+};
+
 export type AdminSeason = {
   id: string;
   hotel_id: string;

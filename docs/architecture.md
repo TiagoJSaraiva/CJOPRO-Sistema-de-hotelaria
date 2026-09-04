@@ -34,6 +34,34 @@ controladas por hotel, arquivamento lógico e trilha imutável de criação, edi
 ativação e arquivamento. Estoque, cobrança, parceiros e vendas permanecem em
 fluxos separados: o catálogo é a referência comercial estável para essas etapas.
 
+## Configurações de vendas e consumo
+
+Pontos de consumo representam canais operacionais do hotel, como Recepção,
+Frigobar, Restaurante e Piscina. Um produto pode ser ofertado em vários pontos,
+sempre com o preço atual do catálogo. Cada ponto define uma política padrão de
+cobrança e cada oferta pode herdá-la ou sobrescrevê-la.
+
+```mermaid
+flowchart LR
+  catalog[Catálogo próprio] --> offer[Oferta produto–ponto]
+  point[Ponto de consumo] -->|política padrão| offer
+  offer --> resolved[Política e disponibilidade resolvidas]
+  resolved -.-> futureSale[Lançamento futuro de consumo]
+  futureSale -.-> immediate[Pagamento imediato ao hotel]
+  futureSale -.-> folio[Débito no fólio]
+```
+
+Ponto, oferta, produto e categoria precisam estar ativos e não arquivados para
+que uma oferta esteja operacionalmente disponível. Alterações são auditadas e
+não existe exclusão física. O modo de pagamento direto ao parceiro está
+reservado no domínio, mas permanece bloqueado até a implementação de parceiros
+e acordos comerciais.
+
+Somente uma estadia em `checked_in` poderá receber lançamentos, e débitos de
+consumo no fólio deverão impedir o checkout enquanto não forem quitados. Essas
+regras serão aplicadas nos fluxos operacionais posteriores; esta etapa não
+altera `stay_consumption`, pagamentos ou checkout.
+
 ## Requisição autenticada e hotel ativo
 
 ```mermaid

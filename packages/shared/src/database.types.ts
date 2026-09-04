@@ -57,6 +57,206 @@ export type Database = {
           },
         ]
       }
+      consumption_configuration_audit_events: {
+        Row: {
+          action: string
+          actor_id: string | null
+          changes: Json
+          created_at: string
+          entity_id: string
+          entity_type: Database["public"]["Enums"]["consumption_configuration_entity"]
+          hotel_id: string
+          id: string
+        }
+        Insert: {
+          action: string
+          actor_id?: string | null
+          changes?: Json
+          created_at?: string
+          entity_id: string
+          entity_type: Database["public"]["Enums"]["consumption_configuration_entity"]
+          hotel_id: string
+          id?: string
+        }
+        Update: {
+          action?: string
+          actor_id?: string | null
+          changes?: Json
+          created_at?: string
+          entity_id?: string
+          entity_type?: Database["public"]["Enums"]["consumption_configuration_entity"]
+          hotel_id?: string
+          id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "consumption_configuration_audit_events_actor_id_fkey"
+            columns: ["actor_id"]
+            isOneToOne: false
+            referencedRelation: "users"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "consumption_configuration_audit_events_hotel_id_fkey"
+            columns: ["hotel_id"]
+            isOneToOne: false
+            referencedRelation: "hotels"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      consumption_offers: {
+        Row: {
+          allowed_billing_modes:
+            | Database["public"]["Enums"]["consumption_billing_mode"][]
+            | null
+          archived_at: string | null
+          created_at: string
+          default_billing_mode:
+            | Database["public"]["Enums"]["consumption_billing_mode"]
+            | null
+          display_order: number
+          hotel_id: string
+          id: string
+          is_active: boolean
+          last_changed_by: string | null
+          point_id: string
+          policy_source: Database["public"]["Enums"]["consumption_policy_source"]
+          product_id: string
+          updated_at: string
+        }
+        Insert: {
+          allowed_billing_modes?:
+            | Database["public"]["Enums"]["consumption_billing_mode"][]
+            | null
+          archived_at?: string | null
+          created_at?: string
+          default_billing_mode?:
+            | Database["public"]["Enums"]["consumption_billing_mode"]
+            | null
+          display_order?: number
+          hotel_id: string
+          id?: string
+          is_active?: boolean
+          last_changed_by?: string | null
+          point_id: string
+          policy_source?: Database["public"]["Enums"]["consumption_policy_source"]
+          product_id: string
+          updated_at?: string
+        }
+        Update: {
+          allowed_billing_modes?:
+            | Database["public"]["Enums"]["consumption_billing_mode"][]
+            | null
+          archived_at?: string | null
+          created_at?: string
+          default_billing_mode?:
+            | Database["public"]["Enums"]["consumption_billing_mode"]
+            | null
+          display_order?: number
+          hotel_id?: string
+          id?: string
+          is_active?: boolean
+          last_changed_by?: string | null
+          point_id?: string
+          policy_source?: Database["public"]["Enums"]["consumption_policy_source"]
+          product_id?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "consumption_offers_hotel_id_fkey"
+            columns: ["hotel_id"]
+            isOneToOne: false
+            referencedRelation: "hotels"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "consumption_offers_last_changed_by_fkey"
+            columns: ["last_changed_by"]
+            isOneToOne: false
+            referencedRelation: "users"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "consumption_offers_point_hotel_fkey"
+            columns: ["point_id", "hotel_id"]
+            isOneToOne: false
+            referencedRelation: "consumption_points"
+            referencedColumns: ["id", "hotel_id"]
+          },
+          {
+            foreignKeyName: "consumption_offers_product_hotel_fkey"
+            columns: ["product_id", "hotel_id"]
+            isOneToOne: false
+            referencedRelation: "products"
+            referencedColumns: ["id", "hotel_id"]
+          },
+        ]
+      }
+      consumption_points: {
+        Row: {
+          archived_at: string | null
+          created_at: string
+          default_allowed_billing_modes: Database["public"]["Enums"]["consumption_billing_mode"][]
+          default_billing_mode: Database["public"]["Enums"]["consumption_billing_mode"]
+          description: string | null
+          display_order: number
+          hotel_id: string
+          id: string
+          internal_code: string | null
+          is_active: boolean
+          last_changed_by: string | null
+          name: string
+          updated_at: string
+        }
+        Insert: {
+          archived_at?: string | null
+          created_at?: string
+          default_allowed_billing_modes: Database["public"]["Enums"]["consumption_billing_mode"][]
+          default_billing_mode: Database["public"]["Enums"]["consumption_billing_mode"]
+          description?: string | null
+          display_order?: number
+          hotel_id: string
+          id?: string
+          internal_code?: string | null
+          is_active?: boolean
+          last_changed_by?: string | null
+          name: string
+          updated_at?: string
+        }
+        Update: {
+          archived_at?: string | null
+          created_at?: string
+          default_allowed_billing_modes?: Database["public"]["Enums"]["consumption_billing_mode"][]
+          default_billing_mode?: Database["public"]["Enums"]["consumption_billing_mode"]
+          description?: string | null
+          display_order?: number
+          hotel_id?: string
+          id?: string
+          internal_code?: string | null
+          is_active?: boolean
+          last_changed_by?: string | null
+          name?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "consumption_points_hotel_id_fkey"
+            columns: ["hotel_id"]
+            isOneToOne: false
+            referencedRelation: "hotels"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "consumption_points_last_changed_by_fkey"
+            columns: ["last_changed_by"]
+            isOneToOne: false
+            referencedRelation: "users"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       customers: {
         Row: {
           birth_date: string
@@ -3783,6 +3983,19 @@ export type Database = {
         }
         Returns: string
       }
+      reorder_consumption_offers: {
+        Args: {
+          p_actor_id: string
+          p_hotel_id: string
+          p_ids: string[]
+          p_point_id: string
+        }
+        Returns: string
+      }
+      reorder_consumption_points: {
+        Args: { p_actor_id: string; p_hotel_id: string; p_ids: string[] }
+        Returns: string
+      }
       reverse_maintenance_financial_settlement: {
         Args: {
           p_actor_id: string
@@ -3970,6 +4183,14 @@ export type Database = {
     }
     Enums: {
       catalog_audit_entity: "product" | "product_category"
+      consumption_billing_mode:
+        | "hotel_immediate"
+        | "stay_folio"
+        | "partner_direct"
+      consumption_configuration_entity:
+        | "consumption_point"
+        | "consumption_offer"
+      consumption_policy_source: "inherit" | "override"
       maintenance_asset_lifecycle: "active" | "out_of_service" | "retired"
       maintenance_automation_status: "running" | "completed" | "failed"
       maintenance_contract_kind: "fixed" | "per_service" | "warranty" | "other"
@@ -4220,6 +4441,16 @@ export const Constants = {
   public: {
     Enums: {
       catalog_audit_entity: ["product", "product_category"],
+      consumption_billing_mode: [
+        "hotel_immediate",
+        "stay_folio",
+        "partner_direct",
+      ],
+      consumption_configuration_entity: [
+        "consumption_point",
+        "consumption_offer",
+      ],
+      consumption_policy_source: ["inherit", "override"],
       maintenance_asset_lifecycle: ["active", "out_of_service", "retired"],
       maintenance_automation_status: ["running", "completed", "failed"],
       maintenance_contract_kind: ["fixed", "per_service", "warranty", "other"],

@@ -5,6 +5,7 @@ import type {
   AdminCatalogAuditEvent,
   AdminProduct,
   AdminProductCategory,
+  AdminConsumptionOffer,
 } from "@hotel/shared";
 import {
   deleteProductAction,
@@ -22,13 +23,14 @@ const units: Record<AdminProduct["sales_unit"], string> = {
   daily: "Diária",
   service: "Serviço",
 };
-const detailTabs = ["information", "price", "history"] as const;
-type DetailTab = (typeof detailTabs)[number];
+type DetailTab = "information" | "price" | "points" | "history";
 
 export function ProductListItem({
   product,
   categories,
   history,
+  consumptionOffers,
+  canReadConsumption,
   canRead,
   canUpdate,
   canDelete,
@@ -38,6 +40,8 @@ export function ProductListItem({
   product: AdminProduct;
   categories: AdminProductCategory[];
   history: AdminCatalogAuditEvent[];
+  consumptionOffers: AdminConsumptionOffer[];
+  canReadConsumption: boolean;
   canRead: boolean;
   canUpdate: boolean;
   canDelete: boolean;
@@ -46,6 +50,9 @@ export function ProductListItem({
 }) {
   const [activeDetailTab, setActiveDetailTab] =
     useState<DetailTab>("information");
+  const detailTabs: DetailTab[] = canReadConsumption
+    ? ["information", "price", "points", "history"]
+    : ["information", "price", "history"];
   const detailTabRefs = useRef<Array<HTMLButtonElement | null>>([]);
   const viewHref = `/dashboard/products/view?productId=${product.id}&mode=view`;
   const editHref = `/dashboard/products/view?productId=${product.id}&mode=edit`;
@@ -138,7 +145,9 @@ export function ProductListItem({
                   ? "Informações"
                   : tab === "price"
                     ? "Preço"
-                    : "Histórico"}
+                    : tab === "points"
+                      ? "Pontos de consumo"
+                      : "Histórico"}
               </button>
             ))}
           </div>
@@ -201,6 +210,38 @@ export function ProductListItem({
               ) : (
                 <p className="m-0">Sem eventos registrados.</p>
               )}
+            </section>
+          ) : null}
+          {activeDetailTab === "points" ? (
+            <section
+              role="tabpanel"
+              id={`${product.id}-points-panel`}
+              aria-labelledby={`${product.id}-points-tab`}
+              className="grid gap-2"
+            >
+              {consumptionOffers.length ? (
+                <ul className="m-0 grid gap-2 pl-5">
+                  {consumptionOffers.map((offer) => (
+                    <li key={offer.id}>
+                      {offer.point.name} ·{" "}
+                      {offer.effective_available
+                        ? "Disponível"
+                        : "Indisponível"}
+                      {offer.archived_at ? " · Arquivada" : ""}
+                    </li>
+                  ))}
+                </ul>
+              ) : (
+                <p className="m-0">
+                  Este item ainda não foi disponibilizado em um ponto.
+                </p>
+              )}
+              <a
+                href="/dashboard/consumption/offers"
+                className="font-semibold text-teal-700"
+              >
+                Gerenciar em Vendas e consumo
+              </a>
             </section>
           ) : null}
         </div>

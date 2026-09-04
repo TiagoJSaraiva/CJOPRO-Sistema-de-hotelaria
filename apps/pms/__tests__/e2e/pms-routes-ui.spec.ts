@@ -290,6 +290,89 @@ test.describe("PMS UI quality", () => {
   );
 
   test(
+    "configura pontos e ofertas de consumo",
+    { tag: TEST_TAGS },
+    async ({ page, context, baseURL, auditAccessibility }) => {
+      test.setTimeout(90_000);
+      await preparePage(page);
+      await authenticate(
+        context,
+        baseURL || "http://127.0.0.1:3001",
+        "consumption-e2e-token",
+      );
+      await page.goto("/dashboard/consumption/points");
+
+      await expect(
+        page.getByRole("heading", { name: "Vendas e consumo" }),
+      ).toBeVisible();
+      await expect(
+        page.getByRole("link", { name: "Vendas e consumo" }),
+      ).toBeVisible();
+      await expect(page.getByText("Recepção").first()).toBeVisible();
+      await page.getByRole("button", { name: "Guia desta página" }).click();
+      await expect(
+        page.getByRole("dialog", { name: "Organize os canais do hotel" }),
+      ).toBeVisible();
+      await page.keyboard.press("Escape");
+      await auditAccessibility("pontos-de-consumo");
+      await stabilizeVisualState(page);
+      await expect(page).toHaveScreenshot("consumption-points.png");
+
+      await page.getByLabel("Nome").first().fill("Restaurante");
+      await page.getByLabel("Código interno").first().fill("REST");
+      await page
+        .getByRole("button", { name: "Criar ponto de consumo" })
+        .click();
+      await expect(page.getByText("Restaurante").first()).toBeVisible();
+      const restaurant = page
+        .getByRole("article")
+        .filter({ hasText: "Restaurante" });
+      await restaurant.getByRole("button", { name: "Arquivar" }).click();
+      await expect(
+        page
+          .getByRole("article")
+          .filter({ hasText: "Restaurante" })
+          .getByRole("button", { name: "Restaurar" }),
+      ).toBeVisible();
+      await page
+        .getByRole("article")
+        .filter({ hasText: "Restaurante" })
+        .getByRole("button", { name: "Restaurar" })
+        .click();
+
+      await page.getByRole("link", { name: "Ofertas" }).click();
+      await expect(page.getByText("Café espresso").first()).toBeVisible();
+      const newPointId = await page
+        .getByLabel("Ponto de consumo")
+        .locator("option")
+        .last()
+        .getAttribute("value");
+      expect(newPointId).not.toBeNull();
+      await page
+        .getByLabel("Ponto de consumo")
+        .selectOption(newPointId as string);
+      await page.getByText("Massagem relaxante").first().click();
+      await page
+        .getByRole("button", { name: "Vincular produtos selecionados" })
+        .click();
+      await expect(
+        page.getByText("Configuração criada com sucesso."),
+      ).toBeVisible();
+      await page.getByLabel("Categoria").selectOption("category-wellness");
+      await expect(page.getByText("Café espresso").last()).toBeHidden();
+      await page.getByLabel("Categoria").selectOption("all");
+      await page
+        .getByRole("combobox", { name: "Ponto", exact: true })
+        .selectOption("point-reception");
+      await expect(page.getByText(/oferta\(s\) encontrada\(s\)/)).toBeVisible();
+      await auditAccessibility("ofertas-de-consumo");
+      await page.evaluate(() => window.scrollTo(0, 0));
+      await stabilizeVisualState(page);
+      await expect(page).toHaveScreenshot("consumption-offers.png");
+    },
+  );
+
+  test(
     "central de manutenção",
     { tag: TEST_TAGS },
     async ({ page, context, baseURL, auditAccessibility }) => {

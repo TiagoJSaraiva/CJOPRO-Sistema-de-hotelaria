@@ -5,6 +5,7 @@ import type {
   AdminCatalogAuditEvent,
   AdminProduct,
   AdminProductCategory,
+  AdminConsumptionOffer,
 } from "@hotel/shared";
 import {
   DEFAULT_PRODUCT_VIEW_FILTERS,
@@ -21,6 +22,8 @@ type ProductsViewFilterableSectionProps = {
   products: AdminProduct[];
   categories: AdminProductCategory[];
   history: AdminCatalogAuditEvent[];
+  consumptionOffers: AdminConsumptionOffer[];
+  canReadConsumption: boolean;
   canRead: boolean;
   canUpdate: boolean;
   canDelete: boolean;
@@ -33,6 +36,8 @@ export function ProductsViewFilterableSection({
   products,
   categories,
   history,
+  consumptionOffers,
+  canReadConsumption,
   canRead,
   canUpdate,
   canDelete,
@@ -77,6 +82,10 @@ export function ProductsViewFilterableSection({
           product={product}
           categories={categories}
           history={activeProductId === product.id ? history : []}
+          consumptionOffers={
+            activeProductId === product.id ? consumptionOffers : []
+          }
+          canReadConsumption={canReadConsumption}
           canRead={canRead}
           canUpdate={canUpdate}
           canDelete={canDelete}

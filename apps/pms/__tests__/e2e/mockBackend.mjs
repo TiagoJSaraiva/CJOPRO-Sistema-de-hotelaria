@@ -15,6 +15,16 @@ const permissions = [
   "update_product",
   "delete_product",
 ];
+const consumptionPermissions = [
+  ...permissions,
+  "read_consumption",
+  "manage_consumption_settings",
+  "post_consumption",
+  "receive_consumption_payment",
+  "grant_consumption_courtesy",
+  "void_consumption",
+  "approve_consumption_adjustment",
+];
 const maintenancePermissions = [
   ...permissions,
   "create_maintenance_occurrence",
@@ -59,6 +69,14 @@ const maintenanceUser = {
   roleAssignments: user.roleAssignments.map((assignment) => ({
     ...assignment,
     permissions: maintenancePermissions,
+  })),
+};
+const consumptionUser = {
+  ...user,
+  permissions: consumptionPermissions,
+  roleAssignments: user.roleAssignments.map((assignment) => ({
+    ...assignment,
+    permissions: consumptionPermissions,
   })),
 };
 
@@ -162,6 +180,102 @@ const productHistory = [
     action: "updated",
     changes: { before: { unit_price: 7 }, after: { unit_price: 8 } },
     created_at: "2026-05-02T10:00:00.000Z",
+  },
+];
+
+const consumptionPoints = [
+  {
+    id: "point-reception",
+    hotel_id: "hotel-e2e",
+    name: "Recepção",
+    internal_code: "REC",
+    description: "Atendimento e vendas no balcão principal.",
+    display_order: 10,
+    is_active: true,
+    default_policy: {
+      allowed_modes: ["hotel_immediate", "stay_folio"],
+      default_mode: "stay_folio",
+    },
+    inherited_offers_count: 1,
+    offers_count: 1,
+    archived_at: null,
+    created_at: "2026-05-01T10:00:00.000Z",
+    updated_at: "2026-05-01T10:00:00.000Z",
+  },
+  {
+    id: "point-pool",
+    hotel_id: "hotel-e2e",
+    name: "Piscina",
+    internal_code: "PISC",
+    description: "Consumos da área externa.",
+    display_order: 20,
+    is_active: true,
+    default_policy: {
+      allowed_modes: ["hotel_immediate"],
+      default_mode: "hotel_immediate",
+    },
+    inherited_offers_count: 0,
+    offers_count: 1,
+    archived_at: null,
+    created_at: "2026-05-01T10:00:00.000Z",
+    updated_at: "2026-05-01T10:00:00.000Z",
+  },
+];
+
+const consumptionOffers = [
+  {
+    id: "offer-coffee-reception",
+    hotel_id: "hotel-e2e",
+    point: {
+      id: "point-reception",
+      name: "Recepção",
+      internal_code: "REC",
+      is_active: true,
+      archived_at: null,
+    },
+    product: products[0],
+    display_order: 10,
+    is_active: true,
+    policy: { source: "inherit" },
+    resolved_policy: {
+      source: "inherit",
+      allowed_modes: ["hotel_immediate", "stay_folio"],
+      default_mode: "stay_folio",
+    },
+    effective_available: true,
+    unavailable_reasons: [],
+    archived_at: null,
+    created_at: "2026-05-01T10:00:00.000Z",
+    updated_at: "2026-05-01T10:00:00.000Z",
+  },
+  {
+    id: "offer-massage-pool",
+    hotel_id: "hotel-e2e",
+    point: {
+      id: "point-pool",
+      name: "Piscina",
+      internal_code: "PISC",
+      is_active: true,
+      archived_at: null,
+    },
+    product: products[1],
+    display_order: 10,
+    is_active: false,
+    policy: {
+      source: "override",
+      allowed_modes: ["hotel_immediate"],
+      default_mode: "hotel_immediate",
+    },
+    resolved_policy: {
+      source: "override",
+      allowed_modes: ["hotel_immediate"],
+      default_mode: "hotel_immediate",
+    },
+    effective_available: false,
+    unavailable_reasons: ["offer_inactive"],
+    archived_at: null,
+    created_at: "2026-05-01T10:00:00.000Z",
+    updated_at: "2026-05-01T10:00:00.000Z",
   },
 ];
 
@@ -448,11 +562,14 @@ const server = http.createServer(async (request, response) => {
   }
 
   if (method === "GET" && url.pathname === "/auth/me") {
+    const authorization = request.headers.authorization;
     sendJson(response, 200, {
       user:
-        request.headers.authorization === "Bearer maintenance-e2e-token"
+        authorization === "Bearer maintenance-e2e-token"
           ? maintenanceUser
-          : user,
+          : authorization === "Bearer consumption-e2e-token"
+            ? consumptionUser
+            : user,
     });
     return;
   }
@@ -477,6 +594,194 @@ const server = http.createServer(async (request, response) => {
     url.pathname === "/admin/products/product-coffee/history"
   ) {
     sendJson(response, 200, { items: productHistory });
+    return;
+  }
+
+  if (method === "GET" && url.pathname === "/admin/consumption-points") {
+    sendJson(response, 200, { items: consumptionPoints });
+    return;
+  }
+
+  if (method === "GET" && url.pathname === "/admin/consumption-offers") {
+    const pointId = url.searchParams.get("point_id");
+    const productId = url.searchParams.get("product_id");
+    sendJson(response, 200, {
+      items: consumptionOffers.filter(
+        (offer) =>
+          (!pointId || offer.point.id === pointId) &&
+          (!productId || offer.product.id === productId),
+      ),
+    });
+    return;
+  }
+
+  if (method === "POST" && url.pathname === "/admin/consumption-points") {
+    const body = await parseBody(request);
+    const created = {
+      id: `point-${consumptionPoints.length + 1}`,
+      hotel_id: "hotel-e2e",
+      name: body.name,
+      internal_code: body.internal_code || null,
+      description: body.description || null,
+      display_order: (consumptionPoints.length + 1) * 10,
+      is_active: body.is_active !== false,
+      default_policy: body.default_policy,
+      inherited_offers_count: 0,
+      offers_count: 0,
+      archived_at: null,
+      created_at: "2026-05-12T15:00:00.000Z",
+      updated_at: "2026-05-12T15:00:00.000Z",
+    };
+    consumptionPoints.push(created);
+    sendJson(response, 201, { item: created });
+    return;
+  }
+
+  const pointLifecycleMatch = url.pathname.match(
+    /^\/admin\/consumption-points\/([^/]+)\/(archive|restore)$/,
+  );
+  if (method === "POST" && pointLifecycleMatch) {
+    const point = consumptionPoints.find(
+      (item) => item.id === pointLifecycleMatch[1],
+    );
+    if (point)
+      point.archived_at =
+        pointLifecycleMatch[2] === "archive"
+          ? "2026-05-12T15:00:00.000Z"
+          : null;
+    sendJson(
+      response,
+      point ? 200 : 404,
+      point ? { item: point } : { message: "Ponto não encontrado" },
+    );
+    return;
+  }
+
+  const pointUpdateMatch = url.pathname.match(
+    /^\/admin\/consumption-points\/([^/]+)$/,
+  );
+  if (method === "PUT" && pointUpdateMatch) {
+    const body = await parseBody(request);
+    const point = consumptionPoints.find(
+      (item) => item.id === pointUpdateMatch[1],
+    );
+    if (point)
+      Object.assign(point, body, { updated_at: "2026-05-12T15:00:00.000Z" });
+    sendJson(
+      response,
+      point ? 200 : 404,
+      point ? { item: point } : { message: "Ponto não encontrado" },
+    );
+    return;
+  }
+
+  if (method === "PUT" && url.pathname === "/admin/consumption-points/order") {
+    await parseBody(request);
+    sendJson(response, 200, { ok: true });
+    return;
+  }
+
+  const offerBatchMatch = url.pathname.match(
+    /^\/admin\/consumption-points\/([^/]+)\/offers$/,
+  );
+  if (method === "POST" && offerBatchMatch) {
+    const body = await parseBody(request);
+    const point = consumptionPoints.find(
+      (item) => item.id === offerBatchMatch[1],
+    );
+    const created = (body.product_ids || []).map((productId) => {
+      const product = products.find((item) => item.id === productId);
+      const inherited = body.policy?.source !== "override";
+      const item = {
+        id: `offer-${consumptionOffers.length + 1}-${productId}`,
+        hotel_id: "hotel-e2e",
+        point: {
+          id: point.id,
+          name: point.name,
+          internal_code: point.internal_code,
+          is_active: point.is_active,
+          archived_at: point.archived_at,
+        },
+        product,
+        display_order: (consumptionOffers.length + 1) * 10,
+        is_active: true,
+        policy: body.policy,
+        resolved_policy: inherited
+          ? { source: "inherit", ...point.default_policy }
+          : {
+              source: "override",
+              allowed_modes: body.policy.allowed_modes,
+              default_mode: body.policy.default_mode,
+            },
+        effective_available: true,
+        unavailable_reasons: [],
+        archived_at: null,
+        created_at: "2026-05-12T15:00:00.000Z",
+        updated_at: "2026-05-12T15:00:00.000Z",
+      };
+      consumptionOffers.push(item);
+      return item;
+    });
+    sendJson(response, 201, { items: created });
+    return;
+  }
+
+  if (
+    method === "PUT" &&
+    /^\/admin\/consumption-points\/[^/]+\/offers\/order$/.test(url.pathname)
+  ) {
+    await parseBody(request);
+    sendJson(response, 200, { ok: true });
+    return;
+  }
+
+  const offerLifecycleMatch = url.pathname.match(
+    /^\/admin\/consumption-offers\/([^/]+)\/(archive|restore)$/,
+  );
+  if (method === "POST" && offerLifecycleMatch) {
+    const offer = consumptionOffers.find(
+      (item) => item.id === offerLifecycleMatch[1],
+    );
+    if (offer) {
+      offer.archived_at =
+        offerLifecycleMatch[2] === "archive"
+          ? "2026-05-12T15:00:00.000Z"
+          : null;
+      offer.effective_available = !offer.archived_at && offer.is_active;
+      offer.unavailable_reasons = offer.archived_at
+        ? ["offer_archived"]
+        : offer.is_active
+          ? []
+          : ["offer_inactive"];
+    }
+    sendJson(
+      response,
+      offer ? 200 : 404,
+      offer ? { item: offer } : { message: "Oferta não encontrada" },
+    );
+    return;
+  }
+
+  const offerUpdateMatch = url.pathname.match(
+    /^\/admin\/consumption-offers\/([^/]+)$/,
+  );
+  if (method === "PUT" && offerUpdateMatch) {
+    const body = await parseBody(request);
+    const offer = consumptionOffers.find(
+      (item) => item.id === offerUpdateMatch[1],
+    );
+    if (offer) {
+      Object.assign(offer, body);
+      offer.effective_available = !offer.archived_at && offer.is_active;
+      offer.unavailable_reasons = offer.effective_available
+        ? []
+        : ["offer_inactive"];
+    }
+    sendJson(
+      response,
+      offer ? 200 : 404,
+      offer ? { item: offer } : { message: "Oferta não encontrada" },
+    );
     return;
   }
 
