@@ -412,6 +412,29 @@ export type AdminCatalogAuditEvent = {
   created_at: string;
 };
 
+export type ProductProviderType = "hotel" | "partner";
+export type CommercialContactPurpose = "operational" | "financial" | "general";
+export type CommercialModel = "fixed_rent" | "revenue_share" | "hybrid";
+export type CommercialRentFrequency = "monthly" | "quarterly" | "yearly";
+export type CommercialPaymentRecipient = "hotel" | "partner" | "both";
+export type CommercialRevisionStatus = "draft" | "activated" | "terminated";
+export type CommercialRevisionEffectiveStatus =
+  "draft" | "scheduled" | "current" | "expired" | "terminated" | "superseded";
+
+export type AdminCommercialPartnerSummary = {
+  id: string;
+  trade_name: string;
+  is_active: boolean;
+  archived_at: string | null;
+};
+
+export type AdminProductProvider =
+  | { type: "hotel"; partner: null }
+  | {
+      type: "partner";
+      partner: Pick<AdminCommercialPartnerSummary, "id" | "trade_name">;
+    };
+
 export type AdminProduct = {
   id: string;
   hotel_id: string;
@@ -424,6 +447,7 @@ export type AdminProduct = {
   unit_price: number;
   status: ProductStatus;
   archived_at: string | null;
+  provider: AdminProductProvider;
   created_at?: string;
   updated_at?: string;
 };
@@ -437,9 +461,141 @@ export type AdminProductCreateInput = {
   sales_unit: ProductSalesUnit;
   unit_price: number;
   status?: ProductStatus;
+  provider_type?: ProductProviderType;
+  commercial_partner_id?: string | null;
 };
 
-export type AdminProductUpdateInput = Partial<AdminProductCreateInput>;
+export type AdminProductUpdateInput = Partial<
+  Omit<AdminProductCreateInput, "provider_type" | "commercial_partner_id">
+>;
+
+export type AdminCommercialPartner = AdminCommercialPartnerSummary & {
+  hotel_id: string;
+  legal_name: string;
+  tax_id: string | null;
+  email: string | null;
+  phone: string | null;
+  notes: string | null;
+  contacts: AdminCommercialPartnerContact[];
+  created_at?: string;
+  updated_at?: string;
+};
+
+export type AdminCommercialPartnerInput = {
+  trade_name: string;
+  legal_name: string;
+  tax_id?: string | null;
+  email?: string | null;
+  phone?: string | null;
+  notes?: string | null;
+  is_active?: boolean;
+};
+
+export type AdminCommercialPartnerContact = {
+  id: string;
+  hotel_id: string;
+  partner_id: string;
+  name: string;
+  role: string | null;
+  purpose: CommercialContactPurpose;
+  email: string | null;
+  phone: string | null;
+  is_primary: boolean;
+  is_active: boolean;
+  archived_at: string | null;
+  created_at?: string;
+  updated_at?: string;
+};
+
+export type AdminCommercialPartnerContactInput = {
+  name: string;
+  role?: string | null;
+  purpose: CommercialContactPurpose;
+  email?: string | null;
+  phone?: string | null;
+  is_primary?: boolean;
+  is_active?: boolean;
+};
+
+export type AdminCommercialAgreementRevision = {
+  id: string;
+  hotel_id: string;
+  agreement_id: string;
+  version: number;
+  starts_on: string;
+  ends_on: string | null;
+  status: CommercialRevisionStatus;
+  effective_status: CommercialRevisionEffectiveStatus;
+  commercial_model: CommercialModel;
+  fixed_rent: number | null;
+  rent_frequency: CommercialRentFrequency | null;
+  commission_percentage: number | null;
+  minimum_guarantee: number | null;
+  payment_recipient: CommercialPaymentRecipient;
+  currency: string;
+  notes: string | null;
+  point_ids: string[];
+  activated_at: string | null;
+  terminated_at: string | null;
+  created_at?: string;
+  updated_at?: string;
+};
+
+export type AdminCommercialAgreementRevisionInput = {
+  starts_on: string;
+  ends_on?: string | null;
+  commercial_model: CommercialModel;
+  fixed_rent?: number | null;
+  rent_frequency?: CommercialRentFrequency | null;
+  commission_percentage?: number | null;
+  minimum_guarantee?: number | null;
+  payment_recipient: CommercialPaymentRecipient;
+  notes?: string | null;
+  point_ids: string[];
+};
+
+export type AdminCommercialAgreement = {
+  id: string;
+  hotel_id: string;
+  partner: AdminCommercialPartnerSummary;
+  internal_number: string;
+  archived_at: string | null;
+  revisions: AdminCommercialAgreementRevision[];
+  current_revision: AdminCommercialAgreementRevision | null;
+  created_at?: string;
+  updated_at?: string;
+};
+
+export type AdminCommercialAgreementCreateInput = {
+  partner_id: string;
+  internal_number: string;
+  revision: AdminCommercialAgreementRevisionInput;
+};
+
+export type AdminCommercialAgreementEligibility = {
+  agreement_id: string;
+  internal_number: string;
+  eligible: boolean;
+  reason: string | null;
+  revision: AdminCommercialAgreementRevision | null;
+};
+
+export type AdminCommercialAuditEvent = {
+  id: string;
+  hotel_id: string;
+  entity_type:
+    | "partner"
+    | "partner_contact"
+    | "agreement"
+    | "agreement_revision"
+    | "agreement_revision_point";
+  entity_id: string;
+  actor_id: string | null;
+  actor_name: string | null;
+  action: string;
+  changes: Record<string, unknown>;
+  created_at: string;
+};
 
 export type ConsumptionBillingMode =
   "hotel_immediate" | "stay_folio" | "partner_direct";
@@ -452,7 +608,17 @@ export type ConsumptionUnavailableReason =
   | "product_inactive"
   | "product_archived"
   | "category_inactive"
-  | "category_archived";
+  | "category_archived"
+  | "partner_inactive"
+  | "partner_archived"
+  | "agreement_missing"
+  | "agreement_draft"
+  | "agreement_scheduled"
+  | "agreement_expired"
+  | "agreement_terminated"
+  | "agreement_outside_point"
+  | "billing_mode_incompatible"
+  | "agreement_revision_missing";
 
 export type AdminConsumptionBillingPolicy = {
   allowed_modes: ConsumptionBillingMode[];
@@ -508,6 +674,11 @@ export type AdminConsumptionOffer = {
   };
   effective_available: boolean;
   unavailable_reasons: ConsumptionUnavailableReason[];
+  commercial_agreement: Pick<
+    AdminCommercialAgreement,
+    "id" | "internal_number"
+  > | null;
+  commercial_revision: AdminCommercialAgreementRevision | null;
   archived_at: string | null;
   created_at?: string;
   updated_at?: string;
@@ -516,12 +687,14 @@ export type AdminConsumptionOffer = {
 export type AdminConsumptionOfferBatchInput = {
   product_ids: string[];
   policy: AdminConsumptionOfferPolicyInput;
+  commercial_agreement_id?: string | null;
 };
 
 export type AdminConsumptionOfferUpdateInput = {
   display_order?: number;
   is_active?: boolean;
   policy?: AdminConsumptionOfferPolicyInput;
+  commercial_agreement_id?: string | null;
 };
 
 export type AdminConsumptionReorderInput = { ids: string[] };

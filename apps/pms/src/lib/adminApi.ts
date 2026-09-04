@@ -22,6 +22,16 @@ import {
   AdminConsumptionPoint,
   AdminConsumptionPointInput,
   AdminConsumptionReorderInput,
+  AdminCommercialPartner,
+  AdminCommercialPartnerInput,
+  AdminCommercialPartnerContact,
+  AdminCommercialPartnerContactInput,
+  AdminCommercialAgreement,
+  AdminCommercialAgreementCreateInput,
+  AdminCommercialAgreementRevision,
+  AdminCommercialAgreementRevisionInput,
+  AdminCommercialAgreementEligibility,
+  AdminCommercialAuditEvent,
   AdminProductCreateInput,
   AdminProductUpdateInput,
   AdminFinancialTransaction,
@@ -865,6 +875,165 @@ export function listProductHistory(
   id: string,
 ): Promise<AdminCatalogAuditEvent[]> {
   return getAdminList<AdminCatalogAuditEvent>(`/admin/products/${id}/history`);
+}
+
+export function listCommercialPartners(
+  includeArchived = false,
+): Promise<AdminCommercialPartner[]> {
+  return getAdminList<AdminCommercialPartner>(
+    `/admin/commercial-partners${includeArchived ? "?include_archived=true" : ""}`,
+  );
+}
+
+export function createCommercialPartner(
+  payload: AdminCommercialPartnerInput,
+): Promise<AdminCommercialPartner | null> {
+  return requestAdmin<AdminCommercialPartner>(
+    "/admin/commercial-partners",
+    "POST",
+    payload,
+  );
+}
+
+export function updateCommercialPartner(
+  id: string,
+  payload: Partial<AdminCommercialPartnerInput>,
+): Promise<AdminCommercialPartner | null> {
+  return requestAdmin<AdminCommercialPartner>(
+    `/admin/commercial-partners/${id}`,
+    "PUT",
+    payload,
+  );
+}
+
+export function setCommercialPartnerArchived(
+  id: string,
+  archived: boolean,
+): Promise<AdminCommercialPartner | null> {
+  return requestAdmin<AdminCommercialPartner>(
+    `/admin/commercial-partners/${id}/${archived ? "archive" : "restore"}`,
+    "POST",
+  );
+}
+
+export function createCommercialPartnerContact(
+  partnerId: string,
+  payload: AdminCommercialPartnerContactInput,
+): Promise<AdminCommercialPartnerContact | null> {
+  return requestAdmin<AdminCommercialPartnerContact>(
+    `/admin/commercial-partners/${partnerId}/contacts`,
+    "POST",
+    payload,
+  );
+}
+
+export function updateCommercialPartnerContact(
+  id: string,
+  payload: Partial<AdminCommercialPartnerContactInput>,
+): Promise<AdminCommercialPartnerContact | null> {
+  return requestAdmin<AdminCommercialPartnerContact>(
+    `/admin/commercial-partner-contacts/${id}`,
+    "PUT",
+    payload,
+  );
+}
+
+export function listCommercialPartnerHistory(
+  id: string,
+): Promise<AdminCommercialAuditEvent[]> {
+  return getAdminList<AdminCommercialAuditEvent>(
+    `/admin/commercial-partners/${id}/history`,
+  );
+}
+
+export function listCommercialAgreements(
+  includeArchived = false,
+): Promise<AdminCommercialAgreement[]> {
+  return getAdminList<AdminCommercialAgreement>(
+    `/admin/commercial-agreements${includeArchived ? "?include_archived=true" : ""}`,
+  );
+}
+
+export function createCommercialAgreement(
+  payload: AdminCommercialAgreementCreateInput,
+): Promise<AdminCommercialAgreement | null> {
+  return requestAdmin<AdminCommercialAgreement>(
+    "/admin/commercial-agreements",
+    "POST",
+    payload,
+  );
+}
+
+export function setCommercialAgreementArchived(
+  id: string,
+  archived: boolean,
+): Promise<AdminCommercialAgreement | null> {
+  return requestAdmin<AdminCommercialAgreement>(
+    `/admin/commercial-agreements/${id}/${archived ? "archive" : "restore"}`,
+    "POST",
+  );
+}
+
+export function setCommercialPartnerContactArchived(
+  id: string,
+  archived: boolean,
+): Promise<AdminCommercialPartnerContact | null> {
+  return requestAdmin<AdminCommercialPartnerContact>(
+    `/admin/commercial-partner-contacts/${id}/${archived ? "archive" : "restore"}`,
+    "POST",
+  );
+}
+
+export function createCommercialAgreementRevision(
+  agreementId: string,
+  payload: AdminCommercialAgreementRevisionInput,
+): Promise<AdminCommercialAgreementRevision | null> {
+  return requestAdmin<AdminCommercialAgreementRevision>(
+    `/admin/commercial-agreements/${agreementId}/revisions`,
+    "POST",
+    payload,
+  );
+}
+
+export function activateCommercialAgreementRevision(
+  id: string,
+): Promise<AdminCommercialAgreementRevision | null> {
+  return requestAdmin<AdminCommercialAgreementRevision>(
+    `/admin/commercial-agreement-revisions/${id}/activate`,
+    "POST",
+  );
+}
+
+export function terminateCommercialAgreementRevision(
+  id: string,
+  endsOn: string,
+): Promise<AdminCommercialAgreementRevision | null> {
+  return requestAdmin<AdminCommercialAgreementRevision>(
+    `/admin/commercial-agreement-revisions/${id}/terminate`,
+    "POST",
+    { ends_on: endsOn },
+  );
+}
+
+export function listCommercialAgreementHistory(
+  id: string,
+): Promise<AdminCommercialAuditEvent[]> {
+  return getAdminList<AdminCommercialAuditEvent>(
+    `/admin/commercial-agreements/${id}/history`,
+  );
+}
+
+export function listCommercialAgreementEligibility(
+  productId: string,
+  pointId: string,
+): Promise<AdminCommercialAgreementEligibility[]> {
+  const query = new URLSearchParams({
+    product_id: productId,
+    point_id: pointId,
+  });
+  return getAdminList<AdminCommercialAgreementEligibility>(
+    `/admin/commercial-agreement-eligibility?${query.toString()}`,
+  );
 }
 
 export function listConsumptionPoints(

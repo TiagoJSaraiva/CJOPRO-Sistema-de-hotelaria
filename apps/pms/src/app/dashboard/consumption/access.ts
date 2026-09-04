@@ -5,6 +5,9 @@ type UserLike = Pick<AuthUser, "permissions"> | null;
 export type ConsumptionAccess = {
   canRead: boolean;
   canManage: boolean;
+  canReadCommercial: boolean;
+  canManagePartners: boolean;
+  canManageAgreements: boolean;
 };
 
 export function getConsumptionAccess(user: UserLike): ConsumptionAccess {
@@ -12,9 +15,19 @@ export function getConsumptionAccess(user: UserLike): ConsumptionAccess {
   return {
     canRead: permissions.includes(PERMISSIONS.CONSUMPTION_READ),
     canManage: permissions.includes(PERMISSIONS.CONSUMPTION_SETTINGS_MANAGE),
+    canReadCommercial: permissions.includes(
+      PERMISSIONS.COMMERCIAL_PARTNERS_READ,
+    ),
+    canManagePartners: permissions.includes(
+      PERMISSIONS.COMMERCIAL_PARTNERS_MANAGE,
+    ),
+    canManageAgreements: permissions.includes(
+      PERMISSIONS.COMMERCIAL_AGREEMENTS_MANAGE,
+    ),
   };
 }
 
 export function getConsumptionDefaultRoute(access: ConsumptionAccess) {
-  return access.canRead ? "/dashboard/consumption/points" : null;
+  if (access.canRead) return "/dashboard/consumption/points";
+  return access.canReadCommercial ? "/dashboard/consumption/partners" : null;
 }

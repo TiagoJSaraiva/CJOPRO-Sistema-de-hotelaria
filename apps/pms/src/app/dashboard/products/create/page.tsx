@@ -7,7 +7,11 @@ import { getUserFromSession } from "../../../../lib/auth";
 import { createProductAction } from "../actions";
 import { getProductsAccess, getProductsDefaultRoute } from "../access";
 import { ProductStatusMessage } from "../_components/ProductStatusMessage";
-import { listProductCategories } from "../../../../lib/adminApi";
+import {
+  listCommercialPartners,
+  listProductCategories,
+} from "../../../../lib/adminApi";
+import { PERMISSIONS } from "@hotel/shared";
 import { productsCreateGuide } from "../usageGuides";
 
 type ProductsCreatePageProps = {
@@ -39,7 +43,12 @@ export default async function ProductsCreatePage({
     );
   }
 
-  const categories = await listProductCategories();
+  const canReadPartners =
+    user?.permissions.includes(PERMISSIONS.COMMERCIAL_PARTNERS_READ) || false;
+  const [categories, partners] = await Promise.all([
+    listProductCategories(),
+    canReadPartners ? listCommercialPartners() : Promise.resolve([]),
+  ]);
 
   return (
     <DashboardEntityPageShell
@@ -72,7 +81,8 @@ export default async function ProductsCreatePage({
     >
       <div data-usage-guide="products-create-form">
         <p className="pms-status-muted">
-          Nesta etapa, todos os itens são fornecidos pelo hotel ativo.
+          Identifique se o item é fornecido pelo hotel ou por uma empresa
+          parceira. O fornecedor não poderá ser alterado depois da criação.
         </p>
         <DashboardCreateFormCard
           title="Criar produto ou serviço"
@@ -106,6 +116,45 @@ export default async function ProductsCreatePage({
                 ))}
             </select>
           </FormField>
+
+          <FormField label="Fornecedor" htmlFor="create-product-provider">
+            <select
+              id="create-product-provider"
+              name="provider_type"
+              defaultValue="hotel"
+              className="pms-field-input"
+              data-usage-guide="products-provider"
+            >
+              <option value="hotel">Hotel</option>
+              {canReadPartners ? (
+                <option value="partner">Parceiro comercial</option>
+              ) : null}
+            </select>
+          </FormField>
+
+          {canReadPartners ? (
+            <FormField
+              label="Empresa parceira"
+              htmlFor="create-product-partner"
+            >
+              <select
+                id="create-product-partner"
+                name="commercial_partner_id"
+                className="pms-field-input"
+              >
+                <option value="">Selecione ao usar fornecedor parceiro</option>
+                {partners
+                  .filter(
+                    (partner) => partner.is_active && !partner.archived_at,
+                  )
+                  .map((partner) => (
+                    <option key={partner.id} value={partner.id}>
+                      {partner.trade_name}
+                    </option>
+                  ))}
+              </select>
+            </FormField>
+          ) : null}
 
           <FormField label="Código interno" htmlFor="create-product-code">
             <input

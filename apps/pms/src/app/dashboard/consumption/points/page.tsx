@@ -44,6 +44,18 @@ export default async function ConsumptionPointsPage({
           href: "/dashboard/consumption/offers",
           isVisible: access.canRead,
         },
+        {
+          key: "partners",
+          label: "Parceiros",
+          href: "/dashboard/consumption/partners",
+          isVisible: access.canReadCommercial,
+        },
+        {
+          key: "agreements",
+          label: "Acordos",
+          href: "/dashboard/consumption/agreements",
+          isVisible: access.canReadCommercial,
+        },
       ]}
       statusContent={<ConsumptionStatusMessage status={status} />}
     >

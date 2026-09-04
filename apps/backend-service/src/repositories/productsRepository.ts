@@ -14,7 +14,8 @@ import {
 
 const CATEGORY_FIELDS =
   "id,hotel_id,name,display_order,is_active,archived_at,created_at,updated_at";
-const PRODUCT_FIELDS = `id,hotel_id,name,description,internal_code,kind,sales_unit,unit_price,status,archived_at,created_at,updated_at,category:product_categories(${CATEGORY_FIELDS})`;
+const PARTNER_FIELDS = "id,trade_name,is_active,archived_at";
+const PRODUCT_FIELDS = `id,hotel_id,name,description,internal_code,kind,sales_unit,unit_price,status,archived_at,created_at,updated_at,provider_type,commercial_partner_id,category:product_categories(${CATEGORY_FIELDS}),commercial_partner:commercial_partners(${PARTNER_FIELDS})`;
 
 export type ProductWriteResult = "ok" | "conflict" | "not-found";
 type ProductCreate = Omit<
@@ -25,17 +26,62 @@ type ProductUpdate = Omit<
   TablesUpdate<"products">,
   "hotel_id" | "last_changed_by"
 >;
-type ProductRow = Omit<AdminProduct, "category"> & {
+type ProductRow = Omit<AdminProduct, "category" | "provider"> & {
+  provider_type: "hotel" | "partner";
+  commercial_partner_id: string | null;
   category: AdminProductCategory | AdminProductCategory[] | null;
+  commercial_partner:
+    | {
+        id: string;
+        trade_name: string;
+        is_active: boolean;
+        archived_at: string | null;
+      }
+    | Array<{
+        id: string;
+        trade_name: string;
+        is_active: boolean;
+        archived_at: string | null;
+      }>
+    | null;
 };
 type CatalogAuditRow = Omit<AdminCatalogAuditEvent, "actor_name"> & {
   users: { name: string } | { name: string }[] | null;
 };
 
 function mapProduct(row: ProductRow): AdminProduct {
-  const category = Array.isArray(row.category) ? row.category[0] : row.category;
+  const {
+    provider_type,
+    commercial_partner_id: commercialPartnerId,
+    commercial_partner,
+    ...rest
+  } = row;
+  const category = Array.isArray(rest.category)
+    ? rest.category[0]
+    : rest.category;
   if (!category) throw new Error("Produto sem categoria associada.");
-  return { ...row, category };
+  const partner = Array.isArray(commercial_partner)
+    ? commercial_partner[0]
+    : commercial_partner;
+  if (provider_type === "partner" && !partner)
+    throw new Error("Produto terceirizado sem parceiro associado.");
+  if (
+    provider_type === "partner" &&
+    partner &&
+    partner.id !== commercialPartnerId
+  )
+    throw new Error("Produto terceirizado com parceiro inconsistente.");
+  return {
+    ...rest,
+    category,
+    provider:
+      provider_type === "partner"
+        ? {
+            type: "partner",
+            partner: { id: partner!.id, trade_name: partner!.trade_name },
+          }
+        : { type: "hotel", partner: null },
+  };
 }
 
 export interface ProductsRepository {

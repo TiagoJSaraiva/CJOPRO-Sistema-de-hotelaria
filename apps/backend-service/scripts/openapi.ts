@@ -10,7 +10,7 @@ const workspaceRoot = path.resolve(
 );
 const outputPath = path.join(workspaceRoot, "docs", "openapi.json");
 const checkOnly = process.argv.includes("--check");
-const EXPECTED_OPERATION_COUNT = 156;
+const EXPECTED_OPERATION_COUNT = 178;
 const HTTP_METHODS = new Set([
   "get",
   "put",
@@ -49,12 +49,21 @@ function normalizeOpenApi30(value: unknown): unknown {
     normalized.exclusiveMinimum = true;
   }
 
+  // TypeBox emits JSON Schema's `type: "null"`, while this repository
+  // publishes OpenAPI 3.0 where nullability is represented by `nullable`.
+  if (normalized.type === "null") {
+    delete normalized.type;
+    normalized.nullable = true;
+  }
+
   if (Array.isArray(normalized.anyOf)) {
     const nonNull = normalized.anyOf.filter((item) => {
       return !(
         item &&
         typeof item === "object" &&
-        (item as Record<string, unknown>).type === "null"
+        ((item as Record<string, unknown>).type === "null" ||
+          ((item as Record<string, unknown>).nullable === true &&
+            Object.keys(item as Record<string, unknown>).length === 1))
       );
     });
 

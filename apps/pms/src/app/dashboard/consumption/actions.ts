@@ -38,12 +38,19 @@ async function requireManage(section: "points" | "offers") {
     go("forbidden", section);
 }
 
-function modes(formData: FormData): ConsumptionBillingMode[] | null {
+function modes(
+  formData: FormData,
+  allowPartnerDirect = false,
+): ConsumptionBillingMode[] | null {
   const result = formData
     .getAll("allowed_modes")
     .map(String)
     .filter((mode): mode is ConsumptionBillingMode =>
-      ["hotel_immediate", "stay_folio"].includes(mode),
+      [
+        "hotel_immediate",
+        "stay_folio",
+        ...(allowPartnerDirect ? ["partner_direct"] : []),
+      ].includes(mode),
     );
   return result.length && new Set(result).size === result.length
     ? result
@@ -53,7 +60,7 @@ function modes(formData: FormData): ConsumptionBillingMode[] | null {
 function policy(formData: FormData): AdminConsumptionOfferPolicyInput | null {
   if (formData.get("policy_source") !== "override")
     return { source: "inherit" };
-  const allowedModes = modes(formData);
+  const allowedModes = modes(formData, true);
   const defaultMode = String(
     formData.get("default_mode") || "",
   ) as ConsumptionBillingMode;
@@ -163,6 +170,8 @@ export async function createConsumptionOffersAction(formData: FormData) {
     await createConsumptionOffers(pointId, {
       product_ids: productIds,
       policy: parsedPolicy,
+      commercial_agreement_id:
+        String(formData.get("commercial_agreement_id") || "").trim() || null,
     });
   } catch {
     go("conflict", "offers");
@@ -180,6 +189,8 @@ export async function updateConsumptionOfferAction(formData: FormData) {
     await updateConsumptionOffer(id, {
       is_active: formData.get("is_active") === "on",
       policy: parsedPolicy,
+      commercial_agreement_id:
+        String(formData.get("commercial_agreement_id") || "").trim() || null,
     });
   } catch {
     go("conflict", "offers");

@@ -54,7 +54,10 @@ function includeArchived(query: ListQuery) {
   return query.include_archived === true || query.include_archived === "true";
 }
 
-function billingPolicy(value: unknown): AdminConsumptionBillingPolicy | null {
+function billingPolicy(
+  value: unknown,
+  allowPartnerDirect = false,
+): AdminConsumptionBillingPolicy | null {
   if (!value || typeof value !== "object") return null;
   const candidate = value as Partial<AdminConsumptionBillingPolicy>;
   const modes = Array.isArray(candidate.allowed_modes)
@@ -63,6 +66,7 @@ function billingPolicy(value: unknown): AdminConsumptionBillingPolicy | null {
   const validModes: ConsumptionBillingMode[] = [
     "hotel_immediate",
     "stay_folio",
+    ...(allowPartnerDirect ? (["partner_direct"] as const) : []),
   ];
   if (
     modes.length === 0 ||
@@ -80,7 +84,7 @@ function offerPolicy(value: unknown): AdminConsumptionOfferPolicyInput | null {
   const candidate = value as Partial<AdminConsumptionOfferPolicyInput>;
   if (candidate.source === "inherit") return { source: "inherit" };
   if (candidate.source !== "override") return null;
-  const parsed = billingPolicy(candidate);
+  const parsed = billingPolicy(candidate, true);
   return parsed ? { source: "override", ...parsed } : null;
 }
 
@@ -371,7 +375,13 @@ export function registerConsumptionSettingsRoutes(
         pointId,
         context.hotelId,
         context.auth.session.id,
-        { product_ids: productIds, policy },
+        {
+          product_ids: productIds,
+          policy,
+          commercial_agreement_id:
+            normalizeOptionalText(request.body?.commercial_agreement_id) ||
+            null,
+        },
       );
       if (result.result === "not-found")
         return sendError(
@@ -462,6 +472,9 @@ export function registerConsumptionSettingsRoutes(
         );
       payload.policy = policy;
     }
+    if (request.body?.commercial_agreement_id !== undefined)
+      payload.commercial_agreement_id =
+        normalizeOptionalText(request.body.commercial_agreement_id) || null;
     if (!id || Object.keys(payload).length === 0)
       return sendError(
         reply,

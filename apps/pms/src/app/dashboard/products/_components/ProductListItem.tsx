@@ -82,7 +82,7 @@ export function ProductListItem({
   return (
     <DashboardEntityListItemFrame
       title={product.name}
-      subtitle={`${product.category.name} · ${product.kind === "physical" ? "Produto" : "Serviço"} · R$ ${product.unit_price.toFixed(2)}${product.archived_at ? " · Arquivado" : ""}`}
+      subtitle={`${product.category.name} · ${product.kind === "physical" ? "Produto" : "Serviço"} · ${product.provider.type === "hotel" ? "Hotel" : product.provider.partner.trade_name} · R$ ${product.unit_price.toFixed(2)}${product.archived_at ? " · Arquivado" : ""}`}
       actions={
         <>
           <DashboardEntityActionButtons
@@ -172,7 +172,10 @@ export function ProductListItem({
                 </span>
               </div>
               <span>
-                <strong>Fornecedor:</strong> Hotel
+                <strong>Fornecedor:</strong>{" "}
+                {product.provider.type === "hotel"
+                  ? "Hotel"
+                  : product.provider.partner.trade_name}
               </span>
               <p className="m-0">{product.description || "Sem descrição."}</p>
             </section>
@@ -253,6 +256,13 @@ export function ProductListItem({
           data-usage-guide="products-form"
         >
           <input type="hidden" name="id" value={product.id} />
+          <p className="pms-status-muted">
+            <strong>Fornecedor:</strong>{" "}
+            {product.provider.type === "hotel"
+              ? "Hotel"
+              : product.provider.partner.trade_name}
+            . Para trocar o fornecedor, arquive este item e crie outro.
+          </p>
           <label className="pms-field">
             Nome
             <input

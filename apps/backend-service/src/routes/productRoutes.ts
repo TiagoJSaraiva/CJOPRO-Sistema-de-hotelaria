@@ -60,11 +60,19 @@ function productCreatePayload(
   const unitPrice = Number(body.unit_price);
   const code = normalizeOptionalText(body.internal_code);
   const description = normalizeOptionalText(body.description);
+  const providerType = body.provider_type || "hotel";
+  const partnerId = normalizeOptionalText(body.commercial_partner_id);
   if (!name || !categoryId || !Number.isFinite(unitPrice) || unitPrice < 0)
     return null;
   if (!isProductKind(body.kind) || !isProductSalesUnit(body.sales_unit))
     return null;
   if (body.status !== undefined && !isProductStatus(body.status)) return null;
+  if (
+    !["hotel", "partner"].includes(providerType) ||
+    (providerType === "hotel" && partnerId) ||
+    (providerType === "partner" && !partnerId)
+  )
+    return null;
   return {
     name,
     category_id: categoryId,
@@ -74,6 +82,8 @@ function productCreatePayload(
     status: body.status || "active",
     internal_code: code,
     description,
+    provider_type: providerType,
+    commercial_partner_id: providerType === "partner" ? partnerId : null,
   };
 }
 

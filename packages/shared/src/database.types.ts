@@ -57,6 +57,418 @@ export type Database = {
           },
         ]
       }
+      commercial_agreement_revision_points: {
+        Row: {
+          created_at: string
+          hotel_id: string
+          id: string
+          last_changed_by: string | null
+          point_id: string
+          revision_id: string
+        }
+        Insert: {
+          created_at?: string
+          hotel_id: string
+          id?: string
+          last_changed_by?: string | null
+          point_id: string
+          revision_id: string
+        }
+        Update: {
+          created_at?: string
+          hotel_id?: string
+          id?: string
+          last_changed_by?: string | null
+          point_id?: string
+          revision_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "commercial_agreement_revision_points_hotel_id_fkey"
+            columns: ["hotel_id"]
+            isOneToOne: false
+            referencedRelation: "hotels"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "commercial_agreement_revision_points_last_changed_by_fkey"
+            columns: ["last_changed_by"]
+            isOneToOne: false
+            referencedRelation: "users"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "commercial_agreement_revision_points_point_hotel_fkey"
+            columns: ["point_id", "hotel_id"]
+            isOneToOne: false
+            referencedRelation: "consumption_points"
+            referencedColumns: ["id", "hotel_id"]
+          },
+          {
+            foreignKeyName: "commercial_agreement_revision_points_revision_hotel_fkey"
+            columns: ["revision_id", "hotel_id"]
+            isOneToOne: false
+            referencedRelation: "commercial_agreement_revisions"
+            referencedColumns: ["id", "hotel_id"]
+          },
+        ]
+      }
+      commercial_agreement_revisions: {
+        Row: {
+          activated_at: string | null
+          activated_by: string | null
+          agreement_id: string
+          commercial_model: Database["public"]["Enums"]["commercial_model"]
+          commission_percentage: number | null
+          created_at: string
+          currency: string
+          ends_on: string | null
+          fixed_rent: number | null
+          hotel_id: string
+          id: string
+          last_changed_by: string | null
+          minimum_guarantee: number | null
+          notes: string | null
+          payment_recipient: Database["public"]["Enums"]["commercial_payment_recipient"]
+          rent_frequency:
+            | Database["public"]["Enums"]["commercial_rent_frequency"]
+            | null
+          starts_on: string
+          status: Database["public"]["Enums"]["commercial_revision_status"]
+          terminated_at: string | null
+          terminated_by: string | null
+          updated_at: string
+          version: number
+        }
+        Insert: {
+          activated_at?: string | null
+          activated_by?: string | null
+          agreement_id: string
+          commercial_model: Database["public"]["Enums"]["commercial_model"]
+          commission_percentage?: number | null
+          created_at?: string
+          currency: string
+          ends_on?: string | null
+          fixed_rent?: number | null
+          hotel_id: string
+          id?: string
+          last_changed_by?: string | null
+          minimum_guarantee?: number | null
+          notes?: string | null
+          payment_recipient: Database["public"]["Enums"]["commercial_payment_recipient"]
+          rent_frequency?:
+            | Database["public"]["Enums"]["commercial_rent_frequency"]
+            | null
+          starts_on: string
+          status?: Database["public"]["Enums"]["commercial_revision_status"]
+          terminated_at?: string | null
+          terminated_by?: string | null
+          updated_at?: string
+          version: number
+        }
+        Update: {
+          activated_at?: string | null
+          activated_by?: string | null
+          agreement_id?: string
+          commercial_model?: Database["public"]["Enums"]["commercial_model"]
+          commission_percentage?: number | null
+          created_at?: string
+          currency?: string
+          ends_on?: string | null
+          fixed_rent?: number | null
+          hotel_id?: string
+          id?: string
+          last_changed_by?: string | null
+          minimum_guarantee?: number | null
+          notes?: string | null
+          payment_recipient?: Database["public"]["Enums"]["commercial_payment_recipient"]
+          rent_frequency?:
+            | Database["public"]["Enums"]["commercial_rent_frequency"]
+            | null
+          starts_on?: string
+          status?: Database["public"]["Enums"]["commercial_revision_status"]
+          terminated_at?: string | null
+          terminated_by?: string | null
+          updated_at?: string
+          version?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "commercial_agreement_revisions_activated_by_fkey"
+            columns: ["activated_by"]
+            isOneToOne: false
+            referencedRelation: "users"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "commercial_agreement_revisions_agreement_hotel_fkey"
+            columns: ["agreement_id", "hotel_id"]
+            isOneToOne: false
+            referencedRelation: "commercial_agreements"
+            referencedColumns: ["id", "hotel_id"]
+          },
+          {
+            foreignKeyName: "commercial_agreement_revisions_hotel_id_fkey"
+            columns: ["hotel_id"]
+            isOneToOne: false
+            referencedRelation: "hotels"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "commercial_agreement_revisions_last_changed_by_fkey"
+            columns: ["last_changed_by"]
+            isOneToOne: false
+            referencedRelation: "users"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "commercial_agreement_revisions_terminated_by_fkey"
+            columns: ["terminated_by"]
+            isOneToOne: false
+            referencedRelation: "users"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      commercial_agreements: {
+        Row: {
+          archived_at: string | null
+          created_at: string
+          hotel_id: string
+          id: string
+          internal_number: string
+          last_changed_by: string | null
+          partner_id: string
+          updated_at: string
+        }
+        Insert: {
+          archived_at?: string | null
+          created_at?: string
+          hotel_id: string
+          id?: string
+          internal_number: string
+          last_changed_by?: string | null
+          partner_id: string
+          updated_at?: string
+        }
+        Update: {
+          archived_at?: string | null
+          created_at?: string
+          hotel_id?: string
+          id?: string
+          internal_number?: string
+          last_changed_by?: string | null
+          partner_id?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "commercial_agreements_hotel_id_fkey"
+            columns: ["hotel_id"]
+            isOneToOne: false
+            referencedRelation: "hotels"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "commercial_agreements_last_changed_by_fkey"
+            columns: ["last_changed_by"]
+            isOneToOne: false
+            referencedRelation: "users"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "commercial_agreements_partner_hotel_fkey"
+            columns: ["partner_id", "hotel_id"]
+            isOneToOne: false
+            referencedRelation: "commercial_partners"
+            referencedColumns: ["id", "hotel_id"]
+          },
+        ]
+      }
+      commercial_audit_events: {
+        Row: {
+          action: string
+          actor_id: string | null
+          changes: Json
+          created_at: string
+          entity_id: string
+          entity_type: Database["public"]["Enums"]["commercial_audit_entity"]
+          hotel_id: string
+          id: string
+        }
+        Insert: {
+          action: string
+          actor_id?: string | null
+          changes?: Json
+          created_at?: string
+          entity_id: string
+          entity_type: Database["public"]["Enums"]["commercial_audit_entity"]
+          hotel_id: string
+          id?: string
+        }
+        Update: {
+          action?: string
+          actor_id?: string | null
+          changes?: Json
+          created_at?: string
+          entity_id?: string
+          entity_type?: Database["public"]["Enums"]["commercial_audit_entity"]
+          hotel_id?: string
+          id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "commercial_audit_events_actor_id_fkey"
+            columns: ["actor_id"]
+            isOneToOne: false
+            referencedRelation: "users"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "commercial_audit_events_hotel_id_fkey"
+            columns: ["hotel_id"]
+            isOneToOne: false
+            referencedRelation: "hotels"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      commercial_partner_contacts: {
+        Row: {
+          archived_at: string | null
+          created_at: string
+          email: string | null
+          hotel_id: string
+          id: string
+          is_active: boolean
+          is_primary: boolean
+          last_changed_by: string | null
+          name: string
+          partner_id: string
+          phone: string | null
+          purpose: Database["public"]["Enums"]["commercial_contact_purpose"]
+          role: string | null
+          updated_at: string
+        }
+        Insert: {
+          archived_at?: string | null
+          created_at?: string
+          email?: string | null
+          hotel_id: string
+          id?: string
+          is_active?: boolean
+          is_primary?: boolean
+          last_changed_by?: string | null
+          name: string
+          partner_id: string
+          phone?: string | null
+          purpose?: Database["public"]["Enums"]["commercial_contact_purpose"]
+          role?: string | null
+          updated_at?: string
+        }
+        Update: {
+          archived_at?: string | null
+          created_at?: string
+          email?: string | null
+          hotel_id?: string
+          id?: string
+          is_active?: boolean
+          is_primary?: boolean
+          last_changed_by?: string | null
+          name?: string
+          partner_id?: string
+          phone?: string | null
+          purpose?: Database["public"]["Enums"]["commercial_contact_purpose"]
+          role?: string | null
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "commercial_partner_contacts_hotel_id_fkey"
+            columns: ["hotel_id"]
+            isOneToOne: false
+            referencedRelation: "hotels"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "commercial_partner_contacts_last_changed_by_fkey"
+            columns: ["last_changed_by"]
+            isOneToOne: false
+            referencedRelation: "users"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "commercial_partner_contacts_partner_hotel_fkey"
+            columns: ["partner_id", "hotel_id"]
+            isOneToOne: false
+            referencedRelation: "commercial_partners"
+            referencedColumns: ["id", "hotel_id"]
+          },
+        ]
+      }
+      commercial_partners: {
+        Row: {
+          archived_at: string | null
+          created_at: string
+          email: string | null
+          hotel_id: string
+          id: string
+          is_active: boolean
+          last_changed_by: string | null
+          legal_name: string
+          notes: string | null
+          phone: string | null
+          tax_id: string | null
+          trade_name: string
+          updated_at: string
+        }
+        Insert: {
+          archived_at?: string | null
+          created_at?: string
+          email?: string | null
+          hotel_id: string
+          id?: string
+          is_active?: boolean
+          last_changed_by?: string | null
+          legal_name: string
+          notes?: string | null
+          phone?: string | null
+          tax_id?: string | null
+          trade_name: string
+          updated_at?: string
+        }
+        Update: {
+          archived_at?: string | null
+          created_at?: string
+          email?: string | null
+          hotel_id?: string
+          id?: string
+          is_active?: boolean
+          last_changed_by?: string | null
+          legal_name?: string
+          notes?: string | null
+          phone?: string | null
+          tax_id?: string | null
+          trade_name?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "commercial_partners_hotel_id_fkey"
+            columns: ["hotel_id"]
+            isOneToOne: false
+            referencedRelation: "hotels"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "commercial_partners_last_changed_by_fkey"
+            columns: ["last_changed_by"]
+            isOneToOne: false
+            referencedRelation: "users"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       consumption_configuration_audit_events: {
         Row: {
           action: string
@@ -111,6 +523,7 @@ export type Database = {
             | Database["public"]["Enums"]["consumption_billing_mode"][]
             | null
           archived_at: string | null
+          commercial_agreement_id: string | null
           created_at: string
           default_billing_mode:
             | Database["public"]["Enums"]["consumption_billing_mode"]
@@ -130,6 +543,7 @@ export type Database = {
             | Database["public"]["Enums"]["consumption_billing_mode"][]
             | null
           archived_at?: string | null
+          commercial_agreement_id?: string | null
           created_at?: string
           default_billing_mode?:
             | Database["public"]["Enums"]["consumption_billing_mode"]
@@ -149,6 +563,7 @@ export type Database = {
             | Database["public"]["Enums"]["consumption_billing_mode"][]
             | null
           archived_at?: string | null
+          commercial_agreement_id?: string | null
           created_at?: string
           default_billing_mode?:
             | Database["public"]["Enums"]["consumption_billing_mode"]
@@ -164,6 +579,13 @@ export type Database = {
           updated_at?: string
         }
         Relationships: [
+          {
+            foreignKeyName: "consumption_offers_agreement_hotel_fkey"
+            columns: ["commercial_agreement_id", "hotel_id"]
+            isOneToOne: false
+            referencedRelation: "commercial_agreements"
+            referencedColumns: ["id", "hotel_id"]
+          },
           {
             foreignKeyName: "consumption_offers_hotel_id_fkey"
             columns: ["hotel_id"]
@@ -2862,6 +3284,7 @@ export type Database = {
         Row: {
           archived_at: string | null
           category_id: string
+          commercial_partner_id: string | null
           created_at: string
           description: string | null
           hotel_id: string
@@ -2870,6 +3293,7 @@ export type Database = {
           kind: Database["public"]["Enums"]["product_kind"]
           last_changed_by: string | null
           name: string
+          provider_type: Database["public"]["Enums"]["product_provider_type"]
           sales_unit: Database["public"]["Enums"]["product_sales_unit"]
           status: Database["public"]["Enums"]["product_status"]
           unit_price: number
@@ -2878,6 +3302,7 @@ export type Database = {
         Insert: {
           archived_at?: string | null
           category_id: string
+          commercial_partner_id?: string | null
           created_at?: string
           description?: string | null
           hotel_id: string
@@ -2886,6 +3311,7 @@ export type Database = {
           kind?: Database["public"]["Enums"]["product_kind"]
           last_changed_by?: string | null
           name: string
+          provider_type?: Database["public"]["Enums"]["product_provider_type"]
           sales_unit?: Database["public"]["Enums"]["product_sales_unit"]
           status?: Database["public"]["Enums"]["product_status"]
           unit_price: number
@@ -2894,6 +3320,7 @@ export type Database = {
         Update: {
           archived_at?: string | null
           category_id?: string
+          commercial_partner_id?: string | null
           created_at?: string
           description?: string | null
           hotel_id?: string
@@ -2902,6 +3329,7 @@ export type Database = {
           kind?: Database["public"]["Enums"]["product_kind"]
           last_changed_by?: string | null
           name?: string
+          provider_type?: Database["public"]["Enums"]["product_provider_type"]
           sales_unit?: Database["public"]["Enums"]["product_sales_unit"]
           status?: Database["public"]["Enums"]["product_status"]
           unit_price?: number
@@ -2913,6 +3341,13 @@ export type Database = {
             columns: ["category_id", "hotel_id"]
             isOneToOne: false
             referencedRelation: "product_categories"
+            referencedColumns: ["id", "hotel_id"]
+          },
+          {
+            foreignKeyName: "products_commercial_partner_hotel_fkey"
+            columns: ["commercial_partner_id", "hotel_id"]
+            isOneToOne: false
+            referencedRelation: "commercial_partners"
             referencedColumns: ["id", "hotel_id"]
           },
           {
@@ -3707,6 +4142,10 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      activate_commercial_agreement_revision: {
+        Args: { p_actor_id: string; p_hotel_id: string; p_revision_id: string }
+        Returns: string
+      }
       allocate_stay_folio_credit: {
         Args: {
           p_actor_id: string
@@ -3758,6 +4197,43 @@ export type Database = {
           p_item_id: string
           p_notes?: string
           p_work_order_id: string
+        }
+        Returns: string
+      }
+      create_commercial_agreement: {
+        Args: {
+          p_actor_id: string
+          p_commercial_model: Database["public"]["Enums"]["commercial_model"]
+          p_commission_percentage: number
+          p_ends_on: string
+          p_fixed_rent: number
+          p_hotel_id: string
+          p_internal_number: string
+          p_minimum_guarantee: number
+          p_notes: string
+          p_partner_id: string
+          p_payment_recipient: Database["public"]["Enums"]["commercial_payment_recipient"]
+          p_point_ids: string[]
+          p_rent_frequency: Database["public"]["Enums"]["commercial_rent_frequency"]
+          p_starts_on: string
+        }
+        Returns: string
+      }
+      create_commercial_agreement_revision: {
+        Args: {
+          p_actor_id: string
+          p_agreement_id: string
+          p_commercial_model: Database["public"]["Enums"]["commercial_model"]
+          p_commission_percentage: number
+          p_ends_on: string
+          p_fixed_rent: number
+          p_hotel_id: string
+          p_minimum_guarantee: number
+          p_notes: string
+          p_payment_recipient: Database["public"]["Enums"]["commercial_payment_recipient"]
+          p_point_ids: string[]
+          p_rent_frequency: Database["public"]["Enums"]["commercial_rent_frequency"]
+          p_starts_on: string
         }
         Returns: string
       }
@@ -4006,6 +4482,15 @@ export type Database = {
         }
         Returns: string
       }
+      set_commercial_agreement_revision_points: {
+        Args: {
+          p_actor_id: string
+          p_hotel_id: string
+          p_point_ids: string[]
+          p_revision_id: string
+        }
+        Returns: string
+      }
       set_maintenance_notification_status: {
         Args: {
           p_hotel_id: string
@@ -4039,6 +4524,15 @@ export type Database = {
           p_paid_at?: string
           p_recovery_id: string
           p_reference_code?: string
+        }
+        Returns: string
+      }
+      terminate_commercial_agreement_revision: {
+        Args: {
+          p_actor_id: string
+          p_ends_on: string
+          p_hotel_id: string
+          p_revision_id: string
         }
         Returns: string
       }
@@ -4176,6 +4670,10 @@ export type Database = {
         }
         Returns: string
       }
+      validate_commercial_actor: {
+        Args: { p_actor_id: string; p_hotel_id: string }
+        Returns: undefined
+      }
       validate_reservation_capacity: {
         Args: { p_reservation_id: string }
         Returns: undefined
@@ -4183,6 +4681,17 @@ export type Database = {
     }
     Enums: {
       catalog_audit_entity: "product" | "product_category"
+      commercial_audit_entity:
+        | "partner"
+        | "partner_contact"
+        | "agreement"
+        | "agreement_revision"
+        | "agreement_revision_point"
+      commercial_contact_purpose: "operational" | "financial" | "general"
+      commercial_model: "fixed_rent" | "revenue_share" | "hybrid"
+      commercial_payment_recipient: "hotel" | "partner" | "both"
+      commercial_rent_frequency: "monthly" | "quarterly" | "yearly"
+      commercial_revision_status: "draft" | "activated" | "terminated"
       consumption_billing_mode:
         | "hotel_immediate"
         | "stay_folio"
@@ -4272,6 +4781,7 @@ export type Database = {
         | "canceled"
       payment_status: "pending" | "partial" | "paid" | "refunded"
       product_kind: "physical" | "service"
+      product_provider_type: "hotel" | "partner"
       product_sales_unit:
         | "unit"
         | "portion"
@@ -4441,6 +4951,18 @@ export const Constants = {
   public: {
     Enums: {
       catalog_audit_entity: ["product", "product_category"],
+      commercial_audit_entity: [
+        "partner",
+        "partner_contact",
+        "agreement",
+        "agreement_revision",
+        "agreement_revision_point",
+      ],
+      commercial_contact_purpose: ["operational", "financial", "general"],
+      commercial_model: ["fixed_rent", "revenue_share", "hybrid"],
+      commercial_payment_recipient: ["hotel", "partner", "both"],
+      commercial_rent_frequency: ["monthly", "quarterly", "yearly"],
+      commercial_revision_status: ["draft", "activated", "terminated"],
       consumption_billing_mode: [
         "hotel_immediate",
         "stay_folio",
@@ -4542,6 +5064,7 @@ export const Constants = {
       ],
       payment_status: ["pending", "partial", "paid", "refunded"],
       product_kind: ["physical", "service"],
+      product_provider_type: ["hotel", "partner"],
       product_sales_unit: [
         "unit",
         "portion",

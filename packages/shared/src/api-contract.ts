@@ -4,6 +4,9 @@ import type {
   AdminConsumptionOfferBatchInput,
   AdminConsumptionPointInput,
   AdminConsumptionReorderInput,
+  AdminCommercialAgreementCreateInput,
+  AdminCommercialPartnerInput,
+  AdminCommercialPartnerContactInput,
   AdminFinancialTransactionCreateInput,
   AdminHotelCreateInput,
   AdminMaintenanceOccurrenceCreateInput,
@@ -235,24 +238,159 @@ export const ProductCategoryUpdateSchema = Type.Partial(
   ProductCategoryBodySchema,
   { $id: "ProductCategoryUpdateInput" },
 );
-export const ProductBodySchema = Type.Object(
+const productCommon = {
+  name: Type.String({ minLength: 1, maxLength: 160 }),
+  category_id: uuid(),
+  description: optionalNullable(Type.String({ maxLength: 1000 })),
+  internal_code: optionalNullable(Type.String({ minLength: 1, maxLength: 80 })),
+  kind: ProductKindSchema,
+  sales_unit: ProductSalesUnitSchema,
+  unit_price: Type.Number({ minimum: 0 }),
+  status: Type.Optional(ProductStatusSchema),
+};
+export const ProductBodySchema = Type.Union(
+  [
+    Type.Object(
+      {
+        ...productCommon,
+        provider_type: Type.Optional(Type.Literal("hotel")),
+        commercial_partner_id: Type.Optional(Type.Null()),
+      },
+      strict,
+    ),
+    Type.Object(
+      {
+        ...productCommon,
+        provider_type: Type.Literal("partner"),
+        commercial_partner_id: uuid(),
+      },
+      strict,
+    ),
+  ],
+  { $id: "ProductCreateInput" },
+);
+export const ProductUpdateSchema = Type.Partial(
+  Type.Object(productCommon, strict),
+  { ...strict, $id: "ProductUpdateInput" },
+);
+
+const CommercialContactPurposeSchema = Type.Union([
+  Type.Literal("operational"),
+  Type.Literal("financial"),
+  Type.Literal("general"),
+]);
+const CommercialModelSchema = Type.Union([
+  Type.Literal("fixed_rent"),
+  Type.Literal("revenue_share"),
+  Type.Literal("hybrid"),
+]);
+const CommercialRentFrequencySchema = Type.Union([
+  Type.Literal("monthly"),
+  Type.Literal("quarterly"),
+  Type.Literal("yearly"),
+]);
+const CommercialPaymentRecipientSchema = Type.Union([
+  Type.Literal("hotel"),
+  Type.Literal("partner"),
+  Type.Literal("both"),
+]);
+export const CommercialPartnerBodySchema = Type.Object(
+  {
+    trade_name: Type.String({ minLength: 1, maxLength: 160 }),
+    legal_name: Type.String({ minLength: 1, maxLength: 200 }),
+    tax_id: optionalNullable(Type.String({ minLength: 3, maxLength: 40 })),
+    email: optionalNullable(Type.String({ format: "email", maxLength: 254 })),
+    phone: optionalNullable(Type.String({ maxLength: 40 })),
+    notes: optionalNullable(Type.String({ maxLength: 2000 })),
+    is_active: Type.Optional(Type.Boolean()),
+  },
+  { ...strict, $id: "CommercialPartnerInput" },
+);
+export const CommercialPartnerUpdateSchema = Type.Partial(
+  CommercialPartnerBodySchema,
+  { $id: "CommercialPartnerUpdateInput" },
+);
+export const CommercialPartnerContactBodySchema = Type.Object(
   {
     name: Type.String({ minLength: 1, maxLength: 160 }),
-    category_id: uuid(),
-    description: optionalNullable(Type.String({ maxLength: 1000 })),
-    internal_code: optionalNullable(
-      Type.String({ minLength: 1, maxLength: 80 }),
-    ),
-    kind: ProductKindSchema,
-    sales_unit: ProductSalesUnitSchema,
-    unit_price: Type.Number({ minimum: 0 }),
-    status: Type.Optional(ProductStatusSchema),
+    role: optionalNullable(Type.String({ maxLength: 120 })),
+    purpose: CommercialContactPurposeSchema,
+    email: optionalNullable(Type.String({ format: "email", maxLength: 254 })),
+    phone: optionalNullable(Type.String({ maxLength: 40 })),
+    is_primary: Type.Optional(Type.Boolean()),
+    is_active: Type.Optional(Type.Boolean()),
   },
-  { ...strict, $id: "ProductCreateInput" },
+  { ...strict, $id: "CommercialPartnerContactInput" },
 );
-export const ProductUpdateSchema = Type.Partial(ProductBodySchema, {
-  $id: "ProductUpdateInput",
-});
+export const CommercialPartnerContactUpdateSchema = Type.Partial(
+  CommercialPartnerContactBodySchema,
+  { $id: "CommercialPartnerContactUpdateInput" },
+);
+const commercialRevisionCommon = {
+  starts_on: date(),
+  ends_on: optionalNullable(date()),
+  payment_recipient: CommercialPaymentRecipientSchema,
+  notes: optionalNullable(Type.String({ maxLength: 2000 })),
+  point_ids: Type.Array(uuid(), { minItems: 1, uniqueItems: true }),
+};
+export const CommercialAgreementRevisionBodySchema = Type.Union(
+  [
+    Type.Object(
+      {
+        ...commercialRevisionCommon,
+        commercial_model: Type.Literal("fixed_rent"),
+        fixed_rent: Type.Number({ minimum: 0 }),
+        rent_frequency: CommercialRentFrequencySchema,
+        commission_percentage: Type.Optional(Type.Null()),
+        minimum_guarantee: Type.Optional(Type.Null()),
+      },
+      strict,
+    ),
+    Type.Object(
+      {
+        ...commercialRevisionCommon,
+        commercial_model: Type.Literal("revenue_share"),
+        fixed_rent: Type.Optional(Type.Null()),
+        rent_frequency: Type.Optional(Type.Null()),
+        commission_percentage: Type.Number({ minimum: 0, maximum: 100 }),
+        minimum_guarantee: Type.Optional(Type.Null()),
+      },
+      strict,
+    ),
+    Type.Object(
+      {
+        ...commercialRevisionCommon,
+        commercial_model: Type.Literal("hybrid"),
+        fixed_rent: Type.Number({ minimum: 0 }),
+        rent_frequency: CommercialRentFrequencySchema,
+        commission_percentage: Type.Number({ minimum: 0, maximum: 100 }),
+        minimum_guarantee: optionalNullable(Type.Number({ minimum: 0 })),
+      },
+      strict,
+    ),
+  ],
+  { $id: "CommercialAgreementRevisionInput" },
+);
+export const CommercialAgreementRevisionUpdateSchema = Type.Partial(
+  CommercialAgreementRevisionBodySchema,
+  { $id: "CommercialAgreementRevisionUpdateInput" },
+);
+export const CommercialAgreementBodySchema = Type.Object(
+  {
+    partner_id: uuid(),
+    internal_number: Type.String({ minLength: 1, maxLength: 80 }),
+    revision: CommercialAgreementRevisionBodySchema,
+  },
+  { ...strict, $id: "CommercialAgreementCreateInput" },
+);
+export const CommercialAgreementTerminateBodySchema = Type.Object(
+  { ends_on: date() },
+  { ...strict, $id: "CommercialAgreementTerminateInput" },
+);
+export const CommercialAgreementPointsBodySchema = Type.Object(
+  { point_ids: Type.Array(uuid(), { minItems: 1, uniqueItems: true }) },
+  { ...strict, $id: "CommercialAgreementPointsInput" },
+);
 
 const ConsumptionBillingModeSchema = Type.Union([
   Type.Literal("hotel_immediate"),
@@ -273,6 +411,19 @@ export const ConsumptionBillingPolicySchema = Type.Object(
   },
   { ...strict, $id: "ConsumptionBillingPolicy" },
 );
+export const ConsumptionPointBillingPolicySchema = Type.Object(
+  {
+    allowed_modes: Type.Array(
+      Type.Union([Type.Literal("hotel_immediate"), Type.Literal("stay_folio")]),
+      { minItems: 1, uniqueItems: true },
+    ),
+    default_mode: Type.Union([
+      Type.Literal("hotel_immediate"),
+      Type.Literal("stay_folio"),
+    ]),
+  },
+  { ...strict, $id: "ConsumptionPointBillingPolicy" },
+);
 export const ConsumptionPointBodySchema = Type.Object(
   {
     name: Type.String({ minLength: 1, maxLength: 120 }),
@@ -282,7 +433,7 @@ export const ConsumptionPointBodySchema = Type.Object(
     description: optionalNullable(Type.String({ maxLength: 1000 })),
     display_order: Type.Optional(Type.Integer({ minimum: 0 })),
     is_active: Type.Optional(Type.Boolean()),
-    default_policy: ConsumptionBillingPolicySchema,
+    default_policy: ConsumptionPointBillingPolicySchema,
   },
   { ...strict, $id: "ConsumptionPointInput" },
 );
@@ -311,6 +462,7 @@ export const ConsumptionOfferBatchBodySchema = Type.Object(
   {
     product_ids: Type.Array(uuid(), { minItems: 1, uniqueItems: true }),
     policy: ConsumptionOfferPolicySchema,
+    commercial_agreement_id: optionalNullable(uuid()),
   },
   { ...strict, $id: "ConsumptionOfferBatchInput" },
 );
@@ -320,6 +472,7 @@ export const ConsumptionOfferUpdateSchema = Type.Partial(
       display_order: Type.Integer({ minimum: 0 }),
       is_active: Type.Boolean(),
       policy: ConsumptionOfferPolicySchema,
+      commercial_agreement_id: optionalNullable(uuid()),
     },
     strict,
   ),
@@ -568,6 +721,28 @@ export const CustomerSchema = Type.Object(
   },
   { ...strict, $id: "Customer" },
 );
+export const CommercialPartnerSummarySchema = Type.Object(
+  {
+    id: uuid(),
+    trade_name: Type.String(),
+    is_active: Type.Boolean(),
+    archived_at: nullable(dateTime()),
+  },
+  { ...strict, $id: "CommercialPartnerSummary" },
+);
+export const ProductProviderSchema = Type.Union(
+  [
+    Type.Object({ type: Type.Literal("hotel"), partner: Type.Null() }, strict),
+    Type.Object(
+      {
+        type: Type.Literal("partner"),
+        partner: Type.Object({ id: uuid(), trade_name: Type.String() }, strict),
+      },
+      strict,
+    ),
+  ],
+  { $id: "ProductProvider" },
+);
 export const ProductSchema = Type.Object(
   {
     id: uuid(),
@@ -581,6 +756,7 @@ export const ProductSchema = Type.Object(
     unit_price: Type.Number(),
     status: ProductStatusSchema,
     archived_at: nullable(dateTime()),
+    provider: Type.Ref("ProductProvider"),
     ...timestamps,
   },
   { ...strict, $id: "Product" },
@@ -613,6 +789,118 @@ export const CatalogAuditEventSchema = Type.Object(
     created_at: dateTime(),
   },
   { ...strict, $id: "CatalogAuditEvent" },
+);
+export const CommercialPartnerContactSchema = Type.Object(
+  {
+    id: uuid(),
+    hotel_id: uuid(),
+    partner_id: uuid(),
+    name: Type.String(),
+    role: nullable(Type.String()),
+    purpose: CommercialContactPurposeSchema,
+    email: nullable(Type.String()),
+    phone: nullable(Type.String()),
+    is_primary: Type.Boolean(),
+    is_active: Type.Boolean(),
+    archived_at: nullable(dateTime()),
+    ...timestamps,
+  },
+  { ...strict, $id: "CommercialPartnerContact" },
+);
+export const CommercialPartnerSchema = Type.Object(
+  {
+    ...CommercialPartnerSummarySchema.properties,
+    hotel_id: uuid(),
+    legal_name: Type.String(),
+    tax_id: nullable(Type.String()),
+    email: nullable(Type.String()),
+    phone: nullable(Type.String()),
+    notes: nullable(Type.String()),
+    contacts: Type.Array(Type.Ref("CommercialPartnerContact")),
+    ...timestamps,
+  },
+  { ...strict, $id: "CommercialPartner" },
+);
+const CommercialRevisionStatusSchema = Type.Union([
+  Type.Literal("draft"),
+  Type.Literal("activated"),
+  Type.Literal("terminated"),
+]);
+const CommercialRevisionEffectiveStatusSchema = Type.Union([
+  Type.Literal("draft"),
+  Type.Literal("scheduled"),
+  Type.Literal("current"),
+  Type.Literal("expired"),
+  Type.Literal("terminated"),
+  Type.Literal("superseded"),
+]);
+export const CommercialAgreementRevisionSchema = Type.Object(
+  {
+    id: uuid(),
+    hotel_id: uuid(),
+    agreement_id: uuid(),
+    version: Type.Integer(),
+    starts_on: date(),
+    ends_on: nullable(date()),
+    status: CommercialRevisionStatusSchema,
+    effective_status: CommercialRevisionEffectiveStatusSchema,
+    commercial_model: CommercialModelSchema,
+    fixed_rent: nullable(Type.Number()),
+    rent_frequency: nullable(CommercialRentFrequencySchema),
+    commission_percentage: nullable(Type.Number()),
+    minimum_guarantee: nullable(Type.Number()),
+    payment_recipient: CommercialPaymentRecipientSchema,
+    currency: Type.String(),
+    notes: nullable(Type.String()),
+    point_ids: Type.Array(uuid()),
+    activated_at: nullable(dateTime()),
+    terminated_at: nullable(dateTime()),
+    ...timestamps,
+  },
+  { ...strict, $id: "CommercialAgreementRevision" },
+);
+export const CommercialAgreementSchema = Type.Object(
+  {
+    id: uuid(),
+    hotel_id: uuid(),
+    partner: Type.Ref("CommercialPartnerSummary"),
+    internal_number: Type.String(),
+    archived_at: nullable(dateTime()),
+    revisions: Type.Array(Type.Ref("CommercialAgreementRevision")),
+    current_revision: nullable(Type.Ref("CommercialAgreementRevision")),
+    ...timestamps,
+  },
+  { ...strict, $id: "CommercialAgreement" },
+);
+export const CommercialAgreementEligibilitySchema = Type.Object(
+  {
+    agreement_id: uuid(),
+    internal_number: Type.String(),
+    eligible: Type.Boolean(),
+    reason: nullable(Type.String()),
+    revision: nullable(Type.Ref("CommercialAgreementRevision")),
+  },
+  { ...strict, $id: "CommercialAgreementEligibility" },
+);
+export const CommercialAuditEventSchema = Type.Object(
+  {
+    id: uuid(),
+    hotel_id: uuid(),
+    entity_type: Type.Union([
+      Type.Literal("partner"),
+      Type.Literal("partner_contact"),
+      Type.Literal("agreement"),
+      Type.Literal("agreement_revision"),
+      Type.Literal("agreement_revision_point"),
+    ]),
+    entity_id: uuid(),
+    actor_id: nullable(uuid()),
+    actor_name: nullable(Type.String()),
+    action: Type.String(),
+    changes: Type.Record(Type.String(), Type.Unknown()),
+    created_at: dateTime(),
+  },
+  { ...strict, $id: "CommercialAuditEvent" },
 );
 export const ConsumptionPointSchema = Type.Object(
   {
@@ -650,6 +938,16 @@ const ConsumptionUnavailableReasonSchema = Type.Union([
   Type.Literal("product_archived"),
   Type.Literal("category_inactive"),
   Type.Literal("category_archived"),
+  Type.Literal("partner_inactive"),
+  Type.Literal("partner_archived"),
+  Type.Literal("agreement_missing"),
+  Type.Literal("agreement_draft"),
+  Type.Literal("agreement_scheduled"),
+  Type.Literal("agreement_expired"),
+  Type.Literal("agreement_terminated"),
+  Type.Literal("agreement_outside_point"),
+  Type.Literal("billing_mode_incompatible"),
+  Type.Literal("agreement_revision_missing"),
 ]);
 export const ConsumptionOfferSchema = Type.Object(
   {
@@ -666,6 +964,10 @@ export const ConsumptionOfferSchema = Type.Object(
     ]),
     effective_available: Type.Boolean(),
     unavailable_reasons: Type.Array(ConsumptionUnavailableReasonSchema),
+    commercial_agreement: nullable(
+      Type.Object({ id: uuid(), internal_number: Type.String() }, strict),
+    ),
+    commercial_revision: nullable(Type.Ref("CommercialAgreementRevision")),
     archived_at: nullable(dateTime()),
     ...timestamps,
   },
@@ -2104,6 +2406,21 @@ type ContractCompatibility = [
   Assert<Compatible<typeof CustomerBodySchema, AdminCustomerCreateInput>>,
   Assert<Compatible<typeof ProductBodySchema, AdminProductCreateInput>>,
   Assert<
+    Compatible<typeof CommercialPartnerBodySchema, AdminCommercialPartnerInput>
+  >,
+  Assert<
+    Compatible<
+      typeof CommercialPartnerContactBodySchema,
+      AdminCommercialPartnerContactInput
+    >
+  >,
+  Assert<
+    Compatible<
+      typeof CommercialAgreementBodySchema,
+      AdminCommercialAgreementCreateInput
+    >
+  >,
+  Assert<
     Compatible<typeof ConsumptionPointBodySchema, AdminConsumptionPointInput>
   >,
   Assert<
@@ -2181,7 +2498,17 @@ export const API_COMPONENT_SCHEMAS = [
   ProductUpdateSchema,
   ProductCategoryBodySchema,
   ProductCategoryUpdateSchema,
+  CommercialPartnerBodySchema,
+  CommercialPartnerUpdateSchema,
+  CommercialPartnerContactBodySchema,
+  CommercialPartnerContactUpdateSchema,
+  CommercialAgreementRevisionBodySchema,
+  CommercialAgreementRevisionUpdateSchema,
+  CommercialAgreementBodySchema,
+  CommercialAgreementTerminateBodySchema,
+  CommercialAgreementPointsBodySchema,
   ConsumptionBillingPolicySchema,
+  ConsumptionPointBillingPolicySchema,
   ConsumptionPointBodySchema,
   ConsumptionPointUpdateSchema,
   ConsumptionOfferPolicySchema,
@@ -2209,8 +2536,16 @@ export const API_COMPONENT_SCHEMAS = [
   RoomSchema,
   CustomerSchema,
   ProductSchema,
+  CommercialPartnerSummarySchema,
+  ProductProviderSchema,
   ProductCategorySchema,
   CatalogAuditEventSchema,
+  CommercialPartnerContactSchema,
+  CommercialPartnerSchema,
+  CommercialAgreementRevisionSchema,
+  CommercialAgreementSchema,
+  CommercialAgreementEligibilitySchema,
+  CommercialAuditEventSchema,
   ConsumptionPointSchema,
   ConsumptionOfferSchema,
   ConsumptionConfigurationAuditEventSchema,
@@ -2534,6 +2869,189 @@ export const API_ROUTE_CONTRACTS: Readonly<Record<string, ApiRouteContract>> = {
     "Restaura uma categoria previamente arquivada.",
     itemSchema(ProductCategorySchema),
     { params: IdParamsSchema },
+  ),
+  "GET /admin/commercial-partners": admin(
+    "listCommercialPartners",
+    "Commercial partners",
+    "Lista parceiros comerciais do hotel ativo.",
+    listSchema(CommercialPartnerSchema),
+    { querystring: IncludeArchivedQuerySchema },
+  ),
+  "POST /admin/commercial-partners": route(
+    "createCommercialPartner",
+    "Commercial partners",
+    "Cria uma empresa parceira no hotel ativo.",
+    {
+      headers: AuthHeadersSchema,
+      security: [{ bearerAuth: [] }],
+      body: CommercialPartnerBodySchema,
+      response: { 201: itemSchema(CommercialPartnerSchema), ...adminErrors },
+    },
+  ),
+  "PUT /admin/commercial-partners/:id": admin(
+    "updateCommercialPartner",
+    "Commercial partners",
+    "Atualiza cadastro e situação de um parceiro.",
+    itemSchema(CommercialPartnerSchema),
+    { params: IdParamsSchema, body: CommercialPartnerUpdateSchema },
+  ),
+  "POST /admin/commercial-partners/:id/archive": admin(
+    "archiveCommercialPartner",
+    "Commercial partners",
+    "Arquiva um parceiro preservando seus vínculos.",
+    itemSchema(CommercialPartnerSchema),
+    { params: IdParamsSchema },
+  ),
+  "POST /admin/commercial-partners/:id/restore": admin(
+    "restoreCommercialPartner",
+    "Commercial partners",
+    "Restaura um parceiro arquivado.",
+    itemSchema(CommercialPartnerSchema),
+    { params: IdParamsSchema },
+  ),
+  "POST /admin/commercial-partners/:id/contacts": route(
+    "createCommercialPartnerContact",
+    "Commercial partners",
+    "Adiciona um contato ao parceiro.",
+    {
+      headers: AuthHeadersSchema,
+      security: [{ bearerAuth: [] }],
+      params: IdParamsSchema,
+      body: CommercialPartnerContactBodySchema,
+      response: {
+        201: itemSchema(CommercialPartnerContactSchema),
+        ...adminErrors,
+      },
+    },
+  ),
+  "PUT /admin/commercial-partner-contacts/:id": admin(
+    "updateCommercialPartnerContact",
+    "Commercial partners",
+    "Atualiza um contato comercial.",
+    itemSchema(CommercialPartnerContactSchema),
+    { params: IdParamsSchema, body: CommercialPartnerContactUpdateSchema },
+  ),
+  "POST /admin/commercial-partner-contacts/:id/archive": admin(
+    "archiveCommercialPartnerContact",
+    "Commercial partners",
+    "Arquiva um contato comercial.",
+    itemSchema(CommercialPartnerContactSchema),
+    { params: IdParamsSchema },
+  ),
+  "POST /admin/commercial-partner-contacts/:id/restore": admin(
+    "restoreCommercialPartnerContact",
+    "Commercial partners",
+    "Restaura um contato comercial.",
+    itemSchema(CommercialPartnerContactSchema),
+    { params: IdParamsSchema },
+  ),
+  "GET /admin/commercial-partners/:id/history": admin(
+    "listCommercialPartnerHistory",
+    "Commercial partners",
+    "Lista a auditoria imutável do parceiro e contatos.",
+    listSchema(CommercialAuditEventSchema),
+    { params: IdParamsSchema },
+  ),
+  "GET /admin/commercial-agreements": admin(
+    "listCommercialAgreements",
+    "Commercial agreements",
+    "Lista acordos comerciais do hotel ativo.",
+    listSchema(CommercialAgreementSchema),
+    { querystring: IncludeArchivedQuerySchema },
+  ),
+  "POST /admin/commercial-agreements": route(
+    "createCommercialAgreement",
+    "Commercial agreements",
+    "Cria um acordo com sua primeira revisão em rascunho.",
+    {
+      headers: AuthHeadersSchema,
+      security: [{ bearerAuth: [] }],
+      body: CommercialAgreementBodySchema,
+      response: { 201: itemSchema(CommercialAgreementSchema), ...adminErrors },
+    },
+  ),
+  "POST /admin/commercial-agreements/:id/archive": admin(
+    "archiveCommercialAgreement",
+    "Commercial agreements",
+    "Arquiva um acordo comercial sem apagar suas revisões.",
+    itemSchema(CommercialAgreementSchema),
+    { params: IdParamsSchema },
+  ),
+  "POST /admin/commercial-agreements/:id/restore": admin(
+    "restoreCommercialAgreement",
+    "Commercial agreements",
+    "Restaura um acordo comercial e sua configuração preservada.",
+    itemSchema(CommercialAgreementSchema),
+    { params: IdParamsSchema },
+  ),
+  "GET /admin/commercial-agreements/:id": admin(
+    "getCommercialAgreement",
+    "Commercial agreements",
+    "Consulta acordo, revisões e estado efetivo.",
+    itemSchema(CommercialAgreementSchema),
+    { params: IdParamsSchema },
+  ),
+  "POST /admin/commercial-agreements/:id/revisions": route(
+    "createCommercialAgreementRevision",
+    "Commercial agreements",
+    "Cria uma revisão em rascunho.",
+    {
+      headers: AuthHeadersSchema,
+      security: [{ bearerAuth: [] }],
+      params: IdParamsSchema,
+      body: CommercialAgreementRevisionBodySchema,
+      response: {
+        201: itemSchema(CommercialAgreementRevisionSchema),
+        ...adminErrors,
+      },
+    },
+  ),
+  "PUT /admin/commercial-agreement-revisions/:id": admin(
+    "updateCommercialAgreementRevision",
+    "Commercial agreements",
+    "Edita somente uma revisão em rascunho.",
+    itemSchema(CommercialAgreementRevisionSchema),
+    { params: IdParamsSchema, body: CommercialAgreementRevisionUpdateSchema },
+  ),
+  "PUT /admin/commercial-agreement-revisions/:id/points": admin(
+    "setCommercialAgreementRevisionPoints",
+    "Commercial agreements",
+    "Substitui atomicamente os pontos de uma revisão em rascunho.",
+    itemSchema(CommercialAgreementRevisionSchema),
+    { params: IdParamsSchema, body: CommercialAgreementPointsBodySchema },
+  ),
+  "POST /admin/commercial-agreement-revisions/:id/activate": admin(
+    "activateCommercialAgreementRevision",
+    "Commercial agreements",
+    "Ativa a revisão e encerra a anterior atomicamente.",
+    itemSchema(CommercialAgreementRevisionSchema),
+    { params: IdParamsSchema },
+  ),
+  "POST /admin/commercial-agreement-revisions/:id/terminate": admin(
+    "terminateCommercialAgreementRevision",
+    "Commercial agreements",
+    "Encerra uma revisão ativada.",
+    itemSchema(CommercialAgreementRevisionSchema),
+    { params: IdParamsSchema, body: CommercialAgreementTerminateBodySchema },
+  ),
+  "GET /admin/commercial-agreements/:id/history": admin(
+    "listCommercialAgreementHistory",
+    "Commercial agreements",
+    "Lista a auditoria imutável do acordo e suas revisões.",
+    listSchema(CommercialAuditEventSchema),
+    { params: IdParamsSchema },
+  ),
+  "GET /admin/commercial-agreement-eligibility": admin(
+    "listEligibleCommercialAgreements",
+    "Commercial agreements",
+    "Resolve acordos elegíveis para um produto e ponto.",
+    listSchema(CommercialAgreementEligibilitySchema),
+    {
+      querystring: Type.Object(
+        { product_id: uuid(), point_id: uuid() },
+        strict,
+      ),
+    },
   ),
   "GET /admin/consumption-points": admin(
     "listConsumptionPoints",

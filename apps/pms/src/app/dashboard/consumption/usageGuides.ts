@@ -55,3 +55,45 @@ export const consumptionOffersGuide: UsageGuideDefinition = {
     },
   ],
 };
+
+export const commercialPartnersGuide: UsageGuideDefinition = {
+  id: "commercial-partners",
+  title: "Cadastrar uma empresa parceira",
+  steps: [
+    {
+      id: "create",
+      target: "commercial-partner-form",
+      title: "Identifique a empresa",
+      description:
+        "Registre os dados comerciais separados dos fornecedores usados pela manutenção.",
+    },
+    {
+      id: "contacts",
+      target: "commercial-partner-list",
+      title: "Organize os contatos",
+      description:
+        "Classifique responsáveis operacionais e financeiros para facilitar a gestão do acordo.",
+    },
+  ],
+};
+
+export const commercialAgreementsGuide: UsageGuideDefinition = {
+  id: "commercial-agreements",
+  title: "Configurar um acordo de exploração",
+  steps: [
+    {
+      id: "terms",
+      target: "commercial-agreement-form",
+      title: "Defina modelo e vigência",
+      description:
+        "Escolha aluguel, comissão ou híbrido, o recebedor e os pontos abrangidos.",
+    },
+    {
+      id: "review",
+      target: "commercial-agreement-list",
+      title: "Revise antes de ativar",
+      description:
+        "A ativação torna os termos imutáveis. Mudanças futuras devem usar uma nova revisão.",
+    },
+  ],
+};

@@ -24,6 +24,9 @@ const consumptionPermissions = [
   "grant_consumption_courtesy",
   "void_consumption",
   "approve_consumption_adjustment",
+  "read_commercial_partners",
+  "manage_commercial_partners",
+  "manage_commercial_agreements",
 ];
 const maintenancePermissions = [
   ...permissions,
@@ -146,6 +149,7 @@ const products = [
     internal_code: "CAF-001",
     kind: "physical",
     sales_unit: "unit",
+    provider: { type: "hotel", partner: null },
     unit_price: 8,
     status: "active",
     archived_at: null,
@@ -161,6 +165,7 @@ const products = [
     internal_code: "SPA-050",
     kind: "service",
     sales_unit: "service",
+    provider: { type: "hotel", partner: null },
     unit_price: 180,
     status: "active",
     archived_at: null,
@@ -182,6 +187,10 @@ const productHistory = [
     created_at: "2026-05-02T10:00:00.000Z",
   },
 ];
+
+const commercialPartners = [];
+const commercialAgreements = [];
+const commercialHistory = [];
 
 const consumptionPoints = [
   {
@@ -244,6 +253,8 @@ const consumptionOffers = [
     },
     effective_available: true,
     unavailable_reasons: [],
+    commercial_agreement: null,
+    current_agreement_revision: null,
     archived_at: null,
     created_at: "2026-05-01T10:00:00.000Z",
     updated_at: "2026-05-01T10:00:00.000Z",
@@ -273,6 +284,8 @@ const consumptionOffers = [
     },
     effective_available: false,
     unavailable_reasons: ["offer_inactive"],
+    commercial_agreement: null,
+    current_agreement_revision: null,
     archived_at: null,
     created_at: "2026-05-01T10:00:00.000Z",
     updated_at: "2026-05-01T10:00:00.000Z",
@@ -561,6 +574,19 @@ const server = http.createServer(async (request, response) => {
     return;
   }
 
+  if (method === "POST" && url.pathname === "/test/reset-commercial") {
+    for (let index = consumptionOffers.length - 1; index >= 0; index -= 1) {
+      if (consumptionOffers[index].product?.provider?.type === "partner")
+        consumptionOffers.splice(index, 1);
+    }
+    products.splice(2);
+    commercialPartners.splice(0);
+    commercialAgreements.splice(0);
+    commercialHistory.splice(0);
+    sendJson(response, 200, { ok: true });
+    return;
+  }
+
   if (method === "GET" && url.pathname === "/auth/me") {
     const authorization = request.headers.authorization;
     sendJson(response, 200, {
@@ -584,6 +610,41 @@ const server = http.createServer(async (request, response) => {
     return;
   }
 
+  if (method === "POST" && url.pathname === "/admin/products") {
+    const body = await parseBody(request);
+    const category = productCategories.find(
+      (item) => item.id === body.category_id,
+    );
+    const partner = commercialPartners.find(
+      (item) => item.id === body.commercial_partner_id,
+    );
+    const created = {
+      id: `product-${products.length + 1}`,
+      hotel_id: "hotel-e2e",
+      name: body.name,
+      category,
+      description: body.description || null,
+      internal_code: body.internal_code || null,
+      kind: body.kind,
+      sales_unit: body.sales_unit,
+      unit_price: body.unit_price,
+      status: body.status,
+      provider:
+        body.provider_type === "partner"
+          ? {
+              type: "partner",
+              partner: { id: partner.id, trade_name: partner.trade_name },
+            }
+          : { type: "hotel", partner: null },
+      archived_at: null,
+      created_at: "2026-05-12T15:00:00.000Z",
+      updated_at: "2026-05-12T15:00:00.000Z",
+    };
+    products.push(created);
+    sendJson(response, 201, { item: created });
+    return;
+  }
+
   if (method === "GET" && url.pathname === "/admin/product-categories") {
     sendJson(response, 200, { items: productCategories });
     return;
@@ -594,6 +655,158 @@ const server = http.createServer(async (request, response) => {
     url.pathname === "/admin/products/product-coffee/history"
   ) {
     sendJson(response, 200, { items: productHistory });
+    return;
+  }
+
+  if (method === "GET" && url.pathname === "/admin/commercial-partners") {
+    sendJson(response, 200, { items: commercialPartners });
+    return;
+  }
+
+  if (method === "POST" && url.pathname === "/admin/commercial-partners") {
+    const body = await parseBody(request);
+    const created = {
+      id: `partner-${commercialPartners.length + 1}`,
+      hotel_id: "hotel-e2e",
+      trade_name: body.trade_name,
+      legal_name: body.legal_name,
+      tax_id: body.tax_id || null,
+      email: body.email || null,
+      phone: body.phone || null,
+      notes: body.notes || null,
+      is_active: body.is_active !== false,
+      archived_at: null,
+      contacts: [],
+      created_at: "2026-05-12T15:00:00.000Z",
+      updated_at: "2026-05-12T15:00:00.000Z",
+    };
+    commercialPartners.push(created);
+    commercialHistory.push({
+      id: `commercial-history-${commercialHistory.length + 1}`,
+      hotel_id: "hotel-e2e",
+      entity_type: "partner",
+      entity_id: created.id,
+      actor_id: "user-e2e",
+      actor_name: "Marina Costa",
+      action: "created",
+      changes: {},
+      created_at: created.created_at,
+    });
+    sendJson(response, 201, { item: created });
+    return;
+  }
+
+  const partnerContactMatch = url.pathname.match(
+    /^\/admin\/commercial-partners\/([^/]+)\/contacts$/,
+  );
+  if (method === "POST" && partnerContactMatch) {
+    const partner = commercialPartners.find(
+      (item) => item.id === partnerContactMatch[1],
+    );
+    const body = await parseBody(request);
+    const contact = {
+      id: `contact-${partner.contacts.length + 1}`,
+      hotel_id: "hotel-e2e",
+      partner_id: partner.id,
+      name: body.name,
+      role: body.role || null,
+      purpose: body.purpose,
+      email: body.email || null,
+      phone: body.phone || null,
+      is_primary: Boolean(body.is_primary),
+      is_active: body.is_active !== false,
+      archived_at: null,
+      created_at: "2026-05-12T15:00:00.000Z",
+      updated_at: "2026-05-12T15:00:00.000Z",
+    };
+    partner.contacts.push(contact);
+    sendJson(response, 201, { item: contact });
+    return;
+  }
+
+  const partnerHistoryMatch = url.pathname.match(
+    /^\/admin\/commercial-partners\/([^/]+)\/history$/,
+  );
+  if (method === "GET" && partnerHistoryMatch) {
+    sendJson(response, 200, {
+      items: commercialHistory.filter(
+        (event) => event.entity_id === partnerHistoryMatch[1],
+      ),
+    });
+    return;
+  }
+
+  if (method === "GET" && url.pathname === "/admin/commercial-agreements") {
+    sendJson(response, 200, { items: commercialAgreements });
+    return;
+  }
+
+  if (method === "POST" && url.pathname === "/admin/commercial-agreements") {
+    const body = await parseBody(request);
+    const partner = commercialPartners.find(
+      (item) => item.id === body.partner_id,
+    );
+    const agreementId = `agreement-${commercialAgreements.length + 1}`;
+    const revision = {
+      id: `revision-${commercialAgreements.length + 1}-1`,
+      hotel_id: "hotel-e2e",
+      agreement_id: agreementId,
+      version: 1,
+      ...body.revision,
+      status: "draft",
+      effective_status: "draft",
+      currency: "BRL",
+      activated_at: null,
+      terminated_at: null,
+      created_at: "2026-05-12T15:00:00.000Z",
+      updated_at: "2026-05-12T15:00:00.000Z",
+    };
+    const created = {
+      id: agreementId,
+      hotel_id: "hotel-e2e",
+      partner: {
+        id: partner.id,
+        trade_name: partner.trade_name,
+        is_active: partner.is_active,
+        archived_at: partner.archived_at,
+      },
+      internal_number: body.internal_number,
+      archived_at: null,
+      revisions: [revision],
+      current_revision: null,
+      created_at: revision.created_at,
+      updated_at: revision.updated_at,
+    };
+    commercialAgreements.push(created);
+    sendJson(response, 201, { item: created });
+    return;
+  }
+
+  const revisionActivateMatch = url.pathname.match(
+    /^\/admin\/commercial-agreement-revisions\/([^/]+)\/activate$/,
+  );
+  if (method === "POST" && revisionActivateMatch) {
+    const agreement = commercialAgreements.find((item) =>
+      item.revisions.some(
+        (revision) => revision.id === revisionActivateMatch[1],
+      ),
+    );
+    const revision = agreement.revisions.find(
+      (item) => item.id === revisionActivateMatch[1],
+    );
+    revision.status = "activated";
+    revision.effective_status = "current";
+    revision.activated_at = "2026-05-12T15:00:00.000Z";
+    agreement.current_revision = revision;
+    sendJson(response, 200, { item: revision });
+    return;
+  }
+
+  const agreementHistoryMatch = url.pathname.match(
+    /^\/admin\/commercial-agreements\/([^/]+)\/history$/,
+  );
+  if (method === "GET" && agreementHistoryMatch) {
+    sendJson(response, 200, { items: [] });
     return;
   }
 
@@ -692,6 +905,9 @@ const server = http.createServer(async (request, response) => {
     const created = (body.product_ids || []).map((productId) => {
       const product = products.find((item) => item.id === productId);
       const inherited = body.policy?.source !== "override";
+      const agreement = commercialAgreements.find(
+        (item) => item.id === body.commercial_agreement_id,
+      );
       const item = {
         id: `offer-${consumptionOffers.length + 1}-${productId}`,
         hotel_id: "hotel-e2e",
@@ -706,6 +922,14 @@ const server = http.createServer(async (request, response) => {
         display_order: (consumptionOffers.length + 1) * 10,
         is_active: true,
         policy: body.policy,
+        commercial_agreement: agreement
+          ? {
+              id: agreement.id,
+              internal_number: agreement.internal_number,
+              partner: agreement.partner,
+            }
+          : null,
+        current_agreement_revision: agreement?.current_revision || null,
         resolved_policy: inherited
           ? { source: "inherit", ...point.default_policy }
           : {

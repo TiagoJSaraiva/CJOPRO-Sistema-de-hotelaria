@@ -6,6 +6,7 @@ import type {
   AdminConsumptionOffer,
   AdminConsumptionPoint,
   AdminProduct,
+  AdminCommercialAgreement,
 } from "@hotel/shared";
 import {
   archiveConsumptionOfferAction,
@@ -24,17 +25,29 @@ const reasonLabels: Record<string, string> = {
   product_archived: "Produto arquivado",
   category_inactive: "Categoria inativa",
   category_archived: "Categoria arquivada",
+  partner_inactive: "Parceiro inativo",
+  partner_archived: "Parceiro arquivado",
+  agreement_missing: "Acordo não informado",
+  agreement_draft: "Acordo em rascunho",
+  agreement_scheduled: "Acordo com vigência futura",
+  agreement_expired: "Acordo expirado",
+  agreement_terminated: "Acordo encerrado",
+  agreement_outside_point: "Acordo não abrange este ponto",
+  billing_mode_incompatible: "Modo de cobrança incompatível com o recebedor",
+  agreement_revision_missing: "Sem revisão vigente",
 };
 
 export function ConsumptionOffersManager({
   points,
   products,
   offers,
+  agreements,
   canManage,
 }: {
   points: AdminConsumptionPoint[];
   products: AdminProduct[];
   offers: AdminConsumptionOffer[];
+  agreements: AdminCommercialAgreement[];
   canManage: boolean;
 }) {
   const firstActivePoint = points.find((point) => !point.archived_at)?.id || "";
@@ -46,6 +59,7 @@ export function ConsumptionOffersManager({
   const [pointFilter, setPointFilter] = useState("all");
   const [categoryFilter, setCategoryFilter] = useState("all");
   const [availabilityFilter, setAvailabilityFilter] = useState("all");
+  const [creationAgreementId, setCreationAgreementId] = useState("");
   const categories = useMemo(
     () =>
       Array.from(
@@ -62,6 +76,19 @@ export function ConsumptionOffersManager({
   );
   const selectableProducts = products.filter(
     (product) => !product.archived_at && !existingProductIds.has(product.id),
+  );
+  const agreementOptions = agreements.filter((agreement) =>
+    agreement.revisions.some((revision) =>
+      revision.point_ids.includes(creationPointId),
+    ),
+  );
+  const selectedAgreement = agreementOptions.find(
+    (agreement) => agreement.id === creationAgreementId,
+  );
+  const selectedAgreementRevision = selectedAgreement?.revisions[0];
+  const allowPartnerDirect = Boolean(
+    selectedAgreementRevision &&
+    ["partner", "both"].includes(selectedAgreementRevision.payment_recipient),
   );
   const visibleOffers = useMemo(() => {
     const normalized = query.trim().toLocaleLowerCase("pt-BR");
@@ -141,7 +168,10 @@ export function ConsumptionOffersManager({
                     <strong>{product.name}</strong>
                     <small className="block text-slate-600">
                       {product.category.name} · R${" "}
-                      {product.unit_price.toFixed(2)}
+                      {product.unit_price.toFixed(2)} ·{" "}
+                      {product.provider.type === "hotel"
+                        ? "Hotel"
+                        : product.provider.partner.trade_name}
                     </small>
                   </span>
                 </label>
@@ -152,6 +182,22 @@ export function ConsumptionOffersManager({
               </p>
             )}
           </fieldset>
+          <label className="pms-field">
+            Acordo comercial para produtos de parceiro
+            <select
+              name="commercial_agreement_id"
+              value={creationAgreementId}
+              onChange={(event) => setCreationAgreementId(event.target.value)}
+              className="pms-field-input"
+            >
+              <option value="">Não aplicável — itens do hotel</option>
+              {agreementOptions.map((agreement) => (
+                <option key={agreement.id} value={agreement.id}>
+                  {agreement.internal_number} · {agreement.partner.trade_name}
+                </option>
+              ))}
+            </select>
+          </label>
           <fieldset className="grid gap-2 rounded-lg border border-slate-200 p-3">
             <legend className="px-1 font-semibold">Política da oferta</legend>
             <label className="flex items-center gap-2">
@@ -185,7 +231,10 @@ export function ConsumptionOffersManager({
             </details>
           </fieldset>
           {policySource === "override" ? (
-            <BillingModeFields prefix="new-offer" />
+            <BillingModeFields
+              prefix="new-offer"
+              allowPartnerDirect={allowPartnerDirect}
+            />
           ) : null}
           <button
             type="submit"
@@ -277,7 +326,10 @@ export function ConsumptionOffersManager({
                     </h3>
                     <p className="m-0 text-sm text-slate-600">
                       {offer.point.name} · {offer.product.category.name} · R${" "}
-                      {offer.product.unit_price.toFixed(2)}
+                      {offer.product.unit_price.toFixed(2)} ·{" "}
+                      {offer.product.provider.type === "hotel"
+                        ? "Hotel"
+                        : offer.product.provider.partner.trade_name}
                     </p>
                   </div>
                   <span
@@ -293,6 +345,14 @@ export function ConsumptionOffersManager({
                   · padrão:{" "}
                   {billingModeLabel(offer.resolved_policy.default_mode)}
                 </p>
+                {offer.commercial_agreement ? (
+                  <p className="text-sm">
+                    Acordo {offer.commercial_agreement.internal_number}
+                    {offer.commercial_revision
+                      ? ` · revisão ${offer.commercial_revision.version} · ${offer.commercial_revision.starts_on} a ${offer.commercial_revision.ends_on || "sem término"}`
+                      : " · sem revisão aplicável"}
+                  </p>
+                ) : null}
                 {!offer.effective_available ? (
                   <ul className="text-sm text-amber-900">
                     {offer.unavailable_reasons.map((reason) => (
@@ -314,6 +374,11 @@ export function ConsumptionOffersManager({
                         className="grid gap-3"
                       >
                         <input type="hidden" name="id" value={offer.id} />
+                        <input
+                          type="hidden"
+                          name="commercial_agreement_id"
+                          value={offer.commercial_agreement?.id || ""}
+                        />
                         <label className="flex items-center gap-2">
                           <input
                             type="checkbox"
@@ -337,6 +402,12 @@ export function ConsumptionOffersManager({
                           allowedModes={offer.resolved_policy.allowed_modes}
                           defaultMode={offer.resolved_policy.default_mode}
                           prefix={offer.id}
+                          allowPartnerDirect={Boolean(
+                            offer.commercial_revision &&
+                            ["partner", "both"].includes(
+                              offer.commercial_revision.payment_recipient,
+                            ),
+                          )}
                         />
                         <button type="submit" className="pms-button-primary">
                           Salvar oferta

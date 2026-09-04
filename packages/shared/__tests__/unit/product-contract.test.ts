@@ -51,6 +51,9 @@ describe("product catalog contract", () => {
 
   it("supports partial edits and validates category inputs", () => {
     expect(Check(ProductUpdateSchema, { unit_price: 9 })).toBe(true);
+    expect(Check(ProductUpdateSchema, { provider_type: "partner" })).toBe(
+      false,
+    );
     expect(
       Check(ProductCategoryBodySchema, {
         name: "Frigobar",

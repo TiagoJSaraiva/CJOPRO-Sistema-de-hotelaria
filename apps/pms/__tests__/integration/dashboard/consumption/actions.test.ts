@@ -102,6 +102,7 @@ describe("dashboard/consumption/actions", () => {
     expect(mocks.createOffers).toHaveBeenCalledWith("point-1", {
       product_ids: ["product-1", "product-2"],
       policy: { source: "inherit" },
+      commercial_agreement_id: null,
     });
   });
 

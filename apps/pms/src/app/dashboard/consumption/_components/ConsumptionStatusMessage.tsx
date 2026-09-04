@@ -1,5 +1,9 @@
 const messages: Record<string, string> = {
   created: "Configuração criada com sucesso.",
+  "contact-created": "Contato comercial adicionado com sucesso.",
+  "revision-created": "Nova revisão criada em rascunho.",
+  activated: "Revisão comercial ativada com sucesso.",
+  terminated: "Revisão comercial encerrada com sucesso.",
   updated: "Configuração atualizada com sucesso.",
   reordered: "Ordem atualizada com sucesso.",
   invalid: "Revise os campos obrigatórios e a política de cobrança.",

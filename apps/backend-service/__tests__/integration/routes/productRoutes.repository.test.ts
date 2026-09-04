@@ -17,6 +17,7 @@ const category = {
   display_order: 0,
   is_active: true,
   archived_at: null,
+  provider: { type: "hotel" as const, partner: null },
 };
 const product = {
   id: "product-1",

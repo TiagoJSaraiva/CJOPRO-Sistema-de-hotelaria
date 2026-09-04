@@ -3,6 +3,7 @@ import { expect, test } from "./axe-test";
 
 const REFERENCE_TIME = new Date("2026-05-12T15:00:00.000Z");
 const TEST_TAGS = ["@visual", "@a11y"];
+const MOCK_BACKEND_URL = `http://127.0.0.1:${process.env.PMS_E2E_BACKEND_PORT || "4334"}`;
 
 async function authenticate(
   context: BrowserContext,
@@ -266,7 +267,7 @@ test.describe("PMS UI quality", () => {
       await page.keyboard.press("Enter");
       const dialog = page.getByRole("dialog", { name: "Filtros de produtos" });
       await expect(dialog).toBeVisible();
-      await page.getByLabel("Tipo").selectOption("service");
+      await dialog.locator("select").nth(1).selectOption("service");
       await page.getByRole("button", { name: "Aplicar filtros" }).click();
       await expect(page.getByText("Massagem relaxante")).toBeVisible();
       await expect(page.getByText("Café espresso")).toBeHidden();
@@ -369,6 +370,138 @@ test.describe("PMS UI quality", () => {
       await page.evaluate(() => window.scrollTo(0, 0));
       await stabilizeVisualState(page);
       await expect(page).toHaveScreenshot("consumption-offers.png");
+    },
+  );
+
+  test(
+    "configura parceiro, acordo e oferta terceirizada",
+    { tag: TEST_TAGS },
+    async ({ page, context, baseURL, auditAccessibility }) => {
+      test.setTimeout(120_000);
+      await preparePage(page);
+      await authenticate(
+        context,
+        baseURL || "http://127.0.0.1:3001",
+        "consumption-e2e-token",
+      );
+      await page.request.post(`${MOCK_BACKEND_URL}/test/reset-commercial`);
+      await page.goto("/dashboard/consumption/partners");
+
+      await page.getByLabel("Nome comercial").first().fill("Spa Azul E2E");
+      await page.getByLabel("Razão social").first().fill("Spa Azul Ltda");
+      await page.getByLabel("E-mail").first().fill("spa@example.com");
+      await page.getByRole("button", { name: "Criar parceiro" }).click();
+      const partnerCard = page
+        .getByRole("article")
+        .filter({ hasText: "Spa Azul E2E" })
+        .last();
+      await expect(partnerCard).toBeVisible();
+      await partnerCard.locator("details").first().locator("summary").click();
+      const contactForm = partnerCard.locator("form").filter({
+        has: page.getByRole("button", { name: "Adicionar contato" }),
+      });
+      await contactForm
+        .getByLabel("Nome", { exact: true })
+        .fill("Ana Financeiro");
+      await contactForm
+        .getByLabel("E-mail", { exact: true })
+        .fill("ana@spa.example");
+      await contactForm
+        .getByRole("button", { name: "Adicionar contato" })
+        .click();
+      await expect(page).toHaveURL(/status=contact-created/);
+
+      await page.getByRole("link", { name: "Acordos" }).click();
+      await page
+        .locator('select[name="partner_id"]')
+        .selectOption({ label: "Spa Azul E2E" });
+      await page.getByLabel("Número interno").fill("AC-E2E");
+      await page.locator('input[name="starts_on"]').first().fill("2026-05-01");
+      await page
+        .locator('select[name="commercial_model"]')
+        .first()
+        .selectOption("hybrid");
+      await page.locator('input[name="fixed_rent"]').first().fill("500");
+      await page
+        .locator('select[name="rent_frequency"]')
+        .first()
+        .selectOption("monthly");
+      await page
+        .locator('input[name="commission_percentage"]')
+        .first()
+        .fill("8");
+      await page.locator('input[name="minimum_guarantee"]').first().fill("900");
+      await page
+        .locator('select[name="payment_recipient"]')
+        .first()
+        .selectOption("both");
+      await page
+        .locator('input[name="point_ids"][value="point-reception"]')
+        .first()
+        .check();
+      await page
+        .getByRole("button", { name: "Criar rascunho do acordo" })
+        .click();
+      const agreementCard = page
+        .getByRole("article")
+        .filter({ hasText: "AC-E2E" })
+        .last();
+      await expect(agreementCard).toContainText("Rascunho");
+      await agreementCard.getByText("Ativar", { exact: true }).click();
+      await agreementCard
+        .getByRole("button", { name: "Confirmar ativação" })
+        .click();
+      await expect(
+        page.getByRole("article").filter({ hasText: "AC-E2E" }).last(),
+      ).toContainText("Vigente");
+
+      await page.goto("/dashboard/products/create");
+      await page.getByLabel("Nome").fill("Massagem parceira E2E");
+      await page.getByLabel("Categoria").selectOption("category-wellness");
+      await page.getByLabel("Fornecedor").selectOption("partner");
+      await page
+        .getByLabel("Empresa parceira")
+        .selectOption({ label: "Spa Azul E2E" });
+      await page.getByLabel("Tipo").selectOption("service");
+      await page.getByLabel("Unidade de venda").selectOption("service");
+      await page.getByLabel("Preço unitário").fill("220");
+      await page.getByRole("button", { name: "Criar item" }).click();
+      await expect(page.getByText("Produto criado com sucesso.")).toBeVisible();
+
+      await page.goto("/dashboard/consumption/offers");
+      await page.getByLabel("Ponto de consumo").selectOption("point-reception");
+      await page
+        .locator("fieldset")
+        .filter({ hasText: "Produtos do catálogo" })
+        .locator("label")
+        .filter({ hasText: "Massagem parceira E2E" })
+        .last()
+        .getByRole("checkbox")
+        .check();
+      await page
+        .getByLabel("Acordo comercial para produtos de parceiro")
+        .selectOption({ label: "AC-E2E · Spa Azul E2E" });
+      await page.getByText("Sobrescrever para estas ofertas").click();
+      await page
+        .locator('input[name="allowed_modes"][value="partner_direct"]')
+        .check();
+      await page
+        .locator('select[name="default_mode"]')
+        .first()
+        .selectOption("partner_direct");
+      await page
+        .getByRole("button", { name: "Vincular produtos selecionados" })
+        .click();
+      await expect(
+        page.getByText("Massagem parceira E2E").last(),
+      ).toBeVisible();
+      await expect(page.getByText(/Acordo AC-E2E/).last()).toBeVisible();
+
+      await auditAccessibility("parceiros-e-acordos-comerciais");
+      await page.evaluate(() => window.scrollTo(0, 0));
+      await stabilizeVisualState(page);
+      await expect(page).toHaveScreenshot("commercial-partners-agreements.png");
+      await page.request.post(`${MOCK_BACKEND_URL}/test/reset-commercial`);
     },
   );
 

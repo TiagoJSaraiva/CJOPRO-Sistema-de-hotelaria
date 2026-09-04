@@ -80,6 +80,8 @@ describe("dashboard/products/actions", () => {
       sales_unit: "service",
       unit_price: 180,
       status: "active",
+      provider_type: "hotel",
+      commercial_partner_id: null,
     });
   });
 
@@ -94,6 +96,24 @@ describe("dashboard/products/actions", () => {
       /^REDIRECT:\/dashboard\/products\/create\?status=create_missing_fields&r=/,
     );
     expect(createProductMock).not.toHaveBeenCalled();
+  });
+
+  it("creates a partner-provided item with an immutable provider reference", async () => {
+    getUserFromSessionMock.mockResolvedValueOnce({
+      permissions: [PERMISSIONS.PRODUCT_CREATE],
+    });
+    const formData = productForm();
+    formData.set("provider_type", "partner");
+    formData.set("commercial_partner_id", "partner-1");
+    await expect(createProductAction(formData)).rejects.toThrow(
+      /^REDIRECT:\/dashboard\/products\/create\?status=created&r=/,
+    );
+    expect(createProductMock).toHaveBeenCalledWith(
+      expect.objectContaining({
+        provider_type: "partner",
+        commercial_partner_id: "partner-1",
+      }),
+    );
   });
 
   it("archives and restores an item with the existing delete permission", async () => {

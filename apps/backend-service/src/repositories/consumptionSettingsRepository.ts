@@ -22,8 +22,11 @@ const POINT_FIELDS =
   "id,hotel_id,name,internal_code,description,display_order,is_active,default_allowed_billing_modes,default_billing_mode,archived_at,created_at,updated_at";
 const CATEGORY_FIELDS =
   "id,hotel_id,name,display_order,is_active,archived_at,created_at,updated_at";
-const PRODUCT_FIELDS = `id,hotel_id,name,description,internal_code,kind,sales_unit,unit_price,status,archived_at,created_at,updated_at,category:product_categories(${CATEGORY_FIELDS})`;
-const OFFER_FIELDS = `id,hotel_id,point_id,product_id,display_order,is_active,policy_source,allowed_billing_modes,default_billing_mode,archived_at,created_at,updated_at,point:consumption_points(${POINT_FIELDS}),product:products(${PRODUCT_FIELDS})`;
+const PARTNER_FIELDS = "id,trade_name,is_active,archived_at";
+const PRODUCT_FIELDS = `id,hotel_id,name,description,internal_code,kind,sales_unit,unit_price,status,archived_at,created_at,updated_at,provider_type,commercial_partner_id,category:product_categories(${CATEGORY_FIELDS}),commercial_partner:commercial_partners(${PARTNER_FIELDS})`;
+const AGREEMENT_REVISION_FIELDS =
+  "id,hotel_id,agreement_id,version,starts_on,ends_on,status,commercial_model,fixed_rent,rent_frequency,commission_percentage,minimum_guarantee,payment_recipient,currency,notes,activated_at,terminated_at,created_at,updated_at,points:commercial_agreement_revision_points(point_id)";
+const OFFER_FIELDS = `id,hotel_id,point_id,product_id,commercial_agreement_id,display_order,is_active,policy_source,allowed_billing_modes,default_billing_mode,archived_at,created_at,updated_at,point:consumption_points(${POINT_FIELDS}),product:products(${PRODUCT_FIELDS}),commercial_agreement:commercial_agreements(id,internal_number,revisions:commercial_agreement_revisions(${AGREEMENT_REVISION_FIELDS}))`;
 
 export type ConsumptionSettingsWriteResult = "ok" | "conflict" | "not-found";
 
@@ -46,6 +49,7 @@ type OfferRow = {
   hotel_id: string;
   point_id: string;
   product_id: string;
+  commercial_agreement_id: string | null;
   display_order: number;
   is_active: boolean;
   policy_source: "inherit" | "override";
@@ -56,15 +60,73 @@ type OfferRow = {
   updated_at?: string;
   point: PointRow | PointRow[] | null;
   product:
-    | (Omit<AdminProduct, "category"> & {
+    | (Omit<AdminProduct, "category" | "provider"> & {
+        provider_type: "hotel" | "partner";
+        commercial_partner_id: string | null;
         category: AdminProduct["category"] | AdminProduct["category"][] | null;
+        commercial_partner:
+          | {
+              id: string;
+              trade_name: string;
+              is_active: boolean;
+              archived_at: string | null;
+            }
+          | Array<{
+              id: string;
+              trade_name: string;
+              is_active: boolean;
+              archived_at: string | null;
+            }>
+          | null;
       })
     | Array<
-        Omit<AdminProduct, "category"> & {
+        Omit<AdminProduct, "category" | "provider"> & {
+          provider_type: "hotel" | "partner";
+          commercial_partner_id: string | null;
           category:
             AdminProduct["category"] | AdminProduct["category"][] | null;
+          commercial_partner:
+            | {
+                id: string;
+                trade_name: string;
+                is_active: boolean;
+                archived_at: string | null;
+              }
+            | Array<{
+                id: string;
+                trade_name: string;
+                is_active: boolean;
+                archived_at: string | null;
+              }>
+            | null;
         }
       >
+    | null;
+  commercial_agreement:
+    | {
+        id: string;
+        internal_number: string;
+        revisions: Array<
+          Omit<
+            NonNullable<AdminConsumptionOffer["commercial_revision"]>,
+            "point_ids" | "effective_status"
+          > & {
+            points: Array<{ point_id: string }> | { point_id: string } | null;
+          }
+        >;
+      }
+    | Array<{
+        id: string;
+        internal_number: string;
+        revisions: Array<
+          Omit<
+            NonNullable<AdminConsumptionOffer["commercial_revision"]>,
+            "point_ids" | "effective_status"
+          > & {
+            points: Array<{ point_id: string }> | { point_id: string } | null;
+          }
+        >;
+      }>
     | null;
 };
 type AuditRow = Omit<AdminConsumptionConfigurationAuditEvent, "actor_name"> & {
@@ -105,7 +167,32 @@ function mapOffer(row: OfferRow): AdminConsumptionOffer {
   const category = productRow ? one(productRow.category) : null;
   if (!point || !productRow || !category)
     throw new Error("Oferta sem ponto, produto ou categoria associada.");
-  const product: AdminProduct = { ...productRow, category };
+  const {
+    provider_type,
+    commercial_partner_id: commercialPartnerId,
+    commercial_partner,
+    ...productFields
+  } = productRow;
+  const partner = one(commercial_partner);
+  if (provider_type === "partner" && !partner)
+    throw new Error("Oferta terceirizada sem parceiro associado.");
+  if (
+    provider_type === "partner" &&
+    partner &&
+    partner.id !== commercialPartnerId
+  )
+    throw new Error("Oferta terceirizada com parceiro inconsistente.");
+  const product: AdminProduct = {
+    ...productFields,
+    category,
+    provider:
+      provider_type === "partner"
+        ? {
+            type: "partner",
+            partner: { id: partner!.id, trade_name: partner!.trade_name },
+          }
+        : { type: "hotel", partner: null },
+  };
   const inherited = row.policy_source === "inherit";
   const allowedModes = inherited
     ? point.default_allowed_billing_modes
@@ -124,6 +211,74 @@ function mapOffer(row: OfferRow): AdminConsumptionOffer {
   if (product.archived_at) reasons.push("product_archived");
   if (!category.is_active) reasons.push("category_inactive");
   if (category.archived_at) reasons.push("category_archived");
+
+  const agreement = one(row.commercial_agreement);
+  const today = new Date().toISOString().slice(0, 10);
+  const revisions = agreement?.revisions || [];
+  const scopedRevisions = revisions.filter((revision) => {
+    const points = Array.isArray(revision.points)
+      ? revision.points
+      : revision.points
+        ? [revision.points]
+        : [];
+    return points.some((scope) => scope.point_id === point.id);
+  });
+  const rawRevision = [...scopedRevisions].sort(
+    (a, b) => b.version - a.version,
+  )[0];
+  let commercialRevision: AdminConsumptionOffer["commercial_revision"] = null;
+  if (rawRevision) {
+    const { points, ...revision } = rawRevision;
+    const pointIds = (
+      Array.isArray(points) ? points : points ? [points] : []
+    ).map((scope) => scope.point_id);
+    const effectiveStatus =
+      revision.status === "draft"
+        ? "draft"
+        : revision.status === "terminated"
+          ? "terminated"
+          : revision.starts_on > today
+            ? "scheduled"
+            : revision.ends_on && revision.ends_on < today
+              ? "expired"
+              : "current";
+    commercialRevision = {
+      ...revision,
+      point_ids: pointIds,
+      effective_status: effectiveStatus,
+    };
+  }
+  if (product.provider.type === "partner") {
+    if (!partner!.is_active) reasons.push("partner_inactive");
+    if (partner!.archived_at) reasons.push("partner_archived");
+    if (!agreement) reasons.push("agreement_missing");
+    else if (!commercialRevision) reasons.push("agreement_outside_point");
+    else if (commercialRevision.effective_status === "draft")
+      reasons.push("agreement_draft");
+    else if (commercialRevision.effective_status === "scheduled")
+      reasons.push("agreement_scheduled");
+    else if (commercialRevision.effective_status === "expired")
+      reasons.push("agreement_expired");
+    else if (commercialRevision.effective_status === "terminated")
+      reasons.push("agreement_terminated");
+    if (commercialRevision) {
+      const acceptsHotel = ["hotel", "both"].includes(
+        commercialRevision.payment_recipient,
+      );
+      const acceptsPartner = ["partner", "both"].includes(
+        commercialRevision.payment_recipient,
+      );
+      if (
+        allowedModes.some((mode) => mode !== "partner_direct") &&
+        !acceptsHotel
+      )
+        reasons.push("billing_mode_incompatible");
+      if (allowedModes.includes("partner_direct") && !acceptsPartner)
+        reasons.push("billing_mode_incompatible");
+    }
+  } else if (agreement) {
+    reasons.push("billing_mode_incompatible");
+  }
 
   return {
     id: row.id,
@@ -152,6 +307,10 @@ function mapOffer(row: OfferRow): AdminConsumptionOffer {
     },
     effective_available: reasons.length === 0,
     unavailable_reasons: reasons,
+    commercial_agreement: agreement
+      ? { id: agreement.id, internal_number: agreement.internal_number }
+      : null,
+    commercial_revision: commercialRevision,
     archived_at: row.archived_at,
     created_at: row.created_at,
     updated_at: row.updated_at,
@@ -472,6 +631,7 @@ class SupabaseConsumptionSettingsRepository implements ConsumptionSettingsReposi
         display_order: maxOrder + (index + 1) * 10,
         is_active: true,
         last_changed_by: actorId,
+        commercial_agreement_id: input.commercial_agreement_id || null,
         ...policy,
       }),
     );
@@ -501,6 +661,8 @@ class SupabaseConsumptionSettingsRepository implements ConsumptionSettingsReposi
     if (input.display_order !== undefined)
       payload.display_order = input.display_order;
     if (input.is_active !== undefined) payload.is_active = input.is_active;
+    if (input.commercial_agreement_id !== undefined)
+      payload.commercial_agreement_id = input.commercial_agreement_id;
     Object.assign(payload, offerPolicy(input.policy));
     let query = createServerClient()
       .from("consumption_offers")

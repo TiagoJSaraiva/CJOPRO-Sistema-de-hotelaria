@@ -109,9 +109,11 @@ select role_id, permission_id
 from (
   select '70000000-0000-4000-8000-000000000002'::uuid as role_id, id as permission_id
   from public.permissions where type = 'HOTEL_PERMISSION'
+    and name not in ('read_commercial_partners', 'manage_commercial_partners', 'manage_commercial_agreements')
   union all
   select '70000000-0000-4000-8000-000000000003'::uuid as role_id, id as permission_id
   from public.permissions where type = 'HOTEL_PERMISSION'
+    and name not in ('read_commercial_partners', 'manage_commercial_partners', 'manage_commercial_agreements')
 ) assignments;
 
 insert into public.users (id, name, email, password_hash, is_active) values

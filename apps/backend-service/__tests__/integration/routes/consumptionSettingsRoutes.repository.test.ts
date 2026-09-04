@@ -37,6 +37,7 @@ const offer = {
     internal_code: point.internal_code,
     is_active: true,
     archived_at: null,
+    provider: { type: "hotel", partner: null },
   },
   product: {
     id: "40000000-0000-4000-8000-000000000001",
@@ -68,6 +69,8 @@ const offer = {
   },
   effective_available: true,
   unavailable_reasons: [],
+  commercial_agreement: null,
+  commercial_revision: null,
   archived_at: null,
 } satisfies AdminConsumptionOffer;
 
@@ -231,7 +234,11 @@ describe("consumption settings routes", () => {
       point.id,
       point.hotel_id,
       expect.any(String),
-      { product_ids: [offer.product.id], policy: { source: "inherit" } },
+      {
+        product_ids: [offer.product.id],
+        policy: { source: "inherit" },
+        commercial_agreement_id: null,
+      },
     );
     vi.mocked(repo.createOffers).mockResolvedValueOnce({ result: "conflict" });
     const conflict = await app.inject({

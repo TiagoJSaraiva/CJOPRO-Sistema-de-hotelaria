@@ -1,6 +1,6 @@
 begin;
 
-select plan(132);
+select plan(158);
 
 select ok(to_regclass('public.room_blocks') is not null, 'room_blocks exists');
 
@@ -78,7 +78,7 @@ select is((select count(*)::integer from public.hotels), 2, 'seed has two hotels
 select is((select count(*)::integer from public.rooms), 6, 'seed has six rooms');
 select is((select count(*)::integer from public.customers), 4, 'seed has four customers');
 select is((select count(*)::integer from public.products), 4, 'seed has four products');
-select is((select count(*)::integer from public.permissions), 68, 'seed matches all canonical application permissions');
+select is((select count(*)::integer from public.permissions), 71, 'seed matches all canonical application permissions');
 select is((select count(*)::integer from public.roles), 3, 'seed has one global role and two hotel roles');
 select is((select count(*)::integer from public.users), 3, 'seed has three local users');
 select is((select count(*)::integer from public.reservations), 4, 'seed has four reservations');
@@ -839,6 +839,208 @@ select is(
   ),
   'ok',
   'point ordering validates the complete non-archived list'
+);
+
+select ok(
+  to_regclass('public.commercial_partners') is not null
+    and to_regclass('public.commercial_partner_contacts') is not null
+    and to_regclass('public.commercial_agreements') is not null
+    and to_regclass('public.commercial_agreement_revisions') is not null
+    and to_regclass('public.commercial_agreement_revision_points') is not null,
+  'commercial partner and agreement tables exist'
+);
+select is(
+  (select array_agg(enumlabel order by enumsortorder)::text from pg_enum
+    where enumtypid = 'public.product_provider_type'::regtype),
+  '{hotel,partner}',
+  'product provider type distinguishes hotel and partner'
+);
+select is(
+  (select count(*)::integer from public.products where provider_type <> 'hotel' or commercial_partner_id is not null),
+  0,
+  'existing products are backfilled as hotel supplied'
+);
+select is(
+  (select count(*)::integer from public.permissions where name in (
+    'read_commercial_partners', 'manage_commercial_partners', 'manage_commercial_agreements'
+  )),
+  3,
+  'commercial permissions are registered idempotently'
+);
+select lives_ok(
+  $$ insert into public.commercial_partners(
+      id, hotel_id, trade_name, legal_name, email, last_changed_by
+    ) values (
+      'b1000000-0000-4000-8000-000000000001', '10000000-0000-4000-8000-000000000001',
+      'Spa Azul', 'Spa Azul Ltda', 'contato@spa.example', '80000000-0000-4000-8000-000000000002'
+    ) $$,
+  'a scoped commercial partner can be created'
+);
+select throws_ok(
+  $$ insert into public.commercial_partners(hotel_id, trade_name, legal_name)
+    values ('10000000-0000-4000-8000-000000000001', 'SPA AZUL', 'Outra empresa') $$,
+  '23505', null, 'partner trade names are unique without case sensitivity per hotel'
+);
+select lives_ok(
+  $$ insert into public.commercial_partner_contacts(
+      id, hotel_id, partner_id, name, purpose, email, is_primary, last_changed_by
+    ) values (
+      'b1100000-0000-4000-8000-000000000001', '10000000-0000-4000-8000-000000000001',
+      'b1000000-0000-4000-8000-000000000001', 'Ana', 'financial', 'ana@spa.example', true,
+      '80000000-0000-4000-8000-000000000002'
+    ) $$,
+  'partner contacts support purpose and primary designation'
+);
+select throws_ok(
+  $$ insert into public.commercial_partner_contacts(hotel_id, partner_id, name, email)
+    values ('10000000-0000-4000-8000-000000000002',
+      'b1000000-0000-4000-8000-000000000001', 'Contato cruzado', 'cross@example.com') $$,
+  '23514', null, 'partner contacts cannot cross hotel scope'
+);
+select lives_ok(
+  $$ insert into public.products(
+      id, hotel_id, name, category_id, unit_price, provider_type, commercial_partner_id,
+      kind, sales_unit, status, last_changed_by
+    ) values (
+      'b4000000-0000-4000-8000-000000000001', '10000000-0000-4000-8000-000000000001',
+      'Massagem parceira', '41000000-0000-4000-8000-000000000001', 180,
+      'partner', 'b1000000-0000-4000-8000-000000000001', 'service', 'service', 'active',
+      '80000000-0000-4000-8000-000000000002'
+    ) $$,
+  'catalog accepts a product supplied by a same-hotel partner'
+);
+select throws_ok(
+  $$ update public.products set provider_type = 'hotel', commercial_partner_id = null
+    where id = 'b4000000-0000-4000-8000-000000000001' $$,
+  '23514', null, 'product provider is immutable after creation'
+);
+select ok(
+  public.create_commercial_agreement(
+    '10000000-0000-4000-8000-000000000001', 'b1000000-0000-4000-8000-000000000001',
+    'AC-001', '80000000-0000-4000-8000-000000000002', current_date, null,
+    'hybrid', 500, 'monthly', 8, 900, 'both', 'Acordo pgTAP',
+    array['a1000000-0000-4000-8000-000000000001']::uuid[]
+  ) is not null,
+  'agreement and first revision are created atomically'
+);
+select is(
+  (select count(*)::integer from public.commercial_agreement_revisions revision
+    join public.commercial_agreement_revision_points scope on scope.revision_id = revision.id
+    join public.commercial_agreements agreement on agreement.id = revision.agreement_id
+    where agreement.internal_number = 'AC-001'),
+  1,
+  'agreement revision persists its point scope'
+);
+select throws_ok(
+  $$ insert into public.commercial_agreement_revisions(
+      hotel_id, agreement_id, version, starts_on, commercial_model, fixed_rent,
+      commission_percentage, payment_recipient, currency
+    ) select hotel_id, id, 99, current_date, 'fixed_rent', 100, 10, 'hotel', 'BRL'
+      from public.commercial_agreements where internal_number = 'AC-001' $$,
+  '23514', null, 'commercial model rejects incomplete or mixed terms'
+);
+select throws_ok(
+  $$ insert into public.commercial_agreement_revisions(
+      hotel_id, agreement_id, version, starts_on, status, commercial_model, fixed_rent,
+      rent_frequency, payment_recipient, currency, activated_at
+    ) select hotel_id, id, 98, current_date, 'activated', 'fixed_rent', 100,
+      'monthly', 'hotel', 'BRL', now()
+      from public.commercial_agreements where internal_number = 'AC-001' $$,
+  '23514', null, 'commercial revisions must be activated through the transactional routine'
+);
+select is(
+  public.activate_commercial_agreement_revision(
+    '10000000-0000-4000-8000-000000000001',
+    (select revision.id from public.commercial_agreement_revisions revision
+      join public.commercial_agreements agreement on agreement.id = revision.agreement_id
+      where agreement.internal_number = 'AC-001'),
+    '80000000-0000-4000-8000-000000000002'
+  ),
+  'ok',
+  'a complete revision can be activated atomically'
+);
+select throws_ok(
+  $$ update public.commercial_agreement_revisions set fixed_rent = 600
+    where agreement_id = (select id from public.commercial_agreements where internal_number = 'AC-001') $$,
+  '23514', null, 'activated revision terms are immutable'
+);
+select throws_ok(
+  $$ update public.commercial_agreement_revision_points set point_id = point_id
+    where revision_id = (select revision.id from public.commercial_agreement_revisions revision
+      join public.commercial_agreements agreement on agreement.id = revision.agreement_id
+      where agreement.internal_number = 'AC-001') $$,
+  '23514', null, 'activated revision scope is immutable'
+);
+select lives_ok(
+  $$ insert into public.consumption_offers(
+      id, hotel_id, point_id, product_id, commercial_agreement_id, policy_source,
+      allowed_billing_modes, default_billing_mode, last_changed_by
+    ) select
+      'b5000000-0000-4000-8000-000000000001', agreement.hotel_id,
+      'a1000000-0000-4000-8000-000000000001', 'b4000000-0000-4000-8000-000000000001',
+      agreement.id, 'override', array['partner_direct']::public.consumption_billing_mode[],
+      'partner_direct', '80000000-0000-4000-8000-000000000002'
+    from public.commercial_agreements agreement where internal_number = 'AC-001' $$,
+  'partner direct is accepted only for an eligible partner offer override'
+);
+select throws_ok(
+  $$ insert into public.consumption_offers(
+      hotel_id, point_id, product_id, policy_source, allowed_billing_modes, default_billing_mode
+    ) values (
+      '10000000-0000-4000-8000-000000000001', 'a1000000-0000-4000-8000-000000000001',
+      '40000000-0000-4000-8000-000000000002', 'override',
+      array['partner_direct']::public.consumption_billing_mode[], 'partner_direct'
+    ) $$,
+  '23514', null, 'hotel products cannot use partner direct payment'
+);
+select ok(
+  (select bool_and(relrowsecurity) from pg_class where oid in (
+    'public.commercial_partners'::regclass, 'public.commercial_partner_contacts'::regclass,
+    'public.commercial_agreements'::regclass, 'public.commercial_agreement_revisions'::regclass,
+    'public.commercial_agreement_revision_points'::regclass, 'public.commercial_audit_events'::regclass
+  )),
+  'RLS is enabled on all commercial tables'
+);
+select throws_ok(
+  $$ delete from public.commercial_partners where id = 'b1000000-0000-4000-8000-000000000001' $$,
+  '23514', null, 'commercial partners cannot be hard deleted'
+);
+select ok(
+  exists(select 1 from public.commercial_audit_events
+    where entity_id = 'b1000000-0000-4000-8000-000000000001'),
+  'commercial writes create audit events'
+);
+select throws_ok(
+  $$ update public.commercial_audit_events set action = 'altered'
+    where entity_id = 'b1000000-0000-4000-8000-000000000001' $$,
+  '23514', null, 'commercial audit is immutable'
+);
+select ok(
+  public.create_commercial_agreement(
+    '10000000-0000-4000-8000-000000000001', 'b1000000-0000-4000-8000-000000000001',
+    'AC-ARCHIVED', '80000000-0000-4000-8000-000000000002', current_date, null,
+    'fixed_rent', 300, 'monthly', null, null, 'hotel', null,
+    array['a1000000-0000-4000-8000-000000000001']::uuid[]
+  ) is not null,
+  'an agreement can be prepared as a draft before archiving'
+);
+update public.commercial_agreements
+  set archived_at = now(), last_changed_by = '80000000-0000-4000-8000-000000000002'
+  where internal_number = 'AC-ARCHIVED';
+select is(
+  public.activate_commercial_agreement_revision(
+    '10000000-0000-4000-8000-000000000001',
+    (select revision.id from public.commercial_agreement_revisions revision
+      join public.commercial_agreements agreement on agreement.id = revision.agreement_id
+      where agreement.internal_number = 'AC-ARCHIVED'),
+    '80000000-0000-4000-8000-000000000002'
+  ),
+  'conflict',
+  'an archived agreement cannot be activated'
+);
+select throws_ok(
+  $$ delete from public.commercial_agreements where internal_number = 'AC-001' $$,
+  '23514', null, 'commercial agreements cannot be hard deleted'
 );
 
 select * from finish();

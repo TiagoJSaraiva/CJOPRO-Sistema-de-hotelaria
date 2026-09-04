@@ -61,6 +61,13 @@ export function ProductsViewFilterableSection({
     () => applyProductViewFilters(products, appliedFilters),
     [products, appliedFilters],
   );
+  const partners = useMemo(() => {
+    const byId = new Map<string, { id: string; trade_name: string }>();
+    for (const product of products)
+      if (product.provider.type === "partner")
+        byId.set(product.provider.partner.id, product.provider.partner);
+    return Array.from(byId.values());
+  }, [products]);
 
   return (
     <EntityViewFilterableSection
@@ -177,6 +184,42 @@ export function ProductsViewFilterableSection({
               <option value="all">Todos</option>
               <option value="active">Ativo</option>
               <option value="inactive">Inativo</option>
+            </select>
+          </label>
+
+          <label className="pms-field">
+            <span>Tipo de fornecedor</span>
+            <select
+              value={draftFilters.providerType}
+              onChange={(event) =>
+                updateDraftFilter(
+                  "providerType",
+                  event.target.value as ProductViewFilters["providerType"],
+                )
+              }
+              className={viewFiltersFieldClassName}
+            >
+              <option value="all">Todos</option>
+              <option value="hotel">Hotel</option>
+              <option value="partner">Parceiro</option>
+            </select>
+          </label>
+
+          <label className="pms-field">
+            <span>Parceiro</span>
+            <select
+              value={draftFilters.partnerId}
+              onChange={(event) =>
+                updateDraftFilter("partnerId", event.target.value)
+              }
+              className={viewFiltersFieldClassName}
+            >
+              <option value="">Todos</option>
+              {partners.map((partner) => (
+                <option key={partner.id} value={partner.id}>
+                  {partner.trade_name}
+                </option>
+              ))}
             </select>
           </label>
 

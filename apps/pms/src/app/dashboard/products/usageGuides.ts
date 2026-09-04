@@ -46,6 +46,13 @@ export const productsCreateGuide: UsageGuideDefinition = {
       description:
         "Categoria, tipo, unidade e preço orientam a identificação operacional do item.",
     },
+    {
+      id: "provider",
+      target: "products-provider",
+      title: "Identifique o fornecedor",
+      description:
+        "Escolha hotel ou parceiro com atenção: o fornecedor fica imutável para preservar o histórico.",
+    },
   ],
 };
 

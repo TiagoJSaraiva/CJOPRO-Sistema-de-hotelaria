@@ -29,10 +29,11 @@ Fontes de verdade: `apps/pms/src`, `apps/backend-service/src`, `apps/booking-eng
 
 ## Catálogo comercial
 
-Produtos e serviços próprios pertencem ao hotel ativo. O catálogo usa categorias
-controladas por hotel, arquivamento lógico e trilha imutável de criação, edição,
-ativação e arquivamento. Estoque, cobrança, parceiros e vendas permanecem em
-fluxos separados: o catálogo é a referência comercial estável para essas etapas.
+Produtos e serviços pertencem ao hotel ativo e identificam um fornecedor
+imutável: o próprio hotel ou um parceiro comercial do mesmo hotel. O catálogo
+usa categorias controladas, arquivamento lógico e trilha imutável de criação,
+edição, ativação e arquivamento. Trocar o fornecedor exige arquivar o item e
+criar outro, preservando a identidade histórica.
 
 ## Configurações de vendas e consumo
 
@@ -43,19 +44,32 @@ cobrança e cada oferta pode herdá-la ou sobrescrevê-la.
 
 ```mermaid
 flowchart LR
-  catalog[Catálogo próprio] --> offer[Oferta produto–ponto]
+  partner[Parceiro comercial] --> agreement[Acordo estável]
+  agreement --> revision[Revisão contratual vigente]
+  revision -->|escopo e recebedor| offer
+  catalog[Catálogo único] --> offer[Oferta produto–ponto]
   point[Ponto de consumo] -->|política padrão| offer
   offer --> resolved[Política e disponibilidade resolvidas]
   resolved -.-> futureSale[Lançamento futuro de consumo]
   futureSale -.-> immediate[Pagamento imediato ao hotel]
   futureSale -.-> folio[Débito no fólio]
+  futureSale -.-> partnerPayment[Pagamento direto ao parceiro]
 ```
 
 Ponto, oferta, produto e categoria precisam estar ativos e não arquivados para
-que uma oferta esteja operacionalmente disponível. Alterações são auditadas e
-não existe exclusão física. O modo de pagamento direto ao parceiro está
-reservado no domínio, mas permanece bloqueado até a implementação de parceiros
-e acordos comerciais.
+que uma oferta esteja operacionalmente disponível. Produtos terceirizados
+também exigem parceiro ativo e um acordo cuja revisão vigente abranja o ponto.
+O recebedor da revisão limita os modos permitidos: cobrança do hotel exige
+recebedor `hotel` ou `both`, enquanto `partner_direct` só aparece em
+sobrescritas de oferta e exige `partner` ou `both`. Alterações são auditadas e
+não existe exclusão física.
+
+O acordo possui identidade estável e revisões numeradas. Revisões ativadas são
+imutáveis; uma nova revisão encerra atomicamente a anterior e não pode se
+sobrepor a outro acordo do mesmo parceiro no mesmo ponto. Os modelos são
+aluguel fixo, comissão sobre venda líquida operacional e híbrido com mínimo
+garantido opcional. Esta camada apenas configura os termos: ainda não calcula
+aluguel/comissão, recebe pagamento, faz split, repasse ou liquidação.
 
 Somente uma estadia em `checked_in` poderá receber lançamentos, e débitos de
 consumo no fólio deverão impedir o checkout enquanto não forem quitados. Essas

@@ -12,6 +12,9 @@ describe("consumption access", () => {
     ).toEqual({
       canRead: true,
       canManage: false,
+      canReadCommercial: false,
+      canManagePartners: false,
+      canManageAgreements: false,
     });
     expect(
       getConsumptionAccess({
@@ -20,15 +23,54 @@ describe("consumption access", () => {
     ).toEqual({
       canRead: false,
       canManage: true,
+      canReadCommercial: false,
+      canManagePartners: false,
+      canManageAgreements: false,
     });
   });
 
   it("routes only readers into the module", () => {
     expect(
-      getConsumptionDefaultRoute({ canRead: true, canManage: false }),
+      getConsumptionDefaultRoute({
+        canRead: true,
+        canManage: false,
+        canReadCommercial: false,
+        canManagePartners: false,
+        canManageAgreements: false,
+      }),
     ).toBe("/dashboard/consumption/points");
     expect(
-      getConsumptionDefaultRoute({ canRead: false, canManage: true }),
+      getConsumptionDefaultRoute({
+        canRead: false,
+        canManage: true,
+        canReadCommercial: false,
+        canManagePartners: false,
+        canManageAgreements: false,
+      }),
     ).toBeNull();
+    expect(
+      getConsumptionDefaultRoute({
+        canRead: false,
+        canManage: false,
+        canReadCommercial: true,
+        canManagePartners: false,
+        canManageAgreements: false,
+      }),
+    ).toBe("/dashboard/consumption/partners");
+  });
+
+  it("separates partner and agreement management permissions", () => {
+    expect(
+      getConsumptionAccess({
+        permissions: [
+          PERMISSIONS.COMMERCIAL_PARTNERS_READ,
+          PERMISSIONS.COMMERCIAL_AGREEMENTS_MANAGE,
+        ],
+      }),
+    ).toMatchObject({
+      canReadCommercial: true,
+      canManagePartners: false,
+      canManageAgreements: true,
+    });
   });
 });

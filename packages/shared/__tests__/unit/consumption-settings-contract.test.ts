@@ -50,6 +50,22 @@ describe("consumption settings contract", () => {
     expect(Check(ConsumptionOfferPolicySchema, { source: "override" })).toBe(
       false,
     );
+    expect(
+      Check(ConsumptionPointBodySchema, {
+        name: "Piscina",
+        default_policy: {
+          allowed_modes: ["partner_direct"],
+          default_mode: "partner_direct",
+        },
+      }),
+    ).toBe(false);
+    expect(
+      Check(ConsumptionOfferPolicySchema, {
+        source: "override",
+        allowed_modes: ["partner_direct"],
+        default_mode: "partner_direct",
+      }),
+    ).toBe(true);
   });
 
   it("validates an atomic product batch", () => {

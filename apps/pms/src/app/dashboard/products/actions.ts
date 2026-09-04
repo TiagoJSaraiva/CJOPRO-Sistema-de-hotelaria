@@ -48,6 +48,8 @@ export async function createProductAction(formData: FormData): Promise<void> {
   const categoryId = String(formData.get("category_id") || "").trim();
   const kind = String(formData.get("kind") || "");
   const salesUnit = String(formData.get("sales_unit") || "");
+  const providerType = String(formData.get("provider_type") || "hotel");
+  const partnerId = String(formData.get("commercial_partner_id") || "").trim();
   if (
     !name ||
     !categoryId ||
@@ -56,7 +58,9 @@ export async function createProductAction(formData: FormData): Promise<void> {
     !["physical", "service"].includes(kind) ||
     !["unit", "portion", "person", "hour", "daily", "service"].includes(
       salesUnit,
-    )
+    ) ||
+    !["hotel", "partner"].includes(providerType) ||
+    (providerType === "partner" && !partnerId)
   ) {
     redirectWithStatus("create_missing_fields", "create");
   }
@@ -73,6 +77,8 @@ export async function createProductAction(formData: FormData): Promise<void> {
       unit_price: unitPrice,
       status: String(formData.get("status") || "active").trim() as
         "active" | "inactive",
+      provider_type: providerType as "hotel" | "partner",
+      commercial_partner_id: providerType === "partner" ? partnerId : null,
     });
   } catch {
     redirectWithStatus("create_error", "create");

@@ -8,6 +8,8 @@ export type ProductViewFilters = {
   archived: "all" | "active" | "archived";
   minPrice: string;
   maxPrice: string;
+  providerType: "all" | "hotel" | "partner";
+  partnerId: string;
 };
 
 export const DEFAULT_PRODUCT_VIEW_FILTERS: ProductViewFilters = {
@@ -18,6 +20,8 @@ export const DEFAULT_PRODUCT_VIEW_FILTERS: ProductViewFilters = {
   archived: "active",
   minPrice: "",
   maxPrice: "",
+  providerType: "all",
+  partnerId: "",
 };
 
 export function countAppliedProductFilters(
@@ -32,6 +36,8 @@ export function countAppliedProductFilters(
   if (filters.archived !== "active") total += 1;
   if (filters.minPrice.trim()) total += 1;
   if (filters.maxPrice.trim()) total += 1;
+  if (filters.providerType !== "all") total += 1;
+  if (filters.partnerId) total += 1;
 
   return total;
 }
@@ -62,6 +68,17 @@ export function applyProductViewFilters(
       return false;
     if (filters.archived === "active" && product.archived_at) return false;
     if (filters.archived === "archived" && !product.archived_at) return false;
+    if (
+      filters.providerType !== "all" &&
+      product.provider.type !== filters.providerType
+    )
+      return false;
+    if (
+      filters.partnerId &&
+      (product.provider.type !== "partner" ||
+        product.provider.partner.id !== filters.partnerId)
+    )
+      return false;
 
     if (
       filters.minPrice.trim() &&
