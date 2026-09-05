@@ -13,6 +13,7 @@ import { ProductsViewFilterableSection } from "../_components/ProductsViewFilter
 import { ProductStatusMessage } from "../_components/ProductStatusMessage";
 import { productsCatalogGuide } from "../usageGuides";
 import { PERMISSIONS } from "@hotel/shared";
+import Link from "next/link";
 
 type ProductsViewPageProps = {
   searchParams?: Promise<{
@@ -92,6 +93,20 @@ export default async function ProductsViewPage({
         <ProductStatusMessage status={resolvedSearchParams?.status} />
       }
     >
+      {user?.permissions.includes(PERMISSIONS.INVENTORY_READ) ? (
+        <aside className="pms-surface-card flex flex-wrap items-center justify-between gap-3">
+          <p className="m-0">
+            Saldos e locais dos produtos físicos são gerenciados no módulo de
+            estoque.
+          </p>
+          <Link
+            className="pms-button-secondary"
+            href="/dashboard/inventory/overview"
+          >
+            Ver estoque
+          </Link>
+        </aside>
+      ) : null}
       <ProductsViewFilterableSection
         products={products}
         categories={categories}

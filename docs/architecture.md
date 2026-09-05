@@ -121,6 +121,45 @@ Fontes de verdade: migration `20260906010000_finalize_stay_accounts.sql`,
 `packages/shared/src/api-contract.ts` e a jornada em
 `apps/pms/src/app/dashboard/reservations/checkout`.
 
+## Estoque básico do hotel
+
+O estoque é isolado por hotel e por local. A migration cria apenas o local
+“Estoque central”; cada produto precisa ser ativado explicitamente em uma
+posição produto–local. São elegíveis somente produtos físicos fornecidos pelo
+hotel e vendidos por unidade ou porção. Serviços e itens de parceiros não
+entram no estoque.
+
+```mermaid
+flowchart LR
+  product[Produto físico próprio] --> position[Posição por local]
+  location[Local de estoque] --> position
+  position --> ledger[Movimentos imutáveis]
+  point[Ponto de consumo] -->|origem padrão| offer[Oferta]
+  offer -->|sobrescrita opcional| position
+  order[Comanda] -->|baixa atômica| ledger
+  correction[Correção aprovada] -->|retorno explícito| ledger
+  receipt[Entrada / ajuste / perda] --> ledger
+  transfer[Transferência atômica] --> ledger
+  count[Contagem sem congelamento] -->|divergência| ledger
+```
+
+O saldo é materializado na posição e protegido por uma versão monotônica; o
+razão registra saldo anterior e resultante. Entradas com custo recalculam o
+custo médio ponderado, enquanto saídas preservam o custo. A valoração ignora a
+parcela negativa e só é exibida com `read_inventory_costs`.
+
+A origem é resolvida pela oferta e, quando ausente, pelo ponto. Produto
+controlado sem posição válida torna a oferta indisponível. A postagem da
+comanda bloqueia as posições e baixa estoque dentro da mesma transação; a
+política do hotel bloqueia saldo insuficiente ou permite saldo negativo com
+alerta auditável. Correções só retornam a quantidade física explicitamente
+informada e nunca inferem devolução de um desconto ou reembolso financeiro.
+
+Fontes de verdade: migration `20260907010000_create_hotel_inventory.sql`,
+`inventoryRepository.ts`, `inventoryRoutes.ts`, contratos em
+`packages/shared/src/api-contract.ts` e o módulo
+`apps/pms/src/app/dashboard/inventory`.
+
 ## Requisição autenticada e hotel ativo
 
 ```mermaid

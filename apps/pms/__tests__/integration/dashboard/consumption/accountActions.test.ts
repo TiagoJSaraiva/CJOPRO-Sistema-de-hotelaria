@@ -112,6 +112,8 @@ describe("dashboard/consumption account actions", () => {
           order_item_id: "item-1",
           resulting_quantity: 1,
           additional_discount: 5.25,
+          restock_quantity: 0,
+          restock_location_id: null,
         },
       ],
     });

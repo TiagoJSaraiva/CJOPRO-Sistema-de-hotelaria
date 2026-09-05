@@ -103,6 +103,7 @@ describe("dashboard/consumption/actions", () => {
       product_ids: ["product-1", "product-2"],
       policy: { source: "inherit" },
       commercial_agreement_id: null,
+      inventory_location_id: null,
     });
   });
 

@@ -5,6 +5,7 @@ import {
   listConsumptionPoints,
   listProducts,
   listCommercialAgreements,
+  listInventoryLocations,
 } from "../../../../lib/adminApi";
 import { getUserFromSession } from "../../../../lib/auth";
 import { ConsumptionOffersManager } from "../_components/ConsumptionOffersManager";
@@ -26,12 +27,16 @@ export default async function ConsumptionOffersPage({
         message="Sem permissão para visualizar ofertas de consumo."
       />
     );
-  const [points, products, offers, agreements] = await Promise.all([
-    listConsumptionPoints(true),
-    listProducts(true),
-    listConsumptionOffers({ includeArchived: true }),
-    access.canReadCommercial ? listCommercialAgreements() : Promise.resolve([]),
-  ]);
+  const [points, products, offers, agreements, inventoryLocations] =
+    await Promise.all([
+      listConsumptionPoints(true),
+      listProducts(true),
+      listConsumptionOffers({ includeArchived: true }),
+      access.canReadCommercial
+        ? listCommercialAgreements()
+        : Promise.resolve([]),
+      listInventoryLocations().catch(() => []),
+    ]);
   return (
     <DashboardEntityPageShell
       title="Vendas e consumo"
@@ -89,6 +94,7 @@ export default async function ConsumptionOffersPage({
         offers={offers}
         agreements={agreements}
         canManage={access.canManage}
+        inventoryLocations={inventoryLocations}
       />
     </DashboardEntityPageShell>
   );

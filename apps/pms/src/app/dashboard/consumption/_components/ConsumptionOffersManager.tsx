@@ -7,6 +7,7 @@ import type {
   AdminConsumptionPoint,
   AdminProduct,
   AdminCommercialAgreement,
+  AdminInventoryLocation,
 } from "@hotel/shared";
 import {
   archiveConsumptionOfferAction,
@@ -43,12 +44,14 @@ export function ConsumptionOffersManager({
   offers,
   agreements,
   canManage,
+  inventoryLocations,
 }: {
   points: AdminConsumptionPoint[];
   products: AdminProduct[];
   offers: AdminConsumptionOffer[];
   agreements: AdminCommercialAgreement[];
   canManage: boolean;
+  inventoryLocations: AdminInventoryLocation[];
 }) {
   const firstActivePoint = points.find((point) => !point.archived_at)?.id || "";
   const [creationPointId, setCreationPointId] = useState(firstActivePoint);
@@ -198,6 +201,19 @@ export function ConsumptionOffersManager({
               ))}
             </select>
           </label>
+          <label className="pms-field">
+            Sobrescrever origem do estoque
+            <select name="inventory_location_id" className="pms-field-input">
+              <option value="">Herdar do ponto</option>
+              {inventoryLocations
+                .filter((item) => item.is_active && !item.archived_at)
+                .map((item) => (
+                  <option key={item.id} value={item.id}>
+                    {item.name}
+                  </option>
+                ))}
+            </select>
+          </label>
           <fieldset className="grid gap-2 rounded-lg border border-slate-200 p-3">
             <legend className="px-1 font-semibold">Política da oferta</legend>
             <label className="flex items-center gap-2">
@@ -345,6 +361,13 @@ export function ConsumptionOffersManager({
                   · padrão:{" "}
                   {billingModeLabel(offer.resolved_policy.default_mode)}
                 </p>
+                <p className="text-sm">
+                  Estoque:{" "}
+                  {offer.inventory_location?.name ||
+                    (offer.inventory_source === "point"
+                      ? "origem do ponto"
+                      : "sem controle/origem")}
+                </p>
                 {offer.commercial_agreement ? (
                   <p className="text-sm">
                     Acordo {offer.commercial_agreement.internal_number}
@@ -386,6 +409,25 @@ export function ConsumptionOffersManager({
                             defaultChecked={offer.is_active}
                           />{" "}
                           Oferta ativa
+                        </label>
+                        <label className="pms-field">
+                          Origem do estoque
+                          <select
+                            name="inventory_location_id"
+                            defaultValue={offer.inventory_location?.id || ""}
+                            className="pms-field-input"
+                          >
+                            <option value="">Herdar do ponto</option>
+                            {inventoryLocations
+                              .filter(
+                                (item) => item.is_active && !item.archived_at,
+                              )
+                              .map((item) => (
+                                <option key={item.id} value={item.id}>
+                                  {item.name}
+                                </option>
+                              ))}
+                          </select>
                         </label>
                         <label className="pms-field">
                           Política

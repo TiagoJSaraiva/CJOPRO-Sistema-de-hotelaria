@@ -19,14 +19,14 @@ import {
 } from "./supabaseError";
 
 const POINT_FIELDS =
-  "id,hotel_id,name,internal_code,description,display_order,is_active,default_allowed_billing_modes,default_billing_mode,archived_at,created_at,updated_at";
+  "id,hotel_id,name,internal_code,description,display_order,is_active,default_allowed_billing_modes,default_billing_mode,default_inventory_location_id,archived_at,created_at,updated_at,inventory_location:inventory_locations(id,name,internal_code,is_active,archived_at)";
 const CATEGORY_FIELDS =
   "id,hotel_id,name,display_order,is_active,archived_at,created_at,updated_at";
 const PARTNER_FIELDS = "id,trade_name,is_active,archived_at";
 const PRODUCT_FIELDS = `id,hotel_id,name,description,internal_code,kind,sales_unit,unit_price,status,archived_at,created_at,updated_at,provider_type,commercial_partner_id,category:product_categories(${CATEGORY_FIELDS}),commercial_partner:commercial_partners(${PARTNER_FIELDS})`;
 const AGREEMENT_REVISION_FIELDS =
   "id,hotel_id,agreement_id,version,starts_on,ends_on,status,commercial_model,fixed_rent,rent_frequency,commission_percentage,minimum_guarantee,payment_recipient,currency,notes,activated_at,terminated_at,created_at,updated_at,points:commercial_agreement_revision_points(point_id)";
-const OFFER_FIELDS = `id,hotel_id,point_id,product_id,commercial_agreement_id,display_order,is_active,policy_source,allowed_billing_modes,default_billing_mode,archived_at,created_at,updated_at,point:consumption_points(${POINT_FIELDS}),product:products(${PRODUCT_FIELDS}),commercial_agreement:commercial_agreements(id,internal_number,revisions:commercial_agreement_revisions(${AGREEMENT_REVISION_FIELDS}))`;
+const OFFER_FIELDS = `id,hotel_id,point_id,product_id,commercial_agreement_id,inventory_location_id,display_order,is_active,policy_source,allowed_billing_modes,default_billing_mode,archived_at,created_at,updated_at,point:consumption_points(${POINT_FIELDS}),product:products(${PRODUCT_FIELDS}),inventory_location:inventory_locations(id,name,internal_code,is_active,archived_at),commercial_agreement:commercial_agreements(id,internal_number,revisions:commercial_agreement_revisions(${AGREEMENT_REVISION_FIELDS}))`;
 
 export type ConsumptionSettingsWriteResult = "ok" | "conflict" | "not-found";
 
@@ -40,6 +40,23 @@ type PointRow = {
   is_active: boolean;
   default_allowed_billing_modes: ConsumptionBillingMode[];
   default_billing_mode: ConsumptionBillingMode;
+  default_inventory_location_id: string | null;
+  inventory_location:
+    | {
+        id: string;
+        name: string;
+        internal_code: string | null;
+        is_active: boolean;
+        archived_at: string | null;
+      }
+    | Array<{
+        id: string;
+        name: string;
+        internal_code: string | null;
+        is_active: boolean;
+        archived_at: string | null;
+      }>
+    | null;
   archived_at: string | null;
   created_at?: string;
   updated_at?: string;
@@ -50,6 +67,7 @@ type OfferRow = {
   point_id: string;
   product_id: string;
   commercial_agreement_id: string | null;
+  inventory_location_id: string | null;
   display_order: number;
   is_active: boolean;
   policy_source: "inherit" | "override";
@@ -128,6 +146,7 @@ type OfferRow = {
         >;
       }>
     | null;
+  inventory_location: PointRow["inventory_location"];
 };
 type AuditRow = Omit<AdminConsumptionConfigurationAuditEvent, "actor_name"> & {
   users: { name: string } | { name: string }[] | null;
@@ -156,12 +175,21 @@ function mapPoint(
     offers_count: counts.offers,
     inherited_offers_count: counts.inherited,
     archived_at: row.archived_at,
+    default_inventory_location: one(row.inventory_location),
     created_at: row.created_at,
     updated_at: row.updated_at,
   };
 }
 
-function mapOffer(row: OfferRow): AdminConsumptionOffer {
+function mapOffer(
+  row: OfferRow,
+  inventoryPositions: Array<{
+    product_id: string;
+    location_id: string;
+    is_active: boolean;
+    archived_at: string | null;
+  }> = [],
+): AdminConsumptionOffer {
   const point = one(row.point);
   const productRow = one(row.product);
   const category = productRow ? one(productRow.category) : null;
@@ -213,6 +241,23 @@ function mapOffer(row: OfferRow): AdminConsumptionOffer {
   if (category.archived_at) reasons.push("category_archived");
 
   const agreement = one(row.commercial_agreement);
+  const inventoryLocation =
+    one(row.inventory_location) || one(point.inventory_location);
+  const controlledPositions = inventoryPositions.filter(
+    (position) => position.product_id === product.id && !position.archived_at,
+  );
+  if (controlledPositions.length) {
+    const sourceLocationId =
+      row.inventory_location_id || point.default_inventory_location_id;
+    if (!sourceLocationId) reasons.push("inventory_source_missing");
+    else if (
+      !controlledPositions.some(
+        (position) =>
+          position.location_id === sourceLocationId && position.is_active,
+      )
+    )
+      reasons.push("inventory_position_inactive");
+  }
   const today = new Date().toISOString().slice(0, 10);
   const revisions = agreement?.revisions || [];
   const scopedRevisions = revisions.filter((revision) => {
@@ -312,6 +357,14 @@ function mapOffer(row: OfferRow): AdminConsumptionOffer {
       : null,
     commercial_revision: commercialRevision,
     archived_at: row.archived_at,
+    inventory_location: inventoryLocation,
+    inventory_source: !controlledPositions.length
+      ? "unmanaged"
+      : row.inventory_location_id
+        ? "offer"
+        : point.default_inventory_location_id
+          ? "point"
+          : "missing",
     created_at: row.created_at,
     updated_at: row.updated_at,
   };
@@ -326,6 +379,7 @@ function pointInsert(input: AdminConsumptionPointInput) {
     is_active: input.is_active,
     default_allowed_billing_modes: input.default_policy.allowed_modes,
     default_billing_mode: input.default_policy.default_mode,
+    default_inventory_location_id: input.default_inventory_location_id || null,
   } satisfies Omit<
     TablesInsert<"consumption_points">,
     "hotel_id" | "last_changed_by"
@@ -511,6 +565,9 @@ class SupabaseConsumptionSettingsRepository implements ConsumptionSettingsReposi
         input.default_policy.allowed_modes;
       payload.default_billing_mode = input.default_policy.default_mode;
     }
+    if (input.default_inventory_location_id !== undefined)
+      payload.default_inventory_location_id =
+        input.default_inventory_location_id;
     let query = createServerClient()
       .from("consumption_points")
       .update(payload)
@@ -587,11 +644,18 @@ class SupabaseConsumptionSettingsRepository implements ConsumptionSettingsReposi
       query = query.eq("point_id", typedFilters.pointId);
     if (typedFilters.productId)
       query = query.eq("product_id", typedFilters.productId);
-    const { data, error } = await query
-      .order("display_order")
-      .order("created_at");
-    if (error) throw error;
-    return ((data || []) as unknown as OfferRow[]).map(mapOffer);
+    const [offersResult, positionsResult] = await Promise.all([
+      query.order("display_order").order("created_at"),
+      createServerClient()
+        .from("inventory_positions")
+        .select("product_id,location_id,is_active,archived_at")
+        .eq("hotel_id", hotelId),
+    ]);
+    if (offersResult.error || positionsResult.error)
+      throw offersResult.error || positionsResult.error;
+    return ((offersResult.data || []) as unknown as OfferRow[]).map((row) =>
+      mapOffer(row, positionsResult.data || []),
+    );
   }
 
   async createOffers(
@@ -632,6 +696,7 @@ class SupabaseConsumptionSettingsRepository implements ConsumptionSettingsReposi
         is_active: true,
         last_changed_by: actorId,
         commercial_agreement_id: input.commercial_agreement_id || null,
+        inventory_location_id: input.inventory_location_id || null,
         ...policy,
       }),
     );
@@ -663,6 +728,8 @@ class SupabaseConsumptionSettingsRepository implements ConsumptionSettingsReposi
     if (input.is_active !== undefined) payload.is_active = input.is_active;
     if (input.commercial_agreement_id !== undefined)
       payload.commercial_agreement_id = input.commercial_agreement_id;
+    if (input.inventory_location_id !== undefined)
+      payload.inventory_location_id = input.inventory_location_id;
     Object.assign(payload, offerPolicy(input.policy));
     let query = createServerClient()
       .from("consumption_offers")

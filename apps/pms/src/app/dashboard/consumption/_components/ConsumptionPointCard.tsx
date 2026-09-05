@@ -1,6 +1,9 @@
 "use client";
 
-import type { AdminConsumptionPoint } from "@hotel/shared";
+import type {
+  AdminConsumptionPoint,
+  AdminInventoryLocation,
+} from "@hotel/shared";
 import {
   archiveConsumptionPointAction,
   reorderConsumptionPointsAction,
@@ -13,11 +16,13 @@ export function ConsumptionPointCard({
   orderedIds,
   index,
   canManage,
+  inventoryLocations,
 }: {
   point: AdminConsumptionPoint;
   orderedIds: string[];
   index: number;
   canManage: boolean;
+  inventoryLocations: AdminInventoryLocation[];
 }) {
   const confirmImpact = (event: React.FormEvent<HTMLFormElement>) => {
     if (
@@ -99,6 +104,23 @@ export function ConsumptionPointCard({
                 defaultMode={point.default_policy.default_mode}
                 prefix={point.id}
               />
+              <label className="pms-field">
+                Origem padrão do estoque
+                <select
+                  name="default_inventory_location_id"
+                  defaultValue={point.default_inventory_location?.id || ""}
+                  className="pms-field-input"
+                >
+                  <option value="">Sem origem padrão</option>
+                  {inventoryLocations
+                    .filter((item) => !item.archived_at && item.is_active)
+                    .map((item) => (
+                      <option key={item.id} value={item.id}>
+                        {item.name}
+                      </option>
+                    ))}
+                </select>
+              </label>
               <button type="submit" className="pms-button-primary">
                 Salvar ponto
               </button>

@@ -4,6 +4,7 @@ import {
   getConsumptionOrder,
   listConsumptionOrders,
   listConsumptionPoints,
+  listInventoryLocations,
 } from "../../../../lib/adminApi";
 import { getUserFromSession } from "../../../../lib/auth";
 import { getConsumptionAccess } from "../access";
@@ -31,7 +32,7 @@ export default async function ConsumptionHistoryPage({
         message="Sem permissão para consultar comandas."
       />
     );
-  const [history, points, selected] = await Promise.all([
+  const [history, points, selected, inventoryLocations] = await Promise.all([
     listConsumptionOrders({
       search: params.search,
       from: params.from,
@@ -44,6 +45,7 @@ export default async function ConsumptionHistoryPage({
     }),
     listConsumptionPoints(false),
     params.id ? getConsumptionOrder(params.id) : Promise.resolve(null),
+    listInventoryLocations().catch(() => []),
   ]);
   const tabs = [
     {
@@ -306,7 +308,7 @@ export default async function ConsumptionHistoryPage({
                 />
                 <h3 className="m-0 text-base">Solicitar ajuste redutor</h3>
                 {selected.items.map((item) => (
-                  <div className="grid gap-2 sm:grid-cols-3" key={item.id}>
+                  <div className="grid gap-2 sm:grid-cols-5" key={item.id}>
                     <input type="hidden" name="order_item_id" value={item.id} />
                     <span className="self-end font-medium">
                       {item.product_name}
@@ -336,6 +338,57 @@ export default async function ConsumptionHistoryPage({
                         required
                       />
                     </label>
+                    {item.inventory_controlled ? (
+                      <>
+                        <label className="pms-field">
+                          <span>Quantidade devolvida</span>
+                          <input
+                            className="pms-field-input"
+                            type="number"
+                            min="0"
+                            step="1"
+                            name="restock_quantity"
+                            defaultValue="0"
+                          />
+                        </label>
+                        <label className="pms-field">
+                          <span>Local de retorno</span>
+                          <select
+                            className="pms-field-input"
+                            name="restock_location_id"
+                            defaultValue=""
+                          >
+                            <option value="">Sem retorno físico</option>
+                            {inventoryLocations
+                              .filter(
+                                (location) =>
+                                  location.is_active && !location.archived_at,
+                              )
+                              .map((location) => (
+                                <option key={location.id} value={location.id}>
+                                  {location.name}
+                                  {location.id === item.inventory_location_id
+                                    ? " (origem)"
+                                    : ""}
+                                </option>
+                              ))}
+                          </select>
+                        </label>
+                      </>
+                    ) : (
+                      <>
+                        <input
+                          type="hidden"
+                          name="restock_quantity"
+                          value="0"
+                        />
+                        <input
+                          type="hidden"
+                          name="restock_location_id"
+                          value=""
+                        />
+                      </>
+                    )}
                   </div>
                 ))}
                 <label className="pms-field">

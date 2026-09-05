@@ -108,6 +108,10 @@ const conflictResults = new Set([
   "billing_mode_not_allowed",
   "different_partners",
   "idempotency_conflict",
+  "inventory_source_missing",
+  "inventory_position_inactive",
+  "inventory_version_conflict",
+  "insufficient_inventory",
 ]);
 
 export function registerConsumptionOrderRoutes(
@@ -181,7 +185,29 @@ export function registerConsumptionOrderRoutes(
             "A estadia não está em check-in.",
             "stay_not_checked_in",
           );
-        return reply.send({ item });
+        const canReadInventory = context.auth.session.permissions.includes(
+          PERMISSIONS.INVENTORY_READ,
+        );
+        return reply.send({
+          item: canReadInventory
+            ? item
+            : {
+                ...item,
+                offers: item.offers.map((offer) => ({
+                  ...offer,
+                  inventory: offer.inventory
+                    ? {
+                        controlled: offer.inventory.controlled,
+                        source: offer.inventory.source,
+                        location_id: offer.inventory.location_id,
+                        location_name: offer.inventory.location_name,
+                        status: offer.inventory.status,
+                        active: offer.inventory.active,
+                      }
+                    : undefined,
+                })),
+              },
+        });
       } catch (cause) {
         request.log.error(cause);
         return sendError(

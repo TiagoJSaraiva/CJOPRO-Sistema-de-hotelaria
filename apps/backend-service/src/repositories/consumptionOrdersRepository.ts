@@ -94,6 +94,10 @@ function mapItem(
     billing_policy: asObject(row.billing_policy_snapshot) || {},
     version_token: row.version_token,
     notes: row.notes,
+    inventory_controlled: row.inventory_controlled_snapshot,
+    inventory_location_id: row.inventory_location_id_snapshot,
+    inventory_location_name: row.inventory_location_name_snapshot,
+    inventory_position_version: row.inventory_position_version_snapshot,
   };
 }
 
@@ -269,7 +273,16 @@ class SupabaseConsumptionOrdersRepository implements ConsumptionOrdersRepository
         p_courtesy_reason: input.courtesy_reason || undefined,
       },
     );
-    if (error) throw error;
+    if (error) {
+      const inventoryResult = [
+        "inventory_source_missing",
+        "inventory_position_inactive",
+        "inventory_version_conflict",
+        "insufficient_inventory",
+      ].find((reason) => error.message.includes(reason));
+      if (inventoryResult) return { result: inventoryResult };
+      throw error;
+    }
     const result = asObject(data) || { result: "internal_error" };
     if (result.result !== "ok") {
       return {

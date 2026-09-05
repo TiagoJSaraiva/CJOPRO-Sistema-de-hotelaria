@@ -1,6 +1,9 @@
 import { DashboardAccessDeniedCard } from "../../_components/DashboardAccessDeniedCard";
 import { DashboardEntityPageShell } from "../../_components/DashboardEntityPageShell";
-import { listConsumptionPoints } from "../../../../lib/adminApi";
+import {
+  listConsumptionPoints,
+  listInventoryLocations,
+} from "../../../../lib/adminApi";
 import { getUserFromSession } from "../../../../lib/auth";
 import { getConsumptionAccess } from "../access";
 import { createConsumptionPointAction } from "../actions";
@@ -23,7 +26,10 @@ export default async function ConsumptionPointsPage({
         message="Sem permissão para visualizar configurações de consumo."
       />
     );
-  const points = await listConsumptionPoints(true);
+  const [points, inventoryLocations] = await Promise.all([
+    listConsumptionPoints(true),
+    listInventoryLocations().catch(() => []),
+  ]);
   const active = points.filter((point) => !point.archived_at);
   const orderedIds = active.map((point) => point.id);
   return (
@@ -121,6 +127,20 @@ export default async function ConsumptionPointsPage({
               />
             </label>
             <BillingModeFields prefix="new-point" />
+            <label className="pms-field">
+              Origem padrão do estoque
+              <select
+                name="default_inventory_location_id"
+                className="pms-field-input"
+              >
+                <option value="">Sem origem padrão</option>
+                {inventoryLocations.map((location) => (
+                  <option key={location.id} value={location.id}>
+                    {location.name}
+                  </option>
+                ))}
+              </select>
+            </label>
             <button type="submit" className="pms-button-primary">
               Criar ponto de consumo
             </button>
@@ -138,6 +158,7 @@ export default async function ConsumptionPointsPage({
               orderedIds={orderedIds}
               index={active.findIndex((item) => item.id === point.id)}
               canManage={access.canManage}
+              inventoryLocations={inventoryLocations}
             />
           ))}
           {!points.length ? (

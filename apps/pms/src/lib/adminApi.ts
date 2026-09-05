@@ -92,6 +92,19 @@ import {
   AdminMaintenanceNotification,
   AdminMaintenanceAnalytics,
   AdminMaintenanceAutomationRun,
+  AdminInventorySettings,
+  AdminInventoryLocation,
+  AdminInventoryLocationInput,
+  AdminInventoryPosition,
+  AdminInventoryPositionInput,
+  AdminInventoryPositionUpdateInput,
+  AdminInventoryMovement,
+  AdminInventoryAuditEvent,
+  AdminInventoryDocumentInput,
+  AdminInventoryTransferInput,
+  AdminInventoryCountSession,
+  AdminInventoryCountCreateInput,
+  AdminInventoryCountUpdateInput,
 } from "@hotel/shared";
 import { getActiveHotelCookieValue } from "./activeHotel";
 
@@ -1289,6 +1302,170 @@ export function getConsumptionOrder(
   )
     .then((payload) => payload.item)
     .catch(() => null);
+}
+
+export function getInventoryOverview(
+  filters: Record<string, string> = {},
+): Promise<{
+  settings: AdminInventorySettings;
+  items: AdminInventoryPosition[];
+}> {
+  const params = new URLSearchParams(filters);
+  const suffix = params.size ? `?${params}` : "";
+  return getAdminData(`/admin/inventory/overview${suffix}`);
+}
+export function getInventorySettings(): Promise<AdminInventorySettings> {
+  return getAdminData<AdminItemResponse<AdminInventorySettings>>(
+    "/admin/inventory/settings",
+  ).then((response) => response.item);
+}
+export function updateInventorySettings(
+  negative_stock_policy: AdminInventorySettings["negative_stock_policy"],
+): Promise<AdminInventorySettings | null> {
+  return requestAdmin<AdminInventorySettings>(
+    "/admin/inventory/settings",
+    "PUT",
+    { negative_stock_policy },
+  );
+}
+export function listInventoryLocations(
+  includeArchived = false,
+): Promise<AdminInventoryLocation[]> {
+  return getAdminList<AdminInventoryLocation>(
+    `/admin/inventory/locations${includeArchived ? "?include_archived=true" : ""}`,
+  );
+}
+export function createInventoryLocation(
+  input: AdminInventoryLocationInput,
+): Promise<AdminInventoryLocation | null> {
+  return requestAdmin<AdminInventoryLocation>(
+    "/admin/inventory/locations",
+    "POST",
+    input,
+  );
+}
+export function updateInventoryLocation(
+  id: string,
+  input: Partial<AdminInventoryLocationInput>,
+): Promise<AdminInventoryLocation | null> {
+  return requestAdmin<AdminInventoryLocation>(
+    `/admin/inventory/locations/${id}`,
+    "PUT",
+    input,
+  );
+}
+export function setInventoryLocationArchived(
+  id: string,
+  archived: boolean,
+): Promise<AdminInventoryLocation | null> {
+  return requestAdmin<AdminInventoryLocation>(
+    `/admin/inventory/locations/${id}/${archived ? "archive" : "restore"}`,
+    "POST",
+  );
+}
+export function reorderInventoryLocations(ids: string[]): Promise<boolean> {
+  return requestAdminOk("/admin/inventory/locations/order", "PUT", { ids });
+}
+export function createInventoryPosition(
+  input: AdminInventoryPositionInput,
+): Promise<AdminInventoryPosition | null> {
+  return requestAdmin<AdminInventoryPosition>(
+    "/admin/inventory/positions",
+    "POST",
+    input,
+  );
+}
+export function updateInventoryPosition(
+  id: string,
+  input: AdminInventoryPositionUpdateInput,
+): Promise<AdminInventoryPosition | null> {
+  return requestAdmin<AdminInventoryPosition>(
+    `/admin/inventory/positions/${id}`,
+    "PUT",
+    input,
+  );
+}
+export function listInventoryMovements(
+  filters: Record<string, string> = {},
+): Promise<{ items: AdminInventoryMovement[]; next_cursor: string | null }> {
+  const params = new URLSearchParams(filters);
+  const suffix = params.size ? `?${params}` : "";
+  return getAdminData<{
+    items: AdminInventoryMovement[];
+    next_cursor: string | null;
+  }>(`/admin/inventory/movements${suffix}`).catch(() => ({
+    items: [],
+    next_cursor: null,
+  }));
+}
+export function listInventoryAuditEvents(
+  filters: Record<string, string> = {},
+): Promise<{ items: AdminInventoryAuditEvent[]; next_cursor: string | null }> {
+  const params = new URLSearchParams(filters);
+  const suffix = params.size ? `?${params}` : "";
+  return getAdminData<{
+    items: AdminInventoryAuditEvent[];
+    next_cursor: string | null;
+  }>(`/admin/inventory/audit${suffix}`).catch(() => ({
+    items: [],
+    next_cursor: null,
+  }));
+}
+export function postInventoryDocument(
+  input: AdminInventoryDocumentInput,
+): Promise<{ id: string }> {
+  return requestAdmin<{ id: string }>(
+    "/admin/inventory/documents",
+    "POST",
+    input,
+  ).then((item) => item!);
+}
+export function transferInventory(
+  input: AdminInventoryTransferInput,
+): Promise<{ id: string }> {
+  return requestAdmin<{ id: string }>(
+    "/admin/inventory/transfers",
+    "POST",
+    input,
+  ).then((item) => item!);
+}
+export function listInventoryCounts(): Promise<AdminInventoryCountSession[]> {
+  return getAdminList<AdminInventoryCountSession>("/admin/inventory/counts");
+}
+export function createInventoryCount(
+  input: AdminInventoryCountCreateInput,
+): Promise<AdminInventoryCountSession | null> {
+  return requestAdmin<AdminInventoryCountSession>(
+    "/admin/inventory/counts",
+    "POST",
+    input,
+  );
+}
+export function updateInventoryCount(
+  id: string,
+  input: AdminInventoryCountUpdateInput,
+): Promise<AdminInventoryCountSession | null> {
+  return requestAdmin<AdminInventoryCountSession>(
+    `/admin/inventory/counts/${id}/items`,
+    "PUT",
+    input,
+  );
+}
+export function completeInventoryCount(
+  id: string,
+): Promise<AdminInventoryCountSession | null> {
+  return requestAdmin<AdminInventoryCountSession>(
+    `/admin/inventory/counts/${id}/complete`,
+    "POST",
+  );
+}
+export function cancelInventoryCount(
+  id: string,
+): Promise<AdminInventoryCountSession | null> {
+  return requestAdmin<AdminInventoryCountSession>(
+    `/admin/inventory/counts/${id}/cancel`,
+    "POST",
+  );
 }
 
 export function listSeasons(): Promise<AdminSeason[]> {

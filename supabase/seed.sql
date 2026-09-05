@@ -423,3 +423,13 @@ insert into public.maintenance_preventive_plan_tasks (
 ) values
   ('99700000-0000-4000-8000-000000000001', '10000000-0000-4000-8000-000000000001', '99600000-0000-4000-8000-000000000001', 10, 'Verificar e higienizar filtros.', true),
   ('99700000-0000-4000-8000-000000000002', '10000000-0000-4000-8000-000000000001', '99600000-0000-4000-8000-000000000001', 20, 'Registrar condição da unidade externa.', true);
+
+-- Cenário sintético de estoque: o opt-in continua explícito e não é feito pela migration.
+select public.configure_inventory_position(
+  '10000000-0000-4000-8000-000000000002',
+  '80000000-0000-4000-8000-000000000003',
+  '40000000-0000-4000-8000-000000000003',
+  (select id from public.inventory_locations where hotel_id='10000000-0000-4000-8000-000000000002' and internal_code='CENTRAL'),
+  12, 4, 16, 2.5000,
+  'a6000000-0000-4000-8000-000000000001'
+);

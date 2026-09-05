@@ -30,6 +30,14 @@ const consumptionPermissions = [
   "manage_commercial_partners",
   "manage_commercial_agreements",
 ];
+const inventoryPermissions = [
+  ...consumptionPermissions,
+  "read_inventory",
+  "read_inventory_costs",
+  "manage_inventory_settings",
+  "post_inventory_movements",
+  "perform_inventory_counts",
+];
 const maintenancePermissions = [
   ...permissions,
   "create_maintenance_occurrence",
@@ -82,6 +90,14 @@ const consumptionUser = {
   roleAssignments: user.roleAssignments.map((assignment) => ({
     ...assignment,
     permissions: consumptionPermissions,
+  })),
+};
+const inventoryUser = {
+  ...user,
+  permissions: inventoryPermissions,
+  roleAssignments: user.roleAssignments.map((assignment) => ({
+    ...assignment,
+    permissions: inventoryPermissions,
   })),
 };
 
@@ -175,6 +191,31 @@ const products = [
     updated_at: "2026-05-01T10:00:00.000Z",
   },
 ];
+
+const inventorySettings = {
+  hotel_id: "hotel-e2e",
+  negative_stock_policy: "allow_with_warning",
+  updated_at: "2026-05-12T15:00:00.000Z",
+};
+const inventoryLocations = [
+  {
+    id: "inventory-central",
+    hotel_id: "hotel-e2e",
+    name: "Estoque central",
+    internal_code: "CENTRAL",
+    description: "Local principal do hotel.",
+    display_order: 0,
+    is_active: true,
+    archived_at: null,
+    position_count: 0,
+    total_quantity: 0,
+    created_at: "2026-05-12T15:00:00.000Z",
+    updated_at: "2026-05-12T15:00:00.000Z",
+  },
+];
+const inventoryPositions = [];
+const inventoryMovements = [];
+const inventoryCounts = [];
 
 const productHistory = [
   {
@@ -661,6 +702,27 @@ const server = http.createServer(async (request, response) => {
     return;
   }
 
+  if (method === "POST" && url.pathname === "/test/reset-state") {
+    products.splice(2);
+    consumptionPoints.splice(2);
+    consumptionOffers.splice(2);
+    consumptionOrders.splice(0);
+    commercialPartners.splice(0);
+    commercialAgreements.splice(0);
+    commercialHistory.splice(0);
+    inventorySettings.negative_stock_policy = "allow_with_warning";
+    inventoryPositions.splice(0);
+    inventoryMovements.splice(0);
+    inventoryCounts.splice(0);
+    inventoryLocations.splice(1);
+    inventoryLocations[0].position_count = 0;
+    inventoryLocations[0].total_quantity = 0;
+    stayTwoPaid = 600;
+    stayTwoCheckedOut = false;
+    sendJson(response, 200, { ok: true });
+    return;
+  }
+
   if (method === "POST" && url.pathname === "/test/reset-commercial") {
     for (let index = consumptionOffers.length - 1; index >= 0; index -= 1) {
       if (consumptionOffers[index].product?.provider?.type === "partner")
@@ -681,16 +743,205 @@ const server = http.createServer(async (request, response) => {
     return;
   }
 
+  if (method === "POST" && url.pathname === "/test/reset-inventory") {
+    inventorySettings.negative_stock_policy = "allow_with_warning";
+    inventoryPositions.splice(0);
+    inventoryMovements.splice(0);
+    inventoryCounts.splice(0);
+    inventoryLocations.splice(1);
+    inventoryLocations[0].position_count = 0;
+    inventoryLocations[0].total_quantity = 0;
+    sendJson(response, 200, { ok: true });
+    return;
+  }
+
   if (method === "GET" && url.pathname === "/auth/me") {
     const authorization = request.headers.authorization;
     sendJson(response, 200, {
       user:
         authorization === "Bearer maintenance-e2e-token"
           ? maintenanceUser
-          : authorization === "Bearer consumption-e2e-token"
-            ? consumptionUser
-            : user,
+          : authorization === "Bearer inventory-e2e-token"
+            ? inventoryUser
+            : authorization === "Bearer consumption-e2e-token"
+              ? consumptionUser
+              : user,
     });
+    return;
+  }
+
+  if (method === "GET" && url.pathname === "/admin/inventory/overview") {
+    sendJson(response, 200, {
+      settings: inventorySettings,
+      items: inventoryPositions,
+    });
+    return;
+  }
+
+  if (method === "GET" && url.pathname === "/admin/inventory/settings") {
+    sendJson(response, 200, { item: inventorySettings });
+    return;
+  }
+
+  if (method === "PUT" && url.pathname === "/admin/inventory/settings") {
+    const body = await parseBody(request);
+    inventorySettings.negative_stock_policy = body.negative_stock_policy;
+    sendJson(response, 200, { item: inventorySettings });
+    return;
+  }
+
+  if (method === "GET" && url.pathname === "/admin/inventory/locations") {
+    sendJson(response, 200, { items: inventoryLocations });
+    return;
+  }
+
+  if (method === "POST" && url.pathname === "/admin/inventory/locations") {
+    const body = await parseBody(request);
+    const created = {
+      id: `inventory-location-${inventoryLocations.length + 1}`,
+      hotel_id: "hotel-e2e",
+      name: body.name,
+      internal_code: body.internal_code || null,
+      description: body.description || null,
+      display_order: inventoryLocations.length * 10,
+      is_active: true,
+      archived_at: null,
+      position_count: 0,
+      total_quantity: 0,
+      created_at: "2026-05-12T15:00:00.000Z",
+      updated_at: "2026-05-12T15:00:00.000Z",
+    };
+    inventoryLocations.push(created);
+    sendJson(response, 201, { item: created });
+    return;
+  }
+
+  if (method === "PUT" && url.pathname === "/admin/inventory/locations/order") {
+    const body = await parseBody(request);
+    const ordered = body.ids
+      .map((id) => inventoryLocations.find((item) => item.id === id))
+      .filter(Boolean);
+    ordered.forEach((item, index) => {
+      item.display_order = (index + 1) * 10;
+    });
+    inventoryLocations.sort(
+      (left, right) => left.display_order - right.display_order,
+    );
+    sendJson(response, 200, { ok: true });
+    return;
+  }
+
+  if (method === "POST" && url.pathname === "/admin/inventory/positions") {
+    const body = await parseBody(request);
+    const product = products.find((item) => item.id === body.product_id);
+    const location = inventoryLocations.find(
+      (item) => item.id === body.location_id,
+    );
+    const created = {
+      id: `inventory-position-${inventoryPositions.length + 1}`,
+      hotel_id: "hotel-e2e",
+      product,
+      location: {
+        id: location.id,
+        name: location.name,
+        internal_code: location.internal_code,
+        is_active: true,
+        archived_at: null,
+      },
+      quantity: body.initial_quantity,
+      version: body.initial_quantity > 0 ? 1 : 0,
+      minimum_quantity: body.minimum_quantity,
+      ideal_quantity: body.ideal_quantity,
+      suggested_replenishment: Math.max(
+        0,
+        body.ideal_quantity - body.initial_quantity,
+      ),
+      average_unit_cost: body.average_unit_cost,
+      inventory_value:
+        body.average_unit_cost == null
+          ? null
+          : body.initial_quantity * body.average_unit_cost,
+      status:
+        body.initial_quantity < body.minimum_quantity ? "low" : "available",
+      is_active: true,
+      archived_at: null,
+      updated_at: "2026-05-12T15:00:00.000Z",
+    };
+    inventoryPositions.push(created);
+    location.position_count += 1;
+    location.total_quantity += body.initial_quantity;
+    sendJson(response, 201, { item: created });
+    return;
+  }
+
+  if (method === "POST" && url.pathname === "/admin/inventory/documents") {
+    const body = await parseBody(request);
+    for (const line of body.lines) {
+      const position = inventoryPositions.find(
+        (item) => item.id === line.position_id,
+      );
+      const before = position.quantity;
+      const direction =
+        body.kind === "receipt" ||
+        (body.kind === "adjustment" && body.direction === "in")
+          ? 1
+          : -1;
+      position.quantity += direction * line.quantity;
+      position.version += 1;
+      position.suggested_replenishment = Math.max(
+        0,
+        position.ideal_quantity - position.quantity,
+      );
+      position.status =
+        position.quantity < 0
+          ? "negative"
+          : position.quantity < position.minimum_quantity
+            ? "low"
+            : "available";
+      inventoryMovements.unshift({
+        id: `inventory-movement-${inventoryMovements.length + 1}`,
+        hotel_id: "hotel-e2e",
+        position_id: position.id,
+        product_id: position.product.id,
+        product_name: position.product.name,
+        location_id: position.location.id,
+        location_name: position.location.name,
+        kind: body.kind,
+        quantity_delta: direction * line.quantity,
+        quantity_before: before,
+        quantity_after: position.quantity,
+        average_unit_cost: line.unit_cost,
+        total_cost:
+          line.unit_cost == null ? null : line.quantity * line.unit_cost,
+        reason: body.reason,
+        reference_code: body.reference_code || null,
+        occurred_at: "2026-05-12T15:00:00.000Z",
+        posted_at: "2026-05-12T15:00:00.000Z",
+        actor_id: "user-e2e",
+        actor_name: "Marina Costa",
+        consumption_order_id: null,
+        consumption_order_item_id: null,
+        consumption_correction_id: null,
+        document_id: "inventory-document-1",
+        count_session_id: null,
+      });
+    }
+    sendJson(response, 201, { item: { id: "inventory-document-1" } });
+    return;
+  }
+
+  if (method === "GET" && url.pathname === "/admin/inventory/movements") {
+    sendJson(response, 200, { items: inventoryMovements, next_cursor: null });
+    return;
+  }
+
+  if (method === "GET" && url.pathname === "/admin/inventory/audit") {
+    sendJson(response, 200, { items: [], next_cursor: null });
+    return;
+  }
+
+  if (method === "GET" && url.pathname === "/admin/inventory/counts") {
+    sendJson(response, 200, { items: inventoryCounts });
     return;
   }
 

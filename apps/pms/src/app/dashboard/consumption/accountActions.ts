@@ -111,6 +111,8 @@ export async function requestConsumptionCorrectionAction(formData: FormData) {
     const itemIds = formData.getAll("order_item_id").map(String);
     const quantities = formData.getAll("resulting_quantity").map(Number);
     const discounts = formData.getAll("additional_discount").map(Number);
+    const restockQuantities = formData.getAll("restock_quantity").map(Number);
+    const restockLocations = formData.getAll("restock_location_id").map(String);
     await requestConsumptionCorrection(orderId, {
       kind,
       reason,
@@ -121,6 +123,11 @@ export async function requestConsumptionCorrectionAction(formData: FormData) {
               order_item_id,
               resulting_quantity: quantities[index] || 0,
               additional_discount: discounts[index] || 0,
+              restock_quantity: restockQuantities[index] || 0,
+              restock_location_id:
+                (restockQuantities[index] ?? 0) > 0
+                  ? restockLocations[index] || null
+                  : null,
             }))
           : undefined,
     });

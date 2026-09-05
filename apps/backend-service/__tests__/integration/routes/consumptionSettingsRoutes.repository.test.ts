@@ -238,6 +238,7 @@ describe("consumption settings routes", () => {
         product_ids: [offer.product.id],
         policy: { source: "inherit" },
         commercial_agreement_id: null,
+        inventory_location_id: null,
       },
     );
     vi.mocked(repo.createOffers).mockResolvedValueOnce({ result: "conflict" });

@@ -34,6 +34,11 @@ export const PERMISSIONS = {
   COMMERCIAL_PARTNERS_READ: "read_commercial_partners",
   COMMERCIAL_PARTNERS_MANAGE: "manage_commercial_partners",
   COMMERCIAL_AGREEMENTS_MANAGE: "manage_commercial_agreements",
+  INVENTORY_READ: "read_inventory",
+  INVENTORY_COSTS_READ: "read_inventory_costs",
+  INVENTORY_SETTINGS_MANAGE: "manage_inventory_settings",
+  INVENTORY_MOVEMENTS_POST: "post_inventory_movements",
+  INVENTORY_COUNTS_PERFORM: "perform_inventory_counts",
   SEASON_CREATE: "create_season",
   SEASON_READ: "read_season",
   SEASON_UPDATE: "update_season",
@@ -109,6 +114,11 @@ export const ADMIN_NAV_ITEMS = [
     href: "/dashboard/consumption",
     label: "Vendas e consumo",
     permission: PERMISSIONS.CONSUMPTION_READ,
+  },
+  {
+    href: "/dashboard/inventory",
+    label: "Estoque",
+    permission: PERMISSIONS.INVENTORY_READ,
   },
   {
     href: "/dashboard/seasons",

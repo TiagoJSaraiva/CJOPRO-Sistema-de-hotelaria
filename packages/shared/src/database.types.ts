@@ -524,10 +524,13 @@ export type Database = {
           created_at: string
           hotel_id: string
           id: string
+          inventory_version: number | null
           order_item_id: string
           previous_discount: number
           previous_net: number
           previous_quantity: number
+          restock_location_id: string | null
+          restock_quantity: number
           resulting_net: number
           resulting_quantity: number
         }
@@ -537,10 +540,13 @@ export type Database = {
           created_at?: string
           hotel_id: string
           id?: string
+          inventory_version?: number | null
           order_item_id: string
           previous_discount: number
           previous_net: number
           previous_quantity: number
+          restock_location_id?: string | null
+          restock_quantity?: number
           resulting_net: number
           resulting_quantity: number
         }
@@ -550,10 +556,13 @@ export type Database = {
           created_at?: string
           hotel_id?: string
           id?: string
+          inventory_version?: number | null
           order_item_id?: string
           previous_discount?: number
           previous_net?: number
           previous_quantity?: number
+          restock_location_id?: string | null
+          restock_quantity?: number
           resulting_net?: number
           resulting_quantity?: number
         }
@@ -711,6 +720,7 @@ export type Database = {
           display_order: number
           hotel_id: string
           id: string
+          inventory_location_id: string | null
           is_active: boolean
           last_changed_by: string | null
           point_id: string
@@ -731,6 +741,7 @@ export type Database = {
           display_order?: number
           hotel_id: string
           id?: string
+          inventory_location_id?: string | null
           is_active?: boolean
           last_changed_by?: string | null
           point_id: string
@@ -751,6 +762,7 @@ export type Database = {
           display_order?: number
           hotel_id?: string
           id?: string
+          inventory_location_id?: string | null
           is_active?: boolean
           last_changed_by?: string | null
           point_id?: string
@@ -772,6 +784,13 @@ export type Database = {
             isOneToOne: false
             referencedRelation: "hotels"
             referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "consumption_offers_inventory_location_hotel_fkey"
+            columns: ["inventory_location_id", "hotel_id"]
+            isOneToOne: false
+            referencedRelation: "inventory_locations"
+            referencedColumns: ["id", "hotel_id"]
           },
           {
             foreignKeyName: "consumption_offers_last_changed_by_fkey"
@@ -871,6 +890,10 @@ export type Database = {
           discount_amount: number
           hotel_id: string
           id: string
+          inventory_controlled_snapshot: boolean
+          inventory_location_id_snapshot: string | null
+          inventory_location_name_snapshot: string | null
+          inventory_position_version_snapshot: number | null
           item_total_amount: number | null
           net_amount: number | null
           notes: string | null
@@ -901,6 +924,10 @@ export type Database = {
           discount_amount?: number
           hotel_id: string
           id?: string
+          inventory_controlled_snapshot?: boolean
+          inventory_location_id_snapshot?: string | null
+          inventory_location_name_snapshot?: string | null
+          inventory_position_version_snapshot?: number | null
           item_total_amount?: number | null
           net_amount?: number | null
           notes?: string | null
@@ -931,6 +958,10 @@ export type Database = {
           discount_amount?: number
           hotel_id?: string
           id?: string
+          inventory_controlled_snapshot?: boolean
+          inventory_location_id_snapshot?: string | null
+          inventory_location_name_snapshot?: string | null
+          inventory_position_version_snapshot?: number | null
           item_total_amount?: number | null
           net_amount?: number | null
           notes?: string | null
@@ -1184,6 +1215,7 @@ export type Database = {
           created_at: string
           default_allowed_billing_modes: Database["public"]["Enums"]["consumption_billing_mode"][]
           default_billing_mode: Database["public"]["Enums"]["consumption_billing_mode"]
+          default_inventory_location_id: string | null
           description: string | null
           display_order: number
           hotel_id: string
@@ -1199,6 +1231,7 @@ export type Database = {
           created_at?: string
           default_allowed_billing_modes: Database["public"]["Enums"]["consumption_billing_mode"][]
           default_billing_mode: Database["public"]["Enums"]["consumption_billing_mode"]
+          default_inventory_location_id?: string | null
           description?: string | null
           display_order?: number
           hotel_id: string
@@ -1214,6 +1247,7 @@ export type Database = {
           created_at?: string
           default_allowed_billing_modes?: Database["public"]["Enums"]["consumption_billing_mode"][]
           default_billing_mode?: Database["public"]["Enums"]["consumption_billing_mode"]
+          default_inventory_location_id?: string | null
           description?: string | null
           display_order?: number
           hotel_id?: string
@@ -1231,6 +1265,13 @@ export type Database = {
             isOneToOne: false
             referencedRelation: "hotels"
             referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "consumption_points_inventory_location_hotel_fkey"
+            columns: ["default_inventory_location_id", "hotel_id"]
+            isOneToOne: false
+            referencedRelation: "inventory_locations"
+            referencedColumns: ["id", "hotel_id"]
           },
           {
             foreignKeyName: "consumption_points_last_changed_by_fkey"
@@ -1531,6 +1572,603 @@ export type Database = {
           zip_code?: string
         }
         Relationships: []
+      }
+      inventory_audit_events: {
+        Row: {
+          action: string
+          actor_id: string | null
+          changes: Json
+          created_at: string
+          entity_id: string
+          entity_type: string
+          hotel_id: string
+          id: string
+        }
+        Insert: {
+          action: string
+          actor_id?: string | null
+          changes?: Json
+          created_at?: string
+          entity_id: string
+          entity_type: string
+          hotel_id: string
+          id?: string
+        }
+        Update: {
+          action?: string
+          actor_id?: string | null
+          changes?: Json
+          created_at?: string
+          entity_id?: string
+          entity_type?: string
+          hotel_id?: string
+          id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "inventory_audit_events_actor_id_fkey"
+            columns: ["actor_id"]
+            isOneToOne: false
+            referencedRelation: "users"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "inventory_audit_events_hotel_id_fkey"
+            columns: ["hotel_id"]
+            isOneToOne: false
+            referencedRelation: "hotels"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      inventory_count_items: {
+        Row: {
+          counted_quantity: number | null
+          expected_quantity: number
+          expected_version: number
+          hotel_id: string
+          id: string
+          position_id: string
+          session_id: string
+        }
+        Insert: {
+          counted_quantity?: number | null
+          expected_quantity: number
+          expected_version: number
+          hotel_id: string
+          id?: string
+          position_id: string
+          session_id: string
+        }
+        Update: {
+          counted_quantity?: number | null
+          expected_quantity?: number
+          expected_version?: number
+          hotel_id?: string
+          id?: string
+          position_id?: string
+          session_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "inventory_count_items_hotel_id_fkey"
+            columns: ["hotel_id"]
+            isOneToOne: false
+            referencedRelation: "hotels"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "inventory_count_items_position_hotel_fkey"
+            columns: ["position_id", "hotel_id"]
+            isOneToOne: false
+            referencedRelation: "inventory_positions"
+            referencedColumns: ["id", "hotel_id"]
+          },
+          {
+            foreignKeyName: "inventory_count_items_session_hotel_fkey"
+            columns: ["session_id", "hotel_id"]
+            isOneToOne: false
+            referencedRelation: "inventory_count_sessions"
+            referencedColumns: ["id", "hotel_id"]
+          },
+        ]
+      }
+      inventory_count_sessions: {
+        Row: {
+          canceled_at: string | null
+          canceled_by: string | null
+          completed_at: string | null
+          completed_by: string | null
+          created_at: string
+          created_by: string
+          hotel_id: string
+          id: string
+          idempotency_key: string
+          location_id: string
+          notes: string | null
+          request_fingerprint: string
+          status: Database["public"]["Enums"]["inventory_count_status"]
+        }
+        Insert: {
+          canceled_at?: string | null
+          canceled_by?: string | null
+          completed_at?: string | null
+          completed_by?: string | null
+          created_at?: string
+          created_by: string
+          hotel_id: string
+          id?: string
+          idempotency_key: string
+          location_id: string
+          notes?: string | null
+          request_fingerprint: string
+          status?: Database["public"]["Enums"]["inventory_count_status"]
+        }
+        Update: {
+          canceled_at?: string | null
+          canceled_by?: string | null
+          completed_at?: string | null
+          completed_by?: string | null
+          created_at?: string
+          created_by?: string
+          hotel_id?: string
+          id?: string
+          idempotency_key?: string
+          location_id?: string
+          notes?: string | null
+          request_fingerprint?: string
+          status?: Database["public"]["Enums"]["inventory_count_status"]
+        }
+        Relationships: [
+          {
+            foreignKeyName: "inventory_count_sessions_canceled_by_fkey"
+            columns: ["canceled_by"]
+            isOneToOne: false
+            referencedRelation: "users"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "inventory_count_sessions_completed_by_fkey"
+            columns: ["completed_by"]
+            isOneToOne: false
+            referencedRelation: "users"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "inventory_count_sessions_created_by_fkey"
+            columns: ["created_by"]
+            isOneToOne: false
+            referencedRelation: "users"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "inventory_count_sessions_hotel_id_fkey"
+            columns: ["hotel_id"]
+            isOneToOne: false
+            referencedRelation: "hotels"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "inventory_count_sessions_location_hotel_fkey"
+            columns: ["location_id", "hotel_id"]
+            isOneToOne: false
+            referencedRelation: "inventory_locations"
+            referencedColumns: ["id", "hotel_id"]
+          },
+        ]
+      }
+      inventory_documents: {
+        Row: {
+          hotel_id: string
+          id: string
+          idempotency_key: string
+          kind: Database["public"]["Enums"]["inventory_document_kind"]
+          metadata: Json
+          occurred_at: string
+          posted_at: string
+          posted_by: string
+          reason: string
+          reference_code: string | null
+          request_fingerprint: string
+        }
+        Insert: {
+          hotel_id: string
+          id?: string
+          idempotency_key: string
+          kind: Database["public"]["Enums"]["inventory_document_kind"]
+          metadata?: Json
+          occurred_at: string
+          posted_at?: string
+          posted_by: string
+          reason: string
+          reference_code?: string | null
+          request_fingerprint: string
+        }
+        Update: {
+          hotel_id?: string
+          id?: string
+          idempotency_key?: string
+          kind?: Database["public"]["Enums"]["inventory_document_kind"]
+          metadata?: Json
+          occurred_at?: string
+          posted_at?: string
+          posted_by?: string
+          reason?: string
+          reference_code?: string | null
+          request_fingerprint?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "inventory_documents_hotel_id_fkey"
+            columns: ["hotel_id"]
+            isOneToOne: false
+            referencedRelation: "hotels"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "inventory_documents_posted_by_fkey"
+            columns: ["posted_by"]
+            isOneToOne: false
+            referencedRelation: "users"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      inventory_locations: {
+        Row: {
+          archived_at: string | null
+          created_at: string
+          created_by: string | null
+          description: string | null
+          display_order: number
+          hotel_id: string
+          id: string
+          internal_code: string | null
+          is_active: boolean
+          name: string
+          updated_at: string
+          updated_by: string | null
+        }
+        Insert: {
+          archived_at?: string | null
+          created_at?: string
+          created_by?: string | null
+          description?: string | null
+          display_order?: number
+          hotel_id: string
+          id?: string
+          internal_code?: string | null
+          is_active?: boolean
+          name: string
+          updated_at?: string
+          updated_by?: string | null
+        }
+        Update: {
+          archived_at?: string | null
+          created_at?: string
+          created_by?: string | null
+          description?: string | null
+          display_order?: number
+          hotel_id?: string
+          id?: string
+          internal_code?: string | null
+          is_active?: boolean
+          name?: string
+          updated_at?: string
+          updated_by?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "inventory_locations_created_by_fkey"
+            columns: ["created_by"]
+            isOneToOne: false
+            referencedRelation: "users"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "inventory_locations_hotel_id_fkey"
+            columns: ["hotel_id"]
+            isOneToOne: false
+            referencedRelation: "hotels"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "inventory_locations_updated_by_fkey"
+            columns: ["updated_by"]
+            isOneToOne: false
+            referencedRelation: "users"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      inventory_movements: {
+        Row: {
+          actor_id: string | null
+          average_unit_cost: number | null
+          consumption_correction_id: string | null
+          consumption_order_id: string | null
+          consumption_order_item_id: string | null
+          count_session_id: string | null
+          document_id: string | null
+          hotel_id: string
+          id: string
+          kind: Database["public"]["Enums"]["inventory_movement_kind"]
+          location_id: string
+          metadata: Json
+          occurred_at: string
+          position_id: string
+          posted_at: string
+          product_id: string
+          quantity_after: number
+          quantity_before: number
+          quantity_delta: number
+          reason: string | null
+          reference_code: string | null
+          total_cost: number | null
+        }
+        Insert: {
+          actor_id?: string | null
+          average_unit_cost?: number | null
+          consumption_correction_id?: string | null
+          consumption_order_id?: string | null
+          consumption_order_item_id?: string | null
+          count_session_id?: string | null
+          document_id?: string | null
+          hotel_id: string
+          id?: string
+          kind: Database["public"]["Enums"]["inventory_movement_kind"]
+          location_id: string
+          metadata?: Json
+          occurred_at: string
+          position_id: string
+          posted_at?: string
+          product_id: string
+          quantity_after: number
+          quantity_before: number
+          quantity_delta: number
+          reason?: string | null
+          reference_code?: string | null
+          total_cost?: number | null
+        }
+        Update: {
+          actor_id?: string | null
+          average_unit_cost?: number | null
+          consumption_correction_id?: string | null
+          consumption_order_id?: string | null
+          consumption_order_item_id?: string | null
+          count_session_id?: string | null
+          document_id?: string | null
+          hotel_id?: string
+          id?: string
+          kind?: Database["public"]["Enums"]["inventory_movement_kind"]
+          location_id?: string
+          metadata?: Json
+          occurred_at?: string
+          position_id?: string
+          posted_at?: string
+          product_id?: string
+          quantity_after?: number
+          quantity_before?: number
+          quantity_delta?: number
+          reason?: string | null
+          reference_code?: string | null
+          total_cost?: number | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "inventory_movements_actor_id_fkey"
+            columns: ["actor_id"]
+            isOneToOne: false
+            referencedRelation: "users"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "inventory_movements_correction_hotel_fkey"
+            columns: ["consumption_correction_id", "hotel_id"]
+            isOneToOne: false
+            referencedRelation: "consumption_corrections"
+            referencedColumns: ["id", "hotel_id"]
+          },
+          {
+            foreignKeyName: "inventory_movements_count_hotel_fkey"
+            columns: ["count_session_id", "hotel_id"]
+            isOneToOne: false
+            referencedRelation: "inventory_count_sessions"
+            referencedColumns: ["id", "hotel_id"]
+          },
+          {
+            foreignKeyName: "inventory_movements_document_hotel_fkey"
+            columns: ["document_id", "hotel_id"]
+            isOneToOne: false
+            referencedRelation: "inventory_documents"
+            referencedColumns: ["id", "hotel_id"]
+          },
+          {
+            foreignKeyName: "inventory_movements_hotel_id_fkey"
+            columns: ["hotel_id"]
+            isOneToOne: false
+            referencedRelation: "hotels"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "inventory_movements_location_hotel_fkey"
+            columns: ["location_id", "hotel_id"]
+            isOneToOne: false
+            referencedRelation: "inventory_locations"
+            referencedColumns: ["id", "hotel_id"]
+          },
+          {
+            foreignKeyName: "inventory_movements_order_hotel_fkey"
+            columns: ["consumption_order_id", "hotel_id"]
+            isOneToOne: false
+            referencedRelation: "consumption_order_effective"
+            referencedColumns: ["id", "hotel_id"]
+          },
+          {
+            foreignKeyName: "inventory_movements_order_hotel_fkey"
+            columns: ["consumption_order_id", "hotel_id"]
+            isOneToOne: false
+            referencedRelation: "consumption_orders"
+            referencedColumns: ["id", "hotel_id"]
+          },
+          {
+            foreignKeyName: "inventory_movements_order_item_hotel_fkey"
+            columns: ["consumption_order_item_id", "hotel_id"]
+            isOneToOne: false
+            referencedRelation: "consumption_order_item_effective"
+            referencedColumns: ["id", "hotel_id"]
+          },
+          {
+            foreignKeyName: "inventory_movements_order_item_hotel_fkey"
+            columns: ["consumption_order_item_id", "hotel_id"]
+            isOneToOne: false
+            referencedRelation: "consumption_order_items"
+            referencedColumns: ["id", "hotel_id"]
+          },
+          {
+            foreignKeyName: "inventory_movements_position_hotel_fkey"
+            columns: ["position_id", "hotel_id"]
+            isOneToOne: false
+            referencedRelation: "inventory_positions"
+            referencedColumns: ["id", "hotel_id"]
+          },
+          {
+            foreignKeyName: "inventory_movements_product_hotel_fkey"
+            columns: ["product_id", "hotel_id"]
+            isOneToOne: false
+            referencedRelation: "products"
+            referencedColumns: ["id", "hotel_id"]
+          },
+        ]
+      }
+      inventory_positions: {
+        Row: {
+          archived_at: string | null
+          average_unit_cost: number | null
+          created_at: string
+          created_by: string | null
+          hotel_id: string
+          id: string
+          ideal_quantity: number
+          is_active: boolean
+          location_id: string
+          minimum_quantity: number
+          product_id: string
+          quantity: number
+          updated_at: string
+          updated_by: string | null
+          version: number
+        }
+        Insert: {
+          archived_at?: string | null
+          average_unit_cost?: number | null
+          created_at?: string
+          created_by?: string | null
+          hotel_id: string
+          id?: string
+          ideal_quantity?: number
+          is_active?: boolean
+          location_id: string
+          minimum_quantity?: number
+          product_id: string
+          quantity?: number
+          updated_at?: string
+          updated_by?: string | null
+          version?: number
+        }
+        Update: {
+          archived_at?: string | null
+          average_unit_cost?: number | null
+          created_at?: string
+          created_by?: string | null
+          hotel_id?: string
+          id?: string
+          ideal_quantity?: number
+          is_active?: boolean
+          location_id?: string
+          minimum_quantity?: number
+          product_id?: string
+          quantity?: number
+          updated_at?: string
+          updated_by?: string | null
+          version?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "inventory_positions_created_by_fkey"
+            columns: ["created_by"]
+            isOneToOne: false
+            referencedRelation: "users"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "inventory_positions_hotel_id_fkey"
+            columns: ["hotel_id"]
+            isOneToOne: false
+            referencedRelation: "hotels"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "inventory_positions_location_hotel_fkey"
+            columns: ["location_id", "hotel_id"]
+            isOneToOne: false
+            referencedRelation: "inventory_locations"
+            referencedColumns: ["id", "hotel_id"]
+          },
+          {
+            foreignKeyName: "inventory_positions_product_hotel_fkey"
+            columns: ["product_id", "hotel_id"]
+            isOneToOne: false
+            referencedRelation: "products"
+            referencedColumns: ["id", "hotel_id"]
+          },
+          {
+            foreignKeyName: "inventory_positions_updated_by_fkey"
+            columns: ["updated_by"]
+            isOneToOne: false
+            referencedRelation: "users"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      inventory_settings: {
+        Row: {
+          created_at: string
+          hotel_id: string
+          negative_stock_policy: Database["public"]["Enums"]["inventory_negative_stock_policy"]
+          updated_at: string
+          updated_by: string | null
+        }
+        Insert: {
+          created_at?: string
+          hotel_id: string
+          negative_stock_policy?: Database["public"]["Enums"]["inventory_negative_stock_policy"]
+          updated_at?: string
+          updated_by?: string | null
+        }
+        Update: {
+          created_at?: string
+          hotel_id?: string
+          negative_stock_policy?: Database["public"]["Enums"]["inventory_negative_stock_policy"]
+          updated_at?: string
+          updated_by?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "inventory_settings_hotel_id_fkey"
+            columns: ["hotel_id"]
+            isOneToOne: true
+            referencedRelation: "hotels"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "inventory_settings_updated_by_fkey"
+            columns: ["updated_by"]
+            isOneToOne: false
+            referencedRelation: "users"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       maintenance_attachments: {
         Row: {
@@ -5346,6 +5984,29 @@ export type Database = {
         }
         Returns: number
       }
+      apply_correction_inventory_return: {
+        Args: { p_actor_id: string; p_correction_id: string }
+        Returns: Json
+      }
+      apply_inventory_delta: {
+        Args: {
+          p_actor_id: string
+          p_correction_id?: string
+          p_count_session_id?: string
+          p_document_id?: string
+          p_hotel_id: string
+          p_kind: Database["public"]["Enums"]["inventory_movement_kind"]
+          p_occurred_at: string
+          p_order_id?: string
+          p_order_item_id?: string
+          p_position_id: string
+          p_quantity_delta: number
+          p_reason: string
+          p_reference: string
+          p_unit_cost?: number
+        }
+        Returns: Json
+      }
       apply_maintenance_occurrence_change: {
         Args: {
           p_actor_id: string
@@ -5358,6 +6019,10 @@ export type Database = {
         Returns: boolean
       }
       backfill_stay_folio: { Args: never; Returns: undefined }
+      cancel_inventory_count: {
+        Args: { p_actor_id: string; p_count_id: string; p_hotel_id: string }
+        Returns: Json
+      }
       checkout_stay_account: {
         Args: {
           p_actor_id: string
@@ -5393,6 +6058,10 @@ export type Database = {
         }
         Returns: boolean
       }
+      complete_inventory_count: {
+        Args: { p_actor_id: string; p_count_id: string; p_hotel_id: string }
+        Returns: Json
+      }
       complete_maintenance_checklist_item: {
         Args: {
           p_actor_id: string
@@ -5410,6 +6079,20 @@ export type Database = {
           p_correction_id: string
           p_hotel_id: string
           p_reference?: string
+        }
+        Returns: Json
+      }
+      configure_inventory_position: {
+        Args: {
+          p_actor_id: string
+          p_average_unit_cost: number
+          p_hotel_id: string
+          p_ideal_quantity: number
+          p_idempotency_key: string
+          p_initial_quantity: number
+          p_location_id: string
+          p_minimum_quantity: number
+          p_product_id: string
         }
         Returns: Json
       }
@@ -5457,6 +6140,17 @@ export type Database = {
       create_default_maintenance_sla_policies: {
         Args: { p_hotel_id: string }
         Returns: undefined
+      }
+      create_inventory_count: {
+        Args: {
+          p_actor_id: string
+          p_hotel_id: string
+          p_idempotency_key: string
+          p_location_id: string
+          p_notes: string
+          p_product_ids: string[]
+        }
+        Returns: Json
       }
       create_maintenance_occurrence: {
         Args: {
@@ -5606,6 +6300,16 @@ export type Database = {
         }
         Returns: Json
       }
+      decide_consumption_correction_with_inventory: {
+        Args: {
+          p_actor_id: string
+          p_correction_id: string
+          p_decision: string
+          p_hotel_id: string
+          p_reason?: string
+        }
+        Returns: Json
+      }
       decide_maintenance_preventive_run: {
         Args: {
           p_action: string
@@ -5640,6 +6344,10 @@ export type Database = {
           p_work_order_id: string
         }
         Returns: string
+      }
+      inventory_assert_actor: {
+        Args: { p_actor_id: string; p_hotel_id: string }
+        Returns: undefined
       }
       maintenance_user_has_hotel_scope: {
         Args: { p_hotel_id: string; p_user_id: string }
@@ -5707,6 +6415,20 @@ export type Database = {
         }
         Returns: Json
       }
+      post_inventory_document: {
+        Args: {
+          p_actor_id: string
+          p_direction: string
+          p_hotel_id: string
+          p_idempotency_key: string
+          p_kind: Database["public"]["Enums"]["inventory_document_kind"]
+          p_lines: Json
+          p_occurred_at: string
+          p_reason: string
+          p_reference: string
+        }
+        Returns: Json
+      }
       process_maintenance_expiry_alerts: {
         Args: { p_hotel_id: string; p_local_date: string }
         Returns: number
@@ -5749,7 +6471,23 @@ export type Database = {
         Args: { p_actor_id: string; p_hotel_id: string; p_ids: string[] }
         Returns: string
       }
+      reorder_inventory_locations: {
+        Args: { p_actor_id: string; p_hotel_id: string; p_ids: string[] }
+        Returns: string
+      }
       request_consumption_correction: {
+        Args: {
+          p_actor_id: string
+          p_expected_version: number
+          p_hotel_id: string
+          p_items: Json
+          p_kind: Database["public"]["Enums"]["consumption_correction_kind"]
+          p_order_id: string
+          p_reason: string
+        }
+        Returns: Json
+      }
+      request_consumption_correction_with_inventory: {
         Args: {
           p_actor_id: string
           p_expected_version: number
@@ -5763,6 +6501,14 @@ export type Database = {
       }
       resolve_consumption_offer_snapshot: {
         Args: { p_hotel_id: string; p_occurred_at: string; p_offer_id: string }
+        Returns: Json
+      }
+      resolve_consumption_offer_snapshot_without_inventory: {
+        Args: { p_hotel_id: string; p_occurred_at: string; p_offer_id: string }
+        Returns: Json
+      }
+      resolve_inventory_source: {
+        Args: { p_hotel_id: string; p_offer_id: string }
         Returns: Json
       }
       reverse_maintenance_financial_settlement: {
@@ -5829,6 +6575,21 @@ export type Database = {
         }
         Returns: string
       }
+      transfer_inventory: {
+        Args: {
+          p_actor_id: string
+          p_destination_location_id: string
+          p_hotel_id: string
+          p_idempotency_key: string
+          p_occurred_at: string
+          p_product_id: string
+          p_quantity: number
+          p_reason: string
+          p_reference: string
+          p_source_location_id: string
+        }
+        Returns: Json
+      }
       transition_maintenance_cost_item: {
         Args: {
           p_action: string
@@ -5874,6 +6635,15 @@ export type Database = {
           p_work_order_id: string
         }
         Returns: string
+      }
+      update_inventory_count: {
+        Args: {
+          p_actor_id: string
+          p_count_id: string
+          p_hotel_id: string
+          p_items: Json
+        }
+        Returns: Json
       }
       update_role_with_permissions: {
         Args: {
@@ -6011,6 +6781,28 @@ export type Database = {
         | "debit_card"
         | "bank_transfer"
       consumption_policy_source: "inherit" | "override"
+      inventory_count_status: "draft" | "completed" | "canceled"
+      inventory_document_kind:
+        | "receipt"
+        | "adjustment"
+        | "loss"
+        | "internal_use"
+        | "transfer"
+      inventory_movement_kind:
+        | "opening"
+        | "receipt"
+        | "consumption"
+        | "courtesy"
+        | "return"
+        | "transfer_out"
+        | "transfer_in"
+        | "loss"
+        | "internal_use"
+        | "adjustment_in"
+        | "adjustment_out"
+        | "count_gain"
+        | "count_loss"
+      inventory_negative_stock_policy: "allow_with_warning" | "block"
       maintenance_asset_lifecycle: "active" | "out_of_service" | "retired"
       maintenance_automation_status: "running" | "completed" | "failed"
       maintenance_contract_kind: "fixed" | "per_service" | "warranty" | "other"
@@ -6308,6 +7100,30 @@ export const Constants = {
         "bank_transfer",
       ],
       consumption_policy_source: ["inherit", "override"],
+      inventory_count_status: ["draft", "completed", "canceled"],
+      inventory_document_kind: [
+        "receipt",
+        "adjustment",
+        "loss",
+        "internal_use",
+        "transfer",
+      ],
+      inventory_movement_kind: [
+        "opening",
+        "receipt",
+        "consumption",
+        "courtesy",
+        "return",
+        "transfer_out",
+        "transfer_in",
+        "loss",
+        "internal_use",
+        "adjustment_in",
+        "adjustment_out",
+        "count_gain",
+        "count_loss",
+      ],
+      inventory_negative_stock_policy: ["allow_with_warning", "block"],
       maintenance_asset_lifecycle: ["active", "out_of_service", "retired"],
       maintenance_automation_status: ["running", "completed", "failed"],
       maintenance_contract_kind: ["fixed", "per_service", "warranty", "other"],

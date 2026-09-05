@@ -33,6 +33,8 @@ const reasonLabels: Record<string, string> = {
   agreement_missing: "Acordo ausente",
   agreement_revision_missing: "Sem revisão vigente no horário informado",
   billing_mode_incompatible: "Cobrança incompatível com o acordo",
+  inventory_source_missing: "Produto controlado sem origem de estoque",
+  inventory_position_inactive: "Posição de estoque indisponível",
 };
 
 function currency(value: number, code: string) {
@@ -321,6 +323,16 @@ export function ConsumptionOrderComposer({
               <p className="my-1 text-sm">
                 {offer.category_name} · {offer.partner_name || "Hotel"}
               </p>
+              {offer.inventory?.controlled ? (
+                <p className="my-1 text-sm font-medium">
+                  Estoque {offer.inventory.location_name || "sem origem"}:{" "}
+                  {offer.inventory.quantity === undefined
+                    ? offer.inventory.status === "warning"
+                      ? "venda com alerta"
+                      : "disponível"
+                    : `${offer.inventory.quantity} disponível(is)`}
+                </p>
+              ) : null}
               {offer.available ? (
                 <label className="pms-field mt-2">
                   Quantidade

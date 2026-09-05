@@ -1,6 +1,6 @@
 begin;
 
-select plan(200);
+select plan(231);
 
 select ok(to_regclass('public.room_blocks') is not null, 'room_blocks exists');
 
@@ -78,7 +78,7 @@ select is((select count(*)::integer from public.hotels), 2, 'seed has two hotels
 select is((select count(*)::integer from public.rooms), 6, 'seed has six rooms');
 select is((select count(*)::integer from public.customers), 4, 'seed has four customers');
 select is((select count(*)::integer from public.products), 4, 'seed has four products');
-select is((select count(*)::integer from public.permissions), 71, 'seed matches all canonical application permissions');
+select is((select count(*)::integer from public.permissions), 76, 'seed matches all canonical application permissions');
 select is((select count(*)::integer from public.roles), 3, 'seed has one global role and two hotel roles');
 select is((select count(*)::integer from public.users), 3, 'seed has three local users');
 select is((select count(*)::integer from public.reservations), 4, 'seed has four reservations');
@@ -217,13 +217,13 @@ select is(
 
 select is(
   (select count(*)::integer from public.role_permissions where role_id = '70000000-0000-4000-8000-000000000002'),
-  52,
+  57,
   'Aurora manager role has every hotel permission'
 );
 
 select is(
   (select count(*)::integer from public.role_permissions where role_id = '70000000-0000-4000-8000-000000000003'),
-  52,
+  57,
   'Horizonte manager role has every hotel permission'
 );
 
@@ -1463,6 +1463,120 @@ select ok(
     where stay_id='91000000-0000-4000-8000-000000000002' and kind='operational'),
   'checkout stores an immutable contemporary statement snapshot'
 );
+
+select ok(to_regclass('public.inventory_positions') is not null, 'inventory positions exist');
+select ok(to_regclass('public.inventory_movements') is not null, 'immutable inventory ledger exists');
+select ok(to_regclass('public.inventory_count_sessions') is not null, 'inventory count sessions exist');
+select is((select count(*)::integer from public.inventory_locations where internal_code='CENTRAL'), 2, 'migration creates one central location per hotel');
+select is((select count(*)::integer from public.inventory_positions), 1, 'only the explicitly seeded product is controlled');
+select is((public.configure_inventory_position(
+  '10000000-0000-4000-8000-000000000001','80000000-0000-4000-8000-000000000002',
+  '40000000-0000-4000-8000-000000000002',(select id from public.inventory_locations where hotel_id='10000000-0000-4000-8000-000000000001' and internal_code='CENTRAL'),
+  0,0,0,null,'a6000000-0000-4000-8000-000000000020')) ->> 'result', 'product_ineligible', 'services cannot be enabled for inventory');
+select is((public.configure_inventory_position(
+  '10000000-0000-4000-8000-000000000001','80000000-0000-4000-8000-000000000002',
+  '40000000-0000-4000-8000-000000000001',(select id from public.inventory_locations where hotel_id='10000000-0000-4000-8000-000000000001' and internal_code='CENTRAL'),
+  12,4,16,2.5,'a6000000-0000-4000-8000-000000000019')) ->> 'result', 'ok', 'eligible hotel products are enabled explicitly');
+select is((select quantity from public.inventory_positions where product_id='40000000-0000-4000-8000-000000000001'), 12::numeric, 'opening balance is stored');
+select is((select kind::text from public.inventory_movements where kind='opening' limit 1), 'opening', 'positive initial balance creates an opening movement');
+select is((public.post_inventory_document(
+  '10000000-0000-4000-8000-000000000001','80000000-0000-4000-8000-000000000002','receipt',null,
+  'Entrada de reposição','NF-SINTETICA',now(),jsonb_build_array(jsonb_build_object('position_id',(select id from public.inventory_positions where product_id='40000000-0000-4000-8000-000000000001'),'quantity',4,'unit_cost',4)),
+  'a6000000-0000-4000-8000-000000000021')) ->> 'result', 'ok', 'receipts post atomically');
+select is((select quantity from public.inventory_positions where product_id='40000000-0000-4000-8000-000000000001'), 16::numeric, 'receipt increases balance');
+select is((select average_unit_cost from public.inventory_positions where product_id='40000000-0000-4000-8000-000000000001'), 2.8750::numeric, 'receipt recalculates weighted average cost');
+insert into public.inventory_locations(id,hotel_id,name,internal_code,description,display_order,is_active,created_by,updated_by)
+values('a6000000-0000-4000-8000-000000000030','10000000-0000-4000-8000-000000000001','Depósito da piscina','PISCINA','Local sintético',10,true,'80000000-0000-4000-8000-000000000002','80000000-0000-4000-8000-000000000002');
+select is((public.configure_inventory_position(
+  '10000000-0000-4000-8000-000000000001','80000000-0000-4000-8000-000000000002','40000000-0000-4000-8000-000000000001',
+  'a6000000-0000-4000-8000-000000000030',0,1,5,null,'a6000000-0000-4000-8000-000000000022')) ->> 'result', 'ok', 'a product can be enabled in another location');
+select is((public.transfer_inventory(
+  '10000000-0000-4000-8000-000000000001','80000000-0000-4000-8000-000000000002',
+  (select location_id from public.inventory_positions where product_id='40000000-0000-4000-8000-000000000001' and quantity=16),
+  'a6000000-0000-4000-8000-000000000030','40000000-0000-4000-8000-000000000001',3,'Reposição da piscina',null,now(),
+  'a6000000-0000-4000-8000-000000000023')) ->> 'result', 'ok', 'transfers are atomic');
+select is((select quantity from public.inventory_positions where location_id='a6000000-0000-4000-8000-000000000030'), 3::numeric, 'transfer increases destination balance');
+select is((public.create_inventory_count(
+  '10000000-0000-4000-8000-000000000001','80000000-0000-4000-8000-000000000002','a6000000-0000-4000-8000-000000000030',null,'Contagem parcial',
+  'a6000000-0000-4000-8000-000000000024')) ->> 'result', 'ok', 'count sessions capture expected balances');
+select is((public.update_inventory_count(
+  '10000000-0000-4000-8000-000000000001','80000000-0000-4000-8000-000000000002',
+  (select id from public.inventory_count_sessions where idempotency_key='a6000000-0000-4000-8000-000000000024'),
+  jsonb_build_array(jsonb_build_object('item_id',(select id from public.inventory_count_items where session_id=(select id from public.inventory_count_sessions where idempotency_key='a6000000-0000-4000-8000-000000000024')),'counted_quantity',2)))) ->> 'result', 'ok', 'count quantities can be saved in draft');
+select is((public.complete_inventory_count(
+  '10000000-0000-4000-8000-000000000001','80000000-0000-4000-8000-000000000002',
+  (select id from public.inventory_count_sessions where idempotency_key='a6000000-0000-4000-8000-000000000024'))) ->> 'result', 'ok', 'count completion posts its divergence');
+select ok(exists(select 1 from public.inventory_movements where kind='count_loss' and count_session_id is not null), 'count divergence is represented in the ledger');
+select is(
+  (select count(*)::integer from public.inventory_movements where consumption_order_id in (
+    select id from public.consumption_orders where idempotency_key::text like 'c1000000-%'
+  )),
+  0,
+  'orders posted before inventory activation do not receive retroactive movements'
+);
+update public.consumption_points
+set default_inventory_location_id=(select id from public.inventory_locations
+  where hotel_id='10000000-0000-4000-8000-000000000001' and internal_code='CENTRAL')
+where id='a1000000-0000-4000-8000-000000000001';
+update public.stays set stay_status='checked_in',checkin_date_actual=now()-interval '1 hour'
+where id='91000000-0000-4000-8000-000000000001';
+select is((public.post_consumption_order(
+  '10000000-0000-4000-8000-000000000001','91000000-0000-4000-8000-000000000001',
+  'a1000000-0000-4000-8000-000000000001','80000000-0000-4000-8000-000000000002',now(),
+  'charged','stay_folio',jsonb_build_array(jsonb_build_object(
+    'offer_id','a2000000-0000-4000-8000-000000000001','quantity',2,
+    'version_token',public.resolve_consumption_offer_snapshot(
+      '10000000-0000-4000-8000-000000000001','a2000000-0000-4000-8000-000000000001',now())->>'version_token'
+  )),'c6000000-0000-4000-8000-000000000001')) ->> 'result','ok','posting a controlled consumption succeeds');
+select is((select quantity from public.inventory_positions
+  where hotel_id='10000000-0000-4000-8000-000000000001' and product_id='40000000-0000-4000-8000-000000000001'
+    and location_id=(select default_inventory_location_id from public.consumption_points where id='a1000000-0000-4000-8000-000000000001')),
+  11::numeric,'controlled consumption immediately decreases its configured source');
+select is((select count(*)::integer from public.inventory_movements where consumption_order_id=(
+  select id from public.consumption_orders where idempotency_key='c6000000-0000-4000-8000-000000000001')),
+  1,'a posted item creates exactly one inventory movement');
+select is((public.post_consumption_order(
+  '10000000-0000-4000-8000-000000000001','91000000-0000-4000-8000-000000000001',
+  'a1000000-0000-4000-8000-000000000001','80000000-0000-4000-8000-000000000002',now(),
+  'charged','stay_folio',jsonb_build_array(jsonb_build_object(
+    'offer_id','a2000000-0000-4000-8000-000000000001','quantity',2,
+    'version_token',(select version_token from public.consumption_order_items where order_id=(
+      select id from public.consumption_orders where idempotency_key='c6000000-0000-4000-8000-000000000001'))
+  )),'c6000000-0000-4000-8000-000000000001')) ->> 'result','ok','idempotent consumption replay returns the existing order');
+select is((select count(*)::integer from public.inventory_movements where consumption_order_id=(
+  select id from public.consumption_orders where idempotency_key='c6000000-0000-4000-8000-000000000001')),
+  1,'idempotent replay never duplicates the stock movement');
+update public.inventory_settings set negative_stock_policy='block'
+where hotel_id='10000000-0000-4000-8000-000000000001';
+select throws_ok($$ select public.post_consumption_order(
+  '10000000-0000-4000-8000-000000000001','91000000-0000-4000-8000-000000000001',
+  'a1000000-0000-4000-8000-000000000001','80000000-0000-4000-8000-000000000002',now(),
+  'charged','stay_folio',jsonb_build_array(jsonb_build_object(
+    'offer_id','a2000000-0000-4000-8000-000000000001','quantity',20,
+    'version_token',public.resolve_consumption_offer_snapshot(
+      '10000000-0000-4000-8000-000000000001','a2000000-0000-4000-8000-000000000001',now())->>'version_token'
+  )),'c6000000-0000-4000-8000-000000000002') $$,
+  '23514', 'insufficient_inventory', 'block policy rejects a consumption that exceeds stock');
+update public.inventory_settings set negative_stock_policy='allow_with_warning'
+where hotel_id='10000000-0000-4000-8000-000000000001';
+select is((public.post_consumption_order(
+  '10000000-0000-4000-8000-000000000001','91000000-0000-4000-8000-000000000001',
+  'a1000000-0000-4000-8000-000000000001','80000000-0000-4000-8000-000000000002',now(),
+  'charged','stay_folio',jsonb_build_array(jsonb_build_object(
+    'offer_id','a2000000-0000-4000-8000-000000000001','quantity',20,
+    'version_token',public.resolve_consumption_offer_snapshot(
+      '10000000-0000-4000-8000-000000000001','a2000000-0000-4000-8000-000000000001',now())->>'version_token'
+  )),'c6000000-0000-4000-8000-000000000003')) ->> 'result','ok','warning policy permits a negative balance');
+select ok(exists(select 1 from public.inventory_audit_events where action='negative_stock_warning'
+  and changes->>'order_id'=(select id::text from public.consumption_orders where idempotency_key='c6000000-0000-4000-8000-000000000003')),
+  'negative stock is highlighted by an immutable audit event');
+select is(public.reorder_inventory_locations(
+  '10000000-0000-4000-8000-000000000001','80000000-0000-4000-8000-000000000002',
+  array(select id from public.inventory_locations
+    where hotel_id='10000000-0000-4000-8000-000000000001' and archived_at is null
+    order by id desc)), 'ok', 'inventory locations can be reordered atomically with a complete hotel-scoped list');
+select throws_ok($$ delete from public.inventory_movements where kind='opening' $$, '23514', null, 'inventory movements cannot be deleted');
+select throws_ok($$ insert into public.inventory_positions(hotel_id,product_id,location_id) values('10000000-0000-4000-8000-000000000002','40000000-0000-4000-8000-000000000003','a6000000-0000-4000-8000-000000000030') $$, '23503', null, 'product and location cannot cross hotel scope');
 
 select * from finish();
 

@@ -198,6 +198,9 @@ class SupabaseStayAccountsRepository implements StayAccountsRepository {
           previous_discount: money(item.previous_discount),
           previous_net: money(item.previous_net),
           resulting_net: money(item.resulting_net),
+          restock_quantity: Number(item.restock_quantity),
+          restock_location_id: item.restock_location_id,
+          inventory_version: item.inventory_version,
         })),
     }));
   }
@@ -507,7 +510,7 @@ class SupabaseStayAccountsRepository implements StayAccountsRepository {
     input: AdminConsumptionCorrectionCreateInput,
   ) {
     const { data, error } = await createServerClient().rpc(
-      "request_consumption_correction",
+      "request_consumption_correction_with_inventory",
       {
         p_hotel_id: hotelId,
         p_order_id: orderId,
@@ -519,7 +522,14 @@ class SupabaseStayAccountsRepository implements StayAccountsRepository {
       },
     );
     if (error) {
-      if (error.code === "23514") return { result: "invalid_correction" };
+      if (error.code === "23514") {
+        const reason = [
+          "invalid_restock",
+          "return_location_unavailable",
+          "inventory_version_conflict",
+        ].find((candidate) => error.message.includes(candidate));
+        return { result: reason || "invalid_correction" };
+      }
       throw error;
     }
     const payload = object(data);
@@ -539,7 +549,7 @@ class SupabaseStayAccountsRepository implements StayAccountsRepository {
     input: AdminConsumptionCorrectionDecisionInput,
   ) {
     const { data, error } = await createServerClient().rpc(
-      "decide_consumption_correction",
+      "decide_consumption_correction_with_inventory",
       {
         p_hotel_id: hotelId,
         p_correction_id: correctionId,

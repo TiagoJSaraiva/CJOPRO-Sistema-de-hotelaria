@@ -39,6 +39,13 @@ async function stabilizeVisualState(page: Page) {
 }
 
 test.describe("PMS UI quality", () => {
+  test.beforeEach(async ({ page }) => {
+    const response = await page.request.post(
+      `${MOCK_BACKEND_URL}/test/reset-state`,
+    );
+    expect(response.ok()).toBe(true);
+  });
+
   test("login", { tag: TEST_TAGS }, async ({ page, auditAccessibility }) => {
     await preparePage(page);
     await page.goto("/login");
@@ -375,6 +382,60 @@ test.describe("PMS UI quality", () => {
       await page.evaluate(() => window.scrollTo(0, 0));
       await stabilizeVisualState(page);
       await expect(page).toHaveScreenshot("consumption-offers.png");
+    },
+  );
+
+  test(
+    "opera o estoque básico do hotel",
+    { tag: TEST_TAGS },
+    async ({ page, context, baseURL, auditAccessibility }) => {
+      test.setTimeout(90_000);
+      await preparePage(page);
+      await authenticate(
+        context,
+        baseURL || "http://127.0.0.1:3001",
+        "inventory-e2e-token",
+      );
+      await page.request.post(`${MOCK_BACKEND_URL}/test/reset-inventory`);
+      await page.goto("/dashboard/inventory/settings");
+
+      await expect(
+        page.getByRole("heading", { name: "Estoque" }),
+      ).toBeVisible();
+      await expect(
+        page.getByRole("article").filter({ hasText: "Estoque central" }),
+      ).toBeVisible();
+      await page.getByLabel("Saldo inicial").fill("8");
+      await page.getByLabel("Mínimo").fill("3");
+      await page.getByLabel("Ideal").fill("12");
+      await page.getByLabel("Custo médio inicial").fill("2.50");
+      await page.getByRole("button", { name: "Ativar controle" }).click();
+      await expect(page.getByRole("status")).toContainText("Controle ativado");
+
+      await page.getByRole("link", { name: "Visão geral" }).click();
+      await expect(page.getByText("Café espresso").first()).toBeVisible();
+      await expect(page.getByText("8 em saldo")).toBeVisible();
+
+      await page.getByRole("link", { name: "Movimentações" }).click();
+      await page.getByLabel("Quantidade").first().fill("2");
+      await page.getByLabel("Custo unitário").fill("3.00");
+      await page.getByLabel("Motivo").first().fill("Reposição diária");
+      await page.getByRole("button", { name: "Registrar" }).click();
+      await expect(page.getByRole("status")).toContainText(
+        "Movimento registrado",
+      );
+      await expect(page.getByText(/saldo 8 → 10/)).toBeVisible();
+
+      await page.getByRole("link", { name: "Visão geral" }).click();
+      await expect(page.getByText("10 em saldo")).toBeVisible();
+      await page.getByRole("button", { name: "Guia desta página" }).click();
+      await expect(
+        page.getByRole("dialog", { name: "Acompanhe saldos" }),
+      ).toBeVisible();
+      await page.keyboard.press("Escape");
+      await auditAccessibility("estoque-visao-geral");
+      await stabilizeVisualState(page);
+      await expect(page).toHaveScreenshot("inventory-overview.png");
     },
   );
 

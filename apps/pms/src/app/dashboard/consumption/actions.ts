@@ -91,6 +91,9 @@ export async function createConsumptionPointAction(formData: FormData) {
         allowed_modes: allowedModes,
         default_mode: defaultMode,
       },
+      default_inventory_location_id:
+        String(formData.get("default_inventory_location_id") || "").trim() ||
+        null,
     });
   } catch {
     go("conflict", "points");
@@ -119,6 +122,9 @@ export async function updateConsumptionPointAction(formData: FormData) {
         allowed_modes: allowedModes,
         default_mode: defaultMode,
       },
+      default_inventory_location_id:
+        String(formData.get("default_inventory_location_id") || "").trim() ||
+        null,
     });
   } catch {
     go("conflict", "points");
@@ -172,6 +178,8 @@ export async function createConsumptionOffersAction(formData: FormData) {
       policy: parsedPolicy,
       commercial_agreement_id:
         String(formData.get("commercial_agreement_id") || "").trim() || null,
+      inventory_location_id:
+        String(formData.get("inventory_location_id") || "").trim() || null,
     });
   } catch {
     go("conflict", "offers");
@@ -191,6 +199,8 @@ export async function updateConsumptionOfferAction(formData: FormData) {
       policy: parsedPolicy,
       commercial_agreement_id:
         String(formData.get("commercial_agreement_id") || "").trim() || null,
+      inventory_location_id:
+        String(formData.get("inventory_location_id") || "").trim() || null,
     });
   } catch {
     go("conflict", "offers");

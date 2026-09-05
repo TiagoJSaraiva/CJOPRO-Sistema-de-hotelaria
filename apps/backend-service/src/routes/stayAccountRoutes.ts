@@ -65,6 +65,8 @@ const validationResults = new Set([
   "reason_required",
   "decision_reason_required",
   "method_override_reason_required",
+  "invalid_restock",
+  "return_location_unavailable",
 ]);
 
 function resultError(reply: FastifyReply, result: string) {
@@ -239,6 +241,17 @@ export function registerStayAccountRoutes(
           request.body.items.length)
     )
       return fail(reply, 400, "Itens do ajuste inválidos.");
+    if (
+      request.body.items?.some(
+        (item) =>
+          (item.restock_quantity ?? 0) < 0 ||
+          !Number.isInteger(item.restock_quantity ?? 0) ||
+          ((item.restock_quantity ?? 0) > 0 && !item.restock_location_id) ||
+          ((item.restock_quantity ?? 0) === 0 &&
+            Boolean(item.restock_location_id)),
+      )
+    )
+      return fail(reply, 400, "Dados de devolução ao estoque inválidos.");
     const result = await repository.requestCorrection(
       context.hotelId,
       request.params.id,

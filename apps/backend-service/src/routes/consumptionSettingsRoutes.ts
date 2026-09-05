@@ -110,6 +110,9 @@ function pointPayload(body: PointBody, partial = false) {
     if (!policy) return null;
     payload.default_policy = policy;
   }
+  if (body.default_inventory_location_id !== undefined)
+    payload.default_inventory_location_id =
+      normalizeOptionalText(body.default_inventory_location_id) || null;
   return payload;
 }
 
@@ -381,6 +384,8 @@ export function registerConsumptionSettingsRoutes(
           commercial_agreement_id:
             normalizeOptionalText(request.body?.commercial_agreement_id) ||
             null,
+          inventory_location_id:
+            normalizeOptionalText(request.body?.inventory_location_id) || null,
         },
       );
       if (result.result === "not-found")
@@ -475,6 +480,9 @@ export function registerConsumptionSettingsRoutes(
     if (request.body?.commercial_agreement_id !== undefined)
       payload.commercial_agreement_id =
         normalizeOptionalText(request.body.commercial_agreement_id) || null;
+    if (request.body?.inventory_location_id !== undefined)
+      payload.inventory_location_id =
+        normalizeOptionalText(request.body.inventory_location_id) || null;
     if (!id || Object.keys(payload).length === 0)
       return sendError(
         reply,

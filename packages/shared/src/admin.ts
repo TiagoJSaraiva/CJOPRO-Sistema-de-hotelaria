@@ -618,7 +618,9 @@ export type ConsumptionUnavailableReason =
   | "agreement_terminated"
   | "agreement_outside_point"
   | "billing_mode_incompatible"
-  | "agreement_revision_missing";
+  | "agreement_revision_missing"
+  | "inventory_source_missing"
+  | "inventory_position_inactive";
 
 export type AdminConsumptionBillingPolicy = {
   allowed_modes: ConsumptionBillingMode[];
@@ -637,6 +639,7 @@ export type AdminConsumptionPoint = {
   inherited_offers_count: number;
   offers_count: number;
   archived_at: string | null;
+  default_inventory_location?: AdminInventoryLocationSummary | null;
   created_at?: string;
   updated_at?: string;
 };
@@ -648,6 +651,7 @@ export type AdminConsumptionPointInput = {
   display_order?: number;
   is_active?: boolean;
   default_policy: AdminConsumptionBillingPolicy;
+  default_inventory_location_id?: string | null;
 };
 
 export type AdminConsumptionOfferPolicyInput =
@@ -680,6 +684,8 @@ export type AdminConsumptionOffer = {
   > | null;
   commercial_revision: AdminCommercialAgreementRevision | null;
   archived_at: string | null;
+  inventory_location?: AdminInventoryLocationSummary | null;
+  inventory_source: "unmanaged" | "point" | "offer" | "missing";
   created_at?: string;
   updated_at?: string;
 };
@@ -688,6 +694,7 @@ export type AdminConsumptionOfferBatchInput = {
   product_ids: string[];
   policy: AdminConsumptionOfferPolicyInput;
   commercial_agreement_id?: string | null;
+  inventory_location_id?: string | null;
 };
 
 export type AdminConsumptionOfferUpdateInput = {
@@ -695,6 +702,7 @@ export type AdminConsumptionOfferUpdateInput = {
   is_active?: boolean;
   policy?: AdminConsumptionOfferPolicyInput;
   commercial_agreement_id?: string | null;
+  inventory_location_id?: string | null;
 };
 
 export type AdminConsumptionReorderInput = { ids: string[] };
@@ -724,7 +732,216 @@ export type ConsumptionOrderConflictReason =
   | "revision_changed"
   | "different_partners"
   | "financial_permission_required"
-  | "idempotency_conflict";
+  | "idempotency_conflict"
+  | "inventory_source_missing"
+  | "inventory_position_inactive"
+  | "inventory_version_conflict"
+  | "insufficient_inventory";
+
+export type InventoryNegativeStockPolicy = "allow_with_warning" | "block";
+export type InventoryPositionStatus =
+  "available" | "low" | "negative" | "unvalued";
+export type InventoryMovementKind =
+  | "opening"
+  | "receipt"
+  | "consumption"
+  | "courtesy"
+  | "return"
+  | "transfer_out"
+  | "transfer_in"
+  | "loss"
+  | "internal_use"
+  | "adjustment_in"
+  | "adjustment_out"
+  | "count_gain"
+  | "count_loss";
+export type InventoryDocumentKind =
+  "receipt" | "adjustment" | "loss" | "internal_use" | "transfer";
+export type InventoryCountStatus = "draft" | "completed" | "canceled";
+
+export type AdminInventorySettings = {
+  hotel_id: string;
+  negative_stock_policy: InventoryNegativeStockPolicy;
+  updated_at: string;
+};
+
+export type AdminInventoryLocationSummary = {
+  id: string;
+  name: string;
+  internal_code: string | null;
+  is_active: boolean;
+  archived_at: string | null;
+};
+
+export type AdminInventoryLocation = AdminInventoryLocationSummary & {
+  hotel_id: string;
+  description: string | null;
+  display_order: number;
+  position_count: number;
+  total_quantity: number;
+  created_at: string;
+  updated_at: string;
+};
+
+export type AdminInventoryLocationInput = {
+  name: string;
+  internal_code?: string | null;
+  description?: string | null;
+  display_order?: number;
+  is_active?: boolean;
+};
+
+export type AdminInventoryPosition = {
+  id: string;
+  hotel_id: string;
+  product: Pick<
+    AdminProduct,
+    "id" | "name" | "internal_code" | "kind" | "sales_unit" | "provider"
+  >;
+  location: AdminInventoryLocationSummary;
+  quantity: number;
+  version: number;
+  minimum_quantity: number;
+  ideal_quantity: number;
+  suggested_replenishment: number;
+  average_unit_cost?: number | null;
+  inventory_value?: number | null;
+  status: InventoryPositionStatus;
+  is_active: boolean;
+  archived_at: string | null;
+  updated_at: string;
+};
+
+export type AdminInventoryPositionInput = {
+  product_id: string;
+  location_id: string;
+  initial_quantity: number;
+  minimum_quantity?: number;
+  ideal_quantity?: number;
+  average_unit_cost?: number | null;
+  idempotency_key: string;
+};
+
+export type AdminInventoryPositionUpdateInput = {
+  minimum_quantity?: number;
+  ideal_quantity?: number;
+  is_active?: boolean;
+};
+
+export type AdminInventoryMovement = {
+  id: string;
+  hotel_id: string;
+  position_id: string;
+  product_id: string;
+  product_name: string;
+  location_id: string;
+  location_name: string;
+  kind: InventoryMovementKind;
+  quantity_delta: number;
+  quantity_before: number;
+  quantity_after: number;
+  average_unit_cost?: number | null;
+  total_cost?: number | null;
+  reason: string | null;
+  reference_code: string | null;
+  occurred_at: string;
+  posted_at: string;
+  actor_id: string | null;
+  actor_name: string | null;
+  consumption_order_id: string | null;
+  consumption_order_item_id: string | null;
+  consumption_correction_id: string | null;
+  document_id: string | null;
+  count_session_id: string | null;
+};
+
+export type AdminInventoryAuditEvent = {
+  id: string;
+  hotel_id: string;
+  entity_type: "settings" | "location" | "position" | "document" | "count";
+  entity_id: string;
+  action: string;
+  actor_id: string | null;
+  actor_name: string | null;
+  changes: Record<string, unknown>;
+  created_at: string;
+};
+
+export type AdminInventoryDocumentLineInput = {
+  position_id: string;
+  quantity: number;
+  unit_cost?: number | null;
+};
+
+export type AdminInventoryDocumentInput = {
+  kind: Exclude<InventoryDocumentKind, "transfer">;
+  direction?: "in" | "out";
+  reason: string;
+  reference_code?: string | null;
+  occurred_at: string;
+  idempotency_key: string;
+  lines: AdminInventoryDocumentLineInput[];
+};
+
+export type AdminInventoryTransferInput = {
+  source_location_id: string;
+  destination_location_id: string;
+  product_id: string;
+  quantity: number;
+  reason: string;
+  reference_code?: string | null;
+  occurred_at: string;
+  idempotency_key: string;
+};
+
+export type AdminInventoryDocument = {
+  id: string;
+  hotel_id: string;
+  kind: InventoryDocumentKind;
+  status: "completed";
+  reason: string;
+  reference_code: string | null;
+  occurred_at: string;
+  posted_at: string;
+  posted_by: string;
+};
+
+export type AdminInventoryCountItem = {
+  id: string;
+  position_id: string;
+  product_id: string;
+  product_name: string;
+  expected_quantity: number;
+  expected_version: number;
+  counted_quantity: number | null;
+  difference: number | null;
+};
+
+export type AdminInventoryCountSession = {
+  id: string;
+  hotel_id: string;
+  location: AdminInventoryLocationSummary;
+  status: InventoryCountStatus;
+  notes: string | null;
+  created_by: string;
+  created_at: string;
+  completed_by: string | null;
+  completed_at: string | null;
+  canceled_by: string | null;
+  canceled_at: string | null;
+  items: AdminInventoryCountItem[];
+};
+
+export type AdminInventoryCountCreateInput = {
+  location_id: string;
+  product_ids?: string[];
+  notes?: string | null;
+  idempotency_key: string;
+};
+
+export type AdminInventoryCountUpdateInput = {
+  items: Array<{ item_id: string; counted_quantity: number }>;
+};
 
 export type AdminConsumptionEligibleStay = {
   id: string;
@@ -778,6 +995,17 @@ export type AdminConsumptionContextOffer = {
   available: boolean;
   reasons: ConsumptionUnavailableReason[];
   version_token: string;
+  inventory?: {
+    controlled: boolean;
+    source: "unmanaged" | "point" | "offer" | "missing";
+    location_id?: string | null;
+    location_name?: string | null;
+    position_id?: string;
+    quantity?: number;
+    status?: string;
+    version?: number | null;
+    active?: boolean;
+  };
 };
 
 export type AdminConsumptionOperationalContext = {
@@ -841,6 +1069,10 @@ export type AdminConsumptionOrderItem = {
   billing_policy: Record<string, unknown>;
   version_token: string;
   notes: string | null;
+  inventory_controlled?: boolean;
+  inventory_location_id?: string | null;
+  inventory_location_name?: string | null;
+  inventory_position_version?: number | null;
 };
 
 export type AdminConsumptionOrderEvent = {
@@ -1188,6 +1420,9 @@ export type AdminConsumptionCorrectionItemInput = {
   order_item_id: string;
   resulting_quantity: number;
   additional_discount: number;
+  restock_quantity?: number;
+  restock_location_id?: string | null;
+  inventory_version?: number | null;
 };
 
 export type AdminConsumptionCorrectionCreateInput = {
@@ -1209,6 +1444,8 @@ export type AdminConsumptionCorrectionItem =
     previous_discount: number;
     previous_net: number;
     resulting_net: number;
+    restock_quantity: number;
+    restock_location_id: string | null;
   };
 
 export type AdminConsumptionCorrection = {

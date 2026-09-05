@@ -437,6 +437,7 @@ export const ConsumptionPointBodySchema = Type.Object(
     display_order: Type.Optional(Type.Integer({ minimum: 0 })),
     is_active: Type.Optional(Type.Boolean()),
     default_policy: ConsumptionPointBillingPolicySchema,
+    default_inventory_location_id: optionalNullable(uuid()),
   },
   { ...strict, $id: "ConsumptionPointInput" },
 );
@@ -466,6 +467,7 @@ export const ConsumptionOfferBatchBodySchema = Type.Object(
     product_ids: Type.Array(uuid(), { minItems: 1, uniqueItems: true }),
     policy: ConsumptionOfferPolicySchema,
     commercial_agreement_id: optionalNullable(uuid()),
+    inventory_location_id: optionalNullable(uuid()),
   },
   { ...strict, $id: "ConsumptionOfferBatchInput" },
 );
@@ -476,6 +478,7 @@ export const ConsumptionOfferUpdateSchema = Type.Partial(
       is_active: Type.Boolean(),
       policy: ConsumptionOfferPolicySchema,
       commercial_agreement_id: optionalNullable(uuid()),
+      inventory_location_id: optionalNullable(uuid()),
     },
     strict,
   ),
@@ -705,8 +708,152 @@ export const ConsumptionCorrectionItemBodySchema = Type.Object(
     order_item_id: uuid(),
     resulting_quantity: Type.Number({ minimum: 0, maximum: 9999 }),
     additional_discount: Type.Number({ minimum: 0, maximum: 9999999999.99 }),
+    restock_quantity: Type.Optional(Type.Number({ minimum: 0, maximum: 9999 })),
+    restock_location_id: optionalNullable(uuid()),
+    inventory_version: Type.Optional(Type.Integer({ minimum: 0 })),
   },
   { ...strict, $id: "ConsumptionCorrectionItemInput" },
+);
+
+const InventoryNegativeStockPolicySchema = Type.Union([
+  Type.Literal("allow_with_warning"),
+  Type.Literal("block"),
+]);
+const InventoryMovementKindSchema = Type.Union([
+  Type.Literal("opening"),
+  Type.Literal("receipt"),
+  Type.Literal("consumption"),
+  Type.Literal("courtesy"),
+  Type.Literal("return"),
+  Type.Literal("transfer_out"),
+  Type.Literal("transfer_in"),
+  Type.Literal("loss"),
+  Type.Literal("internal_use"),
+  Type.Literal("adjustment_in"),
+  Type.Literal("adjustment_out"),
+  Type.Literal("count_gain"),
+  Type.Literal("count_loss"),
+]);
+const InventoryDocumentKindSchema = Type.Union([
+  Type.Literal("receipt"),
+  Type.Literal("adjustment"),
+  Type.Literal("loss"),
+  Type.Literal("internal_use"),
+]);
+export const InventorySettingsBodySchema = Type.Object(
+  { negative_stock_policy: InventoryNegativeStockPolicySchema },
+  { ...strict, $id: "InventorySettingsInput" },
+);
+export const InventoryLocationBodySchema = Type.Object(
+  {
+    name: Type.String({ minLength: 1, maxLength: 120 }),
+    internal_code: optionalNullable(
+      Type.String({ minLength: 1, maxLength: 60 }),
+    ),
+    description: optionalNullable(
+      Type.String({ minLength: 1, maxLength: 1000 }),
+    ),
+    display_order: Type.Optional(Type.Integer({ minimum: 0 })),
+    is_active: Type.Optional(Type.Boolean()),
+  },
+  { ...strict, $id: "InventoryLocationInput" },
+);
+export const InventoryLocationUpdateSchema = Type.Partial(
+  InventoryLocationBodySchema,
+  { $id: "InventoryLocationUpdateInput" },
+);
+export const InventoryPositionBodySchema = Type.Object(
+  {
+    product_id: uuid(),
+    location_id: uuid(),
+    initial_quantity: Type.Integer({ minimum: 0, maximum: 999999999 }),
+    minimum_quantity: Type.Optional(
+      Type.Integer({ minimum: 0, maximum: 999999999 }),
+    ),
+    ideal_quantity: Type.Optional(
+      Type.Integer({ minimum: 0, maximum: 999999999 }),
+    ),
+    average_unit_cost: Type.Optional(nullable(Type.Number({ minimum: 0 }))),
+    idempotency_key: uuid(),
+  },
+  { ...strict, $id: "InventoryPositionInput" },
+);
+export const InventoryPositionUpdateSchema = Type.Partial(
+  Type.Object(
+    {
+      minimum_quantity: Type.Integer({ minimum: 0, maximum: 999999999 }),
+      ideal_quantity: Type.Integer({ minimum: 0, maximum: 999999999 }),
+      is_active: Type.Boolean(),
+    },
+    strict,
+  ),
+  { $id: "InventoryPositionUpdateInput" },
+);
+const InventoryDocumentLineBodySchema = Type.Object(
+  {
+    position_id: uuid(),
+    quantity: Type.Integer({ minimum: 1, maximum: 999999999 }),
+    unit_cost: Type.Optional(nullable(Type.Number({ minimum: 0 }))),
+  },
+  strict,
+);
+export const InventoryDocumentBodySchema = Type.Object(
+  {
+    kind: InventoryDocumentKindSchema,
+    direction: Type.Optional(
+      Type.Union([Type.Literal("in"), Type.Literal("out")]),
+    ),
+    reason: Type.String({ minLength: 3, maxLength: 1000 }),
+    reference_code: optionalNullable(
+      Type.String({ minLength: 1, maxLength: 120 }),
+    ),
+    occurred_at: dateTime(),
+    idempotency_key: uuid(),
+    lines: Type.Array(InventoryDocumentLineBodySchema, {
+      minItems: 1,
+      maxItems: 100,
+    }),
+  },
+  { ...strict, $id: "InventoryDocumentInput" },
+);
+export const InventoryTransferBodySchema = Type.Object(
+  {
+    source_location_id: uuid(),
+    destination_location_id: uuid(),
+    product_id: uuid(),
+    quantity: Type.Integer({ minimum: 1, maximum: 999999999 }),
+    reason: Type.String({ minLength: 3, maxLength: 1000 }),
+    reference_code: optionalNullable(
+      Type.String({ minLength: 1, maxLength: 120 }),
+    ),
+    occurred_at: dateTime(),
+    idempotency_key: uuid(),
+  },
+  { ...strict, $id: "InventoryTransferInput" },
+);
+export const InventoryCountBodySchema = Type.Object(
+  {
+    location_id: uuid(),
+    product_ids: Type.Optional(Type.Array(uuid(), { uniqueItems: true })),
+    notes: optionalNullable(Type.String({ minLength: 1, maxLength: 1000 })),
+    idempotency_key: uuid(),
+  },
+  { ...strict, $id: "InventoryCountInput" },
+);
+export const InventoryCountItemsBodySchema = Type.Object(
+  {
+    items: Type.Array(
+      Type.Object(
+        {
+          item_id: uuid(),
+          counted_quantity: Type.Integer({ minimum: 0, maximum: 999999999 }),
+        },
+        strict,
+      ),
+      { minItems: 1, maxItems: 1000 },
+    ),
+  },
+  { ...strict, $id: "InventoryCountItemsInput" },
 );
 export const ConsumptionCorrectionBodySchema = Type.Object(
   {
@@ -1076,6 +1223,20 @@ export const ConsumptionPointSchema = Type.Object(
     inherited_offers_count: Type.Integer(),
     offers_count: Type.Integer(),
     archived_at: nullable(dateTime()),
+    default_inventory_location: Type.Optional(
+      nullable(
+        Type.Object(
+          {
+            id: uuid(),
+            name: Type.String(),
+            internal_code: nullable(Type.String()),
+            is_active: Type.Boolean(),
+            archived_at: nullable(dateTime()),
+          },
+          strict,
+        ),
+      ),
+    ),
     ...timestamps,
   },
   { ...strict, $id: "ConsumptionPoint" },
@@ -1109,6 +1270,8 @@ const ConsumptionUnavailableReasonSchema = Type.Union([
   Type.Literal("agreement_outside_point"),
   Type.Literal("billing_mode_incompatible"),
   Type.Literal("agreement_revision_missing"),
+  Type.Literal("inventory_source_missing"),
+  Type.Literal("inventory_position_inactive"),
 ]);
 export const ConsumptionOfferSchema = Type.Object(
   {
@@ -1130,6 +1293,28 @@ export const ConsumptionOfferSchema = Type.Object(
     ),
     commercial_revision: nullable(Type.Ref("CommercialAgreementRevision")),
     archived_at: nullable(dateTime()),
+    inventory_location: Type.Optional(
+      nullable(
+        Type.Object(
+          {
+            id: uuid(),
+            name: Type.String(),
+            internal_code: nullable(Type.String()),
+            is_active: Type.Boolean(),
+            archived_at: nullable(dateTime()),
+          },
+          strict,
+        ),
+      ),
+    ),
+    inventory_source: Type.Optional(
+      Type.Union([
+        Type.Literal("unmanaged"),
+        Type.Literal("point"),
+        Type.Literal("offer"),
+        Type.Literal("missing"),
+      ]),
+    ),
     ...timestamps,
   },
   { ...strict, $id: "ConsumptionOffer" },
@@ -1150,6 +1335,160 @@ export const ConsumptionConfigurationAuditEventSchema = Type.Object(
     created_at: dateTime(),
   },
   { ...strict, $id: "ConsumptionConfigurationAuditEvent" },
+);
+
+export const InventorySettingsSchema = Type.Object(
+  {
+    hotel_id: uuid(),
+    negative_stock_policy: InventoryNegativeStockPolicySchema,
+    updated_at: dateTime(),
+  },
+  { ...strict, $id: "InventorySettings" },
+);
+export const InventoryLocationSchema = Type.Object(
+  {
+    id: uuid(),
+    hotel_id: uuid(),
+    name: Type.String(),
+    internal_code: nullable(Type.String()),
+    description: nullable(Type.String()),
+    display_order: Type.Integer(),
+    is_active: Type.Boolean(),
+    archived_at: nullable(dateTime()),
+    position_count: Type.Integer({ minimum: 0 }),
+    total_quantity: Type.Number(),
+    created_at: dateTime(),
+    updated_at: dateTime(),
+  },
+  { ...strict, $id: "InventoryLocation" },
+);
+const InventoryLocationSummarySchema = Type.Object(
+  {
+    id: uuid(),
+    name: Type.String(),
+    internal_code: nullable(Type.String()),
+    is_active: Type.Boolean(),
+    archived_at: nullable(dateTime()),
+  },
+  strict,
+);
+export const InventoryPositionSchema = Type.Object(
+  {
+    id: uuid(),
+    hotel_id: uuid(),
+    product: Type.Object(
+      {
+        id: uuid(),
+        name: Type.String(),
+        internal_code: nullable(Type.String()),
+        kind: ProductKindSchema,
+        sales_unit: ProductSalesUnitSchema,
+        provider: ProductProviderSchema,
+      },
+      strict,
+    ),
+    location: InventoryLocationSummarySchema,
+    quantity: Type.Number(),
+    version: Type.Integer(),
+    minimum_quantity: Type.Number(),
+    ideal_quantity: Type.Number(),
+    suggested_replenishment: Type.Number(),
+    average_unit_cost: Type.Optional(nullable(Type.Number())),
+    inventory_value: Type.Optional(nullable(Type.Number())),
+    status: Type.Union([
+      Type.Literal("available"),
+      Type.Literal("low"),
+      Type.Literal("negative"),
+      Type.Literal("unvalued"),
+    ]),
+    is_active: Type.Boolean(),
+    archived_at: nullable(dateTime()),
+    updated_at: dateTime(),
+  },
+  { ...strict, $id: "InventoryPosition" },
+);
+export const InventoryMovementSchema = Type.Object(
+  {
+    id: uuid(),
+    hotel_id: uuid(),
+    position_id: uuid(),
+    product_id: uuid(),
+    product_name: Type.String(),
+    location_id: uuid(),
+    location_name: Type.String(),
+    kind: InventoryMovementKindSchema,
+    quantity_delta: Type.Number(),
+    quantity_before: Type.Number(),
+    quantity_after: Type.Number(),
+    average_unit_cost: Type.Optional(nullable(Type.Number())),
+    total_cost: Type.Optional(nullable(Type.Number())),
+    reason: nullable(Type.String()),
+    reference_code: nullable(Type.String()),
+    occurred_at: dateTime(),
+    posted_at: dateTime(),
+    actor_id: nullable(uuid()),
+    actor_name: nullable(Type.String()),
+    consumption_order_id: nullable(uuid()),
+    consumption_order_item_id: nullable(uuid()),
+    consumption_correction_id: nullable(uuid()),
+    document_id: nullable(uuid()),
+    count_session_id: nullable(uuid()),
+  },
+  { ...strict, $id: "InventoryMovement" },
+);
+export const InventoryAuditEventSchema = Type.Object(
+  {
+    id: uuid(),
+    hotel_id: uuid(),
+    entity_type: Type.Union([
+      Type.Literal("settings"),
+      Type.Literal("location"),
+      Type.Literal("position"),
+      Type.Literal("document"),
+      Type.Literal("count"),
+    ]),
+    entity_id: uuid(),
+    action: Type.String(),
+    actor_id: nullable(uuid()),
+    actor_name: nullable(Type.String()),
+    changes: Type.Record(Type.String(), Type.Unknown()),
+    created_at: dateTime(),
+  },
+  { ...strict, $id: "InventoryAuditEvent" },
+);
+export const InventoryCountSchema = Type.Object(
+  {
+    id: uuid(),
+    hotel_id: uuid(),
+    location: InventoryLocationSummarySchema,
+    status: Type.Union([
+      Type.Literal("draft"),
+      Type.Literal("completed"),
+      Type.Literal("canceled"),
+    ]),
+    notes: nullable(Type.String()),
+    created_by: uuid(),
+    created_at: dateTime(),
+    completed_by: nullable(uuid()),
+    completed_at: nullable(dateTime()),
+    canceled_by: nullable(uuid()),
+    canceled_at: nullable(dateTime()),
+    items: Type.Array(
+      Type.Object(
+        {
+          id: uuid(),
+          position_id: uuid(),
+          product_id: uuid(),
+          product_name: Type.String(),
+          expected_quantity: Type.Number(),
+          expected_version: Type.Integer(),
+          counted_quantity: nullable(Type.Number()),
+        },
+        strict,
+      ),
+    ),
+  },
+  { ...strict, $id: "InventoryCount" },
 );
 
 export const ConsumptionEligibleStaySchema = Type.Object(
@@ -1194,6 +1533,27 @@ export const ConsumptionContextOfferSchema = Type.Object(
     available: Type.Boolean(),
     reasons: Type.Array(ConsumptionUnavailableReasonSchema),
     version_token: Type.String(),
+    inventory: Type.Optional(
+      Type.Object(
+        {
+          controlled: Type.Boolean(),
+          source: Type.Union([
+            Type.Literal("unmanaged"),
+            Type.Literal("point"),
+            Type.Literal("offer"),
+            Type.Literal("missing"),
+          ]),
+          location_id: Type.Optional(uuid()),
+          location_name: Type.Optional(Type.String()),
+          position_id: Type.Optional(uuid()),
+          quantity: Type.Optional(Type.Number()),
+          version: Type.Optional(Type.Integer()),
+          active: Type.Optional(Type.Boolean()),
+          status: Type.Optional(Type.String()),
+        },
+        strict,
+      ),
+    ),
   },
   { ...strict, $id: "ConsumptionContextOffer" },
 );
@@ -1257,6 +1617,10 @@ export const ConsumptionOrderItemSchema = Type.Object(
     billing_policy: Type.Record(Type.String(), Type.Unknown()),
     version_token: Type.String(),
     notes: nullable(Type.String()),
+    inventory_controlled: Type.Optional(Type.Boolean()),
+    inventory_location_id: Type.Optional(nullable(uuid())),
+    inventory_location_name: Type.Optional(nullable(Type.String())),
+    inventory_position_version: Type.Optional(nullable(Type.Integer())),
   },
   { ...strict, $id: "ConsumptionOrderItem" },
 );
@@ -2505,6 +2869,9 @@ const ConsumptionCorrectionItemSchema = Type.Object(
     previous_discount: Type.Number(),
     previous_net: Type.Number(),
     resulting_net: Type.Number(),
+    restock_quantity: Type.Number(),
+    restock_location_id: nullable(uuid()),
+    inventory_version: Type.Optional(nullable(Type.Integer())),
   },
   strict,
 );
@@ -3070,6 +3437,15 @@ export const API_COMPONENT_SCHEMAS = [
   ConsumptionCorrectionDecisionBodySchema,
   StayRefundBodySchema,
   PartnerRefundConfirmationBodySchema,
+  InventorySettingsBodySchema,
+  InventoryLocationBodySchema,
+  InventoryLocationUpdateSchema,
+  InventoryPositionBodySchema,
+  InventoryPositionUpdateSchema,
+  InventoryDocumentBodySchema,
+  InventoryTransferBodySchema,
+  InventoryCountBodySchema,
+  InventoryCountItemsBodySchema,
   StayFolioSchema,
   StayPaymentBatchSchema,
   ConsumptionCorrectionSchema,
@@ -3101,6 +3477,12 @@ export const API_COMPONENT_SCHEMAS = [
   ConsumptionPointSchema,
   ConsumptionOfferSchema,
   ConsumptionConfigurationAuditEventSchema,
+  InventorySettingsSchema,
+  InventoryLocationSchema,
+  InventoryPositionSchema,
+  InventoryMovementSchema,
+  InventoryAuditEventSchema,
+  InventoryCountSchema,
   ConsumptionEligibleStaySchema,
   ConsumptionContextGuestSchema,
   ConsumptionContextOfferSchema,
@@ -3843,6 +4225,227 @@ export const API_ROUTE_CONTRACTS: Readonly<Record<string, ApiRouteContract>> = {
     "Confirma o reembolso externo efetuado pelo parceiro.",
     itemSchema(ConsumptionCorrectionSchema),
     { params: IdParamsSchema, body: PartnerRefundConfirmationBodySchema },
+  ),
+  "GET /admin/inventory/overview": admin(
+    "getInventoryOverview",
+    "Inventory",
+    "Lista posições, alertas e sugestões de reposição do hotel ativo.",
+    Type.Object(
+      {
+        settings: InventorySettingsSchema,
+        items: Type.Array(InventoryPositionSchema),
+      },
+      strict,
+    ),
+    {
+      querystring: Type.Object(
+        {
+          location_id: Type.Optional(uuid()),
+          product_id: Type.Optional(uuid()),
+          low_only: Type.Optional(Type.Boolean()),
+        },
+        strict,
+      ),
+    },
+  ),
+  "GET /admin/inventory/settings": admin(
+    "getInventorySettings",
+    "Inventory",
+    "Consulta a política de saldo insuficiente.",
+    itemSchema(InventorySettingsSchema),
+  ),
+  "PUT /admin/inventory/settings": admin(
+    "updateInventorySettings",
+    "Inventory",
+    "Atualiza a política de saldo insuficiente.",
+    itemSchema(InventorySettingsSchema),
+    { body: InventorySettingsBodySchema },
+  ),
+  "GET /admin/inventory/locations": admin(
+    "listInventoryLocations",
+    "Inventory",
+    "Lista locais de estoque.",
+    listSchema(InventoryLocationSchema),
+    { querystring: IncludeArchivedQuerySchema },
+  ),
+  "PUT /admin/inventory/locations/order": admin(
+    "reorderInventoryLocations",
+    "Inventory",
+    "Reordena atomicamente todos os locais não arquivados.",
+    OkSchema,
+    {
+      body: Type.Object(
+        { ids: Type.Array(uuid(), { minItems: 1, uniqueItems: true }) },
+        strict,
+      ),
+    },
+  ),
+  "POST /admin/inventory/locations": route(
+    "createInventoryLocation",
+    "Inventory",
+    "Cria um local de estoque.",
+    {
+      headers: AuthHeadersSchema,
+      security: [{ bearerAuth: [] }],
+      body: InventoryLocationBodySchema,
+      response: { 201: itemSchema(InventoryLocationSchema), ...adminErrors },
+    },
+  ),
+  "PUT /admin/inventory/locations/:id": admin(
+    "updateInventoryLocation",
+    "Inventory",
+    "Atualiza um local de estoque.",
+    itemSchema(InventoryLocationSchema),
+    { params: IdParamsSchema, body: InventoryLocationUpdateSchema },
+  ),
+  "POST /admin/inventory/locations/:id/archive": admin(
+    "archiveInventoryLocation",
+    "Inventory",
+    "Arquiva um local vazio e sem vínculos ativos.",
+    itemSchema(InventoryLocationSchema),
+    { params: IdParamsSchema },
+  ),
+  "POST /admin/inventory/locations/:id/restore": admin(
+    "restoreInventoryLocation",
+    "Inventory",
+    "Restaura um local de estoque.",
+    itemSchema(InventoryLocationSchema),
+    { params: IdParamsSchema },
+  ),
+  "POST /admin/inventory/positions": route(
+    "createInventoryPosition",
+    "Inventory",
+    "Ativa controle de um produto em um local.",
+    {
+      headers: AuthHeadersSchema,
+      security: [{ bearerAuth: [] }],
+      body: InventoryPositionBodySchema,
+      response: { 201: itemSchema(InventoryPositionSchema), ...adminErrors },
+    },
+  ),
+  "PUT /admin/inventory/positions/:id": admin(
+    "updateInventoryPosition",
+    "Inventory",
+    "Atualiza mínimos, ideal e estado de uma posição.",
+    itemSchema(InventoryPositionSchema),
+    { params: IdParamsSchema, body: InventoryPositionUpdateSchema },
+  ),
+  "GET /admin/inventory/movements": admin(
+    "listInventoryMovements",
+    "Inventory",
+    "Consulta o razão imutável de estoque.",
+    Type.Object(
+      {
+        items: Type.Array(InventoryMovementSchema),
+        next_cursor: nullable(Type.String()),
+      },
+      strict,
+    ),
+    {
+      querystring: Type.Object(
+        {
+          cursor: Type.Optional(dateTime()),
+          limit: Type.Optional(Type.Integer({ minimum: 1, maximum: 100 })),
+          location_id: Type.Optional(uuid()),
+          product_id: Type.Optional(uuid()),
+          kind: Type.Optional(InventoryMovementKindSchema),
+        },
+        strict,
+      ),
+    },
+  ),
+  "GET /admin/inventory/audit": admin(
+    "listInventoryAuditEvents",
+    "Inventory",
+    "Consulta a auditoria imutável de configurações e documentos de estoque.",
+    Type.Object(
+      {
+        items: Type.Array(InventoryAuditEventSchema),
+        next_cursor: nullable(Type.String()),
+      },
+      strict,
+    ),
+    {
+      querystring: Type.Object(
+        {
+          cursor: Type.Optional(dateTime()),
+          limit: Type.Optional(Type.Integer({ minimum: 1, maximum: 100 })),
+        },
+        strict,
+      ),
+    },
+  ),
+  "POST /admin/inventory/documents": route(
+    "postInventoryDocument",
+    "Inventory",
+    "Registra entrada, ajuste, perda ou uso interno atomicamente.",
+    {
+      headers: AuthHeadersSchema,
+      security: [{ bearerAuth: [] }],
+      body: InventoryDocumentBodySchema,
+      response: {
+        201: itemSchema(Type.Object({ id: uuid() }, strict)),
+        200: itemSchema(Type.Object({ id: uuid() }, strict)),
+        ...adminErrors,
+      },
+    },
+  ),
+  "POST /admin/inventory/transfers": route(
+    "transferInventory",
+    "Inventory",
+    "Transfere saldo entre locais atomicamente.",
+    {
+      headers: AuthHeadersSchema,
+      security: [{ bearerAuth: [] }],
+      body: InventoryTransferBodySchema,
+      response: {
+        201: itemSchema(Type.Object({ id: uuid() }, strict)),
+        200: itemSchema(Type.Object({ id: uuid() }, strict)),
+        ...adminErrors,
+      },
+    },
+  ),
+  "GET /admin/inventory/counts": admin(
+    "listInventoryCounts",
+    "Inventory",
+    "Lista sessões de contagem.",
+    listSchema(InventoryCountSchema),
+  ),
+  "POST /admin/inventory/counts": route(
+    "createInventoryCount",
+    "Inventory",
+    "Abre uma sessão de contagem.",
+    {
+      headers: AuthHeadersSchema,
+      security: [{ bearerAuth: [] }],
+      body: InventoryCountBodySchema,
+      response: {
+        201: itemSchema(InventoryCountSchema),
+        200: itemSchema(InventoryCountSchema),
+        ...adminErrors,
+      },
+    },
+  ),
+  "PUT /admin/inventory/counts/:id/items": admin(
+    "updateInventoryCount",
+    "Inventory",
+    "Registra quantidades contadas.",
+    itemSchema(InventoryCountSchema),
+    { params: IdParamsSchema, body: InventoryCountItemsBodySchema },
+  ),
+  "POST /admin/inventory/counts/:id/complete": admin(
+    "completeInventoryCount",
+    "Inventory",
+    "Conclui a contagem e gera divergências.",
+    itemSchema(InventoryCountSchema),
+    { params: IdParamsSchema },
+  ),
+  "POST /admin/inventory/counts/:id/cancel": admin(
+    "cancelInventoryCount",
+    "Inventory",
+    "Cancela uma contagem em rascunho.",
+    itemSchema(InventoryCountSchema),
+    { params: IdParamsSchema },
   ),
   ...crud(
     "Season",
