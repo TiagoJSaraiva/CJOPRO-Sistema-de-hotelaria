@@ -55,5 +55,5 @@ describe("routes/health", () => {
     expect(documentation.statusCode).toBe(200);
     expect(documentation.json().openapi).toBe("3.0.3");
     expect(hiddenUi.statusCode).toBe(404);
-  });
+  }, 30_000);
 });

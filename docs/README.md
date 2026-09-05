@@ -14,6 +14,7 @@ Use este índice para localizar a fonte de verdade adequada à tarefa.
 | planejar orientação de uma nova feature    | [Guias de uso no PMS](usage-guides.md)                     |
 | consultar o contrato HTTP                  | [OpenAPI versionado](openapi.json)                         |
 | operar preventivas, SLA e automação        | [Gestão avançada de manutenção](maintenance-management.md) |
+| analisar consumo e fechar parceiros        | [Fechamento gerencial](consumption-management.md)          |
 
 ## Fontes de verdade
 

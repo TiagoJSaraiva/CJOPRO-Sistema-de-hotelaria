@@ -706,6 +706,54 @@ export type Database = {
           },
         ]
       }
+      consumption_management_settings: {
+        Row: {
+          agreement_expiry_alert_days: number
+          created_at: string
+          guest_balance_alert_days: number
+          hotel_id: string
+          last_changed_by: string | null
+          payment_due_days: number
+          settlement_tracking_starts_on: string
+          updated_at: string
+        }
+        Insert: {
+          agreement_expiry_alert_days?: number
+          created_at?: string
+          guest_balance_alert_days?: number
+          hotel_id: string
+          last_changed_by?: string | null
+          payment_due_days?: number
+          settlement_tracking_starts_on: string
+          updated_at?: string
+        }
+        Update: {
+          agreement_expiry_alert_days?: number
+          created_at?: string
+          guest_balance_alert_days?: number
+          hotel_id?: string
+          last_changed_by?: string | null
+          payment_due_days?: number
+          settlement_tracking_starts_on?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "consumption_management_settings_hotel_id_fkey"
+            columns: ["hotel_id"]
+            isOneToOne: true
+            referencedRelation: "hotels"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "consumption_management_settings_last_changed_by_fkey"
+            columns: ["last_changed_by"]
+            isOneToOne: false
+            referencedRelation: "users"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       consumption_offers: {
         Row: {
           allowed_billing_modes:
@@ -1355,6 +1403,7 @@ export type Database = {
           maintenance_cost_item_id: string | null
           maintenance_recovery_id: string | null
           paid_at: string | null
+          partner_settlement_id: string | null
           payment_method: string | null
           reference_code: string | null
           reservation_id: string | null
@@ -1380,6 +1429,7 @@ export type Database = {
           maintenance_cost_item_id?: string | null
           maintenance_recovery_id?: string | null
           paid_at?: string | null
+          partner_settlement_id?: string | null
           payment_method?: string | null
           reference_code?: string | null
           reservation_id?: string | null
@@ -1405,6 +1455,7 @@ export type Database = {
           maintenance_cost_item_id?: string | null
           maintenance_recovery_id?: string | null
           paid_at?: string | null
+          partner_settlement_id?: string | null
           payment_method?: string | null
           reference_code?: string | null
           reservation_id?: string | null
@@ -1449,6 +1500,13 @@ export type Database = {
             isOneToOne: false
             referencedRelation: "maintenance_recoveries"
             referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "financial_transactions_partner_settlement_hotel_fkey"
+            columns: ["partner_settlement_id", "hotel_id"]
+            isOneToOne: false
+            referencedRelation: "partner_settlements"
+            referencedColumns: ["id", "hotel_id"]
           },
           {
             foreignKeyName: "financial_transactions_refund_hotel_fkey"
@@ -4438,6 +4496,650 @@ export type Database = {
           },
         ]
       }
+      partner_settlement_components: {
+        Row: {
+          agreement_id: string
+          agreement_number: string
+          calculation_memory: Json
+          commercial_model: Database["public"]["Enums"]["commercial_model"]
+          commission_amount: number
+          commission_percentage: number | null
+          contribution_amount: number
+          courtesy_total: number
+          created_at: string
+          discount_total: number
+          fixed_rent: number | null
+          gross_sales: number
+          hotel_collected: number
+          hotel_id: string
+          id: string
+          minimum_guarantee: number | null
+          minimum_guarantee_topup: number
+          net_settlement_amount: number
+          operational_net: number
+          origin_component_id: string | null
+          partner_direct: number
+          payment_recipient: Database["public"]["Enums"]["commercial_payment_recipient"]
+          prorated_minimum_guarantee: number
+          prorated_rent: number
+          rent_frequency:
+            | Database["public"]["Enums"]["commercial_rent_frequency"]
+            | null
+          reversal_total: number
+          revision_id: string
+          revision_version: number
+          segment_end: string
+          segment_start: string
+          settlement_id: string
+          source_kind: Database["public"]["Enums"]["partner_settlement_source_kind"]
+        }
+        Insert: {
+          agreement_id: string
+          agreement_number: string
+          calculation_memory?: Json
+          commercial_model: Database["public"]["Enums"]["commercial_model"]
+          commission_amount?: number
+          commission_percentage?: number | null
+          contribution_amount?: number
+          courtesy_total?: number
+          created_at?: string
+          discount_total?: number
+          fixed_rent?: number | null
+          gross_sales?: number
+          hotel_collected?: number
+          hotel_id: string
+          id?: string
+          minimum_guarantee?: number | null
+          minimum_guarantee_topup?: number
+          net_settlement_amount?: number
+          operational_net?: number
+          origin_component_id?: string | null
+          partner_direct?: number
+          payment_recipient: Database["public"]["Enums"]["commercial_payment_recipient"]
+          prorated_minimum_guarantee?: number
+          prorated_rent?: number
+          rent_frequency?:
+            | Database["public"]["Enums"]["commercial_rent_frequency"]
+            | null
+          reversal_total?: number
+          revision_id: string
+          revision_version: number
+          segment_end: string
+          segment_start: string
+          settlement_id: string
+          source_kind?: Database["public"]["Enums"]["partner_settlement_source_kind"]
+        }
+        Update: {
+          agreement_id?: string
+          agreement_number?: string
+          calculation_memory?: Json
+          commercial_model?: Database["public"]["Enums"]["commercial_model"]
+          commission_amount?: number
+          commission_percentage?: number | null
+          contribution_amount?: number
+          courtesy_total?: number
+          created_at?: string
+          discount_total?: number
+          fixed_rent?: number | null
+          gross_sales?: number
+          hotel_collected?: number
+          hotel_id?: string
+          id?: string
+          minimum_guarantee?: number | null
+          minimum_guarantee_topup?: number
+          net_settlement_amount?: number
+          operational_net?: number
+          origin_component_id?: string | null
+          partner_direct?: number
+          payment_recipient?: Database["public"]["Enums"]["commercial_payment_recipient"]
+          prorated_minimum_guarantee?: number
+          prorated_rent?: number
+          rent_frequency?:
+            | Database["public"]["Enums"]["commercial_rent_frequency"]
+            | null
+          reversal_total?: number
+          revision_id?: string
+          revision_version?: number
+          segment_end?: string
+          segment_start?: string
+          settlement_id?: string
+          source_kind?: Database["public"]["Enums"]["partner_settlement_source_kind"]
+        }
+        Relationships: [
+          {
+            foreignKeyName: "partner_settlement_components_agreement_hotel_fkey"
+            columns: ["agreement_id", "hotel_id"]
+            isOneToOne: false
+            referencedRelation: "commercial_agreements"
+            referencedColumns: ["id", "hotel_id"]
+          },
+          {
+            foreignKeyName: "partner_settlement_components_hotel_id_fkey"
+            columns: ["hotel_id"]
+            isOneToOne: false
+            referencedRelation: "hotels"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "partner_settlement_components_origin_hotel_fkey"
+            columns: ["origin_component_id", "hotel_id"]
+            isOneToOne: false
+            referencedRelation: "partner_settlement_components"
+            referencedColumns: ["id", "hotel_id"]
+          },
+          {
+            foreignKeyName: "partner_settlement_components_revision_hotel_fkey"
+            columns: ["revision_id", "hotel_id"]
+            isOneToOne: false
+            referencedRelation: "commercial_agreement_revisions"
+            referencedColumns: ["id", "hotel_id"]
+          },
+          {
+            foreignKeyName: "partner_settlement_components_settlement_hotel_fkey"
+            columns: ["settlement_id", "hotel_id"]
+            isOneToOne: false
+            referencedRelation: "partner_settlements"
+            referencedColumns: ["id", "hotel_id"]
+          },
+        ]
+      }
+      partner_settlement_events: {
+        Row: {
+          action: string
+          actor_id: string | null
+          created_at: string
+          details: Json
+          hotel_id: string
+          id: string
+          settlement_id: string
+        }
+        Insert: {
+          action: string
+          actor_id?: string | null
+          created_at?: string
+          details?: Json
+          hotel_id: string
+          id?: string
+          settlement_id: string
+        }
+        Update: {
+          action?: string
+          actor_id?: string | null
+          created_at?: string
+          details?: Json
+          hotel_id?: string
+          id?: string
+          settlement_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "partner_settlement_events_actor_id_fkey"
+            columns: ["actor_id"]
+            isOneToOne: false
+            referencedRelation: "users"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "partner_settlement_events_hotel_id_fkey"
+            columns: ["hotel_id"]
+            isOneToOne: false
+            referencedRelation: "hotels"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "partner_settlement_events_settlement_hotel_fkey"
+            columns: ["settlement_id", "hotel_id"]
+            isOneToOne: false
+            referencedRelation: "partner_settlements"
+            referencedColumns: ["id", "hotel_id"]
+          },
+        ]
+      }
+      partner_settlement_payments: {
+        Row: {
+          amount: number
+          created_at: string
+          created_by: string
+          direction: Database["public"]["Enums"]["partner_settlement_direction"]
+          financial_transaction_id: string
+          hotel_id: string
+          id: string
+          idempotency_key: string
+          notes: string | null
+          paid_at: string
+          payment_method: Database["public"]["Enums"]["consumption_payment_method"]
+          reference_code: string | null
+          request_fingerprint: string
+          reversal_of_id: string | null
+          settlement_id: string
+        }
+        Insert: {
+          amount: number
+          created_at?: string
+          created_by: string
+          direction: Database["public"]["Enums"]["partner_settlement_direction"]
+          financial_transaction_id: string
+          hotel_id: string
+          id?: string
+          idempotency_key: string
+          notes?: string | null
+          paid_at: string
+          payment_method: Database["public"]["Enums"]["consumption_payment_method"]
+          reference_code?: string | null
+          request_fingerprint: string
+          reversal_of_id?: string | null
+          settlement_id: string
+        }
+        Update: {
+          amount?: number
+          created_at?: string
+          created_by?: string
+          direction?: Database["public"]["Enums"]["partner_settlement_direction"]
+          financial_transaction_id?: string
+          hotel_id?: string
+          id?: string
+          idempotency_key?: string
+          notes?: string | null
+          paid_at?: string
+          payment_method?: Database["public"]["Enums"]["consumption_payment_method"]
+          reference_code?: string | null
+          request_fingerprint?: string
+          reversal_of_id?: string | null
+          settlement_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "partner_settlement_payments_created_by_fkey"
+            columns: ["created_by"]
+            isOneToOne: false
+            referencedRelation: "users"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "partner_settlement_payments_hotel_id_fkey"
+            columns: ["hotel_id"]
+            isOneToOne: false
+            referencedRelation: "hotels"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "partner_settlement_payments_reversal_of_id_fkey"
+            columns: ["reversal_of_id"]
+            isOneToOne: true
+            referencedRelation: "partner_settlement_payments"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "partner_settlement_payments_settlement_hotel_fkey"
+            columns: ["settlement_id", "hotel_id"]
+            isOneToOne: false
+            referencedRelation: "partner_settlements"
+            referencedColumns: ["id", "hotel_id"]
+          },
+          {
+            foreignKeyName: "partner_settlement_payments_transaction_hotel_fkey"
+            columns: ["financial_transaction_id", "hotel_id"]
+            isOneToOne: false
+            referencedRelation: "financial_transactions"
+            referencedColumns: ["id", "hotel_id"]
+          },
+        ]
+      }
+      partner_settlement_sources: {
+        Row: {
+          billing_mode:
+            | Database["public"]["Enums"]["consumption_billing_mode"]
+            | null
+          category_id: string | null
+          category_name: string
+          completed_at: string | null
+          component_id: string
+          correction_id: string | null
+          correction_item_id: string | null
+          created_at: string
+          discount_amount: number
+          disposition: Database["public"]["Enums"]["consumption_order_disposition"]
+          gross_amount: number
+          hotel_collected: number
+          hotel_id: string
+          id: string
+          occurred_at: string
+          operational_net: number
+          order_id: string
+          order_item_id: string
+          original_settlement_id: string | null
+          partner_direct: number
+          payment_method:
+            | Database["public"]["Enums"]["consumption_payment_method"]
+            | null
+          point_id: string | null
+          point_name: string | null
+          product_id: string
+          product_name: string
+          provider_type: Database["public"]["Enums"]["product_provider_type"]
+          reservation_code: string | null
+          reversal_amount: number
+          room_number: string | null
+          settlement_id: string
+          source_kind: Database["public"]["Enums"]["partner_settlement_source_kind"]
+          source_snapshot: Json
+          stay_id: string | null
+        }
+        Insert: {
+          billing_mode?:
+            | Database["public"]["Enums"]["consumption_billing_mode"]
+            | null
+          category_id?: string | null
+          category_name: string
+          completed_at?: string | null
+          component_id: string
+          correction_id?: string | null
+          correction_item_id?: string | null
+          created_at?: string
+          discount_amount?: number
+          disposition: Database["public"]["Enums"]["consumption_order_disposition"]
+          gross_amount?: number
+          hotel_collected?: number
+          hotel_id: string
+          id?: string
+          occurred_at: string
+          operational_net?: number
+          order_id: string
+          order_item_id: string
+          original_settlement_id?: string | null
+          partner_direct?: number
+          payment_method?:
+            | Database["public"]["Enums"]["consumption_payment_method"]
+            | null
+          point_id?: string | null
+          point_name?: string | null
+          product_id: string
+          product_name: string
+          provider_type: Database["public"]["Enums"]["product_provider_type"]
+          reservation_code?: string | null
+          reversal_amount?: number
+          room_number?: string | null
+          settlement_id: string
+          source_kind: Database["public"]["Enums"]["partner_settlement_source_kind"]
+          source_snapshot: Json
+          stay_id?: string | null
+        }
+        Update: {
+          billing_mode?:
+            | Database["public"]["Enums"]["consumption_billing_mode"]
+            | null
+          category_id?: string | null
+          category_name?: string
+          completed_at?: string | null
+          component_id?: string
+          correction_id?: string | null
+          correction_item_id?: string | null
+          created_at?: string
+          discount_amount?: number
+          disposition?: Database["public"]["Enums"]["consumption_order_disposition"]
+          gross_amount?: number
+          hotel_collected?: number
+          hotel_id?: string
+          id?: string
+          occurred_at?: string
+          operational_net?: number
+          order_id?: string
+          order_item_id?: string
+          original_settlement_id?: string | null
+          partner_direct?: number
+          payment_method?:
+            | Database["public"]["Enums"]["consumption_payment_method"]
+            | null
+          point_id?: string | null
+          point_name?: string | null
+          product_id?: string
+          product_name?: string
+          provider_type?: Database["public"]["Enums"]["product_provider_type"]
+          reservation_code?: string | null
+          reversal_amount?: number
+          room_number?: string | null
+          settlement_id?: string
+          source_kind?: Database["public"]["Enums"]["partner_settlement_source_kind"]
+          source_snapshot?: Json
+          stay_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "partner_settlement_sources_component_hotel_fkey"
+            columns: ["component_id", "hotel_id"]
+            isOneToOne: false
+            referencedRelation: "partner_settlement_components"
+            referencedColumns: ["id", "hotel_id"]
+          },
+          {
+            foreignKeyName: "partner_settlement_sources_correction_hotel_fkey"
+            columns: ["correction_id", "hotel_id"]
+            isOneToOne: false
+            referencedRelation: "consumption_corrections"
+            referencedColumns: ["id", "hotel_id"]
+          },
+          {
+            foreignKeyName: "partner_settlement_sources_correction_item_fkey"
+            columns: ["correction_item_id"]
+            isOneToOne: false
+            referencedRelation: "consumption_correction_items"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "partner_settlement_sources_hotel_id_fkey"
+            columns: ["hotel_id"]
+            isOneToOne: false
+            referencedRelation: "hotels"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "partner_settlement_sources_item_hotel_fkey"
+            columns: ["order_item_id", "hotel_id"]
+            isOneToOne: false
+            referencedRelation: "consumption_order_item_effective"
+            referencedColumns: ["id", "hotel_id"]
+          },
+          {
+            foreignKeyName: "partner_settlement_sources_item_hotel_fkey"
+            columns: ["order_item_id", "hotel_id"]
+            isOneToOne: false
+            referencedRelation: "consumption_order_items"
+            referencedColumns: ["id", "hotel_id"]
+          },
+          {
+            foreignKeyName: "partner_settlement_sources_order_hotel_fkey"
+            columns: ["order_id", "hotel_id"]
+            isOneToOne: false
+            referencedRelation: "consumption_order_effective"
+            referencedColumns: ["id", "hotel_id"]
+          },
+          {
+            foreignKeyName: "partner_settlement_sources_order_hotel_fkey"
+            columns: ["order_id", "hotel_id"]
+            isOneToOne: false
+            referencedRelation: "consumption_orders"
+            referencedColumns: ["id", "hotel_id"]
+          },
+          {
+            foreignKeyName: "partner_settlement_sources_original_hotel_fkey"
+            columns: ["original_settlement_id", "hotel_id"]
+            isOneToOne: false
+            referencedRelation: "partner_settlements"
+            referencedColumns: ["id", "hotel_id"]
+          },
+          {
+            foreignKeyName: "partner_settlement_sources_settlement_hotel_fkey"
+            columns: ["settlement_id", "hotel_id"]
+            isOneToOne: false
+            referencedRelation: "partner_settlements"
+            referencedColumns: ["id", "hotel_id"]
+          },
+        ]
+      }
+      partner_settlements: {
+        Row: {
+          approved_at: string | null
+          approved_by: string | null
+          commission_total: number
+          contribution_total: number
+          courtesy_total: number
+          created_at: string
+          created_by: string
+          currency: string
+          direction: Database["public"]["Enums"]["partner_settlement_direction"]
+          discount_total: number
+          due_on: string
+          gross_sales: number
+          hotel_collected: number
+          hotel_id: string
+          id: string
+          minimum_guarantee_topup: number
+          net_settlement: number
+          operational_net: number
+          partner_direct: number
+          partner_id: string
+          period_end: string
+          period_start: string
+          prepared_at: string | null
+          prepared_by: string | null
+          rent_total: number
+          reversal_total: number
+          settled_at: string | null
+          settled_by: string | null
+          source_fingerprint: string
+          statement_snapshot: Json | null
+          status: Database["public"]["Enums"]["partner_settlement_status"]
+          submitted_at: string | null
+          submitted_by: string | null
+          updated_at: string
+          version: number
+        }
+        Insert: {
+          approved_at?: string | null
+          approved_by?: string | null
+          commission_total?: number
+          contribution_total?: number
+          courtesy_total?: number
+          created_at?: string
+          created_by: string
+          currency: string
+          direction?: Database["public"]["Enums"]["partner_settlement_direction"]
+          discount_total?: number
+          due_on: string
+          gross_sales?: number
+          hotel_collected?: number
+          hotel_id: string
+          id?: string
+          minimum_guarantee_topup?: number
+          net_settlement?: number
+          operational_net?: number
+          partner_direct?: number
+          partner_id: string
+          period_end: string
+          period_start: string
+          prepared_at?: string | null
+          prepared_by?: string | null
+          rent_total?: number
+          reversal_total?: number
+          settled_at?: string | null
+          settled_by?: string | null
+          source_fingerprint?: string
+          statement_snapshot?: Json | null
+          status?: Database["public"]["Enums"]["partner_settlement_status"]
+          submitted_at?: string | null
+          submitted_by?: string | null
+          updated_at?: string
+          version?: number
+        }
+        Update: {
+          approved_at?: string | null
+          approved_by?: string | null
+          commission_total?: number
+          contribution_total?: number
+          courtesy_total?: number
+          created_at?: string
+          created_by?: string
+          currency?: string
+          direction?: Database["public"]["Enums"]["partner_settlement_direction"]
+          discount_total?: number
+          due_on?: string
+          gross_sales?: number
+          hotel_collected?: number
+          hotel_id?: string
+          id?: string
+          minimum_guarantee_topup?: number
+          net_settlement?: number
+          operational_net?: number
+          partner_direct?: number
+          partner_id?: string
+          period_end?: string
+          period_start?: string
+          prepared_at?: string | null
+          prepared_by?: string | null
+          rent_total?: number
+          reversal_total?: number
+          settled_at?: string | null
+          settled_by?: string | null
+          source_fingerprint?: string
+          statement_snapshot?: Json | null
+          status?: Database["public"]["Enums"]["partner_settlement_status"]
+          submitted_at?: string | null
+          submitted_by?: string | null
+          updated_at?: string
+          version?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "partner_settlements_approved_by_fkey"
+            columns: ["approved_by"]
+            isOneToOne: false
+            referencedRelation: "users"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "partner_settlements_created_by_fkey"
+            columns: ["created_by"]
+            isOneToOne: false
+            referencedRelation: "users"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "partner_settlements_hotel_id_fkey"
+            columns: ["hotel_id"]
+            isOneToOne: false
+            referencedRelation: "hotels"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "partner_settlements_partner_hotel_fkey"
+            columns: ["partner_id", "hotel_id"]
+            isOneToOne: false
+            referencedRelation: "commercial_partners"
+            referencedColumns: ["id", "hotel_id"]
+          },
+          {
+            foreignKeyName: "partner_settlements_prepared_by_fkey"
+            columns: ["prepared_by"]
+            isOneToOne: false
+            referencedRelation: "users"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "partner_settlements_settled_by_fkey"
+            columns: ["settled_by"]
+            isOneToOne: false
+            referencedRelation: "users"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "partner_settlements_submitted_by_fkey"
+            columns: ["submitted_by"]
+            isOneToOne: false
+            referencedRelation: "users"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       permissions: {
         Row: {
           id: string
@@ -6321,6 +7023,17 @@ export type Database = {
         }
         Returns: string
       }
+      decide_partner_settlement: {
+        Args: {
+          p_actor_id: string
+          p_decision: string
+          p_expected_version: number
+          p_hotel_id: string
+          p_reason?: string
+          p_settlement_id: string
+        }
+        Returns: Json
+      }
       generate_maintenance_preventive_run: {
         Args: {
           p_actor_id: string
@@ -6331,10 +7044,32 @@ export type Database = {
         }
         Returns: string
       }
+      get_consumption_analytics: {
+        Args: {
+          p_billing_mode?: Database["public"]["Enums"]["consumption_billing_mode"]
+          p_category_id?: string
+          p_dimension?: string
+          p_disposition?: Database["public"]["Enums"]["consumption_order_disposition"]
+          p_from: string
+          p_hotel_id: string
+          p_limit?: number
+          p_offset?: number
+          p_operator_id?: string
+          p_partner_id?: string
+          p_payment_method?: Database["public"]["Enums"]["consumption_payment_method"]
+          p_point_id?: string
+          p_product_id?: string
+          p_provider_type?: Database["public"]["Enums"]["product_provider_type"]
+          p_stay_search?: string
+          p_to: string
+        }
+        Returns: Json
+      }
       get_consumption_operational_context: {
         Args: { p_hotel_id: string; p_occurred_at?: string; p_stay_id: string }
         Returns: Json
       }
+      get_management_alerts: { Args: { p_hotel_id: string }; Returns: Json }
       inspect_maintenance_work_order: {
         Args: {
           p_actor_id: string
@@ -6395,6 +7130,29 @@ export type Database = {
         }
         Returns: boolean
       }
+      partner_settlement_live_fingerprint: {
+        Args: {
+          p_hotel_id: string
+          p_partner_id: string
+          p_period_start: string
+        }
+        Returns: string
+      }
+      pay_partner_settlement: {
+        Args: {
+          p_actor_id: string
+          p_amount: number
+          p_expected_version: number
+          p_hotel_id: string
+          p_idempotency_key: string
+          p_notes: string
+          p_paid_at: string
+          p_payment_method: Database["public"]["Enums"]["consumption_payment_method"]
+          p_reference_code: string
+          p_settlement_id: string
+        }
+        Returns: Json
+      }
       post_consumption_order: {
         Args: {
           p_actor_id: string
@@ -6448,6 +7206,16 @@ export type Database = {
       recompute_maintenance_occurrence_status: {
         Args: { p_occurrence_id: string }
         Returns: Database["public"]["Enums"]["maintenance_occurrence_status"]
+      }
+      refresh_partner_settlement: {
+        Args: {
+          p_actor_id: string
+          p_expected_version?: number
+          p_hotel_id: string
+          p_partner_id: string
+          p_period_start: string
+        }
+        Returns: Json
       }
       release_maintenance_room_block: {
         Args: {
@@ -6521,6 +7289,17 @@ export type Database = {
         }
         Returns: string
       }
+      reverse_partner_settlement_payment: {
+        Args: {
+          p_actor_id: string
+          p_hotel_id: string
+          p_idempotency_key: string
+          p_payment_id: string
+          p_reason: string
+          p_reversed_at: string
+        }
+        Returns: Json
+      }
       set_commercial_agreement_revision_points: {
         Args: {
           p_actor_id: string
@@ -6565,6 +7344,15 @@ export type Database = {
           p_reference_code?: string
         }
         Returns: string
+      }
+      submit_partner_settlement: {
+        Args: {
+          p_actor_id: string
+          p_expected_version: number
+          p_hotel_id: string
+          p_settlement_id: string
+        }
+        Returns: Json
       }
       terminate_commercial_agreement_revision: {
         Args: {
@@ -6882,6 +7670,12 @@ export type Database = {
         | "awaiting_inspection"
         | "completed"
         | "canceled"
+      partner_settlement_direction:
+        | "hotel_to_partner"
+        | "partner_to_hotel"
+        | "balanced"
+      partner_settlement_source_kind: "regular" | "late_correction"
+      partner_settlement_status: "draft" | "in_review" | "approved" | "settled"
       payment_status: "pending" | "partial" | "paid" | "refunded"
       product_kind: "physical" | "service"
       product_provider_type: "hotel" | "partner"
@@ -7213,6 +8007,13 @@ export const Constants = {
         "completed",
         "canceled",
       ],
+      partner_settlement_direction: [
+        "hotel_to_partner",
+        "partner_to_hotel",
+        "balanced",
+      ],
+      partner_settlement_source_kind: ["regular", "late_correction"],
+      partner_settlement_status: ["draft", "in_review", "approved", "settled"],
       payment_status: ["pending", "partial", "paid", "refunded"],
       product_kind: ["physical", "service"],
       product_provider_type: ["hotel", "partner"],

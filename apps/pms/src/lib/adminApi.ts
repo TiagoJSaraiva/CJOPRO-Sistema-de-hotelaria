@@ -27,6 +27,17 @@ import {
   AdminConsumptionOrder,
   AdminConsumptionOrderCreateInput,
   AdminConsumptionOrderHistory,
+  AdminConsumptionManagementSettings,
+  AdminConsumptionManagementSettingsInput,
+  AdminConsumptionAnalytics,
+  AdminManagementAlerts,
+  AdminPartnerSettlement,
+  AdminPartnerSettlementCandidate,
+  AdminPartnerSettlementCreateInput,
+  AdminPartnerSettlementVersionInput,
+  AdminPartnerSettlementDecisionInput,
+  AdminPartnerSettlementPaymentInput,
+  AdminPartnerSettlementPaymentReversalInput,
   AdminCommercialPartner,
   AdminCommercialPartnerInput,
   AdminCommercialPartnerContact,
@@ -162,7 +173,7 @@ async function getAdminList<T>(path: string): Promise<T[]> {
 
 async function requestAdmin<T>(
   path: string,
-  method: "POST" | "PUT" | "DELETE",
+  method: "POST" | "PUT" | "PATCH" | "DELETE",
   body?: unknown,
 ): Promise<T | null> {
   const token = await getSessionToken();
@@ -1302,6 +1313,133 @@ export function getConsumptionOrder(
   )
     .then((payload) => payload.item)
     .catch(() => null);
+}
+
+export function getConsumptionManagementSettings(): Promise<AdminConsumptionManagementSettings> {
+  return getAdminData<AdminItemResponse<AdminConsumptionManagementSettings>>(
+    "/admin/consumption-management/settings",
+  ).then((payload) => payload.item);
+}
+
+export function updateConsumptionManagementSettings(
+  input: AdminConsumptionManagementSettingsInput,
+): Promise<AdminConsumptionManagementSettings | null> {
+  return requestAdmin<AdminConsumptionManagementSettings>(
+    "/admin/consumption-management/settings",
+    "PATCH",
+    input,
+  );
+}
+
+export function getConsumptionAnalytics(
+  filters: Record<string, string | undefined>,
+): Promise<AdminConsumptionAnalytics> {
+  const params = new URLSearchParams();
+  for (const [key, value] of Object.entries(filters))
+    if (value) params.set(key, value);
+  return getAdminData<AdminItemResponse<AdminConsumptionAnalytics>>(
+    `/admin/consumption-analytics?${params}`,
+  ).then((payload) => payload.item);
+}
+
+export function getManagementAlerts(): Promise<AdminManagementAlerts> {
+  return getAdminData<AdminItemResponse<AdminManagementAlerts>>(
+    "/admin/management-alerts",
+  ).then((payload) => payload.item);
+}
+
+export function listPartnerSettlementCandidates(
+  periodStart: string,
+  partnerId?: string,
+): Promise<AdminPartnerSettlementCandidate[]> {
+  const params = new URLSearchParams({ period_start: periodStart });
+  if (partnerId) params.set("partner_id", partnerId);
+  return getAdminData<{ items: AdminPartnerSettlementCandidate[] }>(
+    `/admin/partner-settlements/candidates?${params}`,
+  ).then((payload) => payload.items);
+}
+
+export function listPartnerSettlements(
+  filters: Record<string, string | undefined> = {},
+): Promise<{ items: AdminPartnerSettlement[]; next_cursor: string | null }> {
+  const params = new URLSearchParams();
+  for (const [key, value] of Object.entries(filters))
+    if (value) params.set(key, value);
+  const suffix = params.size ? `?${params}` : "";
+  return getAdminData(`/admin/partner-settlements${suffix}`);
+}
+
+export function getPartnerSettlement(
+  id: string,
+): Promise<AdminPartnerSettlement | null> {
+  return getAdminData<AdminItemResponse<AdminPartnerSettlement>>(
+    `/admin/partner-settlements/${id}`,
+  ).then((payload) => payload.item);
+}
+
+export function createPartnerSettlement(
+  input: AdminPartnerSettlementCreateInput,
+): Promise<AdminPartnerSettlement | null> {
+  return requestAdmin<AdminPartnerSettlement>(
+    "/admin/partner-settlements",
+    "POST",
+    input,
+  );
+}
+
+export function recalculatePartnerSettlement(
+  id: string,
+  input: AdminPartnerSettlementVersionInput,
+): Promise<AdminPartnerSettlement | null> {
+  return requestAdmin<AdminPartnerSettlement>(
+    `/admin/partner-settlements/${id}/recalculate`,
+    "POST",
+    input,
+  );
+}
+
+export function submitPartnerSettlement(
+  id: string,
+  input: AdminPartnerSettlementVersionInput,
+): Promise<AdminPartnerSettlement | null> {
+  return requestAdmin<AdminPartnerSettlement>(
+    `/admin/partner-settlements/${id}/submit`,
+    "POST",
+    input,
+  );
+}
+
+export function decidePartnerSettlement(
+  id: string,
+  input: AdminPartnerSettlementDecisionInput,
+): Promise<AdminPartnerSettlement | null> {
+  return requestAdmin<AdminPartnerSettlement>(
+    `/admin/partner-settlements/${id}/decision`,
+    "POST",
+    input,
+  );
+}
+
+export function payPartnerSettlement(
+  id: string,
+  input: AdminPartnerSettlementPaymentInput,
+): Promise<AdminPartnerSettlement | null> {
+  return requestAdmin<AdminPartnerSettlement>(
+    `/admin/partner-settlements/${id}/payment`,
+    "POST",
+    input,
+  );
+}
+
+export function reversePartnerSettlementPayment(
+  id: string,
+  input: AdminPartnerSettlementPaymentReversalInput,
+): Promise<AdminPartnerSettlement | null> {
+  return requestAdmin<AdminPartnerSettlement>(
+    `/admin/partner-settlement-payments/${id}/reversal`,
+    "POST",
+    input,
+  );
 }
 
 export function getInventoryOverview(

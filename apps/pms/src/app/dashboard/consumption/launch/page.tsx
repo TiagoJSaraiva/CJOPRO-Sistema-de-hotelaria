@@ -8,6 +8,7 @@ import { getUserFromSession } from "../../../../lib/auth";
 import { ConsumptionOrderComposer } from "../_components/ConsumptionOrderComposer";
 import { getConsumptionAccess } from "../access";
 import { consumptionLaunchGuide } from "../usageGuides";
+import { consumptionTabs } from "../tabs";
 
 export default async function ConsumptionLaunchPage({
   searchParams,
@@ -28,50 +29,7 @@ export default async function ConsumptionLaunchPage({
   const context = selectedStayId
     ? await getConsumptionOperationalContext(selectedStayId).catch(() => null)
     : null;
-  const tabs = [
-    {
-      key: "launch",
-      label: "Lançar consumo",
-      href: "/dashboard/consumption/launch",
-      isVisible: access.canPost,
-    },
-    {
-      key: "history",
-      label: "Histórico",
-      href: "/dashboard/consumption/history",
-      isVisible: access.canRead,
-    },
-    {
-      key: "adjustments",
-      label: "Ajustes",
-      href: "/dashboard/consumption/adjustments",
-      isVisible: access.canApproveAdjustments,
-    },
-    {
-      key: "points",
-      label: "Pontos de consumo",
-      href: "/dashboard/consumption/points",
-      isVisible: access.canRead,
-    },
-    {
-      key: "offers",
-      label: "Ofertas",
-      href: "/dashboard/consumption/offers",
-      isVisible: access.canRead,
-    },
-    {
-      key: "partners",
-      label: "Parceiros",
-      href: "/dashboard/consumption/partners",
-      isVisible: access.canReadCommercial,
-    },
-    {
-      key: "agreements",
-      label: "Acordos",
-      href: "/dashboard/consumption/agreements",
-      isVisible: access.canReadCommercial,
-    },
-  ];
+  const tabs = consumptionTabs(access);
   return (
     <DashboardEntityPageShell
       title="Vendas e consumo"

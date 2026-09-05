@@ -22,6 +22,7 @@ import { registerReservationsCalendarRoutes } from "./routes/reservationsCalenda
 import { registerProductRoutes } from "./routes/productRoutes";
 import { registerConsumptionSettingsRoutes } from "./routes/consumptionSettingsRoutes";
 import { registerConsumptionOrderRoutes } from "./routes/consumptionOrderRoutes";
+import { registerConsumptionManagementRoutes } from "./routes/consumptionManagementRoutes";
 import { registerCommercialPartnerRoutes } from "./routes/commercialPartnerRoutes";
 import { registerInventoryRoutes } from "./routes/inventoryRoutes";
 import { registerSeasonRoutes } from "./routes/seasonRoutes";
@@ -64,7 +65,9 @@ export type CreateAppOptions = {
 export function createApp(options: CreateAppOptions = {}): FastifyInstance {
   const app = Fastify({
     logger: true,
-    pluginTimeout: 30_000,
+    // OpenAPI schema compilation is deliberately broad and can exceed the
+    // default while V8 coverage instrumentation is active on slower hosts.
+    pluginTimeout: 90_000,
     ajv: { customOptions: { removeAdditional: false } },
   });
   const allowedOrigins = new Set(getAllowedOrigins());
@@ -165,6 +168,7 @@ export function createApp(options: CreateAppOptions = {}): FastifyInstance {
     registerProductRoutes(routes);
     registerConsumptionSettingsRoutes(routes);
     registerConsumptionOrderRoutes(routes);
+    registerConsumptionManagementRoutes(routes);
     registerCommercialPartnerRoutes(routes);
     registerInventoryRoutes(routes);
     registerSeasonRoutes(routes);

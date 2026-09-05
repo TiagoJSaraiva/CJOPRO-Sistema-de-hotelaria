@@ -1692,6 +1692,324 @@ export const ConsumptionOrderHistorySchema = Type.Object(
   },
   { ...strict, $id: "ConsumptionOrderHistory" },
 );
+
+const MonthStartDateSchema = Type.String({
+  format: "date",
+  pattern: "^\\d{4}-\\d{2}-01$",
+});
+
+export const ConsumptionManagementSettingsBodySchema = Type.Object(
+  {
+    settlement_tracking_starts_on: MonthStartDateSchema,
+    payment_due_days: Type.Integer({ minimum: 0, maximum: 90 }),
+    agreement_expiry_alert_days: Type.Integer({ minimum: 1, maximum: 365 }),
+    guest_balance_alert_days: Type.Integer({ minimum: 0, maximum: 30 }),
+  },
+  { ...strict, $id: "ConsumptionManagementSettingsInput" },
+);
+export const ConsumptionManagementSettingsSchema = Type.Object(
+  {
+    hotel_id: uuid(),
+    ...ConsumptionManagementSettingsBodySchema.properties,
+    last_changed_by: nullable(uuid()),
+    created_at: dateTime(),
+    updated_at: dateTime(),
+  },
+  { ...strict, $id: "ConsumptionManagementSettings" },
+);
+export const ConsumptionAnalyticsDimensionSchema = Type.Union(
+  [
+    Type.Literal("day"),
+    Type.Literal("point"),
+    Type.Literal("category"),
+    Type.Literal("product"),
+    Type.Literal("stay"),
+    Type.Literal("billing_mode"),
+    Type.Literal("payment_method"),
+    Type.Literal("provider"),
+    Type.Literal("partner"),
+    Type.Literal("operator"),
+  ],
+  { $id: "ConsumptionAnalyticsDimension" },
+);
+export const ConsumptionAnalyticsSummarySchema = Type.Object(
+  {
+    gross_sales: Type.Number(),
+    discount_total: Type.Number(),
+    courtesy_total: Type.Number(),
+    reversal_total: Type.Number(),
+    operational_net: Type.Number(),
+    hotel_collected: Type.Number(),
+    partner_direct: Type.Number(),
+    order_count: Type.Integer(),
+    legacy_count: Type.Integer(),
+  },
+  { ...strict, $id: "ConsumptionAnalyticsSummary" },
+);
+export const ConsumptionAnalyticsPointSchema = Type.Object(
+  {
+    date: date(),
+    gross_sales: Type.Number(),
+    operational_net: Type.Number(),
+    order_count: Type.Integer(),
+  },
+  { ...strict, $id: "ConsumptionAnalyticsPoint" },
+);
+export const ConsumptionAnalyticsRowSchema = Type.Object(
+  {
+    key: Type.String(),
+    label: Type.String(),
+    gross_sales: Type.Number(),
+    operational_net: Type.Number(),
+    order_count: Type.Integer(),
+  },
+  { ...strict, $id: "ConsumptionAnalyticsRow" },
+);
+export const ConsumptionAnalyticsSchema = Type.Object(
+  {
+    summary: ConsumptionAnalyticsSummarySchema,
+    series: Type.Array(ConsumptionAnalyticsPointSchema),
+    rows: Type.Array(ConsumptionAnalyticsRowSchema),
+    total: Type.Integer(),
+    next_cursor: nullable(Type.String()),
+  },
+  { ...strict, $id: "ConsumptionAnalytics" },
+);
+const ManagementAlertKindSchema = Type.Union([
+  Type.Literal("guest_balance"),
+  Type.Literal("critical_stock"),
+  Type.Literal("agreement_expiry"),
+  Type.Literal("pending_settlement"),
+]);
+export const ManagementAlertSchema = Type.Object(
+  {
+    id: Type.String(),
+    kind: ManagementAlertKindSchema,
+    severity: Type.Union([Type.Literal("warning"), Type.Literal("critical")]),
+    title: Type.String(),
+    description: Type.String(),
+    href: Type.String(),
+    entity_id: uuid(),
+    due_on: Type.Optional(nullable(date())),
+    amount: Type.Optional(Type.Number()),
+    quantity: Type.Optional(Type.Number()),
+    guest_name: Type.Optional(nullable(Type.String())),
+  },
+  { ...strict, $id: "ManagementAlert" },
+);
+const ManagementAlertInlineSchema = Type.Omit(ManagementAlertSchema, []);
+export const ManagementAlertsSchema = Type.Object(
+  {
+    guest_balances: Type.Array(ManagementAlertInlineSchema),
+    critical_stock: Type.Array(ManagementAlertInlineSchema),
+    expiring_agreements: Type.Array(ManagementAlertInlineSchema),
+    pending_settlements: Type.Array(ManagementAlertInlineSchema),
+  },
+  { ...strict, $id: "ManagementAlerts" },
+);
+const PartnerSettlementStatusSchema = Type.Union([
+  Type.Literal("draft"),
+  Type.Literal("in_review"),
+  Type.Literal("approved"),
+  Type.Literal("settled"),
+]);
+const PartnerSettlementDirectionSchema = Type.Union([
+  Type.Literal("hotel_to_partner"),
+  Type.Literal("partner_to_hotel"),
+  Type.Literal("balanced"),
+]);
+const PartnerSettlementSourceKindSchema = Type.Union([
+  Type.Literal("regular"),
+  Type.Literal("late_correction"),
+]);
+export const PartnerSettlementComponentSchema = Type.Object(
+  {
+    id: uuid(),
+    source_kind: PartnerSettlementSourceKindSchema,
+    agreement_id: uuid(),
+    revision_id: uuid(),
+    origin_component_id: nullable(uuid()),
+    agreement_number: Type.String(),
+    revision_version: Type.Integer(),
+    segment_start: date(),
+    segment_end: date(),
+    commercial_model: CommercialModelSchema,
+    fixed_rent: nullable(Type.Number()),
+    rent_frequency: nullable(CommercialRentFrequencySchema),
+    commission_percentage: nullable(Type.Number()),
+    minimum_guarantee: nullable(Type.Number()),
+    payment_recipient: CommercialPaymentRecipientSchema,
+    gross_sales: Type.Number(),
+    discount_total: Type.Number(),
+    courtesy_total: Type.Number(),
+    reversal_total: Type.Number(),
+    operational_net: Type.Number(),
+    hotel_collected: Type.Number(),
+    partner_direct: Type.Number(),
+    prorated_rent: Type.Number(),
+    commission_amount: Type.Number(),
+    prorated_minimum_guarantee: Type.Number(),
+    minimum_guarantee_topup: Type.Number(),
+    contribution_amount: Type.Number(),
+    net_settlement_amount: Type.Number(),
+    calculation_memory: Type.Record(Type.String(), Type.Unknown()),
+  },
+  { ...strict, $id: "PartnerSettlementComponent" },
+);
+export const PartnerSettlementSourceSchema = Type.Object(
+  {
+    id: uuid(),
+    source_kind: PartnerSettlementSourceKindSchema,
+    order_id: uuid(),
+    order_item_id: uuid(),
+    correction_id: nullable(uuid()),
+    correction_item_id: nullable(uuid()),
+    original_settlement_id: nullable(uuid()),
+    occurred_at: dateTime(),
+    completed_at: nullable(dateTime()),
+    point_id: nullable(uuid()),
+    point_name: nullable(Type.String()),
+    product_id: uuid(),
+    product_name: Type.String(),
+    category_id: nullable(uuid()),
+    category_name: Type.String(),
+    stay_id: nullable(uuid()),
+    reservation_code: nullable(Type.String()),
+    room_number: nullable(Type.String()),
+    billing_mode: nullable(ConsumptionBillingModeSchema),
+    payment_method: nullable(ConsumptionPaymentMethodSchema),
+    disposition: ConsumptionOrderDispositionSchema,
+    provider_type: ProductProviderSchema,
+    gross_amount: Type.Number(),
+    discount_amount: Type.Number(),
+    reversal_amount: Type.Number(),
+    operational_net: Type.Number(),
+    hotel_collected: Type.Number(),
+    partner_direct: Type.Number(),
+    source_snapshot: Type.Record(Type.String(), Type.Unknown()),
+  },
+  { ...strict, $id: "PartnerSettlementSource" },
+);
+export const PartnerSettlementPaymentSchema = Type.Object(
+  {
+    id: uuid(),
+    financial_transaction_id: uuid(),
+    amount: Type.Number(),
+    direction: PartnerSettlementDirectionSchema,
+    payment_method: ConsumptionPaymentMethodSchema,
+    paid_at: dateTime(),
+    reference_code: nullable(Type.String()),
+    notes: nullable(Type.String()),
+    created_by: uuid(),
+    created_at: dateTime(),
+    reversal_of_id: nullable(uuid()),
+  },
+  { ...strict, $id: "PartnerSettlementPayment" },
+);
+export const PartnerSettlementEventSchema = Type.Object(
+  {
+    id: uuid(),
+    action: Type.String(),
+    actor_id: nullable(uuid()),
+    actor_name: nullable(Type.String()),
+    details: Type.Record(Type.String(), Type.Unknown()),
+    created_at: dateTime(),
+  },
+  { ...strict, $id: "PartnerSettlementEvent" },
+);
+export const PartnerSettlementSchema = Type.Object(
+  {
+    id: uuid(),
+    hotel_id: uuid(),
+    partner: Type.Ref("CommercialPartnerSummary"),
+    period_start: date(),
+    period_end: date(),
+    currency: Type.String(),
+    status: PartnerSettlementStatusSchema,
+    direction: PartnerSettlementDirectionSchema,
+    version: Type.Integer(),
+    gross_sales: Type.Number(),
+    discount_total: Type.Number(),
+    courtesy_total: Type.Number(),
+    reversal_total: Type.Number(),
+    operational_net: Type.Number(),
+    hotel_collected: Type.Number(),
+    partner_direct: Type.Number(),
+    rent_total: Type.Number(),
+    commission_total: Type.Number(),
+    minimum_guarantee_topup: Type.Number(),
+    contribution_total: Type.Number(),
+    net_settlement: Type.Number(),
+    due_on: date(),
+    prepared_by: nullable(uuid()),
+    prepared_at: nullable(dateTime()),
+    submitted_by: nullable(uuid()),
+    submitted_at: nullable(dateTime()),
+    approved_by: nullable(uuid()),
+    approved_at: nullable(dateTime()),
+    settled_by: nullable(uuid()),
+    settled_at: nullable(dateTime()),
+    statement_snapshot: nullable(Type.Record(Type.String(), Type.Unknown())),
+    components: Type.Array(PartnerSettlementComponentSchema),
+    sources: Type.Array(PartnerSettlementSourceSchema),
+    payments: Type.Array(PartnerSettlementPaymentSchema),
+    events: Type.Array(PartnerSettlementEventSchema),
+    created_at: dateTime(),
+    updated_at: dateTime(),
+  },
+  { ...strict, $id: "PartnerSettlement" },
+);
+export const PartnerSettlementCandidateSchema = Type.Object(
+  {
+    partner: Type.Ref("CommercialPartnerSummary"),
+    period_start: date(),
+    period_end: date(),
+    settlement_id: nullable(uuid()),
+    status: Type.Union([
+      PartnerSettlementStatusSchema,
+      Type.Literal("missing"),
+    ]),
+  },
+  { ...strict, $id: "PartnerSettlementCandidate" },
+);
+export const PartnerSettlementCreateBodySchema = Type.Object(
+  { partner_id: uuid(), period_start: MonthStartDateSchema },
+  { ...strict, $id: "PartnerSettlementCreateInput" },
+);
+export const PartnerSettlementVersionBodySchema = Type.Object(
+  { expected_version: Type.Integer({ minimum: 1 }) },
+  { ...strict, $id: "PartnerSettlementVersionInput" },
+);
+export const PartnerSettlementDecisionBodySchema = Type.Object(
+  {
+    expected_version: Type.Integer({ minimum: 1 }),
+    decision: Type.Union([Type.Literal("approve"), Type.Literal("reject")]),
+    reason: optionalNullable(Type.String({ minLength: 3, maxLength: 1000 })),
+  },
+  { ...strict, $id: "PartnerSettlementDecisionInput" },
+);
+export const PartnerSettlementPaymentBodySchema = Type.Object(
+  {
+    expected_version: Type.Integer({ minimum: 1 }),
+    amount: Type.Number({ exclusiveMinimum: 0 }),
+    payment_method: ConsumptionPaymentMethodSchema,
+    paid_at: dateTime(),
+    reference_code: optionalNullable(
+      Type.String({ minLength: 1, maxLength: 200 }),
+    ),
+    notes: optionalNullable(Type.String({ minLength: 3, maxLength: 1000 })),
+    idempotency_key: uuid(),
+  },
+  { ...strict, $id: "PartnerSettlementPaymentInput" },
+);
+export const PartnerSettlementPaymentReversalBodySchema = Type.Object(
+  {
+    reason: Type.String({ minLength: 3, maxLength: 1000 }),
+    reversed_at: dateTime(),
+    idempotency_key: uuid(),
+  },
+  { ...strict, $id: "PartnerSettlementPaymentReversalInput" },
+);
 export const SeasonSchema = Type.Object(
   {
     id: uuid(),
@@ -5499,5 +5817,147 @@ export const API_ROUTE_CONTRACTS: Readonly<Record<string, ApiRouteContract>> = {
     "Cancela a estadia.",
     itemSchema(StayPanelSchema),
     { params: IdParamsSchema },
+  ),
+  "GET /admin/consumption-management/settings": admin(
+    "getConsumptionManagementSettings",
+    "Consumption management",
+    "Consulta os parâmetros de apuração e alertas do hotel ativo.",
+    itemSchema(ConsumptionManagementSettingsSchema),
+  ),
+  "PATCH /admin/consumption-management/settings": admin(
+    "updateConsumptionManagementSettings",
+    "Consumption management",
+    "Atualiza parâmetros aplicáveis somente a apurações ainda abertas.",
+    itemSchema(ConsumptionManagementSettingsSchema),
+    { body: ConsumptionManagementSettingsBodySchema },
+  ),
+  "GET /admin/consumption-analytics": admin(
+    "getConsumptionAnalytics",
+    "Consumption management",
+    "Retorna totais, série diária e agrupamento paginado do consumo.",
+    itemSchema(ConsumptionAnalyticsSchema),
+    {
+      querystring: Type.Object(
+        {
+          from: date(),
+          to: date(),
+          dimension: Type.Optional(ConsumptionAnalyticsDimensionSchema),
+          point_id: Type.Optional(uuid()),
+          category_id: Type.Optional(uuid()),
+          product_id: Type.Optional(uuid()),
+          stay_search: Type.Optional(Type.String({ maxLength: 120 })),
+          disposition: Type.Optional(ConsumptionOrderDispositionSchema),
+          billing_mode: Type.Optional(ConsumptionBillingModeSchema),
+          payment_method: Type.Optional(ConsumptionPaymentMethodSchema),
+          provider_type: Type.Optional(ProductProviderSchema),
+          partner_id: Type.Optional(uuid()),
+          operator_id: Type.Optional(uuid()),
+          cursor: Type.Optional(Type.String({ pattern: "^[0-9]+$" })),
+          limit: Type.Optional(Type.Integer({ minimum: 1, maximum: 100 })),
+        },
+        strict,
+      ),
+    },
+  ),
+  "GET /admin/management-alerts": admin(
+    "getManagementAlerts",
+    "Consumption management",
+    "Calcula alertas gerenciais respeitando as permissões do usuário.",
+    itemSchema(ManagementAlertsSchema),
+  ),
+  "GET /admin/partner-settlements/candidates": admin(
+    "listPartnerSettlementCandidates",
+    "Partner settlements",
+    "Lista parceiros e meses aptos à preparação de uma apuração.",
+    listSchema(PartnerSettlementCandidateSchema),
+    {
+      querystring: Type.Object(
+        {
+          period_start: Type.Optional(date()),
+          partner_id: Type.Optional(uuid()),
+        },
+        strict,
+      ),
+    },
+  ),
+  "GET /admin/partner-settlements": admin(
+    "listPartnerSettlements",
+    "Partner settlements",
+    "Lista apurações mensais por parceiro.",
+    Type.Object(
+      {
+        items: Type.Array(PartnerSettlementSchema),
+        next_cursor: nullable(Type.String()),
+      },
+      strict,
+    ),
+    {
+      querystring: Type.Object(
+        {
+          partner_id: Type.Optional(uuid()),
+          status: Type.Optional(PartnerSettlementStatusSchema),
+          period_start: Type.Optional(date()),
+          cursor: Type.Optional(dateTime()),
+          limit: Type.Optional(Type.Integer({ minimum: 1, maximum: 100 })),
+        },
+        strict,
+      ),
+    },
+  ),
+  "POST /admin/partner-settlements": route(
+    "createPartnerSettlement",
+    "Partner settlements",
+    "Cria e calcula atomicamente a apuração mensal do parceiro.",
+    {
+      headers: AuthHeadersSchema,
+      security: [{ bearerAuth: [] }],
+      body: PartnerSettlementCreateBodySchema,
+      response: { 201: itemSchema(PartnerSettlementSchema), ...adminErrors },
+    },
+  ),
+  "GET /admin/partner-settlements/:id": admin(
+    "getPartnerSettlement",
+    "Partner settlements",
+    "Consulta demonstrativo, fontes, pagamentos e histórico da apuração.",
+    itemSchema(PartnerSettlementSchema),
+    { params: IdParamsSchema },
+  ),
+  "POST /admin/partner-settlements/:id/recalculate": admin(
+    "recalculatePartnerSettlement",
+    "Partner settlements",
+    "Atualiza as fontes e a memória de cálculo de uma apuração aberta.",
+    itemSchema(PartnerSettlementSchema),
+    { params: IdParamsSchema, body: PartnerSettlementVersionBodySchema },
+  ),
+  "POST /admin/partner-settlements/:id/submit": admin(
+    "submitPartnerSettlement",
+    "Partner settlements",
+    "Envia uma apuração preparada para revisão por outra pessoa.",
+    itemSchema(PartnerSettlementSchema),
+    { params: IdParamsSchema, body: PartnerSettlementVersionBodySchema },
+  ),
+  "POST /admin/partner-settlements/:id/decision": admin(
+    "decidePartnerSettlement",
+    "Partner settlements",
+    "Aprova ou rejeita a apuração em revisão.",
+    itemSchema(PartnerSettlementSchema),
+    { params: IdParamsSchema, body: PartnerSettlementDecisionBodySchema },
+  ),
+  "POST /admin/partner-settlements/:id/payment": admin(
+    "payPartnerSettlement",
+    "Partner settlements",
+    "Registra a quitação integral e a transação financeira correspondente.",
+    itemSchema(PartnerSettlementSchema),
+    { params: IdParamsSchema, body: PartnerSettlementPaymentBodySchema },
+  ),
+  "POST /admin/partner-settlement-payments/:id/reversal": admin(
+    "reversePartnerSettlementPayment",
+    "Partner settlements",
+    "Reverte uma baixa por lançamento financeiro compensatório.",
+    itemSchema(PartnerSettlementSchema),
+    {
+      params: IdParamsSchema,
+      body: PartnerSettlementPaymentReversalBodySchema,
+    },
   ),
 };

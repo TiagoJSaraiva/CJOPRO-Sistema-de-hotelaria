@@ -13,6 +13,11 @@ export type ConsumptionAccess = {
   canGrantCourtesy: boolean;
   canVoid: boolean;
   canApproveAdjustments: boolean;
+  canReadAnalytics: boolean;
+  canReadSettlements: boolean;
+  canPrepareSettlements: boolean;
+  canApproveSettlements: boolean;
+  canSettleSettlements: boolean;
 };
 
 export function getConsumptionAccess(user: UserLike): ConsumptionAccess {
@@ -40,11 +45,34 @@ export function getConsumptionAccess(user: UserLike): ConsumptionAccess {
     canApproveAdjustments: permissions.includes(
       PERMISSIONS.CONSUMPTION_ADJUSTMENT_APPROVE,
     ),
+    canReadAnalytics: permissions.includes(
+      PERMISSIONS.CONSUMPTION_ANALYTICS_READ,
+    ),
+    canReadSettlements: permissions.includes(
+      PERMISSIONS.PARTNER_SETTLEMENTS_READ,
+    ),
+    canPrepareSettlements: permissions.includes(
+      PERMISSIONS.PARTNER_SETTLEMENTS_PREPARE,
+    ),
+    canApproveSettlements: permissions.includes(
+      PERMISSIONS.PARTNER_SETTLEMENTS_APPROVE,
+    ),
+    canSettleSettlements: permissions.includes(
+      PERMISSIONS.PARTNER_SETTLEMENTS_SETTLE,
+    ),
   };
 }
 
 export function getConsumptionDefaultRoute(access: ConsumptionAccess) {
   if (access.canPost) return "/dashboard/consumption/launch";
+  if (access.canReadAnalytics) return "/dashboard/consumption/analytics";
+  if (
+    access.canReadSettlements ||
+    access.canPrepareSettlements ||
+    access.canApproveSettlements ||
+    access.canSettleSettlements
+  )
+    return "/dashboard/consumption/settlements";
   if (access.canRead) return "/dashboard/consumption/points";
   return access.canReadCommercial ? "/dashboard/consumption/partners" : null;
 }

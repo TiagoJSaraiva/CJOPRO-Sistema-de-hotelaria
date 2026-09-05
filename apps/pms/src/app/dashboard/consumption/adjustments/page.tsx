@@ -8,6 +8,7 @@ import {
 } from "../accountActions";
 import { getConsumptionAccess } from "../access";
 import { consumptionAdjustmentsGuide } from "../usageGuides";
+import { consumptionTabs } from "../tabs";
 
 const money = (value: number) =>
   new Intl.NumberFormat("pt-BR", { style: "currency", currency: "BRL" }).format(
@@ -32,50 +33,7 @@ export default async function ConsumptionAdjustmentsPage({
     ? new URLSearchParams({ status: params.filter }).toString()
     : "";
   const corrections = await listConsumptionCorrections(query);
-  const tabs = [
-    {
-      key: "launch",
-      label: "Lançar consumo",
-      href: "/dashboard/consumption/launch",
-      isVisible: access.canPost,
-    },
-    {
-      key: "history",
-      label: "Histórico",
-      href: "/dashboard/consumption/history",
-      isVisible: access.canRead,
-    },
-    {
-      key: "adjustments",
-      label: "Ajustes",
-      href: "/dashboard/consumption/adjustments",
-      isVisible: access.canApproveAdjustments,
-    },
-    {
-      key: "points",
-      label: "Pontos de consumo",
-      href: "/dashboard/consumption/points",
-      isVisible: access.canRead,
-    },
-    {
-      key: "offers",
-      label: "Ofertas",
-      href: "/dashboard/consumption/offers",
-      isVisible: access.canRead,
-    },
-    {
-      key: "partners",
-      label: "Parceiros",
-      href: "/dashboard/consumption/partners",
-      isVisible: access.canReadCommercial,
-    },
-    {
-      key: "agreements",
-      label: "Acordos",
-      href: "/dashboard/consumption/agreements",
-      isVisible: access.canReadCommercial,
-    },
-  ];
+  const tabs = consumptionTabs(access);
   return (
     <DashboardEntityPageShell
       title="Vendas e consumo"

@@ -492,6 +492,62 @@ test.describe("PMS UI quality", () => {
   );
 
   test(
+    "painel gerencial e revisão da apuração",
+    { tag: TEST_TAGS },
+    async ({ page, context, baseURL, auditAccessibility }) => {
+      test.setTimeout(90_000);
+      await preparePage(page);
+      await authenticate(
+        context,
+        baseURL || "http://127.0.0.1:3001",
+        "management-e2e-token",
+      );
+      await page.goto(
+        "/dashboard/consumption/analytics?from=2026-08-01&to=2026-08-31&dimension=point",
+      );
+      await expect(page.getByText("Venda líquida").first()).toBeVisible();
+      await expect(page.getByText("Recepção", { exact: true })).toBeVisible();
+      await expect(page.getByText("Alertas gerenciais")).toBeVisible();
+      await page.getByRole("button", { name: "Guia desta página" }).click();
+      await expect(
+        page.getByRole("dialog", { name: "Defina o recorte" }),
+      ).toBeVisible();
+      await page.keyboard.press("Escape");
+      await auditAccessibility("painel-gerencial-consumo");
+      await stabilizeVisualState(page);
+      await expect(page).toHaveScreenshot(
+        "consumption-management-dashboard.png",
+      );
+
+      await page.getByRole("link", { name: "Apurações" }).click();
+      await expect(page).toHaveURL(/\/dashboard\/consumption\/settlements/);
+      await page
+        .getByRole("link", { name: "Abrir", exact: true })
+        .first()
+        .click();
+      await expect(
+        page.getByText("Demonstrativo gerencial — não fiscal"),
+      ).toBeVisible();
+      await expect(page.getByText("Repasse ao parceiro").first()).toBeVisible();
+      page.once("dialog", (dialog) => dialog.accept());
+      const submitForReview = page.getByRole("button", {
+        name: "Enviar para revisão",
+      });
+      await submitForReview.focus();
+      await page.keyboard.press("Enter");
+      await expect(
+        page
+          .locator("strong")
+          .filter({ hasText: /^Em revisão$/ })
+          .first(),
+      ).toBeVisible();
+      await auditAccessibility("apuracao-parceiro");
+      await stabilizeVisualState(page);
+      await expect(page).toHaveScreenshot("partner-settlement-review.png");
+    },
+  );
+
+  test(
     "configura parceiro, acordo e oferta terceirizada",
     { tag: TEST_TAGS },
     async ({ page, context, baseURL, auditAccessibility }) => {

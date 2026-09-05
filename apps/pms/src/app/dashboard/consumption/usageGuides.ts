@@ -188,3 +188,87 @@ export const consumptionAdjustmentsGuide: UsageGuideDefinition = {
     },
   ],
 };
+
+export const consumptionAnalyticsGuide: UsageGuideDefinition = {
+  id: "consumption-analytics",
+  title: "Analisar vendas e consumo",
+  steps: [
+    {
+      id: "filters",
+      target: "consumption-analytics-filters",
+      title: "Defina o recorte",
+      description:
+        "Escolha o período, a dimensão e os filtros. Os totais sempre consideram todo o recorte, não apenas as linhas visíveis.",
+    },
+    {
+      id: "summary",
+      target: "consumption-analytics-summary",
+      title: "Separe origem e resultado",
+      description:
+        "Compare venda bruta, descontos, cortesias, estornos e o que foi recebido pelo hotel ou diretamente pelo parceiro.",
+    },
+    {
+      id: "series",
+      target: "consumption-analytics-series",
+      title: "Observe a evolução",
+      description:
+        "A série diária ajuda a localizar variações antes de detalhar os agrupamentos.",
+    },
+    {
+      id: "breakdown",
+      target: "consumption-analytics-breakdown",
+      title: "Confira e exporte",
+      description:
+        "Ordene sua análise pela dimensão desejada, abra o histórico relacionado ou exporte o recorte em CSV.",
+    },
+    {
+      id: "alerts",
+      target: "consumption-management-alerts",
+      title: "Trate as prioridades",
+      description:
+        "Use os atalhos para saldos de hóspedes, estoque crítico, acordos vencendo e apurações atrasadas.",
+    },
+  ],
+};
+
+export const consumptionSettlementsGuide: UsageGuideDefinition = {
+  id: "consumption-settlements",
+  title: "Fechar uma apuração de parceiro",
+  steps: [
+    {
+      id: "filters",
+      target: "settlement-filters",
+      title: "Escolha o mês civil",
+      description:
+        "O mês corrente é apenas prévia; a aprovação fica disponível depois do encerramento no fuso do hotel.",
+    },
+    {
+      id: "candidates",
+      target: "settlement-candidates",
+      title: "Gere os demonstrativos",
+      description:
+        "Candidatos incluem parceiros sem venda quando o acordo prevê aluguel ou mínimo garantido.",
+    },
+    {
+      id: "statement",
+      target: "settlement-statement",
+      title: "Leia a memória de cálculo",
+      description:
+        "Diferencie vendas diretas, recebidas pelo hotel, aluguel, comissão, mínimo garantido e ajustes de períodos anteriores.",
+    },
+    {
+      id: "workflow",
+      target: "settlement-workflow",
+      title: "Revise em duas pessoas",
+      description:
+        "O preparador envia uma versão para revisão; outra pessoa aprova ou rejeita após conferir fontes e pendências.",
+    },
+    {
+      id: "payment",
+      target: "settlement-payment",
+      title: "Registre a quitação",
+      description:
+        "Saldo positivo é repasse ao parceiro; saldo negativo é cobrança. A baixa é integral e apenas registra a operação.",
+    },
+  ],
+};

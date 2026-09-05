@@ -11,6 +11,7 @@ import { BillingModeFields } from "../_components/BillingModeFields";
 import { ConsumptionPointCard } from "../_components/ConsumptionPointCard";
 import { ConsumptionStatusMessage } from "../_components/ConsumptionStatusMessage";
 import { consumptionPointsGuide } from "../usageGuides";
+import { consumptionTabs } from "../tabs";
 
 export default async function ConsumptionPointsPage({
   searchParams,
@@ -37,50 +38,7 @@ export default async function ConsumptionPointsPage({
       title="Vendas e consumo"
       activeTabKey="points"
       usageGuide={consumptionPointsGuide}
-      tabs={[
-        {
-          key: "launch",
-          label: "Lançar consumo",
-          href: "/dashboard/consumption/launch",
-          isVisible: access.canPost,
-        },
-        {
-          key: "history",
-          label: "Histórico",
-          href: "/dashboard/consumption/history",
-          isVisible: access.canRead,
-        },
-        {
-          key: "adjustments",
-          label: "Ajustes",
-          href: "/dashboard/consumption/adjustments",
-          isVisible: access.canApproveAdjustments,
-        },
-        {
-          key: "points",
-          label: "Pontos de consumo",
-          href: "/dashboard/consumption/points",
-          isVisible: access.canRead,
-        },
-        {
-          key: "offers",
-          label: "Ofertas",
-          href: "/dashboard/consumption/offers",
-          isVisible: access.canRead,
-        },
-        {
-          key: "partners",
-          label: "Parceiros",
-          href: "/dashboard/consumption/partners",
-          isVisible: access.canReadCommercial,
-        },
-        {
-          key: "agreements",
-          label: "Acordos",
-          href: "/dashboard/consumption/agreements",
-          isVisible: access.canReadCommercial,
-        },
-      ]}
+      tabs={consumptionTabs(access)}
       statusContent={<ConsumptionStatusMessage status={status} />}
     >
       <div className="grid gap-5">

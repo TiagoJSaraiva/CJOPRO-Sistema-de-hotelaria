@@ -20,6 +20,11 @@ describe("consumption access", () => {
       canGrantCourtesy: false,
       canVoid: false,
       canApproveAdjustments: false,
+      canReadAnalytics: false,
+      canReadSettlements: false,
+      canPrepareSettlements: false,
+      canApproveSettlements: false,
+      canSettleSettlements: false,
     });
     expect(
       getConsumptionAccess({
@@ -36,6 +41,11 @@ describe("consumption access", () => {
       canGrantCourtesy: false,
       canVoid: false,
       canApproveAdjustments: false,
+      canReadAnalytics: false,
+      canReadSettlements: false,
+      canPrepareSettlements: false,
+      canApproveSettlements: false,
+      canSettleSettlements: false,
     });
   });
 
@@ -52,6 +62,11 @@ describe("consumption access", () => {
         canGrantCourtesy: false,
         canVoid: false,
         canApproveAdjustments: false,
+        canReadAnalytics: false,
+        canReadSettlements: false,
+        canPrepareSettlements: false,
+        canApproveSettlements: false,
+        canSettleSettlements: false,
       }),
     ).toBe("/dashboard/consumption/points");
     expect(
@@ -66,6 +81,11 @@ describe("consumption access", () => {
         canGrantCourtesy: false,
         canVoid: false,
         canApproveAdjustments: false,
+        canReadAnalytics: false,
+        canReadSettlements: false,
+        canPrepareSettlements: false,
+        canApproveSettlements: false,
+        canSettleSettlements: false,
       }),
     ).toBeNull();
     expect(
@@ -80,8 +100,23 @@ describe("consumption access", () => {
         canGrantCourtesy: false,
         canVoid: false,
         canApproveAdjustments: false,
+        canReadAnalytics: false,
+        canReadSettlements: false,
+        canPrepareSettlements: false,
+        canApproveSettlements: false,
+        canSettleSettlements: false,
       }),
     ).toBe("/dashboard/consumption/partners");
+  });
+
+  it("prioritizes analytics for exclusively managerial users", () => {
+    const access = getConsumptionAccess({
+      permissions: [PERMISSIONS.CONSUMPTION_ANALYTICS_READ],
+    });
+    expect(access.canReadAnalytics).toBe(true);
+    expect(getConsumptionDefaultRoute(access)).toBe(
+      "/dashboard/consumption/analytics",
+    );
   });
 
   it("separates partner and agreement management permissions", () => {

@@ -1,6 +1,6 @@
 begin;
 
-select plan(231);
+select plan(264);
 
 select ok(to_regclass('public.room_blocks') is not null, 'room_blocks exists');
 
@@ -78,7 +78,7 @@ select is((select count(*)::integer from public.hotels), 2, 'seed has two hotels
 select is((select count(*)::integer from public.rooms), 6, 'seed has six rooms');
 select is((select count(*)::integer from public.customers), 4, 'seed has four customers');
 select is((select count(*)::integer from public.products), 4, 'seed has four products');
-select is((select count(*)::integer from public.permissions), 76, 'seed matches all canonical application permissions');
+select is((select count(*)::integer from public.permissions), 81, 'seed matches all canonical application permissions');
 select is((select count(*)::integer from public.roles), 3, 'seed has one global role and two hotel roles');
 select is((select count(*)::integer from public.users), 3, 'seed has three local users');
 select is((select count(*)::integer from public.reservations), 4, 'seed has four reservations');
@@ -218,13 +218,13 @@ select is(
 select is(
   (select count(*)::integer from public.role_permissions where role_id = '70000000-0000-4000-8000-000000000002'),
   57,
-  'Aurora manager role has every hotel permission'
+  'Aurora manager keeps commercial and management permissions opt-in'
 );
 
 select is(
   (select count(*)::integer from public.role_permissions where role_id = '70000000-0000-4000-8000-000000000003'),
   57,
-  'Horizonte manager role has every hotel permission'
+  'Horizonte manager keeps commercial and management permissions opt-in'
 );
 
 select ok(
@@ -1577,6 +1577,253 @@ select is(public.reorder_inventory_locations(
     order by id desc)), 'ok', 'inventory locations can be reordered atomically with a complete hotel-scoped list');
 select throws_ok($$ delete from public.inventory_movements where kind='opening' $$, '23514', null, 'inventory movements cannot be deleted');
 select throws_ok($$ insert into public.inventory_positions(hotel_id,product_id,location_id) values('10000000-0000-4000-8000-000000000002','40000000-0000-4000-8000-000000000003','a6000000-0000-4000-8000-000000000030') $$, '23503', null, 'product and location cannot cross hotel scope');
+
+select ok(
+  to_regclass('public.partner_settlements') is not null
+    and to_regclass('public.partner_settlement_components') is not null
+    and to_regclass('public.partner_settlement_sources') is not null
+    and to_regclass('public.partner_settlement_payments') is not null
+    and to_regclass('public.partner_settlement_events') is not null,
+  'partner settlement tables exist'
+);
+select is(
+  (select count(*)::integer from public.permissions where name in (
+    'read_consumption_analytics','read_partner_settlements','prepare_partner_settlements',
+    'approve_partner_settlements','settle_partner_settlements'
+  )),
+  5,
+  'management permissions are registered idempotently'
+);
+select is(
+  (select count(*)::integer from public.consumption_management_settings),
+  2,
+  'each hotel receives isolated management settings'
+);
+select throws_ok(
+  $$ update public.consumption_management_settings set settlement_tracking_starts_on='2026-08-02'
+     where hotel_id='10000000-0000-4000-8000-000000000001' $$,
+  '23514', null, 'settlement tracking always starts on the first day of a month'
+);
+update public.consumption_management_settings
+set settlement_tracking_starts_on=date_trunc('month',current_date-interval '1 month')::date
+where hotel_id='10000000-0000-4000-8000-000000000001';
+select lives_ok(
+  $$ insert into public.users(id,name,email,password_hash,is_active)
+     values('80000000-0000-4000-8000-000000000005','Revisora Aurora','revisora.aurora@hotelaria.local','synthetic-hash',true);
+     insert into public.user_roles(user_id,role_id,hotel_id)
+     values('80000000-0000-4000-8000-000000000005','70000000-0000-4000-8000-000000000002','10000000-0000-4000-8000-000000000001') $$,
+  'a second scoped user can review a settlement'
+);
+select lives_ok(
+  $$ insert into public.commercial_partners(id,hotel_id,trade_name,legal_name,last_changed_by)
+     values('b1000000-0000-4000-8000-000000000002','10000000-0000-4000-8000-000000000001',
+       'Lavanderia Gerencial','Lavanderia Gerencial Ltda','80000000-0000-4000-8000-000000000002') $$,
+  'a settlement test partner can be created'
+);
+select ok(
+  public.create_commercial_agreement(
+    '10000000-0000-4000-8000-000000000001','b1000000-0000-4000-8000-000000000002',
+    'AC-SETTLE','80000000-0000-4000-8000-000000000002',
+    date_trunc('month',current_date-interval '1 month')::date,
+    (date_trunc('month',current_date)-interval '1 day')::date,
+    'fixed_rent',300,'monthly',null,null,'hotel','Acordo sintético de apuração',
+    array['a1000000-0000-4000-8000-000000000001']::uuid[]
+  ) is not null,
+  'a historical fixed-rent agreement is created for a closed month'
+);
+select is(
+  public.activate_commercial_agreement_revision(
+    '10000000-0000-4000-8000-000000000001',
+    (select revision.id from public.commercial_agreement_revisions revision
+      join public.commercial_agreements agreement on agreement.id=revision.agreement_id
+      where agreement.internal_number='AC-SETTLE'),
+    '80000000-0000-4000-8000-000000000002'
+  ),
+  'ok',
+  'the historical agreement revision is activated'
+);
+select is(
+  (public.refresh_partner_settlement(
+    '10000000-0000-4000-8000-000000000001','b1000000-0000-4000-8000-000000000002',
+    date_trunc('month',current_date-interval '1 month')::date,
+    '80000000-0000-4000-8000-000000000002'
+  ))->>'result',
+  'ok',
+  'a closed-month settlement is calculated transactionally'
+);
+select is(
+  (select count(*)::integer from public.partner_settlements where partner_id='b1000000-0000-4000-8000-000000000002'),
+  1,
+  'there is only one settlement per partner and month'
+);
+select is(
+  (public.refresh_partner_settlement(
+    '10000000-0000-4000-8000-000000000001','b1000000-0000-4000-8000-000000000002',
+    date_trunc('month',current_date-interval '1 month')::date,
+    '80000000-0000-4000-8000-000000000002'
+  ))->>'result',
+  'settlement_already_exists',
+  'creating a duplicate partner-month settlement returns a stable conflict'
+);
+select is(
+  (select contribution_total from public.partner_settlements where partner_id='b1000000-0000-4000-8000-000000000002'),
+  300::numeric,
+  'monthly rent is recognized once even without sales'
+);
+select is(
+  (select direction::text from public.partner_settlements where partner_id='b1000000-0000-4000-8000-000000000002'),
+  'partner_to_hotel',
+  'negative net settlement means collection from the partner'
+);
+select is(
+  (select due_on from public.partner_settlements where partner_id='b1000000-0000-4000-8000-000000000002'),
+  ((date_trunc('month',current_date)-interval '1 day')::date+5),
+  'payment due date follows the hotel setting'
+);
+select is(
+  (public.refresh_partner_settlement(
+    '10000000-0000-4000-8000-000000000001','b1000000-0000-4000-8000-000000000002',
+    date_trunc('month',current_date-interval '1 month')::date,
+    '80000000-0000-4000-8000-000000000002',
+    (select version from public.partner_settlements where partner_id='b1000000-0000-4000-8000-000000000002')
+  ))->>'result',
+  'ok',
+  'a draft may be recalculated with its current version'
+);
+select is(
+  (select count(*)::integer from public.partner_settlements where partner_id='b1000000-0000-4000-8000-000000000002'),
+  1,
+  'recalculation does not duplicate the monthly statement'
+);
+select is(
+  (public.submit_partner_settlement(
+    '10000000-0000-4000-8000-000000000001',
+    (select id from public.partner_settlements where partner_id='b1000000-0000-4000-8000-000000000002'),
+    '80000000-0000-4000-8000-000000000002',
+    (select version from public.partner_settlements where partner_id='b1000000-0000-4000-8000-000000000002')
+  ))->>'result',
+  'ok',
+  'the preparer submits a stable version for review'
+);
+select is(
+  (public.decide_partner_settlement(
+    '10000000-0000-4000-8000-000000000001',
+    (select id from public.partner_settlements where partner_id='b1000000-0000-4000-8000-000000000002'),
+    '80000000-0000-4000-8000-000000000002',
+    (select version from public.partner_settlements where partner_id='b1000000-0000-4000-8000-000000000002'),
+    'approve',null
+  ))->>'result',
+  'settlement_self_approval',
+  'the preparer cannot approve their own settlement'
+);
+select is(
+  (public.decide_partner_settlement(
+    '10000000-0000-4000-8000-000000000001',
+    (select id from public.partner_settlements where partner_id='b1000000-0000-4000-8000-000000000002'),
+    '80000000-0000-4000-8000-000000000005',
+    (select version from public.partner_settlements where partner_id='b1000000-0000-4000-8000-000000000002'),
+    'approve',null
+  ))->>'result',
+  'ok',
+  'a different scoped user approves the settlement'
+);
+select ok(
+  (select statement_snapshot is not null from public.partner_settlements where partner_id='b1000000-0000-4000-8000-000000000002'),
+  'approval freezes a reproducible statement snapshot'
+);
+select throws_ok(
+  $$ delete from public.partner_settlements where partner_id='b1000000-0000-4000-8000-000000000002' $$,
+  '23514', null, 'approved settlements cannot be deleted'
+);
+select is(
+  (public.pay_partner_settlement(
+    '10000000-0000-4000-8000-000000000001',
+    (select id from public.partner_settlements where partner_id='b1000000-0000-4000-8000-000000000002'),
+    '80000000-0000-4000-8000-000000000002',
+    (select version from public.partner_settlements where partner_id='b1000000-0000-4000-8000-000000000002'),
+    299,'pix',now(),null,null,'b7000000-0000-4000-8000-000000000090'
+  ))->>'result',
+  'settlement_payment_mismatch',
+  'settlement payment must match the exact balance'
+);
+select is(
+  (public.pay_partner_settlement(
+    '10000000-0000-4000-8000-000000000001',
+    (select id from public.partner_settlements where partner_id='b1000000-0000-4000-8000-000000000002'),
+    '80000000-0000-4000-8000-000000000002',
+    (select version from public.partner_settlements where partner_id='b1000000-0000-4000-8000-000000000002'),
+    300,'pix',now(),'COBRANCA-TESTE','Cobrança sintética','b7000000-0000-4000-8000-000000000091'
+  ))->>'result',
+  'ok',
+  'an exact settlement payment is recorded atomically'
+);
+select ok(
+  exists(select 1 from public.financial_transactions transaction
+    where transaction.partner_settlement_id=(select id from public.partner_settlements where partner_id='b1000000-0000-4000-8000-000000000002')
+      and transaction.type='INCOME' and transaction.category='PARTNER_SETTLEMENT_COLLECTION'),
+  'collection from a partner creates the classified income transaction'
+);
+select is(
+  (public.pay_partner_settlement(
+    '10000000-0000-4000-8000-000000000001',
+    (select id from public.partner_settlements where partner_id='b1000000-0000-4000-8000-000000000002'),
+    '80000000-0000-4000-8000-000000000002',1,
+    300,'pix',now(),'COBRANCA-TESTE','Cobrança sintética','b7000000-0000-4000-8000-000000000091'
+  ))->>'result',
+  'ok',
+  'identical settlement payment replay is idempotent'
+);
+select is(
+  (select count(*)::integer from public.partner_settlement_payments where settlement_id=(
+    select id from public.partner_settlements where partner_id='b1000000-0000-4000-8000-000000000002')),
+  1,
+  'idempotent replay does not duplicate payment records'
+);
+select is(
+  (public.reverse_partner_settlement_payment(
+    '10000000-0000-4000-8000-000000000001',
+    (select id from public.partner_settlement_payments where reversal_of_id is null and settlement_id=(
+      select id from public.partner_settlements where partner_id='b1000000-0000-4000-8000-000000000002')),
+    '80000000-0000-4000-8000-000000000002','Baixa registrada incorretamente',now(),
+    'b7000000-0000-4000-8000-000000000092'
+  ))->>'result',
+  'ok',
+  'settlement payment reversal uses a compensating operation'
+);
+select is(
+  (select status::text from public.partner_settlements where partner_id='b1000000-0000-4000-8000-000000000002'),
+  'approved',
+  'a reversed payment returns the immutable statement to approved'
+);
+select ok(
+  exists(select 1 from public.partner_settlement_payments where reversal_of_id is not null),
+  'the compensating payment keeps the original payment intact'
+);
+select throws_ok(
+  $$ update public.partner_settlement_components set contribution_amount=0 where settlement_id=(
+       select id from public.partner_settlements where partner_id='b1000000-0000-4000-8000-000000000002') $$,
+  '23514', null, 'approved settlement components are immutable'
+);
+select ok(
+  (select bool_and(relrowsecurity) from pg_class where oid in (
+    'public.consumption_management_settings'::regclass,'public.partner_settlements'::regclass,
+    'public.partner_settlement_components'::regclass,'public.partner_settlement_sources'::regclass,
+    'public.partner_settlement_payments'::regclass,'public.partner_settlement_events'::regclass
+  )),
+  'RLS protects all management and settlement tables'
+);
+select is(
+  (public.get_consumption_analytics(
+    '10000000-0000-4000-8000-000000000001',current_date,current_date,'day'
+  ))->>'result',
+  'ok',
+  'analytics are calculated from immutable consumption sources'
+);
+select is(
+  (public.get_management_alerts('10000000-0000-4000-8000-000000000001'))->>'result',
+  'ok',
+  'management alerts combine guest, stock, agreement and settlement signals'
+);
 
 select * from finish();
 

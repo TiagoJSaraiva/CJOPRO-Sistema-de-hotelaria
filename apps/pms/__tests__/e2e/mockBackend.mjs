@@ -38,6 +38,14 @@ const inventoryPermissions = [
   "post_inventory_movements",
   "perform_inventory_counts",
 ];
+const managementPermissions = [
+  ...inventoryPermissions,
+  "read_consumption_analytics",
+  "read_partner_settlements",
+  "prepare_partner_settlements",
+  "approve_partner_settlements",
+  "settle_partner_settlements",
+];
 const maintenancePermissions = [
   ...permissions,
   "create_maintenance_occurrence",
@@ -99,6 +107,143 @@ const inventoryUser = {
     ...assignment,
     permissions: inventoryPermissions,
   })),
+};
+const managementUser = {
+  ...user,
+  permissions: managementPermissions,
+  roleAssignments: user.roleAssignments.map((assignment) => ({
+    ...assignment,
+    permissions: managementPermissions,
+  })),
+};
+
+const managementSettings = {
+  hotel_id: "hotel-e2e",
+  settlement_tracking_starts_on: "2026-01-01",
+  payment_due_days: 5,
+  agreement_expiry_alert_days: 30,
+  guest_balance_alert_days: 0,
+  last_changed_by: "user-e2e",
+  created_at: "2026-01-01T10:00:00.000Z",
+  updated_at: "2026-05-01T10:00:00.000Z",
+};
+const settlementPartner = {
+  id: "partner-management",
+  trade_name: "Spa Azul",
+  is_active: true,
+  archived_at: null,
+};
+const managementSettlement = {
+  id: "settlement-management",
+  hotel_id: "hotel-e2e",
+  partner: settlementPartner,
+  period_start: "2026-08-01",
+  period_end: "2026-08-31",
+  currency: "BRL",
+  status: "draft",
+  direction: "hotel_to_partner",
+  version: 1,
+  gross_sales: 1850,
+  discount_total: 50,
+  courtesy_total: 180,
+  reversal_total: 100,
+  operational_net: 1520,
+  hotel_collected: 1200,
+  partner_direct: 320,
+  rent_total: 500,
+  commission_total: 121.6,
+  minimum_guarantee_topup: 278.4,
+  contribution_total: 900,
+  net_settlement: 300,
+  due_on: "2026-09-05",
+  prepared_by: "user-e2e",
+  prepared_at: "2026-09-01T10:00:00.000Z",
+  submitted_by: null,
+  submitted_at: null,
+  approved_by: null,
+  approved_at: null,
+  settled_by: null,
+  settled_at: null,
+  statement_snapshot: null,
+  components: [
+    {
+      id: "component-management",
+      source_kind: "regular",
+      agreement_id: "agreement-management",
+      revision_id: "revision-management",
+      origin_component_id: null,
+      agreement_number: "SPA-2026",
+      revision_version: 1,
+      segment_start: "2026-08-01",
+      segment_end: "2026-08-31",
+      commercial_model: "hybrid",
+      fixed_rent: 500,
+      rent_frequency: "monthly",
+      commission_percentage: 8,
+      minimum_guarantee: 900,
+      payment_recipient: "both",
+      gross_sales: 1850,
+      discount_total: 50,
+      courtesy_total: 180,
+      reversal_total: 100,
+      operational_net: 1520,
+      hotel_collected: 1200,
+      partner_direct: 320,
+      prorated_rent: 500,
+      commission_amount: 121.6,
+      prorated_minimum_guarantee: 900,
+      minimum_guarantee_topup: 278.4,
+      contribution_amount: 900,
+      net_settlement_amount: 300,
+      calculation_memory: { active_days: 31, commission_base: 1520 },
+    },
+  ],
+  sources: [
+    {
+      id: "source-management",
+      source_kind: "regular",
+      order_id: "order-management",
+      order_item_id: "item-management",
+      correction_id: null,
+      correction_item_id: null,
+      original_settlement_id: null,
+      occurred_at: "2026-08-15T18:00:00.000Z",
+      completed_at: null,
+      point_id: "point-spa",
+      point_name: "Spa",
+      product_id: "product-spa",
+      product_name: "Massagem relaxante",
+      category_id: "category-wellness",
+      category_name: "Bem-estar",
+      stay_id: "stay-2",
+      reservation_code: "RES-1002",
+      room_number: "102",
+      billing_mode: "stay_folio",
+      payment_method: null,
+      disposition: "charged",
+      provider_type: "partner",
+      gross_amount: 180,
+      discount_amount: 0,
+      reversal_amount: 0,
+      operational_net: 180,
+      hotel_collected: 180,
+      partner_direct: 0,
+      source_snapshot: {},
+    },
+  ],
+  payments: [],
+  events: [
+    {
+      id: "event-management",
+      action: "calculated",
+      actor_id: "user-e2e",
+      actor_name: "Marina Costa",
+      details: {},
+      created_at: "2026-09-01T10:00:00.000Z",
+    },
+  ],
+  created_at: "2026-09-01T10:00:00.000Z",
+  updated_at: "2026-09-01T10:00:00.000Z",
 };
 
 const customers = [
@@ -719,6 +864,8 @@ const server = http.createServer(async (request, response) => {
     inventoryLocations[0].total_quantity = 0;
     stayTwoPaid = 600;
     stayTwoCheckedOut = false;
+    managementSettlement.status = "draft";
+    managementSettlement.version = 1;
     sendJson(response, 200, { ok: true });
     return;
   }
@@ -763,10 +910,181 @@ const server = http.createServer(async (request, response) => {
           ? maintenanceUser
           : authorization === "Bearer inventory-e2e-token"
             ? inventoryUser
-            : authorization === "Bearer consumption-e2e-token"
-              ? consumptionUser
-              : user,
+            : authorization === "Bearer management-e2e-token"
+              ? managementUser
+              : authorization === "Bearer consumption-e2e-token"
+                ? consumptionUser
+                : user,
     });
+    return;
+  }
+
+  if (
+    method === "GET" &&
+    url.pathname === "/admin/consumption-management/settings"
+  ) {
+    sendJson(response, 200, { item: managementSettings });
+    return;
+  }
+  if (
+    method === "PATCH" &&
+    url.pathname === "/admin/consumption-management/settings"
+  ) {
+    Object.assign(managementSettings, await parseBody(request));
+    sendJson(response, 200, { item: managementSettings });
+    return;
+  }
+  if (method === "GET" && url.pathname === "/admin/consumption-analytics") {
+    sendJson(response, 200, {
+      item: {
+        summary: {
+          gross_sales: 2430,
+          discount_total: 80,
+          courtesy_total: 180,
+          reversal_total: 100,
+          operational_net: 2070,
+          hotel_collected: 1750,
+          partner_direct: 320,
+          order_count: 18,
+          legacy_count: 2,
+        },
+        series: [
+          {
+            date: "2026-08-14",
+            gross_sales: 780,
+            operational_net: 700,
+            order_count: 6,
+          },
+          {
+            date: "2026-08-15",
+            gross_sales: 1650,
+            operational_net: 1370,
+            order_count: 12,
+          },
+        ],
+        rows: [
+          {
+            key: "point-reception",
+            label: "Recepção",
+            gross_sales: 1350,
+            operational_net: 1200,
+            order_count: 10,
+          },
+          {
+            key: "point-spa",
+            label: "Spa",
+            gross_sales: 1080,
+            operational_net: 870,
+            order_count: 8,
+          },
+        ],
+        total: 2,
+        next_cursor: null,
+      },
+    });
+    return;
+  }
+  if (method === "GET" && url.pathname === "/admin/management-alerts") {
+    sendJson(response, 200, {
+      item: {
+        guest_balances: [
+          {
+            id: "guest-alert",
+            kind: "guest_balance",
+            severity: "critical",
+            title: "Saldo pendente no quarto 102",
+            description: "RES-1002 · BRL 360,00",
+            href: "/dashboard/reservations/account?stay_id=stay-2",
+            entity_id: "stay-2",
+            amount: 360,
+            guest_name: "Bruno Lima",
+          },
+        ],
+        critical_stock: [
+          {
+            id: "stock-alert",
+            kind: "critical_stock",
+            severity: "warning",
+            title: "Estoque baixo: Café espresso",
+            description: "Central · saldo 2 · mínimo 3",
+            href: "/dashboard/inventory/overview",
+            entity_id: "position-coffee",
+            quantity: 2,
+          },
+        ],
+        expiring_agreements: [
+          {
+            id: "agreement-alert",
+            kind: "agreement_expiry",
+            severity: "warning",
+            title: "Acordo vencendo: Spa Azul",
+            description: "SPA-2026 · término 30/09/2026",
+            href: "/dashboard/consumption/agreements",
+            entity_id: "revision-management",
+            due_on: "2026-09-30",
+          },
+        ],
+        pending_settlements: [
+          {
+            id: "settlement-alert",
+            kind: "pending_settlement",
+            severity: "warning",
+            title: "Apuração pendente: Spa Azul",
+            description: "08/2026",
+            href: "/dashboard/consumption/settlements?id=settlement-management",
+            entity_id: "settlement-management",
+            due_on: "2026-09-05",
+          },
+        ],
+      },
+    });
+    return;
+  }
+  if (
+    method === "GET" &&
+    url.pathname === "/admin/partner-settlements/candidates"
+  ) {
+    sendJson(response, 200, {
+      items: [
+        {
+          partner: settlementPartner,
+          period_start: "2026-08-01",
+          period_end: "2026-08-31",
+          settlement_id: managementSettlement.id,
+          status: managementSettlement.status,
+        },
+      ],
+    });
+    return;
+  }
+  if (method === "GET" && url.pathname === "/admin/partner-settlements") {
+    sendJson(response, 200, {
+      items: [managementSettlement],
+      next_cursor: null,
+    });
+    return;
+  }
+  const settlementMatch = url.pathname.match(
+    /^\/admin\/partner-settlements\/([^/]+)$/,
+  );
+  if (method === "GET" && settlementMatch) {
+    sendJson(response, 200, { item: managementSettlement });
+    return;
+  }
+  const settlementActionMatch = url.pathname.match(
+    /^\/admin\/partner-settlements\/([^/]+)\/(recalculate|submit|decision|payment)$/,
+  );
+  if (method === "POST" && settlementActionMatch) {
+    const body = await parseBody(request);
+    managementSettlement.version += 1;
+    if (settlementActionMatch[2] === "submit")
+      managementSettlement.status = "in_review";
+    if (settlementActionMatch[2] === "decision")
+      managementSettlement.status =
+        body.decision === "approve" ? "approved" : "draft";
+    if (settlementActionMatch[2] === "payment")
+      managementSettlement.status = "settled";
+    sendJson(response, 200, { item: managementSettlement });
     return;
   }
 

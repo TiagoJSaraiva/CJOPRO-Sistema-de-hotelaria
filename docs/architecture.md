@@ -70,9 +70,8 @@ O acordo possui identidade estável e revisões numeradas. Revisões ativadas s�
 imutáveis; uma nova revisão encerra atomicamente a anterior e não pode se
 sobrepor a outro acordo do mesmo parceiro no mesmo ponto. Os modelos são
 aluguel fixo, comissão sobre venda líquida operacional e híbrido com mínimo
-garantido opcional. Os termos são preservados nos itens para a apuração futura,
-mas esta camada ainda não calcula aluguel/comissão, faz split, repasse ou
-liquidação.
+garantido opcional. Os termos são preservados nos itens e alimentam a apuração
+mensal; não existe split, transferência bancária ou liquidação externa.
 
 Somente uma estadia em `checked_in` recebe novas comandas. O servidor resolve
 preço, oferta, política e revisão contratual para o horário informado, compara
@@ -159,6 +158,50 @@ Fontes de verdade: migration `20260907010000_create_hotel_inventory.sql`,
 `inventoryRepository.ts`, `inventoryRoutes.ts`, contratos em
 `packages/shared/src/api-contract.ts` e o módulo
 `apps/pms/src/app/dashboard/inventory`.
+
+## Painel gerencial e apuração de parceiros
+
+O painel lê comandas e correções imutáveis, enquadra `occurred_at` no fuso do
+hotel e mantém separados venda bruta, desconto, cortesia, estorno, venda líquida,
+valor recebido pelo hotel e pagamento direto ao parceiro. A mesma consulta gera
+totais sobre todo o recorte, série diária e agrupamentos paginados.
+
+```mermaid
+flowchart LR
+  sources[Comandas + correções] --> analytics[Painel por período e dimensão]
+  sources --> draft[Apuração mensal recalculável]
+  agreements[Acordos + revisões] --> components[Componentes por segmento]
+  components --> draft
+  draft --> review[Revisão por segunda pessoa]
+  review --> snapshot[Demonstrativo aprovado imutável]
+  snapshot --> direction{Saldo líquido}
+  direction -->|positivo| payout[Repasse ao parceiro]
+  direction -->|negativo| collection[Cobrança do parceiro]
+  direction -->|zero| balanced[Quitação sem transação]
+  payout --> compensation[Reversão compensatória]
+  collection --> compensation
+  late[Correção posterior] --> next[Ajuste único no próximo período aberto]
+```
+
+Cada parceiro possui no máximo um demonstrativo por mês civil. Aluguel
+trimestral ou anual é normalizado para o mês e apropriado por dias de vigência;
+comissão é calculada sobre a venda líquida agregada por acordo e revisão. No
+modelo híbrido, a contribuição é o maior valor entre aluguel apropriado mais
+comissão e mínimo garantido apropriado. O saldo é `recebido pelo hotel −
+contribuição`: positivo significa repasse, negativo significa cobrança.
+
+Submissão congela uma versão para análise; aprovação revalida fontes, período e
+correções pendentes, exige outro usuário e persiste um snapshot. A quitação cria
+uma transação financeira classificada, sem representar transferência bancária.
+Reversões preservam a baixa original e criam o lançamento oposto. Alertas são
+calculados em tempo real e respeitam a permissão do destino.
+
+Fontes de verdade: migration
+`20260908010000_create_consumption_management.sql`,
+`consumptionManagementRepository.ts`, `consumptionManagementRoutes.ts`,
+contratos em `packages/shared/src/api-contract.ts`, o módulo
+`apps/pms/src/app/dashboard/consumption` e o
+[guia operacional](consumption-management.md).
 
 ## Requisição autenticada e hotel ativo
 

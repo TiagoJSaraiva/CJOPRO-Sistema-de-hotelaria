@@ -353,6 +353,7 @@ export type AdminFinancialTransaction = {
   created_by?: string | null;
   maintenance_cost_item_id?: string | null;
   maintenance_recovery_id?: string | null;
+  partner_settlement_id?: string | null;
   created_at?: string;
   updated_at?: string;
 };
@@ -595,6 +596,282 @@ export type AdminCommercialAuditEvent = {
   action: string;
   changes: Record<string, unknown>;
   created_at: string;
+};
+
+export type ConsumptionAnalyticsDimension =
+  | "day"
+  | "point"
+  | "category"
+  | "product"
+  | "stay"
+  | "billing_mode"
+  | "payment_method"
+  | "provider"
+  | "partner"
+  | "operator";
+
+export type AdminConsumptionManagementSettings = {
+  hotel_id: string;
+  settlement_tracking_starts_on: string;
+  payment_due_days: number;
+  agreement_expiry_alert_days: number;
+  guest_balance_alert_days: number;
+  last_changed_by: string | null;
+  created_at: string;
+  updated_at: string;
+};
+
+export type AdminConsumptionManagementSettingsInput = Pick<
+  AdminConsumptionManagementSettings,
+  | "settlement_tracking_starts_on"
+  | "payment_due_days"
+  | "agreement_expiry_alert_days"
+  | "guest_balance_alert_days"
+>;
+
+export type AdminConsumptionAnalyticsSummary = {
+  gross_sales: number;
+  discount_total: number;
+  courtesy_total: number;
+  reversal_total: number;
+  operational_net: number;
+  hotel_collected: number;
+  partner_direct: number;
+  order_count: number;
+  legacy_count: number;
+};
+
+export type AdminConsumptionAnalyticsPoint = {
+  date: string;
+  gross_sales: number;
+  operational_net: number;
+  order_count: number;
+};
+
+export type AdminConsumptionAnalyticsRow = {
+  key: string;
+  label: string;
+  gross_sales: number;
+  operational_net: number;
+  order_count: number;
+};
+
+export type AdminConsumptionAnalytics = {
+  summary: AdminConsumptionAnalyticsSummary;
+  series: AdminConsumptionAnalyticsPoint[];
+  rows: AdminConsumptionAnalyticsRow[];
+  total: number;
+  next_cursor: string | null;
+};
+
+export type ManagementAlertKind =
+  | "guest_balance"
+  | "critical_stock"
+  | "agreement_expiry"
+  | "pending_settlement";
+export type ManagementAlertSeverity = "warning" | "critical";
+
+export type AdminManagementAlert = {
+  id: string;
+  kind: ManagementAlertKind;
+  severity: ManagementAlertSeverity;
+  title: string;
+  description: string;
+  href: string;
+  entity_id: string;
+  due_on?: string | null;
+  amount?: number;
+  quantity?: number;
+  guest_name?: string | null;
+};
+
+export type AdminManagementAlerts = {
+  guest_balances: AdminManagementAlert[];
+  critical_stock: AdminManagementAlert[];
+  expiring_agreements: AdminManagementAlert[];
+  pending_settlements: AdminManagementAlert[];
+};
+
+export type PartnerSettlementStatus =
+  "draft" | "in_review" | "approved" | "settled";
+export type PartnerSettlementDirection =
+  "hotel_to_partner" | "partner_to_hotel" | "balanced";
+export type PartnerSettlementSourceKind = "regular" | "late_correction";
+export type PartnerSettlementConflictReason =
+  | "settlement_already_exists"
+  | "settlement_month_still_open"
+  | "settlement_sources_changed"
+  | "settlement_pending_corrections"
+  | "settlement_self_approval"
+  | "settlement_invalid_state"
+  | "settlement_version_conflict"
+  | "settlement_payment_mismatch"
+  | "settlement_idempotency_conflict";
+
+export type AdminPartnerSettlementComponent = {
+  id: string;
+  source_kind: PartnerSettlementSourceKind;
+  agreement_id: string;
+  revision_id: string;
+  origin_component_id: string | null;
+  agreement_number: string;
+  revision_version: number;
+  segment_start: string;
+  segment_end: string;
+  commercial_model: CommercialModel;
+  fixed_rent: number | null;
+  rent_frequency: CommercialRentFrequency | null;
+  commission_percentage: number | null;
+  minimum_guarantee: number | null;
+  payment_recipient: CommercialPaymentRecipient;
+  gross_sales: number;
+  discount_total: number;
+  courtesy_total: number;
+  reversal_total: number;
+  operational_net: number;
+  hotel_collected: number;
+  partner_direct: number;
+  prorated_rent: number;
+  commission_amount: number;
+  prorated_minimum_guarantee: number;
+  minimum_guarantee_topup: number;
+  contribution_amount: number;
+  net_settlement_amount: number;
+  calculation_memory: Record<string, unknown>;
+};
+
+export type AdminPartnerSettlementSource = {
+  id: string;
+  source_kind: PartnerSettlementSourceKind;
+  order_id: string;
+  order_item_id: string;
+  correction_id: string | null;
+  correction_item_id: string | null;
+  original_settlement_id: string | null;
+  occurred_at: string;
+  completed_at: string | null;
+  point_id: string | null;
+  point_name: string | null;
+  product_id: string;
+  product_name: string;
+  category_id: string | null;
+  category_name: string;
+  stay_id: string | null;
+  reservation_code: string | null;
+  room_number: string | null;
+  billing_mode: ConsumptionBillingMode | null;
+  payment_method: ConsumptionPaymentMethod | null;
+  disposition: ConsumptionOrderDisposition;
+  provider_type: ProductProviderType;
+  gross_amount: number;
+  discount_amount: number;
+  reversal_amount: number;
+  operational_net: number;
+  hotel_collected: number;
+  partner_direct: number;
+  source_snapshot: Record<string, unknown>;
+};
+
+export type AdminPartnerSettlementPayment = {
+  id: string;
+  financial_transaction_id: string;
+  amount: number;
+  direction: PartnerSettlementDirection;
+  payment_method: ConsumptionPaymentMethod;
+  paid_at: string;
+  reference_code: string | null;
+  notes: string | null;
+  created_by: string;
+  created_at: string;
+  reversal_of_id: string | null;
+};
+
+export type AdminPartnerSettlementEvent = {
+  id: string;
+  action: string;
+  actor_id: string | null;
+  actor_name: string | null;
+  details: Record<string, unknown>;
+  created_at: string;
+};
+
+export type AdminPartnerSettlement = {
+  id: string;
+  hotel_id: string;
+  partner: AdminCommercialPartnerSummary;
+  period_start: string;
+  period_end: string;
+  currency: string;
+  status: PartnerSettlementStatus;
+  direction: PartnerSettlementDirection;
+  version: number;
+  gross_sales: number;
+  discount_total: number;
+  courtesy_total: number;
+  reversal_total: number;
+  operational_net: number;
+  hotel_collected: number;
+  partner_direct: number;
+  rent_total: number;
+  commission_total: number;
+  minimum_guarantee_topup: number;
+  contribution_total: number;
+  net_settlement: number;
+  due_on: string;
+  prepared_by: string | null;
+  prepared_at: string | null;
+  submitted_by: string | null;
+  submitted_at: string | null;
+  approved_by: string | null;
+  approved_at: string | null;
+  settled_by: string | null;
+  settled_at: string | null;
+  statement_snapshot: Record<string, unknown> | null;
+  components: AdminPartnerSettlementComponent[];
+  sources: AdminPartnerSettlementSource[];
+  payments: AdminPartnerSettlementPayment[];
+  events: AdminPartnerSettlementEvent[];
+  created_at: string;
+  updated_at: string;
+};
+
+export type AdminPartnerSettlementCandidate = {
+  partner: AdminCommercialPartnerSummary;
+  period_start: string;
+  period_end: string;
+  settlement_id: string | null;
+  status: PartnerSettlementStatus | "missing";
+};
+
+export type AdminPartnerSettlementCreateInput = {
+  partner_id: string;
+  period_start: string;
+};
+
+export type AdminPartnerSettlementVersionInput = {
+  expected_version: number;
+};
+
+export type AdminPartnerSettlementDecisionInput =
+  AdminPartnerSettlementVersionInput & {
+    decision: "approve" | "reject";
+    reason?: string | null;
+  };
+
+export type AdminPartnerSettlementPaymentInput =
+  AdminPartnerSettlementVersionInput & {
+    amount: number;
+    payment_method: ConsumptionPaymentMethod;
+    paid_at: string;
+    reference_code?: string | null;
+    notes?: string | null;
+    idempotency_key: string;
+  };
+
+export type AdminPartnerSettlementPaymentReversalInput = {
+  reason: string;
+  reversed_at: string;
+  idempotency_key: string;
 };
 
 export type ConsumptionBillingMode =

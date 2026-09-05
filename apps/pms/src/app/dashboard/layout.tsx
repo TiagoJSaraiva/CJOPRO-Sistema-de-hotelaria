@@ -75,7 +75,12 @@ export default async function DashboardLayout({
       user.permissions.includes(PERMISSIONS.CONSUMPTION_POST) ||
       user.permissions.includes(PERMISSIONS.CONSUMPTION_READ) ||
       user.permissions.includes(PERMISSIONS.CONSUMPTION_SETTINGS_MANAGE) ||
-      user.permissions.includes(PERMISSIONS.COMMERCIAL_PARTNERS_READ),
+      user.permissions.includes(PERMISSIONS.COMMERCIAL_PARTNERS_READ) ||
+      user.permissions.includes(PERMISSIONS.CONSUMPTION_ANALYTICS_READ) ||
+      user.permissions.includes(PERMISSIONS.PARTNER_SETTLEMENTS_READ) ||
+      user.permissions.includes(PERMISSIONS.PARTNER_SETTLEMENTS_PREPARE) ||
+      user.permissions.includes(PERMISSIONS.PARTNER_SETTLEMENTS_APPROVE) ||
+      user.permissions.includes(PERMISSIONS.PARTNER_SETTLEMENTS_SETTLE),
     "/dashboard/inventory":
       user.permissions.includes(PERMISSIONS.INVENTORY_READ) ||
       user.permissions.includes(PERMISSIONS.INVENTORY_SETTINGS_MANAGE) ||

@@ -12,6 +12,7 @@ import { ConsumptionOffersManager } from "../_components/ConsumptionOffersManage
 import { ConsumptionStatusMessage } from "../_components/ConsumptionStatusMessage";
 import { getConsumptionAccess } from "../access";
 import { consumptionOffersGuide } from "../usageGuides";
+import { consumptionTabs } from "../tabs";
 
 export default async function ConsumptionOffersPage({
   searchParams,
@@ -42,50 +43,7 @@ export default async function ConsumptionOffersPage({
       title="Vendas e consumo"
       activeTabKey="offers"
       usageGuide={consumptionOffersGuide}
-      tabs={[
-        {
-          key: "launch",
-          label: "Lançar consumo",
-          href: "/dashboard/consumption/launch",
-          isVisible: access.canPost,
-        },
-        {
-          key: "history",
-          label: "Histórico",
-          href: "/dashboard/consumption/history",
-          isVisible: access.canRead,
-        },
-        {
-          key: "adjustments",
-          label: "Ajustes",
-          href: "/dashboard/consumption/adjustments",
-          isVisible: access.canApproveAdjustments,
-        },
-        {
-          key: "points",
-          label: "Pontos de consumo",
-          href: "/dashboard/consumption/points",
-          isVisible: access.canRead,
-        },
-        {
-          key: "offers",
-          label: "Ofertas",
-          href: "/dashboard/consumption/offers",
-          isVisible: access.canRead,
-        },
-        {
-          key: "partners",
-          label: "Parceiros",
-          href: "/dashboard/consumption/partners",
-          isVisible: access.canReadCommercial,
-        },
-        {
-          key: "agreements",
-          label: "Acordos",
-          href: "/dashboard/consumption/agreements",
-          isVisible: access.canReadCommercial,
-        },
-      ]}
+      tabs={consumptionTabs(access)}
       statusContent={<ConsumptionStatusMessage status={status} />}
     >
       <ConsumptionOffersManager
