@@ -1,3 +1,8 @@
+import {
+  OperationalPendingListSchema,
+  OperationalPendingQuerySchema,
+  OperationalPendingActionSchema,
+} from "./operational-pending";
 import { Type, type Static, type TSchema } from "typebox";
 import type {
   AdminCustomerCreateInput,
@@ -3943,6 +3948,30 @@ const crud = (
 });
 
 export const API_ROUTE_CONTRACTS: Readonly<Record<string, ApiRouteContract>> = {
+  "GET /admin/operational-pending": admin(
+    "listOperationalPending",
+    "Operations",
+    "Lista pendências autorizadas e resumo.",
+    OperationalPendingListSchema,
+    { querystring: OperationalPendingQuerySchema },
+  ),
+  "POST /admin/operational-pending/actions": admin(
+    "actOperationalPending",
+    "Operations",
+    "Registra leitura ou responsabilidade.",
+    OkSchema,
+    { body: OperationalPendingActionSchema },
+  ),
+  "POST /admin/operational-pending/reconcile": route(
+    "reconcileOperationalPending",
+    "Operations",
+    "Atualiza condições do hotel ativo.",
+    {
+      headers: AuthHeadersSchema,
+      security: [{ bearerAuth: [] }],
+      response: { 200: OkSchema, ...adminErrors, 503: ApiErrorSchema },
+    },
+  ),
   "GET /health": route(
     "getHealth",
     "System",

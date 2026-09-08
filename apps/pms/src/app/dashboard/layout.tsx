@@ -1,7 +1,11 @@
 import Link from "next/link";
 import Image from "next/image";
 import { redirect } from "next/navigation";
-import { ADMIN_NAV_ITEMS, PERMISSIONS } from "@hotel/shared";
+import {
+  ADMIN_NAV_ITEMS,
+  PERMISSIONS,
+  OPERATIONAL_PENDING_PERMISSIONS,
+} from "@hotel/shared";
 import type { ReactNode } from "react";
 import { getUserFromSession } from "../../lib/auth";
 import {
@@ -151,6 +155,13 @@ export default async function DashboardLayout({
               Início
             </Link>
 
+            {OPERATIONAL_PENDING_PERMISSIONS.some((permission) =>
+              user.permissions.includes(permission),
+            ) && (
+              <Link href="/dashboard/pending" className={navLinkClassName}>
+                Pendências
+              </Link>
+            )}
             {navItems.map((item) => (
               <Link
                 key={item.href}

@@ -5,11 +5,11 @@ está na [estratégia de testes](testing-strategy.md).
 
 ## Escopo automatizado
 
-O Chromium valida quatro superfícies em desktop (1440 × 960) e no viewport Pixel 5: login, calendário com painel de reserva aberto, checkout concluído e financeiro filtrado. O backend mockado e o relógio fixo tornam os dados, datas e estados reproduzíveis sem banco ou Supabase.
+O Chromium valida login, reservas, financeiro, catálogo, consumo, estoque, manutenção e pendências em desktop (1440 × 960) e no viewport Pixel 5. As jornadas operacionais incluem busca de duplicidade, organização de cobranças incompatíveis, recibos separados e leitura/atribuição de pendências. O backend mockado e o relógio fixo tornam os dados, datas e estados reproduzíveis sem banco ou Supabase.
 
 Comandos na raiz:
 
-- `pnpm test:visual`: compara os oito estados com os baselines da plataforma atual.
+- `pnpm test:visual`: compara os estados marcados `@visual` com os baselines da plataforma atual.
 - `pnpm test:a11y`: audita as mesmas superfícies, inclusive painel, menu e modal abertos.
 - `pnpm test:visual:update`: atualiza somente snapshots alterados da plataforma atual.
 - `pnpm test:e2e`: executa o conjunto funcional, visual e de acessibilidade completo.

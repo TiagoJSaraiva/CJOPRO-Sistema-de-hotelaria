@@ -631,18 +631,24 @@ export function MaintenanceOccurrenceWorkspace({
                 });
               }}
             >
-              <input
-                name="start_date"
-                type="date"
-                required
-                className="pms-field-input"
-              />
-              <input
-                name="end_date"
-                type="date"
-                required
-                className="pms-field-input"
-              />
+              <label className="pms-field">
+                Início do bloqueio
+                <input
+                  name="start_date"
+                  type="date"
+                  required
+                  className="pms-field-input"
+                />
+              </label>
+              <label className="pms-field">
+                Fim previsto do bloqueio
+                <input
+                  name="end_date"
+                  type="date"
+                  required
+                  className="pms-field-input"
+                />
+              </label>
               <textarea
                 name="conflict_acknowledgement"
                 placeholder="Justificativa se houver conflitos"

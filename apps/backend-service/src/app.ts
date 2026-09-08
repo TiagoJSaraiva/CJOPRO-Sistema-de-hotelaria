@@ -1,3 +1,4 @@
+import { registerOperationalPendingRoutes } from "./routes/operationalPendingRoutes";
 import Fastify, { type FastifyInstance } from "fastify";
 import cors from "@fastify/cors";
 import swagger from "@fastify/swagger";
@@ -169,6 +170,7 @@ export function createApp(options: CreateAppOptions = {}): FastifyInstance {
     registerConsumptionSettingsRoutes(routes);
     registerConsumptionOrderRoutes(routes);
     registerConsumptionManagementRoutes(routes);
+    registerOperationalPendingRoutes(routes);
     registerCommercialPartnerRoutes(routes);
     registerInventoryRoutes(routes);
     registerSeasonRoutes(routes);

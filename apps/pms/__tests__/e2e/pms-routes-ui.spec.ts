@@ -39,6 +39,79 @@ async function stabilizeVisualState(page: Page) {
 }
 
 test.describe("PMS UI quality", () => {
+  test(
+    "organiza cobranças incompatíveis e preserva os dois recibos",
+    { tag: TEST_TAGS },
+    async ({ page, context, baseURL, auditAccessibility }) => {
+      await authenticate(context, baseURL!, "consumption-e2e-token");
+      await preparePage(page);
+      await page.request.post(`${MOCK_BACKEND_URL}/test/split-consumption`);
+      await page.goto("/dashboard/consumption/launch?stay_id=stay-2");
+      await page
+        .getByRole("spinbutton", { name: "Quantidade de Café espresso" })
+        .fill("1");
+      await page
+        .getByRole("spinbutton", { name: "Quantidade de Massagem relaxante" })
+        .fill("1");
+      await page
+        .getByRole("button", { name: "Organizar cobranças", exact: true })
+        .click();
+      await expect(
+        page.getByRole("button", { name: "Confirmar este grupo" }),
+      ).toHaveCount(2);
+      await auditAccessibility("consumption-split-queue");
+      await stabilizeVisualState(page);
+      await expect(page).toHaveScreenshot("consumption-split-queue.png");
+      await page
+        .getByRole("button", { name: "Confirmar este grupo" })
+        .first()
+        .click();
+      await expect(
+        page.getByText("Comanda lançada", { exact: true }),
+      ).toHaveCount(1);
+      await page
+        .getByLabel("Referência", { exact: true })
+        .fill("PIX-SEGUNDO-GRUPO");
+      await page.getByRole("button", { name: "Confirmar este grupo" }).click();
+      await expect(
+        page.getByText("Comanda lançada", { exact: true }),
+      ).toHaveCount(2);
+      await expect(
+        page.getByText(/Todos os grupos foram tratados/),
+      ).toBeVisible();
+      await auditAccessibility("consumption-split-receipts");
+    },
+  );
+  test(
+    "central de pendências: leitura e responsabilidade",
+    { tag: TEST_TAGS },
+    async ({ page, context, baseURL, auditAccessibility }) => {
+      await authenticate(context, baseURL!, "management-e2e-token");
+      await preparePage(page);
+      await page.goto("/dashboard/pending");
+      await expect(
+        page.getByRole("heading", { name: "Pendências", exact: true }),
+      ).toBeVisible();
+      await page
+        .getByRole("button", { name: "Marcar lida", exact: true })
+        .click();
+      await expect(page.getByText(/Lida por você/)).toBeVisible();
+      await page.getByRole("button", { name: "Assumir", exact: true }).click();
+      await expect(page.getByText("Responsável: Marina Costa")).toBeVisible();
+      await page.getByRole("button", { name: "Devolver à fila" }).click();
+      await expect(
+        page.getByText("Responsável: Sem responsável"),
+      ).toBeVisible();
+      await page.getByRole("button", { name: "Guia desta página" }).click();
+      await expect(
+        page.getByText("Encontre sua fila", { exact: true }),
+      ).toBeVisible();
+      await page.keyboard.press("Escape");
+      await auditAccessibility("operational-pending");
+      await stabilizeVisualState(page);
+      await expect(page).toHaveScreenshot("operational-pending.png");
+    },
+  );
   test.beforeEach(async ({ page }) => {
     const response = await page.request.post(
       `${MOCK_BACKEND_URL}/test/reset-state`,
@@ -354,6 +427,10 @@ test.describe("PMS UI quality", () => {
         .click();
 
       await page.getByRole("link", { name: "Ofertas" }).click();
+      // Next compiles this route on its first visit in the local test server.
+      await expect(page).toHaveURL(/\/consumption\/offers/, {
+        timeout: 30_000,
+      });
       await expect(page.getByText("Café espresso").first()).toBeVisible();
       const newPointId = await page
         .getByLabel("Ponto de consumo")
@@ -520,7 +597,9 @@ test.describe("PMS UI quality", () => {
       );
 
       await page.getByRole("link", { name: "Apurações" }).click();
-      await expect(page).toHaveURL(/\/dashboard\/consumption\/settlements/);
+      await expect(page).toHaveURL(/\/dashboard\/consumption\/settlements/, {
+        timeout: 30_000,
+      });
       await page
         .getByRole("link", { name: "Abrir", exact: true })
         .first()
@@ -683,6 +762,7 @@ test.describe("PMS UI quality", () => {
     "central de manutenção",
     { tag: TEST_TAGS },
     async ({ page, context, baseURL, auditAccessibility }) => {
+      test.setTimeout(90_000);
       await preparePage(page);
       await authenticate(
         context,
@@ -722,6 +802,32 @@ test.describe("PMS UI quality", () => {
       await auditAccessibility("central-manutencao");
       await stabilizeVisualState(page);
       await expect(page).toHaveScreenshot("maintenance-center.png");
+      await page.getByRole("link", { name: /OCO-001002/ }).click();
+      const duplicate = page.getByRole("button", {
+        name: "Marcar como duplicada",
+      });
+      await duplicate.click();
+      await expect(
+        page.getByRole("dialog", { name: "Vincular ocorrência duplicada" }),
+      ).toBeVisible();
+      await page.getByLabel("Buscar código ou descrição").fill("Televisor");
+      const searchResponse = page.waitForResponse(
+        (response) =>
+          response.url().includes("/api/maintenance/occurrences?") &&
+          response.request().method() === "GET",
+      );
+      await page.getByRole("button", { name: "Buscar ocorrências" }).click();
+      expect((await searchResponse).ok()).toBe(true);
+      await expect(page.getByRole("radio")).toHaveCount(1);
+      await page.getByRole("radio").check();
+      await page
+        .getByLabel("Justificativa / observação")
+        .fill("Relatos do mesmo defeito");
+      await auditAccessibility("maintenance-duplicate-dialog");
+      await stabilizeVisualState(page);
+      await expect(page).toHaveScreenshot("maintenance-duplicate-dialog.png");
+      await page.keyboard.press("Escape");
+      await expect(duplicate).toBeFocused();
     },
   );
 
@@ -753,6 +859,7 @@ test.describe("PMS UI quality", () => {
     "gestão preventiva, alertas e indicadores",
     { tag: ["@a11y"] },
     async ({ page, context, baseURL, auditAccessibility }) => {
+      test.setTimeout(90_000); // Three routes and audits share the compilation server.
       await preparePage(page);
       await authenticate(
         context,

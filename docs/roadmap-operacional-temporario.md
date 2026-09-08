@@ -20,14 +20,14 @@ inferência. Atualizar este acompanhamento em cada entrega validada.
 
 ## Acompanhamento
 
-| Etapa                    | Situação           | Entregas                                                                                             | Decisões                                         | Validações                                                                                            | Próximo trabalho                           |
-| ------------------------ | ------------------ | ---------------------------------------------------------------------------------------------------- | ------------------------------------------------ | ----------------------------------------------------------------------------------------------------- | ------------------------------------------ |
-| 1 — Usabilidade          | Em validação final | Roteiro; ações e decisões de manutenção; busca de duplicidade; fila de comandas; central persistente | Fila persistente; comandas confirmadas por grupo | Banco local: 303 verificações SQL e 8 testes HTTP aprovados; testes de regras e componentes aprovados | Concluir aceite integrado e commits locais |
-| 2 — Operação integrada   | Não iniciada       | —                                                                                                    | Prioridade após etapa 1                          | —                                                                                                     | Planejamento técnico                       |
-| 3 — Manutenção planejada | Não iniciada       | —                                                                                                    | Aprofundar recursos existentes                   | —                                                                                                     | Planejamento técnico                       |
-| 4 — Consumo e saída      | Não iniciada       | —                                                                                                    | Completar atendimento e pagadores                | —                                                                                                     | Planejamento técnico                       |
-| 5 — Estoque e financeiro | Não iniciada       | —                                                                                                    | Fechar ciclos operacionais                       | —                                                                                                     | Planejamento técnico                       |
-| 6 — Expansão do PMS      | Não iniciada       | —                                                                                                    | Consolidar operação primeiro                     | —                                                                                                     | Planejamento técnico e limpeza final       |
+| Etapa                    | Situação             | Entregas                                                                                             | Decisões                                         | Validações                                                                                                               | Próximo trabalho                                  |
+| ------------------------ | -------------------- | ---------------------------------------------------------------------------------------------------- | ------------------------------------------------ | ------------------------------------------------------------------------------------------------------------------------ | ------------------------------------------------- |
+| 1 — Usabilidade          | Concluída e validada | Roteiro; ações e decisões de manutenção; busca de duplicidade; fila de comandas; central persistente | Fila persistente; comandas confirmadas por grupo | 310 verificações SQL; 8 testes HTTP; check, testes e cobertura aprovados; E2E Windows/Linux com reexecuções direcionadas | Planejar tecnicamente a etapa 2 quando solicitada |
+| 2 — Operação integrada   | Não iniciada         | —                                                                                                    | Prioridade após etapa 1                          | —                                                                                                                        | Planejamento técnico                              |
+| 3 — Manutenção planejada | Não iniciada         | —                                                                                                    | Aprofundar recursos existentes                   | —                                                                                                                        | Planejamento técnico                              |
+| 4 — Consumo e saída      | Não iniciada         | —                                                                                                    | Completar atendimento e pagadores                | —                                                                                                                        | Planejamento técnico                              |
+| 5 — Estoque e financeiro | Não iniciada         | —                                                                                                    | Fechar ciclos operacionais                       | —                                                                                                                        | Planejamento técnico                              |
+| 6 — Expansão do PMS      | Não iniciada         | —                                                                                                    | Consolidar operação primeiro                     | —                                                                                                                        | Planejamento técnico e limpeza final              |
 
 ## Levantamento de design aprovado
 
@@ -43,8 +43,21 @@ inferência. Atualizar este acompanhamento em cada entrega validada.
   Testes de agrupamento, ações e fila aprovados; jornada dos dois recibos e axe
   aprovados em desktop e celular. O guia agora acompanha alvos que aparecem após
   carregamento ou mudança de estado, com teste para inclusão e remoção do alvo.
-- Pendências estão implementadas e passam pela validação integrada final.
-  O encerramento da etapa só será registrado depois do aceite completo.
+- Pendências: leitura pessoal, atribuição concorrente e devolução própria,
+  encerramento pela origem, novos episódios na recorrência e reconciliação
+  idempotente por hotel. A identidade parceiro/competência permanece estável ao
+  aprovar uma apuração, preservando leitura e responsável. Migrações, contratos,
+  tipos gerados, guias e diagramas permanentes entregues.
+- Validações: 310 verificações SQL e 8 testes HTTP locais aprovados; `pnpm check`,
+  `pnpm test`, documentação e OpenAPI aprovados. Cobertura completa aprovada e
+  reconferida nos workspaces alterados após os ajustes finais: linhas 40,65%
+  no consolidado e 42,28% no PMS, sem reduzir limiares. A rodada Windows teve
+  31/32 cenários aprovados; o restante (espera pela rota de apuração) passou
+  após ajuste em desktop e celular. No Linux, 31/32 passaram na rodada completa; o cenário de três páginas de manutenção excedeu o tempo e passou em desktop e celular após adequar seu limite a 90 segundos. Os 32 cenários foram aprovados em ambas as plataformas considerando essas reexecuções direcionadas. Não houve atualização de snapshots para contornar falhas funcionais ou axe.
+- Os testes visuais identificaram dois campos de data de bloqueio sem rótulo;
+  receberam rótulos visíveis e teste de componente. Tours acompanham conteúdo
+  carregado depois da montagem. Tempos de inicialização de contratos nos testes
+  de backend foram ajustados para V8; verificações e limites de cobertura mantidos.
 - O banco de testes foi recriado exclusivamente no Supabase local. A checagem do
   seed usa suas identidades estáveis para não depender do instante em que o ciclo
   periódico gera preventivas. Nenhum serviço remoto foi alterado.

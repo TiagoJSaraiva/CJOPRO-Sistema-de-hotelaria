@@ -480,6 +480,7 @@ const consumptionOffers = [
   },
 ];
 const consumptionOrders = [];
+let splitConsumption = false;
 let stayTwoPaid = 600;
 let stayTwoCheckedOut = false;
 
@@ -835,6 +836,23 @@ function sendJson(response, statusCode, payload) {
   response.end(JSON.stringify(payload));
 }
 
+let pendingFixture = {
+  id: "a0900000-0000-4000-8000-000000000001",
+  entity_id: "a0900000-0000-4000-8000-000000000002",
+  source: "consumption",
+  kind: "critical_stock",
+  title: "Reposição de água",
+  href: "/dashboard/inventory/overview",
+  severity: "warning",
+  status: "open",
+  assigned_to: null,
+  assignee_name: null,
+  version: 1,
+  opened_at: "2026-05-12T12:00:00Z",
+  resolved_at: null,
+  resolution_reason: null,
+  read: false,
+};
 const server = http.createServer(async (request, response) => {
   const url = new URL(
     request.url || "/",
@@ -842,12 +860,71 @@ const server = http.createServer(async (request, response) => {
   );
   const method = request.method || "GET";
 
+  if (method === "GET" && url.pathname === "/admin/operational-pending") {
+    const source = url.searchParams.get("source");
+    const items =
+      !source || source === pendingFixture.source ? [pendingFixture] : [];
+    sendJson(response, 200, {
+      items,
+      total: items.length,
+      summary: {
+        open: items.filter((i) => i.status === "open").length,
+        claimed: items.filter((i) => i.status === "claimed").length,
+        resolved: 0,
+        unread: items.filter((i) => !i.read).length,
+      },
+      sync: { last_success_at: "2026-05-12T15:00:00Z", error_message: null },
+    });
+    return;
+  }
+  if (
+    method === "POST" &&
+    url.pathname === "/admin/operational-pending/actions"
+  ) {
+    const body = await parseBody(request);
+    if (body.action === "read") pendingFixture.read = true;
+    if (body.action === "unread") pendingFixture.read = false;
+    if (["claim", "release"].includes(body.action)) {
+      if (body.expected_version !== pendingFixture.version) {
+        sendJson(response, 409, { message: "A pendência mudou." });
+        return;
+      }
+      pendingFixture.status = body.action === "claim" ? "claimed" : "open";
+      pendingFixture.assigned_to = body.action === "claim" ? "user-e2e" : null;
+      pendingFixture.assignee_name =
+        body.action === "claim" ? "Marina Costa" : null;
+      pendingFixture.version += 1;
+    }
+    sendJson(response, 200, { ok: true });
+    return;
+  }
+  if (
+    method === "POST" &&
+    url.pathname === "/admin/operational-pending/reconcile"
+  ) {
+    sendJson(response, 200, { ok: true });
+    return;
+  }
   if (method === "GET" && url.pathname === "/health") {
     sendJson(response, 200, { ok: true });
     return;
   }
 
+  if (method === "POST" && url.pathname === "/test/split-consumption") {
+    splitConsumption = true;
+    sendJson(response, 200, { ok: true });
+    return;
+  }
   if (method === "POST" && url.pathname === "/test/reset-state") {
+    splitConsumption = false;
+    pendingFixture = {
+      ...pendingFixture,
+      status: "open",
+      assigned_to: null,
+      assignee_name: null,
+      version: 1,
+      read: false,
+    };
     products.splice(2);
     consumptionPoints.splice(2);
     consumptionOffers.splice(2);
@@ -1515,7 +1592,7 @@ const server = http.createServer(async (request, response) => {
         occurred_at: consumptionOccurredAt,
         offers: consumptionOffers.map((offer) => ({
           id: offer.id,
-          point_id: offer.point.id,
+          point_id: splitConsumption ? "point-reception" : offer.point.id,
           point_name: offer.point.name,
           product_id: offer.product.id,
           product_name: offer.product.name,
@@ -1532,10 +1609,20 @@ const server = http.createServer(async (request, response) => {
           agreement_id: offer.commercial_agreement?.id || null,
           agreement_number: offer.commercial_agreement?.internal_number || null,
           revision: null,
-          allowed_modes: offer.resolved_policy.allowed_modes,
-          default_mode: offer.resolved_policy.default_mode,
+          allowed_modes: splitConsumption
+            ? [
+                offer.id === "offer-coffee-reception"
+                  ? "stay_folio"
+                  : "hotel_immediate",
+              ]
+            : offer.resolved_policy.allowed_modes,
+          default_mode: splitConsumption
+            ? offer.id === "offer-coffee-reception"
+              ? "stay_folio"
+              : "hotel_immediate"
+            : offer.resolved_policy.default_mode,
           policy_source: offer.resolved_policy.source,
-          available: offer.effective_available,
+          available: splitConsumption || offer.effective_available,
           reasons: offer.unavailable_reasons,
           version_token: `version-${offer.id}`,
         })),
@@ -2250,6 +2337,24 @@ const server = http.createServer(async (request, response) => {
         events: [],
         attachments: [],
         room_blocks: [],
+        ...(maintenanceOccurrenceMatch[1].endsWith("000002")
+          ? {
+              occurrence_number: 1002,
+              code: "OCO-001002",
+              description: "Torneira com vazamento",
+              status: "triaged",
+              kind: "defect",
+              priority: "normal",
+              category_id: "category-2",
+              category_name: "Hidráulica",
+              room_id: "room-101",
+              room_number: "101",
+              stay_id: null,
+              active_block: false,
+              blocking_recommended: false,
+              liability_status: "not_applicable",
+            }
+          : {}),
       },
     });
     return;

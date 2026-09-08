@@ -1,3 +1,7 @@
+import type {
+  OperationalPendingList,
+  OperationalPendingAction,
+} from "@hotel/shared";
 import { cookies } from "next/headers";
 import {
   ACTIVE_HOTEL_GLOBAL_VALUE,
@@ -1654,4 +1658,20 @@ export function updateSeasonRoomRate(
 
 export function deleteSeasonRoomRate(id: string): Promise<null> {
   return requestAdmin<never>(`/admin/season-room-rates/${id}`, "DELETE");
+}
+
+export function getOperationalPending(
+  query = "",
+): Promise<OperationalPendingList> {
+  return getAdminData<OperationalPendingList>(
+    `/admin/operational-pending${query ? "?" + query : ""}`,
+  );
+}
+export async function actOperationalPending(body: OperationalPendingAction) {
+  await requestAdminOk("/admin/operational-pending/actions", "POST", body);
+  return { ok: true };
+}
+export async function reconcileOperationalPending() {
+  await requestAdminOk("/admin/operational-pending/reconcile", "POST", {});
+  return { ok: true };
 }

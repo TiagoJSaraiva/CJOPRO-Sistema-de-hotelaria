@@ -4496,6 +4496,194 @@ export type Database = {
           },
         ]
       }
+      operational_pending: {
+        Row: {
+          assigned_to: string | null
+          due_on: string | null
+          entity_id: string
+          entity_type: string
+          episode: number
+          hotel_id: string
+          href: string
+          id: string
+          kind: string
+          opened_at: string
+          resolution_reason: string | null
+          resolved_at: string | null
+          severity: string
+          source: string
+          source_key: string
+          status: string
+          title: string
+          updated_at: string
+          version: number
+        }
+        Insert: {
+          assigned_to?: string | null
+          due_on?: string | null
+          entity_id: string
+          entity_type: string
+          episode: number
+          hotel_id: string
+          href: string
+          id?: string
+          kind: string
+          opened_at?: string
+          resolution_reason?: string | null
+          resolved_at?: string | null
+          severity: string
+          source: string
+          source_key: string
+          status?: string
+          title: string
+          updated_at?: string
+          version?: number
+        }
+        Update: {
+          assigned_to?: string | null
+          due_on?: string | null
+          entity_id?: string
+          entity_type?: string
+          episode?: number
+          hotel_id?: string
+          href?: string
+          id?: string
+          kind?: string
+          opened_at?: string
+          resolution_reason?: string | null
+          resolved_at?: string | null
+          severity?: string
+          source?: string
+          source_key?: string
+          status?: string
+          title?: string
+          updated_at?: string
+          version?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "operational_pending_assigned_to_fkey"
+            columns: ["assigned_to"]
+            isOneToOne: false
+            referencedRelation: "users"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "operational_pending_hotel_id_fkey"
+            columns: ["hotel_id"]
+            isOneToOne: false
+            referencedRelation: "hotels"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      operational_pending_events: {
+        Row: {
+          action: string
+          actor_id: string | null
+          created_at: string
+          hotel_id: string
+          id: string
+          pending_id: string
+        }
+        Insert: {
+          action: string
+          actor_id?: string | null
+          created_at?: string
+          hotel_id: string
+          id?: string
+          pending_id: string
+        }
+        Update: {
+          action?: string
+          actor_id?: string | null
+          created_at?: string
+          hotel_id?: string
+          id?: string
+          pending_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "operational_pending_events_actor_id_fkey"
+            columns: ["actor_id"]
+            isOneToOne: false
+            referencedRelation: "users"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "operational_pending_events_hotel_id_pending_id_fkey"
+            columns: ["hotel_id", "pending_id"]
+            isOneToOne: false
+            referencedRelation: "operational_pending"
+            referencedColumns: ["hotel_id", "id"]
+          },
+        ]
+      }
+      operational_pending_reads: {
+        Row: {
+          hotel_id: string
+          pending_id: string
+          read_at: string
+          user_id: string
+        }
+        Insert: {
+          hotel_id: string
+          pending_id: string
+          read_at?: string
+          user_id: string
+        }
+        Update: {
+          hotel_id?: string
+          pending_id?: string
+          read_at?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "operational_pending_reads_hotel_id_pending_id_fkey"
+            columns: ["hotel_id", "pending_id"]
+            isOneToOne: false
+            referencedRelation: "operational_pending"
+            referencedColumns: ["hotel_id", "id"]
+          },
+          {
+            foreignKeyName: "operational_pending_reads_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "users"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      operational_pending_sync: {
+        Row: {
+          error_message: string | null
+          hotel_id: string
+          last_attempt_at: string | null
+          last_success_at: string | null
+        }
+        Insert: {
+          error_message?: string | null
+          hotel_id: string
+          last_attempt_at?: string | null
+          last_success_at?: string | null
+        }
+        Update: {
+          error_message?: string | null
+          hotel_id?: string
+          last_attempt_at?: string | null
+          last_success_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "operational_pending_sync_hotel_id_fkey"
+            columns: ["hotel_id"]
+            isOneToOne: true
+            referencedRelation: "hotels"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       partner_settlement_components: {
         Row: {
           agreement_id: string
@@ -6663,6 +6851,17 @@ export type Database = {
       }
     }
     Functions: {
+      act_operational_pending: {
+        Args: {
+          p_action: string
+          p_hotel_id: string
+          p_ids: string[]
+          p_permissions: string[]
+          p_user_id: string
+          p_version?: number
+        }
+        Returns: Json
+      }
       activate_commercial_agreement_revision: {
         Args: { p_actor_id: string; p_hotel_id: string; p_revision_id: string }
         Returns: string
@@ -6721,6 +6920,14 @@ export type Database = {
         Returns: boolean
       }
       backfill_stay_folio: { Args: never; Returns: undefined }
+      can_read_operational_pending: {
+        Args: {
+          p: Database["public"]["Tables"]["operational_pending"]["Row"]
+          p_permissions: string[]
+          p_user_id: string
+        }
+        Returns: boolean
+      }
       cancel_inventory_count: {
         Args: { p_actor_id: string; p_count_id: string; p_hotel_id: string }
         Returns: Json
@@ -7084,6 +7291,15 @@ export type Database = {
         Args: { p_actor_id: string; p_hotel_id: string }
         Returns: undefined
       }
+      list_operational_pending: {
+        Args: {
+          p_filters?: Json
+          p_hotel_id: string
+          p_permissions: string[]
+          p_user_id: string
+        }
+        Returns: Json
+      }
       maintenance_user_has_hotel_scope: {
         Args: { p_hotel_id: string; p_user_id: string }
         Returns: boolean
@@ -7129,6 +7345,10 @@ export type Database = {
           p_title: string
         }
         Returns: boolean
+      }
+      operational_pending_candidates: {
+        Args: { p_hotel_id: string; p_now?: string }
+        Returns: Json
       }
       partner_settlement_live_fingerprint: {
         Args: {
@@ -7206,6 +7426,10 @@ export type Database = {
       recompute_maintenance_occurrence_status: {
         Args: { p_occurrence_id: string }
         Returns: Database["public"]["Enums"]["maintenance_occurrence_status"]
+      }
+      reconcile_operational_pending: {
+        Args: { p_hotel_id: string; p_now?: string }
+        Returns: Json
       }
       refresh_partner_settlement: {
         Args: {

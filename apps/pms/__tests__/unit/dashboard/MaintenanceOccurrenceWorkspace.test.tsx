@@ -69,6 +69,22 @@ it("preserva contexto, histórico e restrições do leitor", () => {
   ).toBeNull();
 });
 
+it("identifica as datas do bloqueio para quem pode gerenciá-lo", () => {
+  render(
+    <MaintenanceOccurrenceWorkspace
+      initial={initial}
+      referenceData={referenceData}
+      access={{ ...access, canManageBlocks: true }}
+    />,
+  );
+  expect(screen.getByLabelText("Início do bloqueio").getAttribute("name")).toBe(
+    "start_date",
+  );
+  expect(
+    screen.getByLabelText("Fim previsto do bloqueio").getAttribute("name"),
+  ).toBe("end_date");
+});
+
 it("envia comentário real ao contexto da ocorrência", async () => {
   const fetchMock = vi
     .fn()

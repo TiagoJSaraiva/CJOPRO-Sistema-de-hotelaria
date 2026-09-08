@@ -1,9 +1,10 @@
+import { PendingCards } from "../../pending/PendingWorkspace";
 import Link from "next/link";
 import { DashboardAccessDeniedCard } from "../../_components/DashboardAccessDeniedCard";
 import { DashboardEntityPageShell } from "../../_components/DashboardEntityPageShell";
 import {
   getConsumptionAnalytics,
-  getManagementAlerts,
+  getOperationalPending,
 } from "../../../../lib/adminApi";
 import { getUserFromSession } from "../../../../lib/auth";
 import { AnalyticsExportButton } from "../_components/ManagementClientActions";
@@ -64,7 +65,7 @@ export default async function ConsumptionAnalyticsPage({
       dimension,
       limit: "100",
     }),
-    getManagementAlerts(),
+    getOperationalPending("source=consumption"),
   ]);
   const cards = [
     ["Venda bruta", analytics.summary.gross_sales],
@@ -279,39 +280,13 @@ export default async function ConsumptionAnalyticsPage({
           data-usage-guide="consumption-management-alerts"
         >
           <h2 className="mt-0 text-xl">Alertas gerenciais</h2>
-          <div className="grid gap-4 lg:grid-cols-2">
-            {[
-              ["Saldos de hóspedes", alerts.guest_balances],
-              ["Estoque abaixo do mínimo", alerts.critical_stock],
-              ["Acordos vencendo", alerts.expiring_agreements],
-              ["Apurações pendentes", alerts.pending_settlements],
-            ].map(([label, items]) => (
-              <article
-                className="rounded border border-slate-200 p-3"
-                key={label as string}
-              >
-                <h3 className="mt-0">{label as string}</h3>
-                {(items as typeof alerts.guest_balances).length ? (
-                  <ul className="m-0 grid gap-2 pl-5">
-                    {(items as typeof alerts.guest_balances).map((alert) => (
-                      <li key={alert.id}>
-                        <Link className="pms-link" href={alert.href}>
-                          {alert.title}
-                        </Link>
-                        <span className="block text-sm text-slate-600">
-                          {alert.description}
-                        </span>
-                      </li>
-                    ))}
-                  </ul>
-                ) : (
-                  <p className="mb-0 text-sm text-emerald-700">
-                    Nenhuma pendência.
-                  </p>
-                )}
-              </article>
-            ))}
-          </div>
+          <PendingCards data={alerts} source="consumption" />
+          <Link
+            className="pms-link inline-flex min-h-8 items-center"
+            href="/dashboard/pending?source=consumption"
+          >
+            Tratar pendências de consumo
+          </Link>
         </section>
       </div>
     </DashboardEntityPageShell>

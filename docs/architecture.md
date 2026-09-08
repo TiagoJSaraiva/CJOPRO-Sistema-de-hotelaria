@@ -358,6 +358,29 @@ contratos em `packages/shared/src/api-contract.ts`, o guia
 `docs/maintenance-management.md` e as páginas de gestão em
 `apps/pms/src/app/dashboard/maintenance`.
 
+## Pendências operacionais compartilhadas
+
+A central consolida condições de manutenção e consumo em episódios por hotel,
+tipo e entidade. Leitura por usuário é independente da atribuição compartilhada.
+Atribuir ou devolver exige a versão atual e preserva eventos. A reconciliação
+examina o hotel completo, sem paginação ou filtro do solicitante, e só encerra
+episódios após consulta bem-sucedida às origens. Uma falha preserva o estado
+anterior e registra a indisponibilidade. As listagens são estritamente de leitura.
+
+```mermaid
+flowchart LR
+  sources[Condições operacionais] --> reconcile[Reconciliação periódica ou explícita]
+  reconcile --> episode[Episódio da pendência]
+  episode --> reading[Leitura individual]
+  episode --> owner[Responsável e versão]
+  sources --> resolution[Condição encerrada na origem]
+  resolution --> history[Episódio resolvido e histórico]
+```
+
+Valores financeiros não são copiados para a central. Permissões das fontes e
+destinatários autorizados de manutenção limitam listagens, totais e ações. A caixa
+antiga de notificações permanece disponível e dispensá-la não encerra episódios.
+
 ## Pipeline de qualidade
 
 ```mermaid

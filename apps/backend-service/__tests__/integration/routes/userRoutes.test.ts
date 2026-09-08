@@ -33,7 +33,7 @@ describe("routes/users", () => {
   beforeAll(async () => {
     app = createApp();
     await app.ready();
-  }, 30_000);
+  }, 90_000); // Full contract compilation is slower with V8 coverage enabled.
 
   afterAll(async () => {
     await app.close();

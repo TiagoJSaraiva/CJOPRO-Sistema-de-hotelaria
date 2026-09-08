@@ -49,6 +49,81 @@ describe.sequential("Supabase local com Fastify real", () => {
     };
   }
 
+  it("central de pendências serializa duas atribuições e mantém isolamento", async () => {
+    const { data: manager } = await supabase
+      .from("users")
+      .select("password_hash")
+      .eq("id", "80000000-0000-4000-8000-000000000002")
+      .single();
+    const colleagueId = "81000000-0000-4000-8000-000000000091";
+    const colleague = await supabase.from("users").insert({
+      id: colleagueId,
+      name: "Operador Local",
+      email: "pendencias@hotelaria.local",
+      password_hash: manager!.password_hash,
+      is_active: true,
+    });
+    expect(colleague.error).toBeNull();
+    const assignment = await supabase.from("user_roles").insert({
+      user_id: colleagueId,
+      role_id: "70000000-0000-4000-8000-000000000002",
+      hotel_id: HOTEL_A,
+    });
+    expect(assignment.error).toBeNull();
+    const colleagueToken = await login("pendencias@hotelaria.local");
+    const id = "a0910000-0000-4000-8000-000000000001";
+    const inserted = await supabase.from("operational_pending").insert({
+      id,
+      hotel_id: HOTEL_A,
+      source: "consumption",
+      source_key: "concurrency-test",
+      kind: "guest_balance",
+      entity_type: "guest_balance",
+      entity_id: CUSTOMER_A,
+      episode: 1,
+      title: "Conferir saldo",
+      href: "/dashboard/reservations",
+      severity: "warning",
+    });
+    expect(inserted.error).toBeNull();
+    const request = (token: string) =>
+      app.inject({
+        method: "POST",
+        url: "/admin/operational-pending/actions",
+        headers: managerHeaders(token, HOTEL_A),
+        payload: { ids: [id], action: "claim", expected_version: 1 },
+      });
+    const responses = await Promise.all([
+      request(managerAToken),
+      request(colleagueToken),
+    ]);
+    expect(responses.map((response) => response.statusCode).sort()).toEqual([
+      200, 409,
+    ]);
+    const persisted = await supabase
+      .from("operational_pending")
+      .select("status,version,assigned_to")
+      .eq("id", id)
+      .single();
+    expect(persisted.data).toMatchObject({ status: "claimed", version: 2 });
+    expect(persisted.data?.assigned_to).toBeTruthy();
+    const hidden = await app.inject({
+      method: "POST",
+      url: "/admin/operational-pending/actions",
+      headers: managerHeaders(managerBToken, HOTEL_B),
+      payload: { ids: [id], action: "read" },
+    });
+    expect(hidden.statusCode).toBe(404);
+    const listed = await app.inject({
+      url: "/admin/operational-pending",
+      headers: managerHeaders(managerAToken, HOTEL_A),
+    });
+    expect(listed.statusCode).toBe(200);
+    expect(
+      listed.json().items.some((item: { id: string }) => item.id === id),
+    ).toBe(true);
+  });
+
   beforeAll(async () => {
     const apiUrl = assertLocalApiUrl(String(process.env.SUPABASE_URL || ""));
     const serviceRoleKey = String(process.env.SUPABASE_SECRET_KEY || "");
@@ -65,7 +140,7 @@ describe.sequential("Supabase local com Fastify real", () => {
     adminToken = await login("admin@hotelaria.local");
     managerAToken = await login("gerente.aurora@hotelaria.local");
     managerBToken = await login("gerente.horizonte@hotelaria.local");
-  }, 30_000);
+  }, 90_000); // Includes complete contract compilation and local authentication.
 
   afterAll(async () => {
     await app?.close();
