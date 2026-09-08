@@ -7,6 +7,18 @@ Leia também o [índice técnico](docs/README.md) e o
 
 ## Antes de agir
 
+<!-- roadmap-operacional-temporario:start -->
+
+Enquanto o roteiro operacional estiver em andamento, leia
+[o roteiro temporário](docs/roadmap-operacional-temporario.md) antes de planejar
+ou implementar suas etapas. Preserve as decisões aprovadas e atualize o
+acompanhamento ao concluir cada entrega validada. O roteiro não autoriza executar
+etapas fora do pedido atual. Após concluir e validar todas as etapas 1 a 6,
+remova apenas este bloco temporário e o arquivo de roteiro, preservando quaisquer
+outras alterações no AGENTS.md.
+
+<!-- roadmap-operacional-temporario:end -->
+
 1. Execute `git status --short` e identifique alterações preexistentes.
 2. Leia o `AGENTS.md` da área e as fontes de verdade relacionadas à tarefa.
 3. Inspecione código, testes e configurações antes de escolher a solução.
