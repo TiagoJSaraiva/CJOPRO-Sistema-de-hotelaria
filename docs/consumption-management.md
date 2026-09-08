@@ -45,7 +45,43 @@ para a correção e o fechamento original.
 
 ## Alertas
 
-O painel completo e a página inicial sinalizam saldos próximos do checkout,
-estoque abaixo do mínimo, acordos vencendo, meses ainda sem aprovação e
-apurações aprovadas não quitadas. Os alertas são calculados em tempo real, não
-possuem marcação de leitura e não enviam notificações externas.
+O painel e a página inicial dão acesso à central **Pendências**, que reúne saldos
+próximos do checkout, estoque abaixo do mínimo, acordos vencendo e apurações
+pendentes, junto às condições autorizadas de manutenção. A central sincroniza as
+origens a cada 15 minutos ou pelo botão **Atualizar pendências**. O horário da
+última atualização e eventuais falhas são visíveis. Consultar a lista não executa
+a sincronização e não são enviadas notificações externas.
+
+Leitura é pessoal; **Assumir** indica quem está tratando o problema. Somente quem
+assumiu pode devolver à fila. Ler ou dispensar uma notificação histórica não
+resolve uma condição. A resolução aparece após a origem deixar de exigir
+atenção; fim de vigência é indicado sem presumir renovação. Uma condição que
+reaparece inicia outro episódio, sem herdar responsável nem leitura.
+
+## Cobranças incompatíveis no lançamento
+
+Use **Organizar cobranças** quando os itens não aceitarem uma cobrança comum.
+Escolha um modo autorizado para cada item e confira os grupos sugeridos. Pagamento
+direto é separado por parceiro e acordo; cortesia não é uma solução automática.
+Confirme cada grupo individualmente, incluindo o recebimento quando aplicável.
+
+Os recibos concluídos permanecem no histórico mesmo se outro grupo falhar.
+Se a resposta for incerta, **Repetir a mesma solicitação** consulta/conclui a mesma
+operação, sem criar outra cobrança. Se houver conflito confirmado, atualize preços
+e políticas e revise os grupos restantes. A fila existe somente na página: após
+sair ou recarregar, confira o histórico antes de reconstruir itens pendentes.
+
+```mermaid
+flowchart TD
+  cart[Itens do atendimento] --> common{Cobrança comum autorizada?}
+  common -->|Sim| single[Revisar comanda existente]
+  common -->|Não| organize[Escolher cobrança por item]
+  organize --> groups[Revisar grupos por modo e parceiro/acordo]
+  groups --> confirm[Confirmar uma comanda]
+  confirm -->|Concluída| receipt[Preservar recibo e seguir ao próximo grupo]
+  receipt --> groups
+  confirm -->|Resposta incerta| retry[Repetir conteúdo e chave originais]
+  retry --> confirm
+  confirm -->|Conflito confirmado| refresh[Atualizar contexto e revisar itens restantes]
+  refresh --> groups
+```

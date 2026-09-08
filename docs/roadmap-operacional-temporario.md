@@ -38,7 +38,12 @@ inferência. Atualizar este acompanhamento em cada entrega validada.
   diagnóstico, inspeção, busca e comparação de duplicidades, proteção transacional
   contra ciclos e tradução do histórico. Migration incremental validada; testes
   de contratos, componentes, busca, rotas e banco cobrem as decisões.
-- Consumo e pendências estão implementados e passam pela validação integrada final.
+- Consumo: organização por modo/parceiro/acordo, confirmação individual, recibos
+  preservados e repetição idempotente com conteúdo congelado em resposta incerta.
+  Testes de agrupamento, ações e fila aprovados; jornada dos dois recibos e axe
+  aprovados em desktop e celular. O guia agora acompanha alvos que aparecem após
+  carregamento ou mudança de estado, com teste para inclusão e remoção do alvo.
+- Pendências estão implementadas e passam pela validação integrada final.
   O encerramento da etapa só será registrado depois do aceite completo.
 - O banco de testes foi recriado exclusivamente no Supabase local. A checagem do
   seed usa suas identidades estáveis para não depender do instante em que o ciclo

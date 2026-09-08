@@ -67,6 +67,28 @@ function Harness({ includeFilters = true }: { includeFilters?: boolean }) {
 }
 
 describe("UsageGuide", () => {
+  it("acompanha alvos que chegam depois da montagem ou deixam de estar disponíveis", async () => {
+    const tree = (visible: boolean) => (
+      <>
+        <UsageGuide definition={definition} />
+        {visible && <section data-usage-guide="summary">Resumo tardio</section>}
+      </>
+    );
+    const view = render(tree(false));
+    expect(
+      screen.queryByRole("button", { name: "Guia desta página" }),
+    ).toBeNull();
+    view.rerender(tree(true));
+    expect(
+      await screen.findByRole("button", { name: "Guia desta página" }),
+    ).toBeTruthy();
+    view.rerender(tree(false));
+    await waitFor(() =>
+      expect(
+        screen.queryByRole("button", { name: "Guia desta página" }),
+      ).toBeNull(),
+    );
+  });
   it("percorre passos, contém o foco e conclui devolvendo-o ao acionador", async () => {
     const user = userEvent.setup();
     render(<Harness />);

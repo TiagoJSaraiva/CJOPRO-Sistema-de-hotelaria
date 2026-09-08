@@ -16,3 +16,4 @@ export type {
   TablesUpdate,
 } from "./database.types";
 export * from "./maintenance-actions";
+export * from "./consumption-groups";

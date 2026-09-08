@@ -215,12 +215,31 @@ export function UsageGuide({
 
   const refreshAvailableSteps = useCallback(() => {
     const steps = getAvailableUsageGuideSteps(definition);
-    setAvailableSteps(steps);
+    setAvailableSteps((current) =>
+      current.length === steps.length &&
+      current.every((step, index) => step === steps[index])
+        ? current
+        : steps,
+    );
     return steps;
   }, [definition]);
 
   useEffect(() => {
     refreshAvailableSteps();
+    const observer = new MutationObserver(refreshAvailableSteps);
+    observer.observe(document.body, {
+      childList: true,
+      subtree: true,
+      attributes: true,
+      attributeFilter: [
+        "data-usage-guide",
+        "hidden",
+        "aria-hidden",
+        "class",
+        "style",
+      ],
+    });
+    return () => observer.disconnect();
   }, [refreshAvailableSteps]);
 
   const currentStep = availableSteps[currentIndex] ?? null;

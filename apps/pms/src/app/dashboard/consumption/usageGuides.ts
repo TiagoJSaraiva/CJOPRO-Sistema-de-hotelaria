@@ -32,6 +32,13 @@ export const consumptionLaunchGuide: UsageGuideDefinition = {
       description:
         "Confira valores e confirme. O preço e a regra comercial são validados novamente no servidor.",
     },
+    {
+      id: "split",
+      target: "consumption-split-queue",
+      title: "Conclua cobranças separadas",
+      description:
+        "Quando os itens exigirem modos diferentes, organize as cobranças e confirme cada grupo. Recibos concluídos permanecem no histórico; em resposta incerta, repita a mesma solicitação antes de editar.",
+    },
   ],
 };
 

@@ -4,7 +4,10 @@ import type {
   AdminConsumptionOrder,
   AdminConsumptionOrderCreateInput,
 } from "@hotel/shared";
-import { postConsumptionOrder } from "../../../lib/adminApi";
+import {
+  postConsumptionOrder,
+  getConsumptionOperationalContext,
+} from "../../../lib/adminApi";
 import { getUserFromSession } from "../../../lib/auth";
 import { PERMISSIONS } from "@hotel/shared";
 
@@ -12,6 +15,7 @@ export type ConsumptionPostState = {
   receipt: AdminConsumptionOrder | null;
   error: string | null;
   conflict: boolean;
+  uncertain?: boolean;
 };
 
 export async function postConsumptionOrderAction(
@@ -28,7 +32,12 @@ export async function postConsumptionOrderAction(
     const receipt = await postConsumptionOrder(input);
     return receipt
       ? { receipt, error: null, conflict: false }
-      : { receipt: null, error: "A comanda não foi criada.", conflict: false };
+      : {
+          receipt: null,
+          error: "Resposta não confirmada. Repita a mesma solicitação.",
+          conflict: false,
+          uncertain: true,
+        };
   } catch (cause) {
     const error = cause as Error & { statusCode?: number; details?: string };
     return {
@@ -38,6 +47,19 @@ export async function postConsumptionOrderAction(
           ? "A configuração mudou enquanto a comanda estava aberta. O carrinho foi preservado; atualize o contexto e confirme novamente."
           : error.message || "Não foi possível lançar a comanda.",
       conflict: error.statusCode === 409,
+      ...(!error.statusCode || error.statusCode >= 500
+        ? { uncertain: true }
+        : {}),
     };
   }
+}
+
+export async function refreshConsumptionContext(
+  stayId: string,
+  occurredAt?: string,
+) {
+  const user = await getUserFromSession();
+  if (!user?.permissions.includes(PERMISSIONS.CONSUMPTION_POST))
+    throw new Error("Operação não autorizada.");
+  return getConsumptionOperationalContext(stayId, occurredAt);
 }

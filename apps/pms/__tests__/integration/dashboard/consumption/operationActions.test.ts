@@ -4,15 +4,23 @@ import {
   type AdminConsumptionOrderCreateInput,
 } from "@hotel/shared";
 
-const mocks = vi.hoisted(() => ({ getUser: vi.fn(), post: vi.fn() }));
+const mocks = vi.hoisted(() => ({
+  getUser: vi.fn(),
+  post: vi.fn(),
+  refresh: vi.fn(),
+}));
 vi.mock("../../../../src/lib/auth", () => ({
   getUserFromSession: mocks.getUser,
 }));
 vi.mock("../../../../src/lib/adminApi", () => ({
   postConsumptionOrder: mocks.post,
+  getConsumptionOperationalContext: mocks.refresh,
 }));
 
-import { postConsumptionOrderAction } from "../../../../src/app/dashboard/consumption/operationActions";
+import {
+  postConsumptionOrderAction,
+  refreshConsumptionContext,
+} from "../../../../src/app/dashboard/consumption/operationActions";
 
 const input: AdminConsumptionOrderCreateInput = {
   stay_id: "91000000-0000-4000-8000-000000000002",
@@ -32,6 +40,24 @@ const input: AdminConsumptionOrderCreateInput = {
 
 describe("consumption operation action", () => {
   beforeEach(() => vi.clearAllMocks());
+  it("atualiza contexto autorizado preservando o horário do atendimento", async () => {
+    mocks.getUser.mockResolvedValue({ permissions: [] });
+    await expect(
+      refreshConsumptionContext(input.stay_id, input.occurred_at),
+    ).rejects.toThrow("não autorizada");
+    expect(mocks.refresh).not.toHaveBeenCalled();
+    mocks.getUser.mockResolvedValue({
+      permissions: [PERMISSIONS.CONSUMPTION_POST],
+    });
+    mocks.refresh.mockResolvedValue({ offers: [] });
+    await expect(
+      refreshConsumptionContext(input.stay_id, input.occurred_at),
+    ).resolves.toEqual({ offers: [] });
+    expect(mocks.refresh).toHaveBeenCalledWith(
+      input.stay_id,
+      input.occurred_at,
+    );
+  });
 
   it("rejects an operator without post_consumption", async () => {
     mocks.getUser.mockResolvedValue({ permissions: [] });
@@ -71,6 +97,7 @@ describe("consumption operation action", () => {
       receipt: null,
       conflict: false,
       error: "Indisponível",
+      uncertain: true,
     });
   });
 });

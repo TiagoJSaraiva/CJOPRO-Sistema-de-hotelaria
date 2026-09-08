@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useMemo, useState, useTransition } from "react";
+import { useEffect, useMemo, useState, useTransition, useRef } from "react";
 import type {
   AdminConsumptionOperationalContext,
   AdminConsumptionOrder,
@@ -12,8 +12,11 @@ import { billingModeLabel } from "./BillingModeFields";
 import { useModalFocus } from "../../_components/useModalFocus";
 import {
   postConsumptionOrderAction,
+  refreshConsumptionContext,
   type ConsumptionPostState,
 } from "../operationActions";
+
+import { ConsumptionSplitQueue } from "./ConsumptionSplitQueue";
 
 const paymentLabels: Record<ConsumptionPaymentMethod, string> = {
   cash: "Dinheiro",
@@ -51,7 +54,7 @@ function localDateTimeInput(value: string) {
     .slice(0, 16);
 }
 
-function Receipt({ order }: { order: AdminConsumptionOrder }) {
+export function Receipt({ order }: { order: AdminConsumptionOrder }) {
   return (
     <section
       className="pms-surface-card grid gap-4"
@@ -112,7 +115,7 @@ function Receipt({ order }: { order: AdminConsumptionOrder }) {
 }
 
 export function ConsumptionOrderComposer({
-  context,
+  context: initialContext,
   canReceivePayment,
   canGrantCourtesy,
 }: {
@@ -120,6 +123,14 @@ export function ConsumptionOrderComposer({
   canReceivePayment: boolean;
   canGrantCourtesy: boolean;
 }) {
+  const [context, setContext] = useState(initialContext);
+  const formRef = useRef<HTMLFormElement>(null);
+  const [split, setSplit] = useState<{
+    guest: string;
+    occurredAt: string;
+    notes: string;
+  } | null>(null);
+  const requestRef = useRef<AdminConsumptionOrderCreateInput | null>(null);
   const points = useMemo(
     () =>
       Array.from(
@@ -219,273 +230,348 @@ export function ConsumptionOrderComposer({
   function submit(formData: FormData) {
     if (!mode) return;
     const occurredAtRaw = String(formData.get("occurred_at") || "");
-    const payload: AdminConsumptionOrderCreateInput = {
-      stay_id: context.stay.id,
-      point_id: pointId,
-      guest_customer_id:
-        String(formData.get("guest_customer_id") || "") || null,
-      occurred_at: new Date(occurredAtRaw).toISOString(),
-      disposition:
-        mode === "courtesy" ? ("courtesy" as const) : ("charged" as const),
-      billing_mode: mode === "courtesy" ? null : mode,
-      payment_method: mode === "hotel_immediate" ? paymentMethod : null,
-      payment_reference:
-        String(formData.get("payment_reference") || "") || null,
-      partner_receipt_confirmed: mode === "partner_direct" && partnerConfirmed,
-      courtesy_reason: mode === "courtesy" ? courtesyReason : null,
-      notes: String(formData.get("notes") || "") || null,
-      idempotency_key: crypto.randomUUID(),
-      lines: selected.map((offer) => ({
-        offer_id: offer.id,
-        quantity: quantities[offer.id] || 0,
-        version_token: offer.version_token,
-      })),
-    };
-    startTransition(async () =>
-      setState(await postConsumptionOrderAction(payload)),
-    );
+    const payload: AdminConsumptionOrderCreateInput =
+      state.uncertain && requestRef.current
+        ? requestRef.current
+        : {
+            stay_id: context.stay.id,
+            point_id: pointId,
+            guest_customer_id:
+              String(formData.get("guest_customer_id") || "") || null,
+            occurred_at: new Date(occurredAtRaw).toISOString(),
+            disposition:
+              mode === "courtesy"
+                ? ("courtesy" as const)
+                : ("charged" as const),
+            billing_mode: mode === "courtesy" ? null : mode,
+            payment_method: mode === "hotel_immediate" ? paymentMethod : null,
+            payment_reference:
+              String(formData.get("payment_reference") || "") || null,
+            partner_receipt_confirmed:
+              mode === "partner_direct" && partnerConfirmed,
+            courtesy_reason: mode === "courtesy" ? courtesyReason : null,
+            notes: String(formData.get("notes") || "") || null,
+            idempotency_key: crypto.randomUUID(),
+            lines: selected.map((offer) => ({
+              offer_id: offer.id,
+              quantity: quantities[offer.id] || 0,
+              version_token: offer.version_token,
+            })),
+          };
+    requestRef.current = payload;
+    startTransition(async () => {
+      try {
+        setState(await postConsumptionOrderAction(payload));
+      } catch {
+        setState({
+          receipt: null,
+          error: "Resposta incerta. Repita a mesma solicitação.",
+          conflict: false,
+          uncertain: true,
+        });
+      }
+    });
   }
+
+  if (split)
+    return (
+      <ConsumptionSplitQueue
+        initialContext={context}
+        quantities={quantities}
+        pointId={pointId}
+        metadata={split}
+        canReceive={canReceivePayment}
+        close={() => {
+          setSplit(null);
+          setQuantities({});
+        }}
+      />
+    );
 
   if (state.receipt) return <Receipt order={state.receipt} />;
 
   return (
     <form
+      ref={formRef}
       className="grid gap-5"
       onSubmit={(event) => {
         event.preventDefault();
         requestReview(new FormData(event.currentTarget));
       }}
     >
-      <section
-        className="pms-surface-card grid gap-4"
-        data-usage-guide="consumption-cart"
+      <fieldset
+        disabled={pending || state.uncertain || state.conflict}
+        className="contents"
       >
-        <div className="grid gap-3 md:grid-cols-3">
-          <label className="pms-field">
-            Ponto de consumo
-            <select
-              className="pms-field-input"
-              value={pointId}
-              onChange={(event) => {
-                setPointId(event.target.value);
-                setQuantities({});
-                setMode("");
-              }}
-            >
-              {points.map(([id, name]) => (
-                <option key={id} value={id}>
-                  {name}
-                </option>
-              ))}
-            </select>
-          </label>
-          <label className="pms-field">
-            Hóspede atribuído (opcional)
-            <select
-              name="guest_customer_id"
-              className="pms-field-input"
-              defaultValue=""
-            >
-              <option value="">Hóspede principal</option>
-              {context.guests.map((guest) => (
-                <option key={guest.id} value={guest.id}>
-                  {guest.full_name}
-                </option>
-              ))}
-            </select>
-          </label>
-          <label className="pms-field">
-            Horário do consumo
-            <input
-              name="occurred_at"
-              type="datetime-local"
-              required
-              className="pms-field-input"
-              min={localDateTimeInput(context.stay.checkin_date_actual)}
-              max={localDateTimeInput(context.occurred_at)}
-              defaultValue={localDateTimeInput(context.occurred_at)}
-            />
-          </label>
-        </div>
-        <div
-          className="grid gap-3 sm:grid-cols-2 xl:grid-cols-3"
-          aria-label="Ofertas do ponto"
+        <section
+          className="pms-surface-card grid gap-4"
+          data-usage-guide="consumption-cart"
         >
-          {pointOffers.map((offer) => (
-            <article
-              key={offer.id}
-              className={`rounded-xl border p-3 ${offer.available ? "border-slate-200" : "border-slate-200 bg-slate-100 text-slate-500"}`}
-            >
-              <div className="flex justify-between gap-3">
-                <strong>{offer.product_name}</strong>
-                <span>{currency(offer.unit_price, offer.currency)}</span>
-              </div>
-              <p className="my-1 text-sm">
-                {offer.category_name} · {offer.partner_name || "Hotel"}
-              </p>
-              {offer.inventory?.controlled ? (
-                <p className="my-1 text-sm font-medium">
-                  Estoque {offer.inventory.location_name || "sem origem"}:{" "}
-                  {offer.inventory.quantity === undefined
-                    ? offer.inventory.status === "warning"
-                      ? "venda com alerta"
-                      : "disponível"
-                    : `${offer.inventory.quantity} disponível(is)`}
-                </p>
-              ) : null}
-              {offer.available ? (
-                <label className="pms-field mt-2">
-                  Quantidade
-                  <input
-                    aria-label={`Quantidade de ${offer.product_name}`}
-                    className="pms-field-input"
-                    type="number"
-                    min="0"
-                    max="9999"
-                    step={offer.sales_unit === "hour" ? "0.25" : "1"}
-                    value={quantities[offer.id] || 0}
-                    onChange={(event) =>
-                      changeQuantity(offer.id, Number(event.target.value))
-                    }
-                  />
-                </label>
-              ) : (
-                <p className="mb-0 text-sm">
-                  Indisponível:{" "}
-                  {offer.reasons
-                    .map((reason) => reasonLabels[reason] || reason)
-                    .join(", ")}
-                </p>
-              )}
-            </article>
-          ))}
-        </div>
-      </section>
-
-      <section
-        className="pms-surface-card grid gap-4"
-        data-usage-guide="consumption-billing"
-      >
-        <div>
-          <h2 className="m-0 text-xl">Cobrança</h2>
-          <p className="mb-0 text-sm text-slate-600">
-            Só aparecem opções aceitas por todos os itens do carrinho.
-          </p>
-        </div>
-        <fieldset className="grid gap-2">
-          <legend className="font-semibold">Desfecho financeiro</legend>
-          {visibleModes.map((item) => (
-            <label key={item} className="flex gap-2">
-              <input
-                type="radio"
-                name="mode"
-                checked={mode === item}
-                onChange={() => setMode(item)}
-              />{" "}
-              {billingModeLabel(item)}
-            </label>
-          ))}
-          {canGrantCourtesy ? (
-            <label className="flex gap-2">
-              <input
-                type="radio"
-                name="mode"
-                checked={mode === "courtesy"}
-                onChange={() => setMode("courtesy")}
-              />{" "}
-              Cortesia integral
-            </label>
-          ) : null}
-        </fieldset>
-        {mode === "hotel_immediate" ? (
-          <div className="grid gap-3 md:grid-cols-2">
+          <div className="grid gap-3 md:grid-cols-3">
             <label className="pms-field">
-              Meio de pagamento
+              Ponto de consumo
               <select
                 className="pms-field-input"
-                value={paymentMethod}
-                onChange={(event) =>
-                  setPaymentMethod(
-                    event.target.value as ConsumptionPaymentMethod,
-                  )
-                }
+                value={pointId}
+                onChange={(event) => {
+                  setPointId(event.target.value);
+                  setQuantities({});
+                  setMode("");
+                }}
               >
-                {Object.entries(paymentLabels).map(([value, label]) => (
-                  <option key={value} value={value}>
-                    {label}
+                {points.map(([id, name]) => (
+                  <option key={id} value={id}>
+                    {name}
                   </option>
                 ))}
               </select>
             </label>
             <label className="pms-field">
-              Referência (opcional)
-              <input
-                name="payment_reference"
-                maxLength={120}
+              Hóspede atribuído (opcional)
+              <select
+                name="guest_customer_id"
                 className="pms-field-input"
+                defaultValue=""
+              >
+                <option value="">Hóspede principal</option>
+                {context.guests.map((guest) => (
+                  <option key={guest.id} value={guest.id}>
+                    {guest.full_name}
+                  </option>
+                ))}
+              </select>
+            </label>
+            <label className="pms-field">
+              Horário do consumo
+              <input
+                name="occurred_at"
+                type="datetime-local"
+                required
+                className="pms-field-input"
+                min={localDateTimeInput(context.stay.checkin_date_actual)}
+                max={localDateTimeInput(context.occurred_at)}
+                defaultValue={localDateTimeInput(context.occurred_at)}
               />
             </label>
           </div>
-        ) : null}
-        {mode === "partner_direct" ? (
-          <label className="flex gap-2">
-            <input
-              type="checkbox"
-              checked={partnerConfirmed}
-              onChange={(event) => setPartnerConfirmed(event.target.checked)}
-              required
-            />{" "}
-            Confirmo que o parceiro recebeu diretamente do hóspede.
-          </label>
-        ) : null}
-        {mode === "courtesy" ? (
+          <div
+            className="grid gap-3 sm:grid-cols-2 xl:grid-cols-3"
+            aria-label="Ofertas do ponto"
+          >
+            {pointOffers.map((offer) => (
+              <article
+                key={offer.id}
+                className={`rounded-xl border p-3 ${offer.available ? "border-slate-200" : "border-slate-200 bg-slate-100 text-slate-500"}`}
+              >
+                <div className="flex justify-between gap-3">
+                  <strong>{offer.product_name}</strong>
+                  <span>{currency(offer.unit_price, offer.currency)}</span>
+                </div>
+                <p className="my-1 text-sm">
+                  {offer.category_name} · {offer.partner_name || "Hotel"}
+                </p>
+                {offer.inventory?.controlled ? (
+                  <p className="my-1 text-sm font-medium">
+                    Estoque {offer.inventory.location_name || "sem origem"}:{" "}
+                    {offer.inventory.quantity === undefined
+                      ? offer.inventory.status === "warning"
+                        ? "venda com alerta"
+                        : "disponível"
+                      : `${offer.inventory.quantity} disponível(is)`}
+                  </p>
+                ) : null}
+                {offer.available ? (
+                  <label className="pms-field mt-2">
+                    Quantidade
+                    <input
+                      aria-label={`Quantidade de ${offer.product_name}`}
+                      className="pms-field-input"
+                      type="number"
+                      min="0"
+                      max="9999"
+                      step={offer.sales_unit === "hour" ? "0.25" : "1"}
+                      value={quantities[offer.id] || 0}
+                      onChange={(event) =>
+                        changeQuantity(offer.id, Number(event.target.value))
+                      }
+                    />
+                  </label>
+                ) : (
+                  <p className="mb-0 text-sm">
+                    Indisponível:{" "}
+                    {offer.reasons
+                      .map((reason) => reasonLabels[reason] || reason)
+                      .join(", ")}
+                  </p>
+                )}
+              </article>
+            ))}
+          </div>
+        </section>
+
+        <section
+          className="pms-surface-card grid gap-4"
+          data-usage-guide="consumption-billing"
+        >
+          <div>
+            <h2 className="m-0 text-xl">Cobrança</h2>
+            <p className="mb-0 text-sm text-slate-600">
+              Só aparecem opções aceitas por todos os itens do carrinho.
+            </p>
+          </div>
+          <fieldset className="grid gap-2">
+            <legend className="font-semibold">Desfecho financeiro</legend>
+            {visibleModes.map((item) => (
+              <label key={item} className="flex gap-2">
+                <input
+                  type="radio"
+                  name="mode"
+                  checked={mode === item}
+                  onChange={() => setMode(item)}
+                />{" "}
+                {billingModeLabel(item)}
+              </label>
+            ))}
+            {canGrantCourtesy ? (
+              <label className="flex gap-2">
+                <input
+                  type="radio"
+                  name="mode"
+                  checked={mode === "courtesy"}
+                  onChange={() => setMode("courtesy")}
+                />{" "}
+                Cortesia integral
+              </label>
+            ) : null}
+          </fieldset>
+          {mode === "hotel_immediate" ? (
+            <div className="grid gap-3 md:grid-cols-2">
+              <label className="pms-field">
+                Meio de pagamento
+                <select
+                  className="pms-field-input"
+                  value={paymentMethod}
+                  onChange={(event) =>
+                    setPaymentMethod(
+                      event.target.value as ConsumptionPaymentMethod,
+                    )
+                  }
+                >
+                  {Object.entries(paymentLabels).map(([value, label]) => (
+                    <option key={value} value={value}>
+                      {label}
+                    </option>
+                  ))}
+                </select>
+              </label>
+              <label className="pms-field">
+                Referência (opcional)
+                <input
+                  name="payment_reference"
+                  maxLength={120}
+                  className="pms-field-input"
+                />
+              </label>
+            </div>
+          ) : null}
+          {mode === "partner_direct" ? (
+            <label className="flex gap-2">
+              <input
+                type="checkbox"
+                checked={partnerConfirmed}
+                onChange={(event) => setPartnerConfirmed(event.target.checked)}
+                required
+              />{" "}
+              Confirmo que o parceiro recebeu diretamente do hóspede.
+            </label>
+          ) : null}
+          {mode === "courtesy" ? (
+            <label className="pms-field">
+              Justificativa da cortesia
+              <textarea
+                className="pms-field-input"
+                minLength={3}
+                maxLength={1000}
+                required
+                value={courtesyReason}
+                onChange={(event) => setCourtesyReason(event.target.value)}
+              />
+            </label>
+          ) : null}
           <label className="pms-field">
-            Justificativa da cortesia
+            Observação (opcional)
             <textarea
-              className="pms-field-input"
-              minLength={3}
+              name="notes"
               maxLength={1000}
-              required
-              value={courtesyReason}
-              onChange={(event) => setCourtesyReason(event.target.value)}
+              className="pms-field-input"
             />
           </label>
-        ) : null}
-        <label className="pms-field">
-          Observação (opcional)
-          <textarea name="notes" maxLength={1000} className="pms-field-input" />
-        </label>
-      </section>
+        </section>
 
-      <section
-        className="pms-surface-card flex flex-wrap items-center justify-between gap-4"
-        data-usage-guide="consumption-review"
-        aria-live="polite"
-      >
-        <div>
-          <span className="block text-sm text-slate-600">
-            {selected.length} item(ns)
-          </span>
-          <strong className="text-2xl">
-            {currency(
-              mode === "courtesy" ? 0 : total,
-              selected[0]?.currency || "BRL",
-            )}
-          </strong>
-          {mode === "courtesy" ? (
-            <span className="ml-2 text-sm">
-              ({currency(total, selected[0]?.currency || "BRL")} em desconto)
-            </span>
-          ) : null}
-        </div>
-        <button
-          className="pms-button-primary"
-          type="submit"
-          disabled={pending || !selected.length || !mode}
+        <section
+          className="pms-surface-card flex flex-wrap items-center justify-between gap-4"
+          data-usage-guide="consumption-review"
+          aria-live="polite"
         >
-          {pending ? "Lançando…" : "Revisar comanda"}
+          <div>
+            <span className="block text-sm text-slate-600">
+              {selected.length} item(ns)
+            </span>
+            <strong className="text-2xl">
+              {currency(
+                mode === "courtesy" ? 0 : total,
+                selected[0]?.currency || "BRL",
+              )}
+            </strong>
+            {mode === "courtesy" ? (
+              <span className="ml-2 text-sm">
+                ({currency(total, selected[0]?.currency || "BRL")} em desconto)
+              </span>
+            ) : null}
+          </div>
+          <button
+            className="pms-button-primary"
+            type="submit"
+            disabled={pending || !selected.length || !mode}
+          >
+            {pending ? "Lançando…" : "Revisar comanda"}
+          </button>
+        </section>
+      </fieldset>
+      {selected.length > 0 && !visibleModes.length && !state.uncertain && (
+        <div className="pms-surface-card">
+          <p>
+            Estes itens exigem cobranças separadas. Organize os grupos sem
+            reconstruir a compra.
+          </p>
+          <button
+            type="button"
+            className="pms-button-secondary"
+            onClick={() => {
+              const data = new FormData(formRef.current!);
+              setSplit({
+                guest: String(data.get("guest_customer_id") || ""),
+                occurredAt: new Date(
+                  String(data.get("occurred_at")),
+                ).toISOString(),
+                notes: String(data.get("notes") || ""),
+              });
+            }}
+          >
+            Organizar cobranças
+          </button>
+        </div>
+      )}
+      {state.uncertain && (
+        <button
+          type="button"
+          className="pms-button-primary"
+          disabled={pending}
+          onClick={() => submit(new FormData(formRef.current!))}
+        >
+          Repetir a mesma solicitação
         </button>
-      </section>
+      )}
       {state.error ? (
         <div
           role="alert"
@@ -498,7 +584,25 @@ export function ConsumptionOrderComposer({
               <button
                 className="pms-button-secondary mt-2"
                 type="button"
-                onClick={() => location.reload()}
+                onClick={async () => {
+                  try {
+                    const updated = await refreshConsumptionContext(
+                      context.stay.id,
+                      requestRef.current?.occurred_at,
+                    );
+                    setContext(updated);
+                    setState({
+                      receipt: null,
+                      error: "Contexto atualizado. Revise a comanda novamente.",
+                      conflict: false,
+                    });
+                  } catch {
+                    setState((current) => ({
+                      ...current,
+                      error: "Falha ao atualizar. O carrinho foi preservado.",
+                    }));
+                  }
+                }}
               >
                 Atualizar preços e políticas
               </button>
