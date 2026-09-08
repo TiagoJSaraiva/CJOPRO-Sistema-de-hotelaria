@@ -107,7 +107,7 @@ const maintenanceOccurrenceBaseGuide: UsageGuideDefinition = {
       target: "maintenance-occurrence-orders",
       title: "Trabalhe por ordens",
       description:
-        "As ordens distribuem responsáveis, instruções, checklist, execução externa e eventual inspeção.",
+        "Use a ação disponível para iniciar ou retomar. Pausas, esperas e conclusões pedem motivos reais; na conclusão, informe diagnóstico e serviço. A inspeção exige outra pessoa.",
     },
     {
       id: "block",
@@ -135,7 +135,7 @@ const maintenanceOccurrenceBaseGuide: UsageGuideDefinition = {
       target: "maintenance-occurrence-history",
       title: "Consulte a trilha",
       description:
-        "Comentários e eventos registram decisões e mudanças de estado da ocorrência.",
+        "Comentários e eventos preservam suas decisões. Para duplicidades, busque e compare a ocorrência de destino antes de confirmar o vínculo; os registros originais permanecem separados.",
     },
   ],
 };

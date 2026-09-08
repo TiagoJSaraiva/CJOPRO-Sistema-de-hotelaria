@@ -252,9 +252,28 @@ describe("maintenance routes", () => {
       method: "POST",
       url: "/admin/maintenance/work-orders/98000000-0000-4000-8000-000000000001/transition",
       headers: headers([PERMISSIONS.MAINTENANCE_EXECUTE]),
-      payload: { action: "complete" },
+      payload: {
+        action: "complete",
+        diagnosis: "Defeito confirmado",
+        notes: "Peça substituída",
+      },
     });
     expect(response.statusCode).toBe(409);
+  });
+
+  it("rejeita motivo vazio antes de executar a transição", async () => {
+    const repo = repository();
+    const app = await appWith(repo);
+    for (const action of ["pause", "wait", "complete", "cancel", "reopen"]) {
+      const response = await app.inject({
+        method: "POST",
+        url: "/admin/maintenance/work-orders/98000000-0000-4000-8000-000000000001/transition",
+        headers: headers([PERMISSIONS.MAINTENANCE_EXECUTE]),
+        payload: { action, notes: "  " },
+      });
+      expect(response.statusCode).toBe(400);
+    }
+    expect(repo.transitionWorkOrder).not.toHaveBeenCalled();
   });
 
   it("exige confirmação justificada quando há conflito de bloqueio", async () => {

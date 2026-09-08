@@ -4868,6 +4868,11 @@ export const API_ROUTE_CONTRACTS: Readonly<Record<string, ApiRouteContract>> = {
           overdue: Type.Optional(Type.String()),
           blocked: Type.Optional(Type.String()),
           search: Type.Optional(Type.String()),
+          created_from: Type.Optional(date()),
+          created_to: Type.Optional(date()),
+          canonical: Type.Optional(
+            Type.Union([Type.Literal("true"), Type.Literal("false")]),
+          ),
         },
         strict,
       ),

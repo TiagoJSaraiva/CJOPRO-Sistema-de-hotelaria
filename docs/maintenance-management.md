@@ -21,6 +21,13 @@ automaticamente a roles hospedadas.
 
 ## Preventivas
 
+As ações da ordem acompanham sua situação: iniciar quando atribuída, pausar ou
+aguardar durante execução e retomar após uma pausa. A espera pede categoria e
+descrição; conclusão pede diagnóstico e serviço realizado. Cancelamentos,
+reaberturas e inspeções registram a justificativa informada pelo operador.
+Para duplicidades, use a busca por código ou descrição e compare os detalhes
+antes de confirmar. O vínculo não transfere ordens, evidências ou cobranças.
+
 Um plano possui um único alvo, responsável interno, categoria, recorrência,
 instruções e checklist. A agenda aceita recorrência diária, semanal, mensal e
 anual. Dias inexistentes são normalizados para o último dia do mês, inclusive em

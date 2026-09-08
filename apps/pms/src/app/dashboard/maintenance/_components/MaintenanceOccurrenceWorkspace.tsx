@@ -6,6 +6,15 @@ import type {
   AdminMaintenanceReferenceData,
   AdminMaintenanceSupplier,
 } from "@hotel/shared";
+import {
+  maintenanceActions,
+  maintenanceActionLabels,
+  maintenanceEventLabel,
+} from "@hotel/shared";
+import {
+  MaintenanceDecisionDialog,
+  type MaintenanceDecision,
+} from "./MaintenanceDecisionDialog";
 import { useState } from "react";
 import { ContextHelp } from "../../_components/ContextHelp";
 
@@ -22,6 +31,7 @@ type Props = {
   initial: AdminMaintenanceOccurrenceDetail;
   referenceData: AdminMaintenanceReferenceData;
   access: Access;
+  viewerId?: string;
   suppliers?: AdminMaintenanceSupplier[];
 };
 
@@ -45,7 +55,9 @@ export function MaintenanceOccurrenceWorkspace({
   referenceData,
   access,
   suppliers = [],
+  viewerId,
 }: Props) {
+  const [decision, setDecision] = useState<MaintenanceDecision | null>(null);
   const [item, setItem] = useState(initial);
   const [pending, setPending] = useState(false);
   const [message, setMessage] = useState("");
@@ -66,14 +78,22 @@ export function MaintenanceOccurrenceWorkspace({
         )) as AdminItemResponse<AdminMaintenanceOccurrenceDetail> & {
         message?: string;
       };
+      if (response.status === 409) {
+        const latest = await fetch(`/api/maintenance/occurrences/${item.id}`)
+          .then((result) => (result.ok ? result.json() : null))
+          .catch(() => null);
+        if (latest?.item) setItem(latest.item);
+      }
       if (!response.ok)
         throw new Error(
           payload.message || "Não foi possível concluir a operação.",
         );
       if (payload.item) setItem(payload.item);
       setMessage("Alteração registrada.");
+      return true;
     } catch (error) {
       setMessage(error instanceof Error ? error.message : "Falha na operação.");
+      return false;
     } finally {
       setPending(false);
     }
@@ -165,6 +185,16 @@ export function MaintenanceOccurrenceWorkspace({
 
   return (
     <div className="grid gap-4">
+      {decision && (
+        <MaintenanceDecisionDialog
+          decision={decision}
+          occurrenceId={item.id}
+          occurrenceCode={item.code}
+          referenceData={referenceData}
+          submit={mutate}
+          close={() => setDecision(null)}
+        />
+      )}
       <section
         className="grid gap-3 rounded-xl border border-[#d7dce2] bg-white p-5 lg:grid-cols-[2fr_1fr]"
         data-usage-guide="maintenance-occurrence-summary"
@@ -417,67 +447,73 @@ export function MaintenanceOccurrenceWorkspace({
                   </div>
                 </fieldset>
               ) : null}
-              {access.canExecute &&
-              !["completed", "canceled", "awaiting_inspection"].includes(
-                order.status,
-              ) ? (
-                <div className="flex flex-wrap gap-2">
-                  {["start", "pause", "wait", "complete", "cancel"].map(
-                    (action) => (
-                      <button
-                        key={action}
-                        disabled={pending}
-                        onClick={() =>
-                          mutate(`work-orders/${order.id}/transition`, {
-                            action,
-                            waiting_reason:
-                              action === "wait" ? "other" : undefined,
-                            notes:
-                              action === "wait"
-                                ? "Aguardando nova definição"
-                                : undefined,
-                            diagnosis:
-                              action === "complete"
-                                ? "Serviço executado"
-                                : undefined,
-                          })
-                        }
-                        className="rounded border px-3 py-2"
-                      >
-                        {action}
-                      </button>
-                    ),
-                  )}
-                </div>
-              ) : null}
-              {access.canInspect && order.status === "awaiting_inspection" ? (
-                <div className="mt-3 flex gap-2">
+              <div className="flex flex-wrap gap-2">
+                {maintenanceActions(
+                  order.status,
+                  access.canTriage,
+                  access.canExecute && order.assigned_to === viewerId,
+                ).map((action) => (
                   <button
+                    key={action}
                     disabled={pending}
-                    onClick={() =>
-                      mutate(`work-orders/${order.id}/inspect`, {
-                        result: "approved",
-                        notes: "Serviço inspecionado e aprovado",
-                      })
-                    }
-                    className="rounded bg-[#176c43] px-3 py-2 text-white"
+                    className="rounded border px-3 py-2"
+                    onClick={() => {
+                      if (action === "start" || action === "resume") {
+                        void mutate(`work-orders/${order.id}/transition`, {
+                          action,
+                        });
+                        return;
+                      }
+                      setDecision({
+                        title:
+                          action === "assign" && order.assigned_to
+                            ? "Reatribuir responsável"
+                            : maintenanceActionLabels[action],
+                        path: `work-orders/${order.id}/transition`,
+                        body: { action },
+                        field: "notes",
+                        assign: action === "assign",
+                        wait: action === "wait",
+                        diagnose: action === "complete",
+                      });
+                    }}
                   >
-                    Aprovar
+                    {action === "assign" && order.assigned_to
+                      ? "Reatribuir responsável"
+                      : maintenanceActionLabels[action]}
                   </button>
-                  <button
-                    disabled={pending}
-                    onClick={() =>
-                      mutate(`work-orders/${order.id}/inspect`, {
-                        result: "rejected",
-                        notes: "Serviço reprovado em inspeção",
-                      })
-                    }
-                    className="rounded bg-[#9f1239] px-3 py-2 text-white"
-                  >
-                    Reprovar
-                  </button>
-                </div>
-              ) : null}
+                ))}
+                {access.canInspect &&
+                  order.status === "awaiting_inspection" &&
+                  order.assigned_to !== viewerId &&
+                  (["approved", "rejected"] as const).map((result) => (
+                    <button
+                      key={result}
+                      disabled={pending}
+                      className="rounded border px-3 py-2"
+                      onClick={() =>
+                        setDecision({
+                          title:
+                            result === "approved"
+                              ? "Aprovar inspeção"
+                              : "Reprovar inspeção",
+                          path: `work-orders/${order.id}/inspect`,
+                          body: { result },
+                          field: "notes",
+                        })
+                      }
+                    >
+                      {result === "approved"
+                        ? "Aprovar inspeção"
+                        : "Reprovar inspeção"}
+                    </button>
+                  ))}
+              </div>
+              {order.waiting_notes && <p>Espera: {order.waiting_notes}</p>}
+              {order.diagnosis && <p>Diagnóstico: {order.diagnosis}</p>}
+              {order.resolution_notes && (
+                <p>Serviço / decisão: {order.resolution_notes}</p>
+              )}
             </article>
           ))}
         </div>
@@ -767,7 +803,8 @@ export function MaintenanceOccurrenceWorkspace({
         <ol className="grid gap-2">
           {item.events.map((event) => (
             <li key={event.id}>
-              <strong>{event.actor_name}</strong> · {event.event_type}
+              <strong>{event.actor_name}</strong> ·{" "}
+              {maintenanceEventLabel(event.event_type)}
               {event.message ? ` — ${event.message}` : ""}
             </li>
           ))}
@@ -779,8 +816,11 @@ export function MaintenanceOccurrenceWorkspace({
             <button
               disabled={pending}
               onClick={() =>
-                mutate(`occurrences/${item.id}/reopen`, {
-                  reason: "Ocorrência requer novo atendimento",
+                setDecision({
+                  title: "Reabrir ocorrência",
+                  path: `occurrences/${item.id}/reopen`,
+                  body: {},
+                  field: "reason",
                 })
               }
               className="rounded border px-3 py-2"
@@ -792,8 +832,11 @@ export function MaintenanceOccurrenceWorkspace({
               <button
                 disabled={pending}
                 onClick={() =>
-                  mutate(`occurrences/${item.id}/cancel`, {
-                    reason: "Registro cancelado com histórico preservado",
+                  setDecision({
+                    title: "Cancelar ocorrência",
+                    path: `occurrences/${item.id}/cancel`,
+                    body: {},
+                    field: "reason",
                   })
                 }
                 className="rounded border border-[#9f1239] px-3 py-2 text-[#9f1239]"
@@ -802,16 +845,15 @@ export function MaintenanceOccurrenceWorkspace({
               </button>
               <button
                 disabled={pending}
-                onClick={() => {
-                  const canonical = window.prompt(
-                    "Informe o id da ocorrência canônica:",
-                  );
-                  if (canonical)
-                    void mutate(`occurrences/${item.id}/duplicate`, {
-                      duplicate_of_id: canonical,
-                      reason: "Registro duplicado identificado na triagem",
-                    });
-                }}
+                onClick={() =>
+                  setDecision({
+                    title: "Vincular ocorrência duplicada",
+                    path: `occurrences/${item.id}/duplicate`,
+                    body: {},
+                    field: "reason",
+                    duplicate: true,
+                  })
+                }
                 className="rounded border px-3 py-2"
               >
                 Marcar como duplicada

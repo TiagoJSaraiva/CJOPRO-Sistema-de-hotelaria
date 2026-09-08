@@ -1,6 +1,7 @@
 import type { FastifyInstance, FastifyReply, FastifyRequest } from "fastify";
 import {
   ADMIN_ERROR_CODE,
+  maintenanceDecisionError,
   PERMISSIONS,
   type AdminMaintenanceOccurrenceCreateInput,
   type AdminMaintenanceWorkOrderCreateInput,
@@ -212,6 +213,9 @@ export function registerMaintenanceRoutes(
         overdue: overdue || undefined,
         blocked: blocked === undefined ? undefined : blocked,
         search: normalizeOptionalText(request.query.search) || undefined,
+        createdFrom: request.query.created_from,
+        createdTo: request.query.created_to,
+        canonical: request.query.canonical === "true",
       };
       const canReadAll = [
         PERMISSIONS.MAINTENANCE_READ,
@@ -413,7 +417,7 @@ export function registerMaintenanceRoutes(
       const hotelId = requireActiveHotelId(reply, auth.activeHotelId);
       if (!hotelId) return;
       const reason = normalizeOptionalText(request.body.reason);
-      if (!reason)
+      if (!reason || reason.length < 3)
         return reply
           .status(400)
           .send(
@@ -483,7 +487,8 @@ export function registerMaintenanceRoutes(
       if (
         !validUuid(request.body.duplicate_of_id) ||
         request.body.duplicate_of_id === request.params.id ||
-        !reason
+        !reason ||
+        reason.length < 3
       )
         return reply
           .status(400)
@@ -497,6 +502,15 @@ export function registerMaintenanceRoutes(
         repository.getOccurrence(hotelId, request.params.id),
         repository.getOccurrence(hotelId, request.body.duplicate_of_id),
       ]);
+      if (canonical?.duplicate_of_id)
+        return reply
+          .status(409)
+          .send(
+            adminError(
+              ADMIN_ERROR_CODE.CONFLICT,
+              "Escolha uma ocorrência que não seja duplicada.",
+            ),
+          );
       if (!existing || !canonical)
         return reply
           .status(404)
@@ -556,7 +570,7 @@ export function registerMaintenanceRoutes(
       const hotelId = requireActiveHotelId(reply, auth.activeHotelId);
       if (!hotelId) return;
       const reason = normalizeOptionalText(request.body.reason);
-      if (!reason)
+      if (!reason || reason.length < 3)
         return reply
           .status(400)
           .send(
@@ -776,6 +790,27 @@ export function registerMaintenanceRoutes(
           .send(
             adminError(ADMIN_ERROR_CODE.VALIDATION, "Transição obrigatória."),
           );
+      const decisionError = maintenanceDecisionError(request.body);
+      if (decisionError)
+        return reply
+          .status(400)
+          .send(adminError(ADMIN_ERROR_CODE.VALIDATION, decisionError));
+      request.body.notes =
+        normalizeOptionalText(request.body.notes) || undefined;
+      request.body.diagnosis =
+        normalizeOptionalText(request.body.diagnosis) || undefined;
+      if (
+        request.body.action === "assign" &&
+        !auth.session.permissions.includes(PERMISSIONS.MAINTENANCE_TRIAGE)
+      )
+        return reply
+          .status(403)
+          .send(
+            adminError(
+              ADMIN_ERROR_CODE.FORBIDDEN,
+              "Somente a triagem pode atribuir responsáveis.",
+            ),
+          );
       if (!auth.session.permissions.includes(PERMISSIONS.MAINTENANCE_TRIAGE)) {
         const order = await repository.getWorkOrderAccess(
           auth.hotelId,
@@ -826,7 +861,7 @@ export function registerMaintenanceRoutes(
       const hotelId = requireActiveHotelId(reply, auth.activeHotelId);
       if (!hotelId) return;
       const notes = normalizeOptionalText(request.body.notes);
-      if (!request.body.result || !notes)
+      if (!request.body.result || !notes || notes.length < 3)
         return reply
           .status(400)
           .send(

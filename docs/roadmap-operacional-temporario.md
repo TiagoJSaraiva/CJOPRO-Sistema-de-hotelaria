@@ -20,16 +20,29 @@ inferência. Atualizar este acompanhamento em cada entrega validada.
 
 ## Acompanhamento
 
-| Etapa                    | Situação     | Entregas                       | Decisões                                         | Validações | Próximo trabalho                     |
-| ------------------------ | ------------ | ------------------------------ | ------------------------------------------------ | ---------- | ------------------------------------ |
-| 1 — Usabilidade          | Em andamento | Roteiro e instrução temporária | Fila persistente; comandas confirmadas por grupo | Pendente   | Manutenção, consumo, pendências      |
-| 2 — Operação integrada   | Não iniciada | —                              | Prioridade após etapa 1                          | —          | Planejamento técnico                 |
-| 3 — Manutenção planejada | Não iniciada | —                              | Aprofundar recursos existentes                   | —          | Planejamento técnico                 |
-| 4 — Consumo e saída      | Não iniciada | —                              | Completar atendimento e pagadores                | —          | Planejamento técnico                 |
-| 5 — Estoque e financeiro | Não iniciada | —                              | Fechar ciclos operacionais                       | —          | Planejamento técnico                 |
-| 6 — Expansão do PMS      | Não iniciada | —                              | Consolidar operação primeiro                     | —          | Planejamento técnico e limpeza final |
+| Etapa                    | Situação           | Entregas                                                                                             | Decisões                                         | Validações                                                                                            | Próximo trabalho                           |
+| ------------------------ | ------------------ | ---------------------------------------------------------------------------------------------------- | ------------------------------------------------ | ----------------------------------------------------------------------------------------------------- | ------------------------------------------ |
+| 1 — Usabilidade          | Em validação final | Roteiro; ações e decisões de manutenção; busca de duplicidade; fila de comandas; central persistente | Fila persistente; comandas confirmadas por grupo | Banco local: 303 verificações SQL e 8 testes HTTP aprovados; testes de regras e componentes aprovados | Concluir aceite integrado e commits locais |
+| 2 — Operação integrada   | Não iniciada       | —                                                                                                    | Prioridade após etapa 1                          | —                                                                                                     | Planejamento técnico                       |
+| 3 — Manutenção planejada | Não iniciada       | —                                                                                                    | Aprofundar recursos existentes                   | —                                                                                                     | Planejamento técnico                       |
+| 4 — Consumo e saída      | Não iniciada       | —                                                                                                    | Completar atendimento e pagadores                | —                                                                                                     | Planejamento técnico                       |
+| 5 — Estoque e financeiro | Não iniciada       | —                                                                                                    | Fechar ciclos operacionais                       | —                                                                                                     | Planejamento técnico                       |
+| 6 — Expansão do PMS      | Não iniciada       | —                                                                                                    | Consolidar operação primeiro                     | —                                                                                                     | Planejamento técnico e limpeza final       |
 
 ## Levantamento de design aprovado
+
+### Registro das entregas da etapa 1
+
+- Documentação temporária: roteiro e bloco delimitado no AGENTS.md preservados.
+- Manutenção: ações contextualizadas, justificativas aparadas e obrigatórias,
+  diagnóstico, inspeção, busca e comparação de duplicidades, proteção transacional
+  contra ciclos e tradução do histórico. Migration incremental validada; testes
+  de contratos, componentes, busca, rotas e banco cobrem as decisões.
+- Consumo e pendências estão implementados e passam pela validação integrada final.
+  O encerramento da etapa só será registrado depois do aceite completo.
+- O banco de testes foi recriado exclusivamente no Supabase local. A checagem do
+  seed usa suas identidades estáveis para não depender do instante em que o ciclo
+  periódico gera preventivas. Nenhum serviço remoto foi alterado.
 
 A principal oportunidade é conectar módulos em jornadas completas. Manutenção
 já inclui preventivas, SLA, fornecedores, garantias, inspeções e financeiro.

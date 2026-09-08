@@ -43,6 +43,7 @@ export default async function MaintenanceOccurrencePage({ params }: Props) {
       usageGuide={getMaintenanceOccurrenceGuide(access.canReadFinance)}
     >
       <MaintenanceOccurrenceWorkspace
+        viewerId={user?.id}
         initial={item}
         referenceData={referenceData}
         access={access}

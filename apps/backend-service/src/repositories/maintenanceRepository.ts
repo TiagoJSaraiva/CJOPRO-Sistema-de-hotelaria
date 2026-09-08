@@ -37,6 +37,9 @@ export type MaintenanceListFilters = {
   overdue?: boolean;
   blocked?: boolean;
   search?: string;
+  createdFrom?: string;
+  createdTo?: string;
+  canonical?: boolean;
 };
 
 export type MaintenanceWriteResult<T> =
@@ -323,8 +326,16 @@ class SupabaseMaintenanceRepository implements MaintenanceRepository {
     if (filters.categoryId) query = query.eq("category_id", filters.categoryId);
     if (filters.roomId) query = query.eq("room_id", filters.roomId);
     if (filters.locationId) query = query.eq("location_id", filters.locationId);
-    if (filters.search)
-      query = query.ilike("description", `%${filters.search}%`);
+    if (filters.canonical) query = query.is("duplicate_of_id", null);
+    if (filters.createdFrom)
+      query = query.gte("created_at", filters.createdFrom);
+    if (filters.createdTo)
+      query = query.lte("created_at", filters.createdTo + "T23:59:59.999999Z");
+    if (filters.search) {
+      const code = /^OCO-0*(\d+)$/i.exec(filters.search);
+      if (code) query = query.eq("occurrence_number", Number(code[1]));
+      else query = query.ilike("description", `%${filters.search}%`);
+    }
     if (filters.assignedTo)
       query = query.eq(
         "maintenance_work_orders.assigned_to",

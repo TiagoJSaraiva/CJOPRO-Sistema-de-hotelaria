@@ -86,8 +86,10 @@ select is((select count(distinct stay_status)::integer from public.stays), 3, 's
 select is((select count(*)::integer from public.room_blocks), 2, 'seed has two room blocks');
 select is((select count(*)::integer from public.maintenance_categories), 20, 'every seeded hotel receives the ten default maintenance categories');
 select is((select count(*)::integer from public.maintenance_locations), 3, 'seed has configurable maintenance locations and equipment assets');
-select is((select count(*)::integer from public.maintenance_occurrences), 2, 'seed has operational and financial maintenance occurrences');
-select is((select count(*)::integer from public.maintenance_work_orders), 1, 'seed has one maintenance work order');
+-- The periodic cycle may create preventive orders after reset. Assert the stable
+-- seed identities rather than treating a scheduled run as corrupted seed data.
+select is((select count(*)::integer from public.maintenance_occurrences where id in ('97000000-0000-4000-8000-000000000001', '97000000-0000-4000-8000-000000000002')), 2, 'seed has operational and financial maintenance occurrences');
+select is((select count(*)::integer from public.maintenance_work_orders where id = '98000000-0000-4000-8000-000000000001'), 1, 'seed has one maintenance work order');
 
 select ok(
   to_regclass('public.maintenance_events') is not null
@@ -274,12 +276,12 @@ select lives_ok(
 
 select lives_ok($$ select public.transition_maintenance_work_order(p_hotel_id => '10000000-0000-4000-8000-000000000001', p_work_order_id => '98100000-0000-4000-8000-000000000001', p_actor_id => '80000000-0000-4000-8000-000000000002', p_action => 'assign', p_assigned_to => '80000000-0000-4000-8000-000000000002') $$, 'pending order can be assigned');
 select lives_ok($$ select public.transition_maintenance_work_order(p_hotel_id => '10000000-0000-4000-8000-000000000001', p_work_order_id => '98100000-0000-4000-8000-000000000001', p_actor_id => '80000000-0000-4000-8000-000000000002', p_action => 'start') $$, 'assigned order can start');
-select lives_ok($$ select public.transition_maintenance_work_order(p_hotel_id => '10000000-0000-4000-8000-000000000001', p_work_order_id => '98100000-0000-4000-8000-000000000001', p_actor_id => '80000000-0000-4000-8000-000000000002', p_action => 'pause') $$, 'active order can pause');
+select lives_ok($$ select public.transition_maintenance_work_order(p_hotel_id => '10000000-0000-4000-8000-000000000001', p_work_order_id => '98100000-0000-4000-8000-000000000001', p_actor_id => '80000000-0000-4000-8000-000000000002', p_action => 'pause', p_notes => 'Acesso interrompido pelo hóspede') $$, 'active order can pause');
 select lives_ok($$ select public.transition_maintenance_work_order(p_hotel_id => '10000000-0000-4000-8000-000000000001', p_work_order_id => '98100000-0000-4000-8000-000000000001', p_actor_id => '80000000-0000-4000-8000-000000000002', p_action => 'resume') $$, 'paused order can resume');
 select lives_ok($$ select public.transition_maintenance_work_order(p_hotel_id => '10000000-0000-4000-8000-000000000001', p_work_order_id => '98100000-0000-4000-8000-000000000001', p_actor_id => '80000000-0000-4000-8000-000000000002', p_action => 'wait', p_waiting_reason => 'parts', p_notes => 'Aguardando peça') $$, 'active order can wait with a reason');
 select lives_ok($$ select public.transition_maintenance_work_order(p_hotel_id => '10000000-0000-4000-8000-000000000001', p_work_order_id => '98100000-0000-4000-8000-000000000001', p_actor_id => '80000000-0000-4000-8000-000000000002', p_action => 'resume') $$, 'waiting order can resume');
-select lives_ok($$ select public.transition_maintenance_work_order(p_hotel_id => '10000000-0000-4000-8000-000000000001', p_work_order_id => '98100000-0000-4000-8000-000000000001', p_actor_id => '80000000-0000-4000-8000-000000000002', p_action => 'complete', p_notes => 'Concluída') $$, 'active order can complete');
-select lives_ok($$ select public.transition_maintenance_work_order(p_hotel_id => '10000000-0000-4000-8000-000000000001', p_work_order_id => '98100000-0000-4000-8000-000000000001', p_actor_id => '80000000-0000-4000-8000-000000000002', p_action => 'reopen') $$, 'completed order can reopen');
+select lives_ok($$ select public.transition_maintenance_work_order(p_hotel_id => '10000000-0000-4000-8000-000000000001', p_work_order_id => '98100000-0000-4000-8000-000000000001', p_actor_id => '80000000-0000-4000-8000-000000000002', p_action => 'complete', p_notes => 'Concluída', p_diagnosis => 'Peça defeituosa') $$, 'active order can complete');
+select lives_ok($$ select public.transition_maintenance_work_order(p_hotel_id => '10000000-0000-4000-8000-000000000001', p_work_order_id => '98100000-0000-4000-8000-000000000001', p_actor_id => '80000000-0000-4000-8000-000000000002', p_action => 'reopen', p_notes => 'Falha voltou na inspeção') $$, 'completed order can reopen');
 select lives_ok($$ select public.transition_maintenance_work_order(p_hotel_id => '10000000-0000-4000-8000-000000000001', p_work_order_id => '98100000-0000-4000-8000-000000000001', p_actor_id => '80000000-0000-4000-8000-000000000002', p_action => 'cancel', p_notes => 'Cancelada no teste') $$, 'active order can cancel');
 select throws_ok($$ select public.transition_maintenance_work_order(p_hotel_id => '10000000-0000-4000-8000-000000000001', p_work_order_id => '98100000-0000-4000-8000-000000000001', p_actor_id => '80000000-0000-4000-8000-000000000002', p_action => 'complete') $$, '23514', null, 'invalid transition is rejected');
 select is((select status::text from public.maintenance_work_orders where id = '98100000-0000-4000-8000-000000000001'), 'canceled', 'invalid transition does not change the persisted state');
@@ -648,7 +650,7 @@ select throws_ok(
   $$ select public.transition_maintenance_work_order(
     '10000000-0000-4000-8000-000000000001',
     (select work_order_id from public.maintenance_preventive_runs where plan_id = '99600000-0000-4000-8000-000000000001'),
-    '80000000-0000-4000-8000-000000000002', 'complete'
+    '80000000-0000-4000-8000-000000000002', 'complete', null, null, 'Revisão realizada', 'Verificação elétrica'
   ) $$,
   '23514', null,
   'required checklist items block premature completion'

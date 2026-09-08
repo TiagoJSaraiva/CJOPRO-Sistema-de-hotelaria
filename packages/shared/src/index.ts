@@ -15,3 +15,4 @@ export type {
   TablesInsert,
   TablesUpdate,
 } from "./database.types";
+export * from "./maintenance-actions";

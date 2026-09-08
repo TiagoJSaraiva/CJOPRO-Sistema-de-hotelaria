@@ -74020,6 +74020,45 @@
             }
           },
           {
+            "in": "query",
+            "name": "created_from",
+            "required": false,
+            "schema": {
+              "format": "date",
+              "type": "string"
+            }
+          },
+          {
+            "in": "query",
+            "name": "created_to",
+            "required": false,
+            "schema": {
+              "format": "date",
+              "type": "string"
+            }
+          },
+          {
+            "in": "query",
+            "name": "canonical",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "enum": [
+                    "true"
+                  ],
+                  "type": "string"
+                },
+                {
+                  "enum": [
+                    "false"
+                  ],
+                  "type": "string"
+                }
+              ]
+            }
+          },
+          {
             "in": "header",
             "name": "x-active-hotel-id",
             "required": false,
