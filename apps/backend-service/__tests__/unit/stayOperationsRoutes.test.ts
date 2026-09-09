@@ -209,7 +209,11 @@ function createSupabaseMock(options: SupabaseMockOptions = {}) {
     return builder;
   });
 
-  return { from };
+  const rpc = vi.fn(async (name: string) => {
+    if (name === "governance_room_state") return { data: null, error: null };
+    return { data: null, error: null };
+  });
+  return { from, rpc };
 }
 
 async function createTestApp() {

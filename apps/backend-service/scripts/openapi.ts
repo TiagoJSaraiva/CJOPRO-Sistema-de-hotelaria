@@ -10,7 +10,7 @@ const workspaceRoot = path.resolve(
 );
 const outputPath = path.join(workspaceRoot, "docs", "openapi.json");
 const checkOnly = process.argv.includes("--check");
-const EXPECTED_OPERATION_COUNT = 229;
+const EXPECTED_OPERATION_COUNT = 239;
 const HTTP_METHODS = new Set([
   "get",
   "put",

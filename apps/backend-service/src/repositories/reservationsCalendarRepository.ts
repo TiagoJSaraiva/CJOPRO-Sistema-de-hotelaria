@@ -157,14 +157,23 @@ class SupabaseReservationsCalendarRepository implements ReservationsCalendarRepo
       throw roomsResult.error;
     }
 
-    const rooms = (roomsResult.data || []).map(
-      (room) =>
-        ({
+    const rooms = await Promise.all(
+      (roomsResult.data || []).map(async (room) => {
+        const { data: operationalState, error: stateError } =
+          await supabase.rpc("governance_room_state", {
+            p_hotel_id: activeHotelId,
+            p_room_id: String(room.id),
+          });
+        if (stateError) throw stateError;
+        return {
           room_id: String(room.id),
           room_number: String(room.room_number),
           room_type: String(room.room_type),
           max_occupancy: Number(room.max_occupancy || 0),
-        }) satisfies AdminReservationCalendarRoomRow,
+          operational_state:
+            operationalState as unknown as AdminReservationCalendarRoomRow["operational_state"],
+        } satisfies AdminReservationCalendarRoomRow;
+      }),
     );
 
     const roomIds = rooms.map((room) => room.room_id);

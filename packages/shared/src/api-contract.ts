@@ -3,6 +3,24 @@ import {
   OperationalPendingQuerySchema,
   OperationalPendingActionSchema,
 } from "./operational-pending";
+import {
+  GovernanceActionSchema,
+  GovernanceBoardSchema,
+  GovernanceChecklistItemSchema,
+  GovernanceCycleCreateSchema,
+  GovernanceCycleSchema,
+  GovernanceEventSchema,
+  GovernanceTaskSchema,
+  GovernanceTemplateCreateSchema,
+  GovernanceTemplateSchema,
+  GovernanceMinibarSchema,
+  GovernanceDefectSchema,
+  RoomOperationalStateSchema,
+  StayCheckinSchema,
+  StayRelocationCandidateSchema,
+  StayRelocationConfirmSchema,
+  StayRelocationSimulateSchema,
+} from "./governance";
 import { Type, type Static, type TSchema } from "typebox";
 import type {
   AdminCustomerCreateInput,
@@ -997,6 +1015,7 @@ export const RoomSchema = Type.Object(
     status: RoomStatusSchema,
     notes: nullable(Type.String()),
     ...timestamps,
+    operational_state: Type.Optional(Type.Ref("RoomOperationalState")),
   },
   { ...strict, $id: "Room" },
 );
@@ -3315,6 +3334,7 @@ export const StayAccountSchema = Type.Object(
         strict,
       ),
     ),
+    governance_cycle_id: Type.Optional(nullable(uuid())),
   },
   { ...strict, $id: "StayAccount" },
 );
@@ -3466,6 +3486,7 @@ export const ReservationCalendarSchema = Type.Object(
           room_number: Type.String(),
           room_type: Type.String(),
           max_occupancy: Type.Integer(),
+          operational_state: Type.Optional(Type.Ref("RoomOperationalState")),
         },
         strict,
       ),
@@ -3603,6 +3624,8 @@ export const StayPanelSchema = Type.Object(
     pending_consumption_count: Type.Optional(Type.Integer({ minimum: 0 })),
     pending_consumption_balance: Type.Optional(Type.Number({ minimum: 0 })),
     pending_consumption_folio_entry_ids: Type.Optional(Type.Array(uuid())),
+    room_operational_state: Type.Optional(Type.Ref("RoomOperationalState")),
+    governance_cycle_id: Type.Optional(nullable(uuid())),
   },
   { ...strict, $id: "StayPanel" },
 );
@@ -3843,6 +3866,14 @@ export const API_COMPONENT_SCHEMAS = [
   MaintenanceNotificationSchema,
   MaintenanceAnalyticsSchema,
   MaintenanceAutomationRunSchema,
+  RoomOperationalStateSchema,
+  GovernanceChecklistItemSchema,
+  GovernanceTaskSchema,
+  GovernanceEventSchema,
+  GovernanceCycleSchema,
+  GovernanceBoardSchema,
+  GovernanceTemplateSchema,
+  StayRelocationCandidateSchema,
 ] as const;
 
 const AuthHeadersSchema = Type.Object(
@@ -3948,6 +3979,82 @@ const crud = (
 });
 
 export const API_ROUTE_CONTRACTS: Readonly<Record<string, ApiRouteContract>> = {
+  "GET /admin/governance/board": admin(
+    "listGovernanceBoard",
+    "Governance",
+    "Lista o giro operacional dos quartos do hotel ativo.",
+    GovernanceBoardSchema,
+  ),
+  "POST /admin/governance/cycles": route(
+    "createGovernanceCycle",
+    "Governance",
+    "Abre uma vistoria de saída ou limpeza avulsa.",
+    {
+      headers: AuthHeadersSchema,
+      security: [{ bearerAuth: [] }],
+      body: GovernanceCycleCreateSchema,
+      response: { 201: itemSchema(GovernanceCycleSchema), ...adminErrors },
+    },
+  ),
+  "GET /admin/governance/cycles/:id": admin(
+    "getGovernanceCycle",
+    "Governance",
+    "Consulta o ciclo e seu checklist preservado.",
+    itemSchema(GovernanceCycleSchema),
+    { params: IdParamsSchema },
+  ),
+  "POST /admin/governance/cycles/:id/actions": admin(
+    "actGovernanceCycle",
+    "Governance",
+    "Executa uma transição concorrente do ciclo.",
+    itemSchema(GovernanceCycleSchema),
+    { params: IdParamsSchema, body: GovernanceActionSchema },
+  ),
+  "POST /admin/governance/cycles/:id/minibar": admin(
+    "registerGovernanceMinibar",
+    "Governance",
+    "Registra consumo ou divergência de frigobar e solicita reposição.",
+    itemSchema(GovernanceCycleSchema),
+    { params: IdParamsSchema, body: GovernanceMinibarSchema },
+  ),
+  "POST /admin/governance/cycles/:id/defects": admin(
+    "reportGovernanceDefect",
+    "Governance",
+    "Abre uma ocorrência restrita ao quarto e, quando necessário, uma interdição.",
+    itemSchema(GovernanceCycleSchema),
+    { params: IdParamsSchema, body: GovernanceDefectSchema },
+  ),
+  "GET /admin/governance/checklist-templates": admin(
+    "listGovernanceTemplates",
+    "Governance",
+    "Lista versões de checklist do hotel ativo.",
+    listSchema(GovernanceTemplateSchema),
+  ),
+  "POST /admin/governance/checklist-templates": route(
+    "createGovernanceTemplate",
+    "Governance",
+    "Ativa uma nova versão de checklist.",
+    {
+      headers: AuthHeadersSchema,
+      security: [{ bearerAuth: [] }],
+      body: GovernanceTemplateCreateSchema,
+      response: { 201: itemSchema(GovernanceTemplateSchema), ...adminErrors },
+    },
+  ),
+  "POST /admin/stays/:id/relocation/simulate": admin(
+    "simulateStayRelocation",
+    "Stays",
+    "Lista acomodações compatíveis preservando o valor contratado.",
+    listSchema(StayRelocationCandidateSchema),
+    { params: IdParamsSchema, body: StayRelocationSimulateSchema },
+  ),
+  "POST /admin/stays/:id/relocation": admin(
+    "relocateStay",
+    "Stays",
+    "Realoca atomicamente uma estadia confirmada.",
+    OkSchema,
+    { params: IdParamsSchema, body: StayRelocationConfirmSchema },
+  ),
   "GET /admin/operational-pending": admin(
     "listOperationalPending",
     "Operations",
@@ -5829,7 +5936,7 @@ export const API_ROUTE_CONTRACTS: Readonly<Record<string, ApiRouteContract>> = {
     "Stays",
     "Realiza o check-in da estadia.",
     itemSchema(StayPanelSchema),
-    { params: IdParamsSchema },
+    { params: IdParamsSchema, body: StayCheckinSchema },
   ),
   "POST /admin/stays/:id/checkout": admin(
     "checkOutStay",

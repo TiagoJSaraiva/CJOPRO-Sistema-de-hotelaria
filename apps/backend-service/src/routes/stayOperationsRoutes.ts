@@ -10,6 +10,7 @@ import {
   type AdminStayPaymentStatus,
   type HotelIdParams,
   type ReservationStatus,
+  type StayCheckinInput,
 } from "@hotel/shared";
 import { ensureAuthorizedWithScope } from "../auth/authorization";
 import { adminError } from "../common/adminError";
@@ -19,6 +20,7 @@ import { normalizeOptionalText } from "../common/text";
 import { createMaintenanceRepository } from "../repositories/maintenanceRepository";
 import { createMaintenanceFinanceRepository } from "../repositories/maintenanceFinanceRepository";
 import { createStayAccountsRepository } from "../repositories/stayAccountsRepository";
+import { createGovernanceRepository } from "../repositories/governanceRepository";
 
 type StayWithRelationsRow = {
   id: string;
@@ -347,6 +349,16 @@ async function loadStayPanel(
       .reduce((sum, entry) => sum + entry.open_amount, 0)
       .toFixed(2),
   );
+  const roomOperationalState = await createGovernanceRepository().roomState(
+    activeHotelId,
+    stay.room_id,
+  );
+  if (roomOperationalState?.readiness !== "ready" && canCheckin) {
+    canCheckin = false;
+    checkinBlockReason =
+      roomOperationalState?.blockers.join(". ") ||
+      "Quarto ainda não liberado pela governança.";
+  }
   return {
     stay: {
       id: String(stay.id),
@@ -410,6 +422,8 @@ async function loadStayPanel(
     pending_consumption_folio_entry_ids: pendingConsumptionEntries.map(
       (entry) => entry.id,
     ),
+    room_operational_state: roomOperationalState || undefined,
+    governance_cycle_id: roomOperationalState?.cycle_id || null,
   };
 }
 
@@ -720,8 +734,13 @@ export function registerStayOperationsRoutes(app: FastifyInstance): void {
     return reply.send({ item: panel });
   });
 
-  app.post<{ Params: HotelIdParams }>(
+  app.post<{ Params: HotelIdParams; Body: StayCheckinInput }>(
     "/admin/stays/:id/checkin",
+    {
+      preValidation: async (request) => {
+        if (request.body == null) request.body = {};
+      },
+    },
     async (request, reply) => {
       const auth = ensureAuthorizedWithScope(
         request,
@@ -759,7 +778,21 @@ export function registerStayOperationsRoutes(app: FastifyInstance): void {
             ),
           );
       }
-      if (!panel.eligibility.can_checkin) {
+      const readiness = panel.room_operational_state;
+      const wantsOverride = Boolean(request.body?.override_reason);
+      const canOverride = auth.session.permissions.includes(
+        PERMISSIONS.GOVERNANCE_READINESS_OVERRIDE,
+      );
+      const readinessReason =
+        readiness?.blockers.join(". ") ||
+        "Quarto ainda não liberado pela governança.";
+      const governanceOnlyBlocked =
+        readiness?.readiness === "not_ready" &&
+        panel.eligibility.checkin_block_reason === readinessReason;
+      if (
+        !panel.eligibility.can_checkin &&
+        !(governanceOnlyBlocked && wantsOverride && canOverride)
+      ) {
         return reply
           .status(409)
           .send(
@@ -771,22 +804,37 @@ export function registerStayOperationsRoutes(app: FastifyInstance): void {
           );
       }
 
-      const supabase = createServerClient();
-      const { error } = await supabase
-        .from("stays")
-        .update({
-          stay_status: "checked_in",
-          checkin_date_actual: new Date().toISOString(),
-        })
-        .eq("id", stayId);
-      if (error) {
-        request.log.error(error);
+      const { data: checkinData, error } = await createServerClient().rpc(
+        "checkin_stay_with_readiness",
+        {
+          p_hotel_id: activeHotelId,
+          p_stay_id: stayId,
+          p_actor_id: auth.session.id,
+          p_expected_version: request.body?.expected_readiness_version,
+          p_override_reason: request.body?.override_reason,
+          p_allow_override: canOverride,
+        },
+      );
+      const checkinResult =
+        checkinData &&
+        typeof checkinData === "object" &&
+        !Array.isArray(checkinData) &&
+        typeof checkinData.result === "string"
+          ? checkinData.result
+          : "failed";
+      if (error || checkinResult !== "ok") {
+        if (error) request.log.error(error);
         return reply
           .status(409)
           .send(
             adminError(
               ADMIN_ERROR_CODE.CONFLICT,
-              "Falha ao executar check-in.",
+              checkinResult === "maintenance_blocked"
+                ? "Quarto interditado pela manutenção."
+                : checkinResult === "room_not_ready"
+                  ? "Quarto ainda não liberado pela governança."
+                  : "Falha ao executar check-in.",
+              checkinResult,
             ),
           );
       }
@@ -959,7 +1007,13 @@ export function registerStayOperationsRoutes(app: FastifyInstance): void {
               result.result,
             ),
           );
-      return reply.send({ item: result.item });
+      const completedPanel = await loadStayPanel(activeHotelId, stayId);
+      return reply.send({
+        item: {
+          ...result.item,
+          governance_cycle_id: completedPanel?.governance_cycle_id || null,
+        },
+      });
     },
   );
 

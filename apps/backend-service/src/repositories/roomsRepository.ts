@@ -50,10 +50,22 @@ class SupabaseRoomsRepository implements RoomsRepository {
     const effectiveStatuses = new Map(
       (blocksResult.data || []).map((block) => [block.room_id, block.status]),
     );
-    return (roomsResult.data || []).map((room) => ({
-      ...room,
-      status: effectiveStatuses.get(room.id) || room.status,
-    }));
+    return Promise.all(
+      (roomsResult.data || []).map(async (room) => {
+        const { data: operationalState, error: stateError } =
+          await supabase.rpc("governance_room_state", {
+            p_hotel_id: activeHotelId,
+            p_room_id: room.id,
+          });
+        if (stateError) throw stateError;
+        return {
+          ...room,
+          status: effectiveStatuses.get(room.id) || room.status,
+          operational_state:
+            operationalState as unknown as AdminRoom["operational_state"],
+        };
+      }),
+    );
   }
 
   async createRoom(
