@@ -18,3 +18,4 @@ export type {
 export * from "./maintenance-actions";
 export * from "./consumption-groups";
 export * from "./operational-pending";
+export * from "./governance";

@@ -78,7 +78,7 @@ select is((select count(*)::integer from public.hotels), 2, 'seed has two hotels
 select is((select count(*)::integer from public.rooms), 6, 'seed has six rooms');
 select is((select count(*)::integer from public.customers), 4, 'seed has four customers');
 select is((select count(*)::integer from public.products), 4, 'seed has four products');
-select is((select count(*)::integer from public.permissions), 81, 'seed matches all canonical application permissions');
+select is((select count(*)::integer from public.permissions), 88, 'seed matches all canonical application permissions');
 select is((select count(*)::integer from public.roles), 3, 'seed has one global role and two hotel roles');
 select is((select count(*)::integer from public.users), 3, 'seed has three local users');
 select is((select count(*)::integer from public.reservations), 4, 'seed has four reservations');
@@ -219,13 +219,13 @@ select is(
 
 select is(
   (select count(*)::integer from public.role_permissions where role_id = '70000000-0000-4000-8000-000000000002'),
-  57,
+  64,
   'Aurora manager keeps commercial and management permissions opt-in'
 );
 
 select is(
   (select count(*)::integer from public.role_permissions where role_id = '70000000-0000-4000-8000-000000000003'),
-  57,
+  64,
   'Horizonte manager keeps commercial and management permissions opt-in'
 );
 
@@ -920,7 +920,7 @@ select throws_ok(
 select ok(
   public.create_commercial_agreement(
     '10000000-0000-4000-8000-000000000001', 'b1000000-0000-4000-8000-000000000001',
-    'AC-001', '80000000-0000-4000-8000-000000000002', current_date, null,
+    'AC-001', '80000000-0000-4000-8000-000000000002', (now() at time zone 'America/Sao_Paulo')::date, null,
     'hybrid', 500, 'monthly', 8, 900, 'both', 'Acordo pgTAP',
     array['a1000000-0000-4000-8000-000000000001']::uuid[]
   ) is not null,
@@ -1436,7 +1436,9 @@ select throws_ok(
   $$ update public.stay_account_events set action=action $$,
   '23514', null, 'stay account events are immutable'
 );
-update public.stays set checkout_date_expected = current_date + time '12:00'
+update public.stays set
+  checkin_date_expected = (now() at time zone 'America/Sao_Paulo')::date - 1 + time '14:00',
+  checkout_date_expected = (now() at time zone 'America/Sao_Paulo')::date + time '12:00'
   where id='91000000-0000-4000-8000-000000000002';
 update public.hotels set checkout_time_start = time '00:00', checkout_time_limit = time '23:59:59'
   where id='10000000-0000-4000-8000-000000000001';

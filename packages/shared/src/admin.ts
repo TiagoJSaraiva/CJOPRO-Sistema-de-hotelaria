@@ -248,6 +248,7 @@ export type AdminRoom = {
   notes: string | null;
   created_at?: string;
   updated_at?: string;
+  operational_state?: import("./governance").RoomOperationalState;
 };
 
 export type AdminRoomCreateInput = {
@@ -1461,6 +1462,7 @@ export type AdminReservationCalendarRoomRow = {
   room_number: string;
   room_type: string;
   max_occupancy: number;
+  operational_state?: import("./governance").RoomOperationalState;
 };
 
 export type AdminReservationCalendarStayBlock = {
@@ -1817,6 +1819,7 @@ export type AdminStayAccount = {
   payment_batches: AdminStayPaymentBatch[];
   refunds: AdminStayRefund[];
   checkout_record: AdminStayCheckoutRecord | null;
+  governance_cycle_id?: string | null;
 };
 
 export type AdminStayCheckoutInput = {
@@ -1881,6 +1884,8 @@ export type AdminStayOperationalPanelResponse = {
   pending_consumption_count?: number;
   pending_consumption_balance?: number;
   pending_consumption_folio_entry_ids?: string[];
+  room_operational_state?: import("./governance").RoomOperationalState;
+  governance_cycle_id?: string | null;
 };
 
 export type MaintenanceLocationKind = "area" | "equipment";

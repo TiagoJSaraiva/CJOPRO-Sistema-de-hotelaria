@@ -1538,6 +1538,493 @@ export type Database = {
           },
         ]
       }
+      governance_checklist_template_items: {
+        Row: {
+          display_order: number
+          hotel_id: string
+          id: string
+          label: string
+          required: boolean
+          template_id: string
+        }
+        Insert: {
+          display_order: number
+          hotel_id: string
+          id?: string
+          label: string
+          required?: boolean
+          template_id: string
+        }
+        Update: {
+          display_order?: number
+          hotel_id?: string
+          id?: string
+          label?: string
+          required?: boolean
+          template_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "governance_checklist_template_items_hotel_id_template_id_fkey"
+            columns: ["hotel_id", "template_id"]
+            isOneToOne: false
+            referencedRelation: "governance_checklist_templates"
+            referencedColumns: ["hotel_id", "id"]
+          },
+        ]
+      }
+      governance_checklist_templates: {
+        Row: {
+          created_at: string
+          created_by: string | null
+          hotel_id: string
+          id: string
+          is_active: boolean
+          kind: Database["public"]["Enums"]["governance_task_kind"]
+          name: string
+          version: number
+        }
+        Insert: {
+          created_at?: string
+          created_by?: string | null
+          hotel_id: string
+          id?: string
+          is_active?: boolean
+          kind: Database["public"]["Enums"]["governance_task_kind"]
+          name: string
+          version: number
+        }
+        Update: {
+          created_at?: string
+          created_by?: string | null
+          hotel_id?: string
+          id?: string
+          is_active?: boolean
+          kind?: Database["public"]["Enums"]["governance_task_kind"]
+          name?: string
+          version?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "governance_checklist_templates_created_by_fkey"
+            columns: ["created_by"]
+            isOneToOne: false
+            referencedRelation: "users"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "governance_checklist_templates_hotel_id_fkey"
+            columns: ["hotel_id"]
+            isOneToOne: false
+            referencedRelation: "hotels"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      governance_cycles: {
+        Row: {
+          created_at: string
+          hotel_id: string
+          id: string
+          opened_by: string | null
+          release_reason: string | null
+          released_at: string | null
+          released_by: string | null
+          room_id: string
+          source: Database["public"]["Enums"]["governance_cycle_source"]
+          status: Database["public"]["Enums"]["governance_cycle_status"]
+          stay_id: string | null
+          updated_at: string
+          version: number
+        }
+        Insert: {
+          created_at?: string
+          hotel_id: string
+          id?: string
+          opened_by?: string | null
+          release_reason?: string | null
+          released_at?: string | null
+          released_by?: string | null
+          room_id: string
+          source: Database["public"]["Enums"]["governance_cycle_source"]
+          status: Database["public"]["Enums"]["governance_cycle_status"]
+          stay_id?: string | null
+          updated_at?: string
+          version?: number
+        }
+        Update: {
+          created_at?: string
+          hotel_id?: string
+          id?: string
+          opened_by?: string | null
+          release_reason?: string | null
+          released_at?: string | null
+          released_by?: string | null
+          room_id?: string
+          source?: Database["public"]["Enums"]["governance_cycle_source"]
+          status?: Database["public"]["Enums"]["governance_cycle_status"]
+          stay_id?: string | null
+          updated_at?: string
+          version?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "governance_cycles_hotel_id_fkey"
+            columns: ["hotel_id"]
+            isOneToOne: false
+            referencedRelation: "hotels"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "governance_cycles_opened_by_fkey"
+            columns: ["opened_by"]
+            isOneToOne: false
+            referencedRelation: "users"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "governance_cycles_released_by_fkey"
+            columns: ["released_by"]
+            isOneToOne: false
+            referencedRelation: "users"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "governance_cycles_room_hotel_fkey"
+            columns: ["room_id", "hotel_id"]
+            isOneToOne: false
+            referencedRelation: "rooms"
+            referencedColumns: ["id", "hotel_id"]
+          },
+          {
+            foreignKeyName: "governance_cycles_room_id_fkey"
+            columns: ["room_id"]
+            isOneToOne: false
+            referencedRelation: "rooms"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "governance_cycles_stay_id_fkey"
+            columns: ["stay_id"]
+            isOneToOne: false
+            referencedRelation: "stays"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      governance_events: {
+        Row: {
+          action: string
+          actor_id: string | null
+          created_at: string
+          cycle_id: string
+          hotel_id: string
+          id: string
+          message: string | null
+          metadata: Json
+          task_id: string | null
+        }
+        Insert: {
+          action: string
+          actor_id?: string | null
+          created_at?: string
+          cycle_id: string
+          hotel_id: string
+          id?: string
+          message?: string | null
+          metadata?: Json
+          task_id?: string | null
+        }
+        Update: {
+          action?: string
+          actor_id?: string | null
+          created_at?: string
+          cycle_id?: string
+          hotel_id?: string
+          id?: string
+          message?: string | null
+          metadata?: Json
+          task_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "governance_events_actor_id_fkey"
+            columns: ["actor_id"]
+            isOneToOne: false
+            referencedRelation: "users"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "governance_events_hotel_id_cycle_id_fkey"
+            columns: ["hotel_id", "cycle_id"]
+            isOneToOne: false
+            referencedRelation: "governance_cycles"
+            referencedColumns: ["hotel_id", "id"]
+          },
+          {
+            foreignKeyName: "governance_events_task_id_fkey"
+            columns: ["task_id"]
+            isOneToOne: false
+            referencedRelation: "governance_tasks"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      governance_maintenance_links: {
+        Row: {
+          blocking: boolean
+          created_at: string
+          cycle_id: string
+          hotel_id: string
+          occurrence_id: string
+          room_block_id: string | null
+        }
+        Insert: {
+          blocking: boolean
+          created_at?: string
+          cycle_id: string
+          hotel_id: string
+          occurrence_id: string
+          room_block_id?: string | null
+        }
+        Update: {
+          blocking?: boolean
+          created_at?: string
+          cycle_id?: string
+          hotel_id?: string
+          occurrence_id?: string
+          room_block_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "governance_links_block_hotel_fkey"
+            columns: ["room_block_id", "hotel_id"]
+            isOneToOne: false
+            referencedRelation: "room_blocks"
+            referencedColumns: ["id", "hotel_id"]
+          },
+          {
+            foreignKeyName: "governance_links_occurrence_hotel_fkey"
+            columns: ["occurrence_id", "hotel_id"]
+            isOneToOne: false
+            referencedRelation: "maintenance_occurrences"
+            referencedColumns: ["id", "hotel_id"]
+          },
+          {
+            foreignKeyName: "governance_maintenance_links_hotel_id_cycle_id_fkey"
+            columns: ["hotel_id", "cycle_id"]
+            isOneToOne: false
+            referencedRelation: "governance_cycles"
+            referencedColumns: ["hotel_id", "id"]
+          },
+          {
+            foreignKeyName: "governance_maintenance_links_occurrence_id_fkey"
+            columns: ["occurrence_id"]
+            isOneToOne: false
+            referencedRelation: "maintenance_occurrences"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "governance_maintenance_links_room_block_id_fkey"
+            columns: ["room_block_id"]
+            isOneToOne: false
+            referencedRelation: "room_blocks"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      governance_minibar_findings: {
+        Row: {
+          consumption_order_id: string | null
+          created_at: string
+          cycle_id: string
+          discrepancy_only: boolean
+          hotel_id: string
+          id: string
+          notes: string | null
+          offer_id: string | null
+          quantity: number
+          replenishment_quantity: number
+          request_key: string | null
+        }
+        Insert: {
+          consumption_order_id?: string | null
+          created_at?: string
+          cycle_id: string
+          discrepancy_only?: boolean
+          hotel_id: string
+          id?: string
+          notes?: string | null
+          offer_id?: string | null
+          quantity: number
+          replenishment_quantity?: number
+          request_key?: string | null
+        }
+        Update: {
+          consumption_order_id?: string | null
+          created_at?: string
+          cycle_id?: string
+          discrepancy_only?: boolean
+          hotel_id?: string
+          id?: string
+          notes?: string | null
+          offer_id?: string | null
+          quantity?: number
+          replenishment_quantity?: number
+          request_key?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "governance_minibar_findings_consumption_order_id_fkey"
+            columns: ["consumption_order_id"]
+            isOneToOne: false
+            referencedRelation: "consumption_order_effective"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "governance_minibar_findings_consumption_order_id_fkey"
+            columns: ["consumption_order_id"]
+            isOneToOne: false
+            referencedRelation: "consumption_orders"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "governance_minibar_findings_hotel_id_cycle_id_fkey"
+            columns: ["hotel_id", "cycle_id"]
+            isOneToOne: false
+            referencedRelation: "governance_cycles"
+            referencedColumns: ["hotel_id", "id"]
+          },
+          {
+            foreignKeyName: "governance_minibar_findings_offer_id_fkey"
+            columns: ["offer_id"]
+            isOneToOne: false
+            referencedRelation: "consumption_offers"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "governance_minibar_offer_hotel_fkey"
+            columns: ["offer_id", "hotel_id"]
+            isOneToOne: false
+            referencedRelation: "consumption_offers"
+            referencedColumns: ["id", "hotel_id"]
+          },
+        ]
+      }
+      governance_task_checklist_items: {
+        Row: {
+          display_order: number
+          hotel_id: string
+          id: string
+          label: string
+          notes: string | null
+          required: boolean
+          result: Database["public"]["Enums"]["governance_check_result"]
+          task_id: string
+          template_id: string | null
+        }
+        Insert: {
+          display_order: number
+          hotel_id: string
+          id?: string
+          label: string
+          notes?: string | null
+          required: boolean
+          result?: Database["public"]["Enums"]["governance_check_result"]
+          task_id: string
+          template_id?: string | null
+        }
+        Update: {
+          display_order?: number
+          hotel_id?: string
+          id?: string
+          label?: string
+          notes?: string | null
+          required?: boolean
+          result?: Database["public"]["Enums"]["governance_check_result"]
+          task_id?: string
+          template_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "governance_task_checklist_items_hotel_id_task_id_fkey"
+            columns: ["hotel_id", "task_id"]
+            isOneToOne: false
+            referencedRelation: "governance_tasks"
+            referencedColumns: ["hotel_id", "id"]
+          },
+        ]
+      }
+      governance_tasks: {
+        Row: {
+          assigned_to: string | null
+          completed_at: string | null
+          completed_by: string | null
+          created_at: string
+          cycle_id: string
+          hotel_id: string
+          id: string
+          kind: Database["public"]["Enums"]["governance_task_kind"]
+          next_action: string | null
+          started_at: string | null
+          status: Database["public"]["Enums"]["governance_task_status"]
+          updated_at: string
+          version: number
+        }
+        Insert: {
+          assigned_to?: string | null
+          completed_at?: string | null
+          completed_by?: string | null
+          created_at?: string
+          cycle_id: string
+          hotel_id: string
+          id?: string
+          kind: Database["public"]["Enums"]["governance_task_kind"]
+          next_action?: string | null
+          started_at?: string | null
+          status?: Database["public"]["Enums"]["governance_task_status"]
+          updated_at?: string
+          version?: number
+        }
+        Update: {
+          assigned_to?: string | null
+          completed_at?: string | null
+          completed_by?: string | null
+          created_at?: string
+          cycle_id?: string
+          hotel_id?: string
+          id?: string
+          kind?: Database["public"]["Enums"]["governance_task_kind"]
+          next_action?: string | null
+          started_at?: string | null
+          status?: Database["public"]["Enums"]["governance_task_status"]
+          updated_at?: string
+          version?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "governance_tasks_assigned_to_fkey"
+            columns: ["assigned_to"]
+            isOneToOne: false
+            referencedRelation: "users"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "governance_tasks_completed_by_fkey"
+            columns: ["completed_by"]
+            isOneToOne: false
+            referencedRelation: "users"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "governance_tasks_hotel_id_cycle_id_fkey"
+            columns: ["hotel_id", "cycle_id"]
+            isOneToOne: false
+            referencedRelation: "governance_cycles"
+            referencedColumns: ["hotel_id", "id"]
+          },
+        ]
+      }
       hotels: {
         Row: {
           address_complement: string | null
@@ -6557,6 +7044,112 @@ export type Database = {
           },
         ]
       }
+      stay_relocation_events: {
+        Row: {
+          actor_id: string
+          contracted_daily_rate: number
+          created_at: string
+          destination_public_rate: number
+          destination_room_id: string
+          hotel_id: string
+          id: string
+          reason: string
+          room_block_id: string | null
+          source_room_id: string
+          stay_id: string
+        }
+        Insert: {
+          actor_id: string
+          contracted_daily_rate: number
+          created_at?: string
+          destination_public_rate: number
+          destination_room_id: string
+          hotel_id: string
+          id?: string
+          reason: string
+          room_block_id?: string | null
+          source_room_id: string
+          stay_id: string
+        }
+        Update: {
+          actor_id?: string
+          contracted_daily_rate?: number
+          created_at?: string
+          destination_public_rate?: number
+          destination_room_id?: string
+          hotel_id?: string
+          id?: string
+          reason?: string
+          room_block_id?: string | null
+          source_room_id?: string
+          stay_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "relocation_block_hotel_fkey"
+            columns: ["room_block_id", "hotel_id"]
+            isOneToOne: false
+            referencedRelation: "room_blocks"
+            referencedColumns: ["id", "hotel_id"]
+          },
+          {
+            foreignKeyName: "relocation_destination_room_hotel_fkey"
+            columns: ["destination_room_id", "hotel_id"]
+            isOneToOne: false
+            referencedRelation: "rooms"
+            referencedColumns: ["id", "hotel_id"]
+          },
+          {
+            foreignKeyName: "relocation_source_room_hotel_fkey"
+            columns: ["source_room_id", "hotel_id"]
+            isOneToOne: false
+            referencedRelation: "rooms"
+            referencedColumns: ["id", "hotel_id"]
+          },
+          {
+            foreignKeyName: "stay_relocation_events_actor_id_fkey"
+            columns: ["actor_id"]
+            isOneToOne: false
+            referencedRelation: "users"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "stay_relocation_events_destination_room_id_fkey"
+            columns: ["destination_room_id"]
+            isOneToOne: false
+            referencedRelation: "rooms"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "stay_relocation_events_hotel_id_fkey"
+            columns: ["hotel_id"]
+            isOneToOne: false
+            referencedRelation: "hotels"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "stay_relocation_events_room_block_id_fkey"
+            columns: ["room_block_id"]
+            isOneToOne: false
+            referencedRelation: "room_blocks"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "stay_relocation_events_source_room_id_fkey"
+            columns: ["source_room_id"]
+            isOneToOne: false
+            referencedRelation: "rooms"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "stay_relocation_events_stay_id_fkey"
+            columns: ["stay_id"]
+            isOneToOne: false
+            referencedRelation: "stays"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       stays: {
         Row: {
           account_version: number
@@ -6567,6 +7160,7 @@ export type Database = {
           checkout_date_expected: string
           created_at: string
           id: string
+          operational_version: number
           reservation_id: string
           room_id: string
           stay_status: Database["public"]["Enums"]["stay_status"]
@@ -6583,6 +7177,7 @@ export type Database = {
           checkout_date_expected: string
           created_at?: string
           id?: string
+          operational_version?: number
           reservation_id: string
           room_id: string
           stay_status?: Database["public"]["Enums"]["stay_status"]
@@ -6599,6 +7194,7 @@ export type Database = {
           checkout_date_expected?: string
           created_at?: string
           id?: string
+          operational_version?: number
           reservation_id?: string
           room_id?: string
           stay_status?: Database["public"]["Enums"]["stay_status"]
@@ -6851,6 +7447,15 @@ export type Database = {
       }
     }
     Functions: {
+      act_governance_cycle: {
+        Args: {
+          p_actor_id: string
+          p_cycle_id: string
+          p_hotel_id: string
+          p_input: Json
+        }
+        Returns: Json
+      }
       act_operational_pending: {
         Args: {
           p_action: string
@@ -6930,6 +7535,17 @@ export type Database = {
       }
       cancel_inventory_count: {
         Args: { p_actor_id: string; p_count_id: string; p_hotel_id: string }
+        Returns: Json
+      }
+      checkin_stay_with_readiness: {
+        Args: {
+          p_actor_id: string
+          p_allow_override?: boolean
+          p_expected_version?: number
+          p_hotel_id: string
+          p_override_reason?: string
+          p_stay_id: string
+        }
         Returns: Json
       }
       checkout_stay_account: {
@@ -7049,6 +7665,21 @@ export type Database = {
       create_default_maintenance_sla_policies: {
         Args: { p_hotel_id: string }
         Returns: undefined
+      }
+      create_governance_cycle: {
+        Args: {
+          p_actor_id?: string
+          p_hotel_id: string
+          p_note?: string
+          p_room_id: string
+          p_source?: Database["public"]["Enums"]["governance_cycle_source"]
+          p_stay_id?: string
+        }
+        Returns: Json
+      }
+      create_governance_template: {
+        Args: { p_actor_id: string; p_hotel_id: string; p_input: Json }
+        Returns: Json
       }
       create_inventory_count: {
         Args: {
@@ -7241,6 +7872,16 @@ export type Database = {
         }
         Returns: Json
       }
+      ensure_governance_cycle: {
+        Args: {
+          p_actor_id?: string
+          p_hotel_id: string
+          p_room_id: string
+          p_source: Database["public"]["Enums"]["governance_cycle_source"]
+          p_stay_id: string
+        }
+        Returns: string
+      }
       generate_maintenance_preventive_run: {
         Args: {
           p_actor_id: string
@@ -7276,7 +7917,45 @@ export type Database = {
         Args: { p_hotel_id: string; p_occurred_at?: string; p_stay_id: string }
         Returns: Json
       }
+      get_governance_cycle: {
+        Args: { p_cycle_id: string; p_hotel_id: string }
+        Returns: Json
+      }
       get_management_alerts: { Args: { p_hotel_id: string }; Returns: Json }
+      governance_create_defect: {
+        Args: {
+          p_actor_id: string
+          p_cycle_id: string
+          p_hotel_id: string
+          p_input: Json
+        }
+        Returns: Json
+      }
+      governance_create_task: {
+        Args: {
+          p_cycle_id: string
+          p_hotel_id: string
+          p_kind: Database["public"]["Enums"]["governance_task_kind"]
+        }
+        Returns: string
+      }
+      governance_register_minibar: {
+        Args: {
+          p_actor_id: string
+          p_cycle_id: string
+          p_hotel_id: string
+          p_input: Json
+        }
+        Returns: Json
+      }
+      governance_room_state: {
+        Args: { p_hotel_id: string; p_now?: string; p_room_id: string }
+        Returns: Json
+      }
+      governance_seed_templates: {
+        Args: { p_actor_id?: string; p_hotel_id: string }
+        Returns: undefined
+      }
       inspect_maintenance_work_order: {
         Args: {
           p_actor_id: string
@@ -7291,6 +7970,8 @@ export type Database = {
         Args: { p_actor_id: string; p_hotel_id: string }
         Returns: undefined
       }
+      list_governance_board: { Args: { p_hotel_id: string }; Returns: Json }
+      list_governance_templates: { Args: { p_hotel_id: string }; Returns: Json }
       list_operational_pending: {
         Args: {
           p_filters?: Json
@@ -7347,6 +8028,10 @@ export type Database = {
         Returns: boolean
       }
       operational_pending_candidates: {
+        Args: { p_hotel_id: string; p_now?: string }
+        Returns: Json
+      }
+      operational_pending_candidates_stage1: {
         Args: { p_hotel_id: string; p_now?: string }
         Returns: Json
       }
@@ -7449,6 +8134,18 @@ export type Database = {
           p_reason: string
         }
         Returns: string
+      }
+      relocate_confirmed_stay: {
+        Args: {
+          p_actor_id: string
+          p_destination_room_id: string
+          p_expected_version: number
+          p_hotel_id: string
+          p_reason: string
+          p_room_block_id?: string
+          p_stay_id: string
+        }
+        Returns: Json
       }
       reorder_consumption_offers: {
         Args: {
@@ -7568,6 +8265,10 @@ export type Database = {
           p_reference_code?: string
         }
         Returns: string
+      }
+      simulate_stay_relocation: {
+        Args: { p_hotel_id: string; p_stay_id: string }
+        Returns: Json
       }
       submit_partner_settlement: {
         Args: {
@@ -7793,6 +8494,35 @@ export type Database = {
         | "debit_card"
         | "bank_transfer"
       consumption_policy_source: "inherit" | "override"
+      governance_check_result:
+        | "pending"
+        | "approved"
+        | "rejected"
+        | "not_applicable"
+      governance_cycle_source:
+        | "checkout"
+        | "pre_departure"
+        | "manual"
+        | "maintenance"
+      governance_cycle_status:
+        | "departure_review"
+        | "cleaning_pending"
+        | "cleaning_in_progress"
+        | "inspection_pending"
+        | "maintenance_hold"
+        | "released"
+        | "canceled"
+      governance_task_kind:
+        | "departure_review"
+        | "cleaning"
+        | "replenishment"
+        | "inspection"
+      governance_task_status:
+        | "pending"
+        | "assigned"
+        | "in_progress"
+        | "completed"
+        | "canceled"
       inventory_count_status: "draft" | "completed" | "canceled"
       inventory_document_kind:
         | "receipt"
@@ -8118,6 +8848,40 @@ export const Constants = {
         "bank_transfer",
       ],
       consumption_policy_source: ["inherit", "override"],
+      governance_check_result: [
+        "pending",
+        "approved",
+        "rejected",
+        "not_applicable",
+      ],
+      governance_cycle_source: [
+        "checkout",
+        "pre_departure",
+        "manual",
+        "maintenance",
+      ],
+      governance_cycle_status: [
+        "departure_review",
+        "cleaning_pending",
+        "cleaning_in_progress",
+        "inspection_pending",
+        "maintenance_hold",
+        "released",
+        "canceled",
+      ],
+      governance_task_kind: [
+        "departure_review",
+        "cleaning",
+        "replenishment",
+        "inspection",
+      ],
+      governance_task_status: [
+        "pending",
+        "assigned",
+        "in_progress",
+        "completed",
+        "canceled",
+      ],
       inventory_count_status: ["draft", "completed", "canceled"],
       inventory_document_kind: [
         "receipt",
