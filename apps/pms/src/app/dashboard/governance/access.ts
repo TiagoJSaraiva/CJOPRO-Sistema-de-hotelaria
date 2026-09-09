@@ -13,6 +13,12 @@ export function getGovernanceAccess(
       PERMISSIONS.GOVERNANCE_TEMPLATES_MANAGE,
     ),
     canPostConsumption: permissions.includes(PERMISSIONS.CONSUMPTION_POST),
+    canReceivePayment: permissions.includes(
+      PERMISSIONS.CONSUMPTION_PAYMENT_RECEIVE,
+    ),
+    canGrantCourtesy: permissions.includes(
+      PERMISSIONS.CONSUMPTION_COURTESY_GRANT,
+    ),
     canReportMaintenance: permissions.includes(
       PERMISSIONS.MAINTENANCE_OCCURRENCE_CREATE,
     ),

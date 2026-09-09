@@ -1,5 +1,6 @@
 import { PERMISSIONS } from "@hotel/shared";
 import {
+  getConsumptionOperationalContext,
   getGovernanceBoard,
   getGovernanceTemplates,
 } from "../../../lib/adminApi";
@@ -28,6 +29,20 @@ export default async function GovernancePage({
     getGovernanceBoard(),
     access.canManageTemplates ? getGovernanceTemplates() : Promise.resolve([]),
   ]);
+  const minibarContexts = access.canPostConsumption
+    ? Object.fromEntries(
+        await Promise.all(
+          board.items
+            .filter((cycle) => cycle.stay_id)
+            .map(async (cycle) => [
+              cycle.id,
+              await getConsumptionOperationalContext(cycle.stay_id!).catch(
+                () => null,
+              ),
+            ]),
+        ),
+      )
+    : {};
   return (
     <DashboardEntityPageShell
       title="Governança"
@@ -55,6 +70,7 @@ export default async function GovernancePage({
       <GovernanceWorkspace
         initial={board}
         templates={templates}
+        minibarContexts={minibarContexts}
         access={access}
         initialRoomId={(await searchParams)?.room_id || ""}
       />

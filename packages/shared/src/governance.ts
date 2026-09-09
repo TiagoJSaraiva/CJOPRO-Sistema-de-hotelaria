@@ -340,11 +340,13 @@ export const GovernanceMinibarSchema = Type.Union(
           Type.Literal("charged"),
           Type.Literal("courtesy"),
         ]),
-        billing_mode: Type.Union([
-          Type.Literal("stay_folio"),
-          Type.Literal("hotel_immediate"),
-          Type.Literal("partner_direct"),
-        ]),
+        billing_mode: Type.Optional(
+          Type.Union([
+            Type.Literal("stay_folio"),
+            Type.Literal("hotel_immediate"),
+            Type.Literal("partner_direct"),
+          ]),
+        ),
         items: Type.Array(GovernanceMinibarLineSchema, {
           minItems: 1,
           maxItems: 100,

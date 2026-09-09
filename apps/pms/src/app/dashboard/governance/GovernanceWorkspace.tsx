@@ -1,7 +1,10 @@
 "use client";
 
-import { useState } from "react";
+import { useRef, useState } from "react";
 import type {
+  AdminConsumptionOperationalContext,
+  ConsumptionBillingMode,
+  ConsumptionPaymentMethod,
   GovernanceActionInput,
   GovernanceBoard,
   GovernanceCycle,
@@ -15,6 +18,8 @@ type Access = {
   canAssign: boolean;
   canManageTemplates: boolean;
   canPostConsumption: boolean;
+  canReceivePayment: boolean;
+  canGrantCourtesy: boolean;
   canReportMaintenance: boolean;
 };
 
@@ -59,14 +64,241 @@ function currentTask(cycle: GovernanceCycle) {
     .find((task) => task.status !== "completed" && task.status !== "canceled");
 }
 
+function AuthorizedMinibarForm({
+  cycleId,
+  context,
+  access,
+  busy,
+  submit,
+}: {
+  cycleId: string;
+  context: AdminConsumptionOperationalContext;
+  access: Access;
+  busy: boolean;
+  submit: (path: string, body: unknown) => Promise<boolean>;
+}) {
+  const availableOffers = context.offers.filter((offer) => offer.available);
+  const [offerId, setOfferId] = useState(availableOffers[0]?.id || "");
+  const selected = availableOffers.find((offer) => offer.id === offerId);
+  const allowedModes = (selected?.allowed_modes || []).filter(
+    (mode) => mode !== "hotel_immediate" || access.canReceivePayment,
+  );
+  const suggestedMode =
+    selected?.default_mode && allowedModes.includes(selected.default_mode)
+      ? selected.default_mode
+      : (["stay_folio", "hotel_immediate", "partner_direct"].find((mode) =>
+          allowedModes.includes(mode as ConsumptionBillingMode),
+        ) as ConsumptionBillingMode | undefined);
+  const [mode, setMode] = useState<ConsumptionBillingMode | "courtesy" | "">(
+    suggestedMode || "",
+  );
+  const [paymentMethod, setPaymentMethod] =
+    useState<ConsumptionPaymentMethod>("pix");
+  const requestRef = useRef<{ signature: string; key: string } | null>(null);
+
+  return (
+    <form
+      data-usage-guide="governance-minibar"
+      className="grid gap-2 rounded-lg border p-3 sm:grid-cols-2"
+      onSubmit={async (event) => {
+        event.preventDefault();
+        if (!selected || !mode) return;
+        const form = new FormData(event.currentTarget);
+        const base = {
+          point_id: selected.point_id,
+          occurred_at: context.occurred_at,
+          disposition: mode === "courtesy" ? "courtesy" : "charged",
+          ...(mode === "courtesy" ? {} : { billing_mode: mode }),
+          items: [
+            {
+              offer_id: selected.id,
+              quantity: Number(form.get("quantity")),
+              replenishment_quantity: Number(
+                form.get("replenishment_quantity"),
+              ),
+              version_token: selected.version_token,
+            },
+          ],
+          payment_method:
+            mode === "hotel_immediate" ? paymentMethod : undefined,
+          payment_reference:
+            mode === "hotel_immediate"
+              ? String(form.get("payment_reference") || "").trim() || undefined
+              : undefined,
+          partner_receipt_confirmed:
+            mode === "partner_direct"
+              ? form.get("partner_receipt_confirmed") === "on"
+              : undefined,
+          courtesy_reason:
+            mode === "courtesy"
+              ? String(form.get("courtesy_reason") || "").trim()
+              : undefined,
+          notes: String(form.get("notes") || "").trim() || undefined,
+        };
+        const signature = JSON.stringify(base);
+        const requestKey =
+          requestRef.current?.signature === signature
+            ? requestRef.current.key
+            : crypto.randomUUID();
+        requestRef.current = { signature, key: requestKey };
+        const completed = await submit(`cycles/${cycleId}/minibar`, {
+          ...base,
+          idempotency_key: requestKey,
+        });
+        if (completed) requestRef.current = null;
+      }}
+    >
+      <strong className="sm:col-span-2">
+        Conferência financeira do frigobar
+      </strong>
+      <label className="pms-field sm:col-span-2">
+        Item disponível
+        <select
+          className="pms-field-input"
+          value={offerId}
+          onChange={(event) => {
+            const offer = availableOffers.find(
+              (item) => item.id === event.target.value,
+            );
+            setOfferId(event.target.value);
+            const modes = (offer?.allowed_modes || []).filter(
+              (item) => item !== "hotel_immediate" || access.canReceivePayment,
+            );
+            setMode(
+              offer?.default_mode && modes.includes(offer.default_mode)
+                ? offer.default_mode
+                : modes[0] || "",
+            );
+            requestRef.current = null;
+          }}
+          required
+        >
+          {availableOffers.map((offer) => (
+            <option key={offer.id} value={offer.id}>
+              {offer.product_name} — {offer.point_name}
+            </option>
+          ))}
+        </select>
+      </label>
+      <label className="pms-field">
+        Quantidade consumida
+        <input
+          className="pms-field-input"
+          name="quantity"
+          type="number"
+          min="0.001"
+          step="0.001"
+          required
+        />
+      </label>
+      <label className="pms-field">
+        Quantidade para reposição
+        <input
+          className="pms-field-input"
+          name="replenishment_quantity"
+          type="number"
+          min="0"
+          step="0.001"
+          required
+        />
+      </label>
+      <fieldset className="grid gap-1 sm:col-span-2">
+        <legend>Forma de cobrança autorizada</legend>
+        {allowedModes.map((item) => (
+          <label key={item} className="flex gap-2">
+            <input
+              type="radio"
+              checked={mode === item}
+              onChange={() => setMode(item)}
+            />
+            {item === "stay_folio"
+              ? "Conta da estadia"
+              : item === "hotel_immediate"
+                ? "Pagamento imediato"
+                : "Pagamento ao parceiro"}
+          </label>
+        ))}
+        {access.canGrantCourtesy ? (
+          <label className="flex gap-2">
+            <input
+              type="radio"
+              checked={mode === "courtesy"}
+              onChange={() => setMode("courtesy")}
+            />
+            Cortesia explícita
+          </label>
+        ) : null}
+      </fieldset>
+      {mode === "hotel_immediate" ? (
+        <>
+          <label className="pms-field">
+            Meio de pagamento
+            <select
+              className="pms-field-input"
+              value={paymentMethod}
+              onChange={(event) =>
+                setPaymentMethod(event.target.value as ConsumptionPaymentMethod)
+              }
+            >
+              <option value="pix">Pix</option>
+              <option value="cash">Dinheiro</option>
+              <option value="credit_card">Cartão de crédito</option>
+              <option value="debit_card">Cartão de débito</option>
+              <option value="other">Outro</option>
+            </select>
+          </label>
+          <label className="pms-field">
+            Referência
+            <input
+              className="pms-field-input"
+              name="payment_reference"
+              maxLength={120}
+            />
+          </label>
+        </>
+      ) : null}
+      {mode === "partner_direct" ? (
+        <label className="flex gap-2 sm:col-span-2">
+          <input type="checkbox" name="partner_receipt_confirmed" required />{" "}
+          Confirmo o recebimento direto pelo parceiro.
+        </label>
+      ) : null}
+      {mode === "courtesy" ? (
+        <label className="pms-field sm:col-span-2">
+          Justificativa da cortesia
+          <textarea
+            className="pms-field-input"
+            name="courtesy_reason"
+            minLength={3}
+            maxLength={1000}
+            required
+          />
+        </label>
+      ) : null}
+      <label className="pms-field sm:col-span-2">
+        Observação
+        <textarea className="pms-field-input" name="notes" maxLength={1000} />
+      </label>
+      <button
+        disabled={busy || !selected || !mode}
+        className="justify-self-start rounded-lg bg-[#1c6d4e] px-3 py-2 text-white"
+      >
+        Lançar e vincular à vistoria
+      </button>
+    </form>
+  );
+}
+
 export function GovernanceWorkspace({
   initial,
   templates,
+  minibarContexts = {},
   access,
   initialRoomId = "",
 }: {
   initial: GovernanceBoard;
   templates: GovernanceTemplate[];
+  minibarContexts?: Record<string, AdminConsumptionOperationalContext | null>;
   access: Access;
   initialRoomId?: string;
 }) {
@@ -82,7 +314,7 @@ export function GovernanceWorkspace({
     setBoard(payload);
   }
 
-  async function request(path: string, body: unknown) {
+  async function request(path: string, body: unknown): Promise<boolean> {
     setBusy(true);
     setMessage("");
     try {
@@ -96,9 +328,11 @@ export function GovernanceWorkspace({
         throw new Error(payload.message || "A ação deixou de ser possível.");
       await reload();
       setMessage("Governança atualizada.");
+      return true;
     } catch (cause) {
       setMessage(cause instanceof Error ? cause.message : "Falha na operação.");
       await reload().catch(() => undefined);
+      return false;
     } finally {
       setBusy(false);
     }
@@ -379,13 +613,13 @@ export function GovernanceWorkspace({
                       Concluir reposição
                     </button>
                   ) : null}
-                  {cycle.stay_id && access.canPostConsumption ? (
-                    <a
-                      className="rounded-lg border px-3 py-2 no-underline"
-                      href={`/dashboard/consumption/launch?stay_id=${cycle.stay_id}`}
-                    >
-                      Conferir frigobar e lançar consumo
-                    </a>
+                  {cycle.stay_id &&
+                  access.canPostConsumption &&
+                  !minibarContexts[cycle.id] ? (
+                    <p>
+                      A conferência financeira só está disponível antes do
+                      checkout.
+                    </p>
                   ) : null}
                 </div>
                 {access.canAssign &&
@@ -427,6 +661,17 @@ export function GovernanceWorkspace({
                       Atribuir
                     </button>
                   </form>
+                ) : null}
+                {cycle.stay_id &&
+                access.canPostConsumption &&
+                minibarContexts[cycle.id] ? (
+                  <AuthorizedMinibarForm
+                    cycleId={cycle.id}
+                    context={minibarContexts[cycle.id]!}
+                    access={access}
+                    busy={busy}
+                    submit={request}
+                  />
                 ) : null}
                 {cycle.stay_id &&
                 !access.canPostConsumption &&

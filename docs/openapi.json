@@ -57897,7 +57897,6 @@
                       "point_id",
                       "occurred_at",
                       "disposition",
-                      "billing_mode",
                       "items"
                     ],
                     "type": "object"

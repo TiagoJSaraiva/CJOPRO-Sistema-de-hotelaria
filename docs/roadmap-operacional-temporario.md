@@ -23,7 +23,7 @@ inferência. Atualizar este acompanhamento em cada entrega validada.
 | Etapa                    | Situação             | Entregas                                                                                             | Decisões                                               | Validações                                                                                                               | Próximo trabalho                                  |
 | ------------------------ | -------------------- | ---------------------------------------------------------------------------------------------------- | ------------------------------------------------------ | ------------------------------------------------------------------------------------------------------------------------ | ------------------------------------------------- |
 | 1 — Usabilidade          | Concluída e validada | Roteiro; ações e decisões de manutenção; busca de duplicidade; fila de comandas; central persistente | Fila persistente; comandas confirmadas por grupo       | 310 verificações SQL; 8 testes HTTP; check, testes e cobertura aprovados; E2E Windows/Linux com reexecuções direcionadas | Planejar tecnicamente a etapa 2 quando solicitada |
-| 2 — Operação integrada   | Concluída e validada | Governança; prontidão; frigobar/avarias; check-in; realocação; passagem e pendências                 | Inspeção segregada; exceção auditada; preço preservado | 357 verificações SQL; 8 testes HTTP; 462 testes; check/cobertura aprovados; 36 E2E desktop/mobile                        | Planejar tecnicamente a etapa 3 quando solicitada |
+| 2 — Operação integrada   | Concluída e validada | Governança; prontidão; frigobar/avarias; check-in; realocação; passagem e pendências                 | Inspeção segregada; exceção auditada; preço preservado | 357 verificações SQL; 8 testes HTTP; 463 testes; check/cobertura aprovados; 36 E2E desktop/mobile                        | Planejar tecnicamente a etapa 3 quando solicitada |
 | 3 — Manutenção planejada | Não iniciada         | —                                                                                                    | Aprofundar recursos existentes                         | —                                                                                                                        | Planejamento técnico                              |
 | 4 — Consumo e saída      | Não iniciada         | —                                                                                                    | Completar atendimento e pagadores                      | —                                                                                                                        | Planejamento técnico                              |
 | 5 — Estoque e financeiro | Não iniciada         | —                                                                                                    | Fechar ciclos operacionais                             | —                                                                                                                        | Planejamento técnico                              |
@@ -87,10 +87,14 @@ inferência. Atualizar este acompanhamento em cada entrega validada.
   OpenAPI (239 no total), tipos Supabase regenerados, guias contextuais e
   documentação e diagramas permanentes. Snapshots de governança, calendário,
   pendências e consumo foram revisados em desktop e celular.
+- A auditoria final conectou o formulário autorizado de frigobar diretamente à
+  operação transacional da vistoria. O formulário usa as ofertas e formas de
+  cobrança permitidas para a estadia, registra reposição e preserva a chave de
+  idempotência em uma nova tentativa com o mesmo conteúdo.
 - Validações: `pnpm check`, `pnpm test`, `pnpm test:coverage`,
   `pnpm api:openapi:check`, `pnpm test:db` e `pnpm test:e2e` aprovados. Foram 357
-  verificações SQL, 8 cenários HTTP com banco real, 462 testes de workspace e 36
-  jornadas E2E com visual e axe. Cobertura de linhas: 40,41% consolidada, 41,60%
+  verificações SQL, 8 cenários HTTP com banco real, 463 testes de workspace e 36
+  jornadas E2E com visual e axe. Cobertura de linhas: 40,46% consolidada, 41,71%
   PMS, 35,36% backend e 95,53% shared, sem redução de limiares. O banco foi
   recriado exclusivamente no Supabase local e nenhum serviço remoto foi alterado.
 
