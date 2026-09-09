@@ -25,6 +25,13 @@ const kinds = {
   preventive_deferred: "Preventiva adiada",
   contract_expiry: "Contrato vencendo",
   warranty_expiry: "Garantia vencendo",
+  governance_departure_review: "Conferência de saída",
+  governance_cleaning: "Limpeza pendente",
+  governance_inspection: "Inspeção pendente",
+  governance_maintenance: "Retido pela manutenção",
+  governance_replenishment: "Reposição pendente",
+  governance_minibar: "Divergência de frigobar",
+  governance_relocation: "Reserva afetada",
 };
 export function PendingCards({
   data,
@@ -135,6 +142,7 @@ export function PendingWorkspace({
             <option value="">Todas</option>
             <option value="maintenance">Manutenção</option>
             <option value="consumption">Consumo</option>
+            <option value="governance">Governança</option>
           </select>
         </label>
         <label className="pms-field">

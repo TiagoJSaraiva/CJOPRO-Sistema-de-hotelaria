@@ -14,20 +14,20 @@ Preservar alterações independentes. Antes da limpeza, transferir orientações
 operacionais exclusivas daqui para a documentação permanente. Iniciar a etapa 6
 ou concluir parcialmente qualquer etapa não autoriza a limpeza.
 
-As etapas 2 a 6 são diretrizes de produto e exigem planejamento técnico próprio
+As etapas 3 a 6 são diretrizes de produto e exigem planejamento técnico próprio
 e autorização de escopo antes da execução. Não implementar todo o roteiro por
 inferência. Atualizar este acompanhamento em cada entrega validada.
 
 ## Acompanhamento
 
-| Etapa                    | Situação             | Entregas                                                                                             | Decisões                                         | Validações                                                                                                               | Próximo trabalho                                  |
-| ------------------------ | -------------------- | ---------------------------------------------------------------------------------------------------- | ------------------------------------------------ | ------------------------------------------------------------------------------------------------------------------------ | ------------------------------------------------- |
-| 1 — Usabilidade          | Concluída e validada | Roteiro; ações e decisões de manutenção; busca de duplicidade; fila de comandas; central persistente | Fila persistente; comandas confirmadas por grupo | 310 verificações SQL; 8 testes HTTP; check, testes e cobertura aprovados; E2E Windows/Linux com reexecuções direcionadas | Planejar tecnicamente a etapa 2 quando solicitada |
-| 2 — Operação integrada   | Não iniciada         | —                                                                                                    | Prioridade após etapa 1                          | —                                                                                                                        | Planejamento técnico                              |
-| 3 — Manutenção planejada | Não iniciada         | —                                                                                                    | Aprofundar recursos existentes                   | —                                                                                                                        | Planejamento técnico                              |
-| 4 — Consumo e saída      | Não iniciada         | —                                                                                                    | Completar atendimento e pagadores                | —                                                                                                                        | Planejamento técnico                              |
-| 5 — Estoque e financeiro | Não iniciada         | —                                                                                                    | Fechar ciclos operacionais                       | —                                                                                                                        | Planejamento técnico                              |
-| 6 — Expansão do PMS      | Não iniciada         | —                                                                                                    | Consolidar operação primeiro                     | —                                                                                                                        | Planejamento técnico e limpeza final              |
+| Etapa                    | Situação             | Entregas                                                                                             | Decisões                                               | Validações                                                                                                               | Próximo trabalho                                  |
+| ------------------------ | -------------------- | ---------------------------------------------------------------------------------------------------- | ------------------------------------------------------ | ------------------------------------------------------------------------------------------------------------------------ | ------------------------------------------------- |
+| 1 — Usabilidade          | Concluída e validada | Roteiro; ações e decisões de manutenção; busca de duplicidade; fila de comandas; central persistente | Fila persistente; comandas confirmadas por grupo       | 310 verificações SQL; 8 testes HTTP; check, testes e cobertura aprovados; E2E Windows/Linux com reexecuções direcionadas | Planejar tecnicamente a etapa 2 quando solicitada |
+| 2 — Operação integrada   | Concluída e validada | Governança; prontidão; frigobar/avarias; check-in; realocação; passagem e pendências                 | Inspeção segregada; exceção auditada; preço preservado | 357 verificações SQL; 8 testes HTTP; 462 testes; check/cobertura aprovados; 36 E2E desktop/mobile                        | Planejar tecnicamente a etapa 3 quando solicitada |
+| 3 — Manutenção planejada | Não iniciada         | —                                                                                                    | Aprofundar recursos existentes                         | —                                                                                                                        | Planejamento técnico                              |
+| 4 — Consumo e saída      | Não iniciada         | —                                                                                                    | Completar atendimento e pagadores                      | —                                                                                                                        | Planejamento técnico                              |
+| 5 — Estoque e financeiro | Não iniciada         | —                                                                                                    | Fechar ciclos operacionais                             | —                                                                                                                        | Planejamento técnico                              |
+| 6 — Expansão do PMS      | Não iniciada         | —                                                                                                    | Consolidar operação primeiro                           | —                                                                                                                        | Planejamento técnico e limpeza final              |
 
 ## Levantamento de design aprovado
 
@@ -61,6 +61,38 @@ inferência. Atualizar este acompanhamento em cada entrega validada.
 - O banco de testes foi recriado exclusivamente no Supabase local. A checagem do
   seed usa suas identidades estáveis para não depender do instante em que o ciclo
   periódico gera preventivas. Nenhum serviço remoto foi alterado.
+
+### Registro das entregas da etapa 2
+
+- Domínio e prontidão: ciclos episódicos de governança, tarefas concorrentes,
+  eventos imutáveis, checklists versionados com cópia histórica e projeção dos
+  eixos de ocupação, governança, manutenção e prontidão. Quartos existentes foram
+  inicializados, bloqueios ativos receberam retenção e o status legado deixou de
+  controlar check-in e liberação.
+- Giro e integrações: vistoria pré-saída e ciclo avulso, avanço transacional no
+  checkout, limpeza, reposição e inspeção por pessoa distinta. Frigobar antes da
+  saída reutiliza cobrança, estoque e idempotência; achado posterior cria
+  divergência. Avarias abrem ocorrência restrita e, quando impeditivas, bloqueio
+  com ciência de reservas; a liberação técnica retorna o quarto à inspeção.
+- Recepção: painel e cadastro de quartos mostram os três eixos e impedimentos.
+  Check-in revalida prontidão e interdição; a exceção gerencial exige permissão,
+  versão e motivo, enquanto interdição permanece absoluta. A realocação sugere
+  quartos compatíveis, preserva o valor contratado e registra origem, destino,
+  interdição e comparativos.
+- Coordenação: quadro de governança com prioridade pela próxima chegada,
+  responsável, próxima ação, checklist, passagem de turno e histórico. A central
+  de pendências incorpora limpeza, inspeção, retenção, reposição, divergência e
+  reserva afetada, usando a tarefa como fonte única de responsabilidade.
+- Contratos e orientação: sete permissões independentes, dez operações novas no
+  OpenAPI (239 no total), tipos Supabase regenerados, guias contextuais e
+  documentação e diagramas permanentes. Snapshots de governança, calendário,
+  pendências e consumo foram revisados em desktop e celular.
+- Validações: `pnpm check`, `pnpm test`, `pnpm test:coverage`,
+  `pnpm api:openapi:check`, `pnpm test:db` e `pnpm test:e2e` aprovados. Foram 357
+  verificações SQL, 8 cenários HTTP com banco real, 462 testes de workspace e 36
+  jornadas E2E com visual e axe. Cobertura de linhas: 40,41% consolidada, 41,60%
+  PMS, 35,36% backend e 95,53% shared, sem redução de limiares. O banco foi
+  recriado exclusivamente no Supabase local e nenhum serviço remoto foi alterado.
 
 A principal oportunidade é conectar módulos em jornadas completas. Manutenção
 já inclui preventivas, SLA, fornecedores, garantias, inspeções e financeiro.
@@ -260,3 +292,88 @@ pnpm test:coverage, pnpm api:openapi:check, pnpm test:db, pnpm test:e2e (inclui 
 e axe). Snapshots somente após inspeção; cobertura preservada/elevada, sem reduzir
 limiares. Geração de tipos/testes recriam exclusivamente banco local, efeito a
 comunicar antes da execução. Revisar diff e registrar validações em cada bloco.
+
+## Plano técnico aprovado — etapa 2
+
+### Escopo, decisões e sequência
+
+Conectar recepção, governança e manutenção por um domínio de giro do quarto.
+Entregar quatro blocos validados: domínio e prontidão; giro/frigobar/manutenção;
+recepção/realocação; pendências/guias. Limpeza e inspeção são obrigatórias e
+executadas por pessoas diferentes. A prontidão substitui o status legado como
+decisão operacional, mantendo o campo antigo nos contratos. Interdição nunca
+aceita exceção; quarto não liberado admite exceção gerencial auditada.
+
+Não implementar agenda de equipes, atendimento de pedidos, cobrança
+pós-checkout, composição padrão de frigobar ou saldo por quarto. Esses temas
+continuam nas etapas 3 a 5 e exigem planejamento técnico próprio.
+
+### Domínio e prontidão
+
+- Criar ciclos por hotel, quarto, estadia opcional e episódio, nos estados
+  `departure_review`, `cleaning_pending`, `cleaning_in_progress`,
+  `inspection_pending`, `maintenance_hold`, `released` e `canceled`.
+- Criar tarefas versionadas de conferência, limpeza, reposição e inspeção;
+  eventos imutáveis; vínculos com manutenção, bloqueio, consumo e pendências;
+  e histórico imutável de realocação.
+- Manter modelos de checklist versionados por hotel e copiar a versão ativa para
+  a tarefa. Sem reescrita de ciclos anteriores. Novos hotéis recebem três
+  modelos iniciais.
+- Projetar ocupação, governança, manutenção e prontidão com próxima chegada,
+  impedimentos, responsável e atualização. Quartos existentes começam prontos;
+  bloqueios ativos criam retenções; estadias encerradas não recebem ciclos.
+- Usar versão concorrente, RLS, hotel ativo e validação de escopo em todas as
+  operações.
+
+### Giro, frigobar e manutenção
+
+- Vistoria pré-saída abre/reutiliza ciclo; checkout o avança atomicamente para
+  limpeza. Executor assume/inicia/conclui, inspeção exige outra pessoa e só
+  libera sem reposição ou bloqueio. Reprovação retorna à limpeza; reparo retorna
+  à inspeção; ciclo liberado não reabre.
+- Derivar prioridade da próxima chegada: vencida/no dia crítica, próximas 24
+  horas em alerta, demais por data. Falha de consulta não equivale a ausência.
+- Antes do checkout, lançar frigobar pelas regras atuais e vincular a comanda na
+  mesma transação. Sem permissão, registrar achado para recepção. Depois do
+  checkout, criar divergência sem alterar a conta. Sugerir e concluir reposição
+  sem modelar composição ou estoque por quarto.
+- Permitir à governança criar ocorrência restrita ao quarto. Avaria impeditiva
+  exige previsão e ciência de conflitos; ocorrência, bloqueio e vínculo são
+  atômicos. Liberação técnica nunca libera o quarto diretamente.
+
+### Recepção, realocação e pendências
+
+- Check-in bloqueia e revalida estadia, quarto, ciclo e interdição. Retornar 409
+  com contexto atualizado. Exceção exige `override_room_readiness`, motivo e
+  versão e encerra o ciclo com auditoria.
+- Realocar somente estadias confirmadas sem check-in. Sugerir quartos do mesmo
+  hotel, sem sobreposição, com capacidade suficiente; ordenar por mesmo tipo,
+  diferença de tarifa e número. Alterar apenas `stay.room_id`, preservar a
+  diária contratada e registrar comparativos e motivo.
+- Ampliar a central com limpeza, inspeção, manutenção, reposição, frigobar e
+  reserva afetada. A tarefa é a fonte do responsável; assumir/devolver usa a
+  mesma transação. A resolução continua dependente da origem.
+- Expor fila por quarto, próxima chegada, responsável, impedimento, atualização
+  e próxima ação. Notas de passagem exigem texto e próxima ação.
+
+### Contratos, guia de uso e proteção
+
+Permissões independentes: `read_governance`, `execute_governance`,
+`inspect_governance`, `assign_governance`, `manage_governance_templates`,
+`override_room_readiness` e `relocate_reservation`. Contratos tipados abrangem
+quadro, ciclos, ações, frigobar, avarias, checklists, prontidão, realocação e
+check-in. Preservar endpoints e envelopes existentes e ocultar hóspedes,
+finanças ou manutenção quando faltar acesso à fonte.
+
+Tours explicam prioridade, responsabilidade, checklist, reposição, inspeção,
+três eixos, exceção, realocação, efeito da interdição, frigobar e passagem. Usar
+`data-usage-guide`, teclado, foco, Escape, anúncios e viewport móvel.
+
+Caracterizar checkout, check-in, bloqueios, calendário, quartos e pendências.
+Cobrir transições, concorrência, separação de funções, snapshot de checklist,
+prontidão, exceção, frigobar, reposição, avarias, realocação, recorrência,
+autorização e isolamento. Camadas: shared, PMS, backend, pgTAP e Playwright.
+Gerar OpenAPI e tipos locais; executar Prettier, documentação, check, testes,
+cobertura, drift de API, banco e E2E. Manter cobertura e revisar snapshots antes
+de qualquer atualização. Preservar este roteiro e o bloco do AGENTS.md até a
+validação da etapa 6.

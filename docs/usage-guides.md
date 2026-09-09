@@ -53,6 +53,23 @@ A ajuda contextual contém apenas texto. Deve abrir por hover e foco, funcionar
 por clique ou toque, fechar com Escape e manter associação acessível com o
 acionador.
 
+## Governança, recepção e manutenção
+
+O quadro de governança usa alvos estáveis para resumo, tarefa corrente,
+checklist, frigobar, avaria e passagem de turno. O calendário usa alvos para a
+prontidão, a exceção gerencial e a realocação. Os passos aparecem somente quando
+a permissão e o estado tornam a ação possível.
+
+Os textos devem explicar que leitura não assume uma pendência, que a liberação
+técnica ainda exige inspeção, que o inspetor precisa ser outra pessoa e que a
+realocação preserva o valor contratado. A ajuda da exceção de check-in informa
+que interdição de manutenção não pode ser ignorada. Conflitos atualizam o
+contexto e são anunciados em região `aria-live`.
+
+Formulários e painéis precisam funcionar por teclado e em viewport móvel. As
+ações não dependem de cor, os grupos têm nomes acessíveis e o foco permanece no
+contexto após recarregar uma fila.
+
 ## Proteção e aceite
 
 Componentes reutilizáveis exigem testes de estado, teclado, foco, alvos ausentes

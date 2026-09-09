@@ -7,6 +7,7 @@ export const OperationalPendingSchema = Type.Object(
     source: Type.Union([
       Type.Literal("maintenance"),
       Type.Literal("consumption"),
+      Type.Literal("governance"),
     ]),
     kind: Type.String(),
     entity_id: Type.String({ format: "uuid" }),
@@ -50,7 +51,11 @@ export const OperationalPendingQuerySchema = Type.Object(
   {
     page: Type.Optional(Type.String({ pattern: "^[1-9][0-9]{0,5}$" })),
     source: Type.Optional(
-      Type.Union([Type.Literal("maintenance"), Type.Literal("consumption")]),
+      Type.Union([
+        Type.Literal("maintenance"),
+        Type.Literal("consumption"),
+        Type.Literal("governance"),
+      ]),
     ),
     kind: Type.Optional(Type.String({ maxLength: 60 })),
     severity: Type.Optional(
@@ -119,4 +124,8 @@ export const OPERATIONAL_PENDING_PERMISSIONS = [
   PERMISSIONS.MAINTENANCE_SLA_MANAGE,
   PERMISSIONS.MAINTENANCE_ANALYTICS_READ,
   PERMISSIONS.MAINTENANCE_SUPPLIER_MANAGE,
+  PERMISSIONS.GOVERNANCE_READ,
+  PERMISSIONS.GOVERNANCE_EXECUTE,
+  PERMISSIONS.GOVERNANCE_INSPECT,
+  PERMISSIONS.GOVERNANCE_ASSIGN,
 ];

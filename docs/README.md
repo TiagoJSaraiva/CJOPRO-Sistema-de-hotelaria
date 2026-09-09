@@ -2,19 +2,20 @@
 
 Use este índice para localizar a fonte de verdade adequada à tarefa.
 
-| Preciso...                                 | Documento                                                  |
-| ------------------------------------------ | ---------------------------------------------------------- |
-| preparar o ambiente ou executar um serviço | [Ambiente e desenvolvimento](development-guide.md)         |
-| escolher ou diagnosticar um comando        | [Catálogo de comandos](commands.md)                        |
-| contribuir e preparar uma revisão          | [Guia de contribuição](../CONTRIBUTING.md)                 |
-| entender componentes e fluxos              | [Arquitetura](architecture.md)                             |
-| escolher testes e interpretar relatórios   | [Estratégia de testes](testing-strategy.md)                |
-| alterar migrations, seed ou tipos Supabase | [Workflow do banco](database-workflow.md)                  |
-| revisar snapshots ou acessibilidade        | [Qualidade de UI](ui-quality.md)                           |
-| planejar orientação de uma nova feature    | [Guias de uso no PMS](usage-guides.md)                     |
-| consultar o contrato HTTP                  | [OpenAPI versionado](openapi.json)                         |
-| operar preventivas, SLA e automação        | [Gestão avançada de manutenção](maintenance-management.md) |
-| analisar consumo e fechar parceiros        | [Fechamento gerencial](consumption-management.md)          |
+| Preciso...                                   | Documento                                                  |
+| -------------------------------------------- | ---------------------------------------------------------- |
+| preparar o ambiente ou executar um serviço   | [Ambiente e desenvolvimento](development-guide.md)         |
+| escolher ou diagnosticar um comando          | [Catálogo de comandos](commands.md)                        |
+| contribuir e preparar uma revisão            | [Guia de contribuição](../CONTRIBUTING.md)                 |
+| entender componentes e fluxos                | [Arquitetura](architecture.md)                             |
+| escolher testes e interpretar relatórios     | [Estratégia de testes](testing-strategy.md)                |
+| alterar migrations, seed ou tipos Supabase   | [Workflow do banco](database-workflow.md)                  |
+| revisar snapshots ou acessibilidade          | [Qualidade de UI](ui-quality.md)                           |
+| planejar orientação de uma nova feature      | [Guias de uso no PMS](usage-guides.md)                     |
+| consultar o contrato HTTP                    | [OpenAPI versionado](openapi.json)                         |
+| operar preventivas, SLA e automação          | [Gestão avançada de manutenção](maintenance-management.md) |
+| analisar consumo e fechar parceiros          | [Fechamento gerencial](consumption-management.md)          |
+| operar giro, inspeção e prontidão de quartos | [Governança e prontidão](governance-operations.md)         |
 
 ## Fontes de verdade
 

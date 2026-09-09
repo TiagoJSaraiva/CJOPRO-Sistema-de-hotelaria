@@ -86,6 +86,30 @@ externo confirmado; cortesia registra desconto integral. O antigo
 dívida ou pagamento retroativo. Comandas, itens, eventos e vínculos financeiros
 são imutáveis; correções redutoras usam lançamentos compensatórios.
 
+## Giro, prontidão e realocação de quartos
+
+A governança mantém episódios de saída, limpeza, reposição e inspeção. Bloqueios
+de manutenção retêm o ciclo e sua liberação técnica sempre retorna à inspeção.
+A recepção usa a projeção operacional, e não o status legado do quarto, para
+autorizar check-in e sugerir realocações. O fluxo detalhado e suas regras estão
+no [guia de governança e prontidão](governance-operations.md).
+
+```mermaid
+sequenceDiagram
+  participant R as Recepção
+  participant G as Governança
+  participant M as Manutenção
+  participant DB as Operações transacionais
+  R->>DB: Checkout
+  DB->>G: Abre ou avança ciclo para limpeza
+  G->>DB: Limpeza + checklist
+  G->>M: Registra avaria impeditiva
+  M->>DB: Repara e libera bloqueio
+  DB->>G: Exige inspeção final
+  G->>DB: Inspetor diferente aprova
+  DB-->>R: Quarto pronto
+```
+
 ## Conta da estadia e fechamento
 
 Cada estadia mantém uma conta própria, versionada a cada mutação financeira. A
