@@ -10,6 +10,7 @@ import type {
   AdminReservationCalendarResponse,
   AdminStayOperationalPanelResponse,
   ReservationSource,
+  StayRelocationCandidate,
 } from "@hotel/shared";
 import { translateReservationSource } from "@hotel/shared";
 import {
@@ -38,6 +39,9 @@ type ReservationsCalendarBoardProps = {
   startDate: string;
   customers: AdminCustomer[];
   canPostConsumption: boolean;
+  canRelocate: boolean;
+  canOverrideReadiness: boolean;
+  canExecuteGovernance: boolean;
 };
 
 const CELL_WIDTH = 44;
@@ -139,6 +143,9 @@ export function ReservationsCalendarBoard({
   startDate,
   customers,
   canPostConsumption,
+  canRelocate,
+  canOverrideReadiness,
+  canExecuteGovernance,
 }: ReservationsCalendarBoardProps) {
   const router = useRouter();
   const [selectedStayId, setSelectedStayId] = useState<string | null>(null);
@@ -156,6 +163,12 @@ export function ReservationsCalendarBoard({
   const [paymentAmount, setPaymentAmount] = useState<string>("");
   const [paymentMethod, setPaymentMethod] = useState<string>("cash");
   const [paymentNote, setPaymentNote] = useState<string>("");
+  const [overrideReason, setOverrideReason] = useState("");
+  const [relocation, setRelocation] = useState<{
+    items: StayRelocationCandidate[];
+    version: number;
+  } | null>(null);
+  const [relocationReason, setRelocationReason] = useState("");
   const [bookingMode, setBookingMode] = useState<"existing" | "create_inline">(
     "existing",
   );
@@ -466,6 +479,25 @@ export function ReservationsCalendarBoard({
       setError(null);
       setIsPending(true);
       let payload: Record<string, unknown> = {};
+      if (action === "checkin" && panelData?.room_operational_state) {
+        const readiness = panelData.room_operational_state;
+        if (readiness.readiness === "blocked") {
+          throw new Error(
+            "O quarto está interditado pela manutenção e não admite exceção.",
+          );
+        }
+        if (readiness.readiness === "not_ready") {
+          if (!canOverrideReadiness || !overrideReason.trim()) {
+            throw new Error(
+              "Informe o motivo da exceção gerencial para continuar.",
+            );
+          }
+          payload = {
+            expected_readiness_version: readiness.cycle_version || undefined,
+            override_reason: overrideReason.trim(),
+          };
+        }
+      }
       if (
         action === "checkout" &&
         (panelData?.maintenance_acknowledgement_required ||
@@ -494,6 +526,7 @@ export function ReservationsCalendarBoard({
         payload,
       );
       setPanelData(panel);
+      setOverrideReason("");
       router.refresh();
     } catch (requestError) {
       setError(
@@ -501,6 +534,91 @@ export function ReservationsCalendarBoard({
           ? requestError.message
           : "Falha ao executar ação operacional.",
       );
+      if (selectedStayId) {
+        await getJson<AdminStayOperationalPanelResponse>(
+          `/api/stays/${selectedStayId}/panel`,
+        )
+          .then(setPanelData)
+          .catch(() => undefined);
+      }
+    } finally {
+      setIsPending(false);
+    }
+  }
+
+  async function handlePreDepartureReview() {
+    if (!panelData) return;
+    try {
+      setError(null);
+      setIsPending(true);
+      await postJson("/api/governance/cycles", {
+        room_id: panelData.stay.room_id,
+        stay_id: panelData.stay.id,
+        source: "pre_departure",
+        note: "Vistoria pré-saída solicitada pela recepção.",
+      });
+      const refreshed = await getJson<AdminStayOperationalPanelResponse>(
+        `/api/stays/${panelData.stay.id}/panel`,
+      );
+      setPanelData(refreshed);
+      router.refresh();
+    } catch (requestError) {
+      setError(
+        requestError instanceof Error
+          ? requestError.message
+          : "Falha ao solicitar a vistoria pré-saída.",
+      );
+    } finally {
+      setIsPending(false);
+    }
+  }
+
+  async function handleSimulateRelocation() {
+    if (!selectedStayId) return;
+    try {
+      setError(null);
+      setIsPending(true);
+      setRelocation(
+        await postJson<{ items: StayRelocationCandidate[]; version: number }>(
+          `/api/stays/${selectedStayId}/relocation/simulate`,
+          {},
+        ),
+      );
+    } catch (requestError) {
+      setError(
+        requestError instanceof Error
+          ? requestError.message
+          : "Falha ao buscar quartos disponíveis.",
+      );
+    } finally {
+      setIsPending(false);
+    }
+  }
+
+  async function handleRelocation(destinationRoomId: string) {
+    if (!selectedStayId || !relocation || !relocationReason.trim()) {
+      setError("Informe o motivo da realocação.");
+      return;
+    }
+    try {
+      setError(null);
+      setIsPending(true);
+      await postJson(`/api/stays/${selectedStayId}/relocation`, {
+        destination_room_id: destinationRoomId,
+        expected_version: relocation.version,
+        reason: relocationReason.trim(),
+      });
+      setRelocation(null);
+      setRelocationReason("");
+      setSelectedStayId(null);
+      router.refresh();
+    } catch (requestError) {
+      setError(
+        requestError instanceof Error
+          ? requestError.message
+          : "Falha ao realocar a estadia.",
+      );
+      await handleSimulateRelocation();
     } finally {
       setIsPending(false);
     }
@@ -939,6 +1057,78 @@ export function ReservationsCalendarBoard({
                     </div>
                   </PanelSection>
 
+                  {panelData.room_operational_state ? (
+                    <PanelSection
+                      title="Prontidão do quarto"
+                      description="Ocupação, governança e manutenção são avaliadas separadamente antes do check-in."
+                    >
+                      <div
+                        className="grid grid-cols-2 gap-2"
+                        data-usage-guide="room-readiness"
+                      >
+                        <DetailItem
+                          label="Ocupação"
+                          value={panelData.room_operational_state.occupancy}
+                        />
+                        <DetailItem
+                          label="Governança"
+                          value={panelData.room_operational_state.housekeeping}
+                        />
+                        <DetailItem
+                          label="Manutenção"
+                          value={panelData.room_operational_state.maintenance}
+                        />
+                        <DetailItem
+                          label="Prontidão"
+                          value={panelData.room_operational_state.readiness}
+                        />
+                      </div>
+                      {panelData.room_operational_state.blockers.length ? (
+                        <ul className="m-0 pl-5 text-[#8a3b12]">
+                          {panelData.room_operational_state.blockers.map(
+                            (blocker) => (
+                              <li key={blocker}>{blocker}</li>
+                            ),
+                          )}
+                        </ul>
+                      ) : (
+                        <p className="m-0 text-[#176c43]">
+                          Quarto liberado para chegada.
+                        </p>
+                      )}
+                      {panelData.room_operational_state.assignee_name ? (
+                        <p className="m-0">
+                          Responsável atual:{" "}
+                          {panelData.room_operational_state.assignee_name}
+                        </p>
+                      ) : null}
+                      {panelData.room_operational_state.readiness ===
+                        "not_ready" && canOverrideReadiness ? (
+                        <label
+                          className="pms-field"
+                          data-usage-guide="readiness-override"
+                        >
+                          <span>Motivo da exceção gerencial</span>
+                          <textarea
+                            className="pms-field-input"
+                            rows={3}
+                            maxLength={1000}
+                            value={overrideReason}
+                            onChange={(event) =>
+                              setOverrideReason(event.target.value)
+                            }
+                            required
+                          />
+                          <small>
+                            A exceção encerra o ciclo com registro do estado e
+                            do responsável. Interdições nunca podem ser
+                            ignoradas.
+                          </small>
+                        </label>
+                      ) : null}
+                    </PanelSection>
+                  ) : null}
+
                   {(panelData.maintenance_occurrences || []).length ? (
                     <PanelSection title="Ocorrências e danos">
                       <ul className="m-0 grid gap-2 pl-5">
@@ -1106,11 +1296,31 @@ export function ReservationsCalendarBoard({
                           Lançar consumo
                         </Link>
                       ) : null}
+                      {canExecuteGovernance &&
+                      panelData.stay.stay_status === "checked_in" ? (
+                        <button
+                          type="button"
+                          onClick={handlePreDepartureReview}
+                          disabled={isPending}
+                          className={`${panelActionButtonClassName} col-span-2`}
+                          data-usage-guide="pre-departure-review"
+                        >
+                          Solicitar vistoria pré-saída
+                        </button>
+                      ) : null}
                       <button
                         type="button"
                         onClick={() => handleStayAction("checkin")}
                         disabled={
-                          isPending || !panelData.eligibility.can_checkin
+                          isPending ||
+                          panelData.room_operational_state?.readiness ===
+                            "blocked" ||
+                          (!panelData.eligibility.can_checkin &&
+                            !(
+                              canOverrideReadiness &&
+                              panelData.room_operational_state?.readiness ===
+                                "not_ready"
+                            ))
                         }
                         className={panelActionButtonClassName}
                         title={panelData.eligibility.checkin_block_reason || ""}
@@ -1154,6 +1364,81 @@ export function ReservationsCalendarBoard({
                       </button>
                     </div>
                   </PanelSection>
+
+                  {canRelocate && panelData.stay.stay_status === "confirmed" ? (
+                    <PanelSection
+                      title="Realocação assistida"
+                      description="Somente quartos disponíveis e com capacidade suficiente são sugeridos. O valor contratado será preservado."
+                    >
+                      {!relocation ? (
+                        <button
+                          type="button"
+                          disabled={isPending}
+                          onClick={handleSimulateRelocation}
+                          className={panelActionButtonClassName}
+                          data-usage-guide="stay-relocation"
+                        >
+                          Buscar quartos compatíveis
+                        </button>
+                      ) : (
+                        <div
+                          className="grid gap-3"
+                          role="region"
+                          aria-label="Quartos disponíveis para realocação"
+                        >
+                          <label className="pms-field">
+                            <span>Motivo da realocação</span>
+                            <textarea
+                              className="pms-field-input"
+                              rows={2}
+                              maxLength={1000}
+                              value={relocationReason}
+                              onChange={(event) =>
+                                setRelocationReason(event.target.value)
+                              }
+                              required
+                            />
+                          </label>
+                          {relocation.items.length === 0 ? (
+                            <p>
+                              Nenhum quarto compatível está disponível para o
+                              período.
+                            </p>
+                          ) : null}
+                          {relocation.items.map((candidate) => (
+                            <article
+                              key={candidate.room_id}
+                              className="rounded-lg border border-[#d9dfe7] p-3"
+                            >
+                              <strong>
+                                Quarto {candidate.room_number} ·{" "}
+                                {candidate.room_type}
+                              </strong>
+                              <p className="m-0">
+                                Capacidade: {candidate.max_occupancy} · Tarifa
+                                pública:{" "}
+                                {formatMoney(candidate.public_daily_rate)}
+                              </p>
+                              <p className="m-0">
+                                Valor contratado preservado:{" "}
+                                {formatMoney(candidate.contracted_daily_rate)}
+                              </p>
+                              <button
+                                type="button"
+                                disabled={isPending || !relocationReason.trim()}
+                                onClick={() =>
+                                  void handleRelocation(candidate.room_id)
+                                }
+                                className={`${panelActionButtonClassName} mt-2`}
+                              >
+                                Confirmar neste quarto
+                              </button>
+                            </article>
+                          ))}
+                        </div>
+                      )}
+                    </PanelSection>
+                  ) : null}
 
                   {panelData.payments.length ? (
                     <PanelSection title="Historico de pagamentos">

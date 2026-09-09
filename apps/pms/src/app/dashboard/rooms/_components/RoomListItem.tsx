@@ -17,6 +17,21 @@ type RoomListItemProps = {
 };
 
 function RoomDataPreview({ room }: { room: AdminRoom }) {
+  const operational = room.operational_state;
+  const operationalLabels: Record<string, string> = {
+    vacant: "Vazio",
+    occupied: "Ocupado",
+    arrival_expected: "Chegada prevista",
+    ready: "Pronto",
+    departure_review: "Conferência de saída",
+    cleaning_pending: "Limpeza pendente",
+    cleaning_in_progress: "Limpeza em andamento",
+    inspection_pending: "Aguardando inspeção",
+    maintenance_hold: "Retido pela manutenção",
+    clear: "Livre",
+    not_ready: "Não pronto",
+    blocked: "Interditado",
+  };
   return (
     <div className="mt-[0.85rem] grid grid-cols-[repeat(auto-fit,minmax(200px,1fr))] gap-[0.75rem]">
       <div>
@@ -28,14 +43,35 @@ function RoomDataPreview({ room }: { room: AdminRoom }) {
         <p className="m-0 mt-[0.2rem]">{room.room_type}</p>
       </div>
       <div>
-        <strong>Status:</strong>
-        <p className="m-0 mt-[0.2rem]">{translateRoomStatus(room.status)}</p>
-        {room.status === "maintenance" || room.status === "blocked" ? (
+        <strong>Prontidão:</strong>
+        <p className="m-0 mt-[0.2rem]">
+          {operational
+            ? operationalLabels[operational.readiness]
+            : translateRoomStatus(room.status)}
+        </p>
+        {operational ? (
+          <p className="m-0 mt-1 text-sm">
+            Ocupação: {operationalLabels[operational.occupancy]} · Governança:{" "}
+            {operationalLabels[operational.housekeeping]} · Manutenção:{" "}
+            {operationalLabels[operational.maintenance]}
+          </p>
+        ) : null}
+        {operational?.maintenance === "blocked" ||
+        room.status === "maintenance" ||
+        room.status === "blocked" ? (
           <Link
             href={`/dashboard/maintenance/view?room_id=${room.id}`}
             className="mt-1 inline-block font-semibold text-[#0f766e]"
           >
             Ver manutenção
+          </Link>
+        ) : null}
+        {operational?.readiness !== "ready" ? (
+          <Link
+            href={`/dashboard/governance?room_id=${room.id}`}
+            className="ml-3 mt-1 inline-block font-semibold text-[#0f766e]"
+          >
+            Ver governança
           </Link>
         ) : null}
       </div>
@@ -109,23 +145,6 @@ function RoomEditForm({ room }: { room: AdminRoom }) {
           required
           className="pms-field-input"
         />
-      </div>
-
-      <div className="pms-field">
-        <label htmlFor={`room-status-${room.id}`}>Status</label>
-        <select
-          id={`room-status-${room.id}`}
-          name="status"
-          defaultValue={room.status}
-          className="pms-field-input"
-        >
-          <option value="available">{translateRoomStatus("available")}</option>
-          <option value="occupied">{translateRoomStatus("occupied")}</option>
-          <option value="maintenance">
-            {translateRoomStatus("maintenance")}
-          </option>
-          <option value="blocked">{translateRoomStatus("blocked")}</option>
-        </select>
       </div>
 
       <div className="pms-field">

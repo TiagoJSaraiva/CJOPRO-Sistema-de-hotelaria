@@ -13,6 +13,7 @@ import {
 import { ReservationsCalendarBoard } from "../_components/ReservationsCalendarBoard";
 import { CALENDAR_WINDOW_DAYS } from "../_components/calendarUtils";
 import { PERMISSIONS } from "@hotel/shared";
+import { reservationsOperationsGuide } from "../usageGuide";
 
 type ReservationsCalendarViewPageProps = {
   searchParams?: Promise<{
@@ -49,6 +50,13 @@ export default async function ReservationsCalendarViewPage({
   }
 
   const startDate = resolveStartDate(resolvedSearchParams?.start_date);
+  const canRelocate =
+    user?.permissions.includes(PERMISSIONS.RESERVATION_RELOCATE) || false;
+  const canOverrideReadiness =
+    user?.permissions.includes(PERMISSIONS.GOVERNANCE_READINESS_OVERRIDE) ||
+    false;
+  const canExecuteGovernance =
+    user?.permissions.includes(PERMISSIONS.GOVERNANCE_EXECUTE) || false;
   const [data, customers] = await Promise.all([
     getReservationsCalendar(startDate, CALENDAR_WINDOW_DAYS),
     listCustomers(),
@@ -72,6 +80,11 @@ export default async function ReservationsCalendarViewPage({
           isVisible: access.canAccess,
         },
       ]}
+      usageGuide={reservationsOperationsGuide({
+        canRelocate,
+        canOverrideReadiness,
+        canExecuteGovernance,
+      })}
     >
       <ReservationsCalendarBoard
         data={data}
@@ -80,6 +93,9 @@ export default async function ReservationsCalendarViewPage({
         canPostConsumption={
           user?.permissions.includes(PERMISSIONS.CONSUMPTION_POST) || false
         }
+        canRelocate={canRelocate}
+        canOverrideReadiness={canOverrideReadiness}
+        canExecuteGovernance={canExecuteGovernance}
       />
     </DashboardEntityPageShell>
   );

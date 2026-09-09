@@ -1,6 +1,12 @@
 import type {
   OperationalPendingList,
   OperationalPendingAction,
+  GovernanceBoard,
+  GovernanceCycle,
+  GovernanceTemplate,
+  StayCheckinInput,
+  StayRelocationCandidate,
+  StayRelocationConfirmInput,
 } from "@hotel/shared";
 import { cookies } from "next/headers";
 import {
@@ -561,6 +567,58 @@ export async function requestMaintenanceEndpoint<T>(
   return payload;
 }
 
+export async function requestGovernanceEndpoint<T>(
+  path: string,
+  method: "GET" | "POST",
+  body?: unknown,
+): Promise<T> {
+  const token = await getSessionToken();
+  if (!token) throw new Error("Sessão inválida. Faça login novamente.");
+  const activeHotelHeaderValue = await getActiveHotelHeaderValue();
+  const headers: Record<string, string> = { Authorization: `Bearer ${token}` };
+  if (activeHotelHeaderValue !== null)
+    headers[ACTIVE_HOTEL_HEADER_NAME] = activeHotelHeaderValue;
+  if (body !== undefined) headers["Content-Type"] = "application/json";
+  const response = await fetch(
+    `${getBackendUrl()}/admin/governance/${path.replace(/^\/+/, "")}`,
+    {
+      method,
+      cache: "no-store",
+      headers,
+      body: body === undefined ? undefined : JSON.stringify(body),
+    },
+  );
+  const payload = (await response.json().catch(() => ({}))) as T &
+    AdminErrorResponse;
+  if (!response.ok) {
+    const error = new Error(
+      payload.message || "Falha na operação de governança.",
+    ) as Error & { statusCode?: number; details?: string };
+    error.statusCode = response.status;
+    error.details = payload.details;
+    throw error;
+  }
+  return payload;
+}
+
+export function getGovernanceBoard(): Promise<GovernanceBoard> {
+  return requestGovernanceEndpoint<GovernanceBoard>("board", "GET");
+}
+export async function getGovernanceCycle(id: string): Promise<GovernanceCycle> {
+  return (
+    await requestGovernanceEndpoint<AdminItemResponse<GovernanceCycle>>(
+      `cycles/${id}`,
+      "GET",
+    )
+  ).item;
+}
+export function getGovernanceTemplates(): Promise<GovernanceTemplate[]> {
+  return requestGovernanceEndpoint<{ items: GovernanceTemplate[] }>(
+    "checklist-templates",
+    "GET",
+  ).then((response) => response.items);
+}
+
 export function getMaintenanceOccurrences(
   query = "",
 ): Promise<AdminMaintenanceOccurrenceListResponse> {
@@ -809,12 +867,36 @@ export function createStayPayment(
 
 export function executeStayCheckin(
   stayId: string,
+  input: StayCheckinInput = {},
 ): Promise<AdminStayOperationalPanelResponse | null> {
   return requestAdmin<AdminStayOperationalPanelResponse>(
     `/admin/stays/${stayId}/checkin`,
     "POST",
-    {},
+    input,
   );
+}
+
+export async function simulateStayRelocation(
+  stayId: string,
+): Promise<{ items: StayRelocationCandidate[]; version: number }> {
+  const response = await requestAdmin<{
+    items: StayRelocationCandidate[];
+    version: number;
+  }>(`/admin/stays/${stayId}/relocation/simulate`, "POST", {});
+  if (!response) throw new Error("Falha ao simular a realocação.");
+  return response;
+}
+export async function relocateStay(
+  stayId: string,
+  input: StayRelocationConfirmInput,
+): Promise<{ ok: boolean }> {
+  const response = await requestAdmin<{ ok: boolean }>(
+    `/admin/stays/${stayId}/relocation`,
+    "POST",
+    input,
+  );
+  if (!response) throw new Error("Falha ao realocar a estadia.");
+  return response;
 }
 
 export function executeStayCheckout(

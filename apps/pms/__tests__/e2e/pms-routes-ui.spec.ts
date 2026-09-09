@@ -112,6 +112,56 @@ test.describe("PMS UI quality", () => {
       await expect(page).toHaveScreenshot("operational-pending.png");
     },
   );
+  test(
+    "governança prioriza, orienta e sincroniza o responsável",
+    { tag: TEST_TAGS },
+    async ({ page, context, baseURL, auditAccessibility }) => {
+      await authenticate(context, baseURL!, "management-e2e-token");
+      await preparePage(page);
+      await page.goto("/dashboard/governance");
+      await expect(
+        page.getByRole("heading", { name: "Governança", exact: true }),
+      ).toBeVisible();
+      await expect(
+        page.getByText(/Próxima chegada: 12\/05\/2026,? 15:00:00/),
+      ).toBeVisible();
+      await page.getByRole("button", { name: "Assumir" }).click();
+      await expect(page.getByText("Responsável: Marina Costa")).toBeVisible();
+      await page.getByRole("button", { name: "Guia desta página" }).click();
+      await expect(
+        page.getByText("Priorize pela próxima chegada", { exact: true }),
+      ).toBeVisible();
+      await page.keyboard.press("Escape");
+      await auditAccessibility("governance-board");
+      await stabilizeVisualState(page);
+      await expect(page).toHaveScreenshot("governance-board.png");
+    },
+  );
+  test(
+    "recepção solicita vistoria pré-saída durante a hospedagem",
+    { tag: "@a11y" },
+    async ({ page, context, baseURL, auditAccessibility }) => {
+      await authenticate(context, baseURL!, "management-e2e-token");
+      await preparePage(page);
+      await page.goto("/dashboard/reservations/view?start_date=2026-05-12");
+      await page
+        .getByRole("button", { name: /Abrir reserva RES-1002/ })
+        .click();
+      const cycleRequest = page.waitForRequest(
+        (request) =>
+          request.method() === "POST" &&
+          request.url().endsWith("/api/governance/cycles"),
+      );
+      await page
+        .getByRole("button", { name: "Solicitar vistoria pré-saída" })
+        .click();
+      expect((await cycleRequest).postDataJSON()).toMatchObject({
+        source: "pre_departure",
+        stay_id: "stay-2",
+      });
+      await auditAccessibility("pre-departure-review");
+    },
+  );
   test.beforeEach(async ({ page }) => {
     const response = await page.request.post(
       `${MOCK_BACKEND_URL}/test/reset-state`,

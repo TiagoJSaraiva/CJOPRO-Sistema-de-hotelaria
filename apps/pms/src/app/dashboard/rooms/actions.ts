@@ -39,7 +39,6 @@ export async function createRoomAction(formData: FormData): Promise<void> {
   const roomType = String(formData.get("room_type") || "").trim();
   const maxOccupancy = Number(formData.get("max_occupancy") || "0");
   const baseDailyRate = Number(formData.get("base_daily_rate") || "0");
-  const status = String(formData.get("status") || "available").trim();
   const notes = String(formData.get("notes") || "").trim() || null;
 
   if (
@@ -59,7 +58,6 @@ export async function createRoomAction(formData: FormData): Promise<void> {
       room_type: roomType,
       max_occupancy: maxOccupancy,
       base_daily_rate: baseDailyRate,
-      status: status as "available" | "occupied" | "maintenance" | "blocked",
       notes,
     });
   } catch {
@@ -85,7 +83,6 @@ export async function updateRoomAction(formData: FormData): Promise<void> {
   const roomType = String(formData.get("room_type") || "").trim();
   const maxOccupancy = Number(formData.get("max_occupancy") || "0");
   const baseDailyRate = Number(formData.get("base_daily_rate") || "0");
-  const status = String(formData.get("status") || "available").trim();
   const notes = String(formData.get("notes") || "").trim() || null;
 
   if (
@@ -104,7 +101,6 @@ export async function updateRoomAction(formData: FormData): Promise<void> {
       room_type: roomType,
       max_occupancy: maxOccupancy,
       base_daily_rate: baseDailyRate,
-      status: status as "available" | "occupied" | "maintenance" | "blocked",
       notes,
     });
   } catch {

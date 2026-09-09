@@ -45,6 +45,13 @@ const managementPermissions = [
   "prepare_partner_settlements",
   "approve_partner_settlements",
   "settle_partner_settlements",
+  "read_governance",
+  "execute_governance",
+  "inspect_governance",
+  "assign_governance",
+  "manage_governance_templates",
+  "override_room_readiness",
+  "relocate_reservation",
 ];
 const maintenancePermissions = [
   ...permissions,
@@ -853,12 +860,104 @@ let pendingFixture = {
   resolution_reason: null,
   read: false,
 };
+const governanceCycle = {
+  id: "cycle-governance-e2e",
+  hotel_id: "hotel-e2e",
+  room_id: "room-101",
+  room_number: "101",
+  stay_id: null,
+  status: "cleaning_pending",
+  source: "manual",
+  version: 1,
+  next_arrival_at: "2026-05-12T18:00:00.000Z",
+  severity: "critical",
+  last_updated_at: "2026-05-12T14:30:00.000Z",
+  released_at: null,
+  events: [],
+  tasks: [
+    {
+      id: "task-cleaning-e2e",
+      kind: "cleaning",
+      status: "pending",
+      assigned_to: null,
+      assignee_name: null,
+      next_action: "Assumir limpeza",
+      version: 1,
+      started_at: null,
+      completed_at: null,
+      checklist: [],
+    },
+  ],
+};
+function governanceBoard() {
+  return {
+    items: [governanceCycle],
+    rooms: [{ id: "room-101", room_number: "101", room_type: "Standard" }],
+    maintenance_categories: [{ id: "category-e2e", name: "Elétrica" }],
+    minibar_options: [],
+    assignable_users: [{ id: "user-e2e", name: "Marina Costa" }],
+    summary: {
+      total: 1,
+      critical: 1,
+      unassigned: governanceCycle.tasks[0].assigned_to ? 0 : 1,
+      awaiting_inspection: 0,
+    },
+  };
+}
 const server = http.createServer(async (request, response) => {
   const url = new URL(
     request.url || "/",
     `http://${request.headers.host || `127.0.0.1:${port}`}`,
   );
   const method = request.method || "GET";
+
+  if (method === "GET" && url.pathname === "/admin/governance/board") {
+    sendJson(response, 200, governanceBoard());
+    return;
+  }
+  if (
+    method === "GET" &&
+    url.pathname === "/admin/governance/checklist-templates"
+  ) {
+    sendJson(response, 200, { items: [] });
+    return;
+  }
+  if (method === "POST" && url.pathname === "/admin/governance/cycles") {
+    const body = await parseBody(request);
+    sendJson(response, 201, {
+      item: { ...governanceCycle, stay_id: body.stay_id, source: body.source },
+    });
+    return;
+  }
+  if (method === "POST" && url.pathname === "/admin/governance/cycles") {
+    const body = await parseBody(request);
+    sendJson(response, 201, {
+      item: {
+        ...governanceCycle,
+        room_id: body.room_id,
+        stay_id: body.stay_id,
+      },
+    });
+    return;
+  }
+  if (
+    method === "POST" &&
+    /^\/admin\/governance\/cycles\/[^/]+\/actions$/.test(url.pathname)
+  ) {
+    const body = await parseBody(request);
+    if (body.expected_version !== governanceCycle.version) {
+      sendJson(response, 409, { message: "A tarefa mudou." });
+      return;
+    }
+    if (body.action === "claim") {
+      governanceCycle.tasks[0].status = "assigned";
+      governanceCycle.tasks[0].assigned_to = "user-e2e";
+      governanceCycle.tasks[0].assignee_name = "Marina Costa";
+      governanceCycle.version += 1;
+    }
+    sendJson(response, 200, { item: governanceCycle });
+    return;
+  }
 
   if (method === "GET" && url.pathname === "/admin/operational-pending") {
     const source = url.searchParams.get("source");
@@ -925,6 +1024,10 @@ const server = http.createServer(async (request, response) => {
       version: 1,
       read: false,
     };
+    governanceCycle.version = 1;
+    governanceCycle.tasks[0].status = "pending";
+    governanceCycle.tasks[0].assigned_to = null;
+    governanceCycle.tasks[0].assignee_name = null;
     products.splice(2);
     consumptionPoints.splice(2);
     consumptionOffers.splice(2);

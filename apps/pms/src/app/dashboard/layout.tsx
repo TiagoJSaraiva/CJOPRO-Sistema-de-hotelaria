@@ -106,6 +106,9 @@ export default async function DashboardLayout({
       user.permissions.includes(PERMISSIONS.PERMISSION_READ) ||
       user.permissions.includes(PERMISSIONS.PERMISSION_CREATE),
     "/dashboard/maintenance": maintenanceAccess.canEnter,
+    "/dashboard/governance": user.permissions.includes(
+      PERMISSIONS.GOVERNANCE_READ,
+    ),
   };
 
   const navItems = ADMIN_NAV_ITEMS.filter(
