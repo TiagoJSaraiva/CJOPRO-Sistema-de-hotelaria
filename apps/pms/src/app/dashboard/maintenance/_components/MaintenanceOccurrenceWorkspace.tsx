@@ -26,6 +26,10 @@ type Access = {
   canInspect: boolean;
   canConfirmLiability: boolean;
   canManageSuppliers: boolean;
+  canManageSchedule?: boolean;
+  canProposeLifecycle?: boolean;
+  canApproveLifecycle?: boolean;
+  canConfirmService?: boolean;
 };
 type Props = {
   initial: AdminMaintenanceOccurrenceDetail;
@@ -62,12 +66,16 @@ export function MaintenanceOccurrenceWorkspace({
   const [pending, setPending] = useState(false);
   const [message, setMessage] = useState("");
 
-  async function mutate(path: string, body: Record<string, unknown>) {
+  async function mutate(
+    path: string,
+    body: Record<string, unknown>,
+    method: "POST" | "PUT" = "POST",
+  ) {
     setPending(true);
     setMessage("");
     try {
       const response = await fetch(`/api/maintenance/${path}`, {
-        method: "POST",
+        method,
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(body),
       });
@@ -89,6 +97,12 @@ export function MaintenanceOccurrenceWorkspace({
           payload.message || "Não foi possível concluir a operação.",
         );
       if (payload.item) setItem(payload.item);
+      else {
+        const latest = await fetch(`/api/maintenance/occurrences/${item.id}`)
+          .then((result) => (result.ok ? result.json() : null))
+          .catch(() => null);
+        if (latest?.item) setItem(latest.item);
+      }
       setMessage("Alteração registrada.");
       return true;
     } catch (error) {
@@ -215,6 +229,11 @@ export function MaintenanceOccurrenceWorkspace({
           <dd>{statusLabels[item.status] || item.status}</dd>
           <dt>Prioridade</dt>
           <dd>{item.priority}</dd>
+          <dt>Impacto operacional</dt>
+          <dd>
+            {item.impact_score ?? 0}/100 · recomendação{" "}
+            {item.recommended_priority || item.priority}
+          </dd>
           <dt>Responsabilidade</dt>
           <dd>{item.liability_status}</dd>
           <dt>Estadia</dt>
@@ -510,6 +529,143 @@ export function MaintenanceOccurrenceWorkspace({
                   ))}
               </div>
               {order.waiting_notes && <p>Espera: {order.waiting_notes}</p>}
+              {order.schedule ? (
+                <p>
+                  Agenda:{" "}
+                  {new Date(order.schedule.planned_start).toLocaleString(
+                    "pt-BR",
+                  )}{" "}
+                  · {order.schedule.estimated_minutes} min · acesso{" "}
+                  {order.schedule.access_kind}
+                </p>
+              ) : null}
+              {order.waiting_episode ? (
+                <form
+                  className="my-3 grid gap-2 rounded-lg bg-amber-50 p-3 sm:grid-cols-3"
+                  onSubmit={(event) => {
+                    event.preventDefault();
+                    const data = new FormData(event.currentTarget);
+                    void mutate(`work-orders/${order.id}/waiting-follow-ups`, {
+                      notes: data.get("notes"),
+                      next_follow_up_at: new Date(
+                        String(data.get("next_follow_up_at")),
+                      ).toISOString(),
+                      expected_version: order.waiting_episode!.version,
+                    });
+                  }}
+                >
+                  <p className="col-span-full m-0 text-sm">
+                    Desbloqueio: {order.waiting_episode.owner_name} · cobrar em{" "}
+                    {new Date(
+                      order.waiting_episode.next_follow_up_at,
+                    ).toLocaleString("pt-BR")}
+                  </p>
+                  <input
+                    className="pms-field-input"
+                    required
+                    minLength={3}
+                    name="notes"
+                    placeholder="Contato e resposta"
+                  />
+                  <input
+                    className="pms-field-input"
+                    required
+                    name="next_follow_up_at"
+                    type="datetime-local"
+                  />
+                  <button
+                    disabled={pending}
+                    className="rounded border px-3 py-2"
+                  >
+                    Registrar cobrança
+                  </button>
+                </form>
+              ) : null}
+              {access.canManageSchedule ? (
+                <form
+                  className="my-3 grid gap-2 rounded-lg bg-slate-50 p-3 sm:grid-cols-4"
+                  onSubmit={(event) => {
+                    event.preventDefault();
+                    const data = new FormData(event.currentTarget);
+                    void mutate(
+                      `work-orders/${order.id}/service-communications`,
+                      {
+                        audience: data.get("audience"),
+                        channel: data.get("channel"),
+                        promised_at: new Date(
+                          String(data.get("promised_at")),
+                        ).toISOString(),
+                        notes: data.get("notes"),
+                      },
+                    );
+                  }}
+                >
+                  <select className="pms-field-input" name="audience">
+                    <option value="front_desk">Recepção</option>
+                    <option value="guest">Hóspede</option>
+                    <option value="requester">Solicitante</option>
+                    <option value="internal">Interno</option>
+                  </select>
+                  <select className="pms-field-input" name="channel">
+                    <option value="in_person">Presencial</option>
+                    <option value="phone">Telefone</option>
+                    <option value="message">Mensagem</option>
+                    <option value="other">Outro</option>
+                  </select>
+                  <input
+                    className="pms-field-input"
+                    required
+                    name="promised_at"
+                    type="datetime-local"
+                  />
+                  <input
+                    className="pms-field-input"
+                    required
+                    minLength={3}
+                    name="notes"
+                    placeholder="Previsão comunicada"
+                  />
+                  <button
+                    disabled={pending}
+                    className="rounded border px-3 py-2 sm:col-span-4"
+                  >
+                    Registrar previsão
+                  </button>
+                </form>
+              ) : null}
+              {access.canConfirmService ? (
+                <form
+                  className="my-3 flex flex-wrap gap-2"
+                  onSubmit={(event) => {
+                    event.preventDefault();
+                    const data = new FormData(event.currentTarget);
+                    void mutate(
+                      `work-orders/${order.id}/service-confirmations`,
+                      { result: data.get("result"), notes: data.get("notes") },
+                    );
+                  }}
+                >
+                  <select className="pms-field-input" name="result">
+                    <option value="arrived">Presença confirmada</option>
+                    <option value="access_obtained">Acesso obtido</option>
+                    <option value="provider_absent">Prestador ausente</option>
+                    <option value="access_denied">Acesso negado</option>
+                  </select>
+                  <input
+                    className="pms-field-input"
+                    required
+                    minLength={3}
+                    name="notes"
+                    placeholder="Observação da recepção"
+                  />
+                  <button
+                    disabled={pending}
+                    className="rounded border px-3 py-2"
+                  >
+                    Confirmar atendimento
+                  </button>
+                </form>
+              ) : null}
               {order.diagnosis && <p>Diagnóstico: {order.diagnosis}</p>}
               {order.resolution_notes && (
                 <p>Serviço / decisão: {order.resolution_notes}</p>
@@ -579,6 +735,279 @@ export function MaintenanceOccurrenceWorkspace({
               className="rounded bg-[#102a43] px-3 py-2 text-white"
             >
               Criar ordem
+            </button>
+          </form>
+        ) : null}
+      </section>
+
+      <section
+        className="rounded-xl border border-[#d7dce2] bg-white p-5"
+        data-usage-guide="maintenance-occurrence-quality"
+      >
+        <h2 className="mt-0">Impacto, reincidência e ciclo de vida</h2>
+        <p>
+          Score operacional: <strong>{item.impact_score ?? 0}/100</strong> ·
+          recomendação {item.recommended_priority || item.priority}. A
+          prioridade técnica só muda por uma decisão justificada.
+        </p>
+        {item.impact_components?.length ? (
+          <ul>
+            {item.impact_components.map((component) => (
+              <li key={component.key}>
+                {component.key}: +{component.points}
+              </li>
+            ))}
+          </ul>
+        ) : null}
+        <p>
+          {item.recurrent
+            ? "Reincidência ativa: revisar reparos, custos e indisponibilidade do grupo."
+            : "Nenhuma reincidência ativa identificada."}
+        </p>
+        {item.recurrence?.active &&
+        item.recurrence.group_id &&
+        access.canTriage ? (
+          <form
+            className="mb-3 flex flex-wrap gap-2"
+            onSubmit={(event) => {
+              event.preventDefault();
+              const data = new FormData(event.currentTarget);
+              void mutate(
+                `recurrence-groups/${item.recurrence!.group_id}/actions`,
+                { action: "false_positive", reason: data.get("reason") },
+              );
+            }}
+          >
+            <input
+              className="pms-field-input"
+              required
+              minLength={3}
+              name="reason"
+              placeholder="Motivo da correção da associação"
+            />
+            <button disabled={pending} className="rounded border px-3 py-2">
+              Marcar falso positivo
+            </button>
+          </form>
+        ) : null}
+        {access.canManageSchedule ? (
+          <form
+            className="grid gap-2 rounded-lg bg-slate-50 p-3 sm:grid-cols-2"
+            onSubmit={(event) => {
+              event.preventDefault();
+              const data = new FormData(event.currentTarget);
+              void mutate(
+                `occurrences/${item.id}/affected-rooms`,
+                {
+                  room_ids: data.getAll("room_ids"),
+                  reason: data.get("reason"),
+                },
+                "PUT",
+              );
+            }}
+          >
+            <fieldset className="grid max-h-40 gap-1 overflow-auto">
+              <legend>Quartos afetados confirmados</legend>
+              {referenceData.rooms.map((room) => (
+                <label key={room.id}>
+                  <input
+                    type="checkbox"
+                    name="room_ids"
+                    value={room.id}
+                    defaultChecked={item.affected_rooms?.some(
+                      (entry) => entry.room_id === room.id,
+                    )}
+                  />{" "}
+                  Quarto {room.room_number}
+                </label>
+              ))}
+            </fieldset>
+            <label className="grid gap-1">
+              Motivo da seleção
+              <textarea
+                className="pms-field-input"
+                required
+                minLength={3}
+                name="reason"
+              />
+            </label>
+            <button
+              disabled={pending}
+              className="rounded border px-3 py-2 sm:col-span-2"
+            >
+              Confirmar quartos e impacto
+            </button>
+          </form>
+        ) : null}
+        {item.lifecycle_decisions?.length ? (
+          <div className="my-3 grid gap-2">
+            {item.lifecycle_decisions.map((entry, index) => {
+              const options = Array.isArray(entry.options)
+                ? (entry.options as Array<Record<string, unknown>>)
+                : [];
+              return (
+                <article
+                  key={String(entry.id || index)}
+                  className="rounded border p-3"
+                >
+                  <strong>Avaliação {String(entry.status)}</strong>
+                  <p>Recomendação: {String(entry.recommendation)}</p>
+                  {options.map((option) => (
+                    <p key={String(option.id)}>
+                      • {String(option.kind)} · R${" "}
+                      {Number(option.estimated_cost || 0).toFixed(2)} ·{" "}
+                      {String(option.estimated_downtime_hours)} h
+                    </p>
+                  ))}
+                  {access.canProposeLifecycle && entry.status === "draft" ? (
+                    <button
+                      disabled={pending}
+                      className="rounded border px-3 py-2"
+                      onClick={() =>
+                        void mutate(
+                          `lifecycle-decisions/${String(entry.id)}/actions`,
+                          {
+                            action: "submit",
+                            expected_version: Number(entry.version),
+                            reason:
+                              "Avaliação revisada e enviada para aprovação",
+                          },
+                        )
+                      }
+                    >
+                      Enviar para aprovação
+                    </button>
+                  ) : null}
+                  {access.canApproveLifecycle &&
+                  entry.status === "submitted" ? (
+                    <form
+                      className="flex flex-wrap gap-2"
+                      onSubmit={(event) => {
+                        event.preventDefault();
+                        const data = new FormData(event.currentTarget);
+                        void mutate(
+                          `lifecycle-decisions/${String(entry.id)}/actions`,
+                          {
+                            action: "approve",
+                            expected_version: Number(entry.version),
+                            selected_option_id: data.get("selected_option_id"),
+                            reason: data.get("reason"),
+                          },
+                        );
+                      }}
+                    >
+                      <select
+                        required
+                        name="selected_option_id"
+                        className="pms-field-input"
+                      >
+                        <option value="">Alternativa aprovada</option>
+                        {options.map((option) => (
+                          <option
+                            key={String(option.id)}
+                            value={String(option.id)}
+                          >
+                            {String(option.kind)}
+                          </option>
+                        ))}
+                      </select>
+                      <input
+                        required
+                        minLength={3}
+                        name="reason"
+                        className="pms-field-input"
+                        placeholder="Motivo da aprovação"
+                      />
+                      <button
+                        disabled={pending}
+                        className="rounded border px-3 py-2"
+                      >
+                        Aprovar decisão operacional
+                      </button>
+                    </form>
+                  ) : null}
+                </article>
+              );
+            })}
+          </div>
+        ) : null}
+        {access.canProposeLifecycle ? (
+          <form
+            className="grid gap-2 rounded-lg bg-blue-50 p-3"
+            onSubmit={(event) => {
+              event.preventDefault();
+              const data = new FormData(event.currentTarget);
+              const option = (kind: string) => ({
+                kind,
+                estimated_cost: Number(data.get(`${kind}_cost`)),
+                estimated_downtime_hours: Number(data.get(`${kind}_hours`)),
+                risks: data.get(`${kind}_risks`),
+                benefits: data.get(`${kind}_benefits`),
+                justification: data.get(`${kind}_justification`),
+              });
+              void mutate(`occurrences/${item.id}/lifecycle-decisions`, {
+                recommendation: data.get("recommendation"),
+                options: [option("repair"), option("replace")],
+              });
+            }}
+          >
+            <h3 className="m-0">Comparar reparar e substituir</h3>
+            <label className="pms-field">
+              <span>Recomendação operacional</span>
+              <select name="recommendation" className="pms-field-input">
+                <option value="repair">Reparar</option>
+                <option value="replace">Substituir</option>
+                <option value="warranty">Acionar garantia</option>
+              </select>
+            </label>
+            {(["repair", "replace"] as const).map((kind) => (
+              <fieldset
+                key={kind}
+                className="grid gap-2 rounded border p-3 sm:grid-cols-2"
+              >
+                <legend>{kind === "repair" ? "Reparo" : "Substituição"}</legend>
+                <input
+                  required
+                  min="0"
+                  step="0.01"
+                  type="number"
+                  name={`${kind}_cost`}
+                  className="pms-field-input"
+                  placeholder="Custo estimado"
+                />
+                <input
+                  required
+                  min="0"
+                  type="number"
+                  name={`${kind}_hours`}
+                  className="pms-field-input"
+                  placeholder="Indisponibilidade em horas"
+                />
+                <input
+                  required
+                  minLength={3}
+                  name={`${kind}_risks`}
+                  className="pms-field-input"
+                  placeholder="Riscos"
+                />
+                <input
+                  required
+                  minLength={3}
+                  name={`${kind}_benefits`}
+                  className="pms-field-input"
+                  placeholder="Benefícios"
+                />
+                <textarea
+                  required
+                  minLength={3}
+                  name={`${kind}_justification`}
+                  className="pms-field-input sm:col-span-2"
+                  placeholder="Justificativa"
+                />
+              </fieldset>
+            ))}
+            <button disabled={pending} className="rounded border px-3 py-2">
+              Criar avaliação
             </button>
           </form>
         ) : null}

@@ -85,6 +85,19 @@ it("identifica as datas do bloqueio para quem pode gerenciá-lo", () => {
   ).toBe("end_date");
 });
 
+it("identifica a recomendação da avaliação de ciclo de vida", () => {
+  render(
+    <MaintenanceOccurrenceWorkspace
+      initial={initial}
+      referenceData={referenceData}
+      access={{ ...access, canProposeLifecycle: true }}
+    />,
+  );
+  expect(
+    screen.getByLabelText("Recomendação operacional").getAttribute("name"),
+  ).toBe("recommendation");
+});
+
 it("envia comentário real ao contexto da ocorrência", async () => {
   const fetchMock = vi
     .fn()

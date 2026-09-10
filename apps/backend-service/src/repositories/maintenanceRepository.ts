@@ -19,7 +19,7 @@ import type {
 import { createServerClient } from "../common/supabaseServer";
 
 const OCCURRENCE_SELECT =
-  "id,occurrence_number,hotel_id,category_id,room_id,location_id,stay_id,kind,priority,status,description,discovered_at,reported_by,blocking_recommended,triaged_by,triaged_at,liability_status,suspected_party,confirmed_party,liability_notes,duplicate_of_id,canceled_reason,resolved_at,preventive_plan_id,sla_response_due_at,sla_resolution_due_at,operational_resolved_at,created_at,updated_at,category:category_id(name),room:room_id(room_number),location:location_id(name),reporter:reported_by(name),maintenance_work_orders(id,status,due_at),room_blocks(id,released_at)";
+  "id,occurrence_number,hotel_id,category_id,room_id,location_id,stay_id,kind,priority,status,description,discovered_at,reported_by,blocking_recommended,triaged_by,triaged_at,liability_status,suspected_party,confirmed_party,liability_notes,duplicate_of_id,canceled_reason,resolved_at,preventive_plan_id,sla_response_due_at,sla_resolution_due_at,operational_resolved_at,created_at,updated_at,category:category_id(name),room:room_id(room_number),location:location_id(name),reporter:reported_by(name),maintenance_work_orders(id,status,due_at),room_blocks(id,released_at),impact:maintenance_impact_scores(score,recommended_priority,components,recurrent)";
 
 type OccurrenceRow = Record<string, any>;
 type WorkOrderRow = Record<string, any>;
@@ -63,6 +63,7 @@ function mapOccurrenceSummary(
     released_at?: string | null;
   }>;
   const number = Number(row.occurrence_number || 0);
+  const impact = relation(row.impact);
   return {
     id: String(row.id),
     occurrence_number: number,
@@ -102,12 +103,28 @@ function mapOccurrenceSummary(
     operational_resolved_at: row.operational_resolved_at
       ? String(row.operational_resolved_at)
       : null,
+    impact_score: impact ? Number(impact.score) : undefined,
+    recommended_priority: impact?.recommended_priority,
+    impact_components: Array.isArray(impact?.components)
+      ? impact.components
+      : undefined,
+    recurrent: impact ? Boolean(impact.recurrent) : undefined,
     created_at: String(row.created_at),
     updated_at: String(row.updated_at),
   };
 }
 
 function mapWorkOrder(row: WorkOrderRow): AdminMaintenanceWorkOrder {
+  const waiting = Array.isArray(row.waiting_episodes)
+    ? row.waiting_episodes.find(
+        (item: Record<string, unknown>) => !item.resolved_at,
+      )
+    : relation(row.waiting_episodes);
+  const schedule = Array.isArray(row.schedules)
+    ? row.schedules.find(
+        (item: Record<string, unknown>) => item.status !== "canceled",
+      )
+    : relation(row.schedules);
   return {
     id: String(row.id),
     occurrence_id: String(row.occurrence_id),
@@ -140,6 +157,27 @@ function mapWorkOrder(row: WorkOrderRow): AdminMaintenanceWorkOrder {
     supplier_status: row.supplier_status,
     supplier_external_reference: row.supplier_external_reference
       ? String(row.supplier_external_reference)
+      : null,
+    version: Number(row.version || 1),
+    waiting_episode: waiting
+      ? {
+          id: String(waiting.id),
+          owner_id: String(waiting.owner_id),
+          owner_name: String(relation(waiting.owner)?.name || ""),
+          next_follow_up_at: String(waiting.next_follow_up_at),
+          version: Number(waiting.version),
+          started_at: String(waiting.started_at),
+        }
+      : null,
+    schedule: schedule
+      ? {
+          id: String(schedule.id),
+          planned_start: String(schedule.planned_start),
+          planned_end: String(schedule.planned_end),
+          estimated_minutes: Number(schedule.estimated_minutes),
+          access_kind: String(schedule.access_kind),
+          version: Number(schedule.version),
+        }
       : null,
     checklist: (row.checklist || []).map((item: Record<string, unknown>) => ({
       id: String(item.id),
@@ -431,11 +469,14 @@ class SupabaseMaintenanceRepository implements MaintenanceRepository {
       eventsResult,
       attachmentsResult,
       blocksResult,
+      affectedRoomsResult,
+      lifecycleResult,
+      recurrenceResult,
     ] = await Promise.all([
       supabase
         .from("maintenance_work_orders")
         .select(
-          "id,occurrence_id,title,instructions,priority,status,assigned_to,due_at,waiting_reason,waiting_notes,requires_inspection,diagnosis,resolution_notes,started_at,completed_at,supplier_id,contract_id,supplier_status,supplier_external_reference,created_at,updated_at,assignee:assigned_to(name),supplier:supplier_id(name),contract:contract_id(contract_number),checklist:maintenance_work_order_checklist_items(id,work_order_id,position,description,is_required,completed_by,completed_at,completion_notes)",
+          "id,occurrence_id,title,instructions,priority,status,assigned_to,due_at,waiting_reason,waiting_notes,requires_inspection,diagnosis,resolution_notes,started_at,completed_at,supplier_id,contract_id,supplier_status,supplier_external_reference,version,created_at,updated_at,assignee:assigned_to(name),supplier:supplier_id(name),contract:contract_id(contract_number),checklist:maintenance_work_order_checklist_items(id,work_order_id,position,description,is_required,completed_by,completed_at,completion_notes),waiting_episodes:maintenance_waiting_episodes(id,owner_id,next_follow_up_at,version,started_at,resolved_at,owner:owner_id(name)),schedules:maintenance_schedules(id,planned_start,planned_end,estimated_minutes,access_kind,version,status)",
         )
         .eq("hotel_id", hotelId)
         .eq("occurrence_id", id)
@@ -475,20 +516,49 @@ class SupabaseMaintenanceRepository implements MaintenanceRepository {
         .eq("hotel_id", hotelId)
         .eq("maintenance_occurrence_id", id)
         .order("start_date", { ascending: false }),
+      supabase
+        .from("maintenance_occurrence_affected_rooms")
+        .select(
+          "id,room_id,source,reason,impact_started_at,impact_ended_at,room:room_id(room_number)",
+        )
+        .eq("hotel_id", hotelId)
+        .eq("occurrence_id", id)
+        .order("created_at"),
+      supabase
+        .from("maintenance_lifecycle_decisions")
+        .select(
+          "*,options:maintenance_lifecycle_options!maintenance_lifecycle_options_decision_id_fkey(*)",
+        )
+        .eq("hotel_id", hotelId)
+        .eq("occurrence_id", id)
+        .order("created_at", { ascending: false }),
+      supabase
+        .from("maintenance_recurrence_members")
+        .select("group_id,group:group_id(status,occurrence_count)")
+        .eq("hotel_id", hotelId)
+        .eq("occurrence_id", id)
+        .limit(1)
+        .maybeSingle(),
     ]);
     if (
       ordersResult.error ||
       inspectionsResult.error ||
       eventsResult.error ||
       attachmentsResult.error ||
-      blocksResult.error
+      blocksResult.error ||
+      affectedRoomsResult.error ||
+      lifecycleResult.error ||
+      recurrenceResult.error
     )
       throw (
         ordersResult.error ||
         inspectionsResult.error ||
         eventsResult.error ||
         attachmentsResult.error ||
-        blocksResult.error
+        blocksResult.error ||
+        affectedRoomsResult.error ||
+        lifecycleResult.error ||
+        recurrenceResult.error
       );
     const row = occurrenceResult.data as OccurrenceRow;
     const summary = mapOccurrenceSummary(row);
@@ -553,6 +623,33 @@ class SupabaseMaintenanceRepository implements MaintenanceRepository {
           !item.released_at &&
           String(item.end_date) < new Date().toISOString().slice(0, 10),
       })) as AdminMaintenanceRoomBlock[],
+      affected_rooms: ((affectedRoomsResult.data || []) as any[]).map(
+        (entry) => ({
+          id: String(entry.id),
+          room_id: String(entry.room_id),
+          room_number: String(relation(entry.room)?.room_number || ""),
+          source: String(entry.source),
+          reason: String(entry.reason),
+          impact_started_at: entry.impact_started_at
+            ? String(entry.impact_started_at)
+            : null,
+          impact_ended_at: entry.impact_ended_at
+            ? String(entry.impact_ended_at)
+            : null,
+        }),
+      ),
+      recurrence: {
+        active: relation(recurrenceResult.data?.group)?.status === "active",
+        group_id: recurrenceResult.data?.group_id
+          ? String(recurrenceResult.data.group_id)
+          : null,
+        occurrence_count: Number(
+          relation(recurrenceResult.data?.group)?.occurrence_count || 0,
+        ),
+      },
+      lifecycle_decisions: (lifecycleResult.data || []) as Array<
+        Record<string, unknown>
+      >,
     };
   }
 
@@ -713,6 +810,18 @@ class SupabaseMaintenanceRepository implements MaintenanceRepository {
           MaintenanceWaitingReason | undefined,
         p_notes: payload.notes ? String(payload.notes) : undefined,
         p_diagnosis: payload.diagnosis ? String(payload.diagnosis) : undefined,
+        p_waiting_owner_id: payload.waiting_owner_id
+          ? String(payload.waiting_owner_id)
+          : undefined,
+        p_next_follow_up_at: payload.next_follow_up_at
+          ? String(payload.next_follow_up_at)
+          : undefined,
+        p_supplier_id: payload.supplier_id
+          ? String(payload.supplier_id)
+          : undefined,
+        p_contract_id: payload.contract_id
+          ? String(payload.contract_id)
+          : undefined,
       },
     );
     if (error) return { result: "conflict" };

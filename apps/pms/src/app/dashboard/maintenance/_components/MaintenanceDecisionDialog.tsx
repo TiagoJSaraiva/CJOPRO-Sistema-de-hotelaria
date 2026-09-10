@@ -237,6 +237,10 @@ export function MaintenanceDecisionDialog({
             data.forEach((value, key) => {
               body[key] = String(value).trim();
             });
+            if (body.next_follow_up_at)
+              body.next_follow_up_at = new Date(
+                String(body.next_follow_up_at),
+              ).toISOString();
             const minimum =
               decision.field === "reason" || decision.path.endsWith("/inspect")
                 ? 3
@@ -283,21 +287,47 @@ export function MaintenanceDecisionDialog({
             </label>
           )}
           {decision.wait && (
-            <label className="pms-field">
-              Motivo da espera
-              <select
-                name="waiting_reason"
-                required
-                className="pms-field-input"
-              >
-                <option value="">Selecione</option>
-                <option value="parts">Peça</option>
-                <option value="vendor">Fornecedor</option>
-                <option value="authorization">Autorização</option>
-                <option value="access">Acesso ao quarto</option>
-                <option value="other">Outro</option>
-              </select>
-            </label>
+            <>
+              <label className="pms-field">
+                Motivo da espera
+                <select
+                  name="waiting_reason"
+                  required
+                  className="pms-field-input"
+                >
+                  <option value="">Selecione</option>
+                  <option value="parts">Peça</option>
+                  <option value="vendor">Fornecedor</option>
+                  <option value="authorization">Autorização</option>
+                  <option value="access">Acesso ao quarto</option>
+                  <option value="other">Outro</option>
+                </select>
+              </label>
+              <label className="pms-field">
+                Responsável interno pelo desbloqueio
+                <select
+                  name="waiting_owner_id"
+                  required
+                  className="pms-field-input"
+                >
+                  <option value="">Selecione</option>
+                  {referenceData.assignable_users.map((user) => (
+                    <option key={user.id} value={user.id}>
+                      {user.name}
+                    </option>
+                  ))}
+                </select>
+              </label>
+              <label className="pms-field">
+                Próxima cobrança
+                <input
+                  name="next_follow_up_at"
+                  type="datetime-local"
+                  required
+                  className="pms-field-input"
+                />
+              </label>
+            </>
           )}
           {decision.diagnose && (
             <label className="pms-field">

@@ -289,21 +289,35 @@ export const stayAccountGuide: UsageGuideDefinition = {
 
 export const maintenanceAgendaGuide: UsageGuideDefinition = {
   id: "maintenance-agenda",
-  title: "Minha agenda de manutenção",
+  title: "Planejamento de manutenção",
   steps: [
     {
-      id: "navigation",
-      target: "maintenance-agenda-header",
-      title: "Acompanhe suas ordens",
+      id: "summary",
+      target: "maintenance-planning-summary",
+      title: "Compare carga e capacidade",
       description:
-        "A agenda reúne somente ordens abertas atribuídas a você no hotel ativo.",
+        "Confira agenda, backlog, minutos disponíveis, carga alocada e conflitos do hotel ativo.",
     },
     {
-      id: "groups",
-      target: "maintenance-agenda-groups",
-      title: "Priorize pelo prazo",
+      id: "calendar",
+      target: "maintenance-planning-calendar",
+      title: "Acompanhe dia ou semana",
       description:
-        "As tarefas são separadas entre atrasadas, previstas para hoje e próximas. Abra uma ordem para executar o checklist e registrar avanços.",
+        "A agenda mostra equipe, técnico, janela, acesso e impacto. Técnicos podem pedir reagendamento sem alterar a agenda diretamente.",
+    },
+    {
+      id: "backlog",
+      target: "maintenance-planning-backlog",
+      title: "Simule antes de confirmar",
+      description:
+        "Escolha equipe, técnico, duração e condição de acesso. Conflitos impedem a confirmação; uma exceção gerencial exige justificativa.",
+    },
+    {
+      id: "teams",
+      target: "maintenance-planning-teams",
+      title: "Configure a capacidade",
+      description:
+        "Membros com vigência e disponibilidade semanal determinam a capacidade usada na simulação da agenda.",
     },
   ],
 };
@@ -397,6 +411,13 @@ export const maintenanceSettingsGuide: UsageGuideDefinition = {
         "Categorias organizam ocorrências, planos e políticas. Desativar preserva o histórico e impede novos usos.",
     },
     {
+      id: "recurrence",
+      target: "maintenance-settings-recurrence",
+      title: "Defina quando uma falha reincide",
+      description:
+        "Configure a janela e a quantidade padrão do hotel ou uma regra específica por categoria.",
+    },
+    {
       id: "locations",
       target: "maintenance-settings-locations",
       title: "Modele áreas e equipamentos",
@@ -405,6 +426,17 @@ export const maintenanceSettingsGuide: UsageGuideDefinition = {
     },
   ],
 };
+
+export function getMaintenanceSettingsGuide(
+  canManageRecurrence: boolean,
+): UsageGuideDefinition {
+  return {
+    ...maintenanceSettingsGuide,
+    steps: maintenanceSettingsGuide.steps.filter(
+      (step) => step.id !== "recurrence" || canManageRecurrence,
+    ),
+  };
+}
 
 const maintenanceSlaBaseGuide: UsageGuideDefinition = {
   id: "maintenance-sla",
