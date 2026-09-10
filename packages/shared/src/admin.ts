@@ -27,6 +27,7 @@ export type AdminErrorResponse = {
   code: AdminErrorCode;
   message: string;
   details?: string;
+  context?: unknown;
 };
 
 export const ADMIN_PERMISSION_TYPES = {
@@ -1981,6 +1982,10 @@ export type AdminMaintenanceOccurrenceSummary = {
   sla_response_due_at?: string | null;
   sla_resolution_due_at?: string | null;
   operational_resolved_at?: string | null;
+  impact_score?: number;
+  recommended_priority?: MaintenancePriority;
+  impact_components?: Array<{ key: string; points: number }>;
+  recurrent?: boolean;
   created_at: string;
   updated_at: string;
 };
@@ -2008,6 +2013,23 @@ export type AdminMaintenanceWorkOrder = {
   contract_number?: string | null;
   supplier_status?: MaintenanceSupplierWorkStatus;
   supplier_external_reference?: string | null;
+  version: number;
+  waiting_episode?: {
+    id: string;
+    owner_id: string;
+    owner_name: string;
+    next_follow_up_at: string;
+    version: number;
+    started_at: string;
+  } | null;
+  schedule?: {
+    id: string;
+    planned_start: string;
+    planned_end: string;
+    estimated_minutes: number;
+    access_kind: string;
+    version: number;
+  } | null;
   checklist?: AdminMaintenanceChecklistItem[];
   created_at: string;
   updated_at: string;
@@ -2075,6 +2097,20 @@ export type AdminMaintenanceOccurrenceDetail =
     events: AdminMaintenanceEvent[];
     attachments: AdminMaintenanceAttachment[];
     room_blocks: AdminMaintenanceRoomBlock[];
+    affected_rooms?: Array<{
+      id: string;
+      room_id: string;
+      room_number: string;
+      source: string;
+      impact_started_at: string | null;
+      impact_ended_at: string | null;
+    }>;
+    recurrence?: {
+      active: boolean;
+      group_id: string | null;
+      occurrence_count: number;
+    };
+    lifecycle_decisions?: Array<Record<string, unknown>>;
   };
 
 export type AdminMaintenanceOccurrenceCreateInput = {
@@ -2462,6 +2498,14 @@ export type AdminMaintenanceAnalytics = {
   recurring_occurrences: number;
   blocked_room_days: number;
   supplier_completion_rate: number;
+  scheduled_capacity_minutes?: number;
+  schedule_adherence_rate?: number;
+  execution_hours?: number;
+  waiting_hours?: number;
+  affected_room_hours?: number;
+  active_recurrence_groups?: number;
+  lifecycle_pending_approval?: number;
+  warranty_followups?: number;
   aging: Array<{ bucket: string; count: number }>;
   series: Array<{ date: string; opened: number; resolved: number }>;
   financial?: {

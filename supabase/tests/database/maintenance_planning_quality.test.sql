@@ -1,0 +1,38 @@
+begin;
+select plan(28);
+
+select ok(to_regclass('public.maintenance_teams') is not null,'maintenance teams exist');
+select ok(to_regclass('public.maintenance_schedules') is not null,'versioned schedules exist');
+select ok(to_regclass('public.maintenance_waiting_episodes') is not null,'waiting episodes exist');
+select ok(to_regclass('public.maintenance_execution_sessions') is not null,'execution sessions exist');
+select ok(to_regclass('public.maintenance_impact_scores') is not null,'impact projection exists');
+select ok(to_regclass('public.maintenance_recurrence_groups') is not null,'recurrence groups exist');
+select ok(to_regclass('public.maintenance_lifecycle_decisions') is not null,'lifecycle decisions exist');
+select ok((select relrowsecurity from pg_class where oid='public.maintenance_schedules'::regclass),'schedules use RLS');
+select ok(not has_table_privilege('authenticated','public.maintenance_schedules','SELECT'),'browser cannot read schedules directly');
+select is((select count(*)::integer from public.maintenance_recurrence_policies),2,'seeded hotels receive recurrence defaults');
+select is((select window_days from public.maintenance_recurrence_policies where hotel_id='10000000-0000-4000-8000-000000000001' and category_id is null),90,'default recurrence window is 90 days');
+select is((select occurrence_threshold from public.maintenance_recurrence_policies where hotel_id='10000000-0000-4000-8000-000000000001' and category_id is null),3,'default recurrence threshold is three');
+
+select is(public.save_maintenance_team('10000000-0000-4000-8000-000000000001','80000000-0000-4000-8000-000000000001',null,jsonb_build_object('name','Equipe teste','members',jsonb_build_array(jsonb_build_object('user_id','80000000-0000-4000-8000-000000000002','role','Técnico','valid_from',current_date)),'availability',jsonb_build_array(jsonb_build_object('weekday',extract(dow from current_date),'starts_at','08:00','ends_at','18:00','capacity',1))))->>'result','ok','team and weekly capacity are saved atomically');
+select is(public.save_maintenance_team('10000000-0000-4000-8000-000000000001','80000000-0000-4000-8000-000000000001',(select id from public.maintenance_teams where name='Equipe teste'),jsonb_build_object('name','Equipe teste','expected_version',1,'members',jsonb_build_array(jsonb_build_object('user_id','80000000-0000-4000-8000-000000000002','role','Técnico','valid_from',current_date)),'availability',jsonb_build_array(jsonb_build_object('weekday',extract(dow from current_date),'starts_at','08:00','ends_at','18:00','capacity',1),jsonb_build_object('user_id','80000000-0000-4000-8000-000000000002','weekday',extract(dow from current_date),'starts_at','09:00','ends_at','17:00','capacity',1))))->>'result','ok','member weekly availability is saved with team capacity');
+select is((select count(*)::integer from public.maintenance_team_availability where team_id=(select id from public.maintenance_teams where name='Equipe teste') and user_id is not null),1,'individual weekly availability remains distinct');
+select is(public.create_maintenance_availability_exception('10000000-0000-4000-8000-000000000001','80000000-0000-4000-8000-000000000001',jsonb_build_object('team_id',(select id from public.maintenance_teams where name='Equipe teste'),'kind','unavailable','starts_at',date_trunc('day',now())+interval '9 hours','ends_at',date_trunc('day',now())+interval '11 hours','reason','Ausência planejada'))->>'result','ok','availability exception is persisted');
+select is(public.create_maintenance_availability_exception('10000000-0000-4000-8000-000000000001','80000000-0000-4000-8000-000000000001',jsonb_build_object('team_id',(select id from public.maintenance_teams where name='Equipe teste'),'user_id','80000000-0000-4000-8000-000000000002','kind','unavailable','starts_at',now(),'ends_at',now()+interval '1 hour','reason','Alvo inválido'))->>'result','invalid','availability exception requires exactly one target');
+
+select is(public.refresh_maintenance_impact_scores('10000000-0000-4000-8000-000000000001',now())::integer,(select count(*)::integer from public.maintenance_occurrences where hotel_id='10000000-0000-4000-8000-000000000001' and status not in ('resolved','canceled')),'impact reconciliation covers every open occurrence');
+select ok(not exists(select 1 from public.maintenance_impact_scores where score>100 or score<0),'impact score remains within limits');
+select ok(not exists(select 1 from public.maintenance_impact_scores where (score<30 and recommended_priority<>'low') or (score between 30 and 54 and recommended_priority<>'normal') or (score between 55 and 79 and recommended_priority<>'high') or (score>=80 and recommended_priority<>'critical')),'score bands map to the documented recommendation');
+
+select is(public.create_maintenance_lifecycle_decision('10000000-0000-4000-8000-000000000001',(select id from public.maintenance_occurrences where hotel_id='10000000-0000-4000-8000-000000000001' limit 1),'80000000-0000-4000-8000-000000000001',jsonb_build_object('recommendation','repair','options',jsonb_build_array(jsonb_build_object('kind','repair','estimated_cost',100,'estimated_downtime_hours',2,'risks','Pode reincidir','benefits','Menor custo','justification','Reparo imediato'),jsonb_build_object('kind','replace','estimated_cost',500,'estimated_downtime_hours',4,'risks','Custo maior','benefits','Vida útil maior','justification','Substituição completa'))))->>'result','ok','lifecycle comparison accepts two alternatives');
+select is(public.act_maintenance_lifecycle_decision('10000000-0000-4000-8000-000000000001',(select id from public.maintenance_lifecycle_decisions order by created_at desc limit 1),'80000000-0000-4000-8000-000000000001',jsonb_build_object('action','submit','expected_version',1,'reason','Enviar para revisão'))->>'result','ok','proposer submits lifecycle decision');
+select is(public.act_maintenance_lifecycle_decision('10000000-0000-4000-8000-000000000001',(select id from public.maintenance_lifecycle_decisions order by created_at desc limit 1),'80000000-0000-4000-8000-000000000001',jsonb_build_object('action','approve','expected_version',2,'selected_option_id',(select o.id from public.maintenance_lifecycle_options o join public.maintenance_lifecycle_decisions d on d.id=o.decision_id order by d.created_at desc,o.created_at limit 1),'reason','Autoaprovação indevida'))->>'result','conflict','proposer cannot approve own decision');
+select is(public.act_maintenance_lifecycle_decision('10000000-0000-4000-8000-000000000001',(select id from public.maintenance_lifecycle_decisions order by created_at desc limit 1),'80000000-0000-4000-8000-000000000002',jsonb_build_object('action','approve','expected_version',2,'selected_option_id',(select o.id from public.maintenance_lifecycle_options o join public.maintenance_lifecycle_decisions d on d.id=o.decision_id order by d.created_at desc,o.created_at limit 1),'reason','Alternativa aprovada'))->>'result','ok','another person approves lifecycle decision');
+
+select is(public.reconcile_operational_pending('10000000-0000-4000-8000-000000000001')->>'result','ok','stage three sources reconcile into shared pending');
+select ok(jsonb_typeof(public.list_maintenance_planning_board('10000000-0000-4000-8000-000000000001')->'backlog')='array','planning board exposes backlog');
+select ok((public.list_maintenance_planning_board('10000000-0000-4000-8000-000000000001')->'teams'->0->'availability'->0) ? 'user_id','planning board identifies team and member availability');
+select ok(has_function_privilege('service_role','public.operational_pending_candidates_stage3(uuid,timestamp with time zone)','EXECUTE'),'stage three pending source remains service-only');
+
+select * from finish();
+rollback;

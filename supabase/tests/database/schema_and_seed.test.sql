@@ -78,7 +78,7 @@ select is((select count(*)::integer from public.hotels), 2, 'seed has two hotels
 select is((select count(*)::integer from public.rooms), 6, 'seed has six rooms');
 select is((select count(*)::integer from public.customers), 4, 'seed has four customers');
 select is((select count(*)::integer from public.products), 4, 'seed has four products');
-select is((select count(*)::integer from public.permissions), 88, 'seed matches all canonical application permissions');
+select is((select count(*)::integer from public.permissions), 94, 'seed matches all canonical application permissions');
 select is((select count(*)::integer from public.roles), 3, 'seed has one global role and two hotel roles');
 select is((select count(*)::integer from public.users), 3, 'seed has three local users');
 select is((select count(*)::integer from public.reservations), 4, 'seed has four reservations');
@@ -219,13 +219,13 @@ select is(
 
 select is(
   (select count(*)::integer from public.role_permissions where role_id = '70000000-0000-4000-8000-000000000002'),
-  64,
+  70,
   'Aurora manager keeps commercial and management permissions opt-in'
 );
 
 select is(
   (select count(*)::integer from public.role_permissions where role_id = '70000000-0000-4000-8000-000000000003'),
-  64,
+  70,
   'Horizonte manager keeps commercial and management permissions opt-in'
 );
 
@@ -278,7 +278,7 @@ select lives_ok($$ select public.transition_maintenance_work_order(p_hotel_id =>
 select lives_ok($$ select public.transition_maintenance_work_order(p_hotel_id => '10000000-0000-4000-8000-000000000001', p_work_order_id => '98100000-0000-4000-8000-000000000001', p_actor_id => '80000000-0000-4000-8000-000000000002', p_action => 'start') $$, 'assigned order can start');
 select lives_ok($$ select public.transition_maintenance_work_order(p_hotel_id => '10000000-0000-4000-8000-000000000001', p_work_order_id => '98100000-0000-4000-8000-000000000001', p_actor_id => '80000000-0000-4000-8000-000000000002', p_action => 'pause', p_notes => 'Acesso interrompido pelo hóspede') $$, 'active order can pause');
 select lives_ok($$ select public.transition_maintenance_work_order(p_hotel_id => '10000000-0000-4000-8000-000000000001', p_work_order_id => '98100000-0000-4000-8000-000000000001', p_actor_id => '80000000-0000-4000-8000-000000000002', p_action => 'resume') $$, 'paused order can resume');
-select lives_ok($$ select public.transition_maintenance_work_order(p_hotel_id => '10000000-0000-4000-8000-000000000001', p_work_order_id => '98100000-0000-4000-8000-000000000001', p_actor_id => '80000000-0000-4000-8000-000000000002', p_action => 'wait', p_waiting_reason => 'parts', p_notes => 'Aguardando peça') $$, 'active order can wait with a reason');
+select lives_ok($$ select public.transition_maintenance_work_order(p_hotel_id => '10000000-0000-4000-8000-000000000001', p_work_order_id => '98100000-0000-4000-8000-000000000001', p_actor_id => '80000000-0000-4000-8000-000000000002', p_action => 'wait', p_waiting_reason => 'parts', p_notes => 'Aguardando peça', p_waiting_owner_id => '80000000-0000-4000-8000-000000000002', p_next_follow_up_at => now() + interval '1 day') $$, 'active order can wait with an owner and follow-up');
 select lives_ok($$ select public.transition_maintenance_work_order(p_hotel_id => '10000000-0000-4000-8000-000000000001', p_work_order_id => '98100000-0000-4000-8000-000000000001', p_actor_id => '80000000-0000-4000-8000-000000000002', p_action => 'resume') $$, 'waiting order can resume');
 select lives_ok($$ select public.transition_maintenance_work_order(p_hotel_id => '10000000-0000-4000-8000-000000000001', p_work_order_id => '98100000-0000-4000-8000-000000000001', p_actor_id => '80000000-0000-4000-8000-000000000002', p_action => 'complete', p_notes => 'Concluída', p_diagnosis => 'Peça defeituosa') $$, 'active order can complete');
 select lives_ok($$ select public.transition_maintenance_work_order(p_hotel_id => '10000000-0000-4000-8000-000000000001', p_work_order_id => '98100000-0000-4000-8000-000000000001', p_actor_id => '80000000-0000-4000-8000-000000000002', p_action => 'reopen', p_notes => 'Falha voltou na inspeção') $$, 'completed order can reopen');

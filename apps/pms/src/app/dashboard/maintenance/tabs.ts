@@ -12,9 +12,9 @@ export function maintenanceTabs(access: Access) {
     },
     {
       key: "agenda",
-      label: "Minha agenda",
+      label: access.canManageSchedule ? "Planejamento" : "Minha agenda",
       href: "/dashboard/maintenance/agenda",
-      isVisible: access.canExecute,
+      isVisible: access.canExecute || access.canManageSchedule,
     },
     {
       key: "preventive",
@@ -44,7 +44,10 @@ export function maintenanceTabs(access: Access) {
       key: "settings",
       label: "Configuração",
       href: "/dashboard/maintenance/settings",
-      isVisible: access.canManageCatalogs || access.canManageSla,
+      isVisible:
+        access.canManageCatalogs ||
+        access.canManageSla ||
+        access.canManageSchedule,
     },
   ];
 }

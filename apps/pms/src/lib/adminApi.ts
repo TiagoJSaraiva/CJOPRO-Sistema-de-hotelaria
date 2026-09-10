@@ -7,6 +7,7 @@ import type {
   StayCheckinInput,
   StayRelocationCandidate,
   StayRelocationConfirmInput,
+  MaintenancePlanningBoard,
 } from "@hotel/shared";
 import { cookies } from "next/headers";
 import {
@@ -231,9 +232,11 @@ async function requestAdmin<T>(
     ) as Error & {
       statusCode?: number;
       details?: string;
+      context?: unknown;
     };
     error.statusCode = response.status;
     error.details = payload.details;
+    error.context = payload.context;
     throw error;
   }
 
@@ -559,9 +562,10 @@ export async function requestMaintenanceEndpoint<T>(
   if (!response.ok) {
     const error = new Error(
       payload.message || "Falha na operação de manutenção.",
-    ) as Error & { statusCode?: number; details?: string };
+    ) as Error & { statusCode?: number; details?: string; context?: unknown };
     error.statusCode = response.status;
     error.details = payload.details;
+    error.context = payload.context;
     throw error;
   }
   return payload;
@@ -624,6 +628,15 @@ export function getMaintenanceOccurrences(
 ): Promise<AdminMaintenanceOccurrenceListResponse> {
   return requestMaintenanceEndpoint<AdminMaintenanceOccurrenceListResponse>(
     `occurrences${query ? `?${query}` : ""}`,
+    "GET",
+  );
+}
+
+export function getMaintenancePlanningBoard(
+  query = "",
+): Promise<MaintenancePlanningBoard> {
+  return requestMaintenanceEndpoint<MaintenancePlanningBoard>(
+    `planning/board${query ? `?${query}` : ""}`,
     "GET",
   );
 }
