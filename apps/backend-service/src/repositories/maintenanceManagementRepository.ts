@@ -58,6 +58,41 @@ function number(value: unknown) {
   return Number(value || 0);
 }
 
+function unionRoomImpactHours(
+  rows: Array<{
+    room_id: string;
+    impact_started_at: string | null;
+    impact_ended_at: string | null;
+  }>,
+  now: number,
+) {
+  const byRoom = new Map<string, Array<[number, number]>>();
+  for (const row of rows) {
+    if (!row.impact_started_at) continue;
+    const values = byRoom.get(row.room_id) || [];
+    values.push([
+      new Date(row.impact_started_at).getTime(),
+      new Date(row.impact_ended_at || now).getTime(),
+    ]);
+    byRoom.set(row.room_id, values);
+  }
+  let milliseconds = 0;
+  for (const ranges of byRoom.values()) {
+    ranges.sort((a, b) => a[0] - b[0]);
+    let current = ranges[0];
+    if (!current) continue;
+    for (const next of ranges.slice(1)) {
+      if (next[0] <= current[1]) current[1] = Math.max(current[1], next[1]);
+      else {
+        milliseconds += Math.max(0, current[1] - current[0]);
+        current = next;
+      }
+    }
+    milliseconds += Math.max(0, current[1] - current[0]);
+  }
+  return number(milliseconds / 3_600_000);
+}
+
 function rpcNullable<T>(value: T | null | undefined): T {
   return (value ?? null) as T;
 }
@@ -1134,7 +1169,20 @@ class SupabaseMaintenanceManagementRepository implements MaintenanceManagementRe
       );
     if (filters.supplier_id)
       orderQuery = orderQuery.eq("supplier_id", filters.supplier_id);
-    const [runs, blocks, orders, costs, recoveries, hotel] = await Promise.all([
+    const [
+      runs,
+      blocks,
+      orders,
+      costs,
+      recoveries,
+      hotel,
+      schedules,
+      sessions,
+      waits,
+      impacts,
+      recurrences,
+      lifecycles,
+    ] = await Promise.all([
       runQuery,
       blockQuery,
       orderQuery,
@@ -1155,6 +1203,31 @@ class SupabaseMaintenanceManagementRepository implements MaintenanceManagementRe
             .in("occurrence_id", occurrenceIds)
         : Promise.resolve({ data: [], error: null }),
       supabase.from("hotels").select("currency").eq("id", hotelId).single(),
+      supabase
+        .from("maintenance_schedules")
+        .select("planned_start,planned_end,estimated_minutes,status")
+        .eq("hotel_id", hotelId),
+      supabase
+        .from("maintenance_execution_sessions")
+        .select("started_at,ended_at")
+        .eq("hotel_id", hotelId),
+      supabase
+        .from("maintenance_waiting_episodes")
+        .select("started_at,resolved_at")
+        .eq("hotel_id", hotelId),
+      supabase
+        .from("maintenance_occurrence_affected_rooms")
+        .select("room_id,impact_started_at,impact_ended_at")
+        .eq("hotel_id", hotelId),
+      supabase
+        .from("maintenance_recurrence_groups")
+        .select("id,status")
+        .eq("hotel_id", hotelId)
+        .eq("status", "active"),
+      supabase
+        .from("maintenance_lifecycle_decisions")
+        .select("status,recommendation")
+        .eq("hotel_id", hotelId),
     ]);
     const error =
       occurrences.error ||
@@ -1163,7 +1236,13 @@ class SupabaseMaintenanceManagementRepository implements MaintenanceManagementRe
       orders.error ||
       costs.error ||
       recoveries.error ||
-      hotel.error;
+      hotel.error ||
+      schedules.error ||
+      sessions.error ||
+      waits.error ||
+      impacts.error ||
+      recurrences.error ||
+      lifecycles.error;
     if (error) throw error;
     const items = occurrences.data || [];
     const open = items.filter(
@@ -1280,6 +1359,51 @@ class SupabaseMaintenanceManagementRepository implements MaintenanceManagementRe
           Math.max((orders.data || []).length, 1)) *
           100,
       ),
+      scheduled_capacity_minutes: (schedules.data || []).reduce(
+        (sum, item) => sum + Number(item.estimated_minutes),
+        0,
+      ),
+      schedule_adherence_rate: number(
+        ((schedules.data || []).filter((item) => item.status === "completed")
+          .length /
+          Math.max(
+            (schedules.data || []).filter(
+              (item) => new Date(item.planned_end).getTime() <= now,
+            ).length,
+            1,
+          )) *
+          100,
+      ),
+      execution_hours: number(
+        (sessions.data || []).reduce(
+          (sum, item) =>
+            sum +
+            (new Date(item.ended_at || now).getTime() -
+              new Date(item.started_at).getTime()) /
+              3_600_000,
+          0,
+        ),
+      ),
+      waiting_hours: number(
+        (waits.data || []).reduce(
+          (sum, item) =>
+            sum +
+            (new Date(item.resolved_at || now).getTime() -
+              new Date(item.started_at).getTime()) /
+              3_600_000,
+          0,
+        ),
+      ),
+      affected_room_hours: unionRoomImpactHours(impacts.data || [], now),
+      active_recurrence_groups: (recurrences.data || []).length,
+      lifecycle_pending_approval: (lifecycles.data || []).filter(
+        (item) => item.status === "submitted",
+      ).length,
+      warranty_followups: (lifecycles.data || []).filter(
+        (item) =>
+          item.recommendation === "warranty" &&
+          ["approved", "executed"].includes(item.status),
+      ).length,
       aging: agingBuckets.map((bucket) => ({
         bucket: bucket.bucket,
         count: open.filter((item) => {

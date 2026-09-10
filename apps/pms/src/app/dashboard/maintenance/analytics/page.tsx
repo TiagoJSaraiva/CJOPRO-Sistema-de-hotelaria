@@ -62,6 +62,13 @@ export default async function MaintenanceAnalyticsPage({
     ["Preventivas cumpridas", `${analytics.preventive_compliance_rate}%`],
     ["Recorrências em 30 dias", analytics.recurring_occurrences],
     ["Indisponibilidade", `${analytics.blocked_room_days.toFixed(1)} dias`],
+    ["Execução efetiva", `${(analytics.execution_hours || 0).toFixed(1)}h`],
+    ["Espera", `${(analytics.waiting_hours || 0).toFixed(1)}h`],
+    ["Quarto-horas", (analytics.affected_room_hours || 0).toFixed(1)],
+    ["Aderência à agenda", `${analytics.schedule_adherence_rate || 0}%`],
+    ["Reincidências ativas", analytics.active_recurrence_groups || 0],
+    ["Decisões pendentes", analytics.lifecycle_pending_approval || 0],
+    ["Garantias", analytics.warranty_followups || 0],
   ];
   return (
     <DashboardEntityPageShell
@@ -194,7 +201,7 @@ export default async function MaintenanceAnalyticsPage({
         </button>
       </form>
       <div
-        className="mb-5 grid gap-3 sm:grid-cols-2 lg:grid-cols-6"
+        className="mb-5 grid gap-3 sm:grid-cols-2 lg:grid-cols-4"
         aria-label="Resumo gerencial"
         data-usage-guide="maintenance-analytics-summary"
       >

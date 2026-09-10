@@ -3,14 +3,19 @@ import { DashboardEntityPageShell } from "../../_components/DashboardEntityPageS
 import { getMaintenanceReferenceData } from "../../../../lib/adminApi";
 import { getUserFromSession } from "../../../../lib/auth";
 import { MaintenanceCatalogManager } from "../_components/MaintenanceCatalogManager";
+import { MaintenanceRecurrencePolicyForm } from "../_components/MaintenanceRecurrencePolicyForm";
 import { getMaintenanceAccess } from "../access";
 import { maintenanceTabs } from "../tabs";
 import Link from "next/link";
-import { maintenanceSettingsGuide } from "../usageGuides";
+import { getMaintenanceSettingsGuide } from "../usageGuides";
 
 export default async function MaintenanceSettingsPage() {
   const access = getMaintenanceAccess(await getUserFromSession());
-  if (!access.canManageCatalogs && !access.canManageSla)
+  if (
+    !access.canManageCatalogs &&
+    !access.canManageSla &&
+    !access.canManageSchedule
+  )
     return (
       <DashboardAccessDeniedCard
         title="Configuração de manutenção"
@@ -23,7 +28,7 @@ export default async function MaintenanceSettingsPage() {
       title="Configuração de manutenção"
       activeTabKey="settings"
       tabs={maintenanceTabs(access)}
-      usageGuide={maintenanceSettingsGuide}
+      usageGuide={getMaintenanceSettingsGuide(access.canManageSchedule)}
     >
       {access.canManageSla ? (
         <div className="mb-4" data-usage-guide="maintenance-settings-sla-link">
@@ -40,6 +45,9 @@ export default async function MaintenanceSettingsPage() {
           initialCategories={data.categories}
           initialLocations={data.locations}
         />
+      ) : null}
+      {access.canManageSchedule ? (
+        <MaintenanceRecurrencePolicyForm categories={data.categories} />
       ) : null}
     </DashboardEntityPageShell>
   );
