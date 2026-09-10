@@ -71,6 +71,12 @@ const maintenancePermissions = [
   "manage_maintenance_sla",
   "manage_maintenance_suppliers",
   "read_maintenance_analytics",
+  "manage_maintenance_teams",
+  "manage_maintenance_schedule",
+  "override_maintenance_schedule_conflicts",
+  "propose_maintenance_lifecycle",
+  "approve_maintenance_lifecycle",
+  "confirm_maintenance_service",
 ];
 
 const user = {
@@ -2256,6 +2262,67 @@ const server = http.createServer(async (request, response) => {
         approved_recovery: 100,
         net_result: -1880,
         currency: "BRL",
+      },
+    });
+    return;
+  }
+
+  if (
+    method === "GET" &&
+    url.pathname === "/admin/maintenance/planning/board"
+  ) {
+    sendJson(response, 200, {
+      generated_at: "2026-05-12T12:00:00.000Z",
+      teams: [
+        {
+          id: "team-e2e",
+          name: "Equipe técnica",
+          description: null,
+          is_active: true,
+          version: 1,
+          members: [
+            {
+              id: "member-e2e",
+              user_id: "user-e2e",
+              user_name: "Marina Costa",
+              role: "Técnica",
+              valid_from: "2026-01-01",
+              valid_until: null,
+            },
+          ],
+          availability: [
+            {
+              id: "availability-e2e",
+              weekday: 2,
+              starts_at: "08:00:00",
+              ends_at: "18:00:00",
+              capacity: 2,
+            },
+          ],
+        },
+      ],
+      schedules: [],
+      backlog: [
+        {
+          work_order_id: "work-order-e2e",
+          occurrence_id: "97000000-0000-4000-8000-000000000001",
+          occurrence_code: "MAN-001001",
+          title: "Revisar disjuntor",
+          priority: "high",
+          impact_score: 80,
+          recommended_priority: "critical",
+          room_number: "101",
+          due_at: "2026-05-12T14:00:00.000Z",
+        },
+      ],
+      reschedule_requests: [],
+      users: [{ id: "user-e2e", name: "Marina Costa" }],
+      summary: {
+        scheduled: 0,
+        backlog: 1,
+        conflicts: 0,
+        capacity_minutes: 1200,
+        allocated_minutes: 0,
       },
     });
     return;

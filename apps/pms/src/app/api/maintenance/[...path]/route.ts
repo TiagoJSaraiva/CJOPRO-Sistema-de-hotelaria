@@ -21,11 +21,13 @@ async function proxy(
     const error = requestError as Error & {
       statusCode?: number;
       details?: string;
+      context?: unknown;
     };
     return NextResponse.json(
       {
         message: error.message || "Falha na operação de manutenção.",
         details: error.details || null,
+        context: error.context,
       },
       { status: error.statusCode || 500 },
     );

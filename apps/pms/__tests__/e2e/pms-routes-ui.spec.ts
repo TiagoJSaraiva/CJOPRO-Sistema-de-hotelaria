@@ -967,7 +967,7 @@ test.describe("PMS UI quality", () => {
           "/dashboard/maintenance/finance?queue=approval",
           "Trabalhe pelas filas financeiras",
         ],
-        ["/dashboard/maintenance/agenda", "Acompanhe suas ordens"],
+        ["/dashboard/maintenance/agenda", "Compare carga e capacidade"],
         ["/dashboard/maintenance/preventive", "Antecipe manutenções"],
         ["/dashboard/maintenance/suppliers", "Organize o atendimento externo"],
         ["/dashboard/maintenance/settings", "Prepare os dados operacionais"],

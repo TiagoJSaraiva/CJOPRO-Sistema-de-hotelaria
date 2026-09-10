@@ -14,20 +14,20 @@ Preservar alterações independentes. Antes da limpeza, transferir orientações
 operacionais exclusivas daqui para a documentação permanente. Iniciar a etapa 6
 ou concluir parcialmente qualquer etapa não autoriza a limpeza.
 
-As etapas 3 a 6 são diretrizes de produto e exigem planejamento técnico próprio
+As etapas 4 a 6 são diretrizes de produto e exigem planejamento técnico próprio
 e autorização de escopo antes da execução. Não implementar todo o roteiro por
 inferência. Atualizar este acompanhamento em cada entrega validada.
 
 ## Acompanhamento
 
-| Etapa                    | Situação             | Entregas                                                                                             | Decisões                                               | Validações                                                                                                               | Próximo trabalho                                  |
-| ------------------------ | -------------------- | ---------------------------------------------------------------------------------------------------- | ------------------------------------------------------ | ------------------------------------------------------------------------------------------------------------------------ | ------------------------------------------------- |
-| 1 — Usabilidade          | Concluída e validada | Roteiro; ações e decisões de manutenção; busca de duplicidade; fila de comandas; central persistente | Fila persistente; comandas confirmadas por grupo       | 310 verificações SQL; 8 testes HTTP; check, testes e cobertura aprovados; E2E Windows/Linux com reexecuções direcionadas | Planejar tecnicamente a etapa 2 quando solicitada |
-| 2 — Operação integrada   | Concluída e validada | Governança; prontidão; frigobar/avarias; check-in; realocação; passagem e pendências                 | Inspeção segregada; exceção auditada; preço preservado | 357 verificações SQL; 8 testes HTTP; 463 testes; check/cobertura aprovados; 36 E2E desktop/mobile                        | Planejar tecnicamente a etapa 3 quando solicitada |
-| 3 — Manutenção planejada | Não iniciada         | —                                                                                                    | Aprofundar recursos existentes                         | —                                                                                                                        | Planejamento técnico                              |
-| 4 — Consumo e saída      | Não iniciada         | —                                                                                                    | Completar atendimento e pagadores                      | —                                                                                                                        | Planejamento técnico                              |
-| 5 — Estoque e financeiro | Não iniciada         | —                                                                                                    | Fechar ciclos operacionais                             | —                                                                                                                        | Planejamento técnico                              |
-| 6 — Expansão do PMS      | Não iniciada         | —                                                                                                    | Consolidar operação primeiro                           | —                                                                                                                        | Planejamento técnico e limpeza final              |
+| Etapa                    | Situação             | Entregas                                                                                             | Decisões                                                             | Validações                                                                                                               | Próximo trabalho                                  |
+| ------------------------ | -------------------- | ---------------------------------------------------------------------------------------------------- | -------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------ | ------------------------------------------------- |
+| 1 — Usabilidade          | Concluída e validada | Roteiro; ações e decisões de manutenção; busca de duplicidade; fila de comandas; central persistente | Fila persistente; comandas confirmadas por grupo                     | 310 verificações SQL; 8 testes HTTP; check, testes e cobertura aprovados; E2E Windows/Linux com reexecuções direcionadas | Planejar tecnicamente a etapa 2 quando solicitada |
+| 2 — Operação integrada   | Concluída e validada | Governança; prontidão; frigobar/avarias; check-in; realocação; passagem e pendências                 | Inspeção segregada; exceção auditada; preço preservado               | 357 verificações SQL; 8 testes HTTP; 463 testes; check/cobertura aprovados; 36 E2E desktop/mobile                        | Planejar tecnicamente a etapa 3 quando solicitada |
+| 3 — Manutenção planejada | Concluída e validada | Equipes, capacidade, agenda; esperas e tempos; impacto, reincidência, ciclo de vida e pendências     | Conflito com exceção auditada; score explicável; aprovação segregada | 385 verificações SQL; 8 testes HTTP; 476 testes; check/cobertura aprovados; 36 E2E desktop/mobile                        | Planejar tecnicamente a etapa 4 quando solicitada |
+| 4 — Consumo e saída      | Não iniciada         | —                                                                                                    | Completar atendimento e pagadores                                    | —                                                                                                                        | Planejamento técnico                              |
+| 5 — Estoque e financeiro | Não iniciada         | —                                                                                                    | Fechar ciclos operacionais                                           | —                                                                                                                        | Planejamento técnico                              |
+| 6 — Expansão do PMS      | Não iniciada         | —                                                                                                    | Consolidar operação primeiro                                         | —                                                                                                                        | Planejamento técnico e limpeza final              |
 
 ## Levantamento de design aprovado
 
@@ -97,6 +97,29 @@ inferência. Atualizar este acompanhamento em cada entrega validada.
   jornadas E2E com visual e axe. Cobertura de linhas: 40,46% consolidada, 41,71%
   PMS, 35,36% backend e 95,53% shared, sem redução de limiares. O banco foi
   recriado exclusivamente no Supabase local e nenhum serviço remoto foi alterado.
+
+### Registro das entregas da etapa 3
+
+- Planejamento: equipes persistentes, membros com vigência, disponibilidade
+  semanal, exceções, capacidade, agenda versionada, simulação transacional e
+  pedidos de reagendamento. A interface oferece dia, semana, backlog e formulário
+  acessível com contexto de conflitos e exceção gerencial justificada.
+- Atendimento: esperas episódicas com responsável interno, próxima cobrança e
+  contatos; previsões comunicadas e confirmação separada de presença ou acesso;
+  sessões de execução e intervalos de impacto preservam métricas paralelas ao SLA.
+- Qualidade: score operacional explicável, quartos afetados confirmados,
+  reincidência configurável e avaliação de reparo, substituição ou garantia com
+  proposta e aprovação por pessoas distintas, sem aprovar custos financeiros.
+- Coordenação: novas condições entram na central persistente e os indicadores
+  incluem capacidade, aderência, execução, espera, quarto-horas, reincidência,
+  decisões e garantias. OpenAPI, tipos, tours e testes acompanham os contratos.
+- Validação: documentação e OpenAPI com 257 operações sincronizados; lint,
+  typecheck e builds aprovados; 385 verificações SQL, 8 cenários HTTP com banco
+  real, 476 testes de workspace e 36 jornadas E2E em desktop e celular com
+  cobertura visual e axe. A cobertura de linhas ficou em 40,26% no total,
+  35,25% no backend, 41,28% no PMS e 95,76% no shared, sem reduzir limiares. O
+  Supabase foi recriado exclusivamente no ambiente local e nenhum serviço remoto
+  foi alterado.
 
 A principal oportunidade é conectar módulos em jornadas completas. Manutenção
 já inclui preventivas, SLA, fornecedores, garantias, inspeções e financeiro.
