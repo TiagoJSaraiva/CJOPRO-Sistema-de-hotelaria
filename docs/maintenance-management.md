@@ -165,3 +165,8 @@ nem incluídos na resposta ou nos arquivos.
 Os documentos de fornecedores e contratos são privados, limitados a JPEG, PNG,
 WebP e PDF de até 10 MB. O navegador recebe somente URLs assinadas; remoções
 exigem motivo e preservam os metadados de auditoria.
+
+Fornecedores de manutenção também podem apontar para uma organização central.
+Essa identidade permite consultar outros papéis autorizados da mesma empresa,
+mas contratos, garantias, custos e permissões permanecem no domínio de
+manutenção. Consolidações cadastrais preservam referências e histórico.

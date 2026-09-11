@@ -11,6 +11,7 @@ import {
   reversePartnerSettlementPayment,
   submitPartnerSettlement,
   updateConsumptionManagementSettings,
+  requestOperationsFinanceEndpoint,
 } from "../../../lib/adminApi";
 import { getUserFromSession } from "../../../lib/auth";
 
@@ -20,6 +21,88 @@ function returnTo(status: string, id?: string): never {
   const params = new URLSearchParams({ status });
   if (id) params.set("id", id);
   redirect(`${settlementsPath}?${params}`);
+}
+
+export async function createSettlementDisputeAction(formData: FormData) {
+  await requirePermission(PERMISSIONS.PARTNER_DISPUTES_MANAGE);
+  const id = String(formData.get("id") || "");
+  try {
+    await requestOperationsFinanceEndpoint(
+      `consumption/partner-settlements/${id}/disputes`,
+      "POST",
+      {
+        component_id: String(formData.get("component_id")),
+        disputed_amount: Number(formData.get("disputed_amount")),
+        reason: String(formData.get("reason") || "").trim(),
+      },
+    );
+  } catch (error) {
+    returnTo(mapError(error), id);
+  }
+  revalidatePath(settlementsPath);
+  returnTo("disputed", id);
+}
+
+export async function paySettlementPartialAction(formData: FormData) {
+  await requirePermission(PERMISSIONS.PARTNER_SETTLEMENTS_SETTLE);
+  const id = String(formData.get("id") || "");
+  try {
+    await requestOperationsFinanceEndpoint(
+      `consumption/partner-settlements/${id}/payments`,
+      "POST",
+      {
+        expected_version: Number(formData.get("expected_version")),
+        idempotency_key: crypto.randomUUID(),
+        paid_at: new Date(String(formData.get("paid_at"))).toISOString(),
+        cash_session_id:
+          String(formData.get("cash_session_id") || "") || undefined,
+        tenders: [
+          {
+            payment_method: String(formData.get("payment_method")),
+            amount: Number(formData.get("amount")),
+            reference_code:
+              String(formData.get("reference_code") || "") || undefined,
+          },
+          ...(String(formData.get("payment_method_2") || "") &&
+          Number(formData.get("amount_2")) > 0
+            ? [
+                {
+                  payment_method: String(formData.get("payment_method_2")),
+                  amount: Number(formData.get("amount_2")),
+                  reference_code:
+                    String(formData.get("reference_code_2") || "") || undefined,
+                },
+              ]
+            : []),
+        ],
+        notes: String(formData.get("notes") || "") || undefined,
+      },
+    );
+  } catch (error) {
+    returnTo(mapError(error), id);
+  }
+  revalidatePath(settlementsPath);
+  returnTo("payment-recorded", id);
+}
+
+export async function decideSettlementDisputeAction(formData: FormData) {
+  await requirePermission(PERMISSIONS.PARTNER_DISPUTES_MANAGE);
+  const settlementId = String(formData.get("settlement_id") || "");
+  try {
+    await requestOperationsFinanceEndpoint(
+      `consumption/partner-disputes/${String(formData.get("id"))}/actions`,
+      "POST",
+      {
+        action: String(formData.get("action")),
+        expected_version: Number(formData.get("version")),
+        reason: String(formData.get("reason") || "").trim(),
+      },
+    );
+  } catch (error) {
+    returnTo(mapError(error), settlementId);
+  }
+  revalidatePath(settlementsPath);
+  returnTo("dispute-decided", settlementId);
 }
 
 async function requirePermission(permission: string) {

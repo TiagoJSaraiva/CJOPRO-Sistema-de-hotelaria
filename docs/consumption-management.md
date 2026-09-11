@@ -154,3 +154,17 @@ flowchart LR
   approval --> supplemental[Venda e conta complementar]
   supplemental --> collection[Contato, contestação e recebimento]
 ```
+
+## Frigobar físico e liquidação de parceiros
+
+Quando o quarto possui composição ativa, o frigobar usa uma localização interna
+e uma contagem física própria. A reposição transfere lotes por FEFO a partir do
+abastecedor e conclui a tarefa correspondente da governança. O lançamento de
+consumo baixa o estoque do quarto uma única vez e mantém preço, benefício,
+parceiro e apuração comercial.
+
+Na apuração mensal, aprovação, liquidação e contestação são estados separados.
+Uma divergência pode atingir somente venda, recebimento direto, aluguel,
+comissão, garantia mínima ou ajuste. O saldo não contestado continua disponível
+para liquidação parcial. Pagamentos em dinheiro exigem sessão de caixa aberta;
+estornos permanecem compensatórios.

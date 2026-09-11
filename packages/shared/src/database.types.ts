@@ -9,6 +9,481 @@ export type Json =
 export type Database = {
   public: {
     Tables: {
+      business_organization_conflicts: {
+        Row: {
+          created_at: string
+          divergent_values: Json
+          hotel_id: string
+          id: string
+          organization_id: string
+          resolution_reason: string | null
+          resolved_at: string | null
+          resolved_by: string | null
+          role_id: string
+          role_type: Database["public"]["Enums"]["business_organization_role"]
+          status: string
+          version: number
+        }
+        Insert: {
+          created_at?: string
+          divergent_values: Json
+          hotel_id: string
+          id?: string
+          organization_id: string
+          resolution_reason?: string | null
+          resolved_at?: string | null
+          resolved_by?: string | null
+          role_id: string
+          role_type: Database["public"]["Enums"]["business_organization_role"]
+          status?: string
+          version?: number
+        }
+        Update: {
+          created_at?: string
+          divergent_values?: Json
+          hotel_id?: string
+          id?: string
+          organization_id?: string
+          resolution_reason?: string | null
+          resolved_at?: string | null
+          resolved_by?: string | null
+          role_id?: string
+          role_type?: Database["public"]["Enums"]["business_organization_role"]
+          status?: string
+          version?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "business_organization_conflicts_organization_id_hotel_id_fkey"
+            columns: ["organization_id", "hotel_id"]
+            isOneToOne: false
+            referencedRelation: "business_organizations"
+            referencedColumns: ["id", "hotel_id"]
+          },
+          {
+            foreignKeyName: "business_organization_conflicts_resolved_by_fkey"
+            columns: ["resolved_by"]
+            isOneToOne: false
+            referencedRelation: "users"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      business_organization_events: {
+        Row: {
+          action: string
+          actor_id: string | null
+          created_at: string
+          details: Json
+          hotel_id: string
+          id: string
+          organization_id: string
+          reason: string | null
+        }
+        Insert: {
+          action: string
+          actor_id?: string | null
+          created_at?: string
+          details?: Json
+          hotel_id: string
+          id?: string
+          organization_id: string
+          reason?: string | null
+        }
+        Update: {
+          action?: string
+          actor_id?: string | null
+          created_at?: string
+          details?: Json
+          hotel_id?: string
+          id?: string
+          organization_id?: string
+          reason?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "business_organization_events_actor_id_fkey"
+            columns: ["actor_id"]
+            isOneToOne: false
+            referencedRelation: "users"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "business_organization_events_organization_id_hotel_id_fkey"
+            columns: ["organization_id", "hotel_id"]
+            isOneToOne: false
+            referencedRelation: "business_organizations"
+            referencedColumns: ["id", "hotel_id"]
+          },
+        ]
+      }
+      business_organizations: {
+        Row: {
+          active: boolean
+          bootstrap_role_id: string | null
+          bootstrap_role_type:
+            | Database["public"]["Enums"]["business_organization_role"]
+            | null
+          created_at: string
+          created_by: string | null
+          currency: string
+          email: string | null
+          hotel_id: string
+          id: string
+          legal_name: string
+          normalized_tax_id: string | null
+          phone: string | null
+          tax_id: string | null
+          trade_name: string | null
+          updated_at: string
+          version: number
+        }
+        Insert: {
+          active?: boolean
+          bootstrap_role_id?: string | null
+          bootstrap_role_type?:
+            | Database["public"]["Enums"]["business_organization_role"]
+            | null
+          created_at?: string
+          created_by?: string | null
+          currency?: string
+          email?: string | null
+          hotel_id: string
+          id?: string
+          legal_name: string
+          normalized_tax_id?: string | null
+          phone?: string | null
+          tax_id?: string | null
+          trade_name?: string | null
+          updated_at?: string
+          version?: number
+        }
+        Update: {
+          active?: boolean
+          bootstrap_role_id?: string | null
+          bootstrap_role_type?:
+            | Database["public"]["Enums"]["business_organization_role"]
+            | null
+          created_at?: string
+          created_by?: string | null
+          currency?: string
+          email?: string | null
+          hotel_id?: string
+          id?: string
+          legal_name?: string
+          normalized_tax_id?: string | null
+          phone?: string | null
+          tax_id?: string | null
+          trade_name?: string | null
+          updated_at?: string
+          version?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "business_organizations_created_by_fkey"
+            columns: ["created_by"]
+            isOneToOne: false
+            referencedRelation: "users"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "business_organizations_hotel_id_fkey"
+            columns: ["hotel_id"]
+            isOneToOne: false
+            referencedRelation: "hotels"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      cash_movements: {
+        Row: {
+          actor_id: string
+          amount: number
+          cash_delta: number
+          cash_session_id: string
+          created_at: string
+          financial_transaction_id: string | null
+          hotel_id: string
+          id: string
+          idempotency_key: string
+          kind: Database["public"]["Enums"]["cash_movement_kind"]
+          occurred_at: string
+          reason: string
+          request_fingerprint: string
+          reversal_of_id: string | null
+        }
+        Insert: {
+          actor_id: string
+          amount: number
+          cash_delta: number
+          cash_session_id: string
+          created_at?: string
+          financial_transaction_id?: string | null
+          hotel_id: string
+          id?: string
+          idempotency_key: string
+          kind: Database["public"]["Enums"]["cash_movement_kind"]
+          occurred_at?: string
+          reason: string
+          request_fingerprint: string
+          reversal_of_id?: string | null
+        }
+        Update: {
+          actor_id?: string
+          amount?: number
+          cash_delta?: number
+          cash_session_id?: string
+          created_at?: string
+          financial_transaction_id?: string | null
+          hotel_id?: string
+          id?: string
+          idempotency_key?: string
+          kind?: Database["public"]["Enums"]["cash_movement_kind"]
+          occurred_at?: string
+          reason?: string
+          request_fingerprint?: string
+          reversal_of_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "cash_movements_actor_id_fkey"
+            columns: ["actor_id"]
+            isOneToOne: false
+            referencedRelation: "users"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "cash_movements_cash_session_id_hotel_id_fkey"
+            columns: ["cash_session_id", "hotel_id"]
+            isOneToOne: false
+            referencedRelation: "cash_sessions"
+            referencedColumns: ["id", "hotel_id"]
+          },
+          {
+            foreignKeyName: "cash_movements_financial_transaction_id_fkey"
+            columns: ["financial_transaction_id"]
+            isOneToOne: false
+            referencedRelation: "financial_transactions"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "cash_movements_reversal_of_id_fkey"
+            columns: ["reversal_of_id"]
+            isOneToOne: false
+            referencedRelation: "cash_movements"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      cash_registers: {
+        Row: {
+          active: boolean
+          code: string
+          consumption_point_id: string | null
+          created_at: string
+          created_by: string
+          currency: string
+          difference_tolerance: number
+          hotel_id: string
+          id: string
+          kind: Database["public"]["Enums"]["cash_register_kind"]
+          name: string
+          updated_at: string
+          version: number
+        }
+        Insert: {
+          active?: boolean
+          code: string
+          consumption_point_id?: string | null
+          created_at?: string
+          created_by: string
+          currency: string
+          difference_tolerance?: number
+          hotel_id: string
+          id?: string
+          kind: Database["public"]["Enums"]["cash_register_kind"]
+          name: string
+          updated_at?: string
+          version?: number
+        }
+        Update: {
+          active?: boolean
+          code?: string
+          consumption_point_id?: string | null
+          created_at?: string
+          created_by?: string
+          currency?: string
+          difference_tolerance?: number
+          hotel_id?: string
+          id?: string
+          kind?: Database["public"]["Enums"]["cash_register_kind"]
+          name?: string
+          updated_at?: string
+          version?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "cash_registers_consumption_point_id_hotel_id_fkey"
+            columns: ["consumption_point_id", "hotel_id"]
+            isOneToOne: false
+            referencedRelation: "consumption_points"
+            referencedColumns: ["id", "hotel_id"]
+          },
+          {
+            foreignKeyName: "cash_registers_created_by_fkey"
+            columns: ["created_by"]
+            isOneToOne: false
+            referencedRelation: "users"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "cash_registers_hotel_id_fkey"
+            columns: ["hotel_id"]
+            isOneToOne: false
+            referencedRelation: "hotels"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      cash_session_counts: {
+        Row: {
+          actor_id: string
+          cash_session_id: string
+          counted_amount: number
+          created_at: string
+          difference_amount: number
+          expected_amount: number
+          hotel_id: string
+          id: string
+          reason: string | null
+        }
+        Insert: {
+          actor_id: string
+          cash_session_id: string
+          counted_amount: number
+          created_at?: string
+          difference_amount: number
+          expected_amount: number
+          hotel_id: string
+          id?: string
+          reason?: string | null
+        }
+        Update: {
+          actor_id?: string
+          cash_session_id?: string
+          counted_amount?: number
+          created_at?: string
+          difference_amount?: number
+          expected_amount?: number
+          hotel_id?: string
+          id?: string
+          reason?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "cash_session_counts_actor_id_fkey"
+            columns: ["actor_id"]
+            isOneToOne: false
+            referencedRelation: "users"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "cash_session_counts_cash_session_id_hotel_id_fkey"
+            columns: ["cash_session_id", "hotel_id"]
+            isOneToOne: false
+            referencedRelation: "cash_sessions"
+            referencedColumns: ["id", "hotel_id"]
+          },
+        ]
+      }
+      cash_sessions: {
+        Row: {
+          business_date: string
+          cash_register_id: string
+          closed_at: string | null
+          closed_by: string | null
+          counted_at: string | null
+          counted_cash: number | null
+          created_at: string
+          difference_amount: number | null
+          expected_cash: number
+          hotel_id: string
+          id: string
+          idempotency_key: string
+          opened_at: string
+          opening_float: number
+          operator_id: string
+          request_fingerprint: string
+          status: Database["public"]["Enums"]["cash_session_status"]
+          updated_at: string
+          version: number
+        }
+        Insert: {
+          business_date: string
+          cash_register_id: string
+          closed_at?: string | null
+          closed_by?: string | null
+          counted_at?: string | null
+          counted_cash?: number | null
+          created_at?: string
+          difference_amount?: number | null
+          expected_cash: number
+          hotel_id: string
+          id?: string
+          idempotency_key: string
+          opened_at?: string
+          opening_float: number
+          operator_id: string
+          request_fingerprint: string
+          status?: Database["public"]["Enums"]["cash_session_status"]
+          updated_at?: string
+          version?: number
+        }
+        Update: {
+          business_date?: string
+          cash_register_id?: string
+          closed_at?: string | null
+          closed_by?: string | null
+          counted_at?: string | null
+          counted_cash?: number | null
+          created_at?: string
+          difference_amount?: number | null
+          expected_cash?: number
+          hotel_id?: string
+          id?: string
+          idempotency_key?: string
+          opened_at?: string
+          opening_float?: number
+          operator_id?: string
+          request_fingerprint?: string
+          status?: Database["public"]["Enums"]["cash_session_status"]
+          updated_at?: string
+          version?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "cash_sessions_cash_register_id_hotel_id_fkey"
+            columns: ["cash_register_id", "hotel_id"]
+            isOneToOne: false
+            referencedRelation: "cash_registers"
+            referencedColumns: ["id", "hotel_id"]
+          },
+          {
+            foreignKeyName: "cash_sessions_closed_by_fkey"
+            columns: ["closed_by"]
+            isOneToOne: false
+            referencedRelation: "users"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "cash_sessions_operator_id_fkey"
+            columns: ["operator_id"]
+            isOneToOne: false
+            referencedRelation: "users"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       catalog_audit_events: {
         Row: {
           action: string
@@ -417,6 +892,7 @@ export type Database = {
           last_changed_by: string | null
           legal_name: string
           notes: string | null
+          organization_id: string | null
           phone: string | null
           tax_id: string | null
           trade_name: string
@@ -432,6 +908,7 @@ export type Database = {
           last_changed_by?: string | null
           legal_name: string
           notes?: string | null
+          organization_id?: string | null
           phone?: string | null
           tax_id?: string | null
           trade_name: string
@@ -447,6 +924,7 @@ export type Database = {
           last_changed_by?: string | null
           legal_name?: string
           notes?: string | null
+          organization_id?: string | null
           phone?: string | null
           tax_id?: string | null
           trade_name?: string
@@ -466,6 +944,13 @@ export type Database = {
             isOneToOne: false
             referencedRelation: "users"
             referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "commercial_partners_organization_hotel_fkey"
+            columns: ["organization_id", "hotel_id"]
+            isOneToOne: false
+            referencedRelation: "business_organizations"
+            referencedColumns: ["id", "hotel_id"]
           },
         ]
       }
@@ -2422,6 +2907,7 @@ export type Database = {
           hotel_id: string
           id: string
           legal_name: string
+          organization_id: string | null
           payment_term_days: number
           tax_id: string
           updated_at: string
@@ -2440,6 +2926,7 @@ export type Database = {
           hotel_id: string
           id?: string
           legal_name: string
+          organization_id?: string | null
           payment_term_days?: number
           tax_id: string
           updated_at?: string
@@ -2458,6 +2945,7 @@ export type Database = {
           hotel_id?: string
           id?: string
           legal_name?: string
+          organization_id?: string | null
           payment_term_days?: number
           tax_id?: string
           updated_at?: string
@@ -2477,6 +2965,13 @@ export type Database = {
             isOneToOne: false
             referencedRelation: "hotels"
             referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "corporate_accounts_organization_hotel_fkey"
+            columns: ["organization_id", "hotel_id"]
+            isOneToOne: false
+            referencedRelation: "business_organizations"
+            referencedColumns: ["id", "hotel_id"]
           },
         ]
       }
@@ -2837,9 +3332,197 @@ export type Database = {
           },
         ]
       }
+      daily_close_events: {
+        Row: {
+          action: string
+          actor_id: string | null
+          created_at: string
+          daily_close_id: string
+          details: Json
+          hotel_id: string
+          id: string
+          reason: string | null
+        }
+        Insert: {
+          action: string
+          actor_id?: string | null
+          created_at?: string
+          daily_close_id: string
+          details?: Json
+          hotel_id: string
+          id?: string
+          reason?: string | null
+        }
+        Update: {
+          action?: string
+          actor_id?: string | null
+          created_at?: string
+          daily_close_id?: string
+          details?: Json
+          hotel_id?: string
+          id?: string
+          reason?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "daily_close_events_actor_id_fkey"
+            columns: ["actor_id"]
+            isOneToOne: false
+            referencedRelation: "users"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "daily_close_events_daily_close_id_hotel_id_fkey"
+            columns: ["daily_close_id", "hotel_id"]
+            isOneToOne: false
+            referencedRelation: "daily_closes"
+            referencedColumns: ["id", "hotel_id"]
+          },
+        ]
+      }
+      daily_close_pending_acceptances: {
+        Row: {
+          created_at: string
+          created_by: string
+          daily_close_id: string
+          hotel_id: string
+          id: string
+          next_action: string
+          pending_id: string
+          reason: string
+          responsible_id: string
+        }
+        Insert: {
+          created_at?: string
+          created_by: string
+          daily_close_id: string
+          hotel_id: string
+          id?: string
+          next_action: string
+          pending_id: string
+          reason: string
+          responsible_id: string
+        }
+        Update: {
+          created_at?: string
+          created_by?: string
+          daily_close_id?: string
+          hotel_id?: string
+          id?: string
+          next_action?: string
+          pending_id?: string
+          reason?: string
+          responsible_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "daily_close_pending_acceptances_created_by_fkey"
+            columns: ["created_by"]
+            isOneToOne: false
+            referencedRelation: "users"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "daily_close_pending_acceptances_daily_close_id_hotel_id_fkey"
+            columns: ["daily_close_id", "hotel_id"]
+            isOneToOne: false
+            referencedRelation: "daily_closes"
+            referencedColumns: ["id", "hotel_id"]
+          },
+          {
+            foreignKeyName: "daily_close_pending_acceptances_pending_id_hotel_id_fkey"
+            columns: ["pending_id", "hotel_id"]
+            isOneToOne: false
+            referencedRelation: "operational_pending"
+            referencedColumns: ["id", "hotel_id"]
+          },
+          {
+            foreignKeyName: "daily_close_pending_acceptances_responsible_id_fkey"
+            columns: ["responsible_id"]
+            isOneToOne: false
+            referencedRelation: "users"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      daily_closes: {
+        Row: {
+          approved_at: string | null
+          approved_by: string | null
+          business_date: string
+          created_at: string
+          fingerprint: string | null
+          hotel_id: string
+          id: string
+          prepared_at: string | null
+          prepared_by: string | null
+          rejection_reason: string | null
+          snapshot: Json | null
+          status: Database["public"]["Enums"]["daily_close_status"]
+          updated_at: string
+          version: number
+        }
+        Insert: {
+          approved_at?: string | null
+          approved_by?: string | null
+          business_date: string
+          created_at?: string
+          fingerprint?: string | null
+          hotel_id: string
+          id?: string
+          prepared_at?: string | null
+          prepared_by?: string | null
+          rejection_reason?: string | null
+          snapshot?: Json | null
+          status?: Database["public"]["Enums"]["daily_close_status"]
+          updated_at?: string
+          version?: number
+        }
+        Update: {
+          approved_at?: string | null
+          approved_by?: string | null
+          business_date?: string
+          created_at?: string
+          fingerprint?: string | null
+          hotel_id?: string
+          id?: string
+          prepared_at?: string | null
+          prepared_by?: string | null
+          rejection_reason?: string | null
+          snapshot?: Json | null
+          status?: Database["public"]["Enums"]["daily_close_status"]
+          updated_at?: string
+          version?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "daily_closes_approved_by_fkey"
+            columns: ["approved_by"]
+            isOneToOne: false
+            referencedRelation: "users"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "daily_closes_hotel_id_fkey"
+            columns: ["hotel_id"]
+            isOneToOne: false
+            referencedRelation: "hotels"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "daily_closes_prepared_by_fkey"
+            columns: ["prepared_by"]
+            isOneToOne: false
+            referencedRelation: "users"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       financial_transactions: {
         Row: {
           amount: number
+          business_date: string | null
+          cash_session_id: string | null
           category: string
           consumption_order_id: string | null
           cost_center: string | null
@@ -2853,6 +3536,8 @@ export type Database = {
           id: string
           maintenance_cost_item_id: string | null
           maintenance_recovery_id: string | null
+          origin_daily_close_id: string | null
+          original_business_date: string | null
           paid_at: string | null
           partner_settlement_id: string | null
           payment_method: string | null
@@ -2866,6 +3551,8 @@ export type Database = {
         }
         Insert: {
           amount: number
+          business_date?: string | null
+          cash_session_id?: string | null
           category: string
           consumption_order_id?: string | null
           cost_center?: string | null
@@ -2879,6 +3566,8 @@ export type Database = {
           id?: string
           maintenance_cost_item_id?: string | null
           maintenance_recovery_id?: string | null
+          origin_daily_close_id?: string | null
+          original_business_date?: string | null
           paid_at?: string | null
           partner_settlement_id?: string | null
           payment_method?: string | null
@@ -2892,6 +3581,8 @@ export type Database = {
         }
         Update: {
           amount?: number
+          business_date?: string | null
+          cash_session_id?: string | null
           category?: string
           consumption_order_id?: string | null
           cost_center?: string | null
@@ -2905,6 +3596,8 @@ export type Database = {
           id?: string
           maintenance_cost_item_id?: string | null
           maintenance_recovery_id?: string | null
+          origin_daily_close_id?: string | null
+          original_business_date?: string | null
           paid_at?: string | null
           partner_settlement_id?: string | null
           payment_method?: string | null
@@ -2917,6 +3610,20 @@ export type Database = {
           updated_at?: string
         }
         Relationships: [
+          {
+            foreignKeyName: "financial_cash_session_fkey"
+            columns: ["cash_session_id", "hotel_id"]
+            isOneToOne: false
+            referencedRelation: "cash_sessions"
+            referencedColumns: ["id", "hotel_id"]
+          },
+          {
+            foreignKeyName: "financial_origin_close_fkey"
+            columns: ["origin_daily_close_id", "hotel_id"]
+            isOneToOne: false
+            referencedRelation: "daily_closes"
+            referencedColumns: ["id", "hotel_id"]
+          },
           {
             foreignKeyName: "financial_transactions_consumption_order_fkey"
             columns: ["consumption_order_id", "hotel_id"]
@@ -3821,7 +4528,9 @@ export type Database = {
           id: string
           internal_code: string | null
           is_active: boolean
+          kind: Database["public"]["Enums"]["inventory_location_kind"]
           name: string
+          room_id: string | null
           updated_at: string
           updated_by: string | null
         }
@@ -3835,7 +4544,9 @@ export type Database = {
           id?: string
           internal_code?: string | null
           is_active?: boolean
+          kind?: Database["public"]["Enums"]["inventory_location_kind"]
           name: string
+          room_id?: string | null
           updated_at?: string
           updated_by?: string | null
         }
@@ -3849,7 +4560,9 @@ export type Database = {
           id?: string
           internal_code?: string | null
           is_active?: boolean
+          kind?: Database["public"]["Enums"]["inventory_location_kind"]
           name?: string
+          room_id?: string | null
           updated_at?: string
           updated_by?: string | null
         }
@@ -3869,11 +4582,166 @@ export type Database = {
             referencedColumns: ["id"]
           },
           {
+            foreignKeyName: "inventory_locations_room_hotel_fkey"
+            columns: ["room_id", "hotel_id"]
+            isOneToOne: false
+            referencedRelation: "rooms"
+            referencedColumns: ["id", "hotel_id"]
+          },
+          {
             foreignKeyName: "inventory_locations_updated_by_fkey"
             columns: ["updated_by"]
             isOneToOne: false
             referencedRelation: "users"
             referencedColumns: ["id"]
+          },
+        ]
+      }
+      inventory_lot_balances: {
+        Row: {
+          hotel_id: string
+          id: string
+          lot_id: string
+          position_id: string
+          quantity: number
+          updated_at: string
+          version: number
+        }
+        Insert: {
+          hotel_id: string
+          id?: string
+          lot_id: string
+          position_id: string
+          quantity?: number
+          updated_at?: string
+          version?: number
+        }
+        Update: {
+          hotel_id?: string
+          id?: string
+          lot_id?: string
+          position_id?: string
+          quantity?: number
+          updated_at?: string
+          version?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "inventory_lot_balances_lot_id_hotel_id_fkey"
+            columns: ["lot_id", "hotel_id"]
+            isOneToOne: false
+            referencedRelation: "inventory_lots"
+            referencedColumns: ["id", "hotel_id"]
+          },
+          {
+            foreignKeyName: "inventory_lot_balances_position_id_hotel_id_fkey"
+            columns: ["position_id", "hotel_id"]
+            isOneToOne: false
+            referencedRelation: "inventory_positions"
+            referencedColumns: ["id", "hotel_id"]
+          },
+        ]
+      }
+      inventory_lots: {
+        Row: {
+          created_at: string
+          disposed_at: string | null
+          disposed_by: string | null
+          expires_on: string | null
+          hotel_id: string
+          id: string
+          lot_code: string
+          product_id: string
+          received_at: string
+          status: Database["public"]["Enums"]["inventory_lot_status"]
+        }
+        Insert: {
+          created_at?: string
+          disposed_at?: string | null
+          disposed_by?: string | null
+          expires_on?: string | null
+          hotel_id: string
+          id?: string
+          lot_code: string
+          product_id: string
+          received_at?: string
+          status?: Database["public"]["Enums"]["inventory_lot_status"]
+        }
+        Update: {
+          created_at?: string
+          disposed_at?: string | null
+          disposed_by?: string | null
+          expires_on?: string | null
+          hotel_id?: string
+          id?: string
+          lot_code?: string
+          product_id?: string
+          received_at?: string
+          status?: Database["public"]["Enums"]["inventory_lot_status"]
+        }
+        Relationships: [
+          {
+            foreignKeyName: "inventory_lots_disposed_by_fkey"
+            columns: ["disposed_by"]
+            isOneToOne: false
+            referencedRelation: "users"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "inventory_lots_hotel_id_fkey"
+            columns: ["hotel_id"]
+            isOneToOne: false
+            referencedRelation: "hotels"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "inventory_lots_product_id_hotel_id_fkey"
+            columns: ["product_id", "hotel_id"]
+            isOneToOne: false
+            referencedRelation: "products"
+            referencedColumns: ["id", "hotel_id"]
+          },
+        ]
+      }
+      inventory_movement_lots: {
+        Row: {
+          created_at: string
+          hotel_id: string
+          id: string
+          lot_id: string
+          movement_id: string
+          quantity: number
+        }
+        Insert: {
+          created_at?: string
+          hotel_id: string
+          id?: string
+          lot_id: string
+          movement_id: string
+          quantity: number
+        }
+        Update: {
+          created_at?: string
+          hotel_id?: string
+          id?: string
+          lot_id?: string
+          movement_id?: string
+          quantity?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "inventory_movement_lots_lot_id_hotel_id_fkey"
+            columns: ["lot_id", "hotel_id"]
+            isOneToOne: false
+            referencedRelation: "inventory_lots"
+            referencedColumns: ["id", "hotel_id"]
+          },
+          {
+            foreignKeyName: "inventory_movement_lots_movement_id_hotel_id_fkey"
+            columns: ["movement_id", "hotel_id"]
+            isOneToOne: false
+            referencedRelation: "inventory_movements"
+            referencedColumns: ["id", "hotel_id"]
           },
         ]
       }
@@ -7122,6 +7990,7 @@ export type Database = {
           legal_name: string | null
           name: string
           notes: string | null
+          organization_id: string | null
           phone: string | null
           specialties: string[]
           status: Database["public"]["Enums"]["maintenance_supplier_status"]
@@ -7137,6 +8006,7 @@ export type Database = {
           legal_name?: string | null
           name: string
           notes?: string | null
+          organization_id?: string | null
           phone?: string | null
           specialties?: string[]
           status?: Database["public"]["Enums"]["maintenance_supplier_status"]
@@ -7152,6 +8022,7 @@ export type Database = {
           legal_name?: string | null
           name?: string
           notes?: string | null
+          organization_id?: string | null
           phone?: string | null
           specialties?: string[]
           status?: Database["public"]["Enums"]["maintenance_supplier_status"]
@@ -7172,6 +8043,13 @@ export type Database = {
             isOneToOne: false
             referencedRelation: "hotels"
             referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "maintenance_suppliers_organization_hotel_fkey"
+            columns: ["organization_id", "hotel_id"]
+            isOneToOne: false
+            referencedRelation: "business_organizations"
+            referencedColumns: ["id", "hotel_id"]
           },
         ]
       }
@@ -7689,6 +8567,369 @@ export type Database = {
           },
         ]
       }
+      minibar_composition_items: {
+        Row: {
+          hotel_id: string
+          id: string
+          ideal_quantity: number
+          product_id: string
+          source_location_id: string
+          version_id: string
+        }
+        Insert: {
+          hotel_id: string
+          id?: string
+          ideal_quantity: number
+          product_id: string
+          source_location_id: string
+          version_id: string
+        }
+        Update: {
+          hotel_id?: string
+          id?: string
+          ideal_quantity?: number
+          product_id?: string
+          source_location_id?: string
+          version_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "minibar_composition_items_product_id_hotel_id_fkey"
+            columns: ["product_id", "hotel_id"]
+            isOneToOne: false
+            referencedRelation: "products"
+            referencedColumns: ["id", "hotel_id"]
+          },
+          {
+            foreignKeyName: "minibar_composition_items_source_location_id_hotel_id_fkey"
+            columns: ["source_location_id", "hotel_id"]
+            isOneToOne: false
+            referencedRelation: "inventory_locations"
+            referencedColumns: ["id", "hotel_id"]
+          },
+          {
+            foreignKeyName: "minibar_composition_items_version_id_hotel_id_fkey"
+            columns: ["version_id", "hotel_id"]
+            isOneToOne: false
+            referencedRelation: "minibar_composition_versions"
+            referencedColumns: ["id", "hotel_id"]
+          },
+        ]
+      }
+      minibar_composition_versions: {
+        Row: {
+          activated_at: string | null
+          activated_by: string | null
+          composition_id: string
+          created_at: string
+          created_by: string
+          hotel_id: string
+          id: string
+          version: number
+        }
+        Insert: {
+          activated_at?: string | null
+          activated_by?: string | null
+          composition_id: string
+          created_at?: string
+          created_by: string
+          hotel_id: string
+          id?: string
+          version: number
+        }
+        Update: {
+          activated_at?: string | null
+          activated_by?: string | null
+          composition_id?: string
+          created_at?: string
+          created_by?: string
+          hotel_id?: string
+          id?: string
+          version?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "minibar_composition_versions_activated_by_fkey"
+            columns: ["activated_by"]
+            isOneToOne: false
+            referencedRelation: "users"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "minibar_composition_versions_composition_id_hotel_id_fkey"
+            columns: ["composition_id", "hotel_id"]
+            isOneToOne: false
+            referencedRelation: "minibar_compositions"
+            referencedColumns: ["id", "hotel_id"]
+          },
+          {
+            foreignKeyName: "minibar_composition_versions_created_by_fkey"
+            columns: ["created_by"]
+            isOneToOne: false
+            referencedRelation: "users"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      minibar_compositions: {
+        Row: {
+          active_version_id: string | null
+          created_at: string
+          created_by: string
+          hotel_id: string
+          id: string
+          name: string
+          room_type: string
+          updated_at: string
+        }
+        Insert: {
+          active_version_id?: string | null
+          created_at?: string
+          created_by: string
+          hotel_id: string
+          id?: string
+          name: string
+          room_type: string
+          updated_at?: string
+        }
+        Update: {
+          active_version_id?: string | null
+          created_at?: string
+          created_by?: string
+          hotel_id?: string
+          id?: string
+          name?: string
+          room_type?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "minibar_active_version_fkey"
+            columns: ["active_version_id", "hotel_id"]
+            isOneToOne: false
+            referencedRelation: "minibar_composition_versions"
+            referencedColumns: ["id", "hotel_id"]
+          },
+          {
+            foreignKeyName: "minibar_compositions_created_by_fkey"
+            columns: ["created_by"]
+            isOneToOne: false
+            referencedRelation: "users"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "minibar_compositions_hotel_id_fkey"
+            columns: ["hotel_id"]
+            isOneToOne: false
+            referencedRelation: "hotels"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      minibar_replenishment_route_items: {
+        Row: {
+          destination_position_id: string
+          hotel_id: string
+          id: string
+          product_id: string
+          quantity: number
+          room_id: string
+          route_id: string
+          source_position_id: string
+          status: string
+        }
+        Insert: {
+          destination_position_id: string
+          hotel_id: string
+          id?: string
+          product_id: string
+          quantity: number
+          room_id: string
+          route_id: string
+          source_position_id: string
+          status?: string
+        }
+        Update: {
+          destination_position_id?: string
+          hotel_id?: string
+          id?: string
+          product_id?: string
+          quantity?: number
+          room_id?: string
+          route_id?: string
+          source_position_id?: string
+          status?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "minibar_replenishment_route_i_destination_position_id_hote_fkey"
+            columns: ["destination_position_id", "hotel_id"]
+            isOneToOne: false
+            referencedRelation: "inventory_positions"
+            referencedColumns: ["id", "hotel_id"]
+          },
+          {
+            foreignKeyName: "minibar_replenishment_route_it_source_position_id_hotel_id_fkey"
+            columns: ["source_position_id", "hotel_id"]
+            isOneToOne: false
+            referencedRelation: "inventory_positions"
+            referencedColumns: ["id", "hotel_id"]
+          },
+          {
+            foreignKeyName: "minibar_replenishment_route_items_product_id_hotel_id_fkey"
+            columns: ["product_id", "hotel_id"]
+            isOneToOne: false
+            referencedRelation: "products"
+            referencedColumns: ["id", "hotel_id"]
+          },
+          {
+            foreignKeyName: "minibar_replenishment_route_items_room_id_hotel_id_fkey"
+            columns: ["room_id", "hotel_id"]
+            isOneToOne: false
+            referencedRelation: "rooms"
+            referencedColumns: ["id", "hotel_id"]
+          },
+          {
+            foreignKeyName: "minibar_replenishment_route_items_route_id_hotel_id_fkey"
+            columns: ["route_id", "hotel_id"]
+            isOneToOne: false
+            referencedRelation: "minibar_replenishment_routes"
+            referencedColumns: ["id", "hotel_id"]
+          },
+        ]
+      }
+      minibar_replenishment_routes: {
+        Row: {
+          completed_at: string | null
+          created_at: string
+          created_by: string
+          hotel_id: string
+          id: string
+          idempotency_key: string
+          request_fingerprint: string
+          responsible_id: string | null
+          status: Database["public"]["Enums"]["minibar_route_status"]
+          version: number
+        }
+        Insert: {
+          completed_at?: string | null
+          created_at?: string
+          created_by: string
+          hotel_id: string
+          id?: string
+          idempotency_key: string
+          request_fingerprint: string
+          responsible_id?: string | null
+          status?: Database["public"]["Enums"]["minibar_route_status"]
+          version?: number
+        }
+        Update: {
+          completed_at?: string | null
+          created_at?: string
+          created_by?: string
+          hotel_id?: string
+          id?: string
+          idempotency_key?: string
+          request_fingerprint?: string
+          responsible_id?: string | null
+          status?: Database["public"]["Enums"]["minibar_route_status"]
+          version?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "minibar_replenishment_routes_created_by_fkey"
+            columns: ["created_by"]
+            isOneToOne: false
+            referencedRelation: "users"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "minibar_replenishment_routes_hotel_id_fkey"
+            columns: ["hotel_id"]
+            isOneToOne: false
+            referencedRelation: "hotels"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "minibar_replenishment_routes_responsible_id_fkey"
+            columns: ["responsible_id"]
+            isOneToOne: false
+            referencedRelation: "users"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      minibar_room_overrides: {
+        Row: {
+          created_at: string
+          created_by: string
+          ends_on: string | null
+          hotel_id: string
+          id: string
+          ideal_quantity: number
+          product_id: string
+          reason: string
+          room_id: string
+          source_location_id: string
+          starts_on: string
+        }
+        Insert: {
+          created_at?: string
+          created_by: string
+          ends_on?: string | null
+          hotel_id: string
+          id?: string
+          ideal_quantity: number
+          product_id: string
+          reason: string
+          room_id: string
+          source_location_id: string
+          starts_on: string
+        }
+        Update: {
+          created_at?: string
+          created_by?: string
+          ends_on?: string | null
+          hotel_id?: string
+          id?: string
+          ideal_quantity?: number
+          product_id?: string
+          reason?: string
+          room_id?: string
+          source_location_id?: string
+          starts_on?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "minibar_room_overrides_created_by_fkey"
+            columns: ["created_by"]
+            isOneToOne: false
+            referencedRelation: "users"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "minibar_room_overrides_product_id_hotel_id_fkey"
+            columns: ["product_id", "hotel_id"]
+            isOneToOne: false
+            referencedRelation: "products"
+            referencedColumns: ["id", "hotel_id"]
+          },
+          {
+            foreignKeyName: "minibar_room_overrides_room_id_hotel_id_fkey"
+            columns: ["room_id", "hotel_id"]
+            isOneToOne: false
+            referencedRelation: "rooms"
+            referencedColumns: ["id", "hotel_id"]
+          },
+          {
+            foreignKeyName: "minibar_room_overrides_source_location_id_hotel_id_fkey"
+            columns: ["source_location_id", "hotel_id"]
+            isOneToOne: false
+            referencedRelation: "inventory_locations"
+            referencedColumns: ["id", "hotel_id"]
+          },
+        ]
+      }
       operational_pending: {
         Row: {
           assigned_to: string | null
@@ -7877,6 +9118,54 @@ export type Database = {
           },
         ]
       }
+      partner_dispute_contacts: {
+        Row: {
+          actor_id: string
+          channel: string
+          created_at: string
+          dispute_id: string
+          hotel_id: string
+          id: string
+          next_action_at: string | null
+          result: string
+        }
+        Insert: {
+          actor_id: string
+          channel: string
+          created_at?: string
+          dispute_id: string
+          hotel_id: string
+          id?: string
+          next_action_at?: string | null
+          result: string
+        }
+        Update: {
+          actor_id?: string
+          channel?: string
+          created_at?: string
+          dispute_id?: string
+          hotel_id?: string
+          id?: string
+          next_action_at?: string | null
+          result?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "partner_dispute_contacts_actor_id_fkey"
+            columns: ["actor_id"]
+            isOneToOne: false
+            referencedRelation: "users"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "partner_dispute_contacts_dispute_id_hotel_id_fkey"
+            columns: ["dispute_id", "hotel_id"]
+            isOneToOne: false
+            referencedRelation: "partner_settlement_disputes"
+            referencedColumns: ["id", "hotel_id"]
+          },
+        ]
+      }
       partner_settlement_components: {
         Row: {
           agreement_id: string
@@ -8024,6 +9313,99 @@ export type Database = {
           },
         ]
       }
+      partner_settlement_disputes: {
+        Row: {
+          component_id: string
+          created_at: string
+          decided_by: string | null
+          decision_reason: string | null
+          disputed_amount: number
+          evidence_path: string | null
+          hotel_id: string
+          id: string
+          opened_by: string
+          reason: string
+          resolved_at: string | null
+          responsible_id: string | null
+          settlement_id: string
+          status: string
+          updated_at: string
+          version: number
+        }
+        Insert: {
+          component_id: string
+          created_at?: string
+          decided_by?: string | null
+          decision_reason?: string | null
+          disputed_amount: number
+          evidence_path?: string | null
+          hotel_id: string
+          id?: string
+          opened_by: string
+          reason: string
+          resolved_at?: string | null
+          responsible_id?: string | null
+          settlement_id: string
+          status?: string
+          updated_at?: string
+          version?: number
+        }
+        Update: {
+          component_id?: string
+          created_at?: string
+          decided_by?: string | null
+          decision_reason?: string | null
+          disputed_amount?: number
+          evidence_path?: string | null
+          hotel_id?: string
+          id?: string
+          opened_by?: string
+          reason?: string
+          resolved_at?: string | null
+          responsible_id?: string | null
+          settlement_id?: string
+          status?: string
+          updated_at?: string
+          version?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "partner_settlement_disputes_component_id_hotel_id_fkey"
+            columns: ["component_id", "hotel_id"]
+            isOneToOne: false
+            referencedRelation: "partner_settlement_components"
+            referencedColumns: ["id", "hotel_id"]
+          },
+          {
+            foreignKeyName: "partner_settlement_disputes_decided_by_fkey"
+            columns: ["decided_by"]
+            isOneToOne: false
+            referencedRelation: "users"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "partner_settlement_disputes_opened_by_fkey"
+            columns: ["opened_by"]
+            isOneToOne: false
+            referencedRelation: "users"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "partner_settlement_disputes_responsible_id_fkey"
+            columns: ["responsible_id"]
+            isOneToOne: false
+            referencedRelation: "users"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "partner_settlement_disputes_settlement_id_hotel_id_fkey"
+            columns: ["settlement_id", "hotel_id"]
+            isOneToOne: false
+            referencedRelation: "partner_settlements"
+            referencedColumns: ["id", "hotel_id"]
+          },
+        ]
+      }
       partner_settlement_events: {
         Row: {
           action: string
@@ -8076,9 +9458,65 @@ export type Database = {
           },
         ]
       }
+      partner_settlement_payment_batches: {
+        Row: {
+          created_at: string
+          created_by: string
+          hotel_id: string
+          id: string
+          idempotency_key: string
+          request_fingerprint: string
+          settlement_id: string
+          total_amount: number
+        }
+        Insert: {
+          created_at?: string
+          created_by: string
+          hotel_id: string
+          id?: string
+          idempotency_key: string
+          request_fingerprint: string
+          settlement_id: string
+          total_amount: number
+        }
+        Update: {
+          created_at?: string
+          created_by?: string
+          hotel_id?: string
+          id?: string
+          idempotency_key?: string
+          request_fingerprint?: string
+          settlement_id?: string
+          total_amount?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "partner_settlement_payment_batches_created_by_fkey"
+            columns: ["created_by"]
+            isOneToOne: false
+            referencedRelation: "users"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "partner_settlement_payment_batches_hotel_id_fkey"
+            columns: ["hotel_id"]
+            isOneToOne: false
+            referencedRelation: "hotels"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "partner_settlement_payment_batches_settlement_id_hotel_id_fkey"
+            columns: ["settlement_id", "hotel_id"]
+            isOneToOne: false
+            referencedRelation: "partner_settlements"
+            referencedColumns: ["id", "hotel_id"]
+          },
+        ]
+      }
       partner_settlement_payments: {
         Row: {
           amount: number
+          cash_session_id: string | null
           created_at: string
           created_by: string
           direction: Database["public"]["Enums"]["partner_settlement_direction"]
@@ -8088,6 +9526,7 @@ export type Database = {
           idempotency_key: string
           notes: string | null
           paid_at: string
+          payment_batch_id: string | null
           payment_method: Database["public"]["Enums"]["consumption_payment_method"]
           reference_code: string | null
           request_fingerprint: string
@@ -8096,6 +9535,7 @@ export type Database = {
         }
         Insert: {
           amount: number
+          cash_session_id?: string | null
           created_at?: string
           created_by: string
           direction: Database["public"]["Enums"]["partner_settlement_direction"]
@@ -8105,6 +9545,7 @@ export type Database = {
           idempotency_key: string
           notes?: string | null
           paid_at: string
+          payment_batch_id?: string | null
           payment_method: Database["public"]["Enums"]["consumption_payment_method"]
           reference_code?: string | null
           request_fingerprint: string
@@ -8113,6 +9554,7 @@ export type Database = {
         }
         Update: {
           amount?: number
+          cash_session_id?: string | null
           created_at?: string
           created_by?: string
           direction?: Database["public"]["Enums"]["partner_settlement_direction"]
@@ -8122,6 +9564,7 @@ export type Database = {
           idempotency_key?: string
           notes?: string | null
           paid_at?: string
+          payment_batch_id?: string | null
           payment_method?: Database["public"]["Enums"]["consumption_payment_method"]
           reference_code?: string | null
           request_fingerprint?: string
@@ -8129,6 +9572,20 @@ export type Database = {
           settlement_id?: string
         }
         Relationships: [
+          {
+            foreignKeyName: "partner_payment_batch_fkey"
+            columns: ["payment_batch_id", "hotel_id"]
+            isOneToOne: false
+            referencedRelation: "partner_settlement_payment_batches"
+            referencedColumns: ["id", "hotel_id"]
+          },
+          {
+            foreignKeyName: "partner_payment_cash_session_fkey"
+            columns: ["cash_session_id", "hotel_id"]
+            isOneToOne: false
+            referencedRelation: "cash_sessions"
+            referencedColumns: ["id", "hotel_id"]
+          },
           {
             foreignKeyName: "partner_settlement_payments_created_by_fkey"
             columns: ["created_by"]
@@ -8359,6 +9816,7 @@ export type Database = {
       }
       partner_settlements: {
         Row: {
+          approval_state: string
           approved_at: string | null
           approved_by: string | null
           commission_total: number
@@ -8369,6 +9827,7 @@ export type Database = {
           currency: string
           direction: Database["public"]["Enums"]["partner_settlement_direction"]
           discount_total: number
+          dispute_state: string
           due_on: string
           gross_sales: number
           hotel_collected: number
@@ -8379,6 +9838,7 @@ export type Database = {
           operational_net: number
           partner_direct: number
           partner_id: string
+          payment_state: string
           period_end: string
           period_start: string
           prepared_at: string | null
@@ -8396,6 +9856,7 @@ export type Database = {
           version: number
         }
         Insert: {
+          approval_state?: string
           approved_at?: string | null
           approved_by?: string | null
           commission_total?: number
@@ -8406,6 +9867,7 @@ export type Database = {
           currency: string
           direction?: Database["public"]["Enums"]["partner_settlement_direction"]
           discount_total?: number
+          dispute_state?: string
           due_on: string
           gross_sales?: number
           hotel_collected?: number
@@ -8416,6 +9878,7 @@ export type Database = {
           operational_net?: number
           partner_direct?: number
           partner_id: string
+          payment_state?: string
           period_end: string
           period_start: string
           prepared_at?: string | null
@@ -8433,6 +9896,7 @@ export type Database = {
           version?: number
         }
         Update: {
+          approval_state?: string
           approved_at?: string | null
           approved_by?: string | null
           commission_total?: number
@@ -8443,6 +9907,7 @@ export type Database = {
           currency?: string
           direction?: Database["public"]["Enums"]["partner_settlement_direction"]
           discount_total?: number
+          dispute_state?: string
           due_on?: string
           gross_sales?: number
           hotel_collected?: number
@@ -8453,6 +9918,7 @@ export type Database = {
           operational_net?: number
           partner_direct?: number
           partner_id?: string
+          payment_state?: string
           period_end?: string
           period_start?: string
           prepared_at?: string | null
@@ -8986,6 +10452,559 @@ export type Database = {
           },
         ]
       }
+      procurement_approval_tiers: {
+        Row: {
+          approvals_required: number
+          created_at: string
+          hotel_id: string
+          id: string
+          maximum_amount: number | null
+          minimum_amount: number
+          quotes_required: number
+        }
+        Insert: {
+          approvals_required: number
+          created_at?: string
+          hotel_id: string
+          id?: string
+          maximum_amount?: number | null
+          minimum_amount: number
+          quotes_required?: number
+        }
+        Update: {
+          approvals_required?: number
+          created_at?: string
+          hotel_id?: string
+          id?: string
+          maximum_amount?: number | null
+          minimum_amount?: number
+          quotes_required?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "procurement_approval_tiers_hotel_id_fkey"
+            columns: ["hotel_id"]
+            isOneToOne: false
+            referencedRelation: "procurement_policies"
+            referencedColumns: ["hotel_id"]
+          },
+        ]
+      }
+      procurement_discrepancies: {
+        Row: {
+          actual_amount: number
+          allowed_variance: number
+          created_at: string
+          decided_by: string | null
+          decision_reason: string | null
+          expected_amount: number
+          hotel_id: string
+          id: string
+          invoice_id: string
+          kind: string
+          opened_by: string
+          order_line_id: string | null
+          resolved_at: string | null
+          status: Database["public"]["Enums"]["procurement_discrepancy_status"]
+        }
+        Insert: {
+          actual_amount: number
+          allowed_variance: number
+          created_at?: string
+          decided_by?: string | null
+          decision_reason?: string | null
+          expected_amount: number
+          hotel_id: string
+          id?: string
+          invoice_id: string
+          kind: string
+          opened_by: string
+          order_line_id?: string | null
+          resolved_at?: string | null
+          status?: Database["public"]["Enums"]["procurement_discrepancy_status"]
+        }
+        Update: {
+          actual_amount?: number
+          allowed_variance?: number
+          created_at?: string
+          decided_by?: string | null
+          decision_reason?: string | null
+          expected_amount?: number
+          hotel_id?: string
+          id?: string
+          invoice_id?: string
+          kind?: string
+          opened_by?: string
+          order_line_id?: string | null
+          resolved_at?: string | null
+          status?: Database["public"]["Enums"]["procurement_discrepancy_status"]
+        }
+        Relationships: [
+          {
+            foreignKeyName: "procurement_discrepancies_decided_by_fkey"
+            columns: ["decided_by"]
+            isOneToOne: false
+            referencedRelation: "users"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "procurement_discrepancies_invoice_id_hotel_id_fkey"
+            columns: ["invoice_id", "hotel_id"]
+            isOneToOne: false
+            referencedRelation: "procurement_invoices"
+            referencedColumns: ["id", "hotel_id"]
+          },
+          {
+            foreignKeyName: "procurement_discrepancies_opened_by_fkey"
+            columns: ["opened_by"]
+            isOneToOne: false
+            referencedRelation: "users"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "procurement_discrepancies_order_line_id_hotel_id_fkey"
+            columns: ["order_line_id", "hotel_id"]
+            isOneToOne: false
+            referencedRelation: "purchase_order_lines"
+            referencedColumns: ["id", "hotel_id"]
+          },
+        ]
+      }
+      procurement_events: {
+        Row: {
+          action: string
+          actor_id: string | null
+          created_at: string
+          details: Json
+          entity_id: string
+          entity_type: string
+          hotel_id: string
+          id: string
+          reason: string | null
+        }
+        Insert: {
+          action: string
+          actor_id?: string | null
+          created_at?: string
+          details?: Json
+          entity_id: string
+          entity_type: string
+          hotel_id: string
+          id?: string
+          reason?: string | null
+        }
+        Update: {
+          action?: string
+          actor_id?: string | null
+          created_at?: string
+          details?: Json
+          entity_id?: string
+          entity_type?: string
+          hotel_id?: string
+          id?: string
+          reason?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "procurement_events_actor_id_fkey"
+            columns: ["actor_id"]
+            isOneToOne: false
+            referencedRelation: "users"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "procurement_events_hotel_id_fkey"
+            columns: ["hotel_id"]
+            isOneToOne: false
+            referencedRelation: "hotels"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      procurement_invoice_due_dates: {
+        Row: {
+          amount: number
+          due_on: string
+          hotel_id: string
+          id: string
+          invoice_id: string
+          paid_amount: number
+          version: number
+        }
+        Insert: {
+          amount: number
+          due_on: string
+          hotel_id: string
+          id?: string
+          invoice_id: string
+          paid_amount?: number
+          version?: number
+        }
+        Update: {
+          amount?: number
+          due_on?: string
+          hotel_id?: string
+          id?: string
+          invoice_id?: string
+          paid_amount?: number
+          version?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "procurement_invoice_due_dates_invoice_id_hotel_id_fkey"
+            columns: ["invoice_id", "hotel_id"]
+            isOneToOne: false
+            referencedRelation: "procurement_invoices"
+            referencedColumns: ["id", "hotel_id"]
+          },
+        ]
+      }
+      procurement_invoices: {
+        Row: {
+          approved_at: string | null
+          approved_by: string | null
+          created_at: string
+          created_by: string
+          evidence_path: string | null
+          hotel_id: string
+          id: string
+          idempotency_key: string
+          invoice_number: string
+          issued_on: string
+          purchase_order_id: string
+          status: Database["public"]["Enums"]["procurement_invoice_status"]
+          total_amount: number
+          updated_at: string
+          version: number
+        }
+        Insert: {
+          approved_at?: string | null
+          approved_by?: string | null
+          created_at?: string
+          created_by: string
+          evidence_path?: string | null
+          hotel_id: string
+          id?: string
+          idempotency_key: string
+          invoice_number: string
+          issued_on: string
+          purchase_order_id: string
+          status?: Database["public"]["Enums"]["procurement_invoice_status"]
+          total_amount: number
+          updated_at?: string
+          version?: number
+        }
+        Update: {
+          approved_at?: string | null
+          approved_by?: string | null
+          created_at?: string
+          created_by?: string
+          evidence_path?: string | null
+          hotel_id?: string
+          id?: string
+          idempotency_key?: string
+          invoice_number?: string
+          issued_on?: string
+          purchase_order_id?: string
+          status?: Database["public"]["Enums"]["procurement_invoice_status"]
+          total_amount?: number
+          updated_at?: string
+          version?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "procurement_invoices_approved_by_fkey"
+            columns: ["approved_by"]
+            isOneToOne: false
+            referencedRelation: "users"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "procurement_invoices_created_by_fkey"
+            columns: ["created_by"]
+            isOneToOne: false
+            referencedRelation: "users"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "procurement_invoices_purchase_order_id_hotel_id_fkey"
+            columns: ["purchase_order_id", "hotel_id"]
+            isOneToOne: false
+            referencedRelation: "purchase_orders"
+            referencedColumns: ["id", "hotel_id"]
+          },
+        ]
+      }
+      procurement_payment_batches: {
+        Row: {
+          created_at: string
+          created_by: string
+          hotel_id: string
+          id: string
+          idempotency_key: string
+          installment_id: string
+          request_fingerprint: string
+          total_amount: number
+        }
+        Insert: {
+          created_at?: string
+          created_by: string
+          hotel_id: string
+          id?: string
+          idempotency_key: string
+          installment_id: string
+          request_fingerprint: string
+          total_amount: number
+        }
+        Update: {
+          created_at?: string
+          created_by?: string
+          hotel_id?: string
+          id?: string
+          idempotency_key?: string
+          installment_id?: string
+          request_fingerprint?: string
+          total_amount?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "procurement_payment_batches_created_by_fkey"
+            columns: ["created_by"]
+            isOneToOne: false
+            referencedRelation: "users"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "procurement_payment_batches_hotel_id_fkey"
+            columns: ["hotel_id"]
+            isOneToOne: false
+            referencedRelation: "hotels"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "procurement_payment_batches_installment_id_fkey"
+            columns: ["installment_id"]
+            isOneToOne: false
+            referencedRelation: "procurement_invoice_due_dates"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      procurement_payments: {
+        Row: {
+          amount: number
+          cash_session_id: string | null
+          created_at: string
+          created_by: string
+          financial_transaction_id: string | null
+          hotel_id: string
+          id: string
+          idempotency_key: string
+          installment_id: string
+          paid_at: string
+          payment_batch_id: string
+          payment_method: string
+          reference_code: string | null
+          request_fingerprint: string
+          reversal_of_id: string | null
+        }
+        Insert: {
+          amount: number
+          cash_session_id?: string | null
+          created_at?: string
+          created_by: string
+          financial_transaction_id?: string | null
+          hotel_id: string
+          id?: string
+          idempotency_key: string
+          installment_id: string
+          paid_at: string
+          payment_batch_id: string
+          payment_method: string
+          reference_code?: string | null
+          request_fingerprint: string
+          reversal_of_id?: string | null
+        }
+        Update: {
+          amount?: number
+          cash_session_id?: string | null
+          created_at?: string
+          created_by?: string
+          financial_transaction_id?: string | null
+          hotel_id?: string
+          id?: string
+          idempotency_key?: string
+          installment_id?: string
+          paid_at?: string
+          payment_batch_id?: string
+          payment_method?: string
+          reference_code?: string | null
+          request_fingerprint?: string
+          reversal_of_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "procurement_payment_cash_session_fkey"
+            columns: ["cash_session_id", "hotel_id"]
+            isOneToOne: false
+            referencedRelation: "cash_sessions"
+            referencedColumns: ["id", "hotel_id"]
+          },
+          {
+            foreignKeyName: "procurement_payments_created_by_fkey"
+            columns: ["created_by"]
+            isOneToOne: false
+            referencedRelation: "users"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "procurement_payments_financial_transaction_id_fkey"
+            columns: ["financial_transaction_id"]
+            isOneToOne: false
+            referencedRelation: "financial_transactions"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "procurement_payments_installment_id_fkey"
+            columns: ["installment_id"]
+            isOneToOne: false
+            referencedRelation: "procurement_invoice_due_dates"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "procurement_payments_payment_batch_id_hotel_id_fkey"
+            columns: ["payment_batch_id", "hotel_id"]
+            isOneToOne: false
+            referencedRelation: "procurement_payment_batches"
+            referencedColumns: ["id", "hotel_id"]
+          },
+          {
+            foreignKeyName: "procurement_payments_reversal_of_id_fkey"
+            columns: ["reversal_of_id"]
+            isOneToOne: false
+            referencedRelation: "procurement_payments"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      procurement_policies: {
+        Row: {
+          configuration_required: boolean
+          created_at: string
+          currency: string
+          hotel_id: string
+          price_tolerance_amount: number
+          price_tolerance_percent: number
+          quantity_tolerance_amount: number
+          quantity_tolerance_percent: number
+          updated_at: string
+          updated_by: string | null
+          version: number
+        }
+        Insert: {
+          configuration_required?: boolean
+          created_at?: string
+          currency?: string
+          hotel_id: string
+          price_tolerance_amount?: number
+          price_tolerance_percent?: number
+          quantity_tolerance_amount?: number
+          quantity_tolerance_percent?: number
+          updated_at?: string
+          updated_by?: string | null
+          version?: number
+        }
+        Update: {
+          configuration_required?: boolean
+          created_at?: string
+          currency?: string
+          hotel_id?: string
+          price_tolerance_amount?: number
+          price_tolerance_percent?: number
+          quantity_tolerance_amount?: number
+          quantity_tolerance_percent?: number
+          updated_at?: string
+          updated_by?: string | null
+          version?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "procurement_policies_hotel_id_fkey"
+            columns: ["hotel_id"]
+            isOneToOne: true
+            referencedRelation: "hotels"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "procurement_policies_updated_by_fkey"
+            columns: ["updated_by"]
+            isOneToOne: false
+            referencedRelation: "users"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      procurement_suppliers: {
+        Row: {
+          active: boolean
+          created_at: string
+          created_by: string | null
+          hotel_id: string
+          id: string
+          lead_time_days: number
+          organization_id: string
+          payment_term_days: number
+          updated_at: string
+          version: number
+        }
+        Insert: {
+          active?: boolean
+          created_at?: string
+          created_by?: string | null
+          hotel_id: string
+          id?: string
+          lead_time_days?: number
+          organization_id: string
+          payment_term_days?: number
+          updated_at?: string
+          version?: number
+        }
+        Update: {
+          active?: boolean
+          created_at?: string
+          created_by?: string | null
+          hotel_id?: string
+          id?: string
+          lead_time_days?: number
+          organization_id?: string
+          payment_term_days?: number
+          updated_at?: string
+          version?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "procurement_suppliers_created_by_fkey"
+            columns: ["created_by"]
+            isOneToOne: false
+            referencedRelation: "users"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "procurement_suppliers_hotel_id_fkey"
+            columns: ["hotel_id"]
+            isOneToOne: false
+            referencedRelation: "hotels"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "procurement_suppliers_organization_id_hotel_id_fkey"
+            columns: ["organization_id", "hotel_id"]
+            isOneToOne: false
+            referencedRelation: "business_organizations"
+            referencedColumns: ["id", "hotel_id"]
+          },
+        ]
+      }
       product_categories: {
         Row: {
           archived_at: string | null
@@ -9044,11 +11063,13 @@ export type Database = {
           commercial_partner_id: string | null
           created_at: string
           description: string | null
+          expiry_alert_days: number
           hotel_id: string
           id: string
           internal_code: string | null
           kind: Database["public"]["Enums"]["product_kind"]
           last_changed_by: string | null
+          lot_tracking_mode: Database["public"]["Enums"]["inventory_lot_tracking_mode"]
           name: string
           provider_type: Database["public"]["Enums"]["product_provider_type"]
           sales_unit: Database["public"]["Enums"]["product_sales_unit"]
@@ -9062,11 +11083,13 @@ export type Database = {
           commercial_partner_id?: string | null
           created_at?: string
           description?: string | null
+          expiry_alert_days?: number
           hotel_id: string
           id?: string
           internal_code?: string | null
           kind?: Database["public"]["Enums"]["product_kind"]
           last_changed_by?: string | null
+          lot_tracking_mode?: Database["public"]["Enums"]["inventory_lot_tracking_mode"]
           name: string
           provider_type?: Database["public"]["Enums"]["product_provider_type"]
           sales_unit?: Database["public"]["Enums"]["product_sales_unit"]
@@ -9080,11 +11103,13 @@ export type Database = {
           commercial_partner_id?: string | null
           created_at?: string
           description?: string | null
+          expiry_alert_days?: number
           hotel_id?: string
           id?: string
           internal_code?: string | null
           kind?: Database["public"]["Enums"]["product_kind"]
           last_changed_by?: string | null
+          lot_tracking_mode?: Database["public"]["Enums"]["inventory_lot_tracking_mode"]
           name?: string
           provider_type?: Database["public"]["Enums"]["product_provider_type"]
           sales_unit?: Database["public"]["Enums"]["product_sales_unit"]
@@ -9117,6 +11142,493 @@ export type Database = {
           {
             foreignKeyName: "products_last_changed_by_fkey"
             columns: ["last_changed_by"]
+            isOneToOne: false
+            referencedRelation: "users"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      purchase_order_approvals: {
+        Row: {
+          actor_id: string
+          approval_level: number
+          created_at: string
+          decision: string
+          hotel_id: string
+          id: string
+          purchase_order_id: string
+          reason: string
+        }
+        Insert: {
+          actor_id: string
+          approval_level: number
+          created_at?: string
+          decision: string
+          hotel_id: string
+          id?: string
+          purchase_order_id: string
+          reason: string
+        }
+        Update: {
+          actor_id?: string
+          approval_level?: number
+          created_at?: string
+          decision?: string
+          hotel_id?: string
+          id?: string
+          purchase_order_id?: string
+          reason?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "purchase_order_approvals_actor_id_fkey"
+            columns: ["actor_id"]
+            isOneToOne: false
+            referencedRelation: "users"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "purchase_order_approvals_purchase_order_id_hotel_id_fkey"
+            columns: ["purchase_order_id", "hotel_id"]
+            isOneToOne: false
+            referencedRelation: "purchase_orders"
+            referencedColumns: ["id", "hotel_id"]
+          },
+        ]
+      }
+      purchase_order_lines: {
+        Row: {
+          hotel_id: string
+          id: string
+          product_id: string
+          purchase_order_id: string
+          quantity: number
+          received_quantity: number
+          tax_amount: number
+          unit_price: number
+        }
+        Insert: {
+          hotel_id: string
+          id?: string
+          product_id: string
+          purchase_order_id: string
+          quantity: number
+          received_quantity?: number
+          tax_amount?: number
+          unit_price: number
+        }
+        Update: {
+          hotel_id?: string
+          id?: string
+          product_id?: string
+          purchase_order_id?: string
+          quantity?: number
+          received_quantity?: number
+          tax_amount?: number
+          unit_price?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "purchase_order_lines_product_id_hotel_id_fkey"
+            columns: ["product_id", "hotel_id"]
+            isOneToOne: false
+            referencedRelation: "products"
+            referencedColumns: ["id", "hotel_id"]
+          },
+          {
+            foreignKeyName: "purchase_order_lines_purchase_order_id_hotel_id_fkey"
+            columns: ["purchase_order_id", "hotel_id"]
+            isOneToOne: false
+            referencedRelation: "purchase_orders"
+            referencedColumns: ["id", "hotel_id"]
+          },
+        ]
+      }
+      purchase_order_quotes: {
+        Row: {
+          amount: number
+          created_at: string
+          hotel_id: string
+          id: string
+          purchase_order_id: string
+          reference: string | null
+          supplier_id: string
+        }
+        Insert: {
+          amount: number
+          created_at?: string
+          hotel_id: string
+          id?: string
+          purchase_order_id: string
+          reference?: string | null
+          supplier_id: string
+        }
+        Update: {
+          amount?: number
+          created_at?: string
+          hotel_id?: string
+          id?: string
+          purchase_order_id?: string
+          reference?: string | null
+          supplier_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "purchase_order_quotes_purchase_order_id_hotel_id_fkey"
+            columns: ["purchase_order_id", "hotel_id"]
+            isOneToOne: false
+            referencedRelation: "purchase_orders"
+            referencedColumns: ["id", "hotel_id"]
+          },
+          {
+            foreignKeyName: "purchase_order_quotes_supplier_id_hotel_id_fkey"
+            columns: ["supplier_id", "hotel_id"]
+            isOneToOne: false
+            referencedRelation: "procurement_suppliers"
+            referencedColumns: ["id", "hotel_id"]
+          },
+        ]
+      }
+      purchase_order_replenishments: {
+        Row: {
+          hotel_id: string
+          purchase_order_id: string
+          replenishment_request_id: string
+        }
+        Insert: {
+          hotel_id: string
+          purchase_order_id: string
+          replenishment_request_id: string
+        }
+        Update: {
+          hotel_id?: string
+          purchase_order_id?: string
+          replenishment_request_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "purchase_order_replenishments_purchase_order_id_hotel_id_fkey"
+            columns: ["purchase_order_id", "hotel_id"]
+            isOneToOne: false
+            referencedRelation: "purchase_orders"
+            referencedColumns: ["id", "hotel_id"]
+          },
+          {
+            foreignKeyName: "purchase_order_replenishments_replenishment_request_id_hot_fkey"
+            columns: ["replenishment_request_id", "hotel_id"]
+            isOneToOne: false
+            referencedRelation: "replenishment_requests"
+            referencedColumns: ["id", "hotel_id"]
+          },
+        ]
+      }
+      purchase_orders: {
+        Row: {
+          created_at: string
+          created_by: string
+          currency: string
+          destination_location_id: string
+          expected_on: string | null
+          hotel_id: string
+          id: string
+          notes: string | null
+          required_approvals: number
+          required_quotes: number
+          status: Database["public"]["Enums"]["purchase_order_status"]
+          supplier_id: string
+          total_amount: number
+          updated_at: string
+          version: number
+        }
+        Insert: {
+          created_at?: string
+          created_by: string
+          currency: string
+          destination_location_id: string
+          expected_on?: string | null
+          hotel_id: string
+          id?: string
+          notes?: string | null
+          required_approvals?: number
+          required_quotes?: number
+          status?: Database["public"]["Enums"]["purchase_order_status"]
+          supplier_id: string
+          total_amount?: number
+          updated_at?: string
+          version?: number
+        }
+        Update: {
+          created_at?: string
+          created_by?: string
+          currency?: string
+          destination_location_id?: string
+          expected_on?: string | null
+          hotel_id?: string
+          id?: string
+          notes?: string | null
+          required_approvals?: number
+          required_quotes?: number
+          status?: Database["public"]["Enums"]["purchase_order_status"]
+          supplier_id?: string
+          total_amount?: number
+          updated_at?: string
+          version?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "purchase_orders_created_by_fkey"
+            columns: ["created_by"]
+            isOneToOne: false
+            referencedRelation: "users"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "purchase_orders_destination_location_id_hotel_id_fkey"
+            columns: ["destination_location_id", "hotel_id"]
+            isOneToOne: false
+            referencedRelation: "inventory_locations"
+            referencedColumns: ["id", "hotel_id"]
+          },
+          {
+            foreignKeyName: "purchase_orders_hotel_id_fkey"
+            columns: ["hotel_id"]
+            isOneToOne: false
+            referencedRelation: "hotels"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "purchase_orders_supplier_id_hotel_id_fkey"
+            columns: ["supplier_id", "hotel_id"]
+            isOneToOne: false
+            referencedRelation: "procurement_suppliers"
+            referencedColumns: ["id", "hotel_id"]
+          },
+        ]
+      }
+      purchase_receipt_lines: {
+        Row: {
+          accepted_quantity: number
+          evidence_path: string | null
+          expires_on: string | null
+          hotel_id: string
+          id: string
+          inventory_movement_id: string | null
+          lot_code: string | null
+          order_line_id: string
+          receipt_id: string
+          rejected_quantity: number
+          unit_cost: number
+        }
+        Insert: {
+          accepted_quantity: number
+          evidence_path?: string | null
+          expires_on?: string | null
+          hotel_id: string
+          id?: string
+          inventory_movement_id?: string | null
+          lot_code?: string | null
+          order_line_id: string
+          receipt_id: string
+          rejected_quantity: number
+          unit_cost: number
+        }
+        Update: {
+          accepted_quantity?: number
+          evidence_path?: string | null
+          expires_on?: string | null
+          hotel_id?: string
+          id?: string
+          inventory_movement_id?: string | null
+          lot_code?: string | null
+          order_line_id?: string
+          receipt_id?: string
+          rejected_quantity?: number
+          unit_cost?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "purchase_receipt_line_movement_hotel_fkey"
+            columns: ["inventory_movement_id", "hotel_id"]
+            isOneToOne: false
+            referencedRelation: "inventory_movements"
+            referencedColumns: ["id", "hotel_id"]
+          },
+          {
+            foreignKeyName: "purchase_receipt_lines_order_line_id_hotel_id_fkey"
+            columns: ["order_line_id", "hotel_id"]
+            isOneToOne: false
+            referencedRelation: "purchase_order_lines"
+            referencedColumns: ["id", "hotel_id"]
+          },
+          {
+            foreignKeyName: "purchase_receipt_lines_receipt_id_hotel_id_fkey"
+            columns: ["receipt_id", "hotel_id"]
+            isOneToOne: false
+            referencedRelation: "purchase_receipts"
+            referencedColumns: ["id", "hotel_id"]
+          },
+        ]
+      }
+      purchase_receipts: {
+        Row: {
+          created_at: string
+          hotel_id: string
+          id: string
+          idempotency_key: string
+          notes: string | null
+          occurred_at: string
+          purchase_order_id: string
+          received_by: string
+          reference_code: string | null
+          request_fingerprint: string
+        }
+        Insert: {
+          created_at?: string
+          hotel_id: string
+          id?: string
+          idempotency_key: string
+          notes?: string | null
+          occurred_at: string
+          purchase_order_id: string
+          received_by: string
+          reference_code?: string | null
+          request_fingerprint: string
+        }
+        Update: {
+          created_at?: string
+          hotel_id?: string
+          id?: string
+          idempotency_key?: string
+          notes?: string | null
+          occurred_at?: string
+          purchase_order_id?: string
+          received_by?: string
+          reference_code?: string | null
+          request_fingerprint?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "purchase_receipts_purchase_order_id_hotel_id_fkey"
+            columns: ["purchase_order_id", "hotel_id"]
+            isOneToOne: false
+            referencedRelation: "purchase_orders"
+            referencedColumns: ["id", "hotel_id"]
+          },
+          {
+            foreignKeyName: "purchase_receipts_received_by_fkey"
+            columns: ["received_by"]
+            isOneToOne: false
+            referencedRelation: "users"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      replenishment_requests: {
+        Row: {
+          created_at: string
+          created_by: string | null
+          current_quantity: number
+          episode: number
+          hotel_id: string
+          id: string
+          ideal_quantity: number
+          location_id: string
+          minimum_quantity: number
+          need_by: string | null
+          preferred_supplier_id: string | null
+          priority: string
+          product_id: string
+          reason: string
+          requested_quantity: number
+          responsible_id: string | null
+          source: string
+          status: Database["public"]["Enums"]["replenishment_status"]
+          updated_at: string
+          version: number
+        }
+        Insert: {
+          created_at?: string
+          created_by?: string | null
+          current_quantity: number
+          episode?: number
+          hotel_id: string
+          id?: string
+          ideal_quantity: number
+          location_id: string
+          minimum_quantity: number
+          need_by?: string | null
+          preferred_supplier_id?: string | null
+          priority?: string
+          product_id: string
+          reason: string
+          requested_quantity: number
+          responsible_id?: string | null
+          source?: string
+          status?: Database["public"]["Enums"]["replenishment_status"]
+          updated_at?: string
+          version?: number
+        }
+        Update: {
+          created_at?: string
+          created_by?: string | null
+          current_quantity?: number
+          episode?: number
+          hotel_id?: string
+          id?: string
+          ideal_quantity?: number
+          location_id?: string
+          minimum_quantity?: number
+          need_by?: string | null
+          preferred_supplier_id?: string | null
+          priority?: string
+          product_id?: string
+          reason?: string
+          requested_quantity?: number
+          responsible_id?: string | null
+          source?: string
+          status?: Database["public"]["Enums"]["replenishment_status"]
+          updated_at?: string
+          version?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "replenishment_requests_created_by_fkey"
+            columns: ["created_by"]
+            isOneToOne: false
+            referencedRelation: "users"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "replenishment_requests_hotel_id_fkey"
+            columns: ["hotel_id"]
+            isOneToOne: false
+            referencedRelation: "hotels"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "replenishment_requests_location_id_hotel_id_fkey"
+            columns: ["location_id", "hotel_id"]
+            isOneToOne: false
+            referencedRelation: "inventory_locations"
+            referencedColumns: ["id", "hotel_id"]
+          },
+          {
+            foreignKeyName: "replenishment_requests_preferred_supplier_id_hotel_id_fkey"
+            columns: ["preferred_supplier_id", "hotel_id"]
+            isOneToOne: false
+            referencedRelation: "procurement_suppliers"
+            referencedColumns: ["id", "hotel_id"]
+          },
+          {
+            foreignKeyName: "replenishment_requests_product_id_hotel_id_fkey"
+            columns: ["product_id", "hotel_id"]
+            isOneToOne: false
+            referencedRelation: "products"
+            referencedColumns: ["id", "hotel_id"]
+          },
+          {
+            foreignKeyName: "replenishment_requests_responsible_id_fkey"
+            columns: ["responsible_id"]
             isOneToOne: false
             referencedRelation: "users"
             referencedColumns: ["id"]
@@ -10984,6 +13496,24 @@ export type Database = {
       }
     }
     Functions: {
+      act_business_organization: {
+        Args: {
+          p_actor_id: string
+          p_hotel_id: string
+          p_id: string
+          p_input: Json
+        }
+        Returns: Json
+      }
+      act_cash_session: {
+        Args: {
+          p_actor_id: string
+          p_hotel_id: string
+          p_id: string
+          p_input: Json
+        }
+        Returns: Json
+      }
       act_consumption_service_order: {
         Args: {
           p_action: string
@@ -11009,12 +13539,30 @@ export type Database = {
         }
         Returns: Json
       }
+      act_daily_close: {
+        Args: {
+          p_actor_id: string
+          p_business_date: string
+          p_hotel_id: string
+          p_input: Json
+        }
+        Returns: Json
+      }
       act_governance_cycle: {
         Args: {
           p_actor_id: string
           p_cycle_id: string
           p_hotel_id: string
           p_input: Json
+        }
+        Returns: Json
+      }
+      act_inventory_lot: {
+        Args: {
+          p_actor_id: string
+          p_hotel_id: string
+          p_input: Json
+          p_lot_id: string
         }
         Returns: Json
       }
@@ -11036,6 +13584,15 @@ export type Database = {
         }
         Returns: Json
       }
+      act_minibar_replenishment_route: {
+        Args: {
+          p_actor_id: string
+          p_hotel_id: string
+          p_id: string
+          p_input: Json
+        }
+        Returns: Json
+      }
       act_operational_pending: {
         Args: {
           p_action: string
@@ -11044,6 +13601,15 @@ export type Database = {
           p_permissions: string[]
           p_user_id: string
           p_version?: number
+        }
+        Returns: Json
+      }
+      act_partner_settlement_dispute: {
+        Args: {
+          p_actor_id: string
+          p_hotel_id: string
+          p_id: string
+          p_input: Json
         }
         Returns: Json
       }
@@ -11057,6 +13623,39 @@ export type Database = {
           p_promised_at: string
           p_reason: string
           p_result: string
+        }
+        Returns: Json
+      }
+      act_procurement_invoice: {
+        Args: {
+          p_action: string
+          p_actor_id: string
+          p_expected_version: number
+          p_hotel_id: string
+          p_id: string
+          p_reason: string
+        }
+        Returns: Json
+      }
+      act_purchase_order: {
+        Args: {
+          p_action: string
+          p_actor_id: string
+          p_expected_version: number
+          p_hotel_id: string
+          p_id: string
+          p_reason: string
+        }
+        Returns: Json
+      }
+      act_replenishment_request: {
+        Args: {
+          p_action: string
+          p_actor_id: string
+          p_expected_version: number
+          p_hotel_id: string
+          p_id: string
+          p_reason: string
         }
         Returns: Json
       }
@@ -11150,6 +13749,14 @@ export type Database = {
       }
       backfill_stay_folio: { Args: never; Returns: undefined }
       can_read_operational_pending: {
+        Args: {
+          p: Database["public"]["Tables"]["operational_pending"]["Row"]
+          p_permissions: string[]
+          p_user_id: string
+        }
+        Returns: boolean
+      }
+      can_read_operational_pending_stage5_base: {
         Args: {
           p: Database["public"]["Tables"]["operational_pending"]["Row"]
           p_permissions: string[]
@@ -11255,6 +13862,15 @@ export type Database = {
           p_initial_quantity: number
           p_location_id: string
           p_minimum_quantity: number
+          p_product_id: string
+        }
+        Returns: Json
+      }
+      configure_product_lot_tracking: {
+        Args: {
+          p_actor_id: string
+          p_hotel_id: string
+          p_input: Json
           p_product_id: string
         }
         Returns: Json
@@ -11418,7 +14034,36 @@ export type Database = {
         }
         Returns: string
       }
+      create_minibar_composition: {
+        Args: { p_actor_id: string; p_hotel_id: string; p_input: Json }
+        Returns: Json
+      }
+      create_minibar_replenishment_route: {
+        Args: { p_actor_id: string; p_hotel_id: string; p_input: Json }
+        Returns: Json
+      }
+      create_partner_settlement_dispute: {
+        Args: {
+          p_actor_id: string
+          p_hotel_id: string
+          p_input: Json
+          p_settlement_id: string
+        }
+        Returns: Json
+      }
       create_post_checkout_consumption_case: {
+        Args: { p_actor_id: string; p_hotel_id: string; p_input: Json }
+        Returns: Json
+      }
+      create_procurement_invoice: {
+        Args: { p_actor_id: string; p_hotel_id: string; p_input: Json }
+        Returns: Json
+      }
+      create_purchase_order: {
+        Args: { p_actor_id: string; p_hotel_id: string; p_input: Json }
+        Returns: Json
+      }
+      create_replenishment_request: {
         Args: { p_actor_id: string; p_hotel_id: string; p_input: Json }
         Returns: Json
       }
@@ -11541,6 +14186,10 @@ export type Database = {
               result: string
             }[]
           }
+      daily_close_projection: {
+        Args: { p_business_date: string; p_hotel_id: string }
+        Returns: Json
+      }
       decide_consumption_correction: {
         Args: {
           p_actor_id: string
@@ -11624,6 +14273,14 @@ export type Database = {
         }
         Returns: string
       }
+      get_business_organization_overview: {
+        Args: { p_hotel_id: string; p_id: string; p_permissions: string[] }
+        Returns: Json
+      }
+      get_cash_session: {
+        Args: { p_hotel_id: string; p_id: string }
+        Returns: Json
+      }
       get_consumption_analytics: {
         Args: {
           p_billing_mode?: Database["public"]["Enums"]["consumption_billing_mode"]
@@ -11653,11 +14310,19 @@ export type Database = {
         Args: { p_hotel_id: string; p_order_id: string }
         Returns: Json
       }
+      get_daily_close: {
+        Args: { p_business_date: string; p_hotel_id: string }
+        Returns: Json
+      }
       get_governance_cycle: {
         Args: { p_cycle_id: string; p_hotel_id: string }
         Returns: Json
       }
       get_management_alerts: { Args: { p_hotel_id: string }; Returns: Json }
+      get_minibar_replenishment_board: {
+        Args: { p_hotel_id: string }
+        Returns: Json
+      }
       get_stay_departure_review: {
         Args: { p_hotel_id: string; p_stay_id: string }
         Returns: Json
@@ -11721,6 +14386,11 @@ export type Database = {
         Args: { p_actor_id: string; p_hotel_id: string }
         Returns: undefined
       }
+      list_business_organizations: {
+        Args: { p_hotel_id: string }
+        Returns: Json
+      }
+      list_cash_registers: { Args: { p_hotel_id: string }; Returns: Json }
       list_consumption_benefit_plans: {
         Args: { p_hotel_id: string }
         Returns: Json
@@ -11737,10 +14407,12 @@ export type Database = {
       list_corporate_accounts: { Args: { p_hotel_id: string }; Returns: Json }
       list_governance_board: { Args: { p_hotel_id: string }; Returns: Json }
       list_governance_templates: { Args: { p_hotel_id: string }; Returns: Json }
+      list_inventory_lots: { Args: { p_hotel_id: string }; Returns: Json }
       list_maintenance_planning_board: {
         Args: { p_from?: string; p_hotel_id: string; p_to?: string }
         Returns: Json
       }
+      list_minibar_compositions: { Args: { p_hotel_id: string }; Returns: Json }
       list_operational_pending: {
         Args: {
           p_filters?: Json
@@ -11754,6 +14426,7 @@ export type Database = {
         Args: { p_case_id?: string; p_hotel_id: string }
         Returns: Json
       }
+      list_procurement_board: { Args: { p_hotel_id: string }; Returns: Json }
       list_stay_payer_accounts: {
         Args: { p_hotel_id: string; p_stay_id: string }
         Returns: Json
@@ -11788,6 +14461,7 @@ export type Database = {
         }
         Returns: string
       }
+      normalize_business_tax_id: { Args: { p_value: string }; Returns: string }
       notify_maintenance_managers: {
         Args: {
           p_entity_id: string
@@ -11817,6 +14491,15 @@ export type Database = {
         }
         Returns: boolean
       }
+      open_cash_session: {
+        Args: {
+          p_actor_id: string
+          p_hotel_id: string
+          p_input: Json
+          p_register_id: string
+        }
+        Returns: Json
+      }
       operational_pending_candidates: {
         Args: { p_hotel_id: string; p_now?: string }
         Returns: Json
@@ -11834,6 +14517,10 @@ export type Database = {
         Returns: Json
       }
       operational_pending_candidates_stage4_base: {
+        Args: { p_hotel_id: string; p_now?: string }
+        Returns: Json
+      }
+      operational_pending_candidates_stage5_base: {
         Args: { p_hotel_id: string; p_now?: string }
         Returns: Json
       }
@@ -11871,6 +14558,15 @@ export type Database = {
         }
         Returns: Json
       }
+      pay_partner_settlement_partial: {
+        Args: {
+          p_actor_id: string
+          p_hotel_id: string
+          p_input: Json
+          p_settlement_id: string
+        }
+        Returns: Json
+      }
       pay_post_checkout_consumption_case: {
         Args: {
           p_actor_id: string
@@ -11879,6 +14575,25 @@ export type Database = {
           p_hotel_id: string
           p_idempotency_key: string
           p_tenders: Json
+        }
+        Returns: Json
+      }
+      pay_procurement_installment: {
+        Args: {
+          p_actor_id: string
+          p_hotel_id: string
+          p_id: string
+          p_input: Json
+        }
+        Returns: Json
+      }
+      post_cash_movement: {
+        Args: {
+          p_actor_id: string
+          p_can_override: boolean
+          p_hotel_id: string
+          p_id: string
+          p_input: Json
         }
         Returns: Json
       }
@@ -11916,6 +14631,15 @@ export type Database = {
         }
         Returns: Json
       }
+      prepare_daily_close: {
+        Args: {
+          p_actor_id: string
+          p_business_date: string
+          p_hotel_id: string
+          p_input: Json
+        }
+        Returns: Json
+      }
       process_maintenance_expiry_alerts: {
         Args: { p_hotel_id: string; p_local_date: string }
         Returns: number
@@ -11936,12 +14660,29 @@ export type Database = {
         Args: { p_hotel_id: string; p_now?: string }
         Returns: number
       }
+      receive_purchase_order: {
+        Args: {
+          p_actor_id: string
+          p_hotel_id: string
+          p_id: string
+          p_input: Json
+        }
+        Returns: Json
+      }
       recompute_maintenance_occurrence_status: {
         Args: { p_occurrence_id: string }
         Returns: Database["public"]["Enums"]["maintenance_occurrence_status"]
       }
       reconcile_operational_pending: {
         Args: { p_hotel_id: string; p_now?: string }
+        Returns: Json
+      }
+      reconcile_operational_pending_stage5_base: {
+        Args: { p_hotel_id: string; p_now?: string }
+        Returns: Json
+      }
+      reconcile_replenishment_requests: {
+        Args: { p_actor_id?: string; p_hotel_id: string }
         Returns: Json
       }
       record_maintenance_service_confirmation: {
@@ -12077,6 +14818,14 @@ export type Database = {
         }
         Returns: Json
       }
+      save_business_organization: {
+        Args: { p_actor_id: string; p_hotel_id: string; p_input: Json }
+        Returns: Json
+      }
+      save_cash_register: {
+        Args: { p_actor_id: string; p_hotel_id: string; p_input: Json }
+        Returns: Json
+      }
       save_consumption_benefit_plan: {
         Args: { p_actor_id: string; p_hotel_id: string; p_input: Json }
         Returns: Json
@@ -12101,6 +14850,10 @@ export type Database = {
           p_input: Json
           p_team_id: string
         }
+        Returns: Json
+      }
+      save_procurement_policy: {
+        Args: { p_actor_id: string; p_hotel_id: string; p_input: Json }
         Returns: Json
       }
       schedule_maintenance_work_order: {
@@ -12370,8 +15123,37 @@ export type Database = {
         Args: { p_reservation_id: string }
         Returns: undefined
       }
+      version_minibar_composition: {
+        Args: {
+          p_actor_id: string
+          p_hotel_id: string
+          p_id: string
+          p_input: Json
+        }
+        Returns: Json
+      }
     }
     Enums: {
+      business_organization_role:
+        | "commercial_partner"
+        | "maintenance_supplier"
+        | "corporate_account"
+        | "stock_supplier"
+      cash_movement_kind:
+        | "opening_float"
+        | "receipt"
+        | "refund"
+        | "cash_in"
+        | "cash_out"
+        | "deposit"
+        | "adjustment"
+      cash_register_kind: "reception" | "consumption"
+      cash_session_status:
+        | "open"
+        | "counting"
+        | "difference_pending"
+        | "closed"
+        | "canceled"
       catalog_audit_entity: "product" | "product_category"
       commercial_audit_entity:
         | "partner"
@@ -12436,6 +15218,7 @@ export type Database = {
         | "partially_paid"
         | "paid"
         | "reversed"
+      daily_close_status: "open" | "prepared" | "closed" | "rejected"
       governance_check_result:
         | "pending"
         | "approved"
@@ -12472,6 +15255,12 @@ export type Database = {
         | "loss"
         | "internal_use"
         | "transfer"
+      inventory_location_kind:
+        | "warehouse"
+        | "consumption_point"
+        | "minibar_room"
+      inventory_lot_status: "active" | "quarantine" | "disposed"
+      inventory_lot_tracking_mode: "none" | "lot" | "lot_expiry"
       inventory_movement_kind:
         | "opening"
         | "receipt"
@@ -12598,6 +15387,7 @@ export type Database = {
         | "awaiting_inspection"
         | "completed"
         | "canceled"
+      minibar_route_status: "draft" | "in_progress" | "completed" | "canceled"
       partner_settlement_direction:
         | "hotel_to_partner"
         | "partner_to_hotel"
@@ -12616,6 +15406,18 @@ export type Database = {
         | "waived"
         | "rejected"
         | "canceled"
+      procurement_discrepancy_status:
+        | "open"
+        | "accepted"
+        | "corrected"
+        | "rejected"
+      procurement_invoice_status:
+        | "draft"
+        | "exception"
+        | "approved"
+        | "partially_paid"
+        | "paid"
+        | "canceled"
       product_kind: "physical" | "service"
       product_provider_type: "hotel" | "partner"
       product_sales_unit:
@@ -12626,6 +15428,22 @@ export type Database = {
         | "daily"
         | "service"
       product_status: "active" | "inactive"
+      purchase_order_status:
+        | "draft"
+        | "pending_approval"
+        | "approved"
+        | "issued"
+        | "partially_received"
+        | "received"
+        | "closed"
+        | "canceled"
+      replenishment_status:
+        | "draft"
+        | "submitted"
+        | "approved"
+        | "converted"
+        | "fulfilled"
+        | "canceled"
       reservation_source: "front_desk" | "website" | "phone" | "agency"
       reservation_status:
         | "pending"
@@ -12790,6 +15608,29 @@ export type CompositeTypes<
 export const Constants = {
   public: {
     Enums: {
+      business_organization_role: [
+        "commercial_partner",
+        "maintenance_supplier",
+        "corporate_account",
+        "stock_supplier",
+      ],
+      cash_movement_kind: [
+        "opening_float",
+        "receipt",
+        "refund",
+        "cash_in",
+        "cash_out",
+        "deposit",
+        "adjustment",
+      ],
+      cash_register_kind: ["reception", "consumption"],
+      cash_session_status: [
+        "open",
+        "counting",
+        "difference_pending",
+        "closed",
+        "canceled",
+      ],
       catalog_audit_entity: ["product", "product_category"],
       commercial_audit_entity: [
         "partner",
@@ -12864,6 +15705,7 @@ export const Constants = {
         "paid",
         "reversed",
       ],
+      daily_close_status: ["open", "prepared", "closed", "rejected"],
       governance_check_result: [
         "pending",
         "approved",
@@ -12906,6 +15748,13 @@ export const Constants = {
         "internal_use",
         "transfer",
       ],
+      inventory_location_kind: [
+        "warehouse",
+        "consumption_point",
+        "minibar_room",
+      ],
+      inventory_lot_status: ["active", "quarantine", "disposed"],
+      inventory_lot_tracking_mode: ["none", "lot", "lot_expiry"],
       inventory_movement_kind: [
         "opening",
         "receipt",
@@ -13049,6 +15898,7 @@ export const Constants = {
         "completed",
         "canceled",
       ],
+      minibar_route_status: ["draft", "in_progress", "completed", "canceled"],
       partner_settlement_direction: [
         "hotel_to_partner",
         "partner_to_hotel",
@@ -13069,6 +15919,20 @@ export const Constants = {
         "rejected",
         "canceled",
       ],
+      procurement_discrepancy_status: [
+        "open",
+        "accepted",
+        "corrected",
+        "rejected",
+      ],
+      procurement_invoice_status: [
+        "draft",
+        "exception",
+        "approved",
+        "partially_paid",
+        "paid",
+        "canceled",
+      ],
       product_kind: ["physical", "service"],
       product_provider_type: ["hotel", "partner"],
       product_sales_unit: [
@@ -13080,6 +15944,24 @@ export const Constants = {
         "service",
       ],
       product_status: ["active", "inactive"],
+      purchase_order_status: [
+        "draft",
+        "pending_approval",
+        "approved",
+        "issued",
+        "partially_received",
+        "received",
+        "closed",
+        "canceled",
+      ],
+      replenishment_status: [
+        "draft",
+        "submitted",
+        "approved",
+        "converted",
+        "fulfilled",
+        "canceled",
+      ],
       reservation_source: ["front_desk", "website", "phone", "agency"],
       reservation_status: [
         "pending",

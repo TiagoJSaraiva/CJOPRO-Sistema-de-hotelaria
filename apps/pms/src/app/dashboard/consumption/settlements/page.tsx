@@ -16,7 +16,9 @@ import { getConsumptionAccess } from "../access";
 import {
   createSettlementAction,
   decideSettlementAction,
-  paySettlementAction,
+  paySettlementPartialAction,
+  createSettlementDisputeAction,
+  decideSettlementDisputeAction,
   recalculateSettlementAction,
   reverseSettlementPaymentAction,
   submitSettlementAction,
@@ -477,10 +479,11 @@ export default async function PartnerSettlementsPage({
             ) : null}
 
             {access.canSettleSettlements &&
-            selected.status === "approved" &&
+            (selected.status === "approved" ||
+              selected.payment_state === "partially_settled") &&
             selected.direction !== "balanced" ? (
               <form
-                action={paySettlementAction}
+                action={paySettlementPartialAction}
                 className="mt-5 grid gap-3 rounded border border-slate-200 p-4 md:grid-cols-3"
                 data-usage-guide="settlement-payment"
               >
@@ -491,15 +494,14 @@ export default async function PartnerSettlementsPage({
                   value={selected.version}
                 />
                 <label className="pms-field">
-                  Valor exato
+                  Valor desta baixa
                   <input
                     className="pms-field-input"
                     type="number"
                     name="amount"
                     step="0.01"
                     min="0.01"
-                    defaultValue={Math.abs(selected.net_settlement)}
-                    readOnly
+                    max={Math.abs(selected.net_settlement)}
                   />
                 </label>
                 <label className="pms-field">
@@ -531,16 +533,160 @@ export default async function PartnerSettlementsPage({
                   Referência
                   <input className="pms-field-input" name="reference_code" />
                 </label>
+                <label className="pms-field">
+                  Segundo meio
+                  <select
+                    className="pms-field-input"
+                    name="payment_method_2"
+                    defaultValue=""
+                  >
+                    <option value="">Não usar</option>
+                    <option value="cash">Dinheiro</option>
+                    <option value="pix">PIX</option>
+                    <option value="credit_card">Cartão de crédito</option>
+                    <option value="debit_card">Cartão de débito</option>
+                    <option value="bank_transfer">Transferência</option>
+                  </select>
+                </label>
+                <label className="pms-field">
+                  Valor no segundo meio
+                  <input
+                    className="pms-field-input"
+                    name="amount_2"
+                    type="number"
+                    min="0.01"
+                    step="0.01"
+                  />
+                </label>
+                <label className="pms-field">
+                  Referência do segundo meio
+                  <input className="pms-field-input" name="reference_code_2" />
+                </label>
+                <label className="pms-field">
+                  Sessão de caixa
+                  <input
+                    className="pms-field-input"
+                    name="cash_session_id"
+                    placeholder="Obrigatória se houver dinheiro"
+                  />
+                </label>
                 <label className="pms-field md:col-span-2">
                   Observações
                   <textarea className="pms-field-input" name="notes" />
                 </label>
                 <ConfirmSubmitButton
-                  message={`${directionLabel[selected.direction]} no valor exato de ${money(Math.abs(selected.net_settlement))}?`}
+                  message={`Registrar a baixa parcial sem alterar os componentes contestados?`}
                 >
-                  Registrar quitação
+                  Registrar baixa
                 </ConfirmSubmitButton>
               </form>
+            ) : null}
+
+            {selected.components.length ? (
+              <section
+                className="mt-5 rounded border border-slate-200 p-4"
+                data-usage-guide="settlement-disputes"
+              >
+                <h3 className="mt-0">Contestações por componente</h3>
+                <p>
+                  O saldo não contestado continua disponível para liquidação.
+                </p>
+                {access.canManagePartnerDisputes ? (
+                  <form
+                    action={createSettlementDisputeAction}
+                    className="grid gap-3 md:grid-cols-3"
+                  >
+                    <input type="hidden" name="id" value={selected.id} />
+                    <label className="pms-field">
+                      Componente
+                      <select className="pms-field-input" name="component_id">
+                        {selected.components.map((component) => (
+                          <option key={component.id} value={component.id}>
+                            {component.agreement_number} ·{" "}
+                            {money(Math.abs(component.net_settlement_amount))}
+                          </option>
+                        ))}
+                      </select>
+                    </label>
+                    <label className="pms-field">
+                      Valor contestado
+                      <input
+                        className="pms-field-input"
+                        name="disputed_amount"
+                        type="number"
+                        min="0.01"
+                        step="0.01"
+                        required
+                      />
+                    </label>
+                    <label className="pms-field">
+                      Motivo
+                      <input
+                        className="pms-field-input"
+                        name="reason"
+                        minLength={3}
+                        required
+                      />
+                    </label>
+                    <button className="pms-button-secondary md:col-span-3 md:w-fit">
+                      Abrir contestação
+                    </button>
+                  </form>
+                ) : null}
+                <div className="mt-3 grid gap-2">
+                  {selected.disputes?.map((dispute) => (
+                    <article
+                      key={dispute.id}
+                      className="rounded bg-slate-50 p-3"
+                    >
+                      <strong>
+                        {money(dispute.disputed_amount)} · {dispute.status}
+                      </strong>
+                      <p>{dispute.reason}</p>
+                      {dispute.status === "open" &&
+                      access.canManagePartnerDisputes ? (
+                        <form
+                          action={decideSettlementDisputeAction}
+                          className="flex flex-wrap gap-2"
+                        >
+                          <input
+                            type="hidden"
+                            name="settlement_id"
+                            value={selected.id}
+                          />
+                          <input type="hidden" name="id" value={dispute.id} />
+                          <input
+                            type="hidden"
+                            name="version"
+                            value={dispute.version}
+                          />
+                          <input
+                            className="pms-field-input"
+                            name="reason"
+                            minLength={3}
+                            placeholder="Fundamento da decisão"
+                            required
+                          />
+                          <button
+                            className="pms-button-primary"
+                            name="action"
+                            value="accept"
+                          >
+                            Aceitar
+                          </button>
+                          <button
+                            className="pms-button-secondary"
+                            name="action"
+                            value="reject"
+                          >
+                            Rejeitar
+                          </button>
+                        </form>
+                      ) : null}
+                    </article>
+                  ))}
+                </div>
+              </section>
             ) : null}
 
             {access.canSettleSettlements && selected.status === "settled"

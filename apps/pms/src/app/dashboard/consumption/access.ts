@@ -18,6 +18,7 @@ export type ConsumptionAccess = {
   canPrepareSettlements: boolean;
   canApproveSettlements: boolean;
   canSettleSettlements: boolean;
+  canManagePartnerDisputes?: boolean;
   canManageService: boolean;
   canCancelService: boolean;
   canManagePayers: boolean;
@@ -71,6 +72,9 @@ export function getConsumptionAccess(user: UserLike): ConsumptionAccess {
     ),
     canSettleSettlements: permissions.includes(
       PERMISSIONS.PARTNER_SETTLEMENTS_SETTLE,
+    ),
+    canManagePartnerDisputes: permissions.includes(
+      PERMISSIONS.PARTNER_DISPUTES_MANAGE,
     ),
     canManageService: permissions.includes(
       PERMISSIONS.CONSUMPTION_SERVICE_MANAGE,

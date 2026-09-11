@@ -443,3 +443,29 @@ flowchart TD
 ```
 
 Fontes de verdade: `.github/workflows/ci.yml`, `package.json`, `turbo.json`, as configurações Vitest/Playwright e os orquestradores em `scripts`. Atualize este diagrama quando jobs, comandos bloqueantes, relatórios ou artefatos do CI mudarem.
+
+## Fechamento operacional e financeiro
+
+O domínio de operações financeiras conecta organizações, compras, estoque por
+lote, frigobares, sessões de caixa, fechamento diário e apurações de parceiros.
+As operações continuam separadas por permissão e usam o hotel ativo em todas as
+referências. Movimentos físicos e financeiros são imutáveis; correções geram
+registros compensatórios.
+
+```mermaid
+flowchart LR
+  demand[Ruptura ou necessidade] --> procurement[Compra aprovada]
+  procurement --> receipt[Recebimento e lotes]
+  receipt --> inventory[Saldo agregado e FEFO]
+  inventory --> minibar[Estoque por quarto]
+  procurement --> payable[Conta a pagar]
+  payable --> cash[Sessão de caixa]
+  cash --> daily[Fechamento diário]
+  partner[Apuração e disputa] --> cash
+  daily --> late[Ajuste tardio na data atual]
+```
+
+Identidade cadastral comum não concede acesso aos papéis especializados. A
+preparação diária guarda snapshot e fingerprint; a aprovação segregada encerra
+o dia sem recalcular períodos anteriores. Consulte
+[Estoque, compras, caixa e parceiros](operations-finance.md).

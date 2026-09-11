@@ -49,8 +49,10 @@ registra o achado para a recepção. Depois do checkout, o achado cria apenas um
 divergência operacional; a conta encerrada não é alterada.
 
 As quantidades encontradas criam uma tarefa de reposição. Sua conclusão registra
-a execução, mas não representa estoque ideal por quarto. O movimento físico
-continua pertencendo à comanda existente.
+a execução. Quando existe composição ativa de frigobar, a tarefa se sincroniza
+com a rota de abastecimento, que compara o saldo físico do quarto, transfere os
+lotes por FEFO e registra falta no local abastecedor. O movimento de consumo
+continua pertencendo à comanda existente e não é duplicado.
 
 Governança pode registrar uma ocorrência restrita ao quarto. Avaria impeditiva
 exige previsão de bloqueio e, quando há reservas conflitantes, uma ciência

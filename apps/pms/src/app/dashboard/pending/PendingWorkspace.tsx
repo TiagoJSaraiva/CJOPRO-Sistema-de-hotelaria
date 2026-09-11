@@ -32,6 +32,14 @@ const kinds = {
   governance_replenishment: "Reposição pendente",
   governance_minibar: "Divergência de frigobar",
   governance_relocation: "Reserva afetada",
+  expired_lot: "Lote vencido",
+  expiring_lot: "Lote próximo do vencimento",
+  replenishment: "Reposição pendente",
+  procurement_invoice: "Nota ou conta de fornecedor",
+  cash_session: "Sessão de caixa",
+  daily_close: "Fechamento diário",
+  partner_dispute: "Contestação de parceiro",
+  organization_conflict: "Divergência cadastral",
 };
 export function PendingCards({
   data,
@@ -143,6 +151,10 @@ export function PendingWorkspace({
             <option value="maintenance">Manutenção</option>
             <option value="consumption">Consumo</option>
             <option value="governance">Governança</option>
+            <option value="inventory">Estoque</option>
+            <option value="procurement">Compras</option>
+            <option value="cash">Caixa</option>
+            <option value="partner">Parceiros</option>
           </select>
         </label>
         <label className="pms-field">

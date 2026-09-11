@@ -14,7 +14,7 @@ Preservar alterações independentes. Antes da limpeza, transferir orientações
 operacionais exclusivas daqui para a documentação permanente. Iniciar a etapa 6
 ou concluir parcialmente qualquer etapa não autoriza a limpeza.
 
-As etapas 5 e 6 são diretrizes de produto e exigem planejamento técnico próprio
+As etapas posteriores ao trabalho autorizado são diretrizes de produto e exigem planejamento técnico próprio
 e autorização de escopo antes da execução. Não implementar todo o roteiro por
 inferência. Atualizar este acompanhamento em cada entrega validada.
 
@@ -26,7 +26,7 @@ inferência. Atualizar este acompanhamento em cada entrega validada.
 | 2 — Operação integrada   | Concluída e validada | Governança; prontidão; frigobar/avarias; check-in; realocação; passagem e pendências                 | Inspeção segregada; exceção auditada; preço preservado               | 357 verificações SQL; 8 testes HTTP; 463 testes; check/cobertura aprovados; 36 E2E desktop/mobile                        | Planejar tecnicamente a etapa 3 quando solicitada |
 | 3 — Manutenção planejada | Concluída e validada | Equipes, capacidade, agenda; esperas e tempos; impacto, reincidência, ciclo de vida e pendências     | Conflito com exceção auditada; score explicável; aprovação segregada | 385 verificações SQL; 8 testes HTTP; 476 testes; check/cobertura aprovados; 36 E2E desktop/mobile                        | Planejar tecnicamente a etapa 4 quando solicitada |
 | 4 — Consumo e saída      | Concluída e validada | Pedidos; pagadores/empresas; benefícios/transferência; pré-checkout e pós-saída                      | Entrega atômica; aprovação segregada; fechamento preservado          | 410 verificações SQL; 8 testes HTTP; 488 testes; 284 operações OpenAPI; check/cobertura aprovados; 36 E2E                | Planejar tecnicamente a etapa 5 quando solicitada |
-| 5 — Estoque e financeiro | Não iniciada         | —                                                                                                    | Fechar ciclos operacionais                                           | —                                                                                                                        | Planejamento técnico                              |
+| 5 — Estoque e financeiro | Concluída e validada | Organizações; compras; lotes/frigobar; caixa/fechamento; parceiros e pendências                      | Alçadas segregadas; FEFO; contagem cega; liquidação por componente   | 447 verificações SQL; 8 testes HTTP; 503 testes; 320 operações OpenAPI; check/cobertura aprovados; 38 E2E desktop/mobile | Planejar tecnicamente a etapa 6 quando solicitada |
 | 6 — Expansão do PMS      | Não iniciada         | —                                                                                                    | Consolidar operação primeiro                                         | —                                                                                                                        | Planejamento técnico e limpeza final              |
 
 ## Levantamento de design aprovado
@@ -148,6 +148,35 @@ inferência. Atualizar este acompanhamento em cada entrega validada.
   celular com cobertura visual e axe. A cobertura ficou em 40,17% das linhas no
   consolidado, 35,97% no backend, 39,93% no PMS e 97,66% no shared, sem reduzir
   limiares.
+
+### Registro das entregas da etapa 5
+
+- Organizações e compras: identidade cadastral por hotel com papéis separados,
+  consolidação por documento normalizado, divergências auditáveis, solicitações
+  de reposição, políticas de alçada, cotações, pedidos, recebimento triplo e
+  contas a pagar parciais e multimeios.
+- Estoque e frigobar: rastreabilidade opcional por lote e validade, ativação com
+  contagem inicial, FEFO, descarte e transferências; composições versionadas,
+  exceções por quarto, rotas de reposição e integração com a governança sem
+  duplicar a baixa do consumo.
+- Caixa e fechamento: caixas físicos com sessão exclusiva, movimentos por
+  operador, contagem cega, troca de operador, decisão segregada de diferenças e
+  fechamento diário com snapshot, fingerprint e lançamentos tardios vinculados.
+- Parceiros e coordenação: apuração separada em aprovação, liquidação e
+  contestação por componente, pagamentos parciais idempotentes e visão
+  consolidada condicionada às permissões de cada domínio. A central persistente
+  recebeu episódios de estoque, compras, caixa, parceiros e divergências
+  cadastrais.
+- Contratos e orientação: 17 permissões independentes, 320 operações OpenAPI,
+  tipos Supabase regenerados, guias contextuais e documentação e diagramas
+  permanentes atualizados. Os snapshots alterados foram inspecionados antes da
+  atualização e a auditoria axe corrigiu o rótulo da data operacional do caixa.
+- Validação: `pnpm check`, `pnpm test`, `pnpm test:coverage`, OpenAPI, reset local,
+  pgTAP e `pnpm test:e2e` aprovados. Foram 447 verificações SQL, 8 cenários HTTP
+  com banco real, 503 testes de workspace e 38 jornadas E2E em desktop e celular.
+  A cobertura de linhas ficou em 40,13% no consolidado, 36,02% no backend, 39,44%
+  no PMS e 97,86% no shared, sem reduzir limiares. O Supabase foi recriado
+  exclusivamente no ambiente local e nenhum serviço remoto foi alterado.
 
 A principal oportunidade é conectar módulos em jornadas completas. Manutenção
 já inclui preventivas, SLA, fornecedores, garantias, inspeções e financeiro.
@@ -490,3 +519,58 @@ complementar, idempotência, permissões e isolamento. Validar shared, PMS,
 backend, migrations/RLS e jornadas Playwright. Gerar OpenAPI e tipos locais;
 executar Prettier, documentação, check, testes, cobertura, banco e E2E. Não
 reduzir cobertura nem atualizar snapshots sem inspeção visual.
+
+## Plano técnico aprovado — etapa 5
+
+### Escopo e limites
+
+Entregar quatro blocos locais: organizações, reposição, compras e recebimento;
+lotes, validade e frigobares; caixa e fechamento diário; parceiros, pendências
+e visão consolidada. Preservar endpoints e históricos existentes, custo médio,
+isolamento por hotel, imutabilidade, concorrência e idempotência. Não incluir
+integrações bancárias, fiscais, contábeis, envio automático, compra sem aprovação,
+transferência entre hotéis, código de barras ou funcionalidades da etapa 6.
+
+### Compras e estoque
+
+- Centralizar a identidade das organizações sem misturar seus papéis. Consolidar
+  apenas documentos fiscais normalizados dentro do hotel e preservar divergências
+  e alterações em eventos auditáveis.
+- Reconciliar rupturas em solicitações episódicas, consolidáveis somente por
+  fornecedor, moeda e destino compatíveis. Exigir política configurada, cotações
+  e alçadas; solicitante e aprovadores devem ser pessoas diferentes.
+- Conferir pedido, recebimento e nota. Somente quantidades aceitas entram no
+  estoque. Exceções acima da tolerância exigem decisão segregada. Notas aprovadas
+  geram parcelas com pagamentos parciais, multimeios e estornos compensatórios.
+- Ativar lotes por produto após distribuir todo o saldo inicial. Usar FEFO nas
+  saídas, impedir lote vencido e manter a soma física alinhada ao saldo agregado
+  e ao custo médio móvel.
+- Versionar composições de frigobar, admitir exceções por quarto, criar localização
+  física por quarto e sincronizar rotas de reposição com a governança.
+
+### Caixa, fechamento e parceiros
+
+- Manter uma sessão exclusiva por caixa e operador. Registrar todos os meios para
+  conciliação, alterando o físico somente para dinheiro. Troca de operador e
+  diferenças usam contagem cega e decisão de outra pessoa.
+- Preparar um fechamento por hotel e data local com snapshot e fingerprint.
+  Sessões ou movimentos inconsistentes bloqueiam; outra pessoa aprova. Lançamentos
+  tardios permanecem na data atual com referência ao fechamento original.
+- Separar aprovação, liquidação e contestação de parceiros. Contestar por
+  componente sem reter o saldo livre e liquidar parcialmente por vários meios.
+- Estender a central com ruptura, validade, compra, nota, caixa, fechamento,
+  disputa e conflito cadastral, preservando episódios quando uma fonte falhar.
+
+### Guia de uso e proteção
+
+As interfaces orientam compras, recebimento, lote/FEFO, frigobar, caixa, contagem
+cega, fechamento, disputas e organizações por alvos `data-usage-guide` visíveis e
+autorizados. Controles preservam teclado, foco, anúncios e viewport móvel.
+
+Caracterizar movimentos e custos, consumo, reposição, pagamentos, apuração e
+pendências. Cobrir regras puras no shared, autorização e conflitos no backend,
+RLS/transações no pgTAP e jornadas no PMS/Playwright. Regenerar OpenAPI e tipos;
+executar Prettier, documentação, check, testes, cobertura, banco e E2E sem reduzir
+limiares ou atualizar snapshots sem inspeção visual. Após validar esta etapa,
+apontar a etapa 6 como próximo planejamento e preservar este arquivo e o bloco
+temporário do AGENTS.md até a validação final da etapa 6.

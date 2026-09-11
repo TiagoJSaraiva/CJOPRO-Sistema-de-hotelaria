@@ -78,6 +78,26 @@ const maintenancePermissions = [
   "approve_maintenance_lifecycle",
   "confirm_maintenance_service",
 ];
+const operationsPermissions = [
+  ...managementPermissions,
+  "read_business_organizations",
+  "manage_business_organizations",
+  "read_procurement",
+  "request_procurement",
+  "approve_procurement",
+  "receive_procurement",
+  "review_procurement_invoices",
+  "settle_supplier_payables",
+  "manage_inventory_lots",
+  "manage_minibar_compositions",
+  "execute_minibar_replenishment",
+  "read_cash_management",
+  "operate_cash_register",
+  "approve_cash_differences",
+  "prepare_daily_close",
+  "approve_daily_close",
+  "manage_partner_disputes",
+];
 
 const user = {
   id: "user-e2e",
@@ -127,6 +147,14 @@ const managementUser = {
   roleAssignments: user.roleAssignments.map((assignment) => ({
     ...assignment,
     permissions: managementPermissions,
+  })),
+};
+const operationsUser = {
+  ...user,
+  permissions: operationsPermissions,
+  roleAssignments: user.roleAssignments.map((assignment) => ({
+    ...assignment,
+    permissions: operationsPermissions,
   })),
 };
 
@@ -1092,16 +1120,88 @@ const server = http.createServer(async (request, response) => {
     const authorization = request.headers.authorization;
     sendJson(response, 200, {
       user:
-        authorization === "Bearer maintenance-e2e-token"
-          ? maintenanceUser
-          : authorization === "Bearer inventory-e2e-token"
-            ? inventoryUser
-            : authorization === "Bearer management-e2e-token"
-              ? managementUser
-              : authorization === "Bearer consumption-e2e-token"
-                ? consumptionUser
-                : user,
+        authorization === "Bearer operations-e2e-token"
+          ? operationsUser
+          : authorization === "Bearer maintenance-e2e-token"
+            ? maintenanceUser
+            : authorization === "Bearer inventory-e2e-token"
+              ? inventoryUser
+              : authorization === "Bearer management-e2e-token"
+                ? managementUser
+                : authorization === "Bearer consumption-e2e-token"
+                  ? consumptionUser
+                  : user,
     });
+    return;
+  }
+
+  if (method === "GET" && url.pathname === "/admin/procurement/board") {
+    sendJson(response, 200, {
+      policy: {
+        configuration_required: true,
+        currency: "BRL",
+        price_tolerance_percent: 0,
+        price_tolerance_amount: 0,
+        quantity_tolerance_percent: 0,
+        quantity_tolerance_amount: 0,
+      },
+      replenishments: [],
+      orders: [],
+      invoices: [],
+      suppliers: [],
+    });
+    return;
+  }
+  if (method === "GET" && url.pathname === "/admin/business-organizations") {
+    sendJson(response, 200, [
+      {
+        id: "organization-e2e",
+        legal_name: "Fornecedor Hotelaria Ltda.",
+        trade_name: "Fornecedor Hotelaria",
+        tax_id: "12345678000190",
+        currency: "BRL",
+        active: true,
+        version: 1,
+        roles: { stock_supplier_id: "supplier-e2e" },
+      },
+    ]);
+    return;
+  }
+  if (method === "GET" && url.pathname === "/admin/cash-registers") {
+    sendJson(response, 200, {
+      registers: [
+        {
+          id: "register-e2e",
+          name: "Recepção",
+          code: "REC",
+          currency: "BRL",
+          difference_tolerance: 0,
+          active_session: null,
+        },
+      ],
+    });
+    return;
+  }
+  if (method === "GET" && url.pathname.startsWith("/admin/daily-close/")) {
+    sendJson(response, 200, {
+      close: null,
+      projection: { transactions: [], cash_sessions: [], blockers: [] },
+    });
+    return;
+  }
+  if (method === "GET" && url.pathname === "/admin/inventory/lots") {
+    sendJson(response, 200, { lots: [] });
+    return;
+  }
+  if (method === "GET" && url.pathname === "/admin/minibar/compositions") {
+    sendJson(response, 200, { compositions: [] });
+    return;
+  }
+  if (
+    method === "GET" &&
+    url.pathname === "/admin/minibar/replenishment-board"
+  ) {
+    sendJson(response, 200, { rooms: [], routes: [] });
     return;
   }
 

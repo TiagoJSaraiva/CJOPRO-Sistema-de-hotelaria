@@ -805,6 +805,9 @@ export type AdminPartnerSettlement = {
   period_end: string;
   currency: string;
   status: PartnerSettlementStatus;
+  approval_state?: "draft" | "in_review" | "approved" | "rejected";
+  payment_state?: "open" | "partially_settled" | "settled";
+  dispute_state?: "clear" | "disputed" | "resolved";
   direction: PartnerSettlementDirection;
   version: number;
   gross_sales: number;
@@ -833,6 +836,17 @@ export type AdminPartnerSettlement = {
   sources: AdminPartnerSettlementSource[];
   payments: AdminPartnerSettlementPayment[];
   events: AdminPartnerSettlementEvent[];
+  disputes?: Array<{
+    id: string;
+    component_id: string;
+    disputed_amount: number;
+    status: "open" | "accepted" | "rejected" | "canceled";
+    reason: string;
+    version: number;
+    opened_by: string;
+    responsible_id: string | null;
+    created_at: string;
+  }>;
   created_at: string;
   updated_at: string;
 };

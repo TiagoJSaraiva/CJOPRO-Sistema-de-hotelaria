@@ -385,9 +385,16 @@ export const consumptionSettlementsGuide: UsageGuideDefinition = {
     {
       id: "payment",
       target: "settlement-payment",
-      title: "Registre a quitação",
+      title: "Registre as baixas",
       description:
-        "Saldo positivo é repasse ao parceiro; saldo negativo é cobrança. A baixa é integral e apenas registra a operação.",
+        "Saldo positivo é repasse ao parceiro; saldo negativo é cobrança. Baixas parciais preservam o saldo restante.",
+    },
+    {
+      id: "disputes",
+      target: "settlement-disputes",
+      title: "Conteste componentes",
+      description:
+        "Isole a parte contestada da apuração para continuar liquidando o valor que já foi conferido.",
     },
   ],
 };

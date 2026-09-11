@@ -15,6 +15,7 @@ Use este índice para localizar a fonte de verdade adequada à tarefa.
 | consultar o contrato HTTP                    | [OpenAPI versionado](openapi.json)                         |
 | operar preventivas, SLA e automação          | [Gestão avançada de manutenção](maintenance-management.md) |
 | analisar consumo e fechar parceiros          | [Fechamento gerencial](consumption-management.md)          |
+| fechar estoque, compras, caixa e parceiros   | [Operações financeiras](operations-finance.md)             |
 | operar giro, inspeção e prontidão de quartos | [Governança e prontidão](governance-operations.md)         |
 
 ## Fontes de verdade

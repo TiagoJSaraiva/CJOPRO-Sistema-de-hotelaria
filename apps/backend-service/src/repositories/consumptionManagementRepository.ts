@@ -70,6 +70,21 @@ function record(value: unknown): Record<string, unknown> {
 function number(value: unknown): number {
   return Number(value || 0);
 }
+function approvalState(value: string) {
+  return (["draft", "in_review", "approved", "rejected"] as const).find(
+    (item) => item === value,
+  );
+}
+function paymentState(value: string) {
+  return (["open", "partially_settled", "settled"] as const).find(
+    (item) => item === value,
+  );
+}
+function disputeState(value: string) {
+  return (["clear", "disputed", "resolved"] as const).find(
+    (item) => item === value,
+  );
+}
 function rpc(value: Json | null): RpcResult {
   const data = record(value);
   return {
@@ -135,6 +150,7 @@ function mapSettlement(
     sources?: Tables<"partner_settlement_sources">[];
     payments?: Tables<"partner_settlement_payments">[];
     events?: EventRow[];
+    disputes?: Tables<"partner_settlement_disputes">[];
   },
 ): AdminPartnerSettlement {
   return {
@@ -145,6 +161,9 @@ function mapSettlement(
     period_end: row.period_end,
     currency: row.currency,
     status: row.status,
+    approval_state: approvalState(row.approval_state),
+    payment_state: paymentState(row.payment_state),
+    dispute_state: disputeState(row.dispute_state),
     direction: row.direction,
     version: number(row.version),
     gross_sales: number(row.gross_sales),
@@ -196,6 +215,17 @@ function mapSettlement(
         created_at: event.created_at,
       };
     }),
+    disputes: (details?.disputes || []).map((dispute) => ({
+      id: dispute.id,
+      component_id: dispute.component_id,
+      disputed_amount: number(dispute.disputed_amount),
+      status: dispute.status as "open" | "accepted" | "rejected" | "canceled",
+      reason: dispute.reason,
+      version: dispute.version,
+      opened_by: dispute.opened_by,
+      responsible_id: dispute.responsible_id,
+      created_at: dispute.created_at,
+    })),
     created_at: row.created_at,
     updated_at: row.updated_at,
   };
@@ -495,7 +525,7 @@ export class SupabaseConsumptionManagementRepository implements ConsumptionManag
   }
 
   async getSettlement(id: string, hotelId: string) {
-    const [settlement, components, sources, payments, events] =
+    const [settlement, components, sources, payments, events, disputes] =
       await Promise.all([
         this.client
           .from("partner_settlements")
@@ -529,8 +559,21 @@ export class SupabaseConsumptionManagementRepository implements ConsumptionManag
           .eq("settlement_id", id)
           .eq("hotel_id", hotelId)
           .order("created_at", { ascending: false }),
+        this.client
+          .from("partner_settlement_disputes")
+          .select("*")
+          .eq("settlement_id", id)
+          .eq("hotel_id", hotelId)
+          .order("created_at", { ascending: false }),
       ]);
-    for (const result of [settlement, components, sources, payments, events])
+    for (const result of [
+      settlement,
+      components,
+      sources,
+      payments,
+      events,
+      disputes,
+    ])
       if (result.error) throw result.error;
     if (!settlement.data) return null;
     return mapSettlement(settlement.data as SettlementRow, {
@@ -538,6 +581,7 @@ export class SupabaseConsumptionManagementRepository implements ConsumptionManag
       sources: sources.data || [],
       payments: payments.data || [],
       events: (events.data || []) as EventRow[],
+      disputes: disputes.data || [],
     });
   }
 

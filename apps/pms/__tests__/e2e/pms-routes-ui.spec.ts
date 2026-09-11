@@ -39,6 +39,43 @@ async function stabilizeVisualState(page: Page) {
 }
 
 test.describe("PMS UI quality", () => {
+  test("consulta compras, organizações, lotes e caixa da etapa 5", async ({
+    page,
+    context,
+    baseURL,
+    auditAccessibility,
+  }) => {
+    test.setTimeout(90_000);
+    await authenticate(context, baseURL!, "operations-e2e-token");
+    await preparePage(page);
+
+    await page.goto("/dashboard/procurement");
+    await expect(
+      page.getByRole("heading", { name: "Compras e reposição" }),
+    ).toBeVisible();
+    await expect(
+      page.getByText("Configure antes de submeter compras."),
+    ).toBeVisible();
+    await auditAccessibility("compras-e-reposicao");
+
+    await page.goto("/dashboard/organizations");
+    await expect(page.getByText("Fornecedor Hotelaria").first()).toBeVisible();
+    await auditAccessibility("organizacoes");
+
+    await page.goto("/dashboard/inventory/lots");
+    await expect(
+      page.getByRole("heading", { name: "Lotes e validade" }),
+    ).toBeVisible();
+    await auditAccessibility("estoque-lotes");
+
+    await page.goto("/dashboard/cash");
+    await expect(
+      page.getByRole("heading", { name: "Caixa e fechamento" }),
+    ).toBeVisible();
+    await expect(page.getByText("Recepção").first()).toBeVisible();
+    await auditAccessibility("caixa-e-fechamento");
+  });
+
   test(
     "organiza cobranças incompatíveis e preserva os dois recibos",
     { tag: TEST_TAGS },
