@@ -120,6 +120,16 @@ export default async function StayAccountPage({
             debitEntries={account.folio.entries.filter(
               (entry) => entry.direction === "debit",
             )}
+            consumptionQuantities={Object.fromEntries(
+              account.consumption_orders.map((order) => [
+                order.id,
+                order.items.reduce(
+                  (total, item) =>
+                    total + Number(item.effective_quantity ?? item.quantity),
+                  0,
+                ),
+              ]),
+            )}
             canManage={consumptionAccess.canManagePayers}
             canReceive={consumptionAccess.canReceivePayment}
           />

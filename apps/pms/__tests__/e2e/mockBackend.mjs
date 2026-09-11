@@ -2615,6 +2615,21 @@ const server = http.createServer(async (request, response) => {
     return;
   }
 
+  const departureReviewMatch = url.pathname.match(
+    /^\/admin\/stays\/([^/]+)\/departure-review$/,
+  );
+  if (method === "GET" && departureReviewMatch) {
+    sendJson(response, 200, {
+      stay_id: departureReviewMatch[1],
+      ready: true,
+      blockers: [],
+      payer_balances: [],
+      account_version: 3,
+      updated_at: "2026-05-12T15:00:00.000Z",
+    });
+    return;
+  }
+
   const stayPaymentBatchMatch = url.pathname.match(
     /^\/admin\/stays\/([^/]+)\/payment-batches$/,
   );

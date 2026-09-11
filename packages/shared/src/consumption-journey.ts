@@ -373,6 +373,9 @@ export const PostCheckoutConsumptionCreateSchema = Type.Object(
   },
   strict,
 );
+export type PostCheckoutConsumptionCreate = Static<
+  typeof PostCheckoutConsumptionCreateSchema
+>;
 export const PostCheckoutConsumptionActionSchema = Type.Object(
   {
     action: Type.Union([
@@ -392,6 +395,9 @@ export const PostCheckoutConsumptionActionSchema = Type.Object(
   },
   strict,
 );
+export type PostCheckoutConsumptionAction = Static<
+  typeof PostCheckoutConsumptionActionSchema
+>;
 export const PostCheckoutPaymentInputSchema = Type.Object(
   {
     idempotency_key: uuid(),
@@ -410,6 +416,22 @@ export const PostCheckoutPaymentInputSchema = Type.Object(
   },
   strict,
 );
+export type PostCheckoutPaymentInput = Static<
+  typeof PostCheckoutPaymentInputSchema
+>;
+export const PostCheckoutEvidenceInputSchema = Type.Object(
+  {
+    private_path: Type.String({ minLength: 1, maxLength: 500 }),
+    description: Type.String({ minLength: 3, maxLength: 1000 }),
+  },
+  strict,
+);
+export type PostCheckoutEvidenceInput = Static<
+  typeof PostCheckoutEvidenceInputSchema
+>;
+export const CorporateReceivablePaymentInputSchema =
+  PostCheckoutPaymentInputSchema;
+export type CorporateReceivablePaymentInput = PostCheckoutPaymentInput;
 
 export const DepartureReviewSchema = Type.Object(
   {
@@ -433,3 +455,4 @@ export const DepartureReviewSchema = Type.Object(
   },
   { ...strict, $id: "DepartureReview" },
 );
+export type DepartureReview = Static<typeof DepartureReviewSchema>;

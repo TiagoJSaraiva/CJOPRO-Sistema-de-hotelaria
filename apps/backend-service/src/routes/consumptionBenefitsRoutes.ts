@@ -35,23 +35,21 @@ function send(
   const notFound = result.result === "not_found";
   const invalid =
     result.result.startsWith("invalid") || result.result === "reason_required";
-  return reply
-    .status(notFound ? 404 : invalid ? 400 : 409)
-    .send({
-      ...adminError(
-        notFound
-          ? ADMIN_ERROR_CODE.NOT_FOUND
-          : invalid
-            ? ADMIN_ERROR_CODE.VALIDATION
-            : ADMIN_ERROR_CODE.CONFLICT,
-        notFound
-          ? "Registro não encontrado no hotel ativo."
-          : invalid
-            ? "Dados inválidos para benefícios ou transferência."
-            : "A conta mudou. Atualize a simulação antes de confirmar.",
-      ),
-      ...(result.context ? { context: result.context } : {}),
-    });
+  return reply.status(notFound ? 404 : invalid ? 400 : 409).send({
+    ...adminError(
+      notFound
+        ? ADMIN_ERROR_CODE.NOT_FOUND
+        : invalid
+          ? ADMIN_ERROR_CODE.VALIDATION
+          : ADMIN_ERROR_CODE.CONFLICT,
+      notFound
+        ? "Registro não encontrado no hotel ativo."
+        : invalid
+          ? "Dados inválidos para benefícios ou transferência."
+          : "A conta mudou. Atualize a simulação antes de confirmar.",
+    ),
+    ...(result.context ? { context: result.context } : {}),
+  });
 }
 export function registerConsumptionBenefitsRoutes(
   app: FastifyInstance,

@@ -118,6 +118,11 @@ reembolsos, mas preserva cada lançamento original. Pagamentos parciais ou
 multimeios formam um lote atômico e são alocados no servidor; nunca podem
 exceder o saldo.
 
+Subcontas distribuem integralmente os débitos entre hóspede principal,
+acompanhantes e empresa. Consumos preservam também a quantidade atribuída.
+Crédito empresarial aprovado por outra pessoa pode liquidar a subconta no
+checkout e originar um recebível independente.
+
 ```mermaid
 flowchart LR
   folio[Conta versionada da estadia] --> review[Revisão de débitos e créditos]
@@ -129,6 +134,8 @@ flowchart LR
   refund --> close
   close --> snapshot[Fechamento original imutável]
   snapshot --> later[Correções posteriores separadas]
+  snapshot --> supplemental[Conta complementar pós-saída]
+  supplemental --> collection[Contato, contestação e pagamentos parciais]
 ```
 
 Ajustes parciais e anulações nunca alteram comandas. Correções pagas somente
@@ -139,7 +146,15 @@ correção pendente e ciência explícita das cobranças de dano aceitas como
 exceção. O snapshot original alimenta o extrato HTML não fiscal e não muda com
 correções posteriores.
 
-Fontes de verdade: migration `20260906010000_finalize_stay_accounts.sql`,
+A conferência pré-checkout revalida pedidos operacionais, rateios, benefícios e
+autorizações. Pedidos de restaurante ou serviço de quarto reservam recursos no
+recebimento e materializam comandas somente na entrega. Um achado após a saída
+passa por evidência e aprovação segregada; a venda, o estoque e a conta
+complementar ficam vinculados ao fechamento sem reabri-lo.
+
+Fontes de verdade: migrations `20260906010000_finalize_stay_accounts.sql` e
+`20260912010000_create_consumption_service_orders.sql` a
+`20260912040000_create_departure_review_and_post_checkout_consumption.sql`,
 `stayAccountsRepository.ts`, `stayAccountRoutes.ts`, contratos em
 `packages/shared/src/api-contract.ts` e a jornada em
 `apps/pms/src/app/dashboard/reservations/checkout`.

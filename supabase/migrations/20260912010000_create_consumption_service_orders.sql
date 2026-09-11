@@ -70,6 +70,7 @@ create table public.consumption_service_order_items (
   version_token text not null,
   inventory_position_id uuid,
   created_at timestamptz not null default now(),
+  constraint consumption_service_items_id_hotel_unique unique(id, hotel_id),
   constraint consumption_service_items_order_hotel_fkey foreign key(service_order_id, hotel_id)
     references public.consumption_service_orders(id, hotel_id) on delete restrict,
   constraint consumption_service_items_offer_hotel_fkey foreign key(offer_id, hotel_id)

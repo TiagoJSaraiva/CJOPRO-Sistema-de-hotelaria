@@ -137,3 +137,33 @@ it("exige permissão de aprovação para decidir crédito", async () => {
   ).toBe(200);
   expect(repository.actCredit).toHaveBeenCalledOnce();
 });
+
+it("filtra autorizações e recebíveis conforme a permissão financeira", async () => {
+  const { app, repository } = await setup();
+  vi.mocked(repository.listCompanies).mockResolvedValue({
+    items: [
+      {
+        id: entityId,
+        legal_name: "Empresa local",
+        authorizations: [{ id: "authorization" }],
+        receivables: [{ id: "receivable", balance: 120 }],
+      },
+    ],
+  });
+
+  const requester = await app.inject({
+    url: "/admin/corporate-accounts",
+    headers: headers([PERMISSIONS.CORPORATE_CREDIT_REQUEST]),
+  });
+  expect(requester.statusCode).toBe(200);
+  expect(requester.json().items[0].authorizations).toHaveLength(1);
+  expect(requester.json().items[0]).not.toHaveProperty("receivables");
+
+  const collector = await app.inject({
+    url: "/admin/corporate-accounts",
+    headers: headers([PERMISSIONS.CORPORATE_RECEIVABLES_SETTLE]),
+  });
+  expect(collector.statusCode).toBe(200);
+  expect(collector.json().items[0]).not.toHaveProperty("authorizations");
+  expect(collector.json().items[0].receivables).toHaveLength(1);
+});

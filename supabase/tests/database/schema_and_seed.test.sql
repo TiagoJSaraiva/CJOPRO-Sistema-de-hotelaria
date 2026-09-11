@@ -78,7 +78,7 @@ select is((select count(*)::integer from public.hotels), 2, 'seed has two hotels
 select is((select count(*)::integer from public.rooms), 6, 'seed has six rooms');
 select is((select count(*)::integer from public.customers), 4, 'seed has four customers');
 select is((select count(*)::integer from public.products), 4, 'seed has four products');
-select is((select count(*)::integer from public.permissions), 94, 'seed matches all canonical application permissions');
+select is((select count(*)::integer from public.permissions), 106, 'seed matches all canonical application permissions');
 select is((select count(*)::integer from public.roles), 3, 'seed has one global role and two hotel roles');
 select is((select count(*)::integer from public.users), 3, 'seed has three local users');
 select is((select count(*)::integer from public.reservations), 4, 'seed has four reservations');
@@ -219,13 +219,13 @@ select is(
 
 select is(
   (select count(*)::integer from public.role_permissions where role_id = '70000000-0000-4000-8000-000000000002'),
-  70,
+  82,
   'Aurora manager keeps commercial and management permissions opt-in'
 );
 
 select is(
   (select count(*)::integer from public.role_permissions where role_id = '70000000-0000-4000-8000-000000000003'),
-  70,
+  82,
   'Horizonte manager keeps commercial and management permissions opt-in'
 );
 
@@ -1442,6 +1442,18 @@ update public.stays set
   where id='91000000-0000-4000-8000-000000000002';
 update public.hotels set checkout_time_start = time '00:00', checkout_time_limit = time '23:59:59'
   where id='10000000-0000-4000-8000-000000000001';
+delete from public.stay_payer_allocations
+  where stay_id='91000000-0000-4000-8000-000000000002';
+insert into public.stay_payer_allocations(
+  hotel_id,stay_id,folio_entry_id,payer_account_id,amount,quantity,allocated_by
+)
+select entry.hotel_id,entry.stay_id,entry.id,payer.id,entry.amount,
+  (select sum(item.quantity) from public.consumption_order_items item
+    where item.order_id=entry.consumption_order_id),
+  '80000000-0000-4000-8000-000000000002'
+from public.stay_folio_entries entry
+join public.stay_payer_accounts payer on payer.stay_id=entry.stay_id and payer.kind='primary_guest'
+where entry.stay_id='91000000-0000-4000-8000-000000000002' and entry.direction='debit';
 select is(
   (public.checkout_stay_account(
     '10000000-0000-4000-8000-000000000001',

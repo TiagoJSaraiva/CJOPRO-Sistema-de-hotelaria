@@ -625,7 +625,7 @@ class SupabaseStayAccountsRepository implements StayAccountsRepository {
     includeTerms: boolean,
   ) {
     const { data, error } = await createServerClient().rpc(
-      "checkout_stay_account",
+      "checkout_stay_account_stage4",
       {
         p_hotel_id: hotelId,
         p_stay_id: stayId,

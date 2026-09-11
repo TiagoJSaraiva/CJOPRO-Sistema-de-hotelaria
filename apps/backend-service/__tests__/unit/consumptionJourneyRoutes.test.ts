@@ -67,13 +67,11 @@ async function setup() {
     produced_order_ids: [],
   };
   const repository: ConsumptionJourneyRepository = {
-    board: vi
-      .fn()
-      .mockResolvedValue({
-        items: [item],
-        summary: {},
-        updated_at: item.updated_at,
-      }),
+    board: vi.fn().mockResolvedValue({
+      items: [item],
+      summary: {},
+      updated_at: item.updated_at,
+    }),
     serviceOrder: vi.fn().mockResolvedValue(item),
     createServiceOrder: vi
       .fn()

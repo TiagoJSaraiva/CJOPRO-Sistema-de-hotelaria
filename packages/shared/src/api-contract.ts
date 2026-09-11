@@ -54,6 +54,11 @@ import {
   BenefitPlanVersionInputSchema,
   BenefitGrantInputSchema,
   ConsumptionTransferInputSchema,
+  PostCheckoutConsumptionCreateSchema,
+  PostCheckoutConsumptionActionSchema,
+  PostCheckoutEvidenceInputSchema,
+  PostCheckoutPaymentInputSchema,
+  CorporateReceivablePaymentInputSchema,
 } from "./consumption-journey";
 import { Type, type Static, type TSchema } from "typebox";
 import type {
@@ -4209,6 +4214,74 @@ export const API_ROUTE_CONTRACTS: Readonly<Record<string, ApiRouteContract>> = {
     "Cria crédito e débito compensatórios sem repetir venda ou estoque.",
     OkSchema,
     { params: IdParamsSchema, body: ConsumptionTransferInputSchema },
+  ),
+  "GET /admin/stays/:id/departure-review": admin(
+    "getStayDepartureReview",
+    "Departure review",
+    "Consolida pedidos, distribuições, saldos, benefícios e crédito antes do checkout.",
+    DepartureReviewSchema,
+    { params: IdParamsSchema },
+  ),
+  "GET /admin/post-checkout-consumption": admin(
+    "listPostCheckoutConsumptionCases",
+    "Post checkout consumption",
+    "Lista casos de cobrança complementar sem alterar o fechamento original.",
+    Type.Object(
+      { items: Type.Array(Type.Record(Type.String(), Type.Unknown())) },
+      strict,
+    ),
+    { querystring: Type.Object({ id: Type.Optional(uuid()) }, strict) },
+  ),
+  "POST /admin/post-checkout-consumption": route(
+    "createPostCheckoutConsumptionCase",
+    "Post checkout consumption",
+    "Registra itens e relato vinculados ao fechamento imutável.",
+    {
+      headers: AuthHeadersSchema,
+      security: [{ bearerAuth: [] }],
+      body: PostCheckoutConsumptionCreateSchema,
+      response: { 201: OkSchema, ...adminErrors },
+    },
+  ),
+  "GET /admin/post-checkout-consumption/:id": admin(
+    "getPostCheckoutConsumptionCase",
+    "Post checkout consumption",
+    "Detalha evidências, eventos, conta complementar e pagamentos.",
+    itemSchema(Type.Record(Type.String(), Type.Unknown())),
+    { params: IdParamsSchema },
+  ),
+  "POST /admin/post-checkout-consumption/:id/actions": admin(
+    "actPostCheckoutConsumptionCase",
+    "Post checkout consumption",
+    "Submete, decide, registra contato, contesta ou dispensa o caso.",
+    OkSchema,
+    { params: IdParamsSchema, body: PostCheckoutConsumptionActionSchema },
+  ),
+  "POST /admin/post-checkout-consumption/:id/evidence": route(
+    "addPostCheckoutConsumptionEvidence",
+    "Post checkout consumption",
+    "Vincula evidência privada ao caso sem expor o arquivo na listagem.",
+    {
+      headers: AuthHeadersSchema,
+      security: [{ bearerAuth: [] }],
+      params: IdParamsSchema,
+      body: PostCheckoutEvidenceInputSchema,
+      response: { 201: OkSchema, ...adminErrors },
+    },
+  ),
+  "POST /admin/post-checkout-consumption/:id/payments": admin(
+    "payPostCheckoutConsumptionCase",
+    "Post checkout consumption",
+    "Recebe pagamento parcial ou multimeios da conta complementar.",
+    OkSchema,
+    { params: IdParamsSchema, body: PostCheckoutPaymentInputSchema },
+  ),
+  "POST /admin/corporate-receivables/:id/payments": admin(
+    "payCorporateReceivable",
+    "Corporate accounts",
+    "Recebe pagamento parcial ou multimeios de recebível empresarial.",
+    OkSchema,
+    { params: IdParamsSchema, body: CorporateReceivablePaymentInputSchema },
   ),
   "GET /admin/governance/board": admin(
     "listGovernanceBoard",

@@ -152,16 +152,16 @@ begin
   for v_item in select * from public.consumption_order_items where order_id=p_order_id order by id loop
     v_remaining:=v_item.net_amount;
     for v_candidate in
-      select grant.id grant_id,grant.expires_at,grant.granted_at,rule.*,
-        coalesce((select sum(redemption.amount) from public.consumption_benefit_redemptions redemption where redemption.grant_id=grant.id and redemption.rule_id=rule.id),0) used_amount,
-        coalesce((select sum(redemption.quantity) from public.consumption_benefit_redemptions redemption where redemption.grant_id=grant.id and redemption.rule_id=rule.id),0) used_quantity
-      from public.stay_benefit_grants grant join public.consumption_benefit_rules rule on rule.plan_version_id=grant.plan_version_id
-      where grant.hotel_id=p_hotel_id and grant.stay_id=v_order.stay_id and grant.status='active' and coalesce(grant.expires_at,now()+interval '100 years')>now()
+      select benefit_grant.id grant_id,benefit_grant.expires_at,benefit_grant.granted_at,rule.*,
+        coalesce((select sum(redemption.amount) from public.consumption_benefit_redemptions redemption where redemption.grant_id=benefit_grant.id and redemption.rule_id=rule.id),0) used_amount,
+        coalesce((select sum(redemption.quantity) from public.consumption_benefit_redemptions redemption where redemption.grant_id=benefit_grant.id and redemption.rule_id=rule.id),0) used_quantity
+      from public.stay_benefit_grants benefit_grant join public.consumption_benefit_rules rule on rule.plan_version_id=benefit_grant.plan_version_id
+      where benefit_grant.hotel_id=p_hotel_id and benefit_grant.stay_id=v_order.stay_id and benefit_grant.status='active' and coalesce(benefit_grant.expires_at,now()+interval '100 years')>now()
         and (rule.product_id is null or rule.product_id=v_item.product_id) and(rule.category_id is null or rule.category_id=v_item.category_id)
         and(rule.offer_id is null or rule.offer_id=v_item.offer_id) and(rule.point_id is null or rule.point_id=v_order.point_id)
-      order by case when rule.kind='monetary_credit' then rule.amount-coalesce((select sum(r.amount) from public.consumption_benefit_redemptions r where r.grant_id=grant.id and r.rule_id=rule.id),0)
-        else (rule.quantity-coalesce((select sum(r.quantity) from public.consumption_benefit_redemptions r where r.grant_id=grant.id and r.rule_id=rule.id),0))*v_item.charged_unit_price end desc,
-        grant.expires_at nulls last,grant.granted_at,grant.id
+      order by case when rule.kind='monetary_credit' then rule.amount-coalesce((select sum(r.amount) from public.consumption_benefit_redemptions r where r.grant_id=benefit_grant.id and r.rule_id=rule.id),0)
+        else (rule.quantity-coalesce((select sum(r.quantity) from public.consumption_benefit_redemptions r where r.grant_id=benefit_grant.id and r.rule_id=rule.id),0))*v_item.charged_unit_price end desc,
+        benefit_grant.expires_at nulls last,benefit_grant.granted_at,benefit_grant.id
     loop
       exit when v_remaining<=0;
       v_available:=case when v_candidate.kind='monetary_credit' then greatest(v_candidate.amount-v_candidate.used_amount,0)

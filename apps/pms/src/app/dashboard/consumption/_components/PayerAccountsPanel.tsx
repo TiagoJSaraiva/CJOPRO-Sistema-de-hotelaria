@@ -18,6 +18,7 @@ export function PayerAccountsPanel({
   currency,
   payers,
   debitEntries,
+  consumptionQuantities,
   canManage,
   canReceive,
 }: {
@@ -26,6 +27,7 @@ export function PayerAccountsPanel({
   currency: string;
   payers: Payer[];
   debitEntries: AdminStayFolioEntry[];
+  consumptionQuantities: Record<string, number>;
   canManage: boolean;
   canReceive: boolean;
 }) {
@@ -33,13 +35,52 @@ export function PayerAccountsPanel({
     new Intl.NumberFormat("pt-BR", { style: "currency", currency }).format(
       value,
     );
-  const [assignments, setAssignments] = useState<Record<string, string>>(() =>
+  const [allocations, setAllocations] = useState<
+    Record<string, Record<string, { amount: string; quantity: string }>>
+  >(() =>
     Object.fromEntries(
-      debitEntries.map((entry) => [entry.id, payers[0]?.id || ""]),
+      debitEntries.map((entry) => [
+        entry.id,
+        Object.fromEntries(
+          payers.map((payer, index) => [
+            payer.id,
+            {
+              amount: index === 0 ? String(entry.amount) : "",
+              quantity:
+                index === 0 && entry.kind === "consumption_charge"
+                  ? String(
+                      consumptionQuantities[entry.consumption_order_id || ""] ||
+                        "",
+                    )
+                  : "",
+            },
+          ]),
+        ),
+      ]),
     ),
   );
   const [message, setMessage] = useState<string | null>(null);
   const [pending, startTransition] = useTransition();
+  function updateAllocation(
+    entryId: string,
+    payerId: string,
+    field: "amount" | "quantity",
+    value: string,
+  ) {
+    setAllocations((current) => {
+      const previous = current[entryId]?.[payerId] || {
+        amount: "",
+        quantity: "",
+      };
+      return {
+        ...current,
+        [entryId]: {
+          ...current[entryId],
+          [payerId]: { ...previous, [field]: value },
+        },
+      };
+    });
+  }
   return (
     <section
       className="pms-surface-card grid gap-3"
@@ -135,11 +176,22 @@ export function PayerAccountsPanel({
             startTransition(async () => {
               const result = await allocatePayersAction(stayId, {
                 expected_account_version: accountVersion,
-                allocations: debitEntries.map((entry) => ({
-                  folio_entry_id: entry.id,
-                  payer_account_id: assignments[entry.id]!,
-                  amount: entry.amount,
-                })),
+                allocations: debitEntries.flatMap((entry) =>
+                  payers.flatMap((payer) => {
+                    const allocation = allocations[entry.id]?.[payer.id];
+                    const amount = Number(allocation?.amount || 0);
+                    if (amount <= 0) return [];
+                    const quantity = Number(allocation?.quantity || 0);
+                    return [
+                      {
+                        folio_entry_id: entry.id,
+                        payer_account_id: payer.id,
+                        amount,
+                        ...(quantity > 0 ? { quantity } : {}),
+                      },
+                    ];
+                  }),
+                ),
               });
               setMessage(result.error || "Responsabilidades atualizadas.");
             })
@@ -147,30 +199,63 @@ export function PayerAccountsPanel({
         >
           <h3 className="m-0">Responsabilidade dos lançamentos</h3>
           {debitEntries.map((entry) => (
-            <label
-              className="grid gap-1 md:grid-cols-[1fr_16rem] md:items-center"
+            <fieldset
+              className="grid gap-2 rounded-lg border border-slate-200 p-3"
               key={entry.id}
             >
-              <span>
+              <legend className="px-1 font-semibold">
                 {entry.description} · {money(entry.amount)}
-              </span>
-              <select
-                className="pms-field-input"
-                value={assignments[entry.id]}
-                onChange={(event) =>
-                  setAssignments((current) => ({
-                    ...current,
-                    [entry.id]: event.target.value,
-                  }))
-                }
-              >
-                {payers.map((payer) => (
-                  <option key={payer.id} value={payer.id}>
-                    {payer.display_name}
-                  </option>
-                ))}
-              </select>
-            </label>
+              </legend>
+              {payers.map((payer) => (
+                <div
+                  className="grid gap-2 md:grid-cols-[1fr_10rem_10rem] md:items-end"
+                  key={payer.id}
+                >
+                  <strong className="text-sm">{payer.display_name}</strong>
+                  <label className="pms-field-label">
+                    Valor
+                    <input
+                      className="pms-field-input"
+                      type="number"
+                      min="0"
+                      max={entry.amount}
+                      step="0.01"
+                      value={allocations[entry.id]?.[payer.id]?.amount || ""}
+                      onChange={(event) =>
+                        updateAllocation(
+                          entry.id,
+                          payer.id,
+                          "amount",
+                          event.target.value,
+                        )
+                      }
+                    />
+                  </label>
+                  {entry.kind === "consumption_charge" ? (
+                    <label className="pms-field-label">
+                      Quantidade
+                      <input
+                        className="pms-field-input"
+                        type="number"
+                        min="0"
+                        step="0.001"
+                        value={
+                          allocations[entry.id]?.[payer.id]?.quantity || ""
+                        }
+                        onChange={(event) =>
+                          updateAllocation(
+                            entry.id,
+                            payer.id,
+                            "quantity",
+                            event.target.value,
+                          )
+                        }
+                      />
+                    </label>
+                  ) : null}
+                </div>
+              ))}
+            </fieldset>
           ))}
           <button className="pms-button-primary" disabled={pending}>
             Confirmar distribuição integral

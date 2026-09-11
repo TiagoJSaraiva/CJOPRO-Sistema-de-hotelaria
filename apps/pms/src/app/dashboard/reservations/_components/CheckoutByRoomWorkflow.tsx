@@ -6,6 +6,7 @@ import type {
   AdminStayFolioAllocationPreview,
   AdminStayOperationalPanelResponse,
   ConsumptionPaymentMethod,
+  DepartureReview,
 } from "@hotel/shared";
 import { ContextHelp } from "../../_components/ContextHelp";
 import {
@@ -25,6 +26,7 @@ type ApiErrorPayload = {
 };
 type PanelWithAccount = AdminStayOperationalPanelResponse & {
   account?: AdminStayAccount;
+  departure_review?: DepartureReview;
 };
 
 const primaryButtonClassName =
@@ -147,6 +149,8 @@ export function CheckoutByRoomWorkflow({
   const [success, setSuccess] = useState<string | null>(null);
   const [maintenanceAcknowledged, setMaintenanceAcknowledged] = useState(false);
   const [accountData, setAccountData] = useState<AdminStayAccount | null>(null);
+  const [departureReview, setDepartureReview] =
+    useState<DepartureReview | null>(null);
   const [checkoutTenders, setCheckoutTenders] = useState<
     Array<{
       payment_method: ConsumptionPaymentMethod;
@@ -276,9 +280,20 @@ export function CheckoutByRoomWorkflow({
       );
       applyPanel(panel);
       applyAccount(panel.account || accountFromPanel(panel));
+      setDepartureReview(
+        panel.departure_review || {
+          stay_id: panel.stay.id,
+          ready: true,
+          blockers: [],
+          payer_balances: [],
+          account_version: panel.stay.account_version || 0,
+          updated_at: new Date().toISOString(),
+        },
+      );
     } catch (requestError) {
       setPanelData(null);
       setAccountData(null);
+      setDepartureReview(null);
       setPaymentAmount("");
       setError(
         requestError instanceof Error
@@ -315,6 +330,7 @@ export function CheckoutByRoomWorkflow({
         "Falha ao registrar pagamento.",
       );
       applyAccount(account);
+      setDepartureReview(null);
       setPaymentAmount("");
       setPaymentNote("");
       setAllocationPreview(null);
@@ -471,6 +487,7 @@ export function CheckoutByRoomWorkflow({
                 setRoomNumber("");
                 setPanelData(null);
                 setAccountData(null);
+                setDepartureReview(null);
                 setPaymentAmount("");
                 setPaymentNote("");
                 setAllocationPreview(null);
@@ -589,6 +606,30 @@ export function CheckoutByRoomWorkflow({
                 />
               </div>
             </PanelSection>
+
+            {departureReview ? (
+              <PanelSection title="Conferência pré-checkout">
+                <div data-usage-guide="consumption-departure-review">
+                  <p className="mt-0 text-sm text-slate-600">
+                    Pedidos, rateios, benefícios, créditos e divergências foram
+                    revalidados para esta conta.
+                  </p>
+                  {departureReview.blockers.length ? (
+                    <ul className="m-0 grid gap-2 pl-5" role="status">
+                      {departureReview.blockers.map((blocker, index) => (
+                        <li key={`${blocker.type}-${index}`}>
+                          <strong>{blocker.label}</strong> · {blocker.action}
+                        </li>
+                      ))}
+                    </ul>
+                  ) : (
+                    <p className="m-0 font-semibold text-emerald-700">
+                      Nenhum impedimento operacional de consumo.
+                    </p>
+                  )}
+                </div>
+              </PanelSection>
+            ) : null}
 
             {accountData ? (
               <PanelSection title="Conta detalhada">
@@ -1035,7 +1076,8 @@ export function CheckoutByRoomWorkflow({
                   Boolean(
                     Number(accountData?.folio.refundable_credit || 0) > 0,
                   ) ||
-                  hasPendingAccountAction
+                  hasPendingAccountAction ||
+                  departureReview?.ready === false
                 }
                 className={primaryButtonClassName}
               >

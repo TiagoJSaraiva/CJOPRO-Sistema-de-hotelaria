@@ -49,6 +49,34 @@ export const corporateAccountsGuide: UsageGuideDefinition = {
   ],
 };
 
+export const postCheckoutConsumptionGuide: UsageGuideDefinition = {
+  id: "post-checkout-consumption",
+  title: "Tratar consumo encontrado após a saída",
+  steps: [
+    {
+      id: "evidence",
+      target: "post-checkout-create",
+      title: "Registre relato e evidência",
+      description:
+        "Informe a estadia encerrada, o horário provável do consumo e os itens. A evidência permanece privada.",
+    },
+    {
+      id: "review",
+      target: "post-checkout-review",
+      title: "Revise em duas pessoas",
+      description:
+        "O autor envia o caso e outra pessoa aprova ou rejeita antes de criar a conta complementar.",
+    },
+    {
+      id: "collection",
+      target: "post-checkout-collection",
+      title: "Acompanhe a cobrança",
+      description:
+        "Registre contatos, contestação, promessa e recebimentos parciais sem alterar o fechamento original.",
+    },
+  ],
+};
+
 export const consumptionBenefitsGuide: UsageGuideDefinition = {
   id: "consumption-benefits",
   title: "Configurar benefícios",

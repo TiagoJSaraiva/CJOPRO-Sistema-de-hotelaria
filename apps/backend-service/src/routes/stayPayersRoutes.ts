@@ -9,7 +9,10 @@ import {
   type StayPayerAllocationInput,
   type StayPayerPaymentInput,
 } from "@hotel/shared";
-import { ensureAuthorizedWithScope } from "../auth/authorization";
+import {
+  ensureAuthorizedAnyWithScope,
+  ensureAuthorizedWithScope,
+} from "../auth/authorization";
 import { adminError } from "../common/adminError";
 import { requireActiveHotelId } from "../common/requireActiveHotelScope";
 import {
@@ -126,13 +129,39 @@ export function registerStayPayersRoutes(
     },
   );
   app.get("/admin/corporate-accounts", async (request, reply) => {
-    const context = scope(
-      request,
-      reply,
+    const auth = ensureAuthorizedAnyWithScope(request, reply, [
       PERMISSIONS.CORPORATE_ACCOUNTS_MANAGE,
+      PERMISSIONS.CORPORATE_CREDIT_REQUEST,
+      PERMISSIONS.CORPORATE_CREDIT_APPROVE,
+      PERMISSIONS.CORPORATE_RECEIVABLES_SETTLE,
+    ]);
+    if (!auth) return;
+    const hotelId = requireActiveHotelId(reply, auth.activeHotelId);
+    if (!hotelId) return;
+    const payload = await repository.listCompanies(hotelId);
+    const canReadAuthorizations = [
+      PERMISSIONS.CORPORATE_ACCOUNTS_MANAGE,
+      PERMISSIONS.CORPORATE_CREDIT_REQUEST,
+      PERMISSIONS.CORPORATE_CREDIT_APPROVE,
+    ].some((permission) => auth.session.permissions.includes(permission));
+    const canReadReceivables = auth.session.permissions.includes(
+      PERMISSIONS.CORPORATE_RECEIVABLES_SETTLE,
     );
-    if (!context) return;
-    return reply.send(await repository.listCompanies(context.hotelId));
+    if (!payload || typeof payload !== "object" || Array.isArray(payload))
+      return reply.send(payload);
+    const items = (payload as { items?: unknown }).items;
+    if (!Array.isArray(items)) return reply.send(payload);
+    return reply.send({
+      ...(payload as Record<string, unknown>),
+      items: items.map((item) => {
+        if (!item || typeof item !== "object" || Array.isArray(item))
+          return item;
+        const filtered = { ...(item as Record<string, unknown>) };
+        if (!canReadAuthorizations) delete filtered.authorizations;
+        if (!canReadReceivables) delete filtered.receivables;
+        return filtered;
+      }),
+    });
   });
   app.post<{ Body: CorporateAccountInput }>(
     "/admin/corporate-accounts",

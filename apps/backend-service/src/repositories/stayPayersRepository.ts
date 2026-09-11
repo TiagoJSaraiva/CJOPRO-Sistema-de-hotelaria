@@ -14,8 +14,10 @@ type RpcCall = (
   name: string,
   args: Record<string, unknown>,
 ) => Promise<{ data: Json; error: Error | null }>;
-const call = (name: string, args: Record<string, unknown>) =>
-  (createServerClient().rpc as unknown as RpcCall)(name, args);
+const call = (name: string, args: Record<string, unknown>) => {
+  const client = createServerClient();
+  return (client as unknown as { rpc: RpcCall }).rpc(name, args);
+};
 const object = (data: Json): Result =>
   data && typeof data === "object" && !Array.isArray(data)
     ? (data as Result)

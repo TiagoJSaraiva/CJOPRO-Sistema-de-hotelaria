@@ -74,6 +74,15 @@ export function consumptionTabs(
         access.canSettleCorporateReceivables,
     },
     {
+      key: "post-checkout",
+      label: "Pós-saída",
+      href: "/dashboard/consumption/post-checkout",
+      isVisible:
+        access.canReviewPostCheckout ||
+        access.canWaivePostCheckout ||
+        access.canReceivePayment,
+    },
+    {
       key: "partners",
       label: "Parceiros",
       href: "/dashboard/consumption/partners",

@@ -38,6 +38,7 @@ import { registerGovernanceRoutes } from "./routes/governanceRoutes";
 import { registerMaintenancePlanningRoutes } from "./routes/maintenancePlanningRoutes";
 import { registerConsumptionJourneyRoutes } from "./routes/consumptionJourneyRoutes";
 import { registerStayPayersRoutes } from "./routes/stayPayersRoutes";
+import { registerPostCheckoutConsumptionRoutes } from "./routes/postCheckoutConsumptionRoutes";
 import { registerConsumptionBenefitsRoutes } from "./routes/consumptionBenefitsRoutes";
 
 const DEFAULT_ALLOWED_ORIGINS = [
@@ -188,6 +189,7 @@ export function createApp(options: CreateAppOptions = {}): FastifyInstance {
     registerGovernanceRoutes(routes);
     registerConsumptionJourneyRoutes(routes);
     registerStayPayersRoutes(routes);
+    registerPostCheckoutConsumptionRoutes(routes);
     registerConsumptionBenefitsRoutes(routes);
   });
 

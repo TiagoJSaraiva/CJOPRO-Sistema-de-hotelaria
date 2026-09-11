@@ -28,6 +28,8 @@ export type ConsumptionAccess = {
   canManageBenefits: boolean;
   canOverrideBenefits: boolean;
   canTransferConsumption: boolean;
+  canReviewPostCheckout: boolean;
+  canWaivePostCheckout: boolean;
 };
 
 export function getConsumptionAccess(user: UserLike): ConsumptionAccess {
@@ -97,6 +99,12 @@ export function getConsumptionAccess(user: UserLike): ConsumptionAccess {
     ),
     canTransferConsumption: permissions.includes(
       PERMISSIONS.CONSUMPTION_TRANSFER,
+    ),
+    canReviewPostCheckout: permissions.includes(
+      PERMISSIONS.POST_CHECKOUT_CONSUMPTION_REVIEW,
+    ),
+    canWaivePostCheckout: permissions.includes(
+      PERMISSIONS.POST_CHECKOUT_CONSUMPTION_WAIVE,
     ),
   };
 }

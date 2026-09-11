@@ -14,7 +14,7 @@ Preservar alterações independentes. Antes da limpeza, transferir orientações
 operacionais exclusivas daqui para a documentação permanente. Iniciar a etapa 6
 ou concluir parcialmente qualquer etapa não autoriza a limpeza.
 
-As etapas 4 a 6 são diretrizes de produto e exigem planejamento técnico próprio
+As etapas 5 e 6 são diretrizes de produto e exigem planejamento técnico próprio
 e autorização de escopo antes da execução. Não implementar todo o roteiro por
 inferência. Atualizar este acompanhamento em cada entrega validada.
 
@@ -25,7 +25,7 @@ inferência. Atualizar este acompanhamento em cada entrega validada.
 | 1 — Usabilidade          | Concluída e validada | Roteiro; ações e decisões de manutenção; busca de duplicidade; fila de comandas; central persistente | Fila persistente; comandas confirmadas por grupo                     | 310 verificações SQL; 8 testes HTTP; check, testes e cobertura aprovados; E2E Windows/Linux com reexecuções direcionadas | Planejar tecnicamente a etapa 2 quando solicitada |
 | 2 — Operação integrada   | Concluída e validada | Governança; prontidão; frigobar/avarias; check-in; realocação; passagem e pendências                 | Inspeção segregada; exceção auditada; preço preservado               | 357 verificações SQL; 8 testes HTTP; 463 testes; check/cobertura aprovados; 36 E2E desktop/mobile                        | Planejar tecnicamente a etapa 3 quando solicitada |
 | 3 — Manutenção planejada | Concluída e validada | Equipes, capacidade, agenda; esperas e tempos; impacto, reincidência, ciclo de vida e pendências     | Conflito com exceção auditada; score explicável; aprovação segregada | 385 verificações SQL; 8 testes HTTP; 476 testes; check/cobertura aprovados; 36 E2E desktop/mobile                        | Planejar tecnicamente a etapa 4 quando solicitada |
-| 4 — Consumo e saída      | Não iniciada         | —                                                                                                    | Completar atendimento e pagadores                                    | —                                                                                                                        | Planejamento técnico                              |
+| 4 — Consumo e saída      | Concluída e validada | Pedidos; pagadores/empresas; benefícios/transferência; pré-checkout e pós-saída                      | Entrega atômica; aprovação segregada; fechamento preservado          | 410 verificações SQL; 8 testes HTTP; 488 testes; 284 operações OpenAPI; check/cobertura aprovados; 36 E2E                | Planejar tecnicamente a etapa 5 quando solicitada |
 | 5 — Estoque e financeiro | Não iniciada         | —                                                                                                    | Fechar ciclos operacionais                                           | —                                                                                                                        | Planejamento técnico                              |
 | 6 — Expansão do PMS      | Não iniciada         | —                                                                                                    | Consolidar operação primeiro                                         | —                                                                                                                        | Planejamento técnico e limpeza final              |
 
@@ -120,6 +120,34 @@ inferência. Atualizar este acompanhamento em cada entrega validada.
   35,25% no backend, 41,28% no PMS e 95,76% no shared, sem reduzir limiares. O
   Supabase foi recriado exclusivamente no ambiente local e nenhum serviço remoto
   foi alterado.
+
+### Registro das entregas da etapa 4
+
+- Pedidos: fila operacional para restaurante e serviço de quarto, com snapshots
+  e reservas no recebimento, preparo, tentativa de entrega, cancelamento e
+  materialização financeira e de estoque atômica na entrega.
+- Pagadores: subcontas para titular, acompanhantes e empresa, rateio integral
+  por valor e quantidade de consumo, pagamentos próprios e cadastro de
+  acompanhante durante a hospedagem. Crédito empresarial mantém solicitação e
+  decisão segregadas, limite reservado e recebível posterior ao checkout.
+- Benefícios e correções: planos e concessões versionados, aplicação
+  determinística da maior vantagem, expiração sem restituição e transferência
+  compensatória entre estadias abertas sem duplicar estoque ou efeitos
+  comerciais.
+- Saída: conferência pré-checkout bloqueia pedidos, rateios e saldos irregulares;
+  o fechamento guarda snapshots e converte apenas crédito empresarial válido.
+  Achados posteriores seguem caso com evidência privada, aprovação por outra
+  pessoa, conta complementar, contato, contestação, dispensa e pagamentos
+  parciais idempotentes, sem alterar o fechamento original.
+- Integração: central persistente recebeu episódios de consumo; OpenAPI, tipos,
+  guias e diagramas permanentes acompanham o domínio. O Supabase foi recriado
+  apenas localmente e nenhum serviço remoto foi alterado.
+- Validação: documentação, lint, typecheck e builds aprovados; OpenAPI com 284
+  operações e tipos Supabase sincronizados; 410 verificações SQL, 8 cenários
+  HTTP com banco real, 488 testes de workspace e 36 jornadas E2E em desktop e
+  celular com cobertura visual e axe. A cobertura ficou em 40,17% das linhas no
+  consolidado, 35,97% no backend, 39,93% no PMS e 97,66% no shared, sem reduzir
+  limiares.
 
 A principal oportunidade é conectar módulos em jornadas completas. Manutenção
 já inclui preventivas, SLA, fornecedores, garantias, inspeções e financeiro.
@@ -404,3 +432,61 @@ Gerar OpenAPI e tipos locais; executar Prettier, documentação, check, testes,
 cobertura, drift de API, banco e E2E. Manter cobertura e revisar snapshots antes
 de qualquer atualização. Preservar este roteiro e o bloco do AGENTS.md até a
 validação da etapa 6.
+
+## Plano técnico aprovado — etapa 4
+
+### Entregas e limites
+
+Quatro blocos locais: pedidos com preparo e entrega; subcontas e empresas;
+benefícios e correção de quarto; pré-checkout, pós-saída e pendências. Preservar
+o lançamento rápido e o fechamento original. Sem gateway, contato externo,
+emissão fiscal, cartão armazenado ou antecipação das etapas 5 e 6.
+
+### Pedidos e materialização
+
+- Pedido operacional nos estados `received`, `preparing`, `ready`, `delivered`
+  e `canceled`, com responsável, previsão, snapshots, eventos e versão.
+- Reservar preço, estoque, benefício e crédito no recebimento; liberar no
+  cancelamento. Após preparo, cancelamento exige motivo e permissão.
+- Na entrega, criar atomicamente uma comanda por grupo de cobrança, pagador,
+  parceiro e acordo. Revalidar e usar idempotência; falha mantém o pedido pronto
+  e não cria grupos parciais.
+
+### Pagadores, empresas e benefícios
+
+- Criar subcontas de titular, acompanhantes e empresa; distribuir todo débito.
+  Consumos dividem quantidade e valor; outros lançamentos dividem valor.
+- Associar pagamentos à subconta. Crédito empresarial exige solicitação e
+  aprovação por outra pessoa, limite, validade e categorias cobertas. No
+  checkout, converter saldo autorizado em recebível parcial e multimeios.
+- Versionar planos de benefício e copiar concessões para a estadia. Maximizar a
+  vantagem com desempate por expiração e antiguidade, preservar venda bruta e
+  expirar saldo não usado.
+- Transferir consumo entre estadias abertas do hotel por crédito e débito
+  compensatórios, recalculando benefícios sem duplicar estoque ou apuração.
+
+### Saída, segurança e orientação
+
+- Projetar pedidos, rateios, saldos, crédito empresarial, divergências e
+  reservas na conferência pré-checkout. Pedido aberto não admite exceção.
+- Fechar conta, subcontas, benefícios e autorizações em uma transação e guardar
+  snapshots. O saldo pessoal deve estar zerado; crédito empresarial válido vira
+  recebível.
+- Achado pós-saída exige horário dentro da hospedagem, relato e evidência ou
+  vistoria. Outra pessoa decide. Aprovação cria venda, estoque e conta
+  complementar; contatos, contestação, dispensa e pagamentos ficam no novo
+  caso, sem alterar o extrato original.
+- Aplicar permissões independentes, hotel ativo, RLS, referências compostas,
+  concorrência e idempotência. Pendências se resolvem pela condição de origem.
+- Tours cobrem pedido, pagadores, crédito, benefícios, correção, conferência e
+  pós-saída com `data-usage-guide`, teclado, foco, Escape e viewport móvel.
+
+### Proteção e testes
+
+Caracterizar comandas, pagamentos, checkout, frigobar e reconciliação. Cobrir
+máquinas de estado, reservas e liberação, grupos atômicos, rateio e arredondamento,
+segregação, benefício máximo, transferência, bloqueios de saída, cobrança
+complementar, idempotência, permissões e isolamento. Validar shared, PMS,
+backend, migrations/RLS e jornadas Playwright. Gerar OpenAPI e tipos locais;
+executar Prettier, documentação, check, testes, cobertura, banco e E2E. Não
+reduzir cobertura nem atualizar snapshots sem inspeção visual.

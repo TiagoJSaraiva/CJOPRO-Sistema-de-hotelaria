@@ -85,3 +85,72 @@ flowchart TD
   confirm -->|Conflito confirmado| refresh[Atualizar contexto e revisar itens restantes]
   refresh --> groups
 ```
+
+## Pedidos com preparo e entrega
+
+**Vendas e consumo > Pedidos** separa a operação do restaurante e do serviço de
+quarto da comanda financeira. O recebimento congela oferta, preço, regra
+comercial e reserva estoque, benefício e limite empresarial. A fila acompanha
+preparo, prontidão e tentativas de entrega. Somente a entrega cria as comandas,
+baixa o estoque e materializa todos os grupos de cobrança em uma transação. Um
+cancelamento libera as reservas; após o preparo, exige permissão e motivo.
+
+O lançamento rápido continua disponível para recepção e frigobar. Ele cria a
+comanda imediatamente e aplica o hóspede principal e os benefícios elegíveis
+como padrão.
+
+```mermaid
+stateDiagram-v2
+  [*] --> received
+  received --> preparing
+  preparing --> ready
+  ready --> ready: tentativa frustrada
+  ready --> delivered: entrega atômica
+  received --> canceled
+  preparing --> canceled: permissão e motivo
+  ready --> canceled: permissão e motivo
+```
+
+## Pagadores, empresas e benefícios
+
+A conta da estadia mostra uma subconta para o hóspede principal, cada
+acompanhante cadastrado e a empresa autorizada. Distribua integralmente cada
+lançamento; consumos exigem também a quantidade atribuída a cada pagador.
+Pagamentos reduzem apenas a subconta escolhida e podem usar vários meios.
+
+Empresas pagadoras têm cadastro e política próprios. A autorização de crédito
+passa por solicitação e decisão de outra pessoa, com limite, validade e
+categorias cobertas. No checkout, o saldo empresarial válido vira um recebível
+separado; recebimentos posteriores podem ser parciais e multimeios.
+
+Planos de benefício são versionados. A estadia recebe uma concessão congelada e
+o sistema escolhe deterministicamente a maior vantagem, priorizando expiração e
+antiguidade no empate. O valor bruto e os efeitos comerciais do produto são
+preservados; créditos não usados expiram no checkout.
+
+## Conferência de saída e conta complementar
+
+Antes do checkout, confira pedidos abertos, rateios, saldos pessoais, crédito
+empresarial, reservas e divergências. Pedido aberto é impedimento absoluto.
+Hóspedes e acompanhantes precisam estar quitados; somente saldo empresarial
+coberto pode virar recebível. O fechamento guarda snapshots e não é alterado
+depois da saída.
+
+Em **Vendas e consumo > Pós-saída**, registre um achado ocorrido durante a
+hospedagem com relato e evidência privada. Outra pessoa aprova ou rejeita. A
+aprovação cria venda, estoque e conta complementar vinculada ao fechamento. A
+equipe registra contatos, promessas e contestações; recebimentos parciais usam
+idempotência. Uma dispensa exige autorização e cria o desfecho compensatório,
+sem devolver estoque consumido.
+
+```mermaid
+flowchart LR
+  review[Conferência pré-checkout] --> blockers{Há impedimentos?}
+  blockers -->|Sim| resolve[Entregar, cancelar, ratear ou quitar]
+  resolve --> review
+  blockers -->|Não| close[Fechamento com snapshots]
+  close --> discovery[Achado pós-saída]
+  discovery --> approval[Revisão por outra pessoa]
+  approval --> supplemental[Venda e conta complementar]
+  supplemental --> collection[Contato, contestação e recebimento]
+```

@@ -12,6 +12,7 @@ import type {
   ConsumptionServiceOrderCreate,
   CorporateAccountInput,
   CorporateCreditAuthorizationInput,
+  CorporateCreditAction,
   StayPayerAccountCreate,
   StayPayerAllocationInput,
   StayPayerPaymentInput,
@@ -19,6 +20,12 @@ import type {
   BenefitPlanVersionInput,
   BenefitGrantInput,
   ConsumptionTransferInput,
+  DepartureReview,
+  PostCheckoutConsumptionCreate,
+  PostCheckoutConsumptionAction,
+  PostCheckoutEvidenceInput,
+  PostCheckoutPaymentInput,
+  CorporateReceivablePaymentInput,
 } from "@hotel/shared";
 import { cookies } from "next/headers";
 import {
@@ -1858,6 +1865,16 @@ export function requestCorporateCredit(
 ) {
   return requestAdmin("/admin/corporate-credit-authorizations", "POST", input);
 }
+export function actCorporateCreditAuthorization(
+  id: string,
+  input: CorporateCreditAction,
+) {
+  return requestAdmin(
+    `/admin/corporate-credit-authorizations/${id}/actions`,
+    "POST",
+    input,
+  );
+}
 export function listConsumptionBenefitPlans(): Promise<
   Array<Record<string, unknown>>
 > {
@@ -1895,6 +1912,71 @@ export function transferConsumption(
 ) {
   return requestAdmin(
     `/admin/consumption-orders/${orderId}/transfer`,
+    "POST",
+    input,
+  );
+}
+
+export function getStayDepartureReview(
+  stayId: string,
+): Promise<DepartureReview> {
+  return getAdminData(`/admin/stays/${stayId}/departure-review`);
+}
+
+export function listPostCheckoutConsumptionCases(id?: string): Promise<{
+  items: Array<Record<string, unknown>>;
+  updated_at: string;
+}> {
+  return getAdminData(
+    `/admin/post-checkout-consumption${id ? `?id=${encodeURIComponent(id)}` : ""}`,
+  );
+}
+
+export function createPostCheckoutConsumptionCase(
+  input: PostCheckoutConsumptionCreate,
+) {
+  return requestAdmin("/admin/post-checkout-consumption", "POST", input);
+}
+
+export function actPostCheckoutConsumptionCase(
+  id: string,
+  input: PostCheckoutConsumptionAction,
+) {
+  return requestAdmin(
+    `/admin/post-checkout-consumption/${id}/actions`,
+    "POST",
+    input,
+  );
+}
+
+export function addPostCheckoutConsumptionEvidence(
+  id: string,
+  input: PostCheckoutEvidenceInput,
+) {
+  return requestAdmin(
+    `/admin/post-checkout-consumption/${id}/evidence`,
+    "POST",
+    input,
+  );
+}
+
+export function payPostCheckoutConsumptionCase(
+  id: string,
+  input: PostCheckoutPaymentInput,
+) {
+  return requestAdmin(
+    `/admin/post-checkout-consumption/${id}/payments`,
+    "POST",
+    input,
+  );
+}
+
+export function payCorporateReceivable(
+  id: string,
+  input: CorporateReceivablePaymentInput,
+) {
+  return requestAdmin(
+    `/admin/corporate-receivables/${id}/payments`,
     "POST",
     input,
   );

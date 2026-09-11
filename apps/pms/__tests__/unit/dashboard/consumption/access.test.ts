@@ -35,6 +35,8 @@ describe("consumption access", () => {
       canManageBenefits: false,
       canOverrideBenefits: false,
       canTransferConsumption: false,
+      canReviewPostCheckout: false,
+      canWaivePostCheckout: false,
     });
     expect(
       getConsumptionAccess({
@@ -66,6 +68,8 @@ describe("consumption access", () => {
       canManageBenefits: false,
       canOverrideBenefits: false,
       canTransferConsumption: false,
+      canReviewPostCheckout: false,
+      canWaivePostCheckout: false,
     });
   });
 
@@ -97,6 +101,8 @@ describe("consumption access", () => {
         canManageBenefits: false,
         canOverrideBenefits: false,
         canTransferConsumption: false,
+        canReviewPostCheckout: false,
+        canWaivePostCheckout: false,
       }),
     ).toBe("/dashboard/consumption/points");
     expect(
@@ -126,6 +132,8 @@ describe("consumption access", () => {
         canManageBenefits: false,
         canOverrideBenefits: false,
         canTransferConsumption: false,
+        canReviewPostCheckout: false,
+        canWaivePostCheckout: false,
       }),
     ).toBeNull();
     expect(
@@ -155,6 +163,8 @@ describe("consumption access", () => {
         canManageBenefits: false,
         canOverrideBenefits: false,
         canTransferConsumption: false,
+        canReviewPostCheckout: false,
+        canWaivePostCheckout: false,
       }),
     ).toBe("/dashboard/consumption/partners");
   });

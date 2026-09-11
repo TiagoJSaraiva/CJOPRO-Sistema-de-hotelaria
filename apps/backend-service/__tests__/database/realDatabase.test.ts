@@ -467,7 +467,7 @@ describe.sequential("Supabase local com Fastify real", () => {
         ],
       },
     });
-    expect(checkout.statusCode).toBe(200);
+    expect(checkout.statusCode, checkout.body).toBe(200);
     expect(checkout.json().item.stay_status).toBe("checked_out");
 
     const { data: persistedStay, error } = await supabase
