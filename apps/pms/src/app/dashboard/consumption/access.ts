@@ -25,6 +25,9 @@ export type ConsumptionAccess = {
   canRequestCorporateCredit: boolean;
   canApproveCorporateCredit: boolean;
   canSettleCorporateReceivables: boolean;
+  canManageBenefits: boolean;
+  canOverrideBenefits: boolean;
+  canTransferConsumption: boolean;
 };
 
 export function getConsumptionAccess(user: UserLike): ConsumptionAccess {
@@ -85,6 +88,15 @@ export function getConsumptionAccess(user: UserLike): ConsumptionAccess {
     ),
     canSettleCorporateReceivables: permissions.includes(
       PERMISSIONS.CORPORATE_RECEIVABLES_SETTLE,
+    ),
+    canManageBenefits: permissions.includes(
+      PERMISSIONS.CONSUMPTION_BENEFITS_MANAGE,
+    ),
+    canOverrideBenefits: permissions.includes(
+      PERMISSIONS.CONSUMPTION_BENEFITS_OVERRIDE,
+    ),
+    canTransferConsumption: permissions.includes(
+      PERMISSIONS.CONSUMPTION_TRANSFER,
     ),
   };
 }

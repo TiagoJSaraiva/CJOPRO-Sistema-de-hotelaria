@@ -32,6 +32,9 @@ describe("consumption access", () => {
       canRequestCorporateCredit: false,
       canApproveCorporateCredit: false,
       canSettleCorporateReceivables: false,
+      canManageBenefits: false,
+      canOverrideBenefits: false,
+      canTransferConsumption: false,
     });
     expect(
       getConsumptionAccess({
@@ -60,6 +63,9 @@ describe("consumption access", () => {
       canRequestCorporateCredit: false,
       canApproveCorporateCredit: false,
       canSettleCorporateReceivables: false,
+      canManageBenefits: false,
+      canOverrideBenefits: false,
+      canTransferConsumption: false,
     });
   });
 
@@ -88,6 +94,9 @@ describe("consumption access", () => {
         canRequestCorporateCredit: false,
         canApproveCorporateCredit: false,
         canSettleCorporateReceivables: false,
+        canManageBenefits: false,
+        canOverrideBenefits: false,
+        canTransferConsumption: false,
       }),
     ).toBe("/dashboard/consumption/points");
     expect(
@@ -114,6 +123,9 @@ describe("consumption access", () => {
         canRequestCorporateCredit: false,
         canApproveCorporateCredit: false,
         canSettleCorporateReceivables: false,
+        canManageBenefits: false,
+        canOverrideBenefits: false,
+        canTransferConsumption: false,
       }),
     ).toBeNull();
     expect(
@@ -140,6 +152,9 @@ describe("consumption access", () => {
         canRequestCorporateCredit: false,
         canApproveCorporateCredit: false,
         canSettleCorporateReceivables: false,
+        canManageBenefits: false,
+        canOverrideBenefits: false,
+        canTransferConsumption: false,
       }),
     ).toBe("/dashboard/consumption/partners");
   });

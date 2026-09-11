@@ -15,6 +15,10 @@ import type {
   StayPayerAccountCreate,
   StayPayerAllocationInput,
   StayPayerPaymentInput,
+  BenefitPlanInput,
+  BenefitPlanVersionInput,
+  BenefitGrantInput,
+  ConsumptionTransferInput,
 } from "@hotel/shared";
 import { cookies } from "next/headers";
 import {
@@ -1853,4 +1857,45 @@ export function requestCorporateCredit(
   input: CorporateCreditAuthorizationInput,
 ) {
   return requestAdmin("/admin/corporate-credit-authorizations", "POST", input);
+}
+export function listConsumptionBenefitPlans(): Promise<
+  Array<Record<string, unknown>>
+> {
+  return getAdminList("/admin/consumption-benefit-plans");
+}
+export function createConsumptionBenefitPlan(input: BenefitPlanInput) {
+  return requestAdmin("/admin/consumption-benefit-plans", "POST", input);
+}
+export function createConsumptionBenefitVersion(
+  planId: string,
+  input: BenefitPlanVersionInput,
+) {
+  return requestAdmin(
+    `/admin/consumption-benefit-plans/${planId}/versions`,
+    "POST",
+    input,
+  );
+}
+export function grantStayBenefit(stayId: string, input: BenefitGrantInput) {
+  return requestAdmin(`/admin/stays/${stayId}/benefit-grants`, "POST", input);
+}
+export function simulateConsumptionTransfer(
+  orderId: string,
+  input: ConsumptionTransferInput,
+) {
+  return requestAdmin(
+    `/admin/consumption-orders/${orderId}/transfer/simulate`,
+    "POST",
+    input,
+  );
+}
+export function transferConsumption(
+  orderId: string,
+  input: ConsumptionTransferInput,
+) {
+  return requestAdmin(
+    `/admin/consumption-orders/${orderId}/transfer`,
+    "POST",
+    input,
+  );
 }

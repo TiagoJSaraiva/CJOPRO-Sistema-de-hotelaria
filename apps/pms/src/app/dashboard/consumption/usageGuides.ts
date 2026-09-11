@@ -49,6 +49,34 @@ export const corporateAccountsGuide: UsageGuideDefinition = {
   ],
 };
 
+export const consumptionBenefitsGuide: UsageGuideDefinition = {
+  id: "consumption-benefits",
+  title: "Configurar benefícios",
+  steps: [
+    {
+      id: "plans",
+      target: "benefit-plan-list",
+      title: "Versione os pacotes",
+      description:
+        "Planos agrupam regras; cada ativação cria uma versão imutável para preservar estadias anteriores.",
+    },
+    {
+      id: "rules",
+      target: "benefit-plan-form",
+      title: "Defina elegibilidade",
+      description:
+        "Escolha produto, categoria, oferta ou ponto e uma franquia por estadia, diária ou dia civil.",
+    },
+    {
+      id: "application",
+      target: "benefit-application-explanation",
+      title: "Confira a vantagem",
+      description:
+        "O sistema combina automaticamente a maior vantagem e registra créditos sem reduzir a receita bruta do produto.",
+    },
+  ],
+};
+
 export const consumptionLaunchGuide: UsageGuideDefinition = {
   id: "consumption-launch",
   title: "Lançar uma comanda",
@@ -95,6 +123,13 @@ export const consumptionHistoryGuide: UsageGuideDefinition = {
   id: "consumption-history",
   title: "Consultar comandas",
   steps: [
+    {
+      id: "transfer",
+      target: "consumption-transfer",
+      title: "Corrija o quarto",
+      description:
+        "Revise origem, destino, hóspede, pagador, quantidades e benefícios antes de criar lançamentos compensatórios.",
+    },
     {
       id: "filters",
       target: "consumption-history-filters",

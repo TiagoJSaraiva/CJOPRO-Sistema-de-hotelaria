@@ -5,6 +5,9 @@ import {
   listConsumptionOrders,
   listConsumptionPoints,
   listInventoryLocations,
+  listConsumptionEligibleStays,
+  getConsumptionOperationalContext,
+  getStayPayerAccounts,
 } from "../../../../lib/adminApi";
 import { getUserFromSession } from "../../../../lib/auth";
 import { getConsumptionAccess } from "../access";
@@ -12,6 +15,7 @@ import { billingModeLabel } from "../_components/BillingModeFields";
 import { consumptionHistoryGuide } from "../usageGuides";
 import { requestConsumptionCorrectionAction } from "../accountActions";
 import { consumptionTabs } from "../tabs";
+import { transferConsumptionAction } from "../transferActions";
 
 function money(value: number, currency: string) {
   return new Intl.NumberFormat("pt-BR", { style: "currency", currency }).format(
@@ -48,6 +52,16 @@ export default async function ConsumptionHistoryPage({
     params.id ? getConsumptionOrder(params.id) : Promise.resolve(null),
     listInventoryLocations().catch(() => []),
   ]);
+  const transferStays = access.canTransferConsumption
+    ? await listConsumptionEligibleStays("")
+    : [];
+  const destinationStayId = params.destination_stay_id;
+  const [destinationContext, destinationPayers] = destinationStayId
+    ? await Promise.all([
+        getConsumptionOperationalContext(destinationStayId).catch(() => null),
+        getStayPayerAccounts(destinationStayId).catch(() => null),
+      ])
+    : [null, null];
   const tabs = consumptionTabs(access);
   return (
     <DashboardEntityPageShell
@@ -251,6 +265,138 @@ export default async function ConsumptionHistoryPage({
                 )}
               </strong>
             </div>
+            {params.transfer === "completed" ? (
+              <p className="pms-alert-success" role="status">
+                Correção concluída sem repetir a venda ou a baixa de estoque.
+              </p>
+            ) : null}
+            {!selected.is_legacy &&
+            selected.stay_id &&
+            access.canTransferConsumption ? (
+              <section
+                className="grid gap-3 rounded-lg border border-slate-200 p-4"
+                data-usage-guide="consumption-transfer"
+              >
+                <h3 className="m-0 text-base">Corrigir quarto da comanda</h3>
+                <p className="m-0 text-sm text-slate-600">
+                  A correção cria crédito na origem e débito no destino. Venda,
+                  estoque, parceiro, acordo e horário permanecem os mesmos.
+                </p>
+                <form className="flex flex-wrap items-end gap-2">
+                  <input type="hidden" name="id" value={selected.id} />
+                  <label className="pms-field min-w-64 flex-1">
+                    <span>Estadia de destino</span>
+                    <select
+                      className="pms-field-input"
+                      name="destination_stay_id"
+                      defaultValue={destinationStayId || ""}
+                      required
+                    >
+                      <option value="">Selecione</option>
+                      {transferStays
+                        .filter((stay) => stay.id !== selected.stay_id)
+                        .map((stay) => (
+                          <option value={stay.id} key={stay.id}>
+                            Quarto {stay.room_number} ·{" "}
+                            {stay.primary_guest_name}
+                          </option>
+                        ))}
+                    </select>
+                  </label>
+                  <button className="pms-button-secondary">
+                    Revisar destino
+                  </button>
+                </form>
+                {destinationContext && destinationPayers ? (
+                  <form
+                    action={transferConsumptionAction}
+                    className="grid gap-3"
+                  >
+                    <input type="hidden" name="order_id" value={selected.id} />
+                    <input
+                      type="hidden"
+                      name="destination_stay_id"
+                      value={destinationStayId}
+                    />
+                    <input
+                      type="hidden"
+                      name="expected_source_version"
+                      value={selected.account_version || 0}
+                    />
+                    <input
+                      type="hidden"
+                      name="expected_destination_version"
+                      value={destinationPayers.account_version}
+                    />
+                    <div className="grid gap-3 md:grid-cols-2">
+                      <label className="pms-field">
+                        <span>Hóspede consumidor</span>
+                        <select
+                          className="pms-field-input"
+                          name="guest_customer_id"
+                        >
+                          {destinationContext.guests.map((guest) => (
+                            <option key={guest.id} value={guest.id}>
+                              {guest.full_name}
+                            </option>
+                          ))}
+                        </select>
+                      </label>
+                      <label className="pms-field">
+                        <span>Pagador</span>
+                        <select
+                          className="pms-field-input"
+                          name="payer_account_id"
+                        >
+                          {destinationPayers.items.map((payer) => (
+                            <option key={payer.id} value={payer.id}>
+                              {payer.display_name}
+                            </option>
+                          ))}
+                        </select>
+                      </label>
+                    </div>
+                    {selected.items.map((item) => (
+                      <label
+                        className="grid gap-1 md:grid-cols-[1fr_12rem] md:items-center"
+                        key={item.id}
+                      >
+                        <span>{item.product_name}</span>
+                        <input
+                          type="hidden"
+                          name="order_item_id"
+                          value={item.id}
+                        />
+                        <input
+                          className="pms-field-input"
+                          name="quantity"
+                          type="number"
+                          min="0.001"
+                          max={item.effective_quantity ?? item.quantity}
+                          step={item.sales_unit === "hour" ? "0.001" : "1"}
+                          defaultValue={
+                            item.effective_quantity ?? item.quantity
+                          }
+                          required
+                        />
+                      </label>
+                    ))}
+                    <label className="pms-field">
+                      <span>Motivo</span>
+                      <textarea
+                        className="pms-field-input"
+                        name="reason"
+                        minLength={3}
+                        required
+                      />
+                    </label>
+                    <button className="pms-button-primary">
+                      Confirmar correção
+                    </button>
+                  </form>
+                ) : null}
+              </section>
+            ) : null}
             {!selected.is_legacy && selected.stay_id && access.canPost ? (
               <form
                 action={requestConsumptionCorrectionAction}

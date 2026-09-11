@@ -237,6 +237,7 @@ export const BenefitPlanInputSchema = Type.Object(
   },
   strict,
 );
+export type BenefitPlanInput = Static<typeof BenefitPlanInputSchema>;
 export const BenefitPlanVersionInputSchema = Type.Object(
   {
     allowance_scope: Type.Union([
@@ -277,6 +278,7 @@ export const BenefitGrantInputSchema = Type.Object(
   },
   strict,
 );
+export type BenefitGrantInput = Static<typeof BenefitGrantInputSchema>;
 
 export type BenefitCandidate = {
   id: string;
@@ -345,6 +347,9 @@ export const ConsumptionTransferInputSchema = Type.Object(
   },
   strict,
 );
+export type ConsumptionTransferInput = Static<
+  typeof ConsumptionTransferInputSchema
+>;
 
 export const PostCheckoutCaseStatusSchema = Type.Union([
   Type.Literal("draft"),

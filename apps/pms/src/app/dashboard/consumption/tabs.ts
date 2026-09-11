@@ -58,6 +58,12 @@ export function consumptionTabs(
       isVisible: access.canRead,
     },
     {
+      key: "benefits",
+      label: "Benefícios",
+      href: "/dashboard/consumption/benefits",
+      isVisible: access.canManageBenefits || access.canOverrideBenefits,
+    },
+    {
       key: "companies",
       label: "Empresas",
       href: "/dashboard/consumption/companies",

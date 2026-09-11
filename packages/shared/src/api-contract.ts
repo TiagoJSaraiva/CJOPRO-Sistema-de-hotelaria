@@ -50,6 +50,10 @@ import {
   CorporateAccountInputSchema,
   CorporateCreditAuthorizationInputSchema,
   CorporateCreditActionSchema,
+  BenefitPlanInputSchema,
+  BenefitPlanVersionInputSchema,
+  BenefitGrantInputSchema,
+  ConsumptionTransferInputSchema,
 } from "./consumption-journey";
 import { Type, type Static, type TSchema } from "typebox";
 import type {
@@ -4147,6 +4151,64 @@ export const API_ROUTE_CONTRACTS: Readonly<Record<string, ApiRouteContract>> = {
     "Submete, aprova, rejeita ou revoga autorização com segregação de pessoas.",
     OkSchema,
     { params: IdParamsSchema, body: CorporateCreditActionSchema },
+  ),
+  "GET /admin/consumption-benefit-plans": admin(
+    "listConsumptionBenefitPlans",
+    "Consumption benefits",
+    "Lista planos e versões de benefícios do hotel ativo.",
+    Type.Object(
+      { items: Type.Array(Type.Record(Type.String(), Type.Unknown())) },
+      strict,
+    ),
+  ),
+  "POST /admin/consumption-benefit-plans": route(
+    "createConsumptionBenefitPlan",
+    "Consumption benefits",
+    "Cria um plano de benefícios ainda sem alterar estadias.",
+    {
+      headers: AuthHeadersSchema,
+      security: [{ bearerAuth: [] }],
+      body: BenefitPlanInputSchema,
+      response: { 201: OkSchema, ...adminErrors },
+    },
+  ),
+  "POST /admin/consumption-benefit-plans/:id/versions": route(
+    "createConsumptionBenefitPlanVersion",
+    "Consumption benefits",
+    "Cria e opcionalmente ativa uma versão imutável de regras.",
+    {
+      headers: AuthHeadersSchema,
+      security: [{ bearerAuth: [] }],
+      params: IdParamsSchema,
+      body: BenefitPlanVersionInputSchema,
+      response: { 201: OkSchema, ...adminErrors },
+    },
+  ),
+  "POST /admin/stays/:id/benefit-grants": route(
+    "grantStayConsumptionBenefit",
+    "Consumption benefits",
+    "Copia uma concessão versionada para reserva confirmada ou hospedada.",
+    {
+      headers: AuthHeadersSchema,
+      security: [{ bearerAuth: [] }],
+      params: IdParamsSchema,
+      body: BenefitGrantInputSchema,
+      response: { 201: OkSchema, ...adminErrors },
+    },
+  ),
+  "POST /admin/consumption-orders/:id/transfer/simulate": admin(
+    "simulateConsumptionTransfer",
+    "Consumption transfers",
+    "Simula valores, benefícios e saldos da correção de quarto.",
+    OkSchema,
+    { params: IdParamsSchema, body: ConsumptionTransferInputSchema },
+  ),
+  "POST /admin/consumption-orders/:id/transfer": admin(
+    "createConsumptionTransfer",
+    "Consumption transfers",
+    "Cria crédito e débito compensatórios sem repetir venda ou estoque.",
+    OkSchema,
+    { params: IdParamsSchema, body: ConsumptionTransferInputSchema },
   ),
   "GET /admin/governance/board": admin(
     "listGovernanceBoard",
