@@ -39,5 +39,19 @@ export const inventoryGuide: UsageGuideDefinition = {
       description:
         "Defina locais, mínimos e se saldo insuficiente bloqueia ou apenas alerta o lançamento de consumo.",
     },
+    {
+      id: "lots",
+      target: "inventory-lots",
+      title: "Controle lotes e validade",
+      description:
+        "Distribua o saldo ao ativar a rastreabilidade; saídas usam primeiro o lote que vence antes.",
+    },
+    {
+      id: "minibar",
+      target: "inventory-minibar",
+      title: "Reponha os frigobares",
+      description:
+        "Composições versionadas mostram a falta por quarto e geram uma rota a partir do estoque abastecedor.",
+    },
   ],
 };

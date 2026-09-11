@@ -16,6 +16,9 @@ describe("inventory access", () => {
       canManage: false,
       canPost: true,
       canCount: false,
+      canManageLots: false,
+      canManageMinibar: false,
+      canReplenishMinibar: false,
     });
   });
 
@@ -30,6 +33,9 @@ describe("inventory access", () => {
       canManage: false,
       canPost: false,
       canCount: false,
+      canManageLots: false,
+      canManageMinibar: false,
+      canReplenishMinibar: false,
     });
   });
 });

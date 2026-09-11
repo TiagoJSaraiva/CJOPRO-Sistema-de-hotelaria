@@ -8,6 +8,7 @@ import {
   listInventoryLocations,
   listInventoryMovements,
   listProducts,
+  requestOperationsFinanceEndpoint,
 } from "../../../../lib/adminApi";
 import { getInventoryAccess } from "../access";
 import { inventoryGuide } from "../usageGuides";
@@ -23,9 +24,15 @@ import {
   updateInventoryCountAction,
   updateInventoryPolicyAction,
   updateInventoryPositionAction,
+  configureLotTrackingAction,
+  createMinibarCompositionAction,
+  createMinibarRouteAction,
+  discardLotAction,
+  versionMinibarCompositionAction,
 } from "../actions";
 
-export type InventoryTab = "overview" | "movements" | "counts" | "settings";
+export type InventoryTab =
+  "overview" | "movements" | "counts" | "settings" | "lots" | "minibar";
 const tabs = [
   {
     key: "overview",
@@ -43,6 +50,8 @@ const tabs = [
     label: "Configurações",
     href: "/dashboard/inventory/settings",
   },
+  { key: "lots", label: "Lotes e validade", href: "/dashboard/inventory/lots" },
+  { key: "minibar", label: "Frigobares", href: "/dashboard/inventory/minibar" },
 ];
 function statusText(status?: string) {
   const labels: Record<string, string> = {
@@ -115,13 +124,37 @@ export async function InventoryWorkspace({
           locations: activeLocations,
         })
       : null;
+  const lots =
+    tab === "lots"
+      ? await requestOperationsFinanceEndpoint<{
+          lots: Array<Record<string, unknown>>;
+        }>("inventory/lots", "GET")
+      : null;
+  const minibar =
+    tab === "minibar"
+      ? await requestOperationsFinanceEndpoint<{
+          items: Array<Record<string, unknown>>;
+        }>("minibar/compositions", "GET")
+      : null;
+  const minibarBoard =
+    tab === "minibar"
+      ? await requestOperationsFinanceEndpoint<{
+          version: number;
+          items: Array<Record<string, unknown>>;
+        }>("minibar/replenishment-board", "GET")
+      : null;
   return (
     <DashboardEntityPageShell
       title="Estoque"
       activeTabKey={tab}
       tabs={tabs.map((item) => ({
         ...item,
-        isVisible: item.key !== "counts" || access.canCount,
+        isVisible:
+          (item.key !== "counts" || access.canCount) &&
+          (item.key !== "lots" || access.canManageLots || access.canRead) &&
+          (item.key !== "minibar" ||
+            access.canManageMinibar ||
+            access.canReplenishMinibar),
       }))}
       usageGuide={inventoryGuide}
       statusContent={
@@ -235,6 +268,23 @@ export async function InventoryWorkspace({
             </p>
           ) : null}
         </section>
+      ) : null}
+      {tab === "lots" ? (
+        <InventoryLots
+          access={access}
+          positions={overview.items}
+          products={eligibleProducts}
+          data={lots?.lots || []}
+        />
+      ) : null}
+      {tab === "minibar" ? (
+        <MinibarInventory
+          access={access}
+          products={eligibleProducts}
+          locations={activeLocations}
+          compositions={minibar?.items || []}
+          board={minibarBoard || { version: 0, items: [] }}
+        />
       ) : null}
       {movementsContent}
       {countsContent}
@@ -785,6 +835,286 @@ function InventorySettings({
           );
         })}
       </section>
+    </section>
+  );
+}
+
+function InventoryLots({
+  access,
+  positions,
+  products,
+  data,
+}: {
+  access: ReturnType<typeof getInventoryAccess>;
+  positions: Array<{
+    id: string;
+    quantity: number;
+    product: { id: string; name: string };
+    location: { name: string };
+  }>;
+  products: Array<{ id: string; name: string }>;
+  data: Array<Record<string, unknown>>;
+}) {
+  return (
+    <section className="grid gap-4" data-usage-guide="inventory-lots">
+      <article className="pms-surface-card">
+        <h2 className="mt-0">Rastreabilidade por produto</h2>
+        <p>
+          Ao ativar lotes, distribua todo o saldo atual da posição. Saídas
+          futuras seguem FEFO.
+        </p>
+        {access.canManageLots ? (
+          <form
+            action={configureLotTrackingAction}
+            className="grid gap-3 md:grid-cols-3"
+          >
+            <label className="pms-field">
+              Produto
+              <select className="pms-field-input" name="product_id">
+                {products.map((p) => (
+                  <option key={p.id} value={p.id}>
+                    {p.name}
+                  </option>
+                ))}
+              </select>
+            </label>
+            <label className="pms-field">
+              Posição
+              <select className="pms-field-input" name="position_id">
+                {positions.map((p) => (
+                  <option key={p.id} value={p.id}>
+                    {p.product.name} · {p.location.name}
+                  </option>
+                ))}
+              </select>
+            </label>
+            <label className="pms-field">
+              Modo
+              <select className="pms-field-input" name="mode">
+                <option value="none">Sem lotes</option>
+                <option value="lot">Lote</option>
+                <option value="lot_expiry">Lote e validade</option>
+              </select>
+            </label>
+            <label className="pms-field">
+              Código do lote
+              <input className="pms-field-input" name="lot_code" />
+            </label>
+            <label className="pms-field">
+              Validade
+              <input
+                className="pms-field-input"
+                name="expires_on"
+                type="date"
+              />
+            </label>
+            <label className="pms-field">
+              Saldo distribuído
+              <input
+                className="pms-field-input"
+                name="quantity"
+                type="number"
+                min="0"
+                step="1"
+              />
+            </label>
+            <label className="pms-field">
+              Alerta antes (dias)
+              <input
+                className="pms-field-input"
+                name="expiry_alert_days"
+                type="number"
+                min="1"
+                max="365"
+                defaultValue="30"
+              />
+            </label>
+            <button className="pms-button-primary self-end">
+              Salvar rastreabilidade
+            </button>
+          </form>
+        ) : null}
+      </article>
+      <article className="pms-surface-card">
+        <h2 className="mt-0">Lotes e validade</h2>
+        <div className="grid gap-2">
+          {data.length ? (
+            data.map((l) => (
+              <div className="rounded border p-3" key={String(l.id)}>
+                <strong>
+                  {String(l.product_name)} · {String(l.lot_code)}
+                </strong>
+                <p>
+                  Validade: {String(l.expires_on || "não informada")} · situação{" "}
+                  {String(l.status)}
+                </p>
+                {Array.isArray(l.balances)
+                  ? l.balances.map((b: Record<string, unknown>) => (
+                      <div
+                        key={String(b.id)}
+                        className="flex flex-wrap items-end gap-2"
+                      >
+                        <span>
+                          {String(b.location_name)}: {String(b.quantity)}
+                        </span>
+                        {access.canManageLots && Number(b.quantity) > 0 ? (
+                          <form
+                            action={discardLotAction}
+                            className="flex gap-2"
+                          >
+                            <input
+                              type="hidden"
+                              name="lot_id"
+                              value={String(l.id)}
+                            />
+                            <input
+                              type="hidden"
+                              name="position_id"
+                              value={String(b.position_id)}
+                            />
+                            <input
+                              type="hidden"
+                              name="version"
+                              value={String(b.version)}
+                            />
+                            <input
+                              className="pms-field-input"
+                              name="quantity"
+                              type="number"
+                              min="1"
+                              max={Number(b.quantity)}
+                              placeholder="Qtd."
+                              required
+                            />
+                            <input
+                              className="pms-field-input"
+                              name="reason"
+                              minLength={3}
+                              placeholder="Motivo do descarte"
+                              required
+                            />
+                            <button className="pms-button-secondary">
+                              Descartar
+                            </button>
+                          </form>
+                        ) : null}
+                      </div>
+                    ))
+                  : null}
+              </div>
+            ))
+          ) : (
+            <p>Nenhum lote cadastrado.</p>
+          )}
+        </div>
+      </article>
+    </section>
+  );
+}
+
+function MinibarInventory({
+  access,
+  products,
+  locations,
+  compositions,
+  board,
+}: {
+  access: ReturnType<typeof getInventoryAccess>;
+  products: Array<{ id: string; name: string }>;
+  locations: Array<{ id: string; name: string }>;
+  compositions: Array<Record<string, unknown>>;
+  board: { version: number; items: Array<Record<string, unknown>> };
+}) {
+  const rooms = [
+    ...new Map(
+      board.items.map((i) => [String(i.room_id), String(i.room_number)]),
+    ).entries(),
+  ];
+  return (
+    <section className="grid gap-4" data-usage-guide="inventory-minibar">
+      <article className="pms-surface-card">
+        <h2 className="mt-0">Composição por tipo de quarto</h2>
+        {access.canManageMinibar ? (
+          <form
+            action={createMinibarCompositionAction}
+            className="flex flex-wrap items-end gap-3"
+          >
+            <label className="pms-field">
+              Tipo do quarto
+              <input className="pms-field-input" name="room_type" required />
+            </label>
+            <label className="pms-field">
+              Nome
+              <input className="pms-field-input" name="name" required />
+            </label>
+            <button className="pms-button-primary">Criar composição</button>
+          </form>
+        ) : null}
+        <div className="mt-4 grid gap-3">
+          {compositions.map((c) => (
+            <article className="rounded border p-3" key={String(c.id)}>
+              <strong>
+                {String(c.room_type)} · {String(c.name)}
+              </strong>
+              {access.canManageMinibar ? (
+                <form
+                  action={versionMinibarCompositionAction}
+                  className="mt-2 grid gap-2 md:grid-cols-4"
+                >
+                  <input type="hidden" name="id" value={String(c.id)} />
+                  <select className="pms-field-input" name="product_id">
+                    {products.map((p) => (
+                      <option value={p.id} key={p.id}>
+                        {p.name}
+                      </option>
+                    ))}
+                  </select>
+                  <select className="pms-field-input" name="source_location_id">
+                    {locations.map((l) => (
+                      <option value={l.id} key={l.id}>
+                        {l.name}
+                      </option>
+                    ))}
+                  </select>
+                  <input
+                    className="pms-field-input"
+                    name="ideal_quantity"
+                    type="number"
+                    min="0"
+                    placeholder="Quantidade ideal"
+                    required
+                  />
+                  <button className="pms-button-secondary">
+                    Ativar nova versão
+                  </button>
+                </form>
+              ) : null}
+            </article>
+          ))}
+        </div>
+      </article>
+      <article className="pms-surface-card">
+        <h2 className="mt-0">Rota de reposição</h2>
+        <p>
+          {board.items.length} necessidades encontradas. A separação respeita
+          lotes e saldo do abastecedor.
+        </p>
+        {access.canReplenishMinibar && rooms.length ? (
+          <form action={createMinibarRouteAction}>
+            <input type="hidden" name="board_version" value={board.version} />
+            <fieldset className="grid gap-2">
+              <legend>Quartos da rota</legend>
+              {rooms.map(([id, number]) => (
+                <label key={id} className="flex gap-2">
+                  <input type="checkbox" name="room_ids" value={id} />
+                  {number}
+                </label>
+              ))}
+            </fieldset>
+            <button className="pms-button-primary mt-3">Criar rota</button>
+          </form>
+        ) : null}
+      </article>
     </section>
   );
 }

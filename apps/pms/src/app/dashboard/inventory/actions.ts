@@ -17,9 +17,11 @@ import {
   updateInventoryCount,
   updateInventoryPosition,
   updateInventorySettings,
+  requestOperationsFinanceEndpoint,
 } from "../../../lib/adminApi";
 
-type Tab = "overview" | "movements" | "counts" | "settings";
+type Tab =
+  "overview" | "movements" | "counts" | "settings" | "lots" | "minibar";
 function go(tab: Tab, status: string): never {
   redirect(
     `/dashboard/inventory/${tab}?status=${encodeURIComponent(status)}&r=${Date.now().toString(36)}`,
@@ -54,6 +56,119 @@ export async function updateInventoryPolicyAction(formData: FormData) {
   }
   refresh();
   go("settings", "updated");
+}
+
+export async function configureLotTrackingAction(formData: FormData) {
+  await requirePermission(PERMISSIONS.INVENTORY_LOTS_MANAGE, "lots");
+  const productId = String(formData.get("product_id") || ""),
+    positionId = String(formData.get("position_id") || ""),
+    mode = String(formData.get("mode") || "none"),
+    quantity = Number(formData.get("quantity") || 0);
+  try {
+    await requestOperationsFinanceEndpoint(
+      `inventory/products/${productId}/lot-tracking`,
+      "POST",
+      {
+        mode,
+        expiry_alert_days: Number(formData.get("expiry_alert_days") || 30),
+        initial_lots:
+          mode === "none"
+            ? []
+            : [
+                {
+                  position_id: positionId,
+                  lot_code: String(formData.get("lot_code") || "").trim(),
+                  expires_on:
+                    String(formData.get("expires_on") || "") || undefined,
+                  quantity,
+                },
+              ],
+      },
+    );
+  } catch {
+    go("lots", "conflict");
+  }
+  refresh();
+  go("lots", "updated");
+}
+
+export async function discardLotAction(formData: FormData) {
+  await requirePermission(PERMISSIONS.INVENTORY_LOTS_MANAGE, "lots");
+  try {
+    await requestOperationsFinanceEndpoint(
+      `inventory/lots/${String(formData.get("lot_id"))}/actions`,
+      "POST",
+      {
+        action: "discard",
+        position_id: String(formData.get("position_id")),
+        quantity: Number(formData.get("quantity")),
+        expected_version: Number(formData.get("version")),
+        reason: String(formData.get("reason") || "").trim(),
+        idempotency_key: uuid(),
+      },
+    );
+  } catch {
+    go("lots", "conflict");
+  }
+  refresh();
+  go("lots", "updated");
+}
+
+export async function createMinibarCompositionAction(formData: FormData) {
+  await requirePermission(PERMISSIONS.MINIBAR_COMPOSITIONS_MANAGE, "minibar");
+  try {
+    await requestOperationsFinanceEndpoint("minibar/compositions", "POST", {
+      room_type: String(formData.get("room_type") || "").trim(),
+      name: String(formData.get("name") || "").trim(),
+    });
+  } catch {
+    go("minibar", "conflict");
+  }
+  refresh();
+  go("minibar", "created");
+}
+
+export async function versionMinibarCompositionAction(formData: FormData) {
+  await requirePermission(PERMISSIONS.MINIBAR_COMPOSITIONS_MANAGE, "minibar");
+  try {
+    await requestOperationsFinanceEndpoint(
+      `minibar/compositions/${String(formData.get("id"))}/versions`,
+      "POST",
+      {
+        activate: true,
+        items: [
+          {
+            product_id: String(formData.get("product_id")),
+            source_location_id: String(formData.get("source_location_id")),
+            ideal_quantity: Number(formData.get("ideal_quantity")),
+          },
+        ],
+      },
+    );
+  } catch {
+    go("minibar", "conflict");
+  }
+  refresh();
+  go("minibar", "updated");
+}
+
+export async function createMinibarRouteAction(formData: FormData) {
+  await requirePermission(PERMISSIONS.MINIBAR_REPLENISHMENT_EXECUTE, "minibar");
+  try {
+    await requestOperationsFinanceEndpoint(
+      "minibar/replenishment-routes",
+      "POST",
+      {
+        room_ids: formData.getAll("room_ids").map(String),
+        expected_board_version: Number(formData.get("board_version")),
+        idempotency_key: uuid(),
+      },
+    );
+  } catch {
+    go("minibar", "conflict");
+  }
+  refresh();
+  go("minibar", "created");
 }
 export async function createInventoryLocationAction(formData: FormData) {
   await requirePermission(PERMISSIONS.INVENTORY_SETTINGS_MANAGE, "settings");
