@@ -21,3 +21,4 @@ export * from "./operational-pending";
 export * from "./governance";
 export * from "./maintenance-planning";
 export * from "./consumption-journey";
+export * from "./operations-finance";

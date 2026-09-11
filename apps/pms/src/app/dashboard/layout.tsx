@@ -84,12 +84,25 @@ export default async function DashboardLayout({
       user.permissions.includes(PERMISSIONS.PARTNER_SETTLEMENTS_READ) ||
       user.permissions.includes(PERMISSIONS.PARTNER_SETTLEMENTS_PREPARE) ||
       user.permissions.includes(PERMISSIONS.PARTNER_SETTLEMENTS_APPROVE) ||
-      user.permissions.includes(PERMISSIONS.PARTNER_SETTLEMENTS_SETTLE),
+      user.permissions.includes(PERMISSIONS.PARTNER_SETTLEMENTS_SETTLE) ||
+      user.permissions.includes(PERMISSIONS.PARTNER_DISPUTES_MANAGE),
     "/dashboard/inventory":
       user.permissions.includes(PERMISSIONS.INVENTORY_READ) ||
       user.permissions.includes(PERMISSIONS.INVENTORY_SETTINGS_MANAGE) ||
       user.permissions.includes(PERMISSIONS.INVENTORY_MOVEMENTS_POST) ||
-      user.permissions.includes(PERMISSIONS.INVENTORY_COUNTS_PERFORM),
+      user.permissions.includes(PERMISSIONS.INVENTORY_COUNTS_PERFORM) ||
+      user.permissions.includes(PERMISSIONS.INVENTORY_LOTS_MANAGE) ||
+      user.permissions.includes(PERMISSIONS.MINIBAR_COMPOSITIONS_MANAGE) ||
+      user.permissions.includes(PERMISSIONS.MINIBAR_REPLENISHMENT_EXECUTE),
+    "/dashboard/procurement": user.permissions.includes(
+      PERMISSIONS.PROCUREMENT_READ,
+    ),
+    "/dashboard/organizations": user.permissions.includes(
+      PERMISSIONS.BUSINESS_ORGANIZATIONS_READ,
+    ),
+    "/dashboard/cash": user.permissions.includes(
+      PERMISSIONS.CASH_MANAGEMENT_READ,
+    ),
     "/dashboard/seasons":
       user.permissions.includes(PERMISSIONS.SEASON_READ) ||
       user.permissions.includes(PERMISSIONS.SEASON_CREATE),

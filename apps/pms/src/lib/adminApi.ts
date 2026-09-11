@@ -623,6 +623,45 @@ export async function requestGovernanceEndpoint<T>(
   return payload;
 }
 
+export async function requestOperationsFinanceEndpoint<T>(
+  path: string,
+  method: "GET" | "POST" | "PUT",
+  body?: unknown,
+): Promise<T> {
+  const token = await getSessionToken();
+  if (!token) throw new Error("Sessão inválida. Faça login novamente.");
+  const activeHotelHeaderValue = await getActiveHotelHeaderValue();
+  const headers: Record<string, string> = { Authorization: `Bearer ${token}` };
+  if (activeHotelHeaderValue !== null)
+    headers[ACTIVE_HOTEL_HEADER_NAME] = activeHotelHeaderValue;
+  if (body !== undefined) headers["Content-Type"] = "application/json";
+  const response = await fetch(
+    `${getBackendUrl()}/admin/${path.replace(/^\/+/, "")}`,
+    {
+      method,
+      cache: "no-store",
+      headers,
+      body: body === undefined ? undefined : JSON.stringify(body),
+    },
+  );
+  const payload = (await response.json().catch(() => ({}))) as T &
+    AdminErrorResponse;
+  if (!response.ok) {
+    const error = new Error(
+      payload.message || "Falha na operação.",
+    ) as Error & {
+      statusCode?: number;
+      details?: string;
+      context?: unknown;
+    };
+    error.statusCode = response.status;
+    error.details = payload.details;
+    error.context = payload.context;
+    throw error;
+  }
+  return payload;
+}
+
 export function getGovernanceBoard(): Promise<GovernanceBoard> {
   return requestGovernanceEndpoint<GovernanceBoard>("board", "GET");
 }
