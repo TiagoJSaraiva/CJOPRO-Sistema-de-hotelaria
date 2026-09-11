@@ -28,6 +28,27 @@ export const consumptionServiceGuide: UsageGuideDefinition = {
   ],
 };
 
+export const corporateAccountsGuide: UsageGuideDefinition = {
+  id: "corporate-accounts",
+  title: "Gerir faturamento empresarial",
+  steps: [
+    {
+      id: "policy",
+      target: "corporate-account-policy",
+      title: "Defina cobertura e limite",
+      description:
+        "Cadastre a empresa separadamente de fornecedores, com moeda, prazo, limite e categorias que podem ser faturadas.",
+    },
+    {
+      id: "approval",
+      target: "corporate-credit-segregation",
+      title: "Separe solicitação e aprovação",
+      description:
+        "O crédito de cada estadia precisa ser aprovado por outra pessoa e continua sujeito ao limite e à vigência.",
+    },
+  ],
+};
+
 export const consumptionLaunchGuide: UsageGuideDefinition = {
   id: "consumption-launch",
   title: "Lançar uma comanda",

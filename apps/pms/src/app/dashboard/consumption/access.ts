@@ -20,6 +20,11 @@ export type ConsumptionAccess = {
   canSettleSettlements: boolean;
   canManageService: boolean;
   canCancelService: boolean;
+  canManagePayers: boolean;
+  canManageCorporate: boolean;
+  canRequestCorporateCredit: boolean;
+  canApproveCorporateCredit: boolean;
+  canSettleCorporateReceivables: boolean;
 };
 
 export function getConsumptionAccess(user: UserLike): ConsumptionAccess {
@@ -67,6 +72,19 @@ export function getConsumptionAccess(user: UserLike): ConsumptionAccess {
     ),
     canCancelService: permissions.includes(
       PERMISSIONS.CONSUMPTION_SERVICE_CANCEL,
+    ),
+    canManagePayers: permissions.includes(PERMISSIONS.STAY_PAYERS_MANAGE),
+    canManageCorporate: permissions.includes(
+      PERMISSIONS.CORPORATE_ACCOUNTS_MANAGE,
+    ),
+    canRequestCorporateCredit: permissions.includes(
+      PERMISSIONS.CORPORATE_CREDIT_REQUEST,
+    ),
+    canApproveCorporateCredit: permissions.includes(
+      PERMISSIONS.CORPORATE_CREDIT_APPROVE,
+    ),
+    canSettleCorporateReceivables: permissions.includes(
+      PERMISSIONS.CORPORATE_RECEIVABLES_SETTLE,
     ),
   };
 }

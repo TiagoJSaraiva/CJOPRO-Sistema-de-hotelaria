@@ -1,5 +1,5 @@
 import { redirect } from "next/navigation";
-import { getStayAccount } from "../../../../lib/adminApi";
+import { getStayAccount, getStayPayerAccounts } from "../../../../lib/adminApi";
 import { getUserFromSession } from "../../../../lib/auth";
 import { DashboardAccessDeniedCard } from "../../_components/DashboardAccessDeniedCard";
 import { DashboardEntityPageShell } from "../../_components/DashboardEntityPageShell";
@@ -11,6 +11,7 @@ import {
   reverseStayPaymentAction,
 } from "../../consumption/accountActions";
 import { stayAccountGuide } from "../../maintenance/usageGuides";
+import { PayerAccountsPanel } from "../../consumption/_components/PayerAccountsPanel";
 
 const money = (value: number, currency: string) =>
   new Intl.NumberFormat("pt-BR", { style: "currency", currency }).format(value);
@@ -40,6 +41,9 @@ export default async function StayAccountPage({
         message="Conta não encontrada no hotel ativo."
       />
     );
+  const payerAccounts = await getStayPayerAccounts(account.stay_id).catch(
+    () => null,
+  );
   return (
     <DashboardEntityPageShell
       title="Conta da estadia"
@@ -107,6 +111,19 @@ export default async function StayAccountPage({
             </div>
           </dl>
         </section>
+        {payerAccounts ? (
+          <PayerAccountsPanel
+            stayId={account.stay_id}
+            accountVersion={payerAccounts.account_version}
+            currency={account.currency}
+            payers={payerAccounts.items}
+            debitEntries={account.folio.entries.filter(
+              (entry) => entry.direction === "debit",
+            )}
+            canManage={consumptionAccess.canManagePayers}
+            canReceive={consumptionAccess.canReceivePayment}
+          />
+        ) : null}
         <section
           className="pms-surface-card overflow-x-auto"
           data-usage-guide="stay-account-lines"

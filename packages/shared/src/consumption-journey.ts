@@ -140,6 +140,9 @@ export const StayPayerAccountCreateSchema = Type.Object(
   },
   strict,
 );
+export type StayPayerAccountCreate = Static<
+  typeof StayPayerAccountCreateSchema
+>;
 export const StayPayerAllocationSchema = Type.Object(
   {
     folio_entry_id: uuid(),
@@ -179,6 +182,7 @@ export const StayPayerPaymentInputSchema = Type.Object(
   },
   strict,
 );
+export type StayPayerPaymentInput = Static<typeof StayPayerPaymentInputSchema>;
 
 export const CorporateAccountInputSchema = Type.Object(
   {
@@ -208,6 +212,9 @@ export const CorporateCreditAuthorizationInputSchema = Type.Object(
   },
   strict,
 );
+export type CorporateCreditAuthorizationInput = Static<
+  typeof CorporateCreditAuthorizationInputSchema
+>;
 export const CorporateCreditActionSchema = Type.Object(
   {
     action: Type.Union([
@@ -221,6 +228,7 @@ export const CorporateCreditActionSchema = Type.Object(
   },
   strict,
 );
+export type CorporateCreditAction = Static<typeof CorporateCreditActionSchema>;
 
 export const BenefitPlanInputSchema = Type.Object(
   {

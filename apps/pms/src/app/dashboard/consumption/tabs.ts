@@ -58,6 +58,16 @@ export function consumptionTabs(
       isVisible: access.canRead,
     },
     {
+      key: "companies",
+      label: "Empresas",
+      href: "/dashboard/consumption/companies",
+      isVisible:
+        access.canManageCorporate ||
+        access.canRequestCorporateCredit ||
+        access.canApproveCorporateCredit ||
+        access.canSettleCorporateReceivables,
+    },
+    {
       key: "partners",
       label: "Parceiros",
       href: "/dashboard/consumption/partners",

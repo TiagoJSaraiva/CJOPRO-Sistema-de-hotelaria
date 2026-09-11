@@ -10,6 +10,11 @@ import type {
   MaintenancePlanningBoard,
   ConsumptionServiceAction,
   ConsumptionServiceOrderCreate,
+  CorporateAccountInput,
+  CorporateCreditAuthorizationInput,
+  StayPayerAccountCreate,
+  StayPayerAllocationInput,
+  StayPayerPaymentInput,
 } from "@hotel/shared";
 import { cookies } from "next/headers";
 import {
@@ -1798,4 +1803,54 @@ export function actConsumptionServiceOrder(
     "POST",
     input,
   );
+}
+
+export function getStayPayerAccounts(stayId: string): Promise<{
+  stay_id: string;
+  account_version: number;
+  items: Array<{
+    id: string;
+    kind: "primary_guest" | "companion" | "company";
+    display_name: string;
+    debit_total: number;
+    credit_total: number;
+    balance: number;
+  }>;
+}> {
+  return getAdminData(`/admin/stays/${stayId}/payer-accounts`);
+}
+export function createStayPayerAccount(
+  stayId: string,
+  input: StayPayerAccountCreate,
+) {
+  return requestAdmin(`/admin/stays/${stayId}/payer-accounts`, "POST", input);
+}
+export function assignStayPayerAllocations(
+  stayId: string,
+  input: StayPayerAllocationInput,
+) {
+  return requestAdmin(
+    `/admin/stays/${stayId}/payer-allocations`,
+    "POST",
+    input,
+  );
+}
+export function createStayPayerPayment(
+  stayId: string,
+  input: StayPayerPaymentInput,
+) {
+  return requestAdmin(`/admin/stays/${stayId}/payer-payments`, "POST", input);
+}
+export function listCorporateAccounts(): Promise<
+  Array<Record<string, unknown>>
+> {
+  return getAdminList("/admin/corporate-accounts");
+}
+export function createCorporateAccount(input: CorporateAccountInput) {
+  return requestAdmin("/admin/corporate-accounts", "POST", input);
+}
+export function requestCorporateCredit(
+  input: CorporateCreditAuthorizationInput,
+) {
+  return requestAdmin("/admin/corporate-credit-authorizations", "POST", input);
 }

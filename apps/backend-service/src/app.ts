@@ -37,6 +37,7 @@ import { registerMaintenanceManagementRoutes } from "./routes/maintenanceManagem
 import { registerGovernanceRoutes } from "./routes/governanceRoutes";
 import { registerMaintenancePlanningRoutes } from "./routes/maintenancePlanningRoutes";
 import { registerConsumptionJourneyRoutes } from "./routes/consumptionJourneyRoutes";
+import { registerStayPayersRoutes } from "./routes/stayPayersRoutes";
 
 const DEFAULT_ALLOWED_ORIGINS = [
   // LOCALHOSTS PARA DESENVOLVIMENTO. DEPOIS COLOCAR AQUI AS URLS REAIS DOS SERVIÇOS HOSPEDADOS
@@ -185,6 +186,7 @@ export function createApp(options: CreateAppOptions = {}): FastifyInstance {
     registerMaintenancePlanningRoutes(routes);
     registerGovernanceRoutes(routes);
     registerConsumptionJourneyRoutes(routes);
+    registerStayPayersRoutes(routes);
   });
 
   return app;

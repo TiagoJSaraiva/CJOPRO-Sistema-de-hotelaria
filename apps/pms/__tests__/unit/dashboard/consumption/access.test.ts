@@ -27,6 +27,11 @@ describe("consumption access", () => {
       canSettleSettlements: false,
       canManageService: false,
       canCancelService: false,
+      canManagePayers: false,
+      canManageCorporate: false,
+      canRequestCorporateCredit: false,
+      canApproveCorporateCredit: false,
+      canSettleCorporateReceivables: false,
     });
     expect(
       getConsumptionAccess({
@@ -50,6 +55,11 @@ describe("consumption access", () => {
       canSettleSettlements: false,
       canManageService: false,
       canCancelService: false,
+      canManagePayers: false,
+      canManageCorporate: false,
+      canRequestCorporateCredit: false,
+      canApproveCorporateCredit: false,
+      canSettleCorporateReceivables: false,
     });
   });
 
@@ -73,6 +83,11 @@ describe("consumption access", () => {
         canSettleSettlements: false,
         canManageService: false,
         canCancelService: false,
+        canManagePayers: false,
+        canManageCorporate: false,
+        canRequestCorporateCredit: false,
+        canApproveCorporateCredit: false,
+        canSettleCorporateReceivables: false,
       }),
     ).toBe("/dashboard/consumption/points");
     expect(
@@ -94,6 +109,11 @@ describe("consumption access", () => {
         canSettleSettlements: false,
         canManageService: false,
         canCancelService: false,
+        canManagePayers: false,
+        canManageCorporate: false,
+        canRequestCorporateCredit: false,
+        canApproveCorporateCredit: false,
+        canSettleCorporateReceivables: false,
       }),
     ).toBeNull();
     expect(
@@ -115,6 +135,11 @@ describe("consumption access", () => {
         canSettleSettlements: false,
         canManageService: false,
         canCancelService: false,
+        canManagePayers: false,
+        canManageCorporate: false,
+        canRequestCorporateCredit: false,
+        canApproveCorporateCredit: false,
+        canSettleCorporateReceivables: false,
       }),
     ).toBe("/dashboard/consumption/partners");
   });

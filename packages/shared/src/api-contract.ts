@@ -44,6 +44,12 @@ import {
   ConsumptionServiceOrderSchema,
   StayPayerAccountSchema,
   DepartureReviewSchema,
+  StayPayerAccountCreateSchema,
+  StayPayerAllocationInputSchema,
+  StayPayerPaymentInputSchema,
+  CorporateAccountInputSchema,
+  CorporateCreditAuthorizationInputSchema,
+  CorporateCreditActionSchema,
 } from "./consumption-journey";
 import { Type, type Static, type TSchema } from "typebox";
 import type {
@@ -4056,6 +4062,91 @@ export const API_ROUTE_CONTRACTS: Readonly<Record<string, ApiRouteContract>> = {
     "Atribui, prepara, conclui, entrega ou cancela um pedido com versão esperada.",
     itemSchema(ConsumptionServiceOrderSchema),
     { params: IdParamsSchema, body: ConsumptionServiceActionSchema },
+  ),
+  "GET /admin/stays/:id/payer-accounts": admin(
+    "listStayPayerAccounts",
+    "Stay payer accounts",
+    "Lista subcontas, débitos, pagamentos e saldos por pagador.",
+    Type.Object(
+      {
+        stay_id: uuid(),
+        account_version: Type.Integer(),
+        items: Type.Array(StayPayerAccountSchema),
+      },
+      strict,
+    ),
+    { params: IdParamsSchema },
+  ),
+  "POST /admin/stays/:id/payer-accounts": route(
+    "createStayPayerAccount",
+    "Stay payer accounts",
+    "Vincula acompanhante existente ou empresa à estadia em andamento.",
+    {
+      headers: AuthHeadersSchema,
+      security: [{ bearerAuth: [] }],
+      params: IdParamsSchema,
+      body: StayPayerAccountCreateSchema,
+      response: { 201: OkSchema, ...adminErrors },
+    },
+  ),
+  "POST /admin/stays/:id/payer-allocations/simulate": admin(
+    "simulateStayPayerAllocations",
+    "Stay payer accounts",
+    "Valida a distribuição integral antes de alterar a conta.",
+    OkSchema,
+    { params: IdParamsSchema, body: StayPayerAllocationInputSchema },
+  ),
+  "POST /admin/stays/:id/payer-allocations": admin(
+    "assignStayPayerAllocations",
+    "Stay payer accounts",
+    "Distribui integralmente os débitos entre pagadores com concorrência otimista.",
+    OkSchema,
+    { params: IdParamsSchema, body: StayPayerAllocationInputSchema },
+  ),
+  "POST /admin/stays/:id/payer-payments": admin(
+    "createStayPayerPayment",
+    "Stay payer accounts",
+    "Registra pagamento parcial ou multimeios na subconta indicada.",
+    OkSchema,
+    { params: IdParamsSchema, body: StayPayerPaymentInputSchema },
+  ),
+  "GET /admin/corporate-accounts": admin(
+    "listCorporateAccounts",
+    "Corporate accounts",
+    "Lista empresas pagadoras do hotel ativo.",
+    Type.Object(
+      { items: Type.Array(Type.Record(Type.String(), Type.Unknown())) },
+      strict,
+    ),
+  ),
+  "POST /admin/corporate-accounts": route(
+    "createCorporateAccount",
+    "Corporate accounts",
+    "Cadastra empresa e sua política de crédito e cobertura.",
+    {
+      headers: AuthHeadersSchema,
+      security: [{ bearerAuth: [] }],
+      body: CorporateAccountInputSchema,
+      response: { 201: OkSchema, ...adminErrors },
+    },
+  ),
+  "POST /admin/corporate-credit-authorizations": route(
+    "createCorporateCreditAuthorization",
+    "Corporate accounts",
+    "Solicita crédito empresarial para uma estadia.",
+    {
+      headers: AuthHeadersSchema,
+      security: [{ bearerAuth: [] }],
+      body: CorporateCreditAuthorizationInputSchema,
+      response: { 201: OkSchema, ...adminErrors },
+    },
+  ),
+  "POST /admin/corporate-credit-authorizations/:id/actions": admin(
+    "actCorporateCreditAuthorization",
+    "Corporate accounts",
+    "Submete, aprova, rejeita ou revoga autorização com segregação de pessoas.",
+    OkSchema,
+    { params: IdParamsSchema, body: CorporateCreditActionSchema },
   ),
   "GET /admin/governance/board": admin(
     "listGovernanceBoard",
