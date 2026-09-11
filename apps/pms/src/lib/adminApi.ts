@@ -8,6 +8,8 @@ import type {
   StayRelocationCandidate,
   StayRelocationConfirmInput,
   MaintenancePlanningBoard,
+  ConsumptionServiceAction,
+  ConsumptionServiceOrderCreate,
 } from "@hotel/shared";
 import { cookies } from "next/headers";
 import {
@@ -1769,4 +1771,31 @@ export async function actOperationalPending(body: OperationalPendingAction) {
 export async function reconcileOperationalPending() {
   await requestAdminOk("/admin/operational-pending/reconcile", "POST", {});
   return { ok: true };
+}
+
+export function getConsumptionServiceBoard(query = ""): Promise<{
+  items: Array<Record<string, unknown>>;
+  summary: Record<string, number>;
+  updated_at: string;
+}> {
+  return getAdminData(
+    `/admin/consumption-service/board${query ? `?${query}` : ""}`,
+  );
+}
+
+export function createConsumptionServiceOrder(
+  input: ConsumptionServiceOrderCreate,
+): Promise<Record<string, unknown> | null> {
+  return requestAdmin("/admin/consumption-service/orders", "POST", input);
+}
+
+export function actConsumptionServiceOrder(
+  id: string,
+  input: ConsumptionServiceAction,
+): Promise<Record<string, unknown> | null> {
+  return requestAdmin(
+    `/admin/consumption-service/orders/${id}/actions`,
+    "POST",
+    input,
+  );
 }

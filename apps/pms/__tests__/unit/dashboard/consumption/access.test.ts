@@ -25,6 +25,8 @@ describe("consumption access", () => {
       canPrepareSettlements: false,
       canApproveSettlements: false,
       canSettleSettlements: false,
+      canManageService: false,
+      canCancelService: false,
     });
     expect(
       getConsumptionAccess({
@@ -46,6 +48,8 @@ describe("consumption access", () => {
       canPrepareSettlements: false,
       canApproveSettlements: false,
       canSettleSettlements: false,
+      canManageService: false,
+      canCancelService: false,
     });
   });
 
@@ -67,6 +71,8 @@ describe("consumption access", () => {
         canPrepareSettlements: false,
         canApproveSettlements: false,
         canSettleSettlements: false,
+        canManageService: false,
+        canCancelService: false,
       }),
     ).toBe("/dashboard/consumption/points");
     expect(
@@ -86,6 +92,8 @@ describe("consumption access", () => {
         canPrepareSettlements: false,
         canApproveSettlements: false,
         canSettleSettlements: false,
+        canManageService: false,
+        canCancelService: false,
       }),
     ).toBeNull();
     expect(
@@ -105,6 +113,8 @@ describe("consumption access", () => {
         canPrepareSettlements: false,
         canApproveSettlements: false,
         canSettleSettlements: false,
+        canManageService: false,
+        canCancelService: false,
       }),
     ).toBe("/dashboard/consumption/partners");
   });

@@ -18,6 +18,8 @@ export type ConsumptionAccess = {
   canPrepareSettlements: boolean;
   canApproveSettlements: boolean;
   canSettleSettlements: boolean;
+  canManageService: boolean;
+  canCancelService: boolean;
 };
 
 export function getConsumptionAccess(user: UserLike): ConsumptionAccess {
@@ -60,10 +62,17 @@ export function getConsumptionAccess(user: UserLike): ConsumptionAccess {
     canSettleSettlements: permissions.includes(
       PERMISSIONS.PARTNER_SETTLEMENTS_SETTLE,
     ),
+    canManageService: permissions.includes(
+      PERMISSIONS.CONSUMPTION_SERVICE_MANAGE,
+    ),
+    canCancelService: permissions.includes(
+      PERMISSIONS.CONSUMPTION_SERVICE_CANCEL,
+    ),
   };
 }
 
 export function getConsumptionDefaultRoute(access: ConsumptionAccess) {
+  if (access.canManageService) return "/dashboard/consumption/service";
   if (access.canPost) return "/dashboard/consumption/launch";
   if (access.canReadAnalytics) return "/dashboard/consumption/analytics";
   if (

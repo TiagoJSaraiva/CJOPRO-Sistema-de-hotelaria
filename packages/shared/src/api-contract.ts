@@ -38,6 +38,13 @@ import {
   MaintenanceTeamInputSchema,
   MaintenanceWaitingFollowupInputSchema,
 } from "./maintenance-planning";
+import {
+  ConsumptionServiceActionSchema,
+  ConsumptionServiceOrderCreateSchema,
+  ConsumptionServiceOrderSchema,
+  StayPayerAccountSchema,
+  DepartureReviewSchema,
+} from "./consumption-journey";
 import { Type, type Static, type TSchema } from "typebox";
 import type {
   AdminCustomerCreateInput,
@@ -3898,6 +3905,9 @@ export const API_COMPONENT_SCHEMAS = [
   StayRelocationCandidateSchema,
   MaintenancePlanningBoardSchema,
   MaintenanceScheduleSimulationSchema,
+  ConsumptionServiceOrderSchema,
+  StayPayerAccountSchema,
+  DepartureReviewSchema,
 ] as const;
 
 const AuthHeadersSchema = Type.Object(
@@ -4003,6 +4013,50 @@ const crud = (
 });
 
 export const API_ROUTE_CONTRACTS: Readonly<Record<string, ApiRouteContract>> = {
+  "GET /admin/consumption-service/board": admin(
+    "listConsumptionServiceBoard",
+    "Consumption service",
+    "Lista pedidos recebidos, em preparo, prontos e concluídos no hotel ativo.",
+    Type.Record(Type.String(), Type.Unknown()),
+    {
+      querystring: Type.Object(
+        {
+          status: Type.Optional(Type.String()),
+          point_id: Type.Optional(uuid()),
+          search: Type.Optional(Type.String()),
+        },
+        strict,
+      ),
+    },
+  ),
+  "POST /admin/consumption-service/orders": route(
+    "createConsumptionServiceOrder",
+    "Consumption service",
+    "Recebe um pedido e reserva preço e disponibilidade operacional.",
+    {
+      headers: AuthHeadersSchema,
+      security: [{ bearerAuth: [] }],
+      body: ConsumptionServiceOrderCreateSchema,
+      response: {
+        201: itemSchema(ConsumptionServiceOrderSchema),
+        ...adminErrors,
+      },
+    },
+  ),
+  "GET /admin/consumption-service/orders/:id": admin(
+    "getConsumptionServiceOrder",
+    "Consumption service",
+    "Detalha o pedido, reservas, eventos e comandas produzidas.",
+    itemSchema(ConsumptionServiceOrderSchema),
+    { params: IdParamsSchema },
+  ),
+  "POST /admin/consumption-service/orders/:id/actions": admin(
+    "actConsumptionServiceOrder",
+    "Consumption service",
+    "Atribui, prepara, conclui, entrega ou cancela um pedido com versão esperada.",
+    itemSchema(ConsumptionServiceOrderSchema),
+    { params: IdParamsSchema, body: ConsumptionServiceActionSchema },
+  ),
   "GET /admin/governance/board": admin(
     "listGovernanceBoard",
     "Governance",

@@ -1,5 +1,33 @@
 import type { UsageGuideDefinition } from "../_components/UsageGuide";
 
+export const consumptionServiceGuide: UsageGuideDefinition = {
+  id: "consumption-service",
+  title: "Acompanhar pedidos",
+  steps: [
+    {
+      id: "receive",
+      target: "consumption-service-receive",
+      title: "Receba e reserve",
+      description:
+        "Informe estadia, item e previsão. O recebimento congela preço e reserva a disponibilidade até entrega ou cancelamento.",
+    },
+    {
+      id: "board",
+      target: "consumption-service-board",
+      title: "Acompanhe o preparo",
+      description:
+        "A fila mostra responsável, previsão e atraso. Registre cada mudança para que a próxima ação fique clara.",
+    },
+    {
+      id: "delivery",
+      target: "consumption-service-delivery",
+      title: "Materialize na entrega",
+      description:
+        "A entrega cria as comandas e efetiva estoque e cobrança de todos os grupos de uma vez. Uma tentativa frustrada mantém o pedido pronto.",
+    },
+  ],
+};
+
 export const consumptionLaunchGuide: UsageGuideDefinition = {
   id: "consumption-launch",
   title: "Lançar uma comanda",

@@ -6,6 +6,12 @@ export function consumptionTabs(
 ): PermissionTabItem[] {
   return [
     {
+      key: "service",
+      label: "Pedidos",
+      href: "/dashboard/consumption/service",
+      isVisible: access.canRead || access.canManageService,
+    },
+    {
       key: "launch",
       label: "Lançar consumo",
       href: "/dashboard/consumption/launch",
