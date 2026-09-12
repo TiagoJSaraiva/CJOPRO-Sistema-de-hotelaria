@@ -48,11 +48,11 @@ export default [
         },
       },
       {
-        files: ["apps/pms/**/*.{ts,tsx,js,jsx}"],
+        files: ["apps/{pms,public}/**/*.{ts,tsx,js,jsx}"],
         extends: ["next/core-web-vitals", "next/typescript"],
         settings: {
           next: {
-            rootDir: "apps/pms/",
+            rootDir: ["apps/pms/", "apps/public/"],
           },
         },
         rules: {

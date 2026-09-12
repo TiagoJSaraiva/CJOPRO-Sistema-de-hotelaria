@@ -86,6 +86,7 @@ import {
 } from "./operations-finance";
 import {
   BookingChannelEventActionSchema,
+  BookingChannelImportInputSchema,
   BookingChannelInputSchema,
   BookingChannelMappingInputSchema,
   BookingConfigurationInputSchema,
@@ -3975,6 +3976,7 @@ export const API_COMPONENT_SCHEMAS = [
   BookingChannelInputSchema,
   BookingChannelMappingInputSchema,
   BookingChannelEventActionSchema,
+  BookingChannelImportInputSchema,
 ] as const;
 
 const AuthHeadersSchema = Type.Object(
@@ -6996,6 +6998,13 @@ export const API_ROUTE_CONTRACTS: Readonly<Record<string, ApiRouteContract>> = {
     "Booking channels",
     "Lista eventos recebidos e conflitos.",
     Type.Record(Type.String(), Type.Any()),
+  ),
+  "POST /admin/booking-channels/import": admin(
+    "importBookingChannelEvents",
+    "Booking channels",
+    "Importa linhas pelo mesmo pipeline idempotente dos eventos de canal.",
+    Type.Record(Type.String(), Type.Any()),
+    { body: BookingChannelImportInputSchema },
   ),
   "POST /admin/booking-channel-events/:id/actions": admin(
     "actBookingChannelEvent",

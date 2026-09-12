@@ -221,7 +221,11 @@ export type BookingChannelMappingInput = Static<
 export const BookingChannelEventInputSchema = Type.Object(
   {
     event_id: Type.String({ minLength: 1, maxLength: 160 }),
-    event_type: Type.Union([Type.Literal("create"), Type.Literal("amend"), Type.Literal("cancel")]),
+    event_type: Type.Union([
+      Type.Literal("create"),
+      Type.Literal("amend"),
+      Type.Literal("cancel"),
+    ]),
     external_reservation_id: Type.String({ minLength: 1, maxLength: 160 }),
     occurred_at: Type.String({ format: "date-time" }),
     reservation: Type.Object(
@@ -243,17 +247,39 @@ export const BookingChannelEventInputSchema = Type.Object(
   },
   { ...strict, $id: "BookingChannelEventInput" },
 );
-export type BookingChannelEventInput = Static<typeof BookingChannelEventInputSchema>;
+export type BookingChannelEventInput = Static<
+  typeof BookingChannelEventInputSchema
+>;
+
+export const BookingChannelImportInputSchema = Type.Object(
+  {
+    channel_id: uuid(),
+    rows: Type.Array(BookingChannelEventInputSchema, {
+      minItems: 1,
+      maxItems: 1000,
+    }),
+  },
+  { ...strict, $id: "BookingChannelImportInput" },
+);
+export type BookingChannelImportInput = Static<
+  typeof BookingChannelImportInputSchema
+>;
 
 export const BookingChannelEventActionSchema = Type.Object(
   {
-    action: Type.Union([Type.Literal("apply"), Type.Literal("reject"), Type.Literal("resolve")]),
+    action: Type.Union([
+      Type.Literal("apply"),
+      Type.Literal("reject"),
+      Type.Literal("resolve"),
+    ]),
     expected_version: Type.Integer({ minimum: 1 }),
     reason: Type.String({ minLength: 3, maxLength: 500 }),
   },
   { ...strict, $id: "BookingChannelEventAction" },
 );
-export type BookingChannelEventAction = Static<typeof BookingChannelEventActionSchema>;
+export type BookingChannelEventAction = Static<
+  typeof BookingChannelEventActionSchema
+>;
 
 export const PublicBookingQuoteInputSchema = Type.Object(
   {
@@ -299,12 +325,16 @@ export const PublicBookingHoldInputSchema = Type.Object(
   },
   { ...strict, $id: "PublicBookingHoldInput" },
 );
-export type PublicBookingHoldInput = Static<typeof PublicBookingHoldInputSchema>;
+export type PublicBookingHoldInput = Static<
+  typeof PublicBookingHoldInputSchema
+>;
 
 export const PublicPrearrivalInputSchema = Type.Object(
   {
     expected_version: Type.Integer({ minimum: 1 }),
-    arrival_time: Type.Optional(Type.String({ pattern: "^([01]\\d|2[0-3]):[0-5]\\d$" })),
+    arrival_time: Type.Optional(
+      Type.String({ pattern: "^([01]\\d|2[0-3]):[0-5]\\d$" }),
+    ),
     primary_guest: Type.Optional(
       Type.Object(
         {

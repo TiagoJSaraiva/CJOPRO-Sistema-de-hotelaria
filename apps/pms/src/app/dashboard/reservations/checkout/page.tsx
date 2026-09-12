@@ -8,6 +8,7 @@ import {
 } from "../access";
 import { CheckoutByRoomWorkflow } from "../_components/CheckoutByRoomWorkflow";
 import { maintenanceCheckoutGuide } from "../../maintenance/usageGuides";
+import { reservationOperationsTabs } from "../stage6Tabs";
 
 export default async function ReservationsCheckoutPage({
   searchParams,
@@ -36,20 +37,7 @@ export default async function ReservationsCheckoutPage({
       title="Calendario de Reservas"
       activeTabKey="checkout"
       usageGuide={maintenanceCheckoutGuide}
-      tabs={[
-        {
-          key: "calendar",
-          label: "Calendario",
-          href: "/dashboard/reservations/view",
-          isVisible: access.canAccess,
-        },
-        {
-          key: "checkout",
-          label: "Checkout",
-          href: "/dashboard/reservations/checkout",
-          isVisible: access.canAccess,
-        },
-      ]}
+      tabs={reservationOperationsTabs(user)}
     >
       <CheckoutByRoomWorkflow initialRoomNumber={params?.room_number || ""} />
     </DashboardEntityPageShell>

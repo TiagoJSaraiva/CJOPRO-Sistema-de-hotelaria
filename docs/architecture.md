@@ -23,7 +23,14 @@ flowchart LR
   api -->|tipos, schemas TypeBox e OpenAPI| shared
   booking -->|tipos comuns| shared
   api -->|cliente tipado e RPCs| supabase
+  booking -->|RPCs de preço, inventário, token e canal| supabase
 ```
+
+O navegador público usa `apps/public` e o booking engine. Ambos identificam o
+hotel pelo slug e não recebem o hotel ativo de uma sessão administrativa. A API
+pública executa as mesmas funções transacionais usadas pelo PMS para preço e
+inventário; tokens são resolvidos por hash e eventos de canal por conexão
+assinada. O fluxo completo está em [Reservas e booking](reservations-booking.md).
 
 Fontes de verdade: `apps/pms/src`, `apps/backend-service/src`, `apps/booking-engine-service/src`, `packages/shared/src` e `supabase/migrations`. Atualize este diagrama ao adicionar um serviço, uma integração entre componentes ou um novo armazenamento.
 

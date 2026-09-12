@@ -1,0 +1,84 @@
+* {
+  box-sizing: border-box;
+}
+body {
+  margin: 0;
+  background: #f5f1ea;
+  color: #1e2b26;
+  font-family: Arial, sans-serif;
+}
+.shell {
+  width: min(1080px, calc(100% - 32px));
+  margin: auto;
+  padding: 48px 0;
+}
+.eyebrow {
+  text-transform: uppercase;
+  letter-spacing: 0.12em;
+  color: #476c5c;
+  font-weight: 700;
+}
+.card,
+header {
+  background: #fff;
+  border: 1px solid #d9d4ca;
+  border-radius: 18px;
+  padding: 24px;
+  margin-bottom: 20px;
+  box-shadow: 0 10px 28px #18302512;
+}
+.grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 16px;
+}
+.grid label {
+  display: grid;
+  gap: 7px;
+  font-weight: 650;
+}
+.grid input {
+  padding: 12px;
+  border: 1px solid #8e9a94;
+  border-radius: 8px;
+  font: inherit;
+}
+.grid button {
+  align-self: end;
+  padding: 13px 18px;
+  border: 0;
+  border-radius: 8px;
+  background: #315f4d;
+  color: #fff;
+  font-weight: 700;
+}
+.options {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(210px, 1fr));
+  gap: 12px;
+}
+.option {
+  display: grid;
+  gap: 7px;
+  padding: 16px;
+  border: 1px solid #aab6af;
+  border-radius: 12px;
+}
+.option.selected {
+  outline: 3px solid #6d9e88;
+}
+.consent {
+  grid-column: 1/-1;
+}
+@media (max-width: 640px) {
+  .shell {
+    padding: 20px 0;
+  }
+  .grid {
+    grid-template-columns: 1fr;
+  }
+  .card,
+  header {
+    padding: 18px;
+  }
+}

@@ -59,8 +59,8 @@ deliberadamente manifests ou overrides.
 
 | Comando                  | Finalidade                                       | Requisito adicional      | Versionados |
 | ------------------------ | ------------------------------------------------ | ------------------------ | ----------- |
-| `pnpm api:openapi`       | valida e atualiza `docs/openapi.json`            | nenhum                   | sim         |
-| `pnpm api:openapi:check` | valida estrutura e drift sem escrever            | nenhum                   | não         |
+| `pnpm api:openapi`       | atualiza os contratos administrativos e públicos | nenhum                   | sim         |
+| `pnpm api:openapi:check` | valida ambos os contratos OpenAPI e seu drift    | nenhum                   | não         |
 | `pnpm db:start`          | inicia o Supabase local                          | Docker                   | não         |
 | `pnpm db:status`         | inspeciona a instância local sem imprimir chaves | Docker                   | não         |
 | `pnpm db:reset`          | recria e semeia exclusivamente o banco local     | Docker; destrutivo local | não         |

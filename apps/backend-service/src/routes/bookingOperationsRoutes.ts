@@ -3,6 +3,7 @@ import {
   ADMIN_ERROR_CODE,
   PERMISSIONS,
   type BookingChannelEventAction,
+  type BookingChannelImportInput,
   type BookingChannelInput,
   type BookingChannelMappingInput,
   type BookingConfigurationInput,
@@ -52,24 +53,22 @@ function send(
   const invalid =
     value.result.startsWith("invalid") ||
     value.result === "insufficient_guarantee";
-  return reply
-    .status(missing ? 404 : invalid ? 400 : 409)
-    .send({
-      ...adminError(
-        missing
-          ? ADMIN_ERROR_CODE.NOT_FOUND
-          : invalid
-            ? ADMIN_ERROR_CODE.VALIDATION
-            : ADMIN_ERROR_CODE.CONFLICT,
-        missing
-          ? "Reserva não encontrada no hotel ativo."
-          : invalid
-            ? "Dados inválidos para a operação."
-            : "A reserva mudou ou exige outra decisão.",
-        value.result,
-      ),
-      ...(value.context ? { context: value.context } : {}),
-    });
+  return reply.status(missing ? 404 : invalid ? 400 : 409).send({
+    ...adminError(
+      missing
+        ? ADMIN_ERROR_CODE.NOT_FOUND
+        : invalid
+          ? ADMIN_ERROR_CODE.VALIDATION
+          : ADMIN_ERROR_CODE.CONFLICT,
+      missing
+        ? "Reserva não encontrada no hotel ativo."
+        : invalid
+          ? "Dados inválidos para a operação."
+          : "A reserva mudou ou exige outra decisão.",
+      value.result,
+    ),
+    ...(value.context ? { context: value.context } : {}),
+  });
 }
 export function registerBookingOperationsRoutes(
   app: FastifyInstance,
@@ -427,6 +426,20 @@ export function registerBookingOperationsRoutes(
       }),
     );
   });
+  app.post<{ Body: BookingChannelImportInput }>(
+    "/admin/booking-channels/import",
+    async (request, reply) => {
+      const c = context(request, reply, PERMISSIONS.BOOKING_CHANNELS_MANAGE);
+      if (!c) return;
+      return reply.status(200).send(
+        await repository.mutate("import_booking_channel_events", {
+          p_hotel_id: c.hotelId,
+          p_channel_id: request.body.channel_id,
+          p_rows: request.body.rows,
+        }),
+      );
+    },
+  );
   app.post<{ Params: Params; Body: BookingChannelEventAction }>(
     "/admin/booking-channel-events/:id/actions",
     async (request, reply) => {

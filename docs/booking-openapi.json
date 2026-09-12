@@ -1,0 +1,104 @@
+{
+  "openapi": "3.1.0",
+  "info": {
+    "title": "Hotel Booking API",
+    "version": "1.0.0"
+  },
+  "servers": [
+    {
+      "url": "http://localhost:3333"
+    }
+  ],
+  "paths": {
+    "/public/hotels/{slug}/booking-config": {
+      "get": {
+        "operationId": "get_public_hotels_slug_booking_config",
+        "responses": {
+          "200": {
+            "description": "Operação concluída"
+          }
+        }
+      }
+    },
+    "/public/hotels/{slug}/quotes": {
+      "post": {
+        "operationId": "post_public_hotels_slug_quotes",
+        "responses": {
+          "200": {
+            "description": "Operação concluída"
+          }
+        }
+      }
+    },
+    "/public/hotels/{slug}/holds": {
+      "post": {
+        "operationId": "post_public_hotels_slug_holds",
+        "responses": {
+          "200": {
+            "description": "Operação concluída"
+          }
+        }
+      }
+    },
+    "/public/booking-access/{token}": {
+      "get": {
+        "operationId": "get_public_booking_access_token_",
+        "responses": {
+          "200": {
+            "description": "Operação concluída"
+          }
+        }
+      }
+    },
+    "/public/booking-access/{token}/prearrival": {
+      "post": {
+        "operationId": "post_public_booking_access_token_prearrival",
+        "responses": {
+          "200": {
+            "description": "Operação concluída"
+          }
+        }
+      }
+    },
+    "/public/booking-access/{token}/change-requests": {
+      "post": {
+        "operationId": "post_public_booking_access_token_change_requests",
+        "responses": {
+          "200": {
+            "description": "Operação concluída"
+          }
+        }
+      }
+    },
+    "/channels/{connectionId}/events": {
+      "post": {
+        "operationId": "post_channels_connectionId_events",
+        "responses": {
+          "200": {
+            "description": "Operação concluída"
+          }
+        }
+      }
+    },
+    "/channels/{connectionId}/inventory": {
+      "get": {
+        "operationId": "get_channels_connectionId_inventory",
+        "responses": {
+          "200": {
+            "description": "Operação concluída"
+          }
+        }
+      }
+    },
+    "/channels/{connectionId}/acknowledgements": {
+      "post": {
+        "operationId": "post_channels_connectionId_acknowledgements",
+        "responses": {
+          "200": {
+            "description": "Operação concluída"
+          }
+        }
+      }
+    }
+  }
+}

@@ -14,11 +14,14 @@
     "test:unit": "vitest run __tests__/unit --passWithNoTests",
     "test:integration": "vitest run __tests__/integration --passWithNoTests",
     "test:coverage": "vitest run --coverage --passWithNoTests --reporter=default --reporter=junit --outputFile.junit=coverage/junit.xml",
-    "test:watch": "vitest --watch --passWithNoTests"
+    "test:watch": "vitest --watch --passWithNoTests",
+    "openapi:generate": "tsx scripts/openapi.ts",
+    "openapi:check": "tsx scripts/openapi.ts --check"
   },
   "dependencies": {
     "@hotel/shared": "workspace:*",
     "@fastify/cors": "^10.1.0",
+    "@supabase/supabase-js": "^2.112.4",
     "fastify": "^5.12.1"
   },
   "devDependencies": {

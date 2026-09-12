@@ -14,6 +14,7 @@ import { ReservationsCalendarBoard } from "../_components/ReservationsCalendarBo
 import { CALENDAR_WINDOW_DAYS } from "../_components/calendarUtils";
 import { PERMISSIONS } from "@hotel/shared";
 import { reservationsOperationsGuide } from "../usageGuide";
+import { reservationOperationsTabs } from "../stage6Tabs";
 
 type ReservationsCalendarViewPageProps = {
   searchParams?: Promise<{
@@ -66,20 +67,7 @@ export default async function ReservationsCalendarViewPage({
     <DashboardEntityPageShell
       title="Calendário de Reservas"
       activeTabKey="calendar"
-      tabs={[
-        {
-          key: "calendar",
-          label: "Calendario",
-          href: "/dashboard/reservations/view",
-          isVisible: access.canAccess,
-        },
-        {
-          key: "checkout",
-          label: "Checkout",
-          href: "/dashboard/reservations/checkout",
-          isVisible: access.canAccess,
-        },
-      ]}
+      tabs={reservationOperationsTabs(user)}
       usageGuide={reservationsOperationsGuide({
         canRelocate,
         canOverrideReadiness,

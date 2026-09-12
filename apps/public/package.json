@@ -1,0 +1,35 @@
+{
+  "name": "@hotel/public",
+  "version": "0.1.0",
+  "private": true,
+  "scripts": {
+    "dev": "next dev --port 3000",
+    "build": "next build",
+    "start": "next start --port 3000",
+    "typecheck": "tsc -p tsconfig.json --noEmit",
+    "lint": "eslint src --max-warnings=0",
+    "clean": "rimraf .next",
+    "test": "vitest run",
+    "test:unit": "vitest run",
+    "test:integration": "vitest run --passWithNoTests",
+    "test:coverage": "vitest run --coverage",
+    "test:watch": "vitest --watch --passWithNoTests"
+  },
+  "dependencies": {
+    "@hotel/shared": "workspace:*",
+    "next": "15.5.21",
+    "react": "19.2.8",
+    "react-dom": "19.2.8"
+  },
+  "devDependencies": {
+    "@testing-library/react": "^16.3.2",
+    "@testing-library/user-event": "^14.6.6",
+    "@types/node": "^22.20.1",
+    "@types/react": "^19.2.18",
+    "@types/react-dom": "^19.2.5",
+    "jsdom": "^29.1.1",
+    "rimraf": "^6.1.3",
+    "typescript": "^5.9.3",
+    "vitest": "^4.1.11"
+  }
+}
