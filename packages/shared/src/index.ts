@@ -22,3 +22,4 @@ export * from "./governance";
 export * from "./maintenance-planning";
 export * from "./consumption-journey";
 export * from "./operations-finance";
+export * from "./booking";

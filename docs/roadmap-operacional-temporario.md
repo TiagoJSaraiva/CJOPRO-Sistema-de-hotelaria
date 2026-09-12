@@ -27,7 +27,7 @@ inferência. Atualizar este acompanhamento em cada entrega validada.
 | 3 — Manutenção planejada | Concluída e validada | Equipes, capacidade, agenda; esperas e tempos; impacto, reincidência, ciclo de vida e pendências     | Conflito com exceção auditada; score explicável; aprovação segregada | 385 verificações SQL; 8 testes HTTP; 476 testes; check/cobertura aprovados; 36 E2E desktop/mobile                        | Planejar tecnicamente a etapa 4 quando solicitada |
 | 4 — Consumo e saída      | Concluída e validada | Pedidos; pagadores/empresas; benefícios/transferência; pré-checkout e pós-saída                      | Entrega atômica; aprovação segregada; fechamento preservado          | 410 verificações SQL; 8 testes HTTP; 488 testes; 284 operações OpenAPI; check/cobertura aprovados; 36 E2E                | Planejar tecnicamente a etapa 5 quando solicitada |
 | 5 — Estoque e financeiro | Concluída e validada | Organizações; compras; lotes/frigobar; caixa/fechamento; parceiros e pendências                      | Alçadas segregadas; FEFO; contagem cega; liquidação por componente   | 447 verificações SQL; 8 testes HTTP; 503 testes; 320 operações OpenAPI; check/cobertura aprovados; 38 E2E desktop/mobile | Planejar tecnicamente a etapa 6 quando solicitada |
-| 6 — Expansão do PMS      | Não iniciada         | —                                                                                                    | Consolidar operação primeiro                                         | —                                                                                                                        | Planejamento técnico e limpeza final              |
+| 6 — Expansão do PMS      | Em implementação     | Reservas e tarifas; pré-chegada; API pública e canais; indicadores em validação                      | Categoria sem quarto prometido; snapshots; token por hash            | Migrations e 477 verificações SQL aprovadas; validação completa em andamento                                            | Concluir aceite e limpeza delimitada              |
 
 ## Levantamento de design aprovado
 
@@ -574,3 +574,43 @@ executar Prettier, documentação, check, testes, cobertura, banco e E2E sem red
 limiares ou atualizar snapshots sem inspeção visual. Após validar esta etapa,
 apontar a etapa 6 como próximo planejamento e preservar este arquivo e o bloco
 temporário do AGENTS.md até a validação final da etapa 6.
+
+## Plano técnico aprovado — etapa 6
+
+### Entregas e decisões
+
+Entregar quatro blocos locais: inventário de reservas, tarifas e alterações;
+relacionamento e pré-chegada; reserva direta e hub neutro de canais; indicadores,
+pendências e encerramento do roteiro. Reservas públicas vendem categoria, criam
+pré-reserva por 24 horas configuráveis e exigem sinal ou dispensa auditada. Uma
+alteração preserva diárias intactas e reprecifica apenas o trecho modificado.
+
+### Reservas, hóspedes e distribuição
+
+- Versionar acomodações, diárias e planos flexíveis, não reembolsáveis ou com
+  pacote, incluindo ocupação, garantia, cancelamento e benefícios.
+- Permitir alocação posterior do quarto, extensão e troca com disponibilidade,
+  prontidão, delta financeiro, concorrência e idempotência.
+- Criar conta da reserva para sinais e penalidades, sem reescrever lançamentos.
+- Registrar preferências somente declaradas, participantes antes da estadia e
+  pré-chegada por token opaco cujo hash é persistido.
+- Triar pedidos especiais e solicitações de alteração antes de convertê-los em
+  ações operacionais.
+
+### Reserva direta, canais e indicadores
+
+- Tornar `apps/public` uma aplicação pública multi-hotel e evoluir o booking
+  engine para cotação, pré-reserva e acesso seguro, sem gateway ou mensagens.
+- Receber eventos idempotentes em hub neutro, mapear categoria/tarifa, preservar
+  preço do canal e encaminhar conflitos para decisão humana.
+- Separar previsão e realizado para ocupação, indisponibilidade, receita,
+  consumo, perdas e manutenção, com drill-down condicionado a permissões.
+
+### Guia de uso, proteção e encerramento
+
+Caracterizar reserva, tarifa, check-in, clientes, benefícios e indicadores.
+Cobrir regras puras, rotas, RLS, transações, tokens, canais, UI pública/PMS,
+desktop/mobile, visual e axe. Regenerar OpenAPI e tipos locais; executar Prettier,
+documentação, check, testes, cobertura, auditoria, banco e E2E. Depois de todos os
+blocos e validações, transferir orientações permanentes, remover somente o bloco
+temporário do `AGENTS.md` e excluir este roteiro.
