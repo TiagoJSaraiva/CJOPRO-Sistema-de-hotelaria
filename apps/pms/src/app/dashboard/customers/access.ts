@@ -7,6 +7,8 @@ export type CustomersAccess = {
   canRead: boolean;
   canUpdate: boolean;
   canDelete: boolean;
+  canReadRelationship: boolean;
+  canManageRelationship: boolean;
 };
 
 export function getCustomersAccess(user: UserLike): CustomersAccess {
@@ -17,6 +19,12 @@ export function getCustomersAccess(user: UserLike): CustomersAccess {
     canRead: permissions.includes(PERMISSIONS.CUSTOMER_READ),
     canUpdate: permissions.includes(PERMISSIONS.CUSTOMER_UPDATE),
     canDelete: permissions.includes(PERMISSIONS.CUSTOMER_DELETE),
+    canReadRelationship: permissions.includes(
+      PERMISSIONS.GUEST_RELATIONSHIP_READ,
+    ),
+    canManageRelationship: permissions.includes(
+      PERMISSIONS.GUEST_RELATIONSHIP_MANAGE,
+    ),
   };
 }
 

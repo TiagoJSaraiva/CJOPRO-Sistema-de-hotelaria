@@ -55,6 +55,12 @@ export default async function CustomersCreatePage({
           href: "/dashboard/customers/view",
           isVisible: access.canRead,
         },
+        {
+          key: "relationship",
+          label: "Relacionamento",
+          href: "/dashboard/customers/relationship",
+          isVisible: access.canReadRelationship,
+        },
       ]}
       statusContent={
         <CustomerStatusMessage

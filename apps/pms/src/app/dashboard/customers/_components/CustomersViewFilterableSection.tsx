@@ -18,6 +18,7 @@ type CustomersViewFilterableSectionProps = {
   canRead: boolean;
   canUpdate: boolean;
   canDelete: boolean;
+  canReadRelationship?: boolean;
   activeCustomerId: string;
   mode: "view" | "edit";
   children?: React.ReactNode;
@@ -28,6 +29,7 @@ export function CustomersViewFilterableSection({
   canRead,
   canUpdate,
   canDelete,
+  canReadRelationship = false,
   activeCustomerId,
   mode,
   children,
@@ -70,6 +72,7 @@ export function CustomersViewFilterableSection({
           canRead={canRead}
           canUpdate={canUpdate}
           canDelete={canDelete}
+          canReadRelationship={canReadRelationship}
           isViewing={activeCustomerId === customer.id && mode === "view"}
           isEditing={activeCustomerId === customer.id && mode === "edit"}
         />

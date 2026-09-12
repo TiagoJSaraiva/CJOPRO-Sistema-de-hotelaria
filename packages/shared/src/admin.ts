@@ -306,7 +306,7 @@ export type PaymentStatus = "pending" | "partial" | "paid" | "refunded";
 export type AdminReservation = {
   id: string;
   hotel_id: string;
-  booking_customer_id: string;
+  booking_customer_id: string | null;
   reservation_code: string;
   guest_count: number;
   reservation_source: ReservationSource | null;

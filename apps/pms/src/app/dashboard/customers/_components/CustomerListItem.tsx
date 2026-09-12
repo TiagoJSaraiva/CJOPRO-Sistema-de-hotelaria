@@ -10,6 +10,7 @@ type CustomerListItemProps = {
   canRead: boolean;
   canUpdate: boolean;
   canDelete: boolean;
+  canReadRelationship?: boolean;
   isViewing: boolean;
   isEditing: boolean;
 };
@@ -180,6 +181,7 @@ export function CustomerListItem({
   canRead,
   canUpdate,
   canDelete,
+  canReadRelationship = false,
   isViewing,
   isEditing,
 }: CustomerListItemProps) {
@@ -205,6 +207,14 @@ export function CustomerListItem({
       }
     >
       {isViewing ? <CustomerDataPreview customer={customer} /> : null}
+      {isViewing && canReadRelationship ? (
+        <a
+          className="pms-button-secondary mt-3 inline-flex"
+          href={`/dashboard/customers/relationship?customerId=${customer.id}`}
+        >
+          Ver relacionamento e preferências
+        </a>
+      ) : null}
       {isEditing ? <CustomerEditForm customer={customer} /> : null}
     </DashboardEntityListItemFrame>
   );

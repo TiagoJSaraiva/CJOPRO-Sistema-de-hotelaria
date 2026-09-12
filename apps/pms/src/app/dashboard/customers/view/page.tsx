@@ -60,6 +60,12 @@ export default async function CustomersViewPage({
           href: "/dashboard/customers/view",
           isVisible: access.canRead,
         },
+        {
+          key: "relationship",
+          label: "Relacionamento",
+          href: "/dashboard/customers/relationship",
+          isVisible: access.canReadRelationship,
+        },
       ]}
       statusContent={
         <CustomerStatusMessage status={resolvedSearchParams?.status} />
@@ -70,6 +76,7 @@ export default async function CustomersViewPage({
         canRead={access.canRead}
         canUpdate={access.canUpdate}
         canDelete={access.canDelete}
+        canReadRelationship={access.canReadRelationship}
         activeCustomerId={activeCustomerId}
         mode={mode}
       />
