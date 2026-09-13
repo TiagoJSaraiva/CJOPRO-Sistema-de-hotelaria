@@ -17,6 +17,7 @@ Use este índice para localizar a fonte de verdade adequada à tarefa.
 | analisar consumo e fechar parceiros          | [Fechamento gerencial](consumption-management.md)          |
 | fechar estoque, compras, caixa e parceiros   | [Operações financeiras](operations-finance.md)             |
 | operar giro, inspeção e prontidão de quartos | [Governança e prontidão](governance-operations.md)         |
+| operar reservas, pré-chegada e venda direta  | [Reservas e booking](reservations-booking.md)              |
 
 ## Fontes de verdade
 
@@ -24,7 +25,8 @@ Use este índice para localizar a fonte de verdade adequada à tarefa.
 - Dependências resolvidas: manifests dos workspaces e `pnpm-lock.yaml`.
 - Schema: `supabase/migrations`.
 - Dados sintéticos locais: `supabase/seed.sql`.
-- Contrato HTTP: schemas TypeBox em `packages/shared` e `docs/openapi.json` gerado.
+- Contratos HTTP: schemas TypeBox em `packages/shared`, `docs/openapi.json` e
+  `docs/booking-openapi.json` gerados.
 - Banco tipado: `packages/shared/src/database.types.ts` gerado do ambiente local.
 - Pipeline: `.github/workflows/ci.yml`.
 - Regressão visual: snapshots versionados em `apps/pms/__tests__/e2e/__screenshots__`.

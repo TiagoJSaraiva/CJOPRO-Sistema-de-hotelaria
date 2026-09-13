@@ -13,17 +13,20 @@
     "test:unit": "vitest run",
     "test:integration": "vitest run --passWithNoTests",
     "test:coverage": "vitest run --coverage",
-    "test:watch": "vitest --watch --passWithNoTests"
+    "test:watch": "vitest --watch --passWithNoTests",
+    "test:e2e": "playwright test"
   },
   "dependencies": {
     "@hotel/shared": "workspace:*",
-    "next": "15.5.21",
+    "next": "15.5.24",
     "react": "19.2.8",
     "react-dom": "19.2.8"
   },
   "devDependencies": {
     "@testing-library/react": "^16.3.2",
     "@testing-library/user-event": "^14.6.6",
+    "@axe-core/playwright": "4.13.0",
+    "@playwright/test": "^1.62.1",
     "@types/node": "^22.20.1",
     "@types/react": "^19.2.18",
     "@types/react-dom": "^19.2.5",

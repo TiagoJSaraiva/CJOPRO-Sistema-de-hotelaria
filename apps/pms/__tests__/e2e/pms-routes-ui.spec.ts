@@ -76,6 +76,42 @@ test.describe("PMS UI quality", () => {
     await auditAccessibility("caixa-e-fechamento");
   });
 
+  test("consulta pré-chegada, tarifas, canais e indicadores da etapa 6", async ({
+    page,
+    context,
+    baseURL,
+    auditAccessibility,
+  }) => {
+    test.setTimeout(90_000);
+    await authenticate(context, baseURL!, "operations-e2e-token");
+    await preparePage(page);
+
+    await page.goto("/dashboard/reservations/prearrival");
+    await expect(page.getByText(/1 chegada\(s\) próxima\(s\)/)).toBeVisible();
+    await auditAccessibility("reservas-pre-chegada");
+
+    await page.goto("/dashboard/reservations/rates");
+    await expect(
+      page.getByRole("heading", { name: "Novo plano em rascunho" }),
+    ).toBeVisible();
+    await auditAccessibility("reservas-tarifas");
+
+    await page.goto("/dashboard/reservations/channels");
+    await expect(
+      page.getByRole("heading", { name: "Venda direta" }),
+    ).toBeVisible();
+    await auditAccessibility("reservas-canais");
+
+    await page.goto(
+      "/dashboard/reservations/analytics?from=2026-05-12&to=2026-05-12",
+    );
+    await expect(page.getByRole("heading", { name: "Previsão" })).toBeVisible();
+    await expect(
+      page.getByRole("heading", { name: "Realizado" }),
+    ).toBeVisible();
+    await auditAccessibility("reservas-indicadores");
+  });
+
   test(
     "organiza cobranças incompatíveis e preserva os dois recibos",
     { tag: TEST_TAGS },

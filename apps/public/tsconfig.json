@@ -4,8 +4,14 @@
     "lib": ["dom", "dom.iterable", "esnext"],
     "jsx": "preserve",
     "incremental": true,
-    "plugins": [{ "name": "next" }],
-    "noEmit": true
+    "plugins": [
+      {
+        "name": "next"
+      }
+    ],
+    "noEmit": true,
+    "allowJs": true,
+    "isolatedModules": true
   },
   "include": [
     "next-env.d.ts",

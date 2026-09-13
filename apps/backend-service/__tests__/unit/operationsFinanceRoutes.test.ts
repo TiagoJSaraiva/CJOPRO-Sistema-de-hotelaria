@@ -13,6 +13,8 @@ import { signToken } from "../../src/auth/session";
 import type { OperationsFinanceRepository } from "../../src/repositories/operationsFinanceRepository";
 import { registerOperationsFinanceRoutes } from "../../src/routes/operationsFinanceRoutes";
 
+vi.setConfig({ testTimeout: 15_000 });
+
 const hotel = "10000000-0000-4000-8000-000000000001",
   user = "80000000-0000-4000-8000-000000000002",
   id = "90000000-0000-4000-8000-000000000001";

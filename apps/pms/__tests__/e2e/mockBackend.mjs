@@ -97,6 +97,18 @@ const operationsPermissions = [
   "prepare_daily_close",
   "approve_daily_close",
   "manage_partner_disputes",
+  "manage_rate_plans",
+  "manage_reservation_amendments",
+  "override_reservation_pricing",
+  "manage_reservation_guarantees",
+  "waive_reservation_guarantee",
+  "manage_room_assignments",
+  "read_guest_relationship",
+  "manage_guest_relationship",
+  "manage_prearrival",
+  "manage_booking_configuration",
+  "manage_booking_channels",
+  "read_integrated_analytics",
 ];
 
 const user = {
@@ -2691,6 +2703,53 @@ const server = http.createServer(async (request, response) => {
 
   if (method === "GET" && url.pathname === "/admin/reservations/calendar") {
     sendJson(response, 200, buildCalendar(url));
+    return;
+  }
+
+  if (method === "GET" && url.pathname === "/admin/prearrival/board") {
+    sendJson(response, 200, {
+      requests: [],
+      unassigned_arrivals: [{ id: "arrival-1" }],
+    });
+    return;
+  }
+  if (method === "GET" && url.pathname === "/admin/rate-plans") {
+    sendJson(response, 200, { items: [] });
+    return;
+  }
+  if (method === "GET" && url.pathname === "/admin/booking-channels") {
+    sendJson(response, 200, { items: [] });
+    return;
+  }
+  if (method === "GET" && url.pathname === "/admin/booking-configuration") {
+    sendJson(response, 200, {
+      configuration: {
+        published: false,
+        primary_color: "#315F4D",
+        introduction: "",
+        guarantee_instructions: "",
+        terms: "Termos de teste",
+        consent_version: "v1",
+      },
+    });
+    return;
+  }
+  if (method === "GET" && url.pathname === "/admin/booking-channels/inbox") {
+    sendJson(response, 200, { items: [] });
+    return;
+  }
+  if (method === "GET" && url.pathname === "/admin/analytics/operations") {
+    sendJson(response, 200, {
+      items: [
+        {
+          date: "2026-05-12",
+          forecast: { confirmed_room_nights: 2, held_room_nights: 1 },
+          actual: { occupied_room_nights: 1 },
+          reconciled_at: "2026-05-12T15:00:00.000Z",
+          closed_snapshot: false,
+        },
+      ],
+    });
     return;
   }
 
