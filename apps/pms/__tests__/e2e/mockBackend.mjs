@@ -1,4 +1,7 @@
 import http from "node:http";
+import { createManagerAuthFixture } from "../../../backend-service/__tests__/fixtures/managerAuth.ts";
+
+const { app: authApp } = await createManagerAuthFixture();
 
 const port = Number(process.env.PMS_E2E_BACKEND_PORT || 4334);
 const consumptionOccurredAt = "2026-09-04T17:32:00.000Z";
@@ -1125,6 +1128,32 @@ const server = http.createServer(async (request, response) => {
     inventoryLocations[0].position_count = 0;
     inventoryLocations[0].total_quantity = 0;
     sendJson(response, 200, { ok: true });
+    return;
+  }
+
+  const legacyE2eTokens = [
+    "e2e-token",
+    "operations-e2e-token",
+    "maintenance-e2e-token",
+    "inventory-e2e-token",
+    "management-e2e-token",
+    "consumption-e2e-token",
+  ];
+  if (
+    (method === "POST" && url.pathname === "/auth/login") ||
+    (method === "GET" &&
+      url.pathname === "/auth/me" &&
+      !legacyE2eTokens.includes(
+        request.headers.authorization?.replace("Bearer ", ""),
+      ))
+  ) {
+    const result = await authApp.inject({
+      method,
+      url: url.pathname,
+      headers: request.headers,
+      ...(method === "POST" ? { payload: await parseBody(request) } : {}),
+    });
+    sendJson(response, result.statusCode, result.json());
     return;
   }
 

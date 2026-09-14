@@ -90,6 +90,23 @@ de sua fonte e ser revisado antes do commit.
 
 ## Diagnóstico
 
+### Login de gerentes sem acesso às telas
+
+O crescimento das permissões dos gerentes locais fez o token antigo ultrapassar
+o limite de um cookie: aproximadamente 8 KB. O navegador podia rejeitar o novo
+cookie e manter uma sessão anterior. O backend agora emite tokens `v2` com payload
+compactado e assinado; o conteúdo e o escopo das permissões são preservados.
+Tokens antigos válidos continuam aceitos até sua expiração, de até oito horas.
+
+Após atualizar, reinicie `pnpm dev:pms-backend` e faça login novamente com a conta
+de gerente do hotel. Não é necessário resetar o banco nem conceder permissões
+adicionais. O administrador global local continua restrito às operações de sistema.
+
+O PMS recusa tokens acima de 3.800 bytes, remove a sessão e o hotel ativo e mostra
+uma mensagem de falha ao iniciar a sessão. Essa condição exige revisar o tamanho
+dos vínculos de acesso; não deve ser contornada removendo as verificações de
+permissão. Tokens e credenciais nunca devem ser registrados no diagnóstico.
+
 - Runtime ou CLI ausente: execute `pnpm run doctor` e siga a correção indicada.
 - Instalação divergente: confirme Node/pnpm e rode `pnpm bootstrap`.
 - Porta `3001` ou `3334` ocupada: encerre o processo indicado pelo diagnóstico

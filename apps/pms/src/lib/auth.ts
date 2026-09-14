@@ -10,10 +10,21 @@ import {
   type LoginRequest,
   type MeSuccessResponse,
 } from "@hotel/shared";
-import { getActiveHotelCookieValue } from "./activeHotel";
+import {
+  clearActiveHotelCookie,
+  getActiveHotelCookieValue,
+} from "./activeHotel";
 
 const SESSION_COOKIE_NAME = "pms_session_token";
 const DEFAULT_BACKEND_URL = "http://localhost:3334";
+const MAX_SESSION_COOKIE_BYTES = 3800;
+
+export class SessionTooLargeError extends Error {
+  constructor() {
+    super("Session token exceeds the cookie size limit.");
+    this.name = "SessionTooLargeError";
+  }
+}
 
 function getBackendUrl(): string {
   return process.env.BACKEND_SERVICE_URL || DEFAULT_BACKEND_URL;
@@ -103,6 +114,11 @@ export async function saveSessionCookie(
   token: string,
   expiresInSeconds: number,
 ): Promise<void> {
+  if (Buffer.byteLength(token, "utf8") > MAX_SESSION_COOKIE_BYTES) {
+    await clearSessionCookie();
+    await clearActiveHotelCookie();
+    throw new SessionTooLargeError();
+  }
   const cookieStore = await cookies();
   cookieStore.set(SESSION_COOKIE_NAME, token, {
     httpOnly: true,

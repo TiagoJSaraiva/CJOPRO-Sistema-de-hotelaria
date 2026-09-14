@@ -2,7 +2,11 @@
 
 import { LOGIN_PAGE_ERROR_PARAM } from "@hotel/shared";
 import { redirect } from "next/navigation";
-import { loginWithCredentials, saveSessionCookie } from "../../lib/auth";
+import {
+  loginWithCredentials,
+  saveSessionCookie,
+  SessionTooLargeError,
+} from "../../lib/auth";
 import {
   getActiveHotelCookieValue,
   resolveActiveHotelForUser,
@@ -26,7 +30,10 @@ export async function loginAction(formData: FormData): Promise<void> {
       preferredHotelId,
     );
     await saveActiveHotelCookie(resolvedActiveHotelId);
-  } catch {
+  } catch (error) {
+    if (error instanceof SessionTooLargeError) {
+      redirect(`/login?error=${LOGIN_PAGE_ERROR_PARAM.SESSION_TOO_LARGE}`);
+    }
     redirect(`/login?error=${LOGIN_PAGE_ERROR_PARAM.INVALID_CREDENTIALS}`);
   }
 

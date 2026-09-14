@@ -8,6 +8,8 @@ const errorMessages: Record<string, string> = {
     AUTH_ERROR_MESSAGE.AUTH_MISSING_FIELDS,
   [LOGIN_PAGE_ERROR_PARAM.INVALID_CREDENTIALS]:
     AUTH_ERROR_MESSAGE.AUTH_INVALID_CREDENTIALS,
+  [LOGIN_PAGE_ERROR_PARAM.SESSION_TOO_LARGE]:
+    "Não foi possível iniciar sua sessão. Entre em contato com o administrador para revisar seus acessos.",
 };
 
 export function LoginErrorMessage() {

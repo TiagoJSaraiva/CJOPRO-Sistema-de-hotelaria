@@ -16,6 +16,11 @@ Testes Vitest ficam em `__tests__/unit`, `__tests__/integration`, `fixtures` e
 `helpers` conforme sua função. A suíte real de banco é separada para manter o
 fluxo normal independente de Docker.
 
+O E2E de sessão passa pelo formulário de login com as rotas reais de autenticação,
+assinatura e verificação de tokens, usando repositório sintético em memória. Ele
+cobre perfis com todas as permissões operacionais, troca de conta, persistência no
+navegador e logout. Os dados operacionais das demais telas continuam mockados.
+
 ## Política para novas features e correções
 
 Testes fazem parte da implementação. Nenhuma `feat` ou `fix` está concluída se a

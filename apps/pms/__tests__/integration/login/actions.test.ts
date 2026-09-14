@@ -23,7 +23,8 @@ vi.mock("next/navigation", () => ({
   redirect: redirectMock,
 }));
 
-vi.mock("../../../src/lib/auth", () => ({
+vi.mock("../../../src/lib/auth", async (importOriginal) => ({
+  ...(await importOriginal<typeof import("../../../src/lib/auth")>()),
   loginWithCredentials: loginWithCredentialsMock,
   saveSessionCookie: saveSessionCookieMock,
 }));
@@ -35,8 +36,25 @@ vi.mock("../../../src/lib/activeHotel", () => ({
 }));
 
 import { loginAction } from "../../../src/app/login/actions";
+import { SessionTooLargeError } from "../../../src/lib/auth";
 
 describe("login/actions", () => {
+  it("informa falha de sessão sem confundir com credenciais inválidas", async () => {
+    loginWithCredentialsMock.mockResolvedValueOnce({
+      token: "oversized",
+      expiresIn: 28800,
+      user: {},
+    });
+    saveSessionCookieMock.mockRejectedValueOnce(new SessionTooLargeError());
+    const form = new FormData();
+    form.set("email", "gerente@example.com");
+    form.set("password", "test-password");
+    await expect(loginAction(form)).rejects.toThrow(
+      "REDIRECT:/login?error=session_too_large",
+    );
+    expect(saveActiveHotelCookieMock).not.toHaveBeenCalled();
+    expect(redirectMock).not.toHaveBeenCalledWith("/dashboard");
+  });
   beforeEach(() => {
     vi.clearAllMocks();
   });

@@ -11,8 +11,86 @@ vi.mock("next/headers", () => ({
 import {
   getUserFromSession,
   loginWithCredentials,
+  saveSessionCookie,
+  clearSessionCookie,
+  SessionTooLargeError,
 } from "../../../src/lib/auth";
 import { cookies } from "next/headers";
+
+describe("lib/auth - cookies", () => {
+  it.each([3799, 3800])("aceita token com %i bytes", async (size) => {
+    const store = { get: vi.fn(), set: vi.fn(), delete: vi.fn() };
+    vi.mocked(cookies).mockResolvedValue(
+      store as unknown as Awaited<ReturnType<typeof cookies>>,
+    );
+    await saveSessionCookie("x".repeat(size), 28800);
+    expect(store.set).toHaveBeenCalledOnce();
+    expect(store.delete).not.toHaveBeenCalled();
+  });
+
+  it.each(["x".repeat(3801), "á".repeat(1901)])(
+    "limpa a sessão e o hotel quando o token excede 3800 bytes",
+    async (token) => {
+      const store = { get: vi.fn(), set: vi.fn(), delete: vi.fn() };
+      vi.mocked(cookies).mockResolvedValue(
+        store as unknown as Awaited<ReturnType<typeof cookies>>,
+      );
+      await expect(saveSessionCookie(token, 28800)).rejects.toBeInstanceOf(
+        SessionTooLargeError,
+      );
+      expect(store.set).not.toHaveBeenCalled();
+      expect(store.delete.mock.calls).toEqual([
+        ["pms_session_token"],
+        ["pms_active_hotel"],
+      ]);
+    },
+  );
+
+  it("mantém Secure em produção", async () => {
+    vi.stubEnv("NODE_ENV", "production");
+    const store = { get: vi.fn(), set: vi.fn(), delete: vi.fn() };
+    vi.mocked(cookies).mockResolvedValue(
+      store as unknown as Awaited<ReturnType<typeof cookies>>,
+    );
+    try {
+      await saveSessionCookie("v2.token.signature", 28800);
+      expect(store.set).toHaveBeenCalledWith(
+        "pms_session_token",
+        "v2.token.signature",
+        expect.objectContaining({ secure: true }),
+      );
+    } finally {
+      vi.unstubAllEnvs();
+    }
+  });
+  it("grava cookie HttpOnly com prazo e caminho da sessão", async () => {
+    const store = { get: vi.fn(), set: vi.fn(), delete: vi.fn() };
+    vi.mocked(cookies).mockResolvedValue(
+      store as unknown as Awaited<ReturnType<typeof cookies>>,
+    );
+    await saveSessionCookie("legacy-token", 28800);
+    expect(store.set).toHaveBeenCalledWith(
+      "pms_session_token",
+      "legacy-token",
+      {
+        httpOnly: true,
+        sameSite: "lax",
+        secure: false,
+        path: "/",
+        maxAge: 28800,
+      },
+    );
+  });
+
+  it("remove o cookie de sessão no logout", async () => {
+    const store = { get: vi.fn(), set: vi.fn(), delete: vi.fn() };
+    vi.mocked(cookies).mockResolvedValue(
+      store as unknown as Awaited<ReturnType<typeof cookies>>,
+    );
+    await clearSessionCookie();
+    expect(store.delete).toHaveBeenCalledWith("pms_session_token");
+  });
+});
 
 describe("lib/auth - loginWithCredentials", () => {
   beforeEach(() => {

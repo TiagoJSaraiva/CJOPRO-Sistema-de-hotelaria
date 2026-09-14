@@ -1,4 +1,5 @@
 import { createHmac, timingSafeEqual } from "node:crypto";
+import { deflateRawSync, inflateRawSync } from "node:zlib";
 import argon2 from "argon2";
 import {
   AUTH_ERROR_MESSAGE,
@@ -10,6 +11,7 @@ export type { SessionPayload };
 
 export const MIN_SESSION_SECRET_LENGTH = 32;
 export const SESSION_TTL_SECONDS = 60 * 60 * 8;
+const MAX_SESSION_PAYLOAD_BYTES = 64 * 1024;
 
 export function getRequiredSessionSecret(): string {
   const sessionSecret = process.env.AUTH_SESSION_SECRET;
@@ -29,16 +31,12 @@ export function getRequiredSessionSecret(): string {
   return sessionSecret;
 }
 
-function base64UrlEncode(value: string): string {
-  return Buffer.from(value).toString("base64url");
-}
-
-function base64UrlDecode(value: string): string {
-  return Buffer.from(value, "base64url").toString("utf8");
-}
-
 export function signToken(payload: SessionPayload): string {
-  const encodedPayload = base64UrlEncode(JSON.stringify(payload));
+  const json = Buffer.from(JSON.stringify(payload));
+  if (json.length > MAX_SESSION_PAYLOAD_BYTES) {
+    throw new Error("Session payload exceeds the supported size.");
+  }
+  const encodedPayload = `v2.${deflateRawSync(json).toString("base64url")}`;
   const signature = createHmac("sha256", getRequiredSessionSecret())
     .update(encodedPayload)
     .digest("base64url");
@@ -46,14 +44,22 @@ export function signToken(payload: SessionPayload): string {
 }
 
 export function verifyToken(token: string): SessionPayload | null {
-  const [encodedPayload, signature] = token.split(".");
+  const parts = token.split(".");
+  const compressed = parts.length === 3 && parts[0] === "v2";
+  if (!compressed && parts.length !== 2) return null;
+  const encodedPayload = compressed ? parts[1] : parts[0];
+  const signature = parts[compressed ? 2 : 1];
 
-  if (!encodedPayload || !signature) {
+  if (
+    !encodedPayload ||
+    !signature ||
+    !/^[A-Za-z0-9_-]+$/.test(encodedPayload)
+  ) {
     return null;
   }
 
   const expectedSignature = createHmac("sha256", getRequiredSessionSecret())
-    .update(encodedPayload)
+    .update(compressed ? `v2.${encodedPayload}` : encodedPayload)
     .digest("base64url");
 
   const receivedBuffer = Buffer.from(signature);
@@ -68,12 +74,16 @@ export function verifyToken(token: string): SessionPayload | null {
   }
 
   try {
-    const parsed = JSON.parse(
-      base64UrlDecode(encodedPayload),
-    ) as SessionPayload;
+    // Authenticate the compressed bytes before allocating the expanded payload.
+    const bytes = Buffer.from(encodedPayload, "base64url");
+    const json = compressed
+      ? inflateRawSync(bytes, { maxOutputLength: MAX_SESSION_PAYLOAD_BYTES })
+      : bytes;
+    if (json.length > MAX_SESSION_PAYLOAD_BYTES) return null;
+    const parsed: unknown = JSON.parse(json.toString("utf8"));
     const nowInSeconds = Math.floor(Date.now() / 1000);
 
-    if (!parsed.exp || parsed.exp <= nowInSeconds) {
+    if (!isSessionPayload(parsed) || parsed.exp <= nowInSeconds) {
       return null;
     }
 
@@ -81,6 +91,39 @@ export function verifyToken(token: string): SessionPayload | null {
   } catch {
     return null;
   }
+}
+
+function isSessionPayload(value: unknown): value is SessionPayload {
+  const isRecord = (item: unknown): item is Record<string, unknown> =>
+    typeof item === "object" && item !== null && !Array.isArray(item);
+  const isStrings = (item: unknown): item is string[] =>
+    Array.isArray(item) && item.every((entry) => typeof entry === "string");
+  const isNullableString = (item: unknown) =>
+    item === null || typeof item === "string";
+  return (
+    isRecord(value) &&
+    typeof value.id === "string" &&
+    typeof value.name === "string" &&
+    typeof value.email === "string" &&
+    isNullableString(value.tenantId) &&
+    isStrings(value.roles) &&
+    isStrings(value.permissions) &&
+    typeof value.iat === "number" &&
+    Number.isFinite(value.iat) &&
+    typeof value.exp === "number" &&
+    Number.isFinite(value.exp) &&
+    Array.isArray(value.roleAssignments) &&
+    value.roleAssignments.every(
+      (role) =>
+        isRecord(role) &&
+        typeof role.roleId === "string" &&
+        typeof role.roleName === "string" &&
+        (role.roleType === "SYSTEM_ROLE" || role.roleType === "HOTEL_ROLE") &&
+        isNullableString(role.hotelId) &&
+        isNullableString(role.hotelName) &&
+        (role.permissions === undefined || isStrings(role.permissions)),
+    )
+  );
 }
 
 export function getAuthError(

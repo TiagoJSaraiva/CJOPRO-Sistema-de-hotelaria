@@ -265,11 +265,16 @@ sequenceDiagram
   PMS->>API: POST /auth/login
   API->>DB: Confere usuário, senha, roles e permissões
   DB-->>API: Identidade e escopos
-  API-->>PMS: Token de sessão e usuário
-  PMS-->>Browser: Cookies HttpOnly de sessão e hotel ativo
+  API-->>PMS: Token v2 compactado e assinado + usuário
+  alt Token até 3.800 bytes
+    PMS-->>Browser: Cookies HttpOnly de sessão e hotel ativo
+  else Token excede o limite
+    PMS-->>Browser: Remove cookies e exibe falha ao iniciar sessão
+  end
   Browser->>PMS: Acessa rota administrativa
   PMS->>API: Bearer token + x-active-hotel-id
   API->>Auth: Valida sessão, permissão e escopo do hotel
+  Note over API,Auth: Assinatura antes da descompactação (até 64 KiB); aceita tokens legados válidos
   Auth->>DB: Consulta ou persiste dentro do hotel autorizado
   DB-->>API: Resultado
   API-->>PMS: Envelope HTTP tipado

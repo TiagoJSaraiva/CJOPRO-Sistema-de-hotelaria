@@ -27,6 +27,7 @@ export const AUTH_ERROR_MESSAGE: Record<AuthErrorCode, string> = {
 export const LOGIN_PAGE_ERROR_PARAM = {
   MISSING_FIELDS: "missing_fields",
   INVALID_CREDENTIALS: "invalid_credentials",
+  SESSION_TOO_LARGE: "session_too_large",
 } as const;
 
 export type LoginPageErrorParam =

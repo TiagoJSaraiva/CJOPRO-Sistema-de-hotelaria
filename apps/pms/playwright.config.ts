@@ -46,12 +46,15 @@ export default defineConfig({
   },
   webServer: [
     {
-      command: "node __tests__/e2e/mockBackend.mjs",
+      command:
+        "pnpm --filter @hotel/backend-service exec tsx ../pms/__tests__/e2e/mockBackend.mjs",
       url: `${mockBackendURL}/health`,
       reuseExistingServer: false,
       timeout: 30_000,
       env: {
         PMS_E2E_BACKEND_PORT: String(mockBackendPort),
+        AUTH_SESSION_SECRET:
+          "pms-e2e-synthetic-session-secret-at-least-32-characters",
       },
     },
     {
