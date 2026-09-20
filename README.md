@@ -66,6 +66,22 @@ script.
 - [Arquitetura e fluxos](docs/architecture.md)
 - [Workflow do banco de dados](docs/database-workflow.md)
 - [Qualidade visual e acessibilidade](docs/ui-quality.md)
+- [Curso operacional do Hotel Aurora](docs/training/README.md)
+
+## Hotel-escola local
+
+O Hotel Aurora possui oito contas operacionais com responsabilidades separadas.
+Todas usam a senha exclusivamente local `Hotelaria123!`; a relação completa está
+na [matriz de contas](docs/training/accounts.md). Para iniciar a primeira lição:
+
+```powershell
+pnpm db:start
+pnpm training reset --scenario orientation
+pnpm dev:pms-backend
+```
+
+Ative `LOCAL_TRAINING_ENABLED=true` somente nos `.env` locais do backend e PMS.
+O recurso recusa produção e Supabase remoto.
 
 Os artefatos `docs/openapi.json` e
 `packages/shared/src/database.types.ts` são gerados e versionados. Não os edite

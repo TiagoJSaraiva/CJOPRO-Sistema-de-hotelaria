@@ -18,6 +18,8 @@ Use este índice para localizar a fonte de verdade adequada à tarefa.
 | fechar estoque, compras, caixa e parceiros   | [Operações financeiras](operations-finance.md)             |
 | operar giro, inspeção e prontidão de quartos | [Governança e prontidão](governance-operations.md)         |
 | operar reservas, pré-chegada e venda direta  | [Reservas e booking](reservations-booking.md)              |
+| aprender os fluxos no Hotel Aurora           | [Curso operacional](training/README.md)                    |
+| auditar relógio real e operacional           | [Contrato temporal](training/time-contract.md)             |
 
 ## Fontes de verdade
 
