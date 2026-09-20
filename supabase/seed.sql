@@ -52,7 +52,8 @@ insert into public.products (id, hotel_id, name, category_id, description, inter
   ('40000000-0000-4000-8000-000000000001', '10000000-0000-4000-8000-000000000001', 'Agua mineral', '41000000-0000-4000-8000-000000000001', null, 'AGUA-001', 'physical', 'unit', 8.00, 'active'),
   ('40000000-0000-4000-8000-000000000002', '10000000-0000-4000-8000-000000000001', 'Cafe da manha', '41000000-0000-4000-8000-000000000002', null, 'CAFE-001', 'service', 'person', 45.00, 'active'),
   ('40000000-0000-4000-8000-000000000003', '10000000-0000-4000-8000-000000000002', 'Agua de coco', '41000000-0000-4000-8000-000000000003', null, 'COCO-001', 'physical', 'unit', 12.00, 'active'),
-  ('40000000-0000-4000-8000-000000000004', '10000000-0000-4000-8000-000000000002', 'Estacionamento', '41000000-0000-4000-8000-000000000004', null, 'ESTAC-001', 'service', 'daily', 35.00, 'active');
+  ('40000000-0000-4000-8000-000000000004', '10000000-0000-4000-8000-000000000002', 'Estacionamento', '41000000-0000-4000-8000-000000000004', null, 'ESTAC-001', 'service', 'daily', 35.00, 'active'),
+  ('40000000-0000-4000-8000-000000000005', '10000000-0000-4000-8000-000000000001', 'Kit de amenidades', '41000000-0000-4000-8000-000000000001', 'Produto físico exclusivo dos exercícios de estoque.', 'AMEN-001', 'physical', 'unit', 15.00, 'active');
 
 insert into public.seasons (id, hotel_id, name, start_date, end_date, is_active) values
   ('50000000-0000-4000-8000-000000000001', '10000000-0000-4000-8000-000000000001', 'Temporada local Aurora', current_date - 30, current_date + 90, true),
@@ -97,7 +98,14 @@ from permission_seed;
 insert into public.roles (id, name, hotel_id, role_type) values
   ('70000000-0000-4000-8000-000000000001', 'Administrador global local', null, 'SYSTEM_ROLE'),
   ('70000000-0000-4000-8000-000000000002', 'Gerente local Aurora', '10000000-0000-4000-8000-000000000001', 'HOTEL_ROLE'),
-  ('70000000-0000-4000-8000-000000000003', 'Gerente local Horizonte', '10000000-0000-4000-8000-000000000002', 'HOTEL_ROLE');
+  ('70000000-0000-4000-8000-000000000003', 'Gerente local Horizonte', '10000000-0000-4000-8000-000000000002', 'HOTEL_ROLE'),
+  ('70000000-0000-4000-8000-000000000004', 'Recepção Aurora', '10000000-0000-4000-8000-000000000001', 'HOTEL_ROLE'),
+  ('70000000-0000-4000-8000-000000000005', 'Governança Aurora', '10000000-0000-4000-8000-000000000001', 'HOTEL_ROLE'),
+  ('70000000-0000-4000-8000-000000000006', 'Técnico de manutenção Aurora', '10000000-0000-4000-8000-000000000001', 'HOTEL_ROLE'),
+  ('70000000-0000-4000-8000-000000000007', 'Supervisão de manutenção Aurora', '10000000-0000-4000-8000-000000000001', 'HOTEL_ROLE'),
+  ('70000000-0000-4000-8000-000000000008', 'Caixa Aurora', '10000000-0000-4000-8000-000000000001', 'HOTEL_ROLE'),
+  ('70000000-0000-4000-8000-000000000009', 'Estoque e compras Aurora', '10000000-0000-4000-8000-000000000001', 'HOTEL_ROLE'),
+  ('70000000-0000-4000-8000-000000000010', 'Financeiro Aurora', '10000000-0000-4000-8000-000000000001', 'HOTEL_ROLE');
 
 insert into public.role_permissions (role_id, permission_id)
 select '70000000-0000-4000-8000-000000000001', id
@@ -108,31 +116,170 @@ insert into public.role_permissions (role_id, permission_id)
 select role_id, permission_id
 from (
   select '70000000-0000-4000-8000-000000000002'::uuid as role_id, id as permission_id
-  from public.permissions where type = 'HOTEL_PERMISSION'
-    and name not in (
-      'read_commercial_partners', 'manage_commercial_partners', 'manage_commercial_agreements',
-      'read_consumption_analytics', 'read_partner_settlements', 'prepare_partner_settlements',
-      'approve_partner_settlements', 'settle_partner_settlements'
-    )
+  from public.permissions where name in (
+    'read_room','create_room','update_room','delete_room','read_customer',
+    'create_customer','update_customer','read_reservation','create_reservation','update_reservation',
+    'access_reservations_calendar','read_transactions','update_transactions',
+    'read_product','read_consumption',
+    'read_inventory','read_inventory_costs','read_procurement','approve_procurement',
+    'read_business_organizations','read_cash_management','approve_cash_differences',
+    'approve_daily_close','read_maintenance','create_maintenance_occurrence','triage_maintenance',
+    'manage_maintenance_blocks','inspect_maintenance','manage_maintenance_catalogs',
+    'manage_maintenance_warranties','read_maintenance_finance','propose_maintenance_finance',
+    'approve_maintenance_finance','settle_maintenance_finance','confirm_damage_liability',
+    'manage_maintenance_plans','manage_maintenance_sla','manage_maintenance_suppliers',
+    'read_maintenance_analytics','manage_maintenance_teams','manage_maintenance_schedule',
+    'override_maintenance_schedule_conflicts','approve_maintenance_lifecycle',
+    'confirm_maintenance_service','read_governance','inspect_governance','assign_governance',
+    'manage_governance_templates','override_room_readiness','relocate_reservation',
+    'read_season','read_season_room_rate','manage_rate_plans',
+    'manage_reservation_amendments','override_reservation_pricing',
+    'manage_reservation_guarantees','waive_reservation_guarantee','manage_room_assignments',
+    'read_guest_relationship','manage_prearrival','manage_booking_configuration',
+    'manage_booking_channels','read_integrated_analytics','read_commercial_partners',
+    'read_consumption_analytics','read_partner_settlements','approve_partner_settlements',
+    'manage_partner_disputes','manage_training_environment'
+  )
   union all
   select '70000000-0000-4000-8000-000000000003'::uuid as role_id, id as permission_id
   from public.permissions where type = 'HOTEL_PERMISSION'
     and name not in (
       'read_commercial_partners', 'manage_commercial_partners', 'manage_commercial_agreements',
       'read_consumption_analytics', 'read_partner_settlements', 'prepare_partner_settlements',
-      'approve_partner_settlements', 'settle_partner_settlements'
+      'approve_partner_settlements', 'settle_partner_settlements',
+      'manage_training_environment', 'manage_maintenance_warranties'
     )
 ) assignments;
+
+with role_permission_seed(role_id, permission_name) as (
+  values
+    ('70000000-0000-4000-8000-000000000004'::uuid,'read_room'),
+    ('70000000-0000-4000-8000-000000000004'::uuid,'read_customer'),
+    ('70000000-0000-4000-8000-000000000004'::uuid,'create_customer'),
+    ('70000000-0000-4000-8000-000000000004'::uuid,'update_customer'),
+    ('70000000-0000-4000-8000-000000000004'::uuid,'read_reservation'),
+    ('70000000-0000-4000-8000-000000000004'::uuid,'create_reservation'),
+    ('70000000-0000-4000-8000-000000000004'::uuid,'update_reservation'),
+    ('70000000-0000-4000-8000-000000000004'::uuid,'access_reservations_calendar'),
+    ('70000000-0000-4000-8000-000000000004'::uuid,'read_consumption'),
+    ('70000000-0000-4000-8000-000000000004'::uuid,'post_consumption'),
+    ('70000000-0000-4000-8000-000000000004'::uuid,'manage_stay_payers'),
+    ('70000000-0000-4000-8000-000000000004'::uuid,'manage_room_assignments'),
+    ('70000000-0000-4000-8000-000000000004'::uuid,'manage_reservation_guarantees'),
+    ('70000000-0000-4000-8000-000000000004'::uuid,'read_guest_relationship'),
+    ('70000000-0000-4000-8000-000000000004'::uuid,'manage_guest_relationship'),
+    ('70000000-0000-4000-8000-000000000004'::uuid,'manage_prearrival'),
+
+    ('70000000-0000-4000-8000-000000000005'::uuid,'read_room'),
+    ('70000000-0000-4000-8000-000000000005'::uuid,'read_governance'),
+    ('70000000-0000-4000-8000-000000000005'::uuid,'execute_governance'),
+    ('70000000-0000-4000-8000-000000000005'::uuid,'inspect_governance'),
+    ('70000000-0000-4000-8000-000000000005'::uuid,'read_inventory'),
+    ('70000000-0000-4000-8000-000000000005'::uuid,'execute_minibar_replenishment'),
+
+    ('70000000-0000-4000-8000-000000000006'::uuid,'read_maintenance'),
+    ('70000000-0000-4000-8000-000000000006'::uuid,'execute_maintenance'),
+
+    ('70000000-0000-4000-8000-000000000007'::uuid,'read_maintenance'),
+    ('70000000-0000-4000-8000-000000000007'::uuid,'create_maintenance_occurrence'),
+    ('70000000-0000-4000-8000-000000000007'::uuid,'triage_maintenance'),
+    ('70000000-0000-4000-8000-000000000007'::uuid,'manage_maintenance_blocks'),
+    ('70000000-0000-4000-8000-000000000007'::uuid,'inspect_maintenance'),
+    ('70000000-0000-4000-8000-000000000007'::uuid,'manage_maintenance_catalogs'),
+    ('70000000-0000-4000-8000-000000000007'::uuid,'manage_maintenance_warranties'),
+    ('70000000-0000-4000-8000-000000000007'::uuid,'manage_maintenance_plans'),
+    ('70000000-0000-4000-8000-000000000007'::uuid,'manage_maintenance_sla'),
+    ('70000000-0000-4000-8000-000000000007'::uuid,'manage_maintenance_suppliers'),
+    ('70000000-0000-4000-8000-000000000007'::uuid,'manage_maintenance_schedule'),
+    ('70000000-0000-4000-8000-000000000007'::uuid,'confirm_maintenance_service'),
+
+    ('70000000-0000-4000-8000-000000000008'::uuid,'read_cash_management'),
+    ('70000000-0000-4000-8000-000000000008'::uuid,'operate_cash_register'),
+
+    ('70000000-0000-4000-8000-000000000009'::uuid,'read_product'),
+    ('70000000-0000-4000-8000-000000000009'::uuid,'read_inventory'),
+    ('70000000-0000-4000-8000-000000000009'::uuid,'read_inventory_costs'),
+    ('70000000-0000-4000-8000-000000000009'::uuid,'manage_inventory_settings'),
+    ('70000000-0000-4000-8000-000000000009'::uuid,'post_inventory_movements'),
+    ('70000000-0000-4000-8000-000000000009'::uuid,'perform_inventory_counts'),
+    ('70000000-0000-4000-8000-000000000009'::uuid,'manage_inventory_lots'),
+    ('70000000-0000-4000-8000-000000000009'::uuid,'read_procurement'),
+    ('70000000-0000-4000-8000-000000000009'::uuid,'request_procurement'),
+    ('70000000-0000-4000-8000-000000000009'::uuid,'receive_procurement'),
+
+    ('70000000-0000-4000-8000-000000000010'::uuid,'read_transactions'),
+    ('70000000-0000-4000-8000-000000000010'::uuid,'read_cash_management'),
+    ('70000000-0000-4000-8000-000000000010'::uuid,'approve_cash_differences'),
+    ('70000000-0000-4000-8000-000000000010'::uuid,'prepare_daily_close'),
+    ('70000000-0000-4000-8000-000000000010'::uuid,'read_procurement'),
+    ('70000000-0000-4000-8000-000000000010'::uuid,'review_procurement_invoices'),
+    ('70000000-0000-4000-8000-000000000010'::uuid,'settle_supplier_payables'),
+    ('70000000-0000-4000-8000-000000000010'::uuid,'read_partner_settlements'),
+    ('70000000-0000-4000-8000-000000000010'::uuid,'prepare_partner_settlements')
+)
+insert into public.role_permissions(role_id,permission_id)
+select seed.role_id,permission.id
+from role_permission_seed seed
+join public.permissions permission on permission.name=seed.permission_name;
 
 insert into public.users (id, name, email, password_hash, is_active) values
   ('80000000-0000-4000-8000-000000000001', 'Administrador Local', 'admin@hotelaria.local', '$argon2id$v=19$m=19456,p=1,t=2$onjiG86/AqT6bedYpgHzZQ$PUjNUfz0DrhpzUSgSN92SSFDvl4W2TOW2slMH5Bhc9k', true),
   ('80000000-0000-4000-8000-000000000002', 'Gerente Aurora', 'gerente.aurora@hotelaria.local', '$argon2id$v=19$m=19456,p=1,t=2$onjiG86/AqT6bedYpgHzZQ$PUjNUfz0DrhpzUSgSN92SSFDvl4W2TOW2slMH5Bhc9k', true),
-  ('80000000-0000-4000-8000-000000000003', 'Gerente Horizonte', 'gerente.horizonte@hotelaria.local', '$argon2id$v=19$m=19456,p=1,t=2$onjiG86/AqT6bedYpgHzZQ$PUjNUfz0DrhpzUSgSN92SSFDvl4W2TOW2slMH5Bhc9k', true);
+  ('80000000-0000-4000-8000-000000000003', 'Gerente Horizonte', 'gerente.horizonte@hotelaria.local', '$argon2id$v=19$m=19456,p=1,t=2$onjiG86/AqT6bedYpgHzZQ$PUjNUfz0DrhpzUSgSN92SSFDvl4W2TOW2slMH5Bhc9k', true),
+  ('80000000-0000-4000-8000-000000000004', 'Recepção Aurora', 'recepcao.aurora@hotelaria.local', '$argon2id$v=19$m=19456,p=1,t=2$onjiG86/AqT6bedYpgHzZQ$PUjNUfz0DrhpzUSgSN92SSFDvl4W2TOW2slMH5Bhc9k', true),
+  ('80000000-0000-4000-8000-000000000005', 'Governança Aurora', 'governanca.aurora@hotelaria.local', '$argon2id$v=19$m=19456,p=1,t=2$onjiG86/AqT6bedYpgHzZQ$PUjNUfz0DrhpzUSgSN92SSFDvl4W2TOW2slMH5Bhc9k', true),
+  ('80000000-0000-4000-8000-000000000006', 'Técnico Aurora', 'tecnico.aurora@hotelaria.local', '$argon2id$v=19$m=19456,p=1,t=2$onjiG86/AqT6bedYpgHzZQ$PUjNUfz0DrhpzUSgSN92SSFDvl4W2TOW2slMH5Bhc9k', true),
+  ('80000000-0000-4000-8000-000000000007', 'Supervisor de manutenção Aurora', 'supervisor.manutencao.aurora@hotelaria.local', '$argon2id$v=19$m=19456,p=1,t=2$onjiG86/AqT6bedYpgHzZQ$PUjNUfz0DrhpzUSgSN92SSFDvl4W2TOW2slMH5Bhc9k', true),
+  ('80000000-0000-4000-8000-000000000008', 'Caixa Aurora', 'caixa.aurora@hotelaria.local', '$argon2id$v=19$m=19456,p=1,t=2$onjiG86/AqT6bedYpgHzZQ$PUjNUfz0DrhpzUSgSN92SSFDvl4W2TOW2slMH5Bhc9k', true),
+  ('80000000-0000-4000-8000-000000000009', 'Estoque e compras Aurora', 'estoque.compras.aurora@hotelaria.local', '$argon2id$v=19$m=19456,p=1,t=2$onjiG86/AqT6bedYpgHzZQ$PUjNUfz0DrhpzUSgSN92SSFDvl4W2TOW2slMH5Bhc9k', true),
+  ('80000000-0000-4000-8000-000000000010', 'Financeiro Aurora', 'financeiro.aurora@hotelaria.local', '$argon2id$v=19$m=19456,p=1,t=2$onjiG86/AqT6bedYpgHzZQ$PUjNUfz0DrhpzUSgSN92SSFDvl4W2TOW2slMH5Bhc9k', true);
 
 insert into public.user_roles (user_id, role_id, hotel_id) values
   ('80000000-0000-4000-8000-000000000001', '70000000-0000-4000-8000-000000000001', null),
   ('80000000-0000-4000-8000-000000000002', '70000000-0000-4000-8000-000000000002', '10000000-0000-4000-8000-000000000001'),
-  ('80000000-0000-4000-8000-000000000003', '70000000-0000-4000-8000-000000000003', '10000000-0000-4000-8000-000000000002');
+  ('80000000-0000-4000-8000-000000000003', '70000000-0000-4000-8000-000000000003', '10000000-0000-4000-8000-000000000002'),
+  ('80000000-0000-4000-8000-000000000004', '70000000-0000-4000-8000-000000000004', '10000000-0000-4000-8000-000000000001'),
+  ('80000000-0000-4000-8000-000000000005', '70000000-0000-4000-8000-000000000005', '10000000-0000-4000-8000-000000000001'),
+  ('80000000-0000-4000-8000-000000000006', '70000000-0000-4000-8000-000000000006', '10000000-0000-4000-8000-000000000001'),
+  ('80000000-0000-4000-8000-000000000007', '70000000-0000-4000-8000-000000000007', '10000000-0000-4000-8000-000000000001'),
+  ('80000000-0000-4000-8000-000000000008', '70000000-0000-4000-8000-000000000008', '10000000-0000-4000-8000-000000000001'),
+  ('80000000-0000-4000-8000-000000000009', '70000000-0000-4000-8000-000000000009', '10000000-0000-4000-8000-000000000001'),
+  ('80000000-0000-4000-8000-000000000010', '70000000-0000-4000-8000-000000000010', '10000000-0000-4000-8000-000000000001');
+
+insert into public.consumption_points(
+  id,hotel_id,name,internal_code,description,display_order,is_active,
+  default_allowed_billing_modes,default_billing_mode,last_changed_by
+) values
+  ('81000000-0000-4000-8000-000000000001','10000000-0000-4000-8000-000000000001',
+   'Balcão Aurora','BALCAO','Consumos rápidos registrados pela recepção.',10,true,
+   array['hotel_immediate','stay_folio']::public.consumption_billing_mode[],'stay_folio','80000000-0000-4000-8000-000000000002'),
+  ('81000000-0000-4000-8000-000000000002','10000000-0000-4000-8000-000000000001',
+   'Café Aurora','CAFE','Ponto de consumo sintético do hotel-escola.',20,true,
+   array['hotel_immediate','stay_folio']::public.consumption_billing_mode[],'hotel_immediate','80000000-0000-4000-8000-000000000002');
+
+insert into public.consumption_offers(
+  id,hotel_id,point_id,product_id,display_order,is_active,policy_source,last_changed_by
+) values
+  ('81100000-0000-4000-8000-000000000001','10000000-0000-4000-8000-000000000001',
+   '81000000-0000-4000-8000-000000000001','40000000-0000-4000-8000-000000000001',10,true,'inherit','80000000-0000-4000-8000-000000000002'),
+  ('81100000-0000-4000-8000-000000000002','10000000-0000-4000-8000-000000000001',
+   '81000000-0000-4000-8000-000000000002','40000000-0000-4000-8000-000000000002',10,true,'inherit','80000000-0000-4000-8000-000000000002');
+
+insert into public.cash_registers(
+  id,hotel_id,name,code,kind,consumption_point_id,currency,difference_tolerance,active,created_by
+) values
+  ('81200000-0000-4000-8000-000000000001','10000000-0000-4000-8000-000000000001',
+   'Caixa da recepção','REC-01','reception',null,'BRL',5.00,true,'80000000-0000-4000-8000-000000000002'),
+  ('81200000-0000-4000-8000-000000000002','10000000-0000-4000-8000-000000000001',
+   'Caixa do Café Aurora','CAFE-01','consumption','81000000-0000-4000-8000-000000000002','BRL',2.00,true,'80000000-0000-4000-8000-000000000002');
+
+select public.configure_inventory_position(
+  '10000000-0000-4000-8000-000000000001',
+  '80000000-0000-4000-8000-000000000009',
+  '40000000-0000-4000-8000-000000000005',
+  (select id from public.inventory_locations where hotel_id='10000000-0000-4000-8000-000000000001' and internal_code='CENTRAL'),
+  24,8,32,2.0000,'81300000-0000-4000-8000-000000000001'
+);
 
 insert into public.reservations (
   id, hotel_id, booking_customer_id, reservation_code, guest_count,
@@ -382,7 +529,9 @@ insert into public.maintenance_contracts (
   '99400000-0000-4000-8000-000000000001',
   '10000000-0000-4000-8000-000000000001',
   '99200000-0000-4000-8000-000000000001', 'LOCAL-CLIMA-001', 'fixed', 'active',
-  current_date - 30, current_date + 30, current_date + 20,
+  public.hotel_operational_date('10000000-0000-4000-8000-000000000001') - 30,
+  public.hotel_operational_date('10000000-0000-4000-8000-000000000001') + 30,
+  public.hotel_operational_date('10000000-0000-4000-8000-000000000001') + 20,
   'Atendimento sintético dos equipamentos de climatização.', 4, 24,
   'Termos comerciais sintéticos para validação de redação por permissão.',
   1200.00, 'BRL', '80000000-0000-4000-8000-000000000002'
@@ -398,7 +547,8 @@ insert into public.maintenance_locations (
   '96000000-0000-4000-8000-000000000001', 'equipment',
   'Ar-condicionado da recepção', 'Equipamento patrimonial sintético.', 20,
   'PAT-LOCAL-001', 'Fabricante Sintético', 'Modelo Local', 'SERIE-LOCAL-001',
-  current_date - 365, current_date + 30,
+  public.hotel_operational_date('10000000-0000-4000-8000-000000000001') - 365,
+  public.hotel_operational_date('10000000-0000-4000-8000-000000000001') + 30,
   '99200000-0000-4000-8000-000000000001',
   '99400000-0000-4000-8000-000000000001', 'active'
 );
@@ -419,8 +569,11 @@ select
   '99200000-0000-4000-8000-000000000001',
   '99400000-0000-4000-8000-000000000001', 'normal',
   'Inspecionar filtros, alimentação e rendimento do equipamento.', true,
-  false, 'monthly', 1, extract(day from current_date)::integer,
-  current_date, '09:00', 1, 24, current_date,
+  false, 'monthly', 1,
+  extract(day from public.hotel_operational_date('10000000-0000-4000-8000-000000000001'))::integer,
+  public.hotel_operational_date('10000000-0000-4000-8000-000000000001'),
+  '09:00', 1, 24,
+  public.hotel_operational_date('10000000-0000-4000-8000-000000000001'),
   '80000000-0000-4000-8000-000000000002'
 from public.maintenance_categories category
 where category.hotel_id = '10000000-0000-4000-8000-000000000001'

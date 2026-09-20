@@ -77,10 +77,10 @@ select is(
 select is((select count(*)::integer from public.hotels), 2, 'seed has two hotels');
 select is((select count(*)::integer from public.rooms), 6, 'seed has six rooms');
 select is((select count(*)::integer from public.customers), 4, 'seed has four customers');
-select is((select count(*)::integer from public.products), 4, 'seed has four products');
-select is((select count(*)::integer from public.permissions), 135, 'seed matches all canonical application permissions');
-select is((select count(*)::integer from public.roles), 3, 'seed has one global role and two hotel roles');
-select is((select count(*)::integer from public.users), 3, 'seed has three local users');
+select is((select count(*)::integer from public.products), 5, 'seed has five products, including the hotel-school stock item');
+select is((select count(*)::integer from public.permissions), 137, 'seed matches all canonical application permissions');
+select is((select count(*)::integer from public.roles), 10, 'seed has one global role, two managers and seven specialized Aurora roles');
+select is((select count(*)::integer from public.users), 10, 'seed has ten local users, including eight Aurora accounts');
 select is((select count(*)::integer from public.reservations), 4, 'seed has four reservations');
 select is((select count(distinct stay_status)::integer from public.stays), 3, 'seed has confirmed, checked-in and checked-out stays');
 select is((select count(*)::integer from public.room_blocks), 2, 'seed has two room blocks');
@@ -219,8 +219,8 @@ select is(
 
 select is(
   (select count(*)::integer from public.role_permissions where role_id = '70000000-0000-4000-8000-000000000002'),
-  111,
-  'Aurora manager keeps commercial and management permissions opt-in'
+  69,
+  'Aurora manager has an explicit approval and management permission matrix'
 );
 
 select is(
@@ -838,7 +838,11 @@ select is(
   public.reorder_consumption_points(
     '10000000-0000-4000-8000-000000000001',
     '80000000-0000-4000-8000-000000000002',
-    array['a1000000-0000-4000-8000-000000000001']::uuid[]
+    array[
+      '81000000-0000-4000-8000-000000000001',
+      '81000000-0000-4000-8000-000000000002',
+      'a1000000-0000-4000-8000-000000000001'
+    ]::uuid[]
   ),
   'ok',
   'point ordering validates the complete non-archived list'
@@ -1484,7 +1488,7 @@ select ok(to_regclass('public.inventory_positions') is not null, 'inventory posi
 select ok(to_regclass('public.inventory_movements') is not null, 'immutable inventory ledger exists');
 select ok(to_regclass('public.inventory_count_sessions') is not null, 'inventory count sessions exist');
 select is((select count(*)::integer from public.inventory_locations where internal_code='CENTRAL'), 2, 'migration creates one central location per hotel');
-select is((select count(*)::integer from public.inventory_positions), 1, 'only the explicitly seeded product is controlled');
+select is((select count(*)::integer from public.inventory_positions), 2, 'the seed includes the original position and the hotel-school stock item');
 select is((public.configure_inventory_position(
   '10000000-0000-4000-8000-000000000001','80000000-0000-4000-8000-000000000002',
   '40000000-0000-4000-8000-000000000002',(select id from public.inventory_locations where hotel_id='10000000-0000-4000-8000-000000000001' and internal_code='CENTRAL'),
@@ -1625,9 +1629,9 @@ set settlement_tracking_starts_on=date_trunc('month',current_date-interval '1 mo
 where hotel_id='10000000-0000-4000-8000-000000000001';
 select lives_ok(
   $$ insert into public.users(id,name,email,password_hash,is_active)
-     values('80000000-0000-4000-8000-000000000005','Revisora Aurora','revisora.aurora@hotelaria.local','synthetic-hash',true);
+     values('8f000000-0000-4000-8000-000000000005','Revisora Aurora','revisora.aurora@hotelaria.local','synthetic-hash',true);
      insert into public.user_roles(user_id,role_id,hotel_id)
-     values('80000000-0000-4000-8000-000000000005','70000000-0000-4000-8000-000000000002','10000000-0000-4000-8000-000000000001') $$,
+     values('8f000000-0000-4000-8000-000000000005','70000000-0000-4000-8000-000000000002','10000000-0000-4000-8000-000000000001') $$,
   'a second scoped user can review a settlement'
 );
 select lives_ok(
@@ -1736,7 +1740,7 @@ select is(
   (public.decide_partner_settlement(
     '10000000-0000-4000-8000-000000000001',
     (select id from public.partner_settlements where partner_id='b1000000-0000-4000-8000-000000000002'),
-    '80000000-0000-4000-8000-000000000005',
+    '8f000000-0000-4000-8000-000000000005',
     (select version from public.partner_settlements where partner_id='b1000000-0000-4000-8000-000000000002'),
     'approve',null
   ))->>'result',

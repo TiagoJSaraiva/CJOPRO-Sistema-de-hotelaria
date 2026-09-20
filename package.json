@@ -38,7 +38,7 @@
     "build": "turbo run build",
     "typecheck": "turbo run typecheck",
     "lint": "pnpm lint:scripts && turbo run lint",
-    "lint:scripts": "node --check scripts/doctor.mjs && node --check scripts/check-full.mjs && node --check scripts/database.mjs && node --check scripts/coverage.mjs && node --check scripts/docs-check.mjs && node --check scripts/dev-pms-backend.mjs",
+    "lint:scripts": "node --check scripts/doctor.mjs && node --check scripts/check-full.mjs && node --check scripts/database.mjs && node --check scripts/training.mjs && node --check scripts/coverage.mjs && node --check scripts/docs-check.mjs && node --check scripts/dev-pms-backend.mjs",
     "clean": "turbo run clean",
     "test": "turbo run test",
     "test:unit": "turbo run test:unit",
@@ -58,7 +58,8 @@
     "db:stop": "node scripts/database.mjs stop",
     "db:types": "node scripts/database.mjs types",
     "db:types:check": "node scripts/database.mjs types-check",
-    "test:db": "node scripts/database.mjs test"
+    "test:db": "node scripts/database.mjs test",
+    "training": "node scripts/training.mjs"
   },
   "devDependencies": {
     "@eslint/eslintrc": "^3.3.6",
