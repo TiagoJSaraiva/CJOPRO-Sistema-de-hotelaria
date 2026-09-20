@@ -54,13 +54,15 @@ export default async function Page({
       />
     );
   const params = await searchParams;
-  const today = new Date().toISOString().slice(0, 10);
-  const from = params.from || today;
-  const to = params.to || today;
-  const data = await requestOperationsFinanceEndpoint<{ items: Fact[] }>(
-    `analytics/operations?from=${from}&to=${to}`,
-    "GET",
-  );
+  const query = new URLSearchParams();
+  if (params.from) query.set("from", params.from);
+  if (params.to) query.set("to", params.to);
+  const data = await requestOperationsFinanceEndpoint<{
+    items: Fact[];
+    operational_date: string;
+  }>(`analytics/operations${query.size ? `?${query}` : ""}`, "GET");
+  const from = params.from || data.operational_date;
+  const to = params.to || data.operational_date;
   const drilldown =
     params.date && params.metric
       ? await requestOperationsFinanceEndpoint<{

@@ -10,6 +10,7 @@ export const TrainingClockModeSchema = Type.Union([
 export const TrainingEnvironmentSchema = Type.Object(
   {
     hotel_id: Type.String({ format: "uuid" }),
+    timezone: Type.String({ minLength: 1 }),
     scenario_key: Type.Union([Type.String(), Type.Null()]),
     scenario_version: Type.Union([Type.Integer({ minimum: 1 }), Type.Null()]),
     clock_mode: TrainingClockModeSchema,
@@ -33,6 +34,11 @@ export const TrainingClockActionSchema = Type.Object(
     ]),
     expected_version: Type.Integer({ minimum: 1 }),
     at: Type.Optional(Type.String({ format: "date-time" })),
+    local_at: Type.Optional(
+      Type.String({
+        pattern: "^\\d{4}-\\d{2}-\\d{2}T\\d{2}:\\d{2}(?::\\d{2})?$",
+      }),
+    ),
     amount: Type.Optional(Type.Integer({ minimum: 1, maximum: 3650 })),
     unit: Type.Optional(
       Type.Union([Type.Literal("hours"), Type.Literal("days")]),

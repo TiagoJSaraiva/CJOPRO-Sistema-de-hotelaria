@@ -175,6 +175,15 @@ export interface MaintenanceFinanceRepository {
 }
 
 class SupabaseMaintenanceFinanceRepository implements MaintenanceFinanceRepository {
+  private async operationalDate(hotelId: string): Promise<string> {
+    const { data, error } = await createServerClient().rpc(
+      "hotel_operational_date",
+      { p_hotel_id: hotelId },
+    );
+    if (error) throw error;
+    return String(data);
+  }
+
   private async currency(hotelId: string): Promise<string> {
     const { data, error } = await createServerClient()
       .from("hotels")
@@ -553,8 +562,10 @@ class SupabaseMaintenanceFinanceRepository implements MaintenanceFinanceReposito
   }
 
   async getSummary(hotelId: string): Promise<AdminMaintenanceFinanceSummary> {
-    const listed = await this.listItems(hotelId, { page: 1, pageSize: 500 });
-    const now = new Date().toISOString().slice(0, 10);
+    const [listed, now] = await Promise.all([
+      this.listItems(hotelId, { page: 1, pageSize: 500 }),
+      this.operationalDate(hotelId),
+    ]);
     return {
       currency: await this.currency(hotelId),
       awaiting_approval: listed.items.filter(
@@ -642,7 +653,7 @@ class SupabaseMaintenanceFinanceRepository implements MaintenanceFinanceReposito
         ),
       )),
     ];
-    const today = new Date().toISOString().slice(0, 10);
+    const today = await this.operationalDate(hotelId);
     if (filters.queue === "approval")
       items = items.filter((item) => item.approval_status === "submitted");
     if (filters.queue === "payable")

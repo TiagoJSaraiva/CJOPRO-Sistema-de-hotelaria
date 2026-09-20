@@ -470,7 +470,12 @@ describe("maintenance management repository", () => {
       },
     ];
     mocks.rpc.mockImplementation(async (name: string) => ({
-      data: name === "mark_all_maintenance_notifications_read" ? 2 : true,
+      data:
+        name === "hotel_operational_now"
+          ? "2026-08-31T12:00:00.000Z"
+          : name === "mark_all_maintenance_notifications_read"
+            ? 2
+            : true,
       error: null,
     }));
     mocks.from.mockImplementation((table: string) => {

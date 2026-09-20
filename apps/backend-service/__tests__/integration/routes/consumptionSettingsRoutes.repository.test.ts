@@ -99,6 +99,7 @@ function token(permissions: string[], hotelId: string | null = point.hotel_id) {
 
 function repository(): ConsumptionSettingsRepository {
   return {
+    listInventoryOrigins: vi.fn(async () => []),
     listPoints: vi.fn(async () => [point]),
     createPoint: vi.fn(async () => ({ result: "ok", item: point })),
     updatePoint: vi.fn(async () => ({ result: "ok", item: point })),
@@ -133,6 +134,25 @@ afterEach(async () => {
 });
 
 describe("consumption settings routes", () => {
+  it("lists eligible inventory origins with consumption read permission", async () => {
+    const repo = repository();
+    vi.mocked(repo.listInventoryOrigins).mockResolvedValueOnce([
+      {
+        product_id: "30000000-0000-4000-8000-000000000001",
+        location_id: "50000000-0000-4000-8000-000000000001",
+        location_name: "Estoque central",
+      },
+    ]);
+    const app = await appWith(repo);
+    const response = await app.inject({
+      url: "/admin/consumption-inventory-origins",
+      headers: headers([PERMISSIONS.CONSUMPTION_READ]),
+    });
+    expect(response.statusCode).toBe(200);
+    expect(response.json().items).toHaveLength(1);
+    expect(repo.listInventoryOrigins).toHaveBeenCalledWith(point.hotel_id);
+  });
+
   it("requires authentication, read permission and an active hotel", async () => {
     const repo = repository();
     const app = await appWith(repo);

@@ -39,6 +39,7 @@ function createRepositoryMock(
   overrides: Partial<ReservationsCalendarRepository> = {},
 ): ReservationsCalendarRepository {
   return {
+    getOperationalDate: vi.fn(async () => "2026-09-20"),
     getTimeline: vi.fn(async (_activeHotelId, startDate, endDate) => ({
       window_start: startDate,
       window_end: endDate,

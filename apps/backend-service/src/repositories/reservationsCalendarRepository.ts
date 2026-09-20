@@ -40,6 +40,7 @@ function derivePaymentStatus(
 }
 
 export interface ReservationsCalendarRepository {
+  getOperationalDate(activeHotelId: string): Promise<string>;
   getTimeline(
     activeHotelId: string,
     startDate: string,
@@ -139,6 +140,14 @@ function normalizeStayBlocks(
 }
 
 class SupabaseReservationsCalendarRepository implements ReservationsCalendarRepository {
+  async getOperationalDate(activeHotelId: string): Promise<string> {
+    const result = await createServerClient().rpc("hotel_operational_date", {
+      p_hotel_id: activeHotelId,
+    });
+    if (result.error) throw result.error;
+    return String(result.data);
+  }
+
   async getTimeline(
     activeHotelId: string,
     startDate: string,
@@ -203,7 +212,11 @@ class SupabaseReservationsCalendarRepository implements ReservationsCalendarRepo
     }
 
     let blocks: AdminReservationCalendarRoomBlock[] = [];
-    const today = new Date().toISOString().slice(0, 10);
+    const operationalDateResult = await supabase.rpc("hotel_operational_date", {
+      p_hotel_id: activeHotelId,
+    });
+    if (operationalDateResult.error) throw operationalDateResult.error;
+    const today = String(operationalDateResult.data);
     const blocksResult = await supabase
       .from("room_blocks")
       .select(

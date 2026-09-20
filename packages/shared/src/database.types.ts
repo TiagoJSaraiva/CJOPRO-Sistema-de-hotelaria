@@ -9011,6 +9011,8 @@ export type Database = {
           hotel_id: string
           id: string
           location_id: string
+          location_state_after: Json
+          location_state_before: Json
           new_warranty_ends_on: string | null
           occurrence_id: string | null
           reason: string
@@ -9025,6 +9027,8 @@ export type Database = {
           hotel_id: string
           id?: string
           location_id: string
+          location_state_after?: Json
+          location_state_before?: Json
           new_warranty_ends_on?: string | null
           occurrence_id?: string | null
           reason: string
@@ -9039,6 +9043,8 @@ export type Database = {
           hotel_id?: string
           id?: string
           location_id?: string
+          location_state_after?: Json
+          location_state_before?: Json
           new_warranty_ends_on?: string | null
           occurrence_id?: string | null
           reason?: string

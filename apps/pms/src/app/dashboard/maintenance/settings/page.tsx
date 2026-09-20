@@ -34,7 +34,10 @@ export default async function MaintenanceSettingsPage({
       title="Configuração de manutenção"
       activeTabKey="settings"
       tabs={maintenanceTabs(access)}
-      usageGuide={getMaintenanceSettingsGuide(access.canManageSchedule)}
+      usageGuide={getMaintenanceSettingsGuide(
+        access.canManageSchedule,
+        access.canManageWarranties,
+      )}
     >
       {access.canManageSla ? (
         <div className="mb-4" data-usage-guide="maintenance-settings-sla-link">

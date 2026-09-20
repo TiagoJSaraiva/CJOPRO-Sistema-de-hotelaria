@@ -61,7 +61,7 @@ export function MaintenancePreventiveManager({
   canManage,
 }: Props) {
   const router = useRouter();
-  const [start, setStart] = useState(new Date().toISOString().slice(0, 10));
+  const [start, setStart] = useState(references.operational_date);
   const [unit, setUnit] = useState("monthly");
   const [interval, setIntervalValue] = useState(1);
   const [error, setError] = useState<string | null>(null);

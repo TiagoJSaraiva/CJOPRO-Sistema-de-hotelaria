@@ -157,6 +157,8 @@ it("keeps expected cash hidden before the blind count", async () => {
   mocks.request.mockImplementation((path: string) =>
     path === "cash-registers"
       ? Promise.resolve({
+          operational_date: "2026-09-11",
+          currency: "BRL",
           registers: [
             {
               id: "register",
@@ -197,6 +199,56 @@ it("keeps expected cash hidden before the blind count", async () => {
     screen.getByText(/valor esperado protegido até a contagem/i),
   ).toBeTruthy();
   expect(screen.queryByText(/esperado: R\$/i)).toBeNull();
+});
+
+it("uses the operational date and shows closed cash reconciliation values", async () => {
+  mocks.user.mockResolvedValue({
+    permissions: [PERMISSIONS.CASH_MANAGEMENT_READ],
+  });
+  mocks.request.mockImplementation((path: string) => {
+    if (path === "cash-registers")
+      return Promise.resolve({
+        operational_date: "2030-02-03",
+        currency: "USD",
+        registers: [],
+      });
+    if (path === "consumption-points") return Promise.resolve({ items: [] });
+    return Promise.resolve({
+      close: null,
+      projection: {
+        business_date: "2030-02-03",
+        transactions: [],
+        blockers: [],
+        totals: { income: 0, expense: 0, refund: 0 },
+        is_zero_activity: false,
+        cash_sessions: [
+          {
+            id: "closed-session",
+            status: "closed",
+            version: 2,
+            operator_id: "operator",
+            operator_name: "Ana",
+            register_name: "Recepção",
+            currency: "USD",
+            business_date: "2030-02-03",
+            opening_float: 100,
+            expected_cash: 150,
+            counted_cash: 149,
+            difference_amount: -1,
+            closed_by_name: "Bruno",
+          },
+        ],
+      },
+    });
+  });
+
+  render(await CashPage({ searchParams: Promise.resolve({}) }));
+
+  expect(mocks.request).toHaveBeenCalledWith("daily-close/2030-02-03", "GET");
+  expect(screen.getByText(/Recepção/)).toBeTruthy();
+  expect(screen.getByText(/Esperado: US\$\s*150/)).toBeTruthy();
+  expect(screen.getByText(/Contado: US\$\s*149/)).toBeTruthy();
+  expect(screen.getByText(/encerrado por Bruno/)).toBeTruthy();
 });
 
 it("explains the cash register identity and requires a point for consumption", () => {

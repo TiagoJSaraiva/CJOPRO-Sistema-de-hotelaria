@@ -135,6 +135,14 @@ export function registerConsumptionSettingsRoutes(
   app: FastifyInstance,
   repository: ConsumptionSettingsRepository = createConsumptionSettingsRepository(),
 ): void {
+  app.get("/admin/consumption-inventory-origins", async (request, reply) => {
+    const context = scope(request, reply, PERMISSIONS.CONSUMPTION_READ);
+    if (!context) return;
+    return reply.send({
+      items: await repository.listInventoryOrigins(context.hotelId),
+    });
+  });
+
   app.get<{ Querystring: ListQuery }>(
     "/admin/consumption-points",
     async (request, reply) => {

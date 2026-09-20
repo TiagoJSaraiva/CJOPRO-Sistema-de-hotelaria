@@ -419,6 +419,8 @@ const inventoryLocations = [
 const inventoryPositions = [];
 const inventoryMovements = [];
 const inventoryCounts = [];
+let cashCounted = false;
+let warrantyCorrected = false;
 
 const productHistory = [
   {
@@ -1133,6 +1135,18 @@ const server = http.createServer(async (request, response) => {
     return;
   }
 
+  if (method === "POST" && url.pathname === "/test/reset-cash") {
+    cashCounted = false;
+    sendJson(response, 200, { ok: true });
+    return;
+  }
+
+  if (method === "POST" && url.pathname === "/test/reset-warranty") {
+    warrantyCorrected = false;
+    sendJson(response, 200, { ok: true });
+    return;
+  }
+
   const legacyE2eTokens = [
     "e2e-token",
     "operations-e2e-token",
@@ -1212,6 +1226,8 @@ const server = http.createServer(async (request, response) => {
   }
   if (method === "GET" && url.pathname === "/admin/cash-registers") {
     sendJson(response, 200, {
+      operational_date: "2026-05-12",
+      currency: "BRL",
       registers: [
         {
           id: "register-e2e",
@@ -1222,9 +1238,43 @@ const server = http.createServer(async (request, response) => {
           consumption_point_name: null,
           currency: "BRL",
           difference_tolerance: 0,
-          active_session: null,
+          active_session: {
+            id: "cash-session-open-e2e",
+            status: cashCounted ? "closed" : "open",
+            version: cashCounted ? 2 : 1,
+            operator_id: "user-e2e",
+            operator_name: "Marina Costa",
+            register_name: "Caixa da recepção",
+            currency: "BRL",
+            business_date: "2026-05-12",
+            opening_float: 100,
+            expected_cash: cashCounted ? 150 : null,
+            counted_cash: cashCounted ? 150 : null,
+            difference_amount: cashCounted ? 0 : null,
+            movement_totals: { cash_in: 50 },
+          },
         },
       ],
+    });
+    return;
+  }
+  if (
+    method === "POST" &&
+    url.pathname === "/admin/cash-sessions/cash-session-open-e2e/actions"
+  ) {
+    const body = await parseBody(request);
+    cashCounted = body.action === "count";
+    sendJson(response, 200, {
+      item: {
+        id: "cash-session-open-e2e",
+        status: "closed",
+        version: 2,
+        operator_id: "user-e2e",
+        opening_float: 100,
+        expected_cash: 150,
+        counted_cash: body.counted_amount,
+        difference_amount: Number(body.counted_amount) - 150,
+      },
     });
     return;
   }
@@ -1236,7 +1286,23 @@ const server = http.createServer(async (request, response) => {
         transactions: [],
         totals: { income: 0, expense: 0, refund: 0 },
         is_zero_activity: true,
-        cash_sessions: [],
+        cash_sessions: [
+          {
+            id: "cash-session-closed-e2e",
+            status: "closed",
+            version: 2,
+            operator_id: "operator-e2e",
+            operator_name: "Ana Operadora",
+            register_name: "Caixa da recepção",
+            currency: "BRL",
+            business_date: "2026-05-12",
+            opening_float: 100,
+            expected_cash: 150,
+            counted_cash: 149,
+            difference_amount: -1,
+            closed_by_name: "Bruno Supervisor",
+          },
+        ],
         blockers: [],
       },
     });
@@ -2207,6 +2273,7 @@ const server = http.createServer(async (request, response) => {
     url.pathname === "/admin/maintenance/reference-data"
   ) {
     sendJson(response, 200, {
+      operational_date: "2026-05-12",
       rooms: [{ id: "room-101", room_number: "101", status: "available" }],
       locations: [
         {
@@ -2246,6 +2313,89 @@ const server = http.createServer(async (request, response) => {
       assignable_users: [
         { id: "user-e2e", name: "Marina Costa", email: "marina@example.com" },
       ],
+    });
+    return;
+  }
+
+  if (
+    method === "GET" &&
+    url.pathname === "/admin/maintenance/locations/location-equipment/warranty"
+  ) {
+    const currentId = warrantyCorrected
+      ? "warranty-decision-corrected"
+      : "warranty-decision-original";
+    sendJson(response, 200, {
+      location: {
+        id: "location-equipment",
+        name: "Gerador principal",
+        kind: "equipment",
+        parent_location_id: null,
+        is_active: true,
+        asset_tag: "AT-001",
+        manufacturer: "Demo",
+        model: "GX",
+        serial_number: "SN-1",
+        installed_on: "2025-01-01",
+        warranty_ends_on: "2026-09-30",
+        supplier_id: "supplier-e2e",
+        contract_id: "contract-e2e",
+        lifecycle_status: "active",
+        description: null,
+        display_order: 1,
+        version: warrantyCorrected ? 3 : 2,
+      },
+      current_decision_id: currentId,
+      active_occurrences: [
+        {
+          id: "occurrence-warranty-e2e",
+          code: "OCO-001099",
+          title: "Falha na partida do gerador",
+        },
+      ],
+      decisions: [
+        {
+          id: currentId,
+          location_id: "location-equipment",
+          result: warrantyCorrected ? "claim_submitted" : "expiry_acknowledged",
+          reason: warrantyCorrected
+            ? "Falha confirmada em inspeção"
+            : "Registro inicial",
+          occurrence_id: warrantyCorrected ? "occurrence-warranty-e2e" : null,
+          replacement_location_id: null,
+          previous_warranty_ends_on: "2026-09-30",
+          new_warranty_ends_on: null,
+          warranty_ends_on: "2026-09-30",
+          supersedes_id: warrantyCorrected
+            ? "warranty-decision-original"
+            : null,
+          decided_by: "user-e2e",
+          decided_by_name: "Marina Costa",
+          decided_at: "2026-05-12T15:00:00.000Z",
+        },
+      ],
+    });
+    return;
+  }
+
+  if (
+    method === "POST" &&
+    url.pathname ===
+      "/admin/maintenance/locations/location-equipment/warranty-decisions"
+  ) {
+    const body = await parseBody(request);
+    if (body.supersedes_id !== "warranty-decision-original") {
+      sendJson(response, 409, {
+        code: "ADMIN_CONFLICT",
+        message: "A decisão vigente deve ser informada para a correção.",
+      });
+      return;
+    }
+    warrantyCorrected = true;
+    sendJson(response, 201, {
+      item: {
+        id: "warranty-decision-corrected",
+        ...body,
+      },
     });
     return;
   }
@@ -2813,6 +2963,7 @@ const server = http.createServer(async (request, response) => {
       scenario_key: "orientation",
       scenario_version: 1,
       clock_mode: "frozen",
+      timezone: "America/Sao_Paulo",
       frozen_at: "2026-05-12T15:00:00.000Z",
       operational_now: "2026-05-12T15:00:00.000Z",
       real_now: "2026-09-19T18:00:00.000Z",

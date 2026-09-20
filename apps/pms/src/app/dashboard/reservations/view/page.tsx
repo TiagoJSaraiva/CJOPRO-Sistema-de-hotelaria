@@ -22,12 +22,12 @@ type ReservationsCalendarViewPageProps = {
   }>;
 };
 
-function resolveStartDate(rawValue: string | undefined): string {
+function resolveStartDate(rawValue: string | undefined): string | undefined {
   const value = String(rawValue || "").trim();
   if (/^\d{4}-\d{2}-\d{2}$/.test(value)) {
     return value;
   }
-  return new Date().toISOString().slice(0, 10);
+  return undefined;
 }
 
 export default async function ReservationsCalendarViewPage({
@@ -50,7 +50,7 @@ export default async function ReservationsCalendarViewPage({
     );
   }
 
-  const startDate = resolveStartDate(resolvedSearchParams?.start_date);
+  const requestedStartDate = resolveStartDate(resolvedSearchParams?.start_date);
   const canRelocate =
     user?.permissions.includes(PERMISSIONS.RESERVATION_RELOCATE) || false;
   const canOverrideReadiness =
@@ -59,9 +59,10 @@ export default async function ReservationsCalendarViewPage({
   const canExecuteGovernance =
     user?.permissions.includes(PERMISSIONS.GOVERNANCE_EXECUTE) || false;
   const [data, customers] = await Promise.all([
-    getReservationsCalendar(startDate, CALENDAR_WINDOW_DAYS),
+    getReservationsCalendar(requestedStartDate, CALENDAR_WINDOW_DAYS),
     listCustomers(),
   ]);
+  const startDate = data.window_start;
 
   return (
     <DashboardEntityPageShell

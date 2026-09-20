@@ -481,7 +481,7 @@ export function registerReservationsCalendarRoutes(
       const activeHotelId = requireActiveHotelId(reply, auth.activeHotelId);
       if (!activeHotelId) return;
 
-      const today = new Date().toISOString().slice(0, 10);
+      const today = await repository.getOperationalDate(activeHotelId);
       const startDate = String(request.query?.start_date || today).trim();
 
       if (!isValidIsoDate(startDate)) {

@@ -108,6 +108,7 @@ import {
 import {
   MaintenanceWarrantyDecisionInputSchema,
   MaintenanceWarrantyDecisionSchema,
+  MaintenanceWarrantyOccurrenceSchema,
 } from "./maintenance-warranty";
 import { Type, type Static, type TSchema } from "typebox";
 import type {
@@ -3498,6 +3499,7 @@ const MaintenanceSummarySchema = Type.Object(
 );
 const MaintenanceReferenceDataSchema = Type.Object(
   {
+    operational_date: date(),
     categories: Type.Array(Type.Ref("MaintenanceCategory")),
     locations: Type.Array(Type.Ref("MaintenanceLocation")),
     rooms: Type.Array(
@@ -4909,6 +4911,26 @@ export const API_ROUTE_CONTRACTS: Readonly<Record<string, ApiRouteContract>> = {
       ),
     },
   ),
+  "GET /admin/consumption-inventory-origins": admin(
+    "listConsumptionInventoryOrigins",
+    "Consumption settings",
+    "Lista origens de estoque ativas e elegíveis por produto.",
+    Type.Object(
+      {
+        items: Type.Array(
+          Type.Object(
+            {
+              product_id: uuid(),
+              location_id: uuid(),
+              location_name: Type.String(),
+            },
+            strict,
+          ),
+        ),
+      },
+      strict,
+    ),
+  ),
   "POST /admin/consumption-points/:id/offers": route(
     "createConsumptionOffers",
     "Consumption settings",
@@ -5384,6 +5406,8 @@ export const API_ROUTE_CONTRACTS: Readonly<Record<string, ApiRouteContract>> = {
       {
         location: MaintenanceLocationSchema,
         decisions: Type.Array(MaintenanceWarrantyDecisionSchema),
+        current_decision_id: nullable(Type.String({ format: "uuid" })),
+        active_occurrences: Type.Array(MaintenanceWarrantyOccurrenceSchema),
       },
       strict,
     ),
@@ -6818,7 +6842,14 @@ export const API_ROUTE_CONTRACTS: Readonly<Record<string, ApiRouteContract>> = {
     "listCashRegisters",
     "Cash",
     "Lista caixas físicos e sessões.",
-    Type.Record(Type.String(), Type.Any()),
+    Type.Object(
+      {
+        operational_date: date(),
+        currency: Type.String({ pattern: "^[A-Z]{3}$" }),
+        registers: Type.Array(Type.Record(Type.String(), Type.Any())),
+      },
+      strict,
+    ),
   ),
   "POST /admin/cash-registers": admin(
     "createCashRegister",

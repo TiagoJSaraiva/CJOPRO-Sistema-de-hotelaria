@@ -46,9 +46,21 @@ export const MaintenanceWarrantyDecisionSchema = Type.Object(
   { ...strict, $id: "MaintenanceWarrantyDecision" },
 );
 
+export const MaintenanceWarrantyOccurrenceSchema = Type.Object(
+  {
+    id: uuid(),
+    code: Type.String(),
+    title: Type.String(),
+  },
+  { ...strict, $id: "MaintenanceWarrantyOccurrence" },
+);
+
 export type MaintenanceWarrantyDecisionInput = Static<
   typeof MaintenanceWarrantyDecisionInputSchema
 >;
 export type MaintenanceWarrantyDecision = Static<
   typeof MaintenanceWarrantyDecisionSchema
+>;
+export type MaintenanceWarrantyOccurrence = Static<
+  typeof MaintenanceWarrantyOccurrenceSchema
 >;

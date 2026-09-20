@@ -10,14 +10,12 @@ const value = (form: FormData, key: string) =>
 
 export async function actTrainingClockAction(form: FormData) {
   const action = value(form, "action") as TrainingClockAction["action"];
-  const atInput = value(form, "at");
+  const localAtInput = value(form, "local_at");
   const input: TrainingClockAction = {
     action,
     expected_version: Number(form.get("expected_version")),
     reason: value(form, "reason") || `Ação local de treinamento: ${action}`,
-    ...(action === "set" && atInput
-      ? { at: new Date(atInput).toISOString() }
-      : {}),
+    ...(action === "set" && localAtInput ? { local_at: localAtInput } : {}),
     ...(action === "advance"
       ? {
           amount: Number(form.get("amount")),

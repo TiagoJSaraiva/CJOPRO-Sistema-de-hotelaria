@@ -164,6 +164,47 @@ it("consulta a sessão com identidade do ator para a contagem cega", async () =>
   );
 });
 
+it("valida tipo, origem e moeda ao cadastrar caixa", async () => {
+  const { app, repository } = await setup();
+  const post = (payload: unknown) =>
+    app.inject({
+      method: "POST",
+      url: "/admin/cash-registers",
+      headers: headers([PERMISSIONS.CASH_DIFFERENCES_APPROVE]),
+      payload,
+    });
+  const base = {
+    name: "Caixa restaurante",
+    code: "REST-01",
+    currency: "BRL",
+    difference_tolerance: 1,
+    active: true,
+  };
+  expect((await post({ ...base, kind: "consumption" })).statusCode).toBe(400);
+  expect(
+    (
+      await post({
+        ...base,
+        kind: "reception",
+        consumption_point_id: id,
+      })
+    ).statusCode,
+  ).toBe(400);
+  expect(
+    (await post({ ...base, kind: "reception", currency: "brl" })).statusCode,
+  ).toBe(400);
+  expect(
+    (
+      await post({
+        ...base,
+        kind: "consumption",
+        consumption_point_id: id,
+      })
+    ).statusCode,
+  ).toBe(201);
+  expect(repository.mutation).toHaveBeenCalledTimes(1);
+});
+
 it("exige payload completo para baixa parcial", async () => {
   const { app, repository } = await setup();
   const response = await app.inject({

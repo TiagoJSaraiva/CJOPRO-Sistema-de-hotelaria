@@ -23,7 +23,7 @@ export const inventoryGuide: UsageGuideDefinition = {
       target: "inventory-counts",
       title: "Conte sem congelar",
       description:
-        "Abra uma sessão, informe quantidades e conclua; mudanças concorrentes exigem nova contagem.",
+        "Configure ao menos uma posição no local, abra a sessão, informe quantidades e conclua; mudanças concorrentes exigem nova contagem.",
     },
     {
       id: "audit",

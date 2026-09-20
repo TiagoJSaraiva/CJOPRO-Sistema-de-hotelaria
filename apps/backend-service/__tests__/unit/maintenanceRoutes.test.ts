@@ -120,6 +120,7 @@ function repository(
     getWarranty: vi.fn(async () => null),
     recordWarrantyDecision: vi.fn(async () => ({ result: "conflict" })),
     getReferenceData: vi.fn(async () => ({
+      operational_date: "2026-09-01",
       categories: [],
       locations: [],
       rooms: [],
@@ -329,6 +330,8 @@ describe("maintenance routes", () => {
         updated_at: "2026-09-01T00:00:00Z",
       },
       decisions: [],
+      current_decision_id: null,
+      active_occurrences: [],
     }));
     const recordWarrantyDecision = vi.fn(async () => ({
       result: "ok",

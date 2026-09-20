@@ -4,17 +4,25 @@ import type {
   AdminMaintenanceCategory,
   AdminMaintenanceLocation,
   MaintenanceWarrantyDecision,
+  MaintenanceWarrantyOccurrence,
 } from "@hotel/shared";
-import { useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { ContextHelp } from "../../_components/ContextHelp";
 
 type WarrantyContext = {
   location: AdminMaintenanceLocation;
   decisions: MaintenanceWarrantyDecision[];
+  current_decision_id: string | null;
+  active_occurrences: MaintenanceWarrantyOccurrence[];
 };
 
 const field = (data: FormData, name: string) =>
   String(data.get(name) || "").trim() || null;
+
+const upsert = <T extends { id: string }>(items: T[], item: T) =>
+  items.some((value) => value.id === item.id)
+    ? items.map((value) => (value.id === item.id ? item : value))
+    : [...items, item];
 
 function EquipmentFields({
   location,
@@ -112,16 +120,32 @@ export function MaintenanceCatalogManager({
   const [warranty, setWarranty] = useState<Record<string, WarrantyContext>>({});
   const focused = useRef(false);
 
+  const loadWarranty = useCallback(async (locationId: string) => {
+    const response = await fetch(
+      `/api/maintenance/locations/${locationId}/warranty`,
+    );
+    const payload = (await response
+      .json()
+      .catch(() => ({}))) as WarrantyContext & { message?: string };
+    if (!response.ok || !payload.location) {
+      setMessage(payload.message || "Falha ao consultar a garantia.");
+      return;
+    }
+    setWarranty((current) => ({ ...current, [locationId]: payload }));
+    setLocations((current) => upsert(current, payload.location));
+  }, []);
+
   useEffect(() => {
     if (!focusLocationId || focused.current) return;
-    const target = document.querySelector<HTMLElement>(
-      `[data-location-id="${CSS.escape(focusLocationId)}"]`,
-    );
+    const target = Array.from(
+      document.querySelectorAll<HTMLElement>("[data-location-id]"),
+    ).find((element) => element.dataset.locationId === focusLocationId);
     if (!target) return;
     focused.current = true;
-    target.scrollIntoView({ block: "center" });
+    target.scrollIntoView?.({ block: "center" });
     target.focus();
-  }, [focusLocationId]);
+    if (canManageWarranties) void loadWarranty(focusLocationId);
+  }, [canManageWarranties, focusLocationId, loadWarranty]);
 
   async function write<T>(
     path: string,
@@ -146,26 +170,6 @@ export function MaintenanceCatalogManager({
     update(payload.item);
     setMessage("Catálogo atualizado.");
     return true;
-  }
-
-  const upsert = <T extends { id: string }>(items: T[], item: T) =>
-    items.some((value) => value.id === item.id)
-      ? items.map((value) => (value.id === item.id ? item : value))
-      : [...items, item];
-
-  async function loadWarranty(locationId: string) {
-    const response = await fetch(
-      `/api/maintenance/locations/${locationId}/warranty`,
-    );
-    const payload = (await response
-      .json()
-      .catch(() => ({}))) as WarrantyContext & { message?: string };
-    if (!response.ok || !payload.location) {
-      setMessage(payload.message || "Falha ao consultar a garantia.");
-      return;
-    }
-    setWarranty((current) => ({ ...current, [locationId]: payload }));
-    setLocations((current) => upsert(current, payload.location));
   }
 
   const areas = locations.filter((item) => item.kind === "area");
@@ -359,7 +363,12 @@ export function MaintenanceCatalogManager({
           ))}
         </div>
       </section>
-      <section className="pms-surface-card lg:col-span-2">
+      <section
+        className="pms-surface-card lg:col-span-2"
+        data-usage-guide={
+          canManageWarranties ? "maintenance-warranty-decision" : undefined
+        }
+      >
         <div className="flex flex-wrap items-center gap-2">
           <h2 className="my-0">Equipamentos</h2>
           <ContextHelp label="garantia de equipamentos">
@@ -398,7 +407,10 @@ export function MaintenanceCatalogManager({
                       <WarrantyPanel
                         context={warrantyContext}
                         replacements={equipment.filter(
-                          (item) => item.id !== location.id && item.is_active,
+                          (item) =>
+                            item.id !== location.id &&
+                            item.is_active &&
+                            item.lifecycle_status === "active",
                         )}
                         onSaved={() => void loadWarranty(location.id)}
                         setMessage={setMessage}
@@ -549,11 +561,19 @@ function WarrantyPanel({
   const [result, setResult] = useState<MaintenanceWarrantyDecision["result"]>(
     "expiry_acknowledged",
   );
+  const currentDecision = context.decisions.find(
+    (decision) => decision.id === context.current_decision_id,
+  );
+  const correctionRequired =
+    currentDecision?.warranty_ends_on === context.location.warranty_ends_on;
+  const [correcting, setCorrecting] = useState(
+    Boolean(context.current_decision_id),
+  );
+  useEffect(() => {
+    setCorrecting(Boolean(context.current_decision_id));
+  }, [context.current_decision_id]);
   return (
-    <div
-      className="mt-3 grid gap-3"
-      data-usage-guide="maintenance-warranty-decision"
-    >
+    <div className="mt-3 grid gap-3">
       <form
         className="grid gap-2"
         onSubmit={async (event) => {
@@ -573,6 +593,10 @@ function WarrantyPanel({
                   field(data, "replacement_location_id") || undefined,
                 new_warranty_ends_on:
                   field(data, "new_warranty_ends_on") || undefined,
+                supersedes_id:
+                  correcting && context.current_decision_id
+                    ? context.current_decision_id
+                    : undefined,
               }),
             },
           );
@@ -590,7 +614,7 @@ function WarrantyPanel({
         <label className="pms-field">
           Decisão
           <select
-            className="pms-field-input"
+            className="pms-field-input min-w-0 w-full"
             value={result}
             onChange={(event) => setResult(event.target.value as typeof result)}
           >
@@ -603,17 +627,49 @@ function WarrantyPanel({
             <option value="retired">Aposentar equipamento</option>
           </select>
         </label>
+        {context.current_decision_id ? (
+          <div className="rounded-lg bg-amber-50 p-3 text-sm">
+            <p className="mt-0">
+              {correcting
+                ? "Esta decisão corrigirá a decisão vigente e preservará todo o histórico."
+                : "Uma nova decisão será registrada para a vigência atual."}
+            </p>
+            {!correctionRequired ? (
+              <button
+                type="button"
+                className="pms-button-secondary"
+                onClick={() => setCorrecting((value) => !value)}
+              >
+                {correcting
+                  ? "Registrar decisão para vigência atual"
+                  : "Corrigir decisão anterior"}
+              </button>
+            ) : null}
+          </div>
+        ) : null}
         {result === "claim_submitted" ? (
           <label className="pms-field">
-            ID da ocorrência ativa vinculada
-            <input className="pms-field-input" name="occurrence_id" required />
+            Ocorrência ativa vinculada
+            <select
+              className="pms-field-input min-w-0 w-full"
+              style={{ minWidth: 0, width: "100%", maxWidth: "100%" }}
+              name="occurrence_id"
+              required
+            >
+              <option value="">Selecione</option>
+              {context.active_occurrences.map((occurrence) => (
+                <option key={occurrence.id} value={occurrence.id}>
+                  {occurrence.code} · {occurrence.title}
+                </option>
+              ))}
+            </select>
           </label>
         ) : null}
         {result === "renewed" ? (
           <label className="pms-field">
             Nova data de garantia
             <input
-              className="pms-field-input"
+              className="pms-field-input min-w-0 w-full"
               type="date"
               name="new_warranty_ends_on"
               required
@@ -624,7 +680,7 @@ function WarrantyPanel({
           <label className="pms-field">
             Equipamento substituto
             <select
-              className="pms-field-input"
+              className="pms-field-input min-w-0 w-full"
               name="replacement_location_id"
               required
             >
@@ -648,7 +704,9 @@ function WarrantyPanel({
           />
         </label>
         <button className="pms-button-primary justify-self-start">
-          Registrar decisão auditável
+          {correcting && context.current_decision_id
+            ? "Corrigir decisão vigente"
+            : "Registrar decisão auditável"}
         </button>
       </form>
       <details>

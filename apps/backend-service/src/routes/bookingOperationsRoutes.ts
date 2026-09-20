@@ -469,14 +469,21 @@ export function registerBookingOperationsRoutes(
     const c = context(request, reply, PERMISSIONS.INTEGRATED_ANALYTICS_READ);
     if (!c) return;
     const q = request.query as { from?: string; to?: string };
-    return reply.send(
-      await repository.query("list_integrated_analytics", {
+    const operationalDate = String(
+      await repository.query("hotel_operational_date", {
         p_hotel_id: c.hotelId,
-        p_from: q.from,
-        p_to: q.to,
-        p_permissions: c.permissions,
       }),
     );
+    const data = await repository.query("list_integrated_analytics", {
+      p_hotel_id: c.hotelId,
+      p_from: q.from || operationalDate,
+      p_to: q.to || operationalDate,
+      p_permissions: c.permissions,
+    });
+    return reply.send({
+      ...(data && typeof data === "object" ? data : {}),
+      operational_date: operationalDate,
+    });
   });
   app.get("/admin/analytics/operations/drilldown", async (request, reply) => {
     const c = context(request, reply, PERMISSIONS.INTEGRATED_ANALYTICS_READ);
@@ -495,13 +502,18 @@ export function registerBookingOperationsRoutes(
     const c = context(request, reply, PERMISSIONS.INTEGRATED_ANALYTICS_READ);
     if (!c) return;
     const b = request.body as { from?: string; to?: string };
+    const operationalNow = String(
+      await repository.query("hotel_operational_now", {
+        p_hotel_id: c.hotelId,
+      }),
+    );
     return send(
       reply,
       await repository.mutate("reconcile_integrated_analytics", {
         p_hotel_id: c.hotelId,
         p_from: b.from,
         p_to: b.to,
-        p_now: new Date().toISOString(),
+        p_now: operationalNow,
       }),
     );
   });

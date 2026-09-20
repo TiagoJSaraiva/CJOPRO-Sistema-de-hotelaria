@@ -46,6 +46,7 @@ import {
   AdminCatalogAuditEvent,
   AdminConsumptionConfigurationAuditEvent,
   AdminConsumptionOffer,
+  AdminConsumptionInventoryOrigin,
   AdminConsumptionOfferBatchInput,
   AdminConsumptionOfferUpdateInput,
   AdminConsumptionPoint,
@@ -542,13 +543,11 @@ export function deleteCustomer(id: string): Promise<null> {
 }
 
 export function getReservationsCalendar(
-  startDate: string,
+  startDate?: string,
   days = 20,
 ): Promise<AdminReservationCalendarResponse> {
-  const query = new URLSearchParams({
-    start_date: startDate,
-    days: String(days),
-  });
+  const query = new URLSearchParams({ days: String(days) });
+  if (startDate) query.set("start_date", startDate);
   return getAdminData<AdminReservationCalendarResponse>(
     `/admin/reservations/calendar?${query.toString()}`,
   );
@@ -1364,6 +1363,14 @@ export function listConsumptionOffers(options?: {
   const suffix = query.size ? `?${query.toString()}` : "";
   return getAdminList<AdminConsumptionOffer>(
     `/admin/consumption-offers${suffix}`,
+  );
+}
+
+export function listConsumptionInventoryOrigins(): Promise<
+  AdminConsumptionInventoryOrigin[]
+> {
+  return getAdminList<AdminConsumptionInventoryOrigin>(
+    "/admin/consumption-inventory-origins",
   );
 }
 

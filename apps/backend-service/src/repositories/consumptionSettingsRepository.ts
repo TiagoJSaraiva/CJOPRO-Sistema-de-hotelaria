@@ -3,6 +3,7 @@ import type {
   AdminConsumptionOffer,
   AdminConsumptionOfferBatchInput,
   AdminConsumptionOfferUpdateInput,
+  AdminConsumptionInventoryOrigin,
   AdminConsumptionPoint,
   AdminConsumptionPointInput,
   AdminProduct,
@@ -402,6 +403,9 @@ function offerPolicy(input: AdminConsumptionOfferUpdateInput["policy"]) {
 }
 
 export interface ConsumptionSettingsRepository {
+  listInventoryOrigins(
+    hotelId: string,
+  ): Promise<AdminConsumptionInventoryOrigin[]>;
   listPoints(
     hotelId: string,
     includeArchived?: boolean,
@@ -486,6 +490,34 @@ export interface ConsumptionSettingsRepository {
 }
 
 class SupabaseConsumptionSettingsRepository implements ConsumptionSettingsRepository {
+  async listInventoryOrigins(hotelId: string) {
+    const result = await createServerClient()
+      .from("inventory_positions")
+      .select(
+        "product_id,location:inventory_locations!inner(id,name,is_active,archived_at)",
+      )
+      .eq("hotel_id", hotelId)
+      .eq("is_active", true)
+      .is("archived_at", null)
+      .eq("location.is_active", true)
+      .is("location.archived_at", null);
+    if (result.error) throw result.error;
+    return (result.data || []).flatMap((row) => {
+      const location = Array.isArray(row.location)
+        ? row.location[0]
+        : row.location;
+      return location
+        ? [
+            {
+              product_id: String(row.product_id),
+              location_id: String(location.id),
+              location_name: String(location.name),
+            },
+          ]
+        : [];
+    });
+  }
+
   async listPoints(hotelId: string, includeArchived = false) {
     const supabase = createServerClient();
     let pointQuery = supabase.from("consumption_points").select(POINT_FIELDS);
@@ -678,6 +710,23 @@ class SupabaseConsumptionSettingsRepository implements ConsumptionSettingsReposi
       products.data.some((item) => item.archived_at)
     )
       return { result: "conflict" as const };
+    if (input.inventory_location_id) {
+      const positions = await createServerClient()
+        .from("inventory_positions")
+        .select(
+          "product_id,location:inventory_locations!inner(id,is_active,archived_at)",
+        )
+        .eq("hotel_id", hotelId)
+        .eq("location_id", input.inventory_location_id)
+        .eq("is_active", true)
+        .is("archived_at", null)
+        .eq("location.is_active", true)
+        .is("location.archived_at", null)
+        .in("product_id", input.product_ids);
+      if (positions.error) throw positions.error;
+      if (positions.data.length !== input.product_ids.length)
+        return { result: "conflict" as const };
+    }
     const existing = await this.listOffers(hotelId, {
       pointId,
       includeArchived: true,
@@ -720,6 +769,31 @@ class SupabaseConsumptionSettingsRepository implements ConsumptionSettingsReposi
     actorId: string,
     input: AdminConsumptionOfferUpdateInput,
   ) {
+    if (input.inventory_location_id) {
+      const offer = await createServerClient()
+        .from("consumption_offers")
+        .select("product_id")
+        .eq("hotel_id", hotelId)
+        .eq("id", id)
+        .maybeSingle();
+      if (offer.error) throw offer.error;
+      if (!offer.data) return { result: "not-found" as const };
+      const position = await createServerClient()
+        .from("inventory_positions")
+        .select(
+          "id,location:inventory_locations!inner(id,is_active,archived_at)",
+        )
+        .eq("hotel_id", hotelId)
+        .eq("product_id", offer.data.product_id)
+        .eq("location_id", input.inventory_location_id)
+        .eq("is_active", true)
+        .is("archived_at", null)
+        .eq("location.is_active", true)
+        .is("location.archived_at", null)
+        .maybeSingle();
+      if (position.error) throw position.error;
+      if (!position.data) return { result: "conflict" as const };
+    }
     const payload: TablesUpdate<"consumption_offers"> = {
       last_changed_by: actorId,
     };

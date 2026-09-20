@@ -27,10 +27,11 @@ const guide: UsageGuideDefinition = {
   ],
 };
 
-const format = (value: string) =>
+const format = (value: string, timeZone: string) =>
   new Date(value).toLocaleString("pt-BR", {
     dateStyle: "full",
     timeStyle: "medium",
+    timeZone,
   });
 
 export default async function TrainingPage({
@@ -93,11 +94,15 @@ export default async function TrainingPage({
           </div>
           <div>
             <dt className="font-medium">Tempo operacional</dt>
-            <dd>{format(environment.operational_now)}</dd>
+            <dd>{format(environment.operational_now, environment.timezone)}</dd>
           </div>
           <div>
             <dt className="font-medium">Tempo real</dt>
-            <dd>{format(environment.real_now)}</dd>
+            <dd>{format(environment.real_now, environment.timezone)}</dd>
+          </div>
+          <div>
+            <dt className="font-medium">Fuso do hotel</dt>
+            <dd>{environment.timezone}</dd>
           </div>
         </dl>
         {environment.clock_mode === "frozen" ? (
@@ -160,7 +165,7 @@ export default async function TrainingPage({
               <input
                 className="pms-field-input"
                 type="datetime-local"
-                name="at"
+                name="local_at"
                 required
               />
             </label>

@@ -1263,7 +1263,11 @@ class SupabaseMaintenanceManagementRepository implements MaintenanceManagementRe
     const fulfilledRuns = (runs.data || []).filter((item) =>
       ["generated", "skipped"].includes(item.status),
     );
-    const now = Date.now();
+    const operationalNow = await supabase.rpc("hotel_operational_now", {
+      p_hotel_id: hotelId,
+    });
+    if (operationalNow.error) throw operationalNow.error;
+    const now = new Date(String(operationalNow.data)).getTime();
     const agingBuckets = [
       { bucket: "0-1 dia", min: 0, max: 1 },
       { bucket: "2-7 dias", min: 1, max: 7 },
@@ -1557,10 +1561,16 @@ class SupabaseMaintenanceManagementRepository implements MaintenanceManagementRe
   }
 
   async runAutomation(hotelId: string) {
-    const result = await createServerClient().rpc(
-      "process_maintenance_management_cycle",
-      { p_now: new Date().toISOString(), p_hotel_id: hotelId, p_force: true },
-    );
+    const client = createServerClient();
+    const operationalNow = await client.rpc("hotel_operational_now", {
+      p_hotel_id: hotelId,
+    });
+    if (operationalNow.error) throw operationalNow.error;
+    const result = await client.rpc("process_maintenance_management_cycle", {
+      p_now: String(operationalNow.data),
+      p_hotel_id: hotelId,
+      p_force: true,
+    });
     if (result.error) throw result.error;
     return result.data;
   }

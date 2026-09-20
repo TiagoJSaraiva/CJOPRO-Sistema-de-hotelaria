@@ -1,4 +1,5 @@
 import { describe, expect, it } from "vitest";
+import { Value } from "typebox/value";
 import {
   allocateFefo,
   approvalRequirement,
@@ -6,6 +7,7 @@ import {
   cashDifference,
   classifyVariance,
   normalizeTaxId,
+  CashRegisterInputSchema,
 } from "../../src/operations-finance";
 
 describe("operations and finance rules", () => {
@@ -77,5 +79,42 @@ describe("operations and finance rules", () => {
   it("keeps disputed partner value outside the payable balance", () => {
     expect(availablePartnerBalance(1000, 250, 300)).toBe(450);
     expect(availablePartnerBalance(100, 80, 40)).toBe(0);
+  });
+
+  it("validates cash register kind, source and ISO currency together", () => {
+    const base = {
+      name: "Caixa principal",
+      code: "REC-01",
+      currency: "BRL",
+      difference_tolerance: 0,
+      active: true,
+    };
+    expect(
+      Value.Check(CashRegisterInputSchema, { ...base, kind: "reception" }),
+    ).toBe(true);
+    expect(
+      Value.Check(CashRegisterInputSchema, {
+        ...base,
+        kind: "consumption",
+        consumption_point_id: "10000000-0000-4000-8000-000000000001",
+      }),
+    ).toBe(true);
+    expect(
+      Value.Check(CashRegisterInputSchema, { ...base, kind: "consumption" }),
+    ).toBe(false);
+    expect(
+      Value.Check(CashRegisterInputSchema, {
+        ...base,
+        kind: "reception",
+        consumption_point_id: "10000000-0000-4000-8000-000000000001",
+      }),
+    ).toBe(false);
+    expect(
+      Value.Check(CashRegisterInputSchema, {
+        ...base,
+        kind: "reception",
+        currency: "brl",
+      }),
+    ).toBe(false);
   });
 });

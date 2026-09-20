@@ -7,7 +7,7 @@ import type {
   AdminConsumptionPoint,
   AdminProduct,
   AdminCommercialAgreement,
-  AdminInventoryLocation,
+  AdminConsumptionInventoryOrigin,
 } from "@hotel/shared";
 import {
   archiveConsumptionOfferAction,
@@ -44,14 +44,14 @@ export function ConsumptionOffersManager({
   offers,
   agreements,
   canManage,
-  inventoryLocations,
+  inventoryOrigins,
 }: {
   points: AdminConsumptionPoint[];
   products: AdminProduct[];
   offers: AdminConsumptionOffer[];
   agreements: AdminCommercialAgreement[];
   canManage: boolean;
-  inventoryLocations: AdminInventoryLocation[];
+  inventoryOrigins: AdminConsumptionInventoryOrigin[];
 }) {
   const firstActivePoint = points.find((point) => !point.archived_at)?.id || "";
   const [creationPointId, setCreationPointId] = useState(firstActivePoint);
@@ -63,6 +63,7 @@ export function ConsumptionOffersManager({
   const [categoryFilter, setCategoryFilter] = useState("all");
   const [availabilityFilter, setAvailabilityFilter] = useState("all");
   const [creationAgreementId, setCreationAgreementId] = useState("");
+  const [creationProductIds, setCreationProductIds] = useState<string[]>([]);
   const categories = useMemo(
     () =>
       Array.from(
@@ -89,6 +90,26 @@ export function ConsumptionOffersManager({
     (agreement) => agreement.id === creationAgreementId,
   );
   const selectedAgreementRevision = selectedAgreement?.revisions[0];
+  const creationOriginOptions = useMemo(() => {
+    if (!creationProductIds.length) return [];
+    const perProduct = creationProductIds.map(
+      (productId) =>
+        new Set(
+          inventoryOrigins
+            .filter((origin) => origin.product_id === productId)
+            .map((origin) => origin.location_id),
+        ),
+    );
+    const eligibleIds = [...perProduct[0]!].filter((locationId) =>
+      perProduct.every((locations) => locations.has(locationId)),
+    );
+    return inventoryOrigins.filter(
+      (origin, index, all) =>
+        eligibleIds.includes(origin.location_id) &&
+        all.findIndex((item) => item.location_id === origin.location_id) ===
+          index,
+    );
+  }, [creationProductIds, inventoryOrigins]);
   const allowPartnerDirect = Boolean(
     selectedAgreementRevision &&
     ["partner", "both"].includes(selectedAgreementRevision.payment_recipient),
@@ -166,6 +187,14 @@ export function ConsumptionOffersManager({
                     type="checkbox"
                     name="product_ids"
                     value={product.id}
+                    checked={creationProductIds.includes(product.id)}
+                    onChange={(event) =>
+                      setCreationProductIds((current) =>
+                        event.target.checked
+                          ? [...current, product.id]
+                          : current.filter((id) => id !== product.id),
+                      )
+                    }
                   />
                   <span>
                     <strong>{product.name}</strong>
@@ -203,17 +232,34 @@ export function ConsumptionOffersManager({
           </label>
           <label className="pms-field">
             Sobrescrever origem do estoque
-            <select name="inventory_location_id" className="pms-field-input">
+            <select
+              name="inventory_location_id"
+              className="pms-field-input"
+              disabled={
+                creationProductIds.length > 0 && !creationOriginOptions.length
+              }
+            >
               <option value="">Herdar do ponto</option>
-              {inventoryLocations
-                .filter((item) => item.is_active && !item.archived_at)
-                .map((item) => (
-                  <option key={item.id} value={item.id}>
-                    {item.name}
-                  </option>
-                ))}
+              {creationOriginOptions.map((item) => (
+                <option key={item.location_id} value={item.location_id}>
+                  {item.location_name}
+                </option>
+              ))}
             </select>
           </label>
+          {creationProductIds.length > 0 && !creationOriginOptions.length ? (
+            <p className="m-0 rounded-lg bg-amber-50 p-3 text-sm">
+              Os produtos selecionados não compartilham uma posição ativa.
+              Mantenha a origem herdada ou{" "}
+              <Link
+                href="/dashboard/inventory/settings"
+                className="font-semibold text-teal-700"
+              >
+                configure posições em Estoque
+              </Link>
+              .
+            </p>
+          ) : null}
           <fieldset className="grid gap-2 rounded-lg border border-slate-200 p-3">
             <legend className="px-1 font-semibold">Política da oferta</legend>
             <label className="flex items-center gap-2">
@@ -325,6 +371,9 @@ export function ConsumptionOffersManager({
         </p>
         <div className="grid gap-3">
           {visibleOffers.map((offer) => {
+            const offerOriginOptions = inventoryOrigins.filter(
+              (origin) => origin.product_id === offer.product.id,
+            );
             const pointOffers = offers.filter(
               (item) => item.point.id === offer.point.id && !item.archived_at,
             );
@@ -416,19 +465,32 @@ export function ConsumptionOffersManager({
                             name="inventory_location_id"
                             defaultValue={offer.inventory_location?.id || ""}
                             className="pms-field-input"
+                            disabled={!offerOriginOptions.length}
                           >
                             <option value="">Herdar do ponto</option>
-                            {inventoryLocations
-                              .filter(
-                                (item) => item.is_active && !item.archived_at,
-                              )
-                              .map((item) => (
-                                <option key={item.id} value={item.id}>
-                                  {item.name}
-                                </option>
-                              ))}
+                            {offerOriginOptions.map((item) => (
+                              <option
+                                key={item.location_id}
+                                value={item.location_id}
+                              >
+                                {item.location_name}
+                              </option>
+                            ))}
                           </select>
                         </label>
+                        {!offerOriginOptions.length ? (
+                          <p className="m-0 text-sm text-amber-900">
+                            Nenhuma posição ativa para este produto; a origem
+                            deve permanecer herdada até a{" "}
+                            <Link
+                              href="/dashboard/inventory/settings"
+                              className="font-semibold text-teal-700"
+                            >
+                              configuração do estoque
+                            </Link>
+                            .
+                          </p>
+                        ) : null}
                         <label className="pms-field">
                           Política
                           <select

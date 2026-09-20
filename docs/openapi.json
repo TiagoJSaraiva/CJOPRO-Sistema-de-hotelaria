@@ -13563,6 +13563,10 @@
             "minimum": 1,
             "type": "integer"
           },
+          "local_at": {
+            "pattern": "^\\d{4}-\\d{2}-\\d{2}T\\d{2}:\\d{2}(?::\\d{2})?$",
+            "type": "string"
+          },
           "reason": {
             "maxLength": 500,
             "minLength": 3,
@@ -13638,6 +13642,10 @@
             "nullable": true,
             "type": "integer"
           },
+          "timezone": {
+            "minLength": 1,
+            "type": "string"
+          },
           "updated_at": {
             "format": "date-time",
             "type": "string"
@@ -13654,6 +13662,7 @@
         },
         "required": [
           "hotel_id",
+          "timezone",
           "scenario_key",
           "scenario_version",
           "clock_mode",
@@ -28802,7 +28811,29 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "additionalProperties": {},
+                  "additionalProperties": false,
+                  "properties": {
+                    "currency": {
+                      "pattern": "^[A-Z]{3}$",
+                      "type": "string"
+                    },
+                    "operational_date": {
+                      "format": "date",
+                      "type": "string"
+                    },
+                    "registers": {
+                      "items": {
+                        "additionalProperties": {},
+                        "type": "object"
+                      },
+                      "type": "array"
+                    }
+                  },
+                  "required": [
+                    "operational_date",
+                    "currency",
+                    "registers"
+                  ],
                   "type": "object"
                 }
               }
@@ -29016,60 +29047,98 @@
           "content": {
             "application/json": {
               "schema": {
-                "additionalProperties": false,
-                "properties": {
-                  "active": {
-                    "type": "boolean"
-                  },
-                  "code": {
-                    "maxLength": 40,
-                    "minLength": 1,
-                    "type": "string"
-                  },
-                  "consumption_point_id": {
-                    "format": "uuid",
-                    "type": "string"
-                  },
-                  "currency": {
-                    "maxLength": 3,
-                    "minLength": 3,
-                    "type": "string"
-                  },
-                  "difference_tolerance": {
-                    "minimum": 0,
-                    "type": "number"
-                  },
-                  "kind": {
-                    "anyOf": [
-                      {
+                "anyOf": [
+                  {
+                    "additionalProperties": false,
+                    "properties": {
+                      "active": {
+                        "type": "boolean"
+                      },
+                      "code": {
+                        "maxLength": 40,
+                        "minLength": 1,
+                        "type": "string"
+                      },
+                      "consumption_point_id": {
+                        "nullable": true
+                      },
+                      "currency": {
+                        "pattern": "^[A-Z]{3}$",
+                        "type": "string"
+                      },
+                      "difference_tolerance": {
+                        "minimum": 0,
+                        "type": "number"
+                      },
+                      "kind": {
                         "enum": [
                           "reception"
                         ],
                         "type": "string"
                       },
-                      {
+                      "name": {
+                        "maxLength": 120,
+                        "minLength": 2,
+                        "type": "string"
+                      }
+                    },
+                    "required": [
+                      "name",
+                      "code",
+                      "currency",
+                      "difference_tolerance",
+                      "active",
+                      "kind"
+                    ],
+                    "type": "object"
+                  },
+                  {
+                    "additionalProperties": false,
+                    "properties": {
+                      "active": {
+                        "type": "boolean"
+                      },
+                      "code": {
+                        "maxLength": 40,
+                        "minLength": 1,
+                        "type": "string"
+                      },
+                      "consumption_point_id": {
+                        "format": "uuid",
+                        "type": "string"
+                      },
+                      "currency": {
+                        "pattern": "^[A-Z]{3}$",
+                        "type": "string"
+                      },
+                      "difference_tolerance": {
+                        "minimum": 0,
+                        "type": "number"
+                      },
+                      "kind": {
                         "enum": [
                           "consumption"
                         ],
                         "type": "string"
+                      },
+                      "name": {
+                        "maxLength": 120,
+                        "minLength": 2,
+                        "type": "string"
                       }
-                    ]
-                  },
-                  "name": {
-                    "maxLength": 120,
-                    "minLength": 2,
-                    "type": "string"
+                    },
+                    "required": [
+                      "name",
+                      "code",
+                      "currency",
+                      "difference_tolerance",
+                      "active",
+                      "kind",
+                      "consumption_point_id"
+                    ],
+                    "type": "object"
                   }
-                },
-                "required": [
-                  "name",
-                  "code",
-                  "kind",
-                  "currency",
-                  "difference_tolerance",
-                  "active"
-                ],
-                "type": "object"
+                ]
               }
             }
           },
@@ -45169,6 +45238,253 @@
         ],
         "tags": [
           "Stay accounts"
+        ]
+      }
+    },
+    "/admin/consumption-inventory-origins": {
+      "get": {
+        "description": "Lista origens de estoque ativas e elegíveis por produto.",
+        "operationId": "listConsumptionInventoryOrigins",
+        "parameters": [
+          {
+            "in": "header",
+            "name": "x-active-hotel-id",
+            "required": false,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "additionalProperties": false,
+                  "properties": {
+                    "items": {
+                      "items": {
+                        "additionalProperties": false,
+                        "properties": {
+                          "location_id": {
+                            "format": "uuid",
+                            "type": "string"
+                          },
+                          "location_name": {
+                            "type": "string"
+                          },
+                          "product_id": {
+                            "format": "uuid",
+                            "type": "string"
+                          }
+                        },
+                        "required": [
+                          "product_id",
+                          "location_id",
+                          "location_name"
+                        ],
+                        "type": "object"
+                      },
+                      "type": "array"
+                    }
+                  },
+                  "required": [
+                    "items"
+                  ],
+                  "type": "object"
+                }
+              }
+            },
+            "description": "Default Response"
+          },
+          "400": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "additionalProperties": false,
+                  "properties": {
+                    "code": {
+                      "type": "string"
+                    },
+                    "context": {},
+                    "details": {
+                      "type": "string"
+                    },
+                    "message": {
+                      "type": "string"
+                    },
+                    "retryAfterSeconds": {
+                      "minimum": 1,
+                      "type": "integer"
+                    }
+                  },
+                  "required": [
+                    "message"
+                  ],
+                  "type": "object"
+                }
+              }
+            },
+            "description": "Default Response"
+          },
+          "401": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "additionalProperties": false,
+                  "properties": {
+                    "code": {
+                      "type": "string"
+                    },
+                    "context": {},
+                    "details": {
+                      "type": "string"
+                    },
+                    "message": {
+                      "type": "string"
+                    },
+                    "retryAfterSeconds": {
+                      "minimum": 1,
+                      "type": "integer"
+                    }
+                  },
+                  "required": [
+                    "message"
+                  ],
+                  "type": "object"
+                }
+              }
+            },
+            "description": "Default Response"
+          },
+          "403": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "additionalProperties": false,
+                  "properties": {
+                    "code": {
+                      "type": "string"
+                    },
+                    "context": {},
+                    "details": {
+                      "type": "string"
+                    },
+                    "message": {
+                      "type": "string"
+                    },
+                    "retryAfterSeconds": {
+                      "minimum": 1,
+                      "type": "integer"
+                    }
+                  },
+                  "required": [
+                    "message"
+                  ],
+                  "type": "object"
+                }
+              }
+            },
+            "description": "Default Response"
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "additionalProperties": false,
+                  "properties": {
+                    "code": {
+                      "type": "string"
+                    },
+                    "context": {},
+                    "details": {
+                      "type": "string"
+                    },
+                    "message": {
+                      "type": "string"
+                    },
+                    "retryAfterSeconds": {
+                      "minimum": 1,
+                      "type": "integer"
+                    }
+                  },
+                  "required": [
+                    "message"
+                  ],
+                  "type": "object"
+                }
+              }
+            },
+            "description": "Default Response"
+          },
+          "409": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "additionalProperties": false,
+                  "properties": {
+                    "code": {
+                      "type": "string"
+                    },
+                    "context": {},
+                    "details": {
+                      "type": "string"
+                    },
+                    "message": {
+                      "type": "string"
+                    },
+                    "retryAfterSeconds": {
+                      "minimum": 1,
+                      "type": "integer"
+                    }
+                  },
+                  "required": [
+                    "message"
+                  ],
+                  "type": "object"
+                }
+              }
+            },
+            "description": "Default Response"
+          },
+          "500": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "additionalProperties": false,
+                  "properties": {
+                    "code": {
+                      "type": "string"
+                    },
+                    "context": {},
+                    "details": {
+                      "type": "string"
+                    },
+                    "message": {
+                      "type": "string"
+                    },
+                    "retryAfterSeconds": {
+                      "minimum": 1,
+                      "type": "integer"
+                    }
+                  },
+                  "required": [
+                    "message"
+                  ],
+                  "type": "object"
+                }
+              }
+            },
+            "description": "Default Response"
+          }
+        },
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "tags": [
+          "Consumption settings"
         ]
       }
     },
@@ -95502,6 +95818,36 @@
                 "schema": {
                   "additionalProperties": false,
                   "properties": {
+                    "active_occurrences": {
+                      "items": {
+                        "additionalProperties": false,
+                        "properties": {
+                          "code": {
+                            "type": "string"
+                          },
+                          "id": {
+                            "format": "uuid",
+                            "type": "string"
+                          },
+                          "title": {
+                            "type": "string"
+                          }
+                        },
+                        "required": [
+                          "id",
+                          "code",
+                          "title"
+                        ],
+                        "title": "MaintenanceWarrantyOccurrence",
+                        "type": "object"
+                      },
+                      "type": "array"
+                    },
+                    "current_decision_id": {
+                      "format": "uuid",
+                      "nullable": true,
+                      "type": "string"
+                    },
                     "decisions": {
                       "items": {
                         "additionalProperties": false,
@@ -95750,7 +96096,9 @@
                   },
                   "required": [
                     "location",
-                    "decisions"
+                    "decisions",
+                    "current_decision_id",
+                    "active_occurrences"
                   ],
                   "type": "object"
                 }
@@ -126345,6 +126693,10 @@
                       },
                       "type": "array"
                     },
+                    "operational_date": {
+                      "format": "date",
+                      "type": "string"
+                    },
                     "rooms": {
                       "items": {
                         "additionalProperties": false,
@@ -126443,6 +126795,7 @@
                     }
                   },
                   "required": [
+                    "operational_date",
                     "categories",
                     "locations",
                     "rooms",
@@ -192502,6 +192855,10 @@
                     "minimum": 1,
                     "type": "integer"
                   },
+                  "local_at": {
+                    "pattern": "^\\d{4}-\\d{2}-\\d{2}T\\d{2}:\\d{2}(?::\\d{2})?$",
+                    "type": "string"
+                  },
                   "reason": {
                     "maxLength": 500,
                     "minLength": 3,
@@ -192587,6 +192944,10 @@
                           "nullable": true,
                           "type": "integer"
                         },
+                        "timezone": {
+                          "minLength": 1,
+                          "type": "string"
+                        },
                         "updated_at": {
                           "format": "date-time",
                           "type": "string"
@@ -192603,6 +192964,7 @@
                       },
                       "required": [
                         "hotel_id",
+                        "timezone",
                         "scenario_key",
                         "scenario_version",
                         "clock_mode",
@@ -192883,6 +193245,10 @@
                       "nullable": true,
                       "type": "integer"
                     },
+                    "timezone": {
+                      "minLength": 1,
+                      "type": "string"
+                    },
                     "updated_at": {
                       "format": "date-time",
                       "type": "string"
@@ -192899,6 +193265,7 @@
                   },
                   "required": [
                     "hotel_id",
+                    "timezone",
                     "scenario_key",
                     "scenario_version",
                     "clock_mode",

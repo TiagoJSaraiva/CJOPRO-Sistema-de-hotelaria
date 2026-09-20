@@ -219,7 +219,7 @@ export const consumptionOffersGuide: UsageGuideDefinition = {
       target: "consumption-offer-form",
       title: "Vincule produtos em lote",
       description:
-        "Selecione um ponto e os produtos que devem aparecer nele. O preço permanece no catálogo.",
+        "Selecione um ponto e os produtos. Uma origem explícita só aparece quando todos têm posição ativa nesse local; o preço permanece no catálogo.",
     },
     {
       id: "policy",

@@ -43,11 +43,11 @@ export function MaintenancePlanningWorkspace({
   const [pending, setPending] = useState(false);
   const schedules = useMemo(() => {
     if (view === "week") return board.schedules;
-    const today = new Date().toISOString().slice(0, 10);
+    const today = board.generated_at.slice(0, 10);
     return board.schedules.filter((item) =>
       item.planned_start.startsWith(today),
     );
-  }, [board.schedules, view]);
+  }, [board.generated_at, board.schedules, view]);
 
   async function reload() {
     const response = await fetch("/api/maintenance/planning/board");

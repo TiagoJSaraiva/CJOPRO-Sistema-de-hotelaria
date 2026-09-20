@@ -19,6 +19,7 @@ const USER_ID = "80000000-0000-4000-8000-000000000002";
 const apps: ReturnType<typeof Fastify>[] = [];
 const environment: TrainingEnvironment = {
   hotel_id: HOTEL_ID,
+  timezone: "America/Sao_Paulo",
   scenario_key: "orientation",
   scenario_version: 1,
   clock_mode: "frozen",

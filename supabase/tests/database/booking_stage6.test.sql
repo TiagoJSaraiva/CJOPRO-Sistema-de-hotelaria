@@ -1,5 +1,5 @@
 begin;
-select plan(36);
+select plan(38);
 
 select has_table('public','rate_plans','rate plans exist');
 select has_table('public','rate_plan_versions','immutable rate versions exist');
@@ -32,10 +32,16 @@ select ok(not exists(select 1 from public.reservation_nightly_prices n join publ
 
 select is((public.save_booking_configuration('10000000-0000-4000-8000-000000000001','80000000-0000-4000-8000-000000000002',jsonb_build_object('published',true,'primary_color','#315F4D','introduction','Reserva direta de teste','guarantee_instructions','Sinal confirmado pela equipe','terms','Termos de teste','consent_version','v1'))->>'result'),'ok','direct booking can be published explicitly');
 
+insert into public.hotel_training_environments(hotel_id,clock_mode,frozen_at)
+values('10000000-0000-4000-8000-000000000001','frozen','2035-01-10T15:00:00Z')
+on conflict(hotel_id) do update set clock_mode='frozen',frozen_at=excluded.frozen_at,version=public.hotel_training_environments.version+1;
+select is((public.quote_public_booking('hotel-aurora',jsonb_build_object('checkin_date',(current_date+10)::text,'checkout_date',(current_date+12)::text,'rooms',jsonb_build_array(jsonb_build_object('adults',1,'children',0))))->>'result'),'invalid_dates','public quote validates dates against hotel operational time');
+
 create temporary table stage6_quote as
-select public.quote_public_booking('hotel-aurora',jsonb_build_object('checkin_date',(current_date+10)::text,'checkout_date',(current_date+12)::text,'rooms',jsonb_build_array(jsonb_build_object('adults',1,'children',0)))) value;
+select public.quote_public_booking('hotel-aurora',jsonb_build_object('checkin_date',(public.hotel_operational_date('10000000-0000-4000-8000-000000000001')+10)::text,'checkout_date',(public.hotel_operational_date('10000000-0000-4000-8000-000000000001')+12)::text,'rooms',jsonb_build_array(jsonb_build_object('adults',1,'children',0)))) value;
 select is((select value->>'result' from stage6_quote),'ok','published hotel returns a quote');
 select ok(jsonb_array_length((select value->'items' from stage6_quote))>0,'quote exposes category and plan choices');
+select is((select (value->>'expires_at')::timestamptz from stage6_quote),public.hotel_operational_now('10000000-0000-4000-8000-000000000001')+interval '15 minutes','quote expiration follows hotel operational time');
 
 do $$declare i integer;v jsonb;begin for i in 1..30 loop v:=public.consume_public_rate_limit('stage6-test','quote',now());end loop;end$$;
 select is((public.consume_public_rate_limit('stage6-test','quote',now())->>'result'),'limited','persistent public rate limit rejects excess requests');

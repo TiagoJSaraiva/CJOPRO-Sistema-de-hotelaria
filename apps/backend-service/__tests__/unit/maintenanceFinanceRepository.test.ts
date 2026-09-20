@@ -238,6 +238,10 @@ describe("maintenance finance repository", () => {
   });
 
   it("calcula detalhe, filas e resumo financeiro", async () => {
+    mocks.rpc.mockImplementation(async (name: string) => ({
+      data: name === "hotel_operational_date" ? "2026-09-20" : null,
+      error: null,
+    }));
     mocks.from.mockImplementation((table: string) => {
       if (table === "maintenance_occurrences")
         return query({ id: OCCURRENCE_ID });

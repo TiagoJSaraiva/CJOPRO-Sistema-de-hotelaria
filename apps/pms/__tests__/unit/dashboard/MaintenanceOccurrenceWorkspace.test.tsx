@@ -34,6 +34,7 @@ const initial = {
   ],
 } as unknown as AdminMaintenanceOccurrenceDetail;
 const referenceData: AdminMaintenanceReferenceData = {
+  operational_date: "2026-09-01",
   categories: [],
   locations: [],
   rooms: [],

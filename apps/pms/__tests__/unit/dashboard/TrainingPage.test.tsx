@@ -45,6 +45,7 @@ beforeEach(() => {
   });
   mocks.request.mockResolvedValue({
     hotel_id: "hotel-1",
+    timezone: "America/Sao_Paulo",
     scenario_key: "cash-close",
     scenario_version: 1,
     clock_mode: "frozen",
@@ -71,6 +72,10 @@ it("shows the frozen operational clock separately from real time", async () => {
   ).toBeTruthy();
   expect(screen.getByText(/cash-close · versão 1/)).toBeTruthy();
   expect(screen.getByText("Congelado")).toBeTruthy();
+  expect(screen.getByText("America/Sao_Paulo")).toBeTruthy();
+  expect(
+    document.querySelector('input[name="local_at"][type="datetime-local"]'),
+  ).toBeTruthy();
   expect(screen.getByRole("status").textContent).toContain(
     "controles de segurança continuam usando o tempo real",
   );

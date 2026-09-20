@@ -1,5 +1,5 @@
 begin;
-select plan(47);
+select plan(55);
 
 select has_table('public','hotel_training_environments','training environment exists');
 select has_table('public','hotel_training_clock_events','clock history exists');
@@ -17,6 +17,10 @@ select is(
 select is(
   (select scenario_key from public.hotel_training_environments where hotel_id='10000000-0000-4000-8000-000000000001'),
   'orientation','scenario key is recorded'
+);
+select is(
+  public.get_training_environment('10000000-0000-4000-8000-000000000001')->>'timezone',
+  'America/Sao_Paulo','training environment exposes the hotel timezone'
 );
 select is(
   (select count(*)::integer from public.hotel_training_environments where hotel_id='10000000-0000-4000-8000-000000000002'),
@@ -52,6 +56,19 @@ select is(
 select is(
   public.hotel_operational_date('10000000-0000-4000-8000-000000000001'),
   date '2030-01-12','advance changes only operational date'
+);
+select is(
+  (public.act_training_clock(
+    '10000000-0000-4000-8000-000000000001','80000000-0000-4000-8000-000000000002',
+    jsonb_build_object('action','set','local_at','2031-02-03T10:30','expected_version',
+      (select version from public.hotel_training_environments where hotel_id='10000000-0000-4000-8000-000000000001'),
+      'reason','Data local da lição')
+  )->>'result'),
+  'ok','clock accepts a hotel-local date and time'
+);
+select is(
+  to_char(public.hotel_operational_now('10000000-0000-4000-8000-000000000001') at time zone 'America/Sao_Paulo','YYYY-MM-DD"T"HH24:MI'),
+  '2031-02-03T10:30','local training input is resolved in the hotel timezone'
 );
 select is(
   (public.act_training_clock(
@@ -198,6 +215,36 @@ select is(
   (select lifecycle_status::text from public.maintenance_locations where id='99500000-0000-4000-8000-000000000001'),
   'retired','retirement changes the equipment lifecycle'
 );
+select is(
+  (public.record_maintenance_warranty_decision(
+    '10000000-0000-4000-8000-000000000001','99500000-0000-4000-8000-000000000001',
+    '80000000-0000-4000-8000-000000000007',
+    jsonb_build_object('result','expiry_acknowledged','reason','Correção da aposentadoria',
+      'supersedes_id',(public.list_maintenance_warranty_decisions(
+        '10000000-0000-4000-8000-000000000001','99500000-0000-4000-8000-000000000001'
+      )->>'current_decision_id')::uuid,
+      'expected_location_version',(select version from public.maintenance_locations where id='99500000-0000-4000-8000-000000000001'))
+  )->>'result'),
+  'ok','correction can replace a side-effecting warranty decision'
+);
+select ok(
+  (select is_active and lifecycle_status='active' from public.maintenance_locations where id='99500000-0000-4000-8000-000000000001'),
+  'correction restores the state that existed before the superseded decision'
+);
+update public.maintenance_locations set lifecycle_status='out_of_service',version=version+1
+where id='99500000-0000-4000-8000-000000000001';
+select is(
+  (public.record_maintenance_warranty_decision(
+    '10000000-0000-4000-8000-000000000001','99500000-0000-4000-8000-000000000001',
+    '80000000-0000-4000-8000-000000000007',
+    jsonb_build_object('result','retired','reason','Conflito esperado',
+      'supersedes_id',(public.list_maintenance_warranty_decisions(
+        '10000000-0000-4000-8000-000000000001','99500000-0000-4000-8000-000000000001'
+      )->>'current_decision_id')::uuid,
+      'expected_location_version',(select version from public.maintenance_locations where id='99500000-0000-4000-8000-000000000001'))
+  )->>'result'),
+  'correction_conflict','correction rejects unrelated equipment state changes'
+);
 
 select throws_ok(
   $$ select public.release_maintenance_room_block(
@@ -282,6 +329,20 @@ select is(
     '80000000-0000-4000-8000-000000000008',false
   )->>'expected_cash')::numeric,
   100::numeric,'expected cash becomes visible after counting'
+);
+select is(
+  public.list_cash_registers_for_actor(
+    '10000000-0000-4000-8000-000000000001','80000000-0000-4000-8000-000000000008',false
+  )->>'operational_date',
+  public.hotel_operational_date('10000000-0000-4000-8000-000000000001')::text,
+  'cash register list exposes the operational date'
+);
+select is(
+  public.daily_close_projection(
+    '10000000-0000-4000-8000-000000000001',
+    public.hotel_operational_date('10000000-0000-4000-8000-000000000001')
+  )->'cash_sessions'->0->>'currency',
+  'BRL','daily close sessions identify their currency'
 );
 select ok(
   (select daily_close_started_on is not null from public.cash_management_settings where hotel_id='10000000-0000-4000-8000-000000000001'),

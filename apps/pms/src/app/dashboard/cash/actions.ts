@@ -9,11 +9,11 @@ const go = (s: string): never =>
 async function run(path: string, body: unknown, status: string) {
   try {
     await requestOperationsFinanceEndpoint(path, "POST", body);
-    revalidatePath("/dashboard/cash");
-    go(status);
   } catch {
     go("conflict");
   }
+  revalidatePath("/dashboard/cash");
+  go(status);
 }
 export async function createCashRegisterAction(f: FormData) {
   await run(

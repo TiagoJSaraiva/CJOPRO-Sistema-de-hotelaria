@@ -312,17 +312,33 @@ export const MinibarRouteInputSchema = Type.Object(
 );
 export type MinibarRouteInput = Static<typeof MinibarRouteInputSchema>;
 
-export const CashRegisterInputSchema = Type.Object(
-  {
-    name: Type.String({ minLength: 2, maxLength: 120 }),
-    code: Type.String({ minLength: 1, maxLength: 40 }),
-    kind: Type.Union([Type.Literal("reception"), Type.Literal("consumption")]),
-    consumption_point_id: Type.Optional(uuid()),
-    currency: Type.String({ minLength: 3, maxLength: 3 }),
-    difference_tolerance: Type.Number({ minimum: 0 }),
-    active: Type.Boolean(),
-  },
-  strict,
+const cashRegisterBase = {
+  name: Type.String({ minLength: 2, maxLength: 120 }),
+  code: Type.String({ minLength: 1, maxLength: 40 }),
+  currency: Type.String({ pattern: "^[A-Z]{3}$" }),
+  difference_tolerance: Type.Number({ minimum: 0 }),
+  active: Type.Boolean(),
+};
+export const CashRegisterInputSchema = Type.Union(
+  [
+    Type.Object(
+      {
+        ...cashRegisterBase,
+        kind: Type.Literal("reception"),
+        consumption_point_id: Type.Optional(Type.Null()),
+      },
+      strict,
+    ),
+    Type.Object(
+      {
+        ...cashRegisterBase,
+        kind: Type.Literal("consumption"),
+        consumption_point_id: uuid(),
+      },
+      strict,
+    ),
+  ],
+  { $id: "CashRegisterInput" },
 );
 export type CashRegisterInput = Static<typeof CashRegisterInputSchema>;
 
@@ -385,6 +401,8 @@ export type CashSessionView = {
   counted_cash: number | null;
   difference_amount: number | null;
   closed_by_name?: string | null;
+  register_name?: string | null;
+  currency?: string | null;
   movement_totals?: Record<string, number>;
 };
 
@@ -399,6 +417,12 @@ export type CashRegisterView = {
   difference_tolerance: number;
   active: boolean;
   active_session: CashSessionView | null;
+};
+
+export type CashRegisterListView = {
+  operational_date: string;
+  currency: string;
+  registers: CashRegisterView[];
 };
 
 export type DailyCloseProjection = {

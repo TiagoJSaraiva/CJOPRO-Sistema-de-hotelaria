@@ -33,6 +33,10 @@ class SupabaseRoomsRepository implements RoomsRepository {
     const supabase = createServerClient();
     let query = supabase.from("rooms").select(ROOM_SELECT_FIELDS);
     query = applyHotelContextFilter(query, activeHotelId);
+    const operationalDateResult = await supabase.rpc("hotel_operational_date", {
+      p_hotel_id: activeHotelId,
+    });
+    if (operationalDateResult.error) throw operationalDateResult.error;
     const [roomsResult, blocksResult] = await Promise.all([
       query.order("created_at", { ascending: false }),
       supabase
@@ -40,7 +44,7 @@ class SupabaseRoomsRepository implements RoomsRepository {
         .select("room_id,status")
         .eq("hotel_id", activeHotelId)
         .is("released_at", null)
-        .lte("start_date", new Date().toISOString().slice(0, 10)),
+        .lte("start_date", String(operationalDateResult.data)),
     ]);
 
     if (roomsResult.error || blocksResult.error) {

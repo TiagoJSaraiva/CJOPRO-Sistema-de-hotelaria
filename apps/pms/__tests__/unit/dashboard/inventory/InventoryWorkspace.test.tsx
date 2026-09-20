@@ -228,6 +228,25 @@ describe("InventoryWorkspace", () => {
     expect(screen.getByRole("button", { name: "Cancelar" })).toBeTruthy();
   });
 
+  it("does not open an empty count when there are no active positions", async () => {
+    mocks.overview.mockResolvedValueOnce({
+      settings: {
+        hotel_id: "hotel-1",
+        negative_stock_policy: "block",
+        updated_at: "2026-09-01T10:00:00.000Z",
+      },
+      items: [],
+    });
+    mocks.counts.mockResolvedValueOnce([]);
+    render(await InventoryWorkspace({ tab: "counts" }));
+
+    expect(screen.getByText("Nenhuma posição configurada")).toBeTruthy();
+    expect(screen.queryByRole("button", { name: "Abrir contagem" })).toBeNull();
+    expect(
+      screen.getByRole("link", { name: "Configurar posições" }),
+    ).toBeTruthy();
+  });
+
   it("renders policy, location and explicit product activation settings", async () => {
     mocks.overview.mockResolvedValueOnce({
       settings: {

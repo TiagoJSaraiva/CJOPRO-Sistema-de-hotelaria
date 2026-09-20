@@ -39,46 +39,63 @@ async function stabilizeVisualState(page: Page) {
 }
 
 test.describe("PMS UI quality", () => {
-  test("consulta compras, organizações, lotes e caixa da etapa 5", async ({
-    page,
-    context,
-    baseURL,
-    auditAccessibility,
-  }) => {
-    test.setTimeout(90_000);
-    await authenticate(context, baseURL!, "operations-e2e-token");
-    await preparePage(page);
+  test(
+    "consulta compras, organizações, lotes e caixa da etapa 5",
+    { tag: TEST_TAGS },
+    async ({ page, context, baseURL, auditAccessibility }) => {
+      test.setTimeout(90_000);
+      await authenticate(context, baseURL!, "operations-e2e-token");
+      await preparePage(page);
 
-    await page.goto("/dashboard/procurement");
-    await expect(
-      page.getByRole("heading", { name: "Compras e reposição" }),
-    ).toBeVisible();
-    await expect(
-      page.getByText("Configure antes de submeter compras."),
-    ).toBeVisible();
-    await auditAccessibility("compras-e-reposicao");
+      await page.goto("/dashboard/procurement");
+      await expect(
+        page.getByRole("heading", { name: "Compras e reposição" }),
+      ).toBeVisible();
+      await expect(
+        page.getByText("Configure antes de submeter compras."),
+      ).toBeVisible();
+      await auditAccessibility("compras-e-reposicao");
 
-    await page.goto("/dashboard/organizations");
-    await expect(page.getByText("Fornecedor Hotelaria").first()).toBeVisible();
-    await auditAccessibility("organizacoes");
+      await page.goto("/dashboard/organizations");
+      await expect(
+        page.getByText("Fornecedor Hotelaria").first(),
+      ).toBeVisible();
+      await auditAccessibility("organizacoes");
 
-    await page.goto("/dashboard/inventory/lots");
-    await expect(
-      page.getByRole("heading", { name: "Lotes e validade" }),
-    ).toBeVisible();
-    await auditAccessibility("estoque-lotes");
+      await page.goto("/dashboard/inventory/lots");
+      await expect(
+        page.getByRole("heading", { name: "Lotes e validade" }),
+      ).toBeVisible();
+      await auditAccessibility("estoque-lotes");
 
-    await page.goto("/dashboard/cash");
-    await expect(
-      page.getByRole("heading", { name: "Caixa e fechamento" }),
-    ).toBeVisible();
-    await expect(page.getByText("Caixa da recepção")).toBeVisible();
-    await expect(page.getByText("Dia sem movimentação.")).toBeVisible();
-    await expect(
-      page.getByText(/Cadastrar caixa → abrir sessão/),
-    ).toBeVisible();
-    await auditAccessibility("caixa-e-fechamento");
-  });
+      await page.request.post(`${MOCK_BACKEND_URL}/test/reset-cash`);
+      await page.goto("/dashboard/cash");
+      await expect(
+        page.getByRole("heading", { name: "Caixa e fechamento" }),
+      ).toBeVisible();
+      await expect(page.getByText("Caixa da recepção").first()).toBeVisible();
+      await expect(page.getByText("Dia sem movimentação.")).toBeVisible();
+      await expect(
+        page.getByText(/Cadastrar caixa → abrir sessão/),
+      ).toBeVisible();
+      await expect(
+        page.getByText(/valor esperado protegido até a contagem/),
+      ).toBeVisible();
+      await expect(page.getByText(/Esperado: R\$\s*150/)).toBeVisible();
+      await expect(page.getByText(/Contado: R\$\s*149/)).toBeVisible();
+      await expect(
+        page.getByText(/encerrado por Bruno Supervisor/),
+      ).toBeVisible();
+      await page.getByLabel("Valor contado").fill("150");
+      await page.getByRole("button", { name: "Enviar contagem cega" }).click();
+      await expect(page).toHaveURL(/status=counted/);
+      await expect(page.getByText(/esperado R\$\s*150/)).toBeVisible();
+      await auditAccessibility("caixa-e-fechamento");
+      await page.getByTestId("daily-cash-sessions").scrollIntoViewIfNeeded();
+      await stabilizeVisualState(page);
+      await expect(page).toHaveScreenshot("cash-daily-reconciliation.png");
+    },
+  );
 
   test("consulta pré-chegada, tarifas, canais e indicadores da etapa 6", async ({
     page,
@@ -120,32 +137,37 @@ test.describe("PMS UI quality", () => {
     await auditAccessibility("reservas-indicadores");
   });
 
-  test("controla o relógio operacional somente no treinamento local @a11y", async ({
-    page,
-    context,
-    baseURL,
-    auditAccessibility,
-  }) => {
-    await authenticate(context, baseURL!, "operations-e2e-token");
-    await preparePage(page);
+  test(
+    "controla o relógio operacional somente no treinamento local",
+    { tag: TEST_TAGS },
+    async ({ page, context, baseURL, auditAccessibility }) => {
+      await authenticate(context, baseURL!, "operations-e2e-token");
+      await preparePage(page);
 
-    await page.goto("/dashboard/training");
-    await expect(
-      page.getByRole("heading", { name: "Treinamento local" }),
-    ).toBeVisible();
-    await expect(page.getByText("Congelado", { exact: true })).toBeVisible();
-    await expect(
-      page.getByText(
-        /Sessões e controles de segurança continuam usando o tempo real/,
-      ),
-    ).toBeVisible();
-    await expect(
-      page.getByText(
-        /restauração destrutiva de cenários existe somente no comando/,
-      ),
-    ).toBeVisible();
-    await auditAccessibility("treinamento-local");
-  });
+      await page.goto("/dashboard/training");
+      await expect(
+        page.getByRole("heading", { name: "Treinamento local" }),
+      ).toBeVisible();
+      await expect(page.getByText("Congelado", { exact: true })).toBeVisible();
+      await expect(page.getByText("America/Sao_Paulo")).toBeVisible();
+      await expect(
+        page.getByText(
+          /Sessões e controles de segurança continuam usando o tempo real/,
+        ),
+      ).toBeVisible();
+      await expect(
+        page.getByText(
+          /restauração destrutiva de cenários existe somente no comando/,
+        ),
+      ).toBeVisible();
+      await auditAccessibility("treinamento-local");
+      await page
+        .locator('[data-usage-guide="training-clock-status"]')
+        .scrollIntoViewIfNeeded();
+      await stabilizeVisualState(page);
+      await expect(page).toHaveScreenshot("training-operational-clock.png");
+    },
+  );
 
   test(
     "organiza cobranças incompatíveis e preserva os dois recibos",
@@ -722,6 +744,7 @@ test.describe("PMS UI quality", () => {
       await expect(page.getByText("Lançamento no fólio").first()).toBeVisible();
       await auditAccessibility("historico-consumo");
       await stabilizeVisualState(page);
+      await page.evaluate(() => window.scrollTo(0, 0));
       await expect(page).toHaveScreenshot("consumption-order-history.png");
     },
   );
@@ -1010,6 +1033,52 @@ test.describe("PMS UI quality", () => {
       await auditAccessibility("financeiro-manutencao");
       await stabilizeVisualState(page);
       await expect(page).toHaveScreenshot("maintenance-finance.png");
+    },
+  );
+
+  test(
+    "abre o deep link e corrige a decisão de garantia",
+    { tag: TEST_TAGS },
+    async ({ page, context, baseURL, auditAccessibility }) => {
+      await preparePage(page);
+      await authenticate(
+        context,
+        baseURL || "http://127.0.0.1:3001",
+        "operations-e2e-token",
+      );
+      await page.request.post(`${MOCK_BACKEND_URL}/test/reset-warranty`);
+      await page.goto(
+        "/dashboard/maintenance/settings?location=location-equipment",
+      );
+
+      const equipment = page.locator('[data-location-id="location-equipment"]');
+      await expect(equipment).toBeFocused();
+      await expect(
+        page.getByText(/Esta decisão corrigirá a decisão vigente/),
+      ).toBeVisible();
+      await page.getByLabel("Decisão").selectOption("claim_submitted");
+      await expect(
+        page.getByRole("option", {
+          name: "OCO-001099 · Falha na partida do gerador",
+        }),
+      ).toBeAttached();
+      await page
+        .getByLabel("Ocorrência ativa vinculada")
+        .selectOption("occurrence-warranty-e2e");
+      await page
+        .getByLabel("Justificativa")
+        .fill("Falha confirmada em inspeção");
+      await auditAccessibility("correcao-garantia");
+      await stabilizeVisualState(page);
+      await expect(page).toHaveScreenshot(
+        "maintenance-warranty-correction.png",
+      );
+      await page
+        .getByRole("button", { name: "Corrigir decisão vigente" })
+        .click();
+      await expect(page.getByRole("status")).toContainText(
+        "Decisão de garantia registrada",
+      );
     },
   );
 

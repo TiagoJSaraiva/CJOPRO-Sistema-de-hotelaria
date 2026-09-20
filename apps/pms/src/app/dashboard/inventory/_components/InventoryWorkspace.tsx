@@ -122,7 +122,13 @@ export async function InventoryWorkspace({
     tab === "counts"
       ? await InventoryCounts({
           canCount: access.canCount,
+          canManage: access.canManage,
           locations: activeLocations,
+          positionLocationIds: new Set(
+            overview.items
+              .filter((item) => item.is_active && !item.archived_at)
+              .map((item) => item.location.id),
+          ),
         })
       : null;
   const lots =
@@ -535,15 +541,22 @@ async function InventoryMovements({
 
 async function InventoryCounts({
   canCount,
+  canManage,
   locations,
+  positionLocationIds,
 }: {
   canCount: boolean;
+  canManage: boolean;
   locations: Awaited<ReturnType<typeof listInventoryLocations>>;
+  positionLocationIds: Set<string>;
 }) {
   const counts = await listInventoryCounts();
+  const countableLocations = locations.filter((location) =>
+    positionLocationIds.has(location.id),
+  );
   return (
     <section className="grid gap-4" data-usage-guide="inventory-counts">
-      {canCount ? (
+      {canCount && countableLocations.length ? (
         <form
           action={createInventoryCountAction}
           className="pms-surface-card grid gap-3 md:grid-cols-3"
@@ -551,7 +564,7 @@ async function InventoryCounts({
           <label className="pms-field">
             Local
             <select name="location_id" className="pms-field-input">
-              {locations.map((item) => (
+              {countableLocations.map((item) => (
                 <option key={item.id} value={item.id}>
                   {item.name}
                 </option>
@@ -566,8 +579,26 @@ async function InventoryCounts({
             Abrir contagem
           </button>
         </form>
-      ) : (
+      ) : !canCount ? (
         <p>Sem permissão para realizar contagens.</p>
+      ) : (
+        <div className="pms-surface-card" role="status">
+          <h2 className="mt-0">Nenhuma posição configurada</h2>
+          <p>
+            Uma contagem precisa de ao menos um produto ativo no local para
+            criar os itens esperados.
+          </p>
+          {canManage ? (
+            <Link
+              href="/dashboard/inventory/settings"
+              className="pms-button-secondary"
+            >
+              Configurar posições
+            </Link>
+          ) : (
+            <p>Solicite ao responsável pelo estoque a configuração.</p>
+          )}
+        </div>
       )}
       {counts.map((count) => (
         <article key={count.id} className="pms-surface-card grid gap-3">

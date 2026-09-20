@@ -23,6 +23,7 @@ function setup() {
       occurrenceId="origin"
       occurrenceCode="OCO-1"
       referenceData={{
+        operational_date: "2026-09-01",
         rooms: [],
         locations: [],
         stays: [],

@@ -15,6 +15,7 @@ import type {
   MaintenancePriority,
   MaintenanceWarrantyDecision,
   MaintenanceWarrantyDecisionInput,
+  MaintenanceWarrantyOccurrence,
   MaintenanceWaitingReason,
   Json,
 } from "@hotel/shared";
@@ -409,16 +410,22 @@ class SupabaseMaintenanceRepository implements MaintenanceRepository {
       .range(from, from + filters.pageSize - 1);
     if (error) throw error;
     let rows = (data || []) as OccurrenceRow[];
-    if (filters.overdue)
+    if (filters.overdue) {
+      const operationalNow = await supabase.rpc("hotel_operational_now", {
+        p_hotel_id: hotelId,
+      });
+      if (operationalNow.error) throw operationalNow.error;
+      const now = String(operationalNow.data);
       rows = rows.filter((row) =>
         (row.maintenance_work_orders || []).some(
           (order: { status?: string; due_at?: string | null }) =>
             order.due_at &&
-            order.due_at < new Date().toISOString() &&
+            order.due_at < now &&
             order.status !== "completed" &&
             order.status !== "canceled",
         ),
       );
+    }
     let items = rows.map(mapOccurrenceSummary);
     if (filters.blocked !== undefined)
       items = items.filter((item) => item.active_block === filters.blocked);
@@ -494,6 +501,7 @@ class SupabaseMaintenanceRepository implements MaintenanceRepository {
       affectedRoomsResult,
       lifecycleResult,
       recurrenceResult,
+      operationalDateResult,
     ] = await Promise.all([
       supabase
         .from("maintenance_work_orders")
@@ -561,6 +569,7 @@ class SupabaseMaintenanceRepository implements MaintenanceRepository {
         .eq("occurrence_id", id)
         .limit(1)
         .maybeSingle(),
+      supabase.rpc("hotel_operational_date", { p_hotel_id: hotelId }),
     ]);
     if (
       ordersResult.error ||
@@ -570,7 +579,8 @@ class SupabaseMaintenanceRepository implements MaintenanceRepository {
       blocksResult.error ||
       affectedRoomsResult.error ||
       lifecycleResult.error ||
-      recurrenceResult.error
+      recurrenceResult.error ||
+      operationalDateResult.error
     )
       throw (
         ordersResult.error ||
@@ -580,7 +590,8 @@ class SupabaseMaintenanceRepository implements MaintenanceRepository {
         blocksResult.error ||
         affectedRoomsResult.error ||
         lifecycleResult.error ||
-        recurrenceResult.error
+        recurrenceResult.error ||
+        operationalDateResult.error
       );
     const row = occurrenceResult.data as OccurrenceRow;
     const summary = mapOccurrenceSummary(row);
@@ -643,7 +654,7 @@ class SupabaseMaintenanceRepository implements MaintenanceRepository {
         released_at: item.released_at ? String(item.released_at) : null,
         is_overdue:
           !item.released_at &&
-          String(item.end_date) < new Date().toISOString().slice(0, 10),
+          String(item.end_date) < String(operationalDateResult.data),
       })) as AdminMaintenanceRoomBlock[],
       affected_rooms: ((affectedRoomsResult.data || []) as any[]).map(
         (entry) => ({
@@ -699,6 +710,10 @@ class SupabaseMaintenanceRepository implements MaintenanceRepository {
     payload: AdminMaintenanceOccurrenceCreateInput,
   ): Promise<AdminMaintenanceOccurrenceDetail> {
     const supabase = createServerClient();
+    const operationalNow = payload.discovered_at
+      ? null
+      : await supabase.rpc("hotel_operational_now", { p_hotel_id: hotelId });
+    if (operationalNow?.error) throw operationalNow.error;
     const { data: id, error } = await supabase.rpc(
       "create_maintenance_occurrence",
       {
@@ -707,7 +722,7 @@ class SupabaseMaintenanceRepository implements MaintenanceRepository {
         p_kind: payload.kind,
         p_priority: payload.priority || "normal",
         p_description: payload.description.trim(),
-        p_discovered_at: payload.discovered_at || new Date().toISOString(),
+        p_discovered_at: payload.discovered_at || String(operationalNow?.data),
         p_reported_by: actorId,
         p_blocking_recommended: payload.blocking_recommended || false,
         ...(payload.room_id ? { p_room_id: payload.room_id } : {}),
@@ -1044,9 +1059,16 @@ class SupabaseMaintenanceRepository implements MaintenanceRepository {
     const value = data as unknown as {
       location?: AdminMaintenanceLocation;
       decisions?: MaintenanceWarrantyDecision[];
+      current_decision_id?: string | null;
+      active_occurrences?: MaintenanceWarrantyOccurrence[];
     } | null;
     return value?.location
-      ? { location: value.location, decisions: value.decisions || [] }
+      ? {
+          location: value.location,
+          decisions: value.decisions || [],
+          current_decision_id: value.current_decision_id || null,
+          active_occurrences: value.active_occurrences || [],
+        }
       : null;
   }
 
@@ -1076,28 +1098,45 @@ class SupabaseMaintenanceRepository implements MaintenanceRepository {
     hotelId: string,
   ): Promise<AdminMaintenanceReferenceData> {
     const supabase = createServerClient();
-    const [categories, locations, roomsResult, usersResult, staysResult] =
-      await Promise.all([
-        this.listCategories(hotelId),
-        this.listLocations(hotelId),
-        supabase
-          .from("rooms")
-          .select("id,room_number,room_type")
-          .eq("hotel_id", hotelId)
-          .order("room_number"),
-        supabase
-          .from("user_roles")
-          .select("users:user_id(id,name,is_active)")
-          .eq("hotel_id", hotelId),
-        supabase
-          .from("stays")
-          .select(
-            "id,room_id,stay_status,reservations:reservation_id(reservation_code,hotel_id,customers:booking_customer_id(full_name)),rooms:room_id(hotel_id)",
-          )
-          .in("stay_status", ["confirmed", "checked_in"]),
-      ]);
-    if (roomsResult.error || usersResult.error || staysResult.error)
-      throw roomsResult.error || usersResult.error || staysResult.error;
+    const [
+      categories,
+      locations,
+      roomsResult,
+      usersResult,
+      staysResult,
+      operationalDateResult,
+    ] = await Promise.all([
+      this.listCategories(hotelId),
+      this.listLocations(hotelId),
+      supabase
+        .from("rooms")
+        .select("id,room_number,room_type")
+        .eq("hotel_id", hotelId)
+        .order("room_number"),
+      supabase
+        .from("user_roles")
+        .select("users:user_id(id,name,is_active)")
+        .eq("hotel_id", hotelId),
+      supabase
+        .from("stays")
+        .select(
+          "id,room_id,stay_status,reservations:reservation_id(reservation_code,hotel_id,customers:booking_customer_id(full_name)),rooms:room_id(hotel_id)",
+        )
+        .in("stay_status", ["confirmed", "checked_in"]),
+      supabase.rpc("hotel_operational_date", { p_hotel_id: hotelId }),
+    ]);
+    if (
+      roomsResult.error ||
+      usersResult.error ||
+      staysResult.error ||
+      operationalDateResult.error
+    )
+      throw (
+        roomsResult.error ||
+        usersResult.error ||
+        staysResult.error ||
+        operationalDateResult.error
+      );
     const users = ((usersResult.data || []) as any[])
       .map((item) => relation(item.users))
       .filter((item) => item?.is_active)
@@ -1128,6 +1167,7 @@ class SupabaseMaintenanceRepository implements MaintenanceRepository {
       assignable_users: Array.from(
         new Map(users.map((item) => [item.id, item])).values(),
       ),
+      operational_date: String(operationalDateResult.data),
     };
   }
 
@@ -1156,7 +1196,11 @@ class SupabaseMaintenanceRepository implements MaintenanceRepository {
     if (occurrencesResult.error || ordersResult.error || blocksResult.error)
       throw occurrencesResult.error || ordersResult.error || blocksResult.error;
     const orders = (ordersResult.data || []) as any[];
-    const now = new Date().toISOString();
+    const operationalNow = await supabase.rpc("hotel_operational_now", {
+      p_hotel_id: hotelId,
+    });
+    if (operationalNow.error) throw operationalNow.error;
+    const now = String(operationalNow.data);
     return {
       open: (occurrencesResult.data || []).length,
       assigned_to_me: orders.filter((item) => item.assigned_to === actorId)

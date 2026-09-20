@@ -1,10 +1,10 @@
 import { expect, it, vi } from "vitest";
-const mocks = vi.hoisted(() => ({ from: vi.fn() }));
+const mocks = vi.hoisted(() => ({ from: vi.fn(), rpc: vi.fn() }));
 vi.mock("../../src/common/supabaseServer", () => ({
-  createServerClient: () => ({ from: mocks.from }),
+  createServerClient: () => ({ from: mocks.from, rpc: mocks.rpc }),
 }));
 import { createMaintenanceRepository } from "../../src/repositories/maintenanceRepository";
-function setup(error: Error | null = null) {
+function setup(error: Error | null = null, data: unknown[] = []) {
   const query = {
     select: vi.fn(),
     eq: vi.fn(),
@@ -13,7 +13,7 @@ function setup(error: Error | null = null) {
     lte: vi.fn(),
     ilike: vi.fn(),
     order: vi.fn(),
-    range: vi.fn().mockResolvedValue({ data: [], count: 0, error }),
+    range: vi.fn().mockResolvedValue({ data, count: data.length, error }),
   };
   for (const method of [
     query.select,
@@ -28,6 +28,34 @@ function setup(error: Error | null = null) {
   mocks.from.mockReturnValue(query);
   return query;
 }
+it("calcula atraso com o relógio operacional do hotel", async () => {
+  setup(null, [
+    {
+      id: "occurrence-1",
+      occurrence_number: 1,
+      category_id: "category-1",
+      reported_by: "actor-1",
+      maintenance_work_orders: [
+        { status: "assigned", due_at: "2029-01-01T00:00:00.000Z" },
+      ],
+      created_at: "2026-09-01T00:00:00.000Z",
+      updated_at: "2026-09-01T00:00:00.000Z",
+    },
+  ]);
+  mocks.rpc.mockResolvedValue({
+    data: "2030-01-01T00:00:00.000Z",
+    error: null,
+  });
+  const result = await createMaintenanceRepository().listOccurrences("hotel", {
+    page: 1,
+    pageSize: 20,
+    overdue: true,
+  });
+  expect(result.items).toHaveLength(1);
+  expect(mocks.rpc).toHaveBeenCalledWith("hotel_operational_now", {
+    p_hotel_id: "hotel",
+  });
+});
 it("preserva busca textual paginada e escopo do hotel", async () => {
   const query = setup();
   expect(

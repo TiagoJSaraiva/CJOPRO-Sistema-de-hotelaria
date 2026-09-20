@@ -429,12 +429,26 @@ export const maintenanceSettingsGuide: UsageGuideDefinition = {
 
 export function getMaintenanceSettingsGuide(
   canManageRecurrence: boolean,
+  canManageWarranties = false,
 ): UsageGuideDefinition {
   return {
     ...maintenanceSettingsGuide,
-    steps: maintenanceSettingsGuide.steps.filter(
-      (step) => step.id !== "recurrence" || canManageRecurrence,
-    ),
+    steps: [
+      ...maintenanceSettingsGuide.steps.filter(
+        (step) => step.id !== "recurrence" || canManageRecurrence,
+      ),
+      ...(canManageWarranties
+        ? [
+            {
+              id: "warranty",
+              target: "maintenance-warranty-decision",
+              title: "Decida ou corrija a garantia",
+              description:
+                "Abra o equipamento indicado, registre a decisão e use a correção auditável quando a decisão vigente precisar mudar.",
+            },
+          ]
+        : []),
+    ],
   };
 }
 

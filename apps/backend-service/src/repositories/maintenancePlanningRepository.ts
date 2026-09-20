@@ -124,16 +124,31 @@ export interface MaintenancePlanningRepository {
 export function createMaintenancePlanningRepository(): MaintenancePlanningRepository {
   return {
     async board(hotelId, from, to) {
-      const { data, error } = await createServerClient().rpc(
+      const client = createServerClient();
+      const operationalNow = await client.rpc("hotel_operational_now", {
+        p_hotel_id: hotelId,
+      });
+      if (operationalNow.error) throw operationalNow.error;
+      const reference = new Date(String(operationalNow.data));
+      const defaultFrom = new Date(
+        reference.getTime() - 86_400_000,
+      ).toISOString();
+      const defaultTo = new Date(
+        reference.getTime() + 14 * 86_400_000,
+      ).toISOString();
+      const { data, error } = await client.rpc(
         "list_maintenance_planning_board",
         {
           p_hotel_id: hotelId,
-          ...(from ? { p_from: from } : {}),
-          ...(to ? { p_to: to } : {}),
+          p_from: from || defaultFrom,
+          p_to: to || defaultTo,
         },
       );
       if (error) throw error;
-      return data as unknown as MaintenancePlanningBoard;
+      return {
+        ...(data as unknown as MaintenancePlanningBoard),
+        generated_at: String(operationalNow.data),
+      };
     },
     async saveTeam(hotelId, actorId, input, id) {
       const { data, error } = await createServerClient().rpc(
@@ -373,13 +388,15 @@ export function createMaintenancePlanningRepository(): MaintenancePlanningReposi
       return { result: error ? "invalid" : "ok" };
     },
     async reconcile(hotelId) {
-      const { error } = await createServerClient().rpc(
-        "refresh_maintenance_impact_scores",
-        {
-          p_hotel_id: hotelId,
-          p_now: new Date().toISOString(),
-        },
-      );
+      const client = createServerClient();
+      const operationalNow = await client.rpc("hotel_operational_now", {
+        p_hotel_id: hotelId,
+      });
+      if (operationalNow.error) throw operationalNow.error;
+      const { error } = await client.rpc("refresh_maintenance_impact_scores", {
+        p_hotel_id: hotelId,
+        p_now: String(operationalNow.data),
+      });
       if (error) throw error;
       return { result: "ok" };
     },

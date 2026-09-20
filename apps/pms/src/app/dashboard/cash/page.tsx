@@ -1,6 +1,6 @@
 import {
   PERMISSIONS,
-  type CashRegisterView,
+  type CashRegisterListView,
   type CashSessionView,
   type DailyCloseView,
 } from "@hotel/shared";
@@ -41,10 +41,14 @@ const guide: UsageGuideDefinition = {
       target: "daily-close",
       title: "Feche o dia",
       description:
-        "Prepare a conferência e peça a aprovação de outra pessoa; alterações exigem nova preparação.",
+        "Revise esperado, contado e diferença por sessão, prepare a conferência e peça a aprovação de outra pessoa.",
     },
   ],
 };
+const formatMoney = (value: number | null | undefined, currency: string) =>
+  value == null
+    ? "protegido"
+    : Number(value).toLocaleString("pt-BR", { style: "currency", currency });
 export default async function CashPage({
   searchParams,
 }: {
@@ -58,13 +62,13 @@ export default async function CashPage({
         message="Sem permissão para consultar o caixa."
       />
     );
-  const params = await searchParams,
-    date = params.date || new Date().toISOString().slice(0, 10);
-  const [data, daily, consumptionPoints] = await Promise.all([
-    requestOperationsFinanceEndpoint<{ registers: CashRegisterView[] }>(
-      "cash-registers",
-      "GET",
-    ),
+  const params = await searchParams;
+  const data = await requestOperationsFinanceEndpoint<CashRegisterListView>(
+    "cash-registers",
+    "GET",
+  );
+  const date = params.date || data.operational_date;
+  const [daily, consumptionPoints] = await Promise.all([
     requestOperationsFinanceEndpoint<DailyCloseView>(
       `daily-close/${date}`,
       "GET",
@@ -148,6 +152,7 @@ export default async function CashPage({
                     session={r.active_session}
                     operate={operate}
                     approve={approve}
+                    currency={r.currency}
                   />
                 ) : null}
               </article>
@@ -189,7 +194,7 @@ export default async function CashPage({
                 <strong className="block text-lg">
                   {Number(amount).toLocaleString("pt-BR", {
                     style: "currency",
-                    currency: "BRL",
+                    currency: data.currency,
                   })}
                 </strong>
               </div>
@@ -203,7 +208,7 @@ export default async function CashPage({
                   {transaction.type} · {transaction.payment_method}:{" "}
                   {Number(transaction.amount).toLocaleString("pt-BR", {
                     style: "currency",
-                    currency: "BRL",
+                    currency: data.currency,
                   })}{" "}
                   ({transaction.count})
                 </li>
@@ -216,6 +221,39 @@ export default async function CashPage({
             {daily.projection.cash_sessions.length} sessão(ões) ·{" "}
             {daily.projection.blockers.length} impedimento(s).
           </p>
+          {daily.projection.cash_sessions.length ? (
+            <div className="grid gap-2" data-testid="daily-cash-sessions">
+              {daily.projection.cash_sessions.map((session) => (
+                <article key={session.id} className="rounded border p-3">
+                  <strong>{session.register_name || "Caixa"}</strong>
+                  <p className="m-0 text-sm text-slate-600">
+                    {session.operator_name || "Operador não identificado"} ·{" "}
+                    {session.status.replaceAll("_", " ")}
+                    {session.closed_by_name
+                      ? ` · encerrado por ${session.closed_by_name}`
+                      : ""}
+                  </p>
+                  <p className="mb-0">
+                    Esperado:{" "}
+                    {formatMoney(
+                      session.expected_cash,
+                      session.currency || data.currency,
+                    )}{" "}
+                    · Contado:{" "}
+                    {formatMoney(
+                      session.counted_cash,
+                      session.currency || data.currency,
+                    )}{" "}
+                    · Diferença:{" "}
+                    {formatMoney(
+                      session.difference_amount,
+                      session.currency || data.currency,
+                    )}
+                  </p>
+                </article>
+              ))}
+            </div>
+          ) : null}
           {daily.projection.blockers.length ? (
             <ul>
               {daily.projection.blockers.map((b, i) => (
@@ -292,10 +330,12 @@ function SessionCard({
   session,
   operate,
   approve,
+  currency,
 }: {
   session: CashSessionView;
   operate: boolean;
   approve: boolean;
+  currency: string;
 }) {
   return (
     <div className="mt-3 rounded bg-slate-50 p-3" data-usage-guide="cash-count">
@@ -307,7 +347,7 @@ function SessionCard({
         Fundo inicial:{" "}
         {Number(session.opening_float).toLocaleString("pt-BR", {
           style: "currency",
-          currency: "BRL",
+          currency,
         })}
         {session.expected_cash === null
           ? " · valor esperado protegido até a contagem"
@@ -315,7 +355,7 @@ function SessionCard({
               "pt-BR",
               {
                 style: "currency",
-                currency: "BRL",
+                currency,
               },
             )}`}
       </p>
@@ -327,7 +367,7 @@ function SessionCard({
               {kind.replaceAll("_", " ")}:{" "}
               {Number(amount).toLocaleString("pt-BR", {
                 style: "currency",
-                currency: "BRL",
+                currency,
               })}
             </li>
           ))}
@@ -388,7 +428,10 @@ function SessionCard({
       ) : null}
       {session.status === "difference_pending" ? (
         <>
-          <p role="alert">Diferença: {session.difference_amount}</p>
+          <p role="alert">
+            Contado: {formatMoney(session.counted_cash, currency)} · diferença:{" "}
+            {formatMoney(session.difference_amount, currency)}
+          </p>
           {approve ? (
             <form
               action={decideCashDifferenceAction}

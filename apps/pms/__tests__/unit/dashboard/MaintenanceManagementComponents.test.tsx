@@ -42,6 +42,7 @@ vi.mock("jspdf-autotable", () => ({
 }));
 
 const references: AdminMaintenanceReferenceData = {
+  operational_date: "2026-09-01",
   rooms: [{ id: "room-1", room_number: "101", room_type: "standard" }],
   locations: [
     {
@@ -252,6 +253,8 @@ describe("componentes da gestão avançada de manutenção", () => {
     const context = {
       location: references.locations[0],
       decisions: [],
+      current_decision_id: null,
+      active_occurrences: [],
     };
     const fetchMock = vi.fn((_: RequestInfo | URL, init?: RequestInit) =>
       Promise.resolve(
@@ -297,6 +300,62 @@ describe("componentes da gestão avançada de manutenção", () => {
     expect(
       await screen.findByText(/Decisão de garantia registrada/),
     ).toBeTruthy();
+  });
+
+  it("opens a warranty deep link and submits an auditable correction", async () => {
+    const context = {
+      location: references.locations[0],
+      decisions: [],
+      current_decision_id: "decision-1",
+      active_occurrences: [
+        { id: "occurrence-1", code: "MAN-000001", title: "Falha ativa" },
+      ],
+    };
+    const fetchMock = vi.fn((_: RequestInfo | URL, init?: RequestInit) =>
+      Promise.resolve(
+        new Response(JSON.stringify(init?.method === "POST" ? {} : context), {
+          status: init?.method === "POST" ? 201 : 200,
+          headers: { "Content-Type": "application/json" },
+        }),
+      ),
+    );
+    vi.stubGlobal("fetch", fetchMock);
+    const user = userEvent.setup();
+    render(
+      <MaintenanceCatalogManager
+        initialCategories={references.categories}
+        initialLocations={references.locations}
+        focusLocationId="location-1"
+        canManageCatalogs={false}
+        canManageWarranties
+      />,
+    );
+
+    await user.selectOptions(
+      await screen.findByLabelText("Decisão"),
+      "claim_submitted",
+    );
+    await user.selectOptions(
+      screen.getByLabelText("Ocorrência ativa vinculada"),
+      "occurrence-1",
+    );
+    await user.type(
+      screen.getByLabelText("Justificativa"),
+      "Correção auditada",
+    );
+    await user.click(
+      screen.getByRole("button", { name: "Corrigir decisão vigente" }),
+    );
+
+    const post = fetchMock.mock.calls.find(
+      ([, init]) => init?.method === "POST",
+    );
+    expect(JSON.parse(String(post?.[1]?.body))).toEqual(
+      expect.objectContaining({
+        supersedes_id: "decision-1",
+        occurrence_id: "occurrence-1",
+      }),
+    );
   });
 
   it("cria política de SLA e apresenta conflito devolvido pela API", async () => {
@@ -455,6 +514,9 @@ describe("componentes da gestão avançada de manutenção", () => {
     );
     await user.click(screen.getByRole("button", { name: "Desativar" }));
     expect(await screen.findByRole("alert")).toBeTruthy();
+    expect((screen.getByLabelText("Início") as HTMLInputElement).value).toBe(
+      references.operational_date,
+    );
     rerender(
       <MaintenancePreventiveManager
         plans={[]}

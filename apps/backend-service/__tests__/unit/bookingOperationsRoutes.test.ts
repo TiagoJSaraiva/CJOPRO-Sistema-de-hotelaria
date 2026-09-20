@@ -45,7 +45,13 @@ function headers(permissions: string[]) {
 }
 async function setup() {
   const repository: BookingOperationsRepository = {
-    query: vi.fn().mockResolvedValue({ items: [] }),
+    query: vi.fn(async (name) =>
+      name === "hotel_operational_now"
+        ? "2026-09-12T12:00:00.000Z"
+        : name === "hotel_operational_date"
+          ? "2026-09-12"
+          : { items: [] },
+    ),
     mutate: vi.fn().mockResolvedValue({ result: "ok", id }),
   };
   const app = Fastify();
@@ -71,6 +77,24 @@ it("protege leitura por autenticação, permissão e hotel", async () => {
       .statusCode,
   ).toBe(403);
   expect(repository.query).not.toHaveBeenCalled();
+});
+it("usa a data operacional como padrão dos indicadores", async () => {
+  const { app, repository } = await setup();
+  const response = await app.inject({
+    url: "/admin/analytics/operations",
+    headers: headers([PERMISSIONS.INTEGRATED_ANALYTICS_READ]),
+  });
+  expect(response.statusCode).toBe(200);
+  expect(response.json()).toMatchObject({
+    operational_date: "2026-09-12",
+    items: [],
+  });
+  expect(repository.query).toHaveBeenCalledWith("list_integrated_analytics", {
+    p_hotel_id: hotel,
+    p_from: "2026-09-12",
+    p_to: "2026-09-12",
+    p_permissions: expect.any(Array),
+  });
 });
 it("lista planos sem mutação", async () => {
   const { app, repository } = await setup();
@@ -243,6 +267,7 @@ it("encaminha configuração, canais e indicadores com permissões próprias", a
       p_hotel_id: hotel,
       p_from: "2026-09-01",
       p_to: "2026-09-12",
+      p_now: "2026-09-12T12:00:00.000Z",
     }),
   );
 });

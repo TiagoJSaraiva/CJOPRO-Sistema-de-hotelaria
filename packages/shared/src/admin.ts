@@ -983,6 +983,12 @@ export type AdminConsumptionOffer = {
   updated_at?: string;
 };
 
+export type AdminConsumptionInventoryOrigin = {
+  product_id: string;
+  location_id: string;
+  location_name: string;
+};
+
 export type AdminConsumptionOfferBatchInput = {
   product_ids: string[];
   policy: AdminConsumptionOfferPolicyInput;
@@ -2159,6 +2165,7 @@ export type AdminMaintenanceSummary = {
 };
 
 export type AdminMaintenanceReferenceData = {
+  operational_date: string;
   categories: AdminMaintenanceCategory[];
   locations: AdminMaintenanceLocation[];
   rooms: Array<{ id: string; room_number: string; room_type: string }>;
