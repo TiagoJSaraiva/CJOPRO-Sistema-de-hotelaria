@@ -1,6 +1,7 @@
 "use client";
 
 import { useRef, useState } from "react";
+import Link from "next/link";
 import type {
   AdminConsumptionOperationalContext,
   ConsumptionBillingMode,
@@ -453,6 +454,27 @@ export function GovernanceWorkspace({
                 </p>
               </div>
             </div>
+            {cycle.status === "maintenance_hold" ? (
+              <div className="rounded-lg border border-amber-300 bg-amber-50 p-3">
+                <p>
+                  {cycle.maintenance_next_step ||
+                    "Aguardando a manutenção liberar o quarto para inspeção."}
+                </p>
+                {cycle.maintenance_href && cycle.maintenance_occurrence_code ? (
+                  <Link
+                    href={cycle.maintenance_href}
+                    className="pms-button-primary inline-flex no-underline"
+                  >
+                    Abrir ocorrência {cycle.maintenance_occurrence_code}
+                  </Link>
+                ) : (
+                  <p className="text-sm text-slate-600">
+                    Bloqueio legado sem ocorrência vinculada. Procure o contexto
+                    na Governança.
+                  </p>
+                )}
+              </div>
+            ) : null}
             {task ? (
               <div className="grid gap-3">
                 <p>
@@ -905,9 +927,12 @@ export function GovernanceWorkspace({
                   </details>
                 ) : null}
               </div>
-            ) : (
-              <p>Aguardando a manutenção liberar o quarto para inspeção.</p>
-            )}
+            ) : cycle.status !== "maintenance_hold" ? (
+              <p>
+                {cycle.maintenance_next_step ||
+                  "Aguardando a manutenção liberar o quarto para inspeção."}
+              </p>
+            ) : null}
           </article>
         );
       })}

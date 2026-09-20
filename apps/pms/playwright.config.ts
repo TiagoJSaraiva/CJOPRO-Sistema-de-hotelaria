@@ -64,6 +64,7 @@ export default defineConfig({
       timeout: 120_000,
       env: {
         BACKEND_SERVICE_URL: mockBackendURL,
+        LOCAL_TRAINING_ENABLED: "true",
       },
     },
   ],

@@ -190,6 +190,34 @@ describe("InventoryWorkspace", () => {
     expect(screen.getByText("inventory.position.created")).toBeTruthy();
   });
 
+  it("explains an empty position and disables movement and transfer", async () => {
+    mocks.overview.mockResolvedValueOnce({
+      settings: {
+        hotel_id: "hotel-1",
+        negative_stock_policy: "block",
+        updated_at: "2026-09-01T10:00:00.000Z",
+      },
+      items: [],
+    });
+    render(await InventoryWorkspace({ tab: "movements" }));
+
+    expect(screen.getByText(/posição significa/i).textContent).toContain(
+      "produto + local",
+    );
+    expect(
+      screen.getByRole("link", { name: "Ativar produto em local" }),
+    ).toBeTruthy();
+    expect(
+      (screen.getByRole("button", { name: "Registrar" }) as HTMLButtonElement)
+        .disabled,
+    ).toBe(true);
+    expect(
+      (screen.getByRole("button", { name: "Transferir" }) as HTMLButtonElement)
+        .disabled,
+    ).toBe(true);
+    expect(screen.getByText("Nenhuma posição configurada")).toBeTruthy();
+  });
+
   it("renders draft counts with save, complete and cancel actions", async () => {
     render(await InventoryWorkspace({ tab: "counts" }));
     expect(screen.getByRole("button", { name: "Abrir contagem" })).toBeTruthy();

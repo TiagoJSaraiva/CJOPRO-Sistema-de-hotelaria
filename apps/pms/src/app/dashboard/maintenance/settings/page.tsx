@@ -9,12 +9,17 @@ import { maintenanceTabs } from "../tabs";
 import Link from "next/link";
 import { getMaintenanceSettingsGuide } from "../usageGuides";
 
-export default async function MaintenanceSettingsPage() {
+export default async function MaintenanceSettingsPage({
+  searchParams,
+}: {
+  searchParams: Promise<{ location?: string }>;
+}) {
   const access = getMaintenanceAccess(await getUserFromSession());
   if (
     !access.canManageCatalogs &&
     !access.canManageSla &&
-    !access.canManageSchedule
+    !access.canManageSchedule &&
+    !access.canManageWarranties
   )
     return (
       <DashboardAccessDeniedCard
@@ -23,6 +28,7 @@ export default async function MaintenanceSettingsPage() {
       />
     );
   const data = await getMaintenanceReferenceData();
+  const params = await searchParams;
   return (
     <DashboardEntityPageShell
       title="Configuração de manutenção"
@@ -40,10 +46,13 @@ export default async function MaintenanceSettingsPage() {
           </Link>
         </div>
       ) : null}
-      {access.canManageCatalogs ? (
+      {access.canManageCatalogs || access.canManageWarranties ? (
         <MaintenanceCatalogManager
           initialCategories={data.categories}
           initialLocations={data.locations}
+          focusLocationId={params.location}
+          canManageWarranties={access.canManageWarranties}
+          canManageCatalogs={access.canManageCatalogs}
         />
       ) : null}
       {access.canManageSchedule ? (

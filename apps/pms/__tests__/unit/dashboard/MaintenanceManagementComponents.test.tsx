@@ -17,6 +17,7 @@ import type {
   AdminMaintenanceSupplier,
 } from "@hotel/shared";
 import { MaintenanceAnalyticsExports } from "../../../src/app/dashboard/maintenance/_components/MaintenanceAnalyticsExports";
+import { MaintenanceCatalogManager } from "../../../src/app/dashboard/maintenance/_components/MaintenanceCatalogManager";
 import { MaintenanceNotificationInbox } from "../../../src/app/dashboard/maintenance/_components/MaintenanceNotificationInbox";
 import { MaintenancePreventiveManager } from "../../../src/app/dashboard/maintenance/_components/MaintenancePreventiveManager";
 import { MaintenanceSlaManager } from "../../../src/app/dashboard/maintenance/_components/MaintenanceSlaManager";
@@ -60,6 +61,7 @@ const references: AdminMaintenanceReferenceData = {
       supplier_id: "supplier-1",
       contract_id: "contract-1",
       lifecycle_status: "active",
+      version: 1,
       display_order: 1,
       created_at: "2026-01-01T00:00:00Z",
       updated_at: "2026-01-01T00:00:00Z",
@@ -222,6 +224,81 @@ afterEach(() => {
 });
 
 describe("componentes da gestão avançada de manutenção", () => {
+  it("keeps asset fields out of categories and reveals them for equipment", async () => {
+    const user = userEvent.setup();
+    render(
+      <MaintenanceCatalogManager
+        initialCategories={references.categories}
+        initialLocations={[]}
+        canManageCatalogs
+        canManageWarranties
+      />,
+    );
+
+    expect(
+      screen.getByText(/dados patrimoniais pertencem aos equipamentos/i),
+    ).toBeTruthy();
+    expect(
+      screen.queryByPlaceholderText("Patrimônio, ex.: PAT-REC-001"),
+    ).toBeNull();
+    await user.selectOptions(screen.getByLabelText("Tipo"), "equipment");
+    expect(
+      screen.getByPlaceholderText("Patrimônio, ex.: PAT-REC-001"),
+    ).toBeTruthy();
+    expect(screen.getByLabelText("Fim da garantia")).toBeTruthy();
+  });
+
+  it("loads an equipment warranty and records an auditable decision", async () => {
+    const context = {
+      location: references.locations[0],
+      decisions: [],
+    };
+    const fetchMock = vi.fn((_: RequestInfo | URL, init?: RequestInit) =>
+      Promise.resolve(
+        new Response(JSON.stringify(init?.method === "POST" ? {} : context), {
+          status: init?.method === "POST" ? 201 : 200,
+          headers: { "Content-Type": "application/json" },
+        }),
+      ),
+    );
+    vi.stubGlobal("fetch", fetchMock);
+    const user = userEvent.setup();
+    render(
+      <MaintenanceCatalogManager
+        initialCategories={references.categories}
+        initialLocations={references.locations}
+        canManageCatalogs={false}
+        canManageWarranties
+      />,
+    );
+
+    await user.click(screen.getByRole("button", { name: "Tratar garantia" }));
+    await user.selectOptions(
+      await screen.findByLabelText("Decisão"),
+      "renewed",
+    );
+    fireEvent.change(screen.getByLabelText("Nova data de garantia"), {
+      target: { value: "2028-01-01" },
+    });
+    await user.type(
+      screen.getByLabelText("Justificativa"),
+      "Renovação aprovada",
+    );
+    await user.click(
+      screen.getByRole("button", { name: "Registrar decisão auditável" }),
+    );
+
+    await waitFor(() =>
+      expect(fetchMock).toHaveBeenCalledWith(
+        "/api/maintenance/locations/location-1/warranty-decisions",
+        expect.objectContaining({ method: "POST" }),
+      ),
+    );
+    expect(
+      await screen.findByText(/Decisão de garantia registrada/),
+    ).toBeTruthy();
+  });
+
   it("cria política de SLA e apresenta conflito devolvido pela API", async () => {
     const fetchMock = vi
       .fn()

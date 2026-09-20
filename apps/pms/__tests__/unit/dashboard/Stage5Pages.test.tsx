@@ -1,5 +1,5 @@
 // @vitest-environment jsdom
-import { cleanup, render, screen } from "@testing-library/react";
+import { cleanup, fireEvent, render, screen } from "@testing-library/react";
 import { afterEach, beforeEach, expect, it, vi } from "vitest";
 import { PERMISSIONS } from "@hotel/shared";
 const mocks = vi.hoisted(() => ({
@@ -34,6 +34,7 @@ vi.mock(
 import ProcurementPage from "../../../src/app/dashboard/procurement/page";
 import OrganizationsPage from "../../../src/app/dashboard/organizations/page";
 import CashPage from "../../../src/app/dashboard/cash/page";
+import { CashRegisterCreateForm } from "../../../src/app/dashboard/cash/CashRegisterCreateForm";
 afterEach(cleanup);
 beforeEach(() => {
   vi.clearAllMocks();
@@ -161,6 +162,7 @@ it("keeps expected cash hidden before the blind count", async () => {
               id: "register",
               name: "Recepção",
               code: "REC",
+              kind: "reception",
               currency: "BRL",
               difference_tolerance: 5,
               active_session: {
@@ -168,7 +170,8 @@ it("keeps expected cash hidden before the blind count", async () => {
                 status: "open",
                 version: 1,
                 operator_id: "user",
-                expected_cash: 999,
+                opening_float: 100,
+                expected_cash: null,
                 difference_amount: null,
               },
             },
@@ -176,12 +179,47 @@ it("keeps expected cash hidden before the blind count", async () => {
         })
       : Promise.resolve({
           close: null,
-          projection: { transactions: [], cash_sessions: [], blockers: [] },
+          projection: {
+            business_date: "2026-09-11",
+            transactions: [],
+            cash_sessions: [],
+            blockers: [],
+            totals: { income: 0, expense: 0, refund: 0 },
+            is_zero_activity: true,
+          },
         }),
   );
   render(
     await CashPage({ searchParams: Promise.resolve({ date: "2026-09-11" }) }),
   );
   expect(screen.getByText("Valor contado")).toBeTruthy();
-  expect(screen.queryByText(/999/)).toBeNull();
+  expect(
+    screen.getByText(/valor esperado protegido até a contagem/i),
+  ).toBeTruthy();
+  expect(screen.queryByText(/esperado: R\$/i)).toBeNull();
+});
+
+it("explains the cash register identity and requires a point for consumption", () => {
+  render(
+    <CashRegisterCreateForm
+      consumptionPoints={[{ id: "cafe", name: "Café Aurora" }]}
+    />,
+  );
+
+  expect(screen.getByPlaceholderText("Caixa da recepção")).toBeTruthy();
+  expect(screen.getByPlaceholderText("REC-01")).toBeTruthy();
+  expect(
+    (
+      document.querySelector(
+        'input[name="difference_tolerance"]',
+      ) as HTMLInputElement
+    ).value,
+  ).toBe("0");
+
+  fireEvent.change(screen.getByLabelText("Tipo"), {
+    target: { value: "consumption" },
+  });
+  const point = screen.getByLabelText("Ponto de consumo") as HTMLSelectElement;
+  expect(point.required).toBe(true);
+  expect(screen.getByRole("option", { name: "Café Aurora" })).toBeTruthy();
 });

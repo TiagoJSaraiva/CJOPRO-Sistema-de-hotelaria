@@ -86,6 +86,55 @@ it("renders the stage 6 reservation workspaces with authorized source data", asy
   expect(screen.getByText("Realizado")).toBeTruthy();
 });
 
+it("maps a channel with readable room and rate-plan references", async () => {
+  mocks.user.mockResolvedValue({
+    permissions: [PERMISSIONS.BOOKING_CHANNELS_MANAGE],
+  });
+  mocks.request.mockImplementation((path: string) => {
+    if (path === "booking-channels")
+      return Promise.resolve({
+        items: [
+          {
+            id: "channel-1",
+            name: "HospedaLink Sandbox",
+            code: "HOSPEDALINK-AURORA",
+            active: true,
+            mappings: [],
+          },
+        ],
+      });
+    if (path === "booking-configuration") return Promise.resolve({});
+    if (path === "booking-channels/inbox")
+      return Promise.resolve({ items: [] });
+    return Promise.resolve({
+      room_types: [{ value: "Standard", label: "Standard", room_count: 12 }],
+      rate_plans: [
+        {
+          id: "rate-1",
+          code: "FLEX",
+          name: "Tarifa flexível",
+          version: 2,
+          channels: ["channel"],
+        },
+      ],
+    });
+  });
+
+  render(await ChannelsPage({ searchParams: Promise.resolve({}) }));
+
+  expect(screen.getByText(/simulador fictício/i)).toBeTruthy();
+  expect(
+    screen.getByRole("option", { name: "Standard (12 quarto(s))" }),
+  ).toBeTruthy();
+  expect(
+    screen.getByRole("option", {
+      name: "Tarifa flexível · FLEX · v2",
+    }),
+  ).toBeTruthy();
+  expect(screen.getByDisplayValue(/HL-001,create,RES-001/)).toBeTruthy();
+  expect(screen.getByText(/Nenhum evento aguardando decisão/)).toBeTruthy();
+});
+
 it("protects customer relationship and renders declared preferences", async () => {
   mocks.user.mockResolvedValue({ permissions: [] });
   render(await RelationshipPage({ searchParams: Promise.resolve({}) }));

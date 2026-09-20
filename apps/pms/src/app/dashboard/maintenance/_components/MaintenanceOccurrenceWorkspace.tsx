@@ -1031,17 +1031,37 @@ export function MaintenanceOccurrenceWorkspace({
               {block.start_date} a {block.planned_end_date}
               {block.is_overdue ? " · atrasado" : ""}
               {!block.released_at && access.canManageBlocks ? (
-                <button
-                  disabled={pending}
-                  onClick={() =>
-                    mutate(`room-blocks/${block.id}/release`, {
-                      reason: "Local inspecionado e liberado",
-                    })
-                  }
-                  className="ml-3 rounded border px-2 py-1"
+                <form
+                  className="mt-2 grid gap-2"
+                  onSubmit={(event) => {
+                    event.preventDefault();
+                    const data = new FormData(event.currentTarget);
+                    void mutate(`room-blocks/${block.id}/release`, {
+                      reason: data.get("reason"),
+                    });
+                  }}
                 >
-                  Liberar
-                </button>
+                  <label className="pms-field">
+                    Justificativa da liberação técnica
+                    <textarea
+                      name="reason"
+                      minLength={3}
+                      maxLength={1000}
+                      required
+                      className="pms-field-input"
+                    />
+                  </label>
+                  <p className="text-sm text-slate-600">
+                    A liberação técnica cria a inspeção final da governança; o
+                    quarto ainda não fica pronto para hóspedes.
+                  </p>
+                  <button
+                    disabled={pending}
+                    className="pms-button-primary justify-self-start"
+                  >
+                    Liberar para inspeção da governança
+                  </button>
+                </form>
               ) : null}
             </div>
           ))}

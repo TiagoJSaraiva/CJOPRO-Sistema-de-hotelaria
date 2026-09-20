@@ -85,6 +85,52 @@ it("identifica as datas do bloqueio para quem pode gerenciá-lo", () => {
   ).toBe("end_date");
 });
 
+it("requires a real release reason and explains the governance inspection", async () => {
+  const blocked = structuredClone(initial) as AdminMaintenanceOccurrenceDetail;
+  blocked.active_block = true;
+  blocked.room_blocks = [
+    {
+      id: "block-1",
+      start_date: "2026-09-19",
+      planned_end_date: "2026-09-20",
+      released_at: null,
+      is_overdue: false,
+    },
+  ] as AdminMaintenanceOccurrenceDetail["room_blocks"];
+  const fetchMock = vi
+    .fn()
+    .mockResolvedValue({ ok: true, json: async () => ({ item: blocked }) });
+  vi.stubGlobal("fetch", fetchMock);
+  render(
+    <MaintenanceOccurrenceWorkspace
+      initial={blocked}
+      referenceData={referenceData}
+      access={{ ...access, canManageBlocks: true }}
+    />,
+  );
+
+  expect(
+    screen.getByText(/o quarto ainda não fica pronto para hóspedes/i),
+  ).toBeTruthy();
+  await userEvent.type(
+    screen.getByLabelText("Justificativa da liberação técnica"),
+    "Serviço e inspeção técnica concluídos",
+  );
+  await userEvent.click(
+    screen.getByRole("button", {
+      name: "Liberar para inspeção da governança",
+    }),
+  );
+  expect(fetchMock).toHaveBeenCalledWith(
+    "/api/maintenance/room-blocks/block-1/release",
+    expect.objectContaining({
+      body: JSON.stringify({
+        reason: "Serviço e inspeção técnica concluídos",
+      }),
+    }),
+  );
+});
+
 it("identifica a recomendação da avaliação de ciclo de vida", () => {
   render(
     <MaintenanceOccurrenceWorkspace

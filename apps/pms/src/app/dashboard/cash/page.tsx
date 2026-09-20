@@ -1,4 +1,9 @@
-import { PERMISSIONS } from "@hotel/shared";
+import {
+  PERMISSIONS,
+  type CashRegisterView,
+  type CashSessionView,
+  type DailyCloseView,
+} from "@hotel/shared";
 import { DashboardAccessDeniedCard } from "../_components/DashboardAccessDeniedCard";
 import { DashboardEntityPageShell } from "../_components/DashboardEntityPageShell";
 import type { UsageGuideDefinition } from "../_components/UsageGuide";
@@ -7,12 +12,12 @@ import { requestOperationsFinanceEndpoint } from "../../../lib/adminApi";
 import {
   approveDailyCloseAction,
   countCashSessionAction,
-  createCashRegisterAction,
   decideCashDifferenceAction,
   openCashSessionAction,
   postCashMovementAction,
   prepareDailyCloseAction,
 } from "./actions";
+import { CashRegisterCreateForm } from "./CashRegisterCreateForm";
 const guide: UsageGuideDefinition = {
   id: "cash",
   title: "Caixa e fechamento",
@@ -40,38 +45,6 @@ const guide: UsageGuideDefinition = {
     },
   ],
 };
-type Session = {
-  id: string;
-  status: string;
-  version: number;
-  operator_id: string;
-  expected_cash: number;
-  difference_amount: number | null;
-};
-type Register = {
-  id: string;
-  name: string;
-  code: string;
-  currency: string;
-  difference_tolerance: number;
-  active_session: Session | null;
-};
-type Registers = { registers: Register[] };
-type Daily = {
-  close: {
-    id: string;
-    status: string;
-    version: number;
-    fingerprint: string | null;
-    prepared_by: string | null;
-  } | null;
-  projection: {
-    transactions: unknown[];
-    cash_sessions: unknown[];
-    blockers: unknown[];
-  };
-};
-const today = new Date().toISOString().slice(0, 10);
 export default async function CashPage({
   searchParams,
 }: {
@@ -86,10 +59,19 @@ export default async function CashPage({
       />
     );
   const params = await searchParams,
-    date = params.date || today;
-  const [data, daily] = await Promise.all([
-    requestOperationsFinanceEndpoint<Registers>("cash-registers", "GET"),
-    requestOperationsFinanceEndpoint<Daily>(`daily-close/${date}`, "GET"),
+    date = params.date || new Date().toISOString().slice(0, 10);
+  const [data, daily, consumptionPoints] = await Promise.all([
+    requestOperationsFinanceEndpoint<{ registers: CashRegisterView[] }>(
+      "cash-registers",
+      "GET",
+    ),
+    requestOperationsFinanceEndpoint<DailyCloseView>(
+      `daily-close/${date}`,
+      "GET",
+    ),
+    requestOperationsFinanceEndpoint<{
+      items: Array<{ id: string; name: string }>;
+    }>("consumption-points", "GET").catch(() => ({ items: [] })),
   ]);
   const operate = user.permissions.includes(PERMISSIONS.CASH_REGISTER_OPERATE),
     approve = user.permissions.includes(PERMISSIONS.CASH_DIFFERENCES_APPROVE),
@@ -113,44 +95,18 @@ export default async function CashPage({
       <div className="grid gap-4">
         <section className="pms-surface-card" data-usage-guide="cash-registers">
           <h2 className="mt-0">Caixas físicos</h2>
+          <p className="text-sm text-slate-600">
+            O cadastro identifica o caixa. O dinheiro entra na abertura da
+            sessão como fundo inicial e nos movimentos feitos durante o turno.
+          </p>
+          <p className="rounded-lg bg-slate-50 p-3 font-medium">
+            Cadastrar caixa → abrir sessão → registrar movimentos → contar
+            dinheiro → fechar sessão → fechar o dia
+          </p>
           {approve ? (
-            <form
-              action={createCashRegisterAction}
-              className="grid gap-3 md:grid-cols-4"
-            >
-              <label className="pms-field">
-                Nome
-                <input className="pms-field-input" name="name" required />
-              </label>
-              <label className="pms-field">
-                Código
-                <input className="pms-field-input" name="code" required />
-              </label>
-              <label className="pms-field">
-                Moeda
-                <input
-                  className="pms-field-input"
-                  name="currency"
-                  defaultValue="BRL"
-                  required
-                />
-              </label>
-              <label className="pms-field">
-                Tolerância
-                <input
-                  className="pms-field-input"
-                  name="difference_tolerance"
-                  type="number"
-                  min="0"
-                  step="0.01"
-                  defaultValue="0"
-                  required
-                />
-              </label>
-              <button className="pms-button-primary md:col-span-4 md:w-fit">
-                Cadastrar caixa
-              </button>
-            </form>
+            <CashRegisterCreateForm
+              consumptionPoints={consumptionPoints.items}
+            />
           ) : null}
           <div className="mt-4 grid gap-3">
             {data.registers.map((r) => (
@@ -160,6 +116,11 @@ export default async function CashPage({
                   style: "currency",
                   currency: r.currency,
                 })}
+                <p className="text-sm text-slate-600">
+                  {r.kind === "reception"
+                    ? "Recepção"
+                    : `Ponto de consumo: ${r.consumption_point_name || "não identificado"}`}
+                </p>
                 {!r.active_session && operate ? (
                   <form
                     action={openCashSessionAction}
@@ -193,7 +154,11 @@ export default async function CashPage({
             ))}
           </div>
         </section>
-        <section className="pms-surface-card" data-usage-guide="daily-close">
+        <section
+          id="daily-close"
+          className="pms-surface-card"
+          data-usage-guide="daily-close"
+        >
           <h2 className="mt-0">Fechamento diário</h2>
           <form className="mb-3 flex flex-wrap items-end gap-2">
             <label className="pms-field">
@@ -207,16 +172,67 @@ export default async function CashPage({
             </label>
             <button className="pms-button-secondary">Consultar</button>
           </form>
+          {daily.projection.is_zero_activity ? (
+            <p className="rounded-lg bg-blue-50 p-3 font-medium">
+              Dia sem movimentação. Confirme as sessões e faça o fechamento
+              normalmente para registrar que a operação foi conferida.
+            </p>
+          ) : null}
+          <div className="grid gap-2 sm:grid-cols-3">
+            {[
+              ["Receitas", daily.projection.totals.income],
+              ["Despesas", daily.projection.totals.expense],
+              ["Reembolsos", daily.projection.totals.refund],
+            ].map(([label, amount]) => (
+              <div key={String(label)} className="rounded border p-3">
+                <span>{label}</span>
+                <strong className="block text-lg">
+                  {Number(amount).toLocaleString("pt-BR", {
+                    style: "currency",
+                    currency: "BRL",
+                  })}
+                </strong>
+              </div>
+            ))}
+          </div>
+          <h3>Totais por meio de pagamento</h3>
+          {daily.projection.transactions.length ? (
+            <ul>
+              {daily.projection.transactions.map((transaction) => (
+                <li key={`${transaction.type}-${transaction.payment_method}`}>
+                  {transaction.type} · {transaction.payment_method}:{" "}
+                  {Number(transaction.amount).toLocaleString("pt-BR", {
+                    style: "currency",
+                    currency: "BRL",
+                  })}{" "}
+                  ({transaction.count})
+                </li>
+              ))}
+            </ul>
+          ) : (
+            <p>Nenhuma transação concluída nesta data.</p>
+          )}
           <p>
-            {daily.projection.transactions.length} consolidações ·{" "}
-            {daily.projection.blockers.length} impedimentos.
+            {daily.projection.cash_sessions.length} sessão(ões) ·{" "}
+            {daily.projection.blockers.length} impedimento(s).
           </p>
           {daily.projection.blockers.length ? (
             <ul>
               {daily.projection.blockers.map((b, i) => (
-                <li key={i}>{JSON.stringify(b)}</li>
+                <li key={i}>{b.title}</li>
               ))}
             </ul>
+          ) : null}
+          {daily.close ? (
+            <p className="text-sm text-slate-600">
+              Estado: {daily.close.status}
+              {daily.close.prepared_by_name
+                ? ` · preparado por ${daily.close.prepared_by_name}`
+                : ""}
+              {daily.close.approved_by_name
+                ? ` · aprovado por ${daily.close.approved_by_name}`
+                : ""}
+            </p>
           ) : null}
           {prepare &&
           (!daily.close ||
@@ -277,7 +293,7 @@ function SessionCard({
   operate,
   approve,
 }: {
-  session: Session;
+  session: CashSessionView;
   operate: boolean;
   approve: boolean;
 }) {
@@ -285,7 +301,38 @@ function SessionCard({
     <div className="mt-3 rounded bg-slate-50 p-3" data-usage-guide="cash-count">
       <p>
         <strong>Sessão {session.status.replaceAll("_", " ")}</strong>
+        {session.operator_name ? ` · operador ${session.operator_name}` : ""}
       </p>
+      <p>
+        Fundo inicial:{" "}
+        {Number(session.opening_float).toLocaleString("pt-BR", {
+          style: "currency",
+          currency: "BRL",
+        })}
+        {session.expected_cash === null
+          ? " · valor esperado protegido até a contagem"
+          : ` · esperado ${Number(session.expected_cash).toLocaleString(
+              "pt-BR",
+              {
+                style: "currency",
+                currency: "BRL",
+              },
+            )}`}
+      </p>
+      {session.movement_totals &&
+      Object.keys(session.movement_totals).length ? (
+        <ul className="text-sm">
+          {Object.entries(session.movement_totals).map(([kind, amount]) => (
+            <li key={kind}>
+              {kind.replaceAll("_", " ")}:{" "}
+              {Number(amount).toLocaleString("pt-BR", {
+                style: "currency",
+                currency: "BRL",
+              })}
+            </li>
+          ))}
+        </ul>
+      ) : null}
       {session.status === "open" && operate ? (
         <>
           <form

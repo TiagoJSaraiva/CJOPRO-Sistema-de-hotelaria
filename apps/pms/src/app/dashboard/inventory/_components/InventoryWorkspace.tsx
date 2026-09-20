@@ -1,4 +1,5 @@
 import { DashboardAccessDeniedCard } from "../../_components/DashboardAccessDeniedCard";
+import Link from "next/link";
 import { DashboardEntityPageShell } from "../../_components/DashboardEntityPageShell";
 import { getUserFromSession } from "../../../../lib/auth";
 import {
@@ -331,6 +332,9 @@ async function InventoryMovements({
         data-usage-guide="inventory-movement-form"
       >
         <h2 className="m-0 text-xl font-semibold">Registrar movimento</h2>
+        {!positions.length ? (
+          <EmptyPositionNotice canManage={access.canManage} />
+        ) : null}
         {access.canPost ? (
           <form
             action={postInventoryDocumentAction}
@@ -348,6 +352,11 @@ async function InventoryMovements({
             <label className="pms-field">
               Posição
               <select name="position_id" required className="pms-field-input">
+                {!positions.length ? (
+                  <option value="" disabled>
+                    Nenhuma posição configurada
+                  </option>
+                ) : null}
                 {positions.map((item) => (
                   <option key={item.id} value={item.id}>
                     {item.product.name} · {item.location.name}
@@ -402,7 +411,11 @@ async function InventoryMovements({
                 className="pms-field-input"
               />
             </label>
-            <button type="submit" className="pms-button-primary">
+            <button
+              type="submit"
+              disabled={!positions.length}
+              className="pms-button-primary"
+            >
               Registrar
             </button>
           </form>
@@ -474,7 +487,11 @@ async function InventoryMovements({
                 className="pms-field-input"
               />
             </label>
-            <button className="pms-button-secondary" type="submit">
+            <button
+              className="pms-button-secondary"
+              type="submit"
+              disabled={!positions.length || locations.length < 2}
+            >
               Transferir
             </button>
           </form>
@@ -863,6 +880,9 @@ function InventoryLots({
           Ao ativar lotes, distribua todo o saldo atual da posição. Saídas
           futuras seguem FEFO.
         </p>
+        {!positions.length ? (
+          <EmptyPositionNotice canManage={access.canManage} />
+        ) : null}
         {access.canManageLots ? (
           <form
             action={configureLotTrackingAction}
@@ -881,6 +901,11 @@ function InventoryLots({
             <label className="pms-field">
               Posição
               <select className="pms-field-input" name="position_id">
+                {!positions.length ? (
+                  <option value="" disabled>
+                    Nenhuma posição configurada
+                  </option>
+                ) : null}
                 {positions.map((p) => (
                   <option key={p.id} value={p.id}>
                     {p.product.name} · {p.location.name}
@@ -929,7 +954,10 @@ function InventoryLots({
                 defaultValue="30"
               />
             </label>
-            <button className="pms-button-primary self-end">
+            <button
+              className="pms-button-primary self-end"
+              disabled={!positions.length}
+            >
               Salvar rastreabilidade
             </button>
           </form>
@@ -1009,6 +1037,32 @@ function InventoryLots({
         </div>
       </article>
     </section>
+  );
+}
+
+function EmptyPositionNotice({ canManage }: { canManage: boolean }) {
+  return (
+    <div
+      className="rounded-lg border border-amber-300 bg-amber-50 p-3"
+      role="note"
+    >
+      <p className="m-0">
+        Posição significa <strong>produto + local</strong>. Antes de movimentar,
+        contar, transferir ou controlar lotes, ative o produto em um local.
+      </p>
+      {canManage ? (
+        <Link
+          href="/dashboard/inventory/settings"
+          className="mt-2 inline-flex font-medium"
+        >
+          Ativar produto em local
+        </Link>
+      ) : (
+        <p className="mb-0 text-sm">
+          Solicite essa ativação ao responsável pelas configurações de estoque.
+        </p>
+      )}
+    </div>
   );
 }
 

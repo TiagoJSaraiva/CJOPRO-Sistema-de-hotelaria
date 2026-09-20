@@ -13,13 +13,13 @@ export function ChannelCreateForm() {
       <input
         className="pms-field-input"
         name="name"
-        placeholder="Provedor"
+        placeholder="HospedaLink Sandbox"
         required
       />
       <input
         className="pms-field-input"
         name="code"
-        placeholder="Código"
+        placeholder="HOSPEDALINK-AURORA"
         required
       />
       <button className="pms-button-primary" type="submit" disabled={pending}>
@@ -31,12 +31,15 @@ export function ChannelCreateForm() {
         </p>
       ) : null}
       {state.secret ? (
-        <output
-          className="pms-field-input md:col-span-3"
-          aria-label="Segredo do canal"
-        >
-          {state.secret}
-        </output>
+        <div className="md:col-span-3 rounded-lg border border-amber-300 bg-amber-50 p-3">
+          <strong>Copie agora: este segredo aparece uma única vez.</strong>
+          <output
+            className="mt-2 block break-all font-mono"
+            aria-label="Segredo do canal"
+          >
+            {state.secret}
+          </output>
+        </div>
       ) : null}
     </form>
   );

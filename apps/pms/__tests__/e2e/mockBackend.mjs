@@ -111,6 +111,8 @@ const operationsPermissions = [
   "manage_prearrival",
   "manage_booking_configuration",
   "manage_booking_channels",
+  "manage_maintenance_warranties",
+  "manage_training_environment",
   "read_integrated_analytics",
 ];
 
@@ -1213,8 +1215,11 @@ const server = http.createServer(async (request, response) => {
       registers: [
         {
           id: "register-e2e",
-          name: "Recepção",
+          name: "Caixa da recepção",
           code: "REC",
+          kind: "reception",
+          consumption_point_id: null,
+          consumption_point_name: null,
           currency: "BRL",
           difference_tolerance: 0,
           active_session: null,
@@ -1226,7 +1231,14 @@ const server = http.createServer(async (request, response) => {
   if (method === "GET" && url.pathname.startsWith("/admin/daily-close/")) {
     sendJson(response, 200, {
       close: null,
-      projection: { transactions: [], cash_sessions: [], blockers: [] },
+      projection: {
+        business_date: "2026-05-12",
+        transactions: [],
+        totals: { income: 0, expense: 0, refund: 0 },
+        is_zero_activity: true,
+        cash_sessions: [],
+        blockers: [],
+      },
     });
     return;
   }
@@ -2747,7 +2759,35 @@ const server = http.createServer(async (request, response) => {
     return;
   }
   if (method === "GET" && url.pathname === "/admin/booking-channels") {
-    sendJson(response, 200, { items: [] });
+    sendJson(response, 200, {
+      items: [
+        {
+          id: "channel-e2e",
+          code: "HOSPEDALINK",
+          name: "HospedaLink Sandbox",
+          active: true,
+          mappings: [],
+        },
+      ],
+    });
+    return;
+  }
+  if (
+    method === "GET" &&
+    url.pathname === "/admin/booking-channels/reference-data"
+  ) {
+    sendJson(response, 200, {
+      room_types: [{ value: "Standard", label: "Standard", room_count: 12 }],
+      rate_plans: [
+        {
+          id: "rate-plan-e2e",
+          code: "FLEX",
+          name: "Tarifa flexível",
+          version: 2,
+          channels: ["channel"],
+        },
+      ],
+    });
     return;
   }
   if (method === "GET" && url.pathname === "/admin/booking-configuration") {
@@ -2765,6 +2805,21 @@ const server = http.createServer(async (request, response) => {
   }
   if (method === "GET" && url.pathname === "/admin/booking-channels/inbox") {
     sendJson(response, 200, { items: [] });
+    return;
+  }
+  if (method === "GET" && url.pathname === "/admin/training/environment") {
+    sendJson(response, 200, {
+      hotel_id: "hotel-e2e",
+      scenario_key: "orientation",
+      scenario_version: 1,
+      clock_mode: "frozen",
+      frozen_at: "2026-05-12T15:00:00.000Z",
+      operational_now: "2026-05-12T15:00:00.000Z",
+      real_now: "2026-09-19T18:00:00.000Z",
+      version: 3,
+      updated_by: "user-e2e",
+      updated_at: "2026-09-19T18:00:00.000Z",
+    });
     return;
   }
   if (method === "GET" && url.pathname === "/admin/analytics/operations") {

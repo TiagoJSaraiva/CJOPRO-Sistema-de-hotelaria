@@ -21,7 +21,11 @@ export async function createCashRegisterAction(f: FormData) {
     {
       name: value(f, "name"),
       code: value(f, "code"),
-      kind: "reception",
+      kind: value(f, "kind") || "reception",
+      consumption_point_id:
+        value(f, "kind") === "consumption"
+          ? value(f, "consumption_point_id")
+          : undefined,
       currency: value(f, "currency"),
       difference_tolerance: num(f, "difference_tolerance"),
       active: true,

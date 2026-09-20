@@ -24,7 +24,7 @@ export function reservationOperationsTabs(user: AuthUser | null) {
     },
     {
       key: "channels",
-      label: "Canais",
+      label: "Canais de reserva",
       href: "/dashboard/reservations/channels",
       isVisible: has(PERMISSIONS.BOOKING_CHANNELS_MANAGE),
     },

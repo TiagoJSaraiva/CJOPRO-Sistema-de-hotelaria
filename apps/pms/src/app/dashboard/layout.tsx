@@ -122,6 +122,9 @@ export default async function DashboardLayout({
     "/dashboard/governance": user.permissions.includes(
       PERMISSIONS.GOVERNANCE_READ,
     ),
+    "/dashboard/training":
+      process.env.LOCAL_TRAINING_ENABLED === "true" &&
+      user.permissions.includes(PERMISSIONS.TRAINING_ENVIRONMENT_MANAGE),
   };
 
   const navItems = ADMIN_NAV_ITEMS.filter(
@@ -178,6 +181,11 @@ export default async function DashboardLayout({
                 Pendências
               </Link>
             )}
+            {moduleEntryAccess["/dashboard/training"] ? (
+              <Link href="/dashboard/training" className={navLinkClassName}>
+                Treinamento
+              </Link>
+            ) : null}
             {navItems.map((item) => (
               <Link
                 key={item.href}

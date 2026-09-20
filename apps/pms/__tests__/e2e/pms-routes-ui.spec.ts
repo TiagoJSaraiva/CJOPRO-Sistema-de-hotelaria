@@ -72,7 +72,11 @@ test.describe("PMS UI quality", () => {
     await expect(
       page.getByRole("heading", { name: "Caixa e fechamento" }),
     ).toBeVisible();
-    await expect(page.getByText("Recepção").first()).toBeVisible();
+    await expect(page.getByText("Caixa da recepção")).toBeVisible();
+    await expect(page.getByText("Dia sem movimentação.")).toBeVisible();
+    await expect(
+      page.getByText(/Cadastrar caixa → abrir sessão/),
+    ).toBeVisible();
     await auditAccessibility("caixa-e-fechamento");
   });
 
@@ -100,6 +104,10 @@ test.describe("PMS UI quality", () => {
     await expect(
       page.getByRole("heading", { name: "Venda direta" }),
     ).toBeVisible();
+    await expect(page.getByText("HospedaLink Sandbox").first()).toBeVisible();
+    await expect(
+      page.getByRole("option", { name: "Standard (12 quarto(s))" }),
+    ).toBeAttached();
     await auditAccessibility("reservas-canais");
 
     await page.goto(
@@ -110,6 +118,33 @@ test.describe("PMS UI quality", () => {
       page.getByRole("heading", { name: "Realizado" }),
     ).toBeVisible();
     await auditAccessibility("reservas-indicadores");
+  });
+
+  test("controla o relógio operacional somente no treinamento local @a11y", async ({
+    page,
+    context,
+    baseURL,
+    auditAccessibility,
+  }) => {
+    await authenticate(context, baseURL!, "operations-e2e-token");
+    await preparePage(page);
+
+    await page.goto("/dashboard/training");
+    await expect(
+      page.getByRole("heading", { name: "Treinamento local" }),
+    ).toBeVisible();
+    await expect(page.getByText("Congelado", { exact: true })).toBeVisible();
+    await expect(
+      page.getByText(
+        /Sessões e controles de segurança continuam usando o tempo real/,
+      ),
+    ).toBeVisible();
+    await expect(
+      page.getByText(
+        /restauração destrutiva de cenários existe somente no comando/,
+      ),
+    ).toBeVisible();
+    await auditAccessibility("treinamento-local");
   });
 
   test(

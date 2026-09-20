@@ -129,6 +129,31 @@ it("mantém todos os alvos do guia vinculados a conteúdo operacional", () => {
   }
 });
 
+it("opens the linked maintenance occurrence from a retained room", () => {
+  const retained = structuredClone(board);
+  retained.items[0]!.status = "maintenance_hold";
+  retained.items[0]!.tasks = [];
+  retained.items[0]!.maintenance_occurrence_id = "occurrence-103";
+  retained.items[0]!.maintenance_occurrence_code = "MAN-000103";
+  retained.items[0]!.maintenance_block_id = "block-103";
+  retained.items[0]!.maintenance_href =
+    "/dashboard/maintenance/occurrences/occurrence-103";
+  retained.items[0]!.maintenance_next_step =
+    "Aguardando liberação técnica da manutenção.";
+
+  render(
+    <GovernanceWorkspace initial={retained} templates={[]} access={access} />,
+  );
+
+  const link = screen.getByRole("link", {
+    name: "Abrir ocorrência MAN-000103",
+  });
+  expect(link.getAttribute("href")).toBe(
+    "/dashboard/maintenance/occurrences/occurrence-103",
+  );
+  expect(screen.getByText(/Aguardando liberação técnica/)).toBeTruthy();
+});
+
 it("conclui uma reposição assumida com a versão atual do ciclo", async () => {
   const replenishment = structuredClone(board);
   replenishment.items[0]!.tasks[0]!.kind = "replenishment";
