@@ -10,7 +10,7 @@ const workspaceRoot = path.resolve(
 );
 const outputPath = path.join(workspaceRoot, "docs", "openapi.json");
 const checkOnly = process.argv.includes("--check");
-const EXPECTED_OPERATION_COUNT = 347;
+const EXPECTED_OPERATION_COUNT = 352;
 const HTTP_METHODS = new Set([
   "get",
   "put",
@@ -124,6 +124,12 @@ function assertOperationContract(document: Record<string, unknown>): void {
 }
 
 async function generateDocument(): Promise<string> {
+  const previousTrainingEnabled = process.env.LOCAL_TRAINING_ENABLED;
+  const previousSupabaseUrl = process.env.SUPABASE_URL;
+  const previousNodeEnv = process.env.NODE_ENV;
+  process.env.LOCAL_TRAINING_ENABLED = "true";
+  process.env.SUPABASE_URL = "http://127.0.0.1:54321";
+  process.env.NODE_ENV = "test";
   const app = createApp({ documentation: "openapi" });
   try {
     await app.ready();
@@ -147,6 +153,13 @@ async function generateDocument(): Promise<string> {
     return `${JSON.stringify(sortRecursively(document), null, 2)}\n`;
   } finally {
     await app.close();
+    if (previousTrainingEnabled === undefined)
+      delete process.env.LOCAL_TRAINING_ENABLED;
+    else process.env.LOCAL_TRAINING_ENABLED = previousTrainingEnabled;
+    if (previousSupabaseUrl === undefined) delete process.env.SUPABASE_URL;
+    else process.env.SUPABASE_URL = previousSupabaseUrl;
+    if (previousNodeEnv === undefined) delete process.env.NODE_ENV;
+    else process.env.NODE_ENV = previousNodeEnv;
   }
 }
 

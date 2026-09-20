@@ -1967,6 +1967,7 @@ export type AdminMaintenanceLocation = {
   supplier_id?: string | null;
   contract_id?: string | null;
   lifecycle_status?: "active" | "out_of_service" | "retired" | null;
+  version: number;
   created_at: string;
   updated_at: string;
 };

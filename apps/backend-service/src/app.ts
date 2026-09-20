@@ -42,6 +42,10 @@ import { registerPostCheckoutConsumptionRoutes } from "./routes/postCheckoutCons
 import { registerConsumptionBenefitsRoutes } from "./routes/consumptionBenefitsRoutes";
 import { registerOperationsFinanceRoutes } from "./routes/operationsFinanceRoutes";
 import { registerBookingOperationsRoutes } from "./routes/bookingOperationsRoutes";
+import {
+  localTrainingEnabled,
+  registerTrainingRoutes,
+} from "./routes/trainingRoutes";
 
 const DEFAULT_ALLOWED_ORIGINS = [
   // LOCALHOSTS PARA DESENVOLVIMENTO. DEPOIS COLOCAR AQUI AS URLS REAIS DOS SERVIÇOS HOSPEDADOS
@@ -70,6 +74,12 @@ export type DocumentationMode = "disabled" | "openapi" | "ui";
 export type CreateAppOptions = {
   documentation?: DocumentationMode;
 };
+
+export function registerLocalTrainingRoutes(app: FastifyInstance): boolean {
+  if (!localTrainingEnabled()) return false;
+  registerTrainingRoutes(app);
+  return true;
+}
 
 export function createApp(options: CreateAppOptions = {}): FastifyInstance {
   const app = Fastify({
@@ -195,6 +205,7 @@ export function createApp(options: CreateAppOptions = {}): FastifyInstance {
     registerConsumptionBenefitsRoutes(routes);
     registerOperationsFinanceRoutes(routes);
     registerBookingOperationsRoutes(routes);
+    registerLocalTrainingRoutes(routes);
   });
 
   return app;

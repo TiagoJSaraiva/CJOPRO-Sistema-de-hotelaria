@@ -89,6 +89,7 @@ import {
   BookingChannelImportInputSchema,
   BookingChannelInputSchema,
   BookingChannelMappingInputSchema,
+  BookingChannelReferenceDataSchema,
   BookingConfigurationInputSchema,
   GuestPreferenceInputSchema,
   PrearrivalLinkInputSchema,
@@ -100,6 +101,14 @@ import {
   RoomAssignmentInputSchema,
   VersionedBookingActionSchema,
 } from "./booking";
+import {
+  TrainingClockActionSchema,
+  TrainingEnvironmentSchema,
+} from "./training";
+import {
+  MaintenanceWarrantyDecisionInputSchema,
+  MaintenanceWarrantyDecisionSchema,
+} from "./maintenance-warranty";
 import { Type, type Static, type TSchema } from "typebox";
 import type {
   AdminCustomerCreateInput,
@@ -2324,6 +2333,24 @@ export const MaintenanceLocationSchema = Type.Object(
     description: nullable(Type.String()),
     display_order: Type.Integer(),
     is_active: Type.Boolean(),
+    asset_tag: Type.Optional(nullable(Type.String())),
+    manufacturer: Type.Optional(nullable(Type.String())),
+    model: Type.Optional(nullable(Type.String())),
+    serial_number: Type.Optional(nullable(Type.String())),
+    installed_on: Type.Optional(nullable(date())),
+    warranty_ends_on: Type.Optional(nullable(date())),
+    supplier_id: Type.Optional(nullable(uuid())),
+    contract_id: Type.Optional(nullable(uuid())),
+    lifecycle_status: Type.Optional(
+      nullable(
+        Type.Union([
+          Type.Literal("active"),
+          Type.Literal("out_of_service"),
+          Type.Literal("retired"),
+        ]),
+      ),
+    ),
+    version: Type.Integer({ minimum: 1 }),
     created_at: dateTime(),
     updated_at: dateTime(),
   },
@@ -2995,6 +3022,7 @@ const MaintenanceCatalogBodySchema = Type.Object(
         Type.Literal("retired"),
       ]),
     ),
+    expected_version: Type.Optional(Type.Integer({ minimum: 1 })),
   },
   strict,
 );
@@ -3977,6 +4005,11 @@ export const API_COMPONENT_SCHEMAS = [
   BookingChannelMappingInputSchema,
   BookingChannelEventActionSchema,
   BookingChannelImportInputSchema,
+  BookingChannelReferenceDataSchema,
+  TrainingClockActionSchema,
+  TrainingEnvironmentSchema,
+  MaintenanceWarrantyDecisionInputSchema,
+  MaintenanceWarrantyDecisionSchema,
 ] as const;
 
 const AuthHeadersSchema = Type.Object(
@@ -5342,6 +5375,26 @@ export const API_ROUTE_CONTRACTS: Readonly<Record<string, ApiRouteContract>> = {
     "Atualiza uma área ou equipamento.",
     itemSchema(MaintenanceLocationSchema),
     { params: IdParamsSchema, body: MaintenanceCatalogBodySchema },
+  ),
+  "GET /admin/maintenance/locations/:id/warranty": admin(
+    "getMaintenanceWarranty",
+    "Maintenance",
+    "Consulta o equipamento e o histórico auditável de decisões de garantia.",
+    Type.Object(
+      {
+        location: MaintenanceLocationSchema,
+        decisions: Type.Array(MaintenanceWarrantyDecisionSchema),
+      },
+      strict,
+    ),
+    { params: IdParamsSchema },
+  ),
+  "POST /admin/maintenance/locations/:id/warranty-decisions": admin(
+    "createMaintenanceWarrantyDecision",
+    "Maintenance",
+    "Registra uma decisão imutável para a vigência atual da garantia.",
+    OkSchema,
+    { params: IdParamsSchema, body: MaintenanceWarrantyDecisionInputSchema },
   ),
   "GET /admin/maintenance/occurrences": admin(
     "listMaintenanceOccurrences",
@@ -6979,6 +7032,12 @@ export const API_ROUTE_CONTRACTS: Readonly<Record<string, ApiRouteContract>> = {
     "Lista conexões e mapeamentos de canais.",
     Type.Record(Type.String(), Type.Any()),
   ),
+  "GET /admin/booking-channels/reference-data": admin(
+    "getBookingChannelReferenceData",
+    "Booking channels",
+    "Lista categorias internas e planos ativos aceitos por canais externos.",
+    BookingChannelReferenceDataSchema,
+  ),
   "POST /admin/booking-channels": admin(
     "createBookingChannel",
     "Booking channels",
@@ -7012,6 +7071,22 @@ export const API_ROUTE_CONTRACTS: Readonly<Record<string, ApiRouteContract>> = {
     "Decide um evento recebido do canal.",
     OkSchema,
     { params: IdParamsSchema, body: BookingChannelEventActionSchema },
+  ),
+  "GET /admin/training/environment": admin(
+    "getTrainingEnvironment",
+    "Local training",
+    "Consulta cenário, relógio operacional e relógio real do hotel ativo.",
+    TrainingEnvironmentSchema,
+  ),
+  "POST /admin/training/clock/actions": admin(
+    "actTrainingClock",
+    "Local training",
+    "Congela, define, avança ou retoma o relógio operacional local.",
+    Type.Object(
+      { ok: Type.Boolean(), environment: TrainingEnvironmentSchema },
+      strict,
+    ),
+    { body: TrainingClockActionSchema },
   ),
   "GET /admin/analytics/operations": admin(
     "listIntegratedAnalytics",

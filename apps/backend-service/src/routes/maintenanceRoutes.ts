@@ -10,6 +10,7 @@ import {
   type PermissionName,
   type SessionPayload,
   type AdminMaintenanceOccurrenceDetail,
+  type MaintenanceWarrantyDecisionInput,
 } from "@hotel/shared";
 import {
   ensureAuthorizedAnyWithScope,
@@ -43,6 +44,7 @@ type CatalogBody = {
   supplier_id?: string | null;
   contract_id?: string | null;
   lifecycle_status?: "active" | "out_of_service" | "retired" | null;
+  expected_version?: number;
 };
 type TriageBody = {
   category_id?: string;
@@ -99,6 +101,7 @@ function permissionList(): PermissionName[] {
     PERMISSIONS.MAINTENANCE_INSPECT,
     PERMISSIONS.MAINTENANCE_LIABILITY_CONFIRM,
     PERMISSIONS.MAINTENANCE_CATALOG_MANAGE,
+    PERMISSIONS.MAINTENANCE_WARRANTIES_MANAGE,
   ];
 }
 
@@ -1089,17 +1092,34 @@ export function registerMaintenanceRoutes(
               "Nome e tipo são obrigatórios.",
             ),
           );
-      const result = await repository.writeLocation(hotelId, null, {
-        name,
-        kind: request.body.kind,
-        parent_location_id:
-          request.body.kind === "equipment"
-            ? request.body.parent_location_id || null
-            : null,
-        description: normalizeOptionalText(request.body.description),
-        display_order: request.body.display_order || 0,
-        is_active: request.body.is_active ?? true,
-      });
+      const result = await repository.writeLocation(
+        hotelId,
+        null,
+        auth.session.id,
+        {
+          name,
+          kind: request.body.kind,
+          parent_location_id:
+            request.body.kind === "equipment"
+              ? request.body.parent_location_id || null
+              : null,
+          description: normalizeOptionalText(request.body.description),
+          display_order: request.body.display_order || 0,
+          is_active: request.body.is_active ?? true,
+          asset_tag: normalizeOptionalText(request.body.asset_tag),
+          manufacturer: normalizeOptionalText(request.body.manufacturer),
+          model: normalizeOptionalText(request.body.model),
+          serial_number: normalizeOptionalText(request.body.serial_number),
+          installed_on: request.body.installed_on || null,
+          warranty_ends_on: request.body.warranty_ends_on || null,
+          supplier_id: request.body.supplier_id || null,
+          contract_id: request.body.contract_id || null,
+          lifecycle_status:
+            request.body.kind === "equipment"
+              ? request.body.lifecycle_status || "active"
+              : null,
+        },
+      );
       if (result.result !== "ok")
         return resultError(
           reply,
@@ -1121,16 +1141,27 @@ export function registerMaintenanceRoutes(
       if (!auth) return;
       const hotelId = requireActiveHotelId(reply, auth.activeHotelId);
       if (!hotelId) return;
+      const existing = (await repository.listLocations(hotelId)).find(
+        (item) => item.id === request.params.id,
+      );
+      if (!existing)
+        return reply
+          .status(404)
+          .send(
+            adminError(ADMIN_ERROR_CODE.NOT_FOUND, "Local não encontrado."),
+          );
       const payload = {
+        ...existing,
         ...request.body,
         name:
           request.body.name === undefined
-            ? undefined
+            ? existing.name
             : normalizeOptionalText(request.body.name),
         description:
           request.body.description === undefined
-            ? undefined
+            ? existing.description
             : normalizeOptionalText(request.body.description),
+        expected_version: request.body.expected_version ?? existing.version,
       };
       Object.keys(payload).forEach(
         (key) =>
@@ -1140,6 +1171,7 @@ export function registerMaintenanceRoutes(
       const result = await repository.writeLocation(
         hotelId,
         request.params.id,
+        auth.session.id,
         payload,
       );
       if (result.result !== "ok")
@@ -1150,6 +1182,71 @@ export function registerMaintenanceRoutes(
           "Local duplicado ou inválido.",
         );
       return reply.send({ item: result.item });
+    },
+  );
+
+  app.get<{ Params: HotelIdParams }>(
+    "/admin/maintenance/locations/:id/warranty",
+    async (request, reply) => {
+      const auth = requireAnyScope(request, reply, [
+        PERMISSIONS.MAINTENANCE_READ,
+        PERMISSIONS.MAINTENANCE_WARRANTIES_MANAGE,
+      ]);
+      if (!auth) return;
+      const item = await repository.getWarranty(
+        auth.hotelId,
+        request.params.id,
+      );
+      if (!item)
+        return reply
+          .status(404)
+          .send(
+            adminError(
+              ADMIN_ERROR_CODE.NOT_FOUND,
+              "Equipamento não encontrado.",
+            ),
+          );
+      return reply.send(item);
+    },
+  );
+  app.post<{ Params: HotelIdParams; Body: MaintenanceWarrantyDecisionInput }>(
+    "/admin/maintenance/locations/:id/warranty-decisions",
+    async (request, reply) => {
+      const auth = ensureAuthorizedWithScope(
+        request,
+        reply,
+        PERMISSIONS.MAINTENANCE_WARRANTIES_MANAGE,
+      );
+      if (!auth) return;
+      const hotelId = requireActiveHotelId(reply, auth.activeHotelId);
+      if (!hotelId) return;
+      const result = await repository.recordWarrantyDecision(
+        hotelId,
+        request.params.id,
+        auth.session.id,
+        request.body,
+      );
+      if (result.result === "ok")
+        return reply.status(201).send({ ok: true, ...result });
+      const missing = result.result === "not_found";
+      const invalid =
+        result.result.endsWith("required") || result.result === "invalid";
+      return reply.status(missing ? 404 : invalid ? 400 : 409).send({
+        ...adminError(
+          missing
+            ? ADMIN_ERROR_CODE.NOT_FOUND
+            : invalid
+              ? ADMIN_ERROR_CODE.VALIDATION
+              : ADMIN_ERROR_CODE.CONFLICT,
+          missing
+            ? "Equipamento não encontrado."
+            : invalid
+              ? "Complete os dados exigidos para essa decisão."
+              : "A garantia ou o equipamento mudou; atualize e tente novamente.",
+          result.result,
+        ),
+        ...(result.context ? { context: result.context } : {}),
+      });
     },
   );
 

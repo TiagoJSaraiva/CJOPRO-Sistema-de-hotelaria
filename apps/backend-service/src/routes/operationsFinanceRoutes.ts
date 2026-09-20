@@ -465,11 +465,19 @@ export function registerOperationsFinanceRoutes(
     },
   );
 
-  get(
-    "/admin/cash-registers",
-    PERMISSIONS.CASH_MANAGEMENT_READ,
-    "list_cash_registers",
-  );
+  app.get("/admin/cash-registers", async (request, reply) => {
+    const c = scoped(request, reply, PERMISSIONS.CASH_MANAGEMENT_READ);
+    if (!c) return;
+    return reply.send(
+      await repository.rpc("list_cash_registers_for_actor", {
+        p_hotel_id: c.hotelId,
+        p_actor_id: c.actorId,
+        p_can_approve: c.permissions.includes(
+          PERMISSIONS.CASH_DIFFERENCES_APPROVE,
+        ),
+      }),
+    );
+  });
   app.post<{ Body: CashRegisterInput }>(
     "/admin/cash-registers",
     async (request, reply) => {
@@ -503,11 +511,22 @@ export function registerOperationsFinanceRoutes(
       );
     },
   );
-  get(
+  app.get<{ Params: Params }>(
     "/admin/cash-sessions/:id",
-    PERMISSIONS.CASH_MANAGEMENT_READ,
-    "get_cash_session",
-    (request) => ({ p_id: (request.params as Params).id }),
+    async (request, reply) => {
+      const c = scoped(request, reply, PERMISSIONS.CASH_MANAGEMENT_READ);
+      if (!c) return;
+      return reply.send(
+        await repository.rpc("get_cash_session_for_actor", {
+          p_hotel_id: c.hotelId,
+          p_id: request.params.id,
+          p_actor_id: c.actorId,
+          p_can_approve: c.permissions.includes(
+            PERMISSIONS.CASH_DIFFERENCES_APPROVE,
+          ),
+        }),
+      );
+    },
   );
   app.post<{ Params: Params; Body: CashSessionAction }>(
     "/admin/cash-sessions/:id/actions",
@@ -554,13 +573,22 @@ export function registerOperationsFinanceRoutes(
       );
     },
   );
-  get(
+  app.get<{ Params: DateParams }>(
     "/admin/daily-close/:businessDate",
-    PERMISSIONS.CASH_MANAGEMENT_READ,
-    "get_daily_close",
-    (request) => ({
-      p_business_date: (request.params as DateParams).businessDate,
-    }),
+    async (request, reply) => {
+      const c = scoped(request, reply, PERMISSIONS.CASH_MANAGEMENT_READ);
+      if (!c) return;
+      return reply.send(
+        await repository.rpc("get_daily_close_for_actor", {
+          p_hotel_id: c.hotelId,
+          p_business_date: request.params.businessDate,
+          p_actor_id: c.actorId,
+          p_can_approve: c.permissions.includes(
+            PERMISSIONS.CASH_DIFFERENCES_APPROVE,
+          ),
+        }),
+      );
+    },
   );
   app.post<{ Params: DateParams; Body: DailyClosePrepare }>(
     "/admin/daily-close/:businessDate/prepare",

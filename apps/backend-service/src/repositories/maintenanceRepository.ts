@@ -13,6 +13,8 @@ import type {
   AdminMaintenanceSummary,
   AdminMaintenanceWorkOrder,
   MaintenancePriority,
+  MaintenanceWarrantyDecision,
+  MaintenanceWarrantyDecisionInput,
   MaintenanceWaitingReason,
   Json,
 } from "@hotel/shared";
@@ -23,6 +25,12 @@ const OCCURRENCE_SELECT =
 
 type OccurrenceRow = Record<string, any>;
 type WorkOrderRow = Record<string, any>;
+type UntypedRpcClient = {
+  rpc(
+    name: string,
+    args?: Record<string, unknown>,
+  ): PromiseLike<{ data: unknown; error: Error | null }>;
+};
 
 export type MaintenanceListFilters = {
   page: number;
@@ -295,8 +303,22 @@ export interface MaintenanceRepository {
   writeLocation(
     hotelId: string,
     id: string | null,
+    actorId: string,
     payload: Record<string, unknown>,
   ): Promise<MaintenanceWriteResult<AdminMaintenanceLocation>>;
+  getWarranty(
+    hotelId: string,
+    locationId: string,
+  ): Promise<{
+    location: AdminMaintenanceLocation;
+    decisions: MaintenanceWarrantyDecision[];
+  } | null>;
+  recordWarrantyDecision(
+    hotelId: string,
+    locationId: string,
+    actorId: string,
+    input: MaintenanceWarrantyDecisionInput,
+  ): Promise<{ result: string; id?: string; context?: unknown }>;
   getReferenceData(hotelId: string): Promise<AdminMaintenanceReferenceData>;
   getSummary(
     hotelId: string,
@@ -976,7 +998,7 @@ class SupabaseMaintenanceRepository implements MaintenanceRepository {
     const { data, error } = await createServerClient()
       .from("maintenance_locations")
       .select(
-        "id,hotel_id,parent_location_id,kind,name,description,display_order,is_active,asset_tag,manufacturer,model,serial_number,installed_on,warranty_ends_on,supplier_id,contract_id,lifecycle_status,created_at,updated_at,parent:parent_location_id(name)",
+        "id,hotel_id,parent_location_id,kind,name,description,display_order,is_active,asset_tag,manufacturer,model,serial_number,installed_on,warranty_ends_on,supplier_id,contract_id,lifecycle_status,version,created_at,updated_at,parent:parent_location_id(name)",
       )
       .eq("hotel_id", hotelId)
       .order("display_order")
@@ -990,24 +1012,64 @@ class SupabaseMaintenanceRepository implements MaintenanceRepository {
   async writeLocation(
     hotelId: string,
     id: string | null,
+    actorId: string,
     payload: Record<string, unknown>,
   ): Promise<MaintenanceWriteResult<AdminMaintenanceLocation>> {
-    const supabase = createServerClient();
-    const query = id
-      ? supabase
-          .from("maintenance_locations")
-          .update(payload as any)
-          .eq("hotel_id", hotelId)
-          .eq("id", id)
-      : supabase
-          .from("maintenance_locations")
-          .insert({ ...payload, hotel_id: hotelId } as any);
-    const { data, error } = await query.select("id").single();
-    if (error || !data) return { result: id ? "not-found" : "conflict" };
+    const supabase = createServerClient() as unknown as UntypedRpcClient;
+    const { data, error } = await supabase.rpc("save_maintenance_location", {
+      p_hotel_id: hotelId,
+      p_id: id,
+      p_actor_id: actorId,
+      p_input: payload as Json,
+    });
+    const result = data as { result?: string; id?: string } | null;
+    if (error || result?.result !== "ok" || !result.id)
+      return {
+        result: result?.result === "not_found" ? "not-found" : "conflict",
+      };
     const item = (await this.listLocations(hotelId)).find(
-      (candidate) => candidate.id === String(data.id),
+      (candidate) => candidate.id === String(result.id),
     );
     return item ? { result: "ok", item } : { result: "not-found" };
+  }
+
+  async getWarranty(hotelId: string, locationId: string) {
+    const { data, error } = await (
+      createServerClient() as unknown as UntypedRpcClient
+    ).rpc("list_maintenance_warranty_decisions", {
+      p_hotel_id: hotelId,
+      p_location_id: locationId,
+    });
+    if (error) throw error;
+    const value = data as unknown as {
+      location?: AdminMaintenanceLocation;
+      decisions?: MaintenanceWarrantyDecision[];
+    } | null;
+    return value?.location
+      ? { location: value.location, decisions: value.decisions || [] }
+      : null;
+  }
+
+  async recordWarrantyDecision(
+    hotelId: string,
+    locationId: string,
+    actorId: string,
+    input: MaintenanceWarrantyDecisionInput,
+  ) {
+    const { data, error } = await (
+      createServerClient() as unknown as UntypedRpcClient
+    ).rpc("record_maintenance_warranty_decision", {
+      p_hotel_id: hotelId,
+      p_location_id: locationId,
+      p_actor_id: actorId,
+      p_input: input as unknown as Json,
+    });
+    if (error) throw error;
+    return data as unknown as {
+      result: string;
+      id?: string;
+      context?: unknown;
+    };
   }
 
   async getReferenceData(

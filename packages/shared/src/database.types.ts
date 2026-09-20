@@ -600,6 +600,45 @@ export type Database = {
           },
         ]
       }
+      cash_management_settings: {
+        Row: {
+          activated_at: string
+          activated_by: string | null
+          daily_close_started_on: string
+          hotel_id: string
+          updated_at: string
+        }
+        Insert: {
+          activated_at?: string
+          activated_by?: string | null
+          daily_close_started_on: string
+          hotel_id: string
+          updated_at?: string
+        }
+        Update: {
+          activated_at?: string
+          activated_by?: string | null
+          daily_close_started_on?: string
+          hotel_id?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "cash_management_settings_activated_by_fkey"
+            columns: ["activated_by"]
+            isOneToOne: false
+            referencedRelation: "users"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "cash_management_settings_hotel_id_fkey"
+            columns: ["hotel_id"]
+            isOneToOne: true
+            referencedRelation: "hotels"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       cash_movements: {
         Row: {
           actor_id: string
@@ -4648,6 +4687,102 @@ export type Database = {
           },
         ]
       }
+      hotel_training_clock_events: {
+        Row: {
+          action: string
+          actor_id: string | null
+          after_state: Json
+          before_state: Json
+          created_at: string
+          hotel_id: string
+          id: string
+          reason: string
+        }
+        Insert: {
+          action: string
+          actor_id?: string | null
+          after_state: Json
+          before_state: Json
+          created_at?: string
+          hotel_id: string
+          id?: string
+          reason: string
+        }
+        Update: {
+          action?: string
+          actor_id?: string | null
+          after_state?: Json
+          before_state?: Json
+          created_at?: string
+          hotel_id?: string
+          id?: string
+          reason?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "hotel_training_clock_events_actor_id_fkey"
+            columns: ["actor_id"]
+            isOneToOne: false
+            referencedRelation: "users"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "hotel_training_clock_events_hotel_id_fkey"
+            columns: ["hotel_id"]
+            isOneToOne: false
+            referencedRelation: "hotels"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      hotel_training_environments: {
+        Row: {
+          clock_mode: Database["public"]["Enums"]["training_clock_mode"]
+          frozen_at: string | null
+          hotel_id: string
+          scenario_key: string | null
+          scenario_version: number | null
+          updated_at: string
+          updated_by: string | null
+          version: number
+        }
+        Insert: {
+          clock_mode?: Database["public"]["Enums"]["training_clock_mode"]
+          frozen_at?: string | null
+          hotel_id: string
+          scenario_key?: string | null
+          scenario_version?: number | null
+          updated_at?: string
+          updated_by?: string | null
+          version?: number
+        }
+        Update: {
+          clock_mode?: Database["public"]["Enums"]["training_clock_mode"]
+          frozen_at?: string | null
+          hotel_id?: string
+          scenario_key?: string | null
+          scenario_version?: number | null
+          updated_at?: string
+          updated_by?: string | null
+          version?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "hotel_training_environments_hotel_id_fkey"
+            columns: ["hotel_id"]
+            isOneToOne: true
+            referencedRelation: "hotels"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "hotel_training_environments_updated_by_fkey"
+            columns: ["updated_by"]
+            isOneToOne: false
+            referencedRelation: "users"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       hotels: {
         Row: {
           address_complement: string | null
@@ -6890,6 +7025,7 @@ export type Database = {
           serial_number: string | null
           supplier_id: string | null
           updated_at: string
+          version: number
           warranty_ends_on: string | null
         }
         Insert: {
@@ -6913,6 +7049,7 @@ export type Database = {
           serial_number?: string | null
           supplier_id?: string | null
           updated_at?: string
+          version?: number
           warranty_ends_on?: string | null
         }
         Update: {
@@ -6936,6 +7073,7 @@ export type Database = {
           serial_number?: string | null
           supplier_id?: string | null
           updated_at?: string
+          version?: number
           warranty_ends_on?: string | null
         }
         Relationships: [
@@ -8863,6 +9001,94 @@ export type Database = {
             isOneToOne: false
             referencedRelation: "hotels"
             referencedColumns: ["id"]
+          },
+        ]
+      }
+      maintenance_warranty_decisions: {
+        Row: {
+          created_at: string
+          decided_by: string
+          hotel_id: string
+          id: string
+          location_id: string
+          new_warranty_ends_on: string | null
+          occurrence_id: string | null
+          reason: string
+          replacement_location_id: string | null
+          result: Database["public"]["Enums"]["maintenance_warranty_decision_result"]
+          supersedes_id: string | null
+          warranty_ends_on: string
+        }
+        Insert: {
+          created_at?: string
+          decided_by: string
+          hotel_id: string
+          id?: string
+          location_id: string
+          new_warranty_ends_on?: string | null
+          occurrence_id?: string | null
+          reason: string
+          replacement_location_id?: string | null
+          result: Database["public"]["Enums"]["maintenance_warranty_decision_result"]
+          supersedes_id?: string | null
+          warranty_ends_on: string
+        }
+        Update: {
+          created_at?: string
+          decided_by?: string
+          hotel_id?: string
+          id?: string
+          location_id?: string
+          new_warranty_ends_on?: string | null
+          occurrence_id?: string | null
+          reason?: string
+          replacement_location_id?: string | null
+          result?: Database["public"]["Enums"]["maintenance_warranty_decision_result"]
+          supersedes_id?: string | null
+          warranty_ends_on?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "maintenance_warranty_decision_replacement_location_id_hote_fkey"
+            columns: ["replacement_location_id", "hotel_id"]
+            isOneToOne: false
+            referencedRelation: "maintenance_locations"
+            referencedColumns: ["id", "hotel_id"]
+          },
+          {
+            foreignKeyName: "maintenance_warranty_decisions_decided_by_fkey"
+            columns: ["decided_by"]
+            isOneToOne: false
+            referencedRelation: "users"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "maintenance_warranty_decisions_hotel_id_fkey"
+            columns: ["hotel_id"]
+            isOneToOne: false
+            referencedRelation: "hotels"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "maintenance_warranty_decisions_location_id_hotel_id_fkey"
+            columns: ["location_id", "hotel_id"]
+            isOneToOne: false
+            referencedRelation: "maintenance_locations"
+            referencedColumns: ["id", "hotel_id"]
+          },
+          {
+            foreignKeyName: "maintenance_warranty_decisions_occurrence_id_hotel_id_fkey"
+            columns: ["occurrence_id", "hotel_id"]
+            isOneToOne: false
+            referencedRelation: "maintenance_occurrences"
+            referencedColumns: ["id", "hotel_id"]
+          },
+          {
+            foreignKeyName: "maintenance_warranty_decisions_supersedes_id_hotel_id_fkey"
+            columns: ["supersedes_id", "hotel_id"]
+            isOneToOne: false
+            referencedRelation: "maintenance_warranty_decisions"
+            referencedColumns: ["id", "hotel_id"]
           },
         ]
       }
@@ -15201,6 +15427,10 @@ export type Database = {
         }
         Returns: Json
       }
+      act_training_clock: {
+        Args: { p_actor_id: string; p_hotel_id: string; p_input: Json }
+        Returns: Json
+      }
       activate_commercial_agreement_revision: {
         Args: { p_actor_id: string; p_hotel_id: string; p_revision_id: string }
         Returns: string
@@ -15885,6 +16115,15 @@ export type Database = {
         Args: { p_hotel_id: string; p_id: string }
         Returns: Json
       }
+      get_cash_session_for_actor: {
+        Args: {
+          p_actor_id: string
+          p_can_approve: boolean
+          p_hotel_id: string
+          p_id: string
+        }
+        Returns: Json
+      }
       get_consumption_analytics: {
         Args: {
           p_billing_mode?: Database["public"]["Enums"]["consumption_billing_mode"]
@@ -15918,6 +16157,15 @@ export type Database = {
         Args: { p_business_date: string; p_hotel_id: string }
         Returns: Json
       }
+      get_daily_close_for_actor: {
+        Args: {
+          p_actor_id: string
+          p_business_date: string
+          p_can_approve: boolean
+          p_hotel_id: string
+        }
+        Returns: Json
+      }
       get_governance_cycle: {
         Args: { p_cycle_id: string; p_hotel_id: string }
         Returns: Json
@@ -15947,6 +16195,7 @@ export type Database = {
         Args: { p_hotel_id: string; p_stay_id: string }
         Returns: Json
       }
+      get_training_environment: { Args: { p_hotel_id: string }; Returns: Json }
       governance_create_defect: {
         Args: {
           p_actor_id: string
@@ -15992,6 +16241,8 @@ export type Database = {
         }
         Returns: Json
       }
+      hotel_operational_date: { Args: { p_hotel_id: string }; Returns: string }
+      hotel_operational_now: { Args: { p_hotel_id: string }; Returns: string }
       import_booking_channel_events: {
         Args: { p_channel_id: string; p_hotel_id: string; p_rows: Json }
         Returns: Json
@@ -16018,12 +16269,20 @@ export type Database = {
         Args: { p_hotel_id: string }
         Returns: Json
       }
+      list_booking_channel_reference_data: {
+        Args: { p_hotel_id: string }
+        Returns: Json
+      }
       list_booking_channels: { Args: { p_hotel_id: string }; Returns: Json }
       list_business_organizations: {
         Args: { p_hotel_id: string }
         Returns: Json
       }
       list_cash_registers: { Args: { p_hotel_id: string }; Returns: Json }
+      list_cash_registers_for_actor: {
+        Args: { p_actor_id: string; p_can_approve: boolean; p_hotel_id: string }
+        Returns: Json
+      }
       list_consumption_benefit_plans: {
         Args: { p_hotel_id: string }
         Returns: Json
@@ -16052,6 +16311,10 @@ export type Database = {
       list_inventory_lots: { Args: { p_hotel_id: string }; Returns: Json }
       list_maintenance_planning_board: {
         Args: { p_from?: string; p_hotel_id: string; p_to?: string }
+        Returns: Json
+      }
+      list_maintenance_warranty_decisions: {
+        Args: { p_hotel_id: string; p_location_id: string }
         Returns: Json
       }
       list_minibar_compositions: { Args: { p_hotel_id: string }; Returns: Json }
@@ -16145,6 +16408,10 @@ export type Database = {
         Returns: Json
       }
       operational_pending_candidates: {
+        Args: { p_hotel_id: string; p_now?: string }
+        Returns: Json
+      }
+      operational_pending_candidates_before_training: {
         Args: { p_hotel_id: string; p_now?: string }
         Returns: Json
       }
@@ -16292,6 +16559,16 @@ export type Database = {
         }
         Returns: Json
       }
+      prepare_training_scenario: {
+        Args: {
+          p_actor_id?: string
+          p_description: string
+          p_hotel_id: string
+          p_scenario_key: string
+          p_scenario_version: number
+        }
+        Returns: Json
+      }
       process_maintenance_expiry_alerts: {
         Args: { p_hotel_id: string; p_local_date: string }
         Returns: number
@@ -16342,6 +16619,10 @@ export type Database = {
         Args: { p_hotel_id: string; p_now?: string }
         Returns: Json
       }
+      reconcile_operational_pending_before_training: {
+        Args: { p_hotel_id: string; p_now?: string }
+        Returns: Json
+      }
       reconcile_operational_pending_stage5_base: {
         Args: { p_hotel_id: string; p_now?: string }
         Returns: Json
@@ -16364,6 +16645,15 @@ export type Database = {
         }
         Returns: Json
       }
+      record_maintenance_warranty_decision: {
+        Args: {
+          p_actor_id: string
+          p_hotel_id: string
+          p_input: Json
+          p_location_id: string
+        }
+        Returns: Json
+      }
       record_reservation_guarantee: {
         Args: {
           p_actor_id: string
@@ -16372,6 +16662,10 @@ export type Database = {
           p_input: Json
           p_reservation_id: string
         }
+        Returns: Json
+      }
+      redact_cash_session: {
+        Args: { p_actor_id: string; p_can_approve: boolean; p_session: Json }
         Returns: Json
       }
       refresh_maintenance_impact_scores: {
@@ -16537,6 +16831,15 @@ export type Database = {
           p_actor_id: string
           p_customer_id: string
           p_hotel_id: string
+          p_input: Json
+        }
+        Returns: Json
+      }
+      save_maintenance_location: {
+        Args: {
+          p_actor_id: string
+          p_hotel_id: string
+          p_id: string
           p_input: Json
         }
         Returns: Json
@@ -17105,6 +17408,12 @@ export type Database = {
         | "authorization"
         | "access"
         | "other"
+      maintenance_warranty_decision_result:
+        | "claim_submitted"
+        | "renewed"
+        | "replaced"
+        | "retired"
+        | "expiry_acknowledged"
       maintenance_work_order_status:
         | "pending"
         | "assigned"
@@ -17198,6 +17507,7 @@ export type Database = {
         | "no_show"
         | "canceled"
         | "confirmed"
+      training_clock_mode: "live" | "frozen"
       transaction_status:
         | "PENDING"
         | "COMPLETED"
@@ -17615,6 +17925,13 @@ export const Constants = {
         "access",
         "other",
       ],
+      maintenance_warranty_decision_result: [
+        "claim_submitted",
+        "renewed",
+        "replaced",
+        "retired",
+        "expiry_acknowledged",
+      ],
       maintenance_work_order_status: [
         "pending",
         "assigned",
@@ -17719,6 +18036,7 @@ export const Constants = {
         "canceled",
         "confirmed",
       ],
+      training_clock_mode: ["live", "frozen"],
       transaction_status: [
         "PENDING",
         "COMPLETED",

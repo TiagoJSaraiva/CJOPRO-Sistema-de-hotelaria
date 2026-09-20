@@ -5476,6 +5476,15 @@
       "def-119": {
         "additionalProperties": false,
         "properties": {
+          "asset_tag": {
+            "nullable": true,
+            "type": "string"
+          },
+          "contract_id": {
+            "format": "uuid",
+            "nullable": true,
+            "type": "string"
+          },
           "created_at": {
             "format": "date-time",
             "type": "string"
@@ -5493,6 +5502,11 @@
           },
           "id": {
             "format": "uuid",
+            "type": "string"
+          },
+          "installed_on": {
+            "format": "date",
+            "nullable": true,
             "type": "string"
           },
           "is_active": {
@@ -5514,6 +5528,37 @@
               }
             ]
           },
+          "lifecycle_status": {
+            "anyOf": [
+              {
+                "enum": [
+                  "active"
+                ],
+                "type": "string"
+              },
+              {
+                "enum": [
+                  "out_of_service"
+                ],
+                "type": "string"
+              },
+              {
+                "enum": [
+                  "retired"
+                ],
+                "type": "string"
+              }
+            ],
+            "nullable": true
+          },
+          "manufacturer": {
+            "nullable": true,
+            "type": "string"
+          },
+          "model": {
+            "nullable": true,
+            "type": "string"
+          },
           "name": {
             "type": "string"
           },
@@ -5526,8 +5571,26 @@
             "nullable": true,
             "type": "string"
           },
+          "serial_number": {
+            "nullable": true,
+            "type": "string"
+          },
+          "supplier_id": {
+            "format": "uuid",
+            "nullable": true,
+            "type": "string"
+          },
           "updated_at": {
             "format": "date-time",
+            "type": "string"
+          },
+          "version": {
+            "minimum": 1,
+            "type": "integer"
+          },
+          "warranty_ends_on": {
+            "format": "date",
+            "nullable": true,
             "type": "string"
           }
         },
@@ -5540,6 +5603,7 @@
           "description",
           "display_order",
           "is_active",
+          "version",
           "created_at",
           "updated_at"
         ],
@@ -10496,6 +10560,28 @@
           "last_updated_at": {
             "type": "string"
           },
+          "maintenance_block_id": {
+            "format": "uuid",
+            "nullable": true,
+            "type": "string"
+          },
+          "maintenance_href": {
+            "nullable": true,
+            "type": "string"
+          },
+          "maintenance_next_step": {
+            "nullable": true,
+            "type": "string"
+          },
+          "maintenance_occurrence_code": {
+            "nullable": true,
+            "type": "string"
+          },
+          "maintenance_occurrence_id": {
+            "format": "uuid",
+            "nullable": true,
+            "type": "string"
+          },
           "next_arrival_at": {
             "nullable": true,
             "type": "string"
@@ -10880,6 +10966,28 @@
                   "type": "string"
                 },
                 "last_updated_at": {
+                  "type": "string"
+                },
+                "maintenance_block_id": {
+                  "format": "uuid",
+                  "nullable": true,
+                  "type": "string"
+                },
+                "maintenance_href": {
+                  "nullable": true,
+                  "type": "string"
+                },
+                "maintenance_next_step": {
+                  "nullable": true,
+                  "type": "string"
+                },
+                "maintenance_occurrence_code": {
+                  "nullable": true,
+                  "type": "string"
+                },
+                "maintenance_occurrence_id": {
+                  "format": "uuid",
+                  "nullable": true,
                   "type": "string"
                 },
                 "next_arrival_at": {
@@ -13338,6 +13446,403 @@
           "reservation"
         ],
         "title": "BookingChannelEventInput",
+        "type": "object"
+      },
+      "def-164": {
+        "additionalProperties": false,
+        "properties": {
+          "rate_plans": {
+            "items": {
+              "additionalProperties": false,
+              "properties": {
+                "channels": {
+                  "items": {
+                    "type": "string"
+                  },
+                  "type": "array"
+                },
+                "code": {
+                  "type": "string"
+                },
+                "id": {
+                  "format": "uuid",
+                  "type": "string"
+                },
+                "name": {
+                  "type": "string"
+                },
+                "version": {
+                  "minimum": 1,
+                  "type": "integer"
+                }
+              },
+              "required": [
+                "id",
+                "code",
+                "name",
+                "version",
+                "channels"
+              ],
+              "type": "object"
+            },
+            "type": "array"
+          },
+          "room_types": {
+            "items": {
+              "additionalProperties": false,
+              "properties": {
+                "label": {
+                  "type": "string"
+                },
+                "room_count": {
+                  "minimum": 0,
+                  "type": "integer"
+                },
+                "value": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "value",
+                "label",
+                "room_count"
+              ],
+              "type": "object"
+            },
+            "type": "array"
+          }
+        },
+        "required": [
+          "room_types",
+          "rate_plans"
+        ],
+        "title": "BookingChannelReferenceData",
+        "type": "object"
+      },
+      "def-165": {
+        "additionalProperties": false,
+        "properties": {
+          "action": {
+            "anyOf": [
+              {
+                "enum": [
+                  "freeze"
+                ],
+                "type": "string"
+              },
+              {
+                "enum": [
+                  "set"
+                ],
+                "type": "string"
+              },
+              {
+                "enum": [
+                  "advance"
+                ],
+                "type": "string"
+              },
+              {
+                "enum": [
+                  "resume"
+                ],
+                "type": "string"
+              }
+            ]
+          },
+          "amount": {
+            "maximum": 3650,
+            "minimum": 1,
+            "type": "integer"
+          },
+          "at": {
+            "format": "date-time",
+            "type": "string"
+          },
+          "expected_version": {
+            "minimum": 1,
+            "type": "integer"
+          },
+          "reason": {
+            "maxLength": 500,
+            "minLength": 3,
+            "type": "string"
+          },
+          "unit": {
+            "anyOf": [
+              {
+                "enum": [
+                  "hours"
+                ],
+                "type": "string"
+              },
+              {
+                "enum": [
+                  "days"
+                ],
+                "type": "string"
+              }
+            ]
+          }
+        },
+        "required": [
+          "action",
+          "expected_version",
+          "reason"
+        ],
+        "title": "TrainingClockAction",
+        "type": "object"
+      },
+      "def-166": {
+        "additionalProperties": false,
+        "properties": {
+          "clock_mode": {
+            "anyOf": [
+              {
+                "enum": [
+                  "live"
+                ],
+                "type": "string"
+              },
+              {
+                "enum": [
+                  "frozen"
+                ],
+                "type": "string"
+              }
+            ]
+          },
+          "frozen_at": {
+            "format": "date-time",
+            "nullable": true,
+            "type": "string"
+          },
+          "hotel_id": {
+            "format": "uuid",
+            "type": "string"
+          },
+          "operational_now": {
+            "format": "date-time",
+            "type": "string"
+          },
+          "real_now": {
+            "format": "date-time",
+            "type": "string"
+          },
+          "scenario_key": {
+            "nullable": true,
+            "type": "string"
+          },
+          "scenario_version": {
+            "minimum": 1,
+            "nullable": true,
+            "type": "integer"
+          },
+          "updated_at": {
+            "format": "date-time",
+            "type": "string"
+          },
+          "updated_by": {
+            "format": "uuid",
+            "nullable": true,
+            "type": "string"
+          },
+          "version": {
+            "minimum": 1,
+            "type": "integer"
+          }
+        },
+        "required": [
+          "hotel_id",
+          "scenario_key",
+          "scenario_version",
+          "clock_mode",
+          "frozen_at",
+          "operational_now",
+          "real_now",
+          "version",
+          "updated_by",
+          "updated_at"
+        ],
+        "title": "TrainingEnvironment",
+        "type": "object"
+      },
+      "def-167": {
+        "additionalProperties": false,
+        "properties": {
+          "expected_location_version": {
+            "minimum": 1,
+            "type": "integer"
+          },
+          "new_warranty_ends_on": {
+            "format": "date",
+            "type": "string"
+          },
+          "occurrence_id": {
+            "format": "uuid",
+            "type": "string"
+          },
+          "reason": {
+            "maxLength": 1000,
+            "minLength": 3,
+            "type": "string"
+          },
+          "replacement_location_id": {
+            "format": "uuid",
+            "type": "string"
+          },
+          "result": {
+            "anyOf": [
+              {
+                "enum": [
+                  "claim_submitted"
+                ],
+                "type": "string"
+              },
+              {
+                "enum": [
+                  "renewed"
+                ],
+                "type": "string"
+              },
+              {
+                "enum": [
+                  "replaced"
+                ],
+                "type": "string"
+              },
+              {
+                "enum": [
+                  "retired"
+                ],
+                "type": "string"
+              },
+              {
+                "enum": [
+                  "expiry_acknowledged"
+                ],
+                "type": "string"
+              }
+            ]
+          },
+          "supersedes_id": {
+            "format": "uuid",
+            "type": "string"
+          }
+        },
+        "required": [
+          "result",
+          "reason",
+          "expected_location_version"
+        ],
+        "title": "MaintenanceWarrantyDecisionInput",
+        "type": "object"
+      },
+      "def-168": {
+        "additionalProperties": false,
+        "properties": {
+          "created_at": {
+            "format": "date-time",
+            "type": "string"
+          },
+          "decided_by": {
+            "format": "uuid",
+            "type": "string"
+          },
+          "decided_by_name": {
+            "nullable": true,
+            "type": "string"
+          },
+          "hotel_id": {
+            "format": "uuid",
+            "type": "string"
+          },
+          "id": {
+            "format": "uuid",
+            "type": "string"
+          },
+          "location_id": {
+            "format": "uuid",
+            "type": "string"
+          },
+          "new_warranty_ends_on": {
+            "format": "date",
+            "nullable": true,
+            "type": "string"
+          },
+          "occurrence_id": {
+            "format": "uuid",
+            "nullable": true,
+            "type": "string"
+          },
+          "reason": {
+            "type": "string"
+          },
+          "replacement_location_id": {
+            "format": "uuid",
+            "nullable": true,
+            "type": "string"
+          },
+          "result": {
+            "anyOf": [
+              {
+                "enum": [
+                  "claim_submitted"
+                ],
+                "type": "string"
+              },
+              {
+                "enum": [
+                  "renewed"
+                ],
+                "type": "string"
+              },
+              {
+                "enum": [
+                  "replaced"
+                ],
+                "type": "string"
+              },
+              {
+                "enum": [
+                  "retired"
+                ],
+                "type": "string"
+              },
+              {
+                "enum": [
+                  "expiry_acknowledged"
+                ],
+                "type": "string"
+              }
+            ]
+          },
+          "supersedes_id": {
+            "format": "uuid",
+            "nullable": true,
+            "type": "string"
+          },
+          "warranty_ends_on": {
+            "format": "date",
+            "type": "string"
+          }
+        },
+        "required": [
+          "id",
+          "hotel_id",
+          "location_id",
+          "warranty_ends_on",
+          "result",
+          "reason",
+          "occurrence_id",
+          "replacement_location_id",
+          "new_warranty_ends_on",
+          "supersedes_id",
+          "decided_by",
+          "decided_by_name",
+          "created_at"
+        ],
+        "title": "MaintenanceWarrantyDecision",
         "type": "object"
       },
       "def-17": {
@@ -26239,6 +26744,289 @@
               "application/json": {
                 "schema": {
                   "additionalProperties": {},
+                  "type": "object"
+                }
+              }
+            },
+            "description": "Default Response"
+          },
+          "400": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "additionalProperties": false,
+                  "properties": {
+                    "code": {
+                      "type": "string"
+                    },
+                    "context": {},
+                    "details": {
+                      "type": "string"
+                    },
+                    "message": {
+                      "type": "string"
+                    },
+                    "retryAfterSeconds": {
+                      "minimum": 1,
+                      "type": "integer"
+                    }
+                  },
+                  "required": [
+                    "message"
+                  ],
+                  "type": "object"
+                }
+              }
+            },
+            "description": "Default Response"
+          },
+          "401": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "additionalProperties": false,
+                  "properties": {
+                    "code": {
+                      "type": "string"
+                    },
+                    "context": {},
+                    "details": {
+                      "type": "string"
+                    },
+                    "message": {
+                      "type": "string"
+                    },
+                    "retryAfterSeconds": {
+                      "minimum": 1,
+                      "type": "integer"
+                    }
+                  },
+                  "required": [
+                    "message"
+                  ],
+                  "type": "object"
+                }
+              }
+            },
+            "description": "Default Response"
+          },
+          "403": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "additionalProperties": false,
+                  "properties": {
+                    "code": {
+                      "type": "string"
+                    },
+                    "context": {},
+                    "details": {
+                      "type": "string"
+                    },
+                    "message": {
+                      "type": "string"
+                    },
+                    "retryAfterSeconds": {
+                      "minimum": 1,
+                      "type": "integer"
+                    }
+                  },
+                  "required": [
+                    "message"
+                  ],
+                  "type": "object"
+                }
+              }
+            },
+            "description": "Default Response"
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "additionalProperties": false,
+                  "properties": {
+                    "code": {
+                      "type": "string"
+                    },
+                    "context": {},
+                    "details": {
+                      "type": "string"
+                    },
+                    "message": {
+                      "type": "string"
+                    },
+                    "retryAfterSeconds": {
+                      "minimum": 1,
+                      "type": "integer"
+                    }
+                  },
+                  "required": [
+                    "message"
+                  ],
+                  "type": "object"
+                }
+              }
+            },
+            "description": "Default Response"
+          },
+          "409": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "additionalProperties": false,
+                  "properties": {
+                    "code": {
+                      "type": "string"
+                    },
+                    "context": {},
+                    "details": {
+                      "type": "string"
+                    },
+                    "message": {
+                      "type": "string"
+                    },
+                    "retryAfterSeconds": {
+                      "minimum": 1,
+                      "type": "integer"
+                    }
+                  },
+                  "required": [
+                    "message"
+                  ],
+                  "type": "object"
+                }
+              }
+            },
+            "description": "Default Response"
+          },
+          "500": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "additionalProperties": false,
+                  "properties": {
+                    "code": {
+                      "type": "string"
+                    },
+                    "context": {},
+                    "details": {
+                      "type": "string"
+                    },
+                    "message": {
+                      "type": "string"
+                    },
+                    "retryAfterSeconds": {
+                      "minimum": 1,
+                      "type": "integer"
+                    }
+                  },
+                  "required": [
+                    "message"
+                  ],
+                  "type": "object"
+                }
+              }
+            },
+            "description": "Default Response"
+          }
+        },
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "tags": [
+          "Booking channels"
+        ]
+      }
+    },
+    "/admin/booking-channels/reference-data": {
+      "get": {
+        "description": "Lista categorias internas e planos ativos aceitos por canais externos.",
+        "operationId": "getBookingChannelReferenceData",
+        "parameters": [
+          {
+            "in": "header",
+            "name": "x-active-hotel-id",
+            "required": false,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "additionalProperties": false,
+                  "properties": {
+                    "rate_plans": {
+                      "items": {
+                        "additionalProperties": false,
+                        "properties": {
+                          "channels": {
+                            "items": {
+                              "type": "string"
+                            },
+                            "type": "array"
+                          },
+                          "code": {
+                            "type": "string"
+                          },
+                          "id": {
+                            "format": "uuid",
+                            "type": "string"
+                          },
+                          "name": {
+                            "type": "string"
+                          },
+                          "version": {
+                            "minimum": 1,
+                            "type": "integer"
+                          }
+                        },
+                        "required": [
+                          "id",
+                          "code",
+                          "name",
+                          "version",
+                          "channels"
+                        ],
+                        "type": "object"
+                      },
+                      "type": "array"
+                    },
+                    "room_types": {
+                      "items": {
+                        "additionalProperties": false,
+                        "properties": {
+                          "label": {
+                            "type": "string"
+                          },
+                          "room_count": {
+                            "minimum": 0,
+                            "type": "integer"
+                          },
+                          "value": {
+                            "type": "string"
+                          }
+                        },
+                        "required": [
+                          "value",
+                          "label",
+                          "room_count"
+                        ],
+                        "type": "object"
+                      },
+                      "type": "array"
+                    }
+                  },
+                  "required": [
+                    "room_types",
+                    "rate_plans"
+                  ],
                   "type": "object"
                 }
               }
@@ -67989,6 +68777,28 @@
                           "last_updated_at": {
                             "type": "string"
                           },
+                          "maintenance_block_id": {
+                            "format": "uuid",
+                            "nullable": true,
+                            "type": "string"
+                          },
+                          "maintenance_href": {
+                            "nullable": true,
+                            "type": "string"
+                          },
+                          "maintenance_next_step": {
+                            "nullable": true,
+                            "type": "string"
+                          },
+                          "maintenance_occurrence_code": {
+                            "nullable": true,
+                            "type": "string"
+                          },
+                          "maintenance_occurrence_id": {
+                            "format": "uuid",
+                            "nullable": true,
+                            "type": "string"
+                          },
                           "next_arrival_at": {
                             "nullable": true,
                             "type": "string"
@@ -69379,6 +70189,28 @@
                         "last_updated_at": {
                           "type": "string"
                         },
+                        "maintenance_block_id": {
+                          "format": "uuid",
+                          "nullable": true,
+                          "type": "string"
+                        },
+                        "maintenance_href": {
+                          "nullable": true,
+                          "type": "string"
+                        },
+                        "maintenance_next_step": {
+                          "nullable": true,
+                          "type": "string"
+                        },
+                        "maintenance_occurrence_code": {
+                          "nullable": true,
+                          "type": "string"
+                        },
+                        "maintenance_occurrence_id": {
+                          "format": "uuid",
+                          "nullable": true,
+                          "type": "string"
+                        },
                         "next_arrival_at": {
                           "nullable": true,
                           "type": "string"
@@ -69969,6 +70801,28 @@
                           "type": "string"
                         },
                         "last_updated_at": {
+                          "type": "string"
+                        },
+                        "maintenance_block_id": {
+                          "format": "uuid",
+                          "nullable": true,
+                          "type": "string"
+                        },
+                        "maintenance_href": {
+                          "nullable": true,
+                          "type": "string"
+                        },
+                        "maintenance_next_step": {
+                          "nullable": true,
+                          "type": "string"
+                        },
+                        "maintenance_occurrence_code": {
+                          "nullable": true,
+                          "type": "string"
+                        },
+                        "maintenance_occurrence_id": {
+                          "format": "uuid",
+                          "nullable": true,
                           "type": "string"
                         },
                         "next_arrival_at": {
@@ -70703,6 +71557,28 @@
                         "last_updated_at": {
                           "type": "string"
                         },
+                        "maintenance_block_id": {
+                          "format": "uuid",
+                          "nullable": true,
+                          "type": "string"
+                        },
+                        "maintenance_href": {
+                          "nullable": true,
+                          "type": "string"
+                        },
+                        "maintenance_next_step": {
+                          "nullable": true,
+                          "type": "string"
+                        },
+                        "maintenance_occurrence_code": {
+                          "nullable": true,
+                          "type": "string"
+                        },
+                        "maintenance_occurrence_id": {
+                          "format": "uuid",
+                          "nullable": true,
+                          "type": "string"
+                        },
                         "next_arrival_at": {
                           "nullable": true,
                           "type": "string"
@@ -71402,6 +72278,28 @@
                           "type": "string"
                         },
                         "last_updated_at": {
+                          "type": "string"
+                        },
+                        "maintenance_block_id": {
+                          "format": "uuid",
+                          "nullable": true,
+                          "type": "string"
+                        },
+                        "maintenance_href": {
+                          "nullable": true,
+                          "type": "string"
+                        },
+                        "maintenance_next_step": {
+                          "nullable": true,
+                          "type": "string"
+                        },
+                        "maintenance_occurrence_code": {
+                          "nullable": true,
+                          "type": "string"
+                        },
+                        "maintenance_occurrence_id": {
+                          "format": "uuid",
+                          "nullable": true,
                           "type": "string"
                         },
                         "next_arrival_at": {
@@ -72188,6 +73086,28 @@
                           "type": "string"
                         },
                         "last_updated_at": {
+                          "type": "string"
+                        },
+                        "maintenance_block_id": {
+                          "format": "uuid",
+                          "nullable": true,
+                          "type": "string"
+                        },
+                        "maintenance_href": {
+                          "nullable": true,
+                          "type": "string"
+                        },
+                        "maintenance_next_step": {
+                          "nullable": true,
+                          "type": "string"
+                        },
+                        "maintenance_occurrence_code": {
+                          "nullable": true,
+                          "type": "string"
+                        },
+                        "maintenance_occurrence_id": {
+                          "format": "uuid",
+                          "nullable": true,
                           "type": "string"
                         },
                         "next_arrival_at": {
@@ -86085,6 +87005,10 @@
                   "display_order": {
                     "type": "integer"
                   },
+                  "expected_version": {
+                    "minimum": 1,
+                    "type": "integer"
+                  },
                   "installed_on": {
                     "format": "date",
                     "nullable": true,
@@ -86534,6 +87458,10 @@
                     "type": "string"
                   },
                   "display_order": {
+                    "type": "integer"
+                  },
+                  "expected_version": {
+                    "minimum": 1,
                     "type": "integer"
                   },
                   "installed_on": {
@@ -93245,6 +94173,15 @@
                       "items": {
                         "additionalProperties": false,
                         "properties": {
+                          "asset_tag": {
+                            "nullable": true,
+                            "type": "string"
+                          },
+                          "contract_id": {
+                            "format": "uuid",
+                            "nullable": true,
+                            "type": "string"
+                          },
                           "created_at": {
                             "format": "date-time",
                             "type": "string"
@@ -93262,6 +94199,11 @@
                           },
                           "id": {
                             "format": "uuid",
+                            "type": "string"
+                          },
+                          "installed_on": {
+                            "format": "date",
+                            "nullable": true,
                             "type": "string"
                           },
                           "is_active": {
@@ -93283,6 +94225,37 @@
                               }
                             ]
                           },
+                          "lifecycle_status": {
+                            "anyOf": [
+                              {
+                                "enum": [
+                                  "active"
+                                ],
+                                "type": "string"
+                              },
+                              {
+                                "enum": [
+                                  "out_of_service"
+                                ],
+                                "type": "string"
+                              },
+                              {
+                                "enum": [
+                                  "retired"
+                                ],
+                                "type": "string"
+                              }
+                            ],
+                            "nullable": true
+                          },
+                          "manufacturer": {
+                            "nullable": true,
+                            "type": "string"
+                          },
+                          "model": {
+                            "nullable": true,
+                            "type": "string"
+                          },
                           "name": {
                             "type": "string"
                           },
@@ -93295,8 +94268,26 @@
                             "nullable": true,
                             "type": "string"
                           },
+                          "serial_number": {
+                            "nullable": true,
+                            "type": "string"
+                          },
+                          "supplier_id": {
+                            "format": "uuid",
+                            "nullable": true,
+                            "type": "string"
+                          },
                           "updated_at": {
                             "format": "date-time",
+                            "type": "string"
+                          },
+                          "version": {
+                            "minimum": 1,
+                            "type": "integer"
+                          },
+                          "warranty_ends_on": {
+                            "format": "date",
+                            "nullable": true,
                             "type": "string"
                           }
                         },
@@ -93309,6 +94300,7 @@
                           "description",
                           "display_order",
                           "is_active",
+                          "version",
                           "created_at",
                           "updated_at"
                         ],
@@ -93553,6 +94545,10 @@
                   "display_order": {
                     "type": "integer"
                   },
+                  "expected_version": {
+                    "minimum": 1,
+                    "type": "integer"
+                  },
                   "installed_on": {
                     "format": "date",
                     "nullable": true,
@@ -93655,6 +94651,15 @@
                     "item": {
                       "additionalProperties": false,
                       "properties": {
+                        "asset_tag": {
+                          "nullable": true,
+                          "type": "string"
+                        },
+                        "contract_id": {
+                          "format": "uuid",
+                          "nullable": true,
+                          "type": "string"
+                        },
                         "created_at": {
                           "format": "date-time",
                           "type": "string"
@@ -93672,6 +94677,11 @@
                         },
                         "id": {
                           "format": "uuid",
+                          "type": "string"
+                        },
+                        "installed_on": {
+                          "format": "date",
+                          "nullable": true,
                           "type": "string"
                         },
                         "is_active": {
@@ -93693,6 +94703,37 @@
                             }
                           ]
                         },
+                        "lifecycle_status": {
+                          "anyOf": [
+                            {
+                              "enum": [
+                                "active"
+                              ],
+                              "type": "string"
+                            },
+                            {
+                              "enum": [
+                                "out_of_service"
+                              ],
+                              "type": "string"
+                            },
+                            {
+                              "enum": [
+                                "retired"
+                              ],
+                              "type": "string"
+                            }
+                          ],
+                          "nullable": true
+                        },
+                        "manufacturer": {
+                          "nullable": true,
+                          "type": "string"
+                        },
+                        "model": {
+                          "nullable": true,
+                          "type": "string"
+                        },
                         "name": {
                           "type": "string"
                         },
@@ -93705,8 +94746,26 @@
                           "nullable": true,
                           "type": "string"
                         },
+                        "serial_number": {
+                          "nullable": true,
+                          "type": "string"
+                        },
+                        "supplier_id": {
+                          "format": "uuid",
+                          "nullable": true,
+                          "type": "string"
+                        },
                         "updated_at": {
                           "format": "date-time",
+                          "type": "string"
+                        },
+                        "version": {
+                          "minimum": 1,
+                          "type": "integer"
+                        },
+                        "warranty_ends_on": {
+                          "format": "date",
+                          "nullable": true,
                           "type": "string"
                         }
                       },
@@ -93719,6 +94778,7 @@
                         "description",
                         "display_order",
                         "is_active",
+                        "version",
                         "created_at",
                         "updated_at"
                       ],
@@ -93972,6 +95032,10 @@
                   "display_order": {
                     "type": "integer"
                   },
+                  "expected_version": {
+                    "minimum": 1,
+                    "type": "integer"
+                  },
                   "installed_on": {
                     "format": "date",
                     "nullable": true,
@@ -94074,6 +95138,15 @@
                     "item": {
                       "additionalProperties": false,
                       "properties": {
+                        "asset_tag": {
+                          "nullable": true,
+                          "type": "string"
+                        },
+                        "contract_id": {
+                          "format": "uuid",
+                          "nullable": true,
+                          "type": "string"
+                        },
                         "created_at": {
                           "format": "date-time",
                           "type": "string"
@@ -94091,6 +95164,11 @@
                         },
                         "id": {
                           "format": "uuid",
+                          "type": "string"
+                        },
+                        "installed_on": {
+                          "format": "date",
+                          "nullable": true,
                           "type": "string"
                         },
                         "is_active": {
@@ -94112,6 +95190,37 @@
                             }
                           ]
                         },
+                        "lifecycle_status": {
+                          "anyOf": [
+                            {
+                              "enum": [
+                                "active"
+                              ],
+                              "type": "string"
+                            },
+                            {
+                              "enum": [
+                                "out_of_service"
+                              ],
+                              "type": "string"
+                            },
+                            {
+                              "enum": [
+                                "retired"
+                              ],
+                              "type": "string"
+                            }
+                          ],
+                          "nullable": true
+                        },
+                        "manufacturer": {
+                          "nullable": true,
+                          "type": "string"
+                        },
+                        "model": {
+                          "nullable": true,
+                          "type": "string"
+                        },
                         "name": {
                           "type": "string"
                         },
@@ -94124,8 +95233,26 @@
                           "nullable": true,
                           "type": "string"
                         },
+                        "serial_number": {
+                          "nullable": true,
+                          "type": "string"
+                        },
+                        "supplier_id": {
+                          "format": "uuid",
+                          "nullable": true,
+                          "type": "string"
+                        },
                         "updated_at": {
                           "format": "date-time",
+                          "type": "string"
+                        },
+                        "version": {
+                          "minimum": 1,
+                          "type": "integer"
+                        },
+                        "warranty_ends_on": {
+                          "format": "date",
+                          "nullable": true,
                           "type": "string"
                         }
                       },
@@ -94138,6 +95265,7 @@
                         "description",
                         "display_order",
                         "is_active",
+                        "version",
                         "created_at",
                         "updated_at"
                       ],
@@ -94146,6 +95274,794 @@
                   },
                   "required": [
                     "item"
+                  ],
+                  "type": "object"
+                }
+              }
+            },
+            "description": "Default Response"
+          },
+          "400": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "additionalProperties": false,
+                  "properties": {
+                    "code": {
+                      "type": "string"
+                    },
+                    "context": {},
+                    "details": {
+                      "type": "string"
+                    },
+                    "message": {
+                      "type": "string"
+                    },
+                    "retryAfterSeconds": {
+                      "minimum": 1,
+                      "type": "integer"
+                    }
+                  },
+                  "required": [
+                    "message"
+                  ],
+                  "type": "object"
+                }
+              }
+            },
+            "description": "Default Response"
+          },
+          "401": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "additionalProperties": false,
+                  "properties": {
+                    "code": {
+                      "type": "string"
+                    },
+                    "context": {},
+                    "details": {
+                      "type": "string"
+                    },
+                    "message": {
+                      "type": "string"
+                    },
+                    "retryAfterSeconds": {
+                      "minimum": 1,
+                      "type": "integer"
+                    }
+                  },
+                  "required": [
+                    "message"
+                  ],
+                  "type": "object"
+                }
+              }
+            },
+            "description": "Default Response"
+          },
+          "403": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "additionalProperties": false,
+                  "properties": {
+                    "code": {
+                      "type": "string"
+                    },
+                    "context": {},
+                    "details": {
+                      "type": "string"
+                    },
+                    "message": {
+                      "type": "string"
+                    },
+                    "retryAfterSeconds": {
+                      "minimum": 1,
+                      "type": "integer"
+                    }
+                  },
+                  "required": [
+                    "message"
+                  ],
+                  "type": "object"
+                }
+              }
+            },
+            "description": "Default Response"
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "additionalProperties": false,
+                  "properties": {
+                    "code": {
+                      "type": "string"
+                    },
+                    "context": {},
+                    "details": {
+                      "type": "string"
+                    },
+                    "message": {
+                      "type": "string"
+                    },
+                    "retryAfterSeconds": {
+                      "minimum": 1,
+                      "type": "integer"
+                    }
+                  },
+                  "required": [
+                    "message"
+                  ],
+                  "type": "object"
+                }
+              }
+            },
+            "description": "Default Response"
+          },
+          "409": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "additionalProperties": false,
+                  "properties": {
+                    "code": {
+                      "type": "string"
+                    },
+                    "context": {},
+                    "details": {
+                      "type": "string"
+                    },
+                    "message": {
+                      "type": "string"
+                    },
+                    "retryAfterSeconds": {
+                      "minimum": 1,
+                      "type": "integer"
+                    }
+                  },
+                  "required": [
+                    "message"
+                  ],
+                  "type": "object"
+                }
+              }
+            },
+            "description": "Default Response"
+          },
+          "500": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "additionalProperties": false,
+                  "properties": {
+                    "code": {
+                      "type": "string"
+                    },
+                    "context": {},
+                    "details": {
+                      "type": "string"
+                    },
+                    "message": {
+                      "type": "string"
+                    },
+                    "retryAfterSeconds": {
+                      "minimum": 1,
+                      "type": "integer"
+                    }
+                  },
+                  "required": [
+                    "message"
+                  ],
+                  "type": "object"
+                }
+              }
+            },
+            "description": "Default Response"
+          }
+        },
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "tags": [
+          "Maintenance"
+        ]
+      }
+    },
+    "/admin/maintenance/locations/{id}/warranty": {
+      "get": {
+        "description": "Consulta o equipamento e o histórico auditável de decisões de garantia.",
+        "operationId": "getMaintenanceWarranty",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "type": "string"
+            }
+          },
+          {
+            "in": "header",
+            "name": "x-active-hotel-id",
+            "required": false,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "additionalProperties": false,
+                  "properties": {
+                    "decisions": {
+                      "items": {
+                        "additionalProperties": false,
+                        "properties": {
+                          "created_at": {
+                            "format": "date-time",
+                            "type": "string"
+                          },
+                          "decided_by": {
+                            "format": "uuid",
+                            "type": "string"
+                          },
+                          "decided_by_name": {
+                            "nullable": true,
+                            "type": "string"
+                          },
+                          "hotel_id": {
+                            "format": "uuid",
+                            "type": "string"
+                          },
+                          "id": {
+                            "format": "uuid",
+                            "type": "string"
+                          },
+                          "location_id": {
+                            "format": "uuid",
+                            "type": "string"
+                          },
+                          "new_warranty_ends_on": {
+                            "format": "date",
+                            "nullable": true,
+                            "type": "string"
+                          },
+                          "occurrence_id": {
+                            "format": "uuid",
+                            "nullable": true,
+                            "type": "string"
+                          },
+                          "reason": {
+                            "type": "string"
+                          },
+                          "replacement_location_id": {
+                            "format": "uuid",
+                            "nullable": true,
+                            "type": "string"
+                          },
+                          "result": {
+                            "anyOf": [
+                              {
+                                "enum": [
+                                  "claim_submitted"
+                                ],
+                                "type": "string"
+                              },
+                              {
+                                "enum": [
+                                  "renewed"
+                                ],
+                                "type": "string"
+                              },
+                              {
+                                "enum": [
+                                  "replaced"
+                                ],
+                                "type": "string"
+                              },
+                              {
+                                "enum": [
+                                  "retired"
+                                ],
+                                "type": "string"
+                              },
+                              {
+                                "enum": [
+                                  "expiry_acknowledged"
+                                ],
+                                "type": "string"
+                              }
+                            ]
+                          },
+                          "supersedes_id": {
+                            "format": "uuid",
+                            "nullable": true,
+                            "type": "string"
+                          },
+                          "warranty_ends_on": {
+                            "format": "date",
+                            "type": "string"
+                          }
+                        },
+                        "required": [
+                          "id",
+                          "hotel_id",
+                          "location_id",
+                          "warranty_ends_on",
+                          "result",
+                          "reason",
+                          "occurrence_id",
+                          "replacement_location_id",
+                          "new_warranty_ends_on",
+                          "supersedes_id",
+                          "decided_by",
+                          "decided_by_name",
+                          "created_at"
+                        ],
+                        "type": "object"
+                      },
+                      "type": "array"
+                    },
+                    "location": {
+                      "additionalProperties": false,
+                      "properties": {
+                        "asset_tag": {
+                          "nullable": true,
+                          "type": "string"
+                        },
+                        "contract_id": {
+                          "format": "uuid",
+                          "nullable": true,
+                          "type": "string"
+                        },
+                        "created_at": {
+                          "format": "date-time",
+                          "type": "string"
+                        },
+                        "description": {
+                          "nullable": true,
+                          "type": "string"
+                        },
+                        "display_order": {
+                          "type": "integer"
+                        },
+                        "hotel_id": {
+                          "format": "uuid",
+                          "type": "string"
+                        },
+                        "id": {
+                          "format": "uuid",
+                          "type": "string"
+                        },
+                        "installed_on": {
+                          "format": "date",
+                          "nullable": true,
+                          "type": "string"
+                        },
+                        "is_active": {
+                          "type": "boolean"
+                        },
+                        "kind": {
+                          "anyOf": [
+                            {
+                              "enum": [
+                                "area"
+                              ],
+                              "type": "string"
+                            },
+                            {
+                              "enum": [
+                                "equipment"
+                              ],
+                              "type": "string"
+                            }
+                          ]
+                        },
+                        "lifecycle_status": {
+                          "anyOf": [
+                            {
+                              "enum": [
+                                "active"
+                              ],
+                              "type": "string"
+                            },
+                            {
+                              "enum": [
+                                "out_of_service"
+                              ],
+                              "type": "string"
+                            },
+                            {
+                              "enum": [
+                                "retired"
+                              ],
+                              "type": "string"
+                            }
+                          ],
+                          "nullable": true
+                        },
+                        "manufacturer": {
+                          "nullable": true,
+                          "type": "string"
+                        },
+                        "model": {
+                          "nullable": true,
+                          "type": "string"
+                        },
+                        "name": {
+                          "type": "string"
+                        },
+                        "parent_location_id": {
+                          "format": "uuid",
+                          "nullable": true,
+                          "type": "string"
+                        },
+                        "parent_name": {
+                          "nullable": true,
+                          "type": "string"
+                        },
+                        "serial_number": {
+                          "nullable": true,
+                          "type": "string"
+                        },
+                        "supplier_id": {
+                          "format": "uuid",
+                          "nullable": true,
+                          "type": "string"
+                        },
+                        "updated_at": {
+                          "format": "date-time",
+                          "type": "string"
+                        },
+                        "version": {
+                          "minimum": 1,
+                          "type": "integer"
+                        },
+                        "warranty_ends_on": {
+                          "format": "date",
+                          "nullable": true,
+                          "type": "string"
+                        }
+                      },
+                      "required": [
+                        "id",
+                        "hotel_id",
+                        "parent_location_id",
+                        "kind",
+                        "name",
+                        "description",
+                        "display_order",
+                        "is_active",
+                        "version",
+                        "created_at",
+                        "updated_at"
+                      ],
+                      "type": "object"
+                    }
+                  },
+                  "required": [
+                    "location",
+                    "decisions"
+                  ],
+                  "type": "object"
+                }
+              }
+            },
+            "description": "Default Response"
+          },
+          "400": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "additionalProperties": false,
+                  "properties": {
+                    "code": {
+                      "type": "string"
+                    },
+                    "context": {},
+                    "details": {
+                      "type": "string"
+                    },
+                    "message": {
+                      "type": "string"
+                    },
+                    "retryAfterSeconds": {
+                      "minimum": 1,
+                      "type": "integer"
+                    }
+                  },
+                  "required": [
+                    "message"
+                  ],
+                  "type": "object"
+                }
+              }
+            },
+            "description": "Default Response"
+          },
+          "401": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "additionalProperties": false,
+                  "properties": {
+                    "code": {
+                      "type": "string"
+                    },
+                    "context": {},
+                    "details": {
+                      "type": "string"
+                    },
+                    "message": {
+                      "type": "string"
+                    },
+                    "retryAfterSeconds": {
+                      "minimum": 1,
+                      "type": "integer"
+                    }
+                  },
+                  "required": [
+                    "message"
+                  ],
+                  "type": "object"
+                }
+              }
+            },
+            "description": "Default Response"
+          },
+          "403": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "additionalProperties": false,
+                  "properties": {
+                    "code": {
+                      "type": "string"
+                    },
+                    "context": {},
+                    "details": {
+                      "type": "string"
+                    },
+                    "message": {
+                      "type": "string"
+                    },
+                    "retryAfterSeconds": {
+                      "minimum": 1,
+                      "type": "integer"
+                    }
+                  },
+                  "required": [
+                    "message"
+                  ],
+                  "type": "object"
+                }
+              }
+            },
+            "description": "Default Response"
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "additionalProperties": false,
+                  "properties": {
+                    "code": {
+                      "type": "string"
+                    },
+                    "context": {},
+                    "details": {
+                      "type": "string"
+                    },
+                    "message": {
+                      "type": "string"
+                    },
+                    "retryAfterSeconds": {
+                      "minimum": 1,
+                      "type": "integer"
+                    }
+                  },
+                  "required": [
+                    "message"
+                  ],
+                  "type": "object"
+                }
+              }
+            },
+            "description": "Default Response"
+          },
+          "409": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "additionalProperties": false,
+                  "properties": {
+                    "code": {
+                      "type": "string"
+                    },
+                    "context": {},
+                    "details": {
+                      "type": "string"
+                    },
+                    "message": {
+                      "type": "string"
+                    },
+                    "retryAfterSeconds": {
+                      "minimum": 1,
+                      "type": "integer"
+                    }
+                  },
+                  "required": [
+                    "message"
+                  ],
+                  "type": "object"
+                }
+              }
+            },
+            "description": "Default Response"
+          },
+          "500": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "additionalProperties": false,
+                  "properties": {
+                    "code": {
+                      "type": "string"
+                    },
+                    "context": {},
+                    "details": {
+                      "type": "string"
+                    },
+                    "message": {
+                      "type": "string"
+                    },
+                    "retryAfterSeconds": {
+                      "minimum": 1,
+                      "type": "integer"
+                    }
+                  },
+                  "required": [
+                    "message"
+                  ],
+                  "type": "object"
+                }
+              }
+            },
+            "description": "Default Response"
+          }
+        },
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "tags": [
+          "Maintenance"
+        ]
+      }
+    },
+    "/admin/maintenance/locations/{id}/warranty-decisions": {
+      "post": {
+        "description": "Registra uma decisão imutável para a vigência atual da garantia.",
+        "operationId": "createMaintenanceWarrantyDecision",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "type": "string"
+            }
+          },
+          {
+            "in": "header",
+            "name": "x-active-hotel-id",
+            "required": false,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "additionalProperties": false,
+                "properties": {
+                  "expected_location_version": {
+                    "minimum": 1,
+                    "type": "integer"
+                  },
+                  "new_warranty_ends_on": {
+                    "format": "date",
+                    "type": "string"
+                  },
+                  "occurrence_id": {
+                    "format": "uuid",
+                    "type": "string"
+                  },
+                  "reason": {
+                    "maxLength": 1000,
+                    "minLength": 3,
+                    "type": "string"
+                  },
+                  "replacement_location_id": {
+                    "format": "uuid",
+                    "type": "string"
+                  },
+                  "result": {
+                    "anyOf": [
+                      {
+                        "enum": [
+                          "claim_submitted"
+                        ],
+                        "type": "string"
+                      },
+                      {
+                        "enum": [
+                          "renewed"
+                        ],
+                        "type": "string"
+                      },
+                      {
+                        "enum": [
+                          "replaced"
+                        ],
+                        "type": "string"
+                      },
+                      {
+                        "enum": [
+                          "retired"
+                        ],
+                        "type": "string"
+                      },
+                      {
+                        "enum": [
+                          "expiry_acknowledged"
+                        ],
+                        "type": "string"
+                      }
+                    ]
+                  },
+                  "supersedes_id": {
+                    "format": "uuid",
+                    "type": "string"
+                  }
+                },
+                "required": [
+                  "result",
+                  "reason",
+                  "expected_location_version"
+                ],
+                "type": "object"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "additionalProperties": false,
+                  "properties": {
+                    "ok": {
+                      "type": "boolean"
+                    }
+                  },
+                  "required": [
+                    "ok"
                   ],
                   "type": "object"
                 }
@@ -124293,6 +126209,15 @@
                       "items": {
                         "additionalProperties": false,
                         "properties": {
+                          "asset_tag": {
+                            "nullable": true,
+                            "type": "string"
+                          },
+                          "contract_id": {
+                            "format": "uuid",
+                            "nullable": true,
+                            "type": "string"
+                          },
                           "created_at": {
                             "format": "date-time",
                             "type": "string"
@@ -124310,6 +126235,11 @@
                           },
                           "id": {
                             "format": "uuid",
+                            "type": "string"
+                          },
+                          "installed_on": {
+                            "format": "date",
+                            "nullable": true,
                             "type": "string"
                           },
                           "is_active": {
@@ -124331,6 +126261,37 @@
                               }
                             ]
                           },
+                          "lifecycle_status": {
+                            "anyOf": [
+                              {
+                                "enum": [
+                                  "active"
+                                ],
+                                "type": "string"
+                              },
+                              {
+                                "enum": [
+                                  "out_of_service"
+                                ],
+                                "type": "string"
+                              },
+                              {
+                                "enum": [
+                                  "retired"
+                                ],
+                                "type": "string"
+                              }
+                            ],
+                            "nullable": true
+                          },
+                          "manufacturer": {
+                            "nullable": true,
+                            "type": "string"
+                          },
+                          "model": {
+                            "nullable": true,
+                            "type": "string"
+                          },
                           "name": {
                             "type": "string"
                           },
@@ -124343,8 +126304,26 @@
                             "nullable": true,
                             "type": "string"
                           },
+                          "serial_number": {
+                            "nullable": true,
+                            "type": "string"
+                          },
+                          "supplier_id": {
+                            "format": "uuid",
+                            "nullable": true,
+                            "type": "string"
+                          },
                           "updated_at": {
                             "format": "date-time",
+                            "type": "string"
+                          },
+                          "version": {
+                            "minimum": 1,
+                            "type": "integer"
+                          },
+                          "warranty_ends_on": {
+                            "format": "date",
+                            "nullable": true,
                             "type": "string"
                           }
                         },
@@ -124357,6 +126336,7 @@
                           "description",
                           "display_order",
                           "is_active",
+                          "version",
                           "created_at",
                           "updated_at"
                         ],
@@ -190458,6 +192438,671 @@
         ],
         "tags": [
           "Stays"
+        ]
+      }
+    },
+    "/admin/training/clock/actions": {
+      "post": {
+        "description": "Congela, define, avança ou retoma o relógio operacional local.",
+        "operationId": "actTrainingClock",
+        "parameters": [
+          {
+            "in": "header",
+            "name": "x-active-hotel-id",
+            "required": false,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "additionalProperties": false,
+                "properties": {
+                  "action": {
+                    "anyOf": [
+                      {
+                        "enum": [
+                          "freeze"
+                        ],
+                        "type": "string"
+                      },
+                      {
+                        "enum": [
+                          "set"
+                        ],
+                        "type": "string"
+                      },
+                      {
+                        "enum": [
+                          "advance"
+                        ],
+                        "type": "string"
+                      },
+                      {
+                        "enum": [
+                          "resume"
+                        ],
+                        "type": "string"
+                      }
+                    ]
+                  },
+                  "amount": {
+                    "maximum": 3650,
+                    "minimum": 1,
+                    "type": "integer"
+                  },
+                  "at": {
+                    "format": "date-time",
+                    "type": "string"
+                  },
+                  "expected_version": {
+                    "minimum": 1,
+                    "type": "integer"
+                  },
+                  "reason": {
+                    "maxLength": 500,
+                    "minLength": 3,
+                    "type": "string"
+                  },
+                  "unit": {
+                    "anyOf": [
+                      {
+                        "enum": [
+                          "hours"
+                        ],
+                        "type": "string"
+                      },
+                      {
+                        "enum": [
+                          "days"
+                        ],
+                        "type": "string"
+                      }
+                    ]
+                  }
+                },
+                "required": [
+                  "action",
+                  "expected_version",
+                  "reason"
+                ],
+                "type": "object"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "additionalProperties": false,
+                  "properties": {
+                    "environment": {
+                      "additionalProperties": false,
+                      "properties": {
+                        "clock_mode": {
+                          "anyOf": [
+                            {
+                              "enum": [
+                                "live"
+                              ],
+                              "type": "string"
+                            },
+                            {
+                              "enum": [
+                                "frozen"
+                              ],
+                              "type": "string"
+                            }
+                          ]
+                        },
+                        "frozen_at": {
+                          "format": "date-time",
+                          "nullable": true,
+                          "type": "string"
+                        },
+                        "hotel_id": {
+                          "format": "uuid",
+                          "type": "string"
+                        },
+                        "operational_now": {
+                          "format": "date-time",
+                          "type": "string"
+                        },
+                        "real_now": {
+                          "format": "date-time",
+                          "type": "string"
+                        },
+                        "scenario_key": {
+                          "nullable": true,
+                          "type": "string"
+                        },
+                        "scenario_version": {
+                          "minimum": 1,
+                          "nullable": true,
+                          "type": "integer"
+                        },
+                        "updated_at": {
+                          "format": "date-time",
+                          "type": "string"
+                        },
+                        "updated_by": {
+                          "format": "uuid",
+                          "nullable": true,
+                          "type": "string"
+                        },
+                        "version": {
+                          "minimum": 1,
+                          "type": "integer"
+                        }
+                      },
+                      "required": [
+                        "hotel_id",
+                        "scenario_key",
+                        "scenario_version",
+                        "clock_mode",
+                        "frozen_at",
+                        "operational_now",
+                        "real_now",
+                        "version",
+                        "updated_by",
+                        "updated_at"
+                      ],
+                      "type": "object"
+                    },
+                    "ok": {
+                      "type": "boolean"
+                    }
+                  },
+                  "required": [
+                    "ok",
+                    "environment"
+                  ],
+                  "type": "object"
+                }
+              }
+            },
+            "description": "Default Response"
+          },
+          "400": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "additionalProperties": false,
+                  "properties": {
+                    "code": {
+                      "type": "string"
+                    },
+                    "context": {},
+                    "details": {
+                      "type": "string"
+                    },
+                    "message": {
+                      "type": "string"
+                    },
+                    "retryAfterSeconds": {
+                      "minimum": 1,
+                      "type": "integer"
+                    }
+                  },
+                  "required": [
+                    "message"
+                  ],
+                  "type": "object"
+                }
+              }
+            },
+            "description": "Default Response"
+          },
+          "401": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "additionalProperties": false,
+                  "properties": {
+                    "code": {
+                      "type": "string"
+                    },
+                    "context": {},
+                    "details": {
+                      "type": "string"
+                    },
+                    "message": {
+                      "type": "string"
+                    },
+                    "retryAfterSeconds": {
+                      "minimum": 1,
+                      "type": "integer"
+                    }
+                  },
+                  "required": [
+                    "message"
+                  ],
+                  "type": "object"
+                }
+              }
+            },
+            "description": "Default Response"
+          },
+          "403": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "additionalProperties": false,
+                  "properties": {
+                    "code": {
+                      "type": "string"
+                    },
+                    "context": {},
+                    "details": {
+                      "type": "string"
+                    },
+                    "message": {
+                      "type": "string"
+                    },
+                    "retryAfterSeconds": {
+                      "minimum": 1,
+                      "type": "integer"
+                    }
+                  },
+                  "required": [
+                    "message"
+                  ],
+                  "type": "object"
+                }
+              }
+            },
+            "description": "Default Response"
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "additionalProperties": false,
+                  "properties": {
+                    "code": {
+                      "type": "string"
+                    },
+                    "context": {},
+                    "details": {
+                      "type": "string"
+                    },
+                    "message": {
+                      "type": "string"
+                    },
+                    "retryAfterSeconds": {
+                      "minimum": 1,
+                      "type": "integer"
+                    }
+                  },
+                  "required": [
+                    "message"
+                  ],
+                  "type": "object"
+                }
+              }
+            },
+            "description": "Default Response"
+          },
+          "409": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "additionalProperties": false,
+                  "properties": {
+                    "code": {
+                      "type": "string"
+                    },
+                    "context": {},
+                    "details": {
+                      "type": "string"
+                    },
+                    "message": {
+                      "type": "string"
+                    },
+                    "retryAfterSeconds": {
+                      "minimum": 1,
+                      "type": "integer"
+                    }
+                  },
+                  "required": [
+                    "message"
+                  ],
+                  "type": "object"
+                }
+              }
+            },
+            "description": "Default Response"
+          },
+          "500": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "additionalProperties": false,
+                  "properties": {
+                    "code": {
+                      "type": "string"
+                    },
+                    "context": {},
+                    "details": {
+                      "type": "string"
+                    },
+                    "message": {
+                      "type": "string"
+                    },
+                    "retryAfterSeconds": {
+                      "minimum": 1,
+                      "type": "integer"
+                    }
+                  },
+                  "required": [
+                    "message"
+                  ],
+                  "type": "object"
+                }
+              }
+            },
+            "description": "Default Response"
+          }
+        },
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "tags": [
+          "Local training"
+        ]
+      }
+    },
+    "/admin/training/environment": {
+      "get": {
+        "description": "Consulta cenário, relógio operacional e relógio real do hotel ativo.",
+        "operationId": "getTrainingEnvironment",
+        "parameters": [
+          {
+            "in": "header",
+            "name": "x-active-hotel-id",
+            "required": false,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "additionalProperties": false,
+                  "properties": {
+                    "clock_mode": {
+                      "anyOf": [
+                        {
+                          "enum": [
+                            "live"
+                          ],
+                          "type": "string"
+                        },
+                        {
+                          "enum": [
+                            "frozen"
+                          ],
+                          "type": "string"
+                        }
+                      ]
+                    },
+                    "frozen_at": {
+                      "format": "date-time",
+                      "nullable": true,
+                      "type": "string"
+                    },
+                    "hotel_id": {
+                      "format": "uuid",
+                      "type": "string"
+                    },
+                    "operational_now": {
+                      "format": "date-time",
+                      "type": "string"
+                    },
+                    "real_now": {
+                      "format": "date-time",
+                      "type": "string"
+                    },
+                    "scenario_key": {
+                      "nullable": true,
+                      "type": "string"
+                    },
+                    "scenario_version": {
+                      "minimum": 1,
+                      "nullable": true,
+                      "type": "integer"
+                    },
+                    "updated_at": {
+                      "format": "date-time",
+                      "type": "string"
+                    },
+                    "updated_by": {
+                      "format": "uuid",
+                      "nullable": true,
+                      "type": "string"
+                    },
+                    "version": {
+                      "minimum": 1,
+                      "type": "integer"
+                    }
+                  },
+                  "required": [
+                    "hotel_id",
+                    "scenario_key",
+                    "scenario_version",
+                    "clock_mode",
+                    "frozen_at",
+                    "operational_now",
+                    "real_now",
+                    "version",
+                    "updated_by",
+                    "updated_at"
+                  ],
+                  "type": "object"
+                }
+              }
+            },
+            "description": "Default Response"
+          },
+          "400": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "additionalProperties": false,
+                  "properties": {
+                    "code": {
+                      "type": "string"
+                    },
+                    "context": {},
+                    "details": {
+                      "type": "string"
+                    },
+                    "message": {
+                      "type": "string"
+                    },
+                    "retryAfterSeconds": {
+                      "minimum": 1,
+                      "type": "integer"
+                    }
+                  },
+                  "required": [
+                    "message"
+                  ],
+                  "type": "object"
+                }
+              }
+            },
+            "description": "Default Response"
+          },
+          "401": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "additionalProperties": false,
+                  "properties": {
+                    "code": {
+                      "type": "string"
+                    },
+                    "context": {},
+                    "details": {
+                      "type": "string"
+                    },
+                    "message": {
+                      "type": "string"
+                    },
+                    "retryAfterSeconds": {
+                      "minimum": 1,
+                      "type": "integer"
+                    }
+                  },
+                  "required": [
+                    "message"
+                  ],
+                  "type": "object"
+                }
+              }
+            },
+            "description": "Default Response"
+          },
+          "403": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "additionalProperties": false,
+                  "properties": {
+                    "code": {
+                      "type": "string"
+                    },
+                    "context": {},
+                    "details": {
+                      "type": "string"
+                    },
+                    "message": {
+                      "type": "string"
+                    },
+                    "retryAfterSeconds": {
+                      "minimum": 1,
+                      "type": "integer"
+                    }
+                  },
+                  "required": [
+                    "message"
+                  ],
+                  "type": "object"
+                }
+              }
+            },
+            "description": "Default Response"
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "additionalProperties": false,
+                  "properties": {
+                    "code": {
+                      "type": "string"
+                    },
+                    "context": {},
+                    "details": {
+                      "type": "string"
+                    },
+                    "message": {
+                      "type": "string"
+                    },
+                    "retryAfterSeconds": {
+                      "minimum": 1,
+                      "type": "integer"
+                    }
+                  },
+                  "required": [
+                    "message"
+                  ],
+                  "type": "object"
+                }
+              }
+            },
+            "description": "Default Response"
+          },
+          "409": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "additionalProperties": false,
+                  "properties": {
+                    "code": {
+                      "type": "string"
+                    },
+                    "context": {},
+                    "details": {
+                      "type": "string"
+                    },
+                    "message": {
+                      "type": "string"
+                    },
+                    "retryAfterSeconds": {
+                      "minimum": 1,
+                      "type": "integer"
+                    }
+                  },
+                  "required": [
+                    "message"
+                  ],
+                  "type": "object"
+                }
+              }
+            },
+            "description": "Default Response"
+          },
+          "500": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "additionalProperties": false,
+                  "properties": {
+                    "code": {
+                      "type": "string"
+                    },
+                    "context": {},
+                    "details": {
+                      "type": "string"
+                    },
+                    "message": {
+                      "type": "string"
+                    },
+                    "retryAfterSeconds": {
+                      "minimum": 1,
+                      "type": "integer"
+                    }
+                  },
+                  "required": [
+                    "message"
+                  ],
+                  "type": "object"
+                }
+              }
+            },
+            "description": "Default Response"
+          }
+        },
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "tags": [
+          "Local training"
         ]
       }
     },

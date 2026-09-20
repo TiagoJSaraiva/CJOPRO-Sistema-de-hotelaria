@@ -368,6 +368,67 @@ export const CashMovementInputSchema = Type.Object(
 );
 export type CashMovementInput = Static<typeof CashMovementInputSchema>;
 
+export type CashMovementSummary = {
+  kind: string;
+  total: number;
+};
+
+export type CashSessionView = {
+  id: string;
+  status: "open" | "counting" | "difference_pending" | "closed" | "canceled";
+  version: number;
+  operator_id: string;
+  operator_name?: string | null;
+  business_date: string;
+  opening_float: number;
+  expected_cash: number | null;
+  counted_cash: number | null;
+  difference_amount: number | null;
+  closed_by_name?: string | null;
+  movement_totals?: Record<string, number>;
+};
+
+export type CashRegisterView = {
+  id: string;
+  name: string;
+  code: string;
+  kind: "reception" | "consumption";
+  consumption_point_id: string | null;
+  consumption_point_name?: string | null;
+  currency: string;
+  difference_tolerance: number;
+  active: boolean;
+  active_session: CashSessionView | null;
+};
+
+export type DailyCloseProjection = {
+  business_date: string;
+  transactions: Array<{
+    type: "INCOME" | "EXPENSE" | "REFUND" | string;
+    payment_method: string;
+    amount: number;
+    count: number;
+  }>;
+  totals: { income: number; expense: number; refund: number };
+  is_zero_activity: boolean;
+  cash_sessions: CashSessionView[];
+  blockers: Array<{ kind: string; entity_id: string; title: string }>;
+};
+
+export type DailyCloseView = {
+  close: {
+    id: string;
+    status: "open" | "prepared" | "closed" | "rejected";
+    version: number;
+    fingerprint: string | null;
+    prepared_by: string | null;
+    prepared_by_name?: string | null;
+    approved_by: string | null;
+    approved_by_name?: string | null;
+  } | null;
+  projection: DailyCloseProjection;
+};
+
 export const DailyClosePrepareSchema = Type.Object(
   {
     expected_version: Type.Integer({ minimum: 0 }),

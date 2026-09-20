@@ -117,6 +117,8 @@ function repository(
     writeCategory: vi.fn(async () => ({ result: "conflict" })),
     listLocations: vi.fn(async () => []),
     writeLocation: vi.fn(async () => ({ result: "conflict" })),
+    getWarranty: vi.fn(async () => null),
+    recordWarrantyDecision: vi.fn(async () => ({ result: "conflict" })),
     getReferenceData: vi.fn(async () => ({
       categories: [],
       locations: [],
@@ -299,5 +301,80 @@ describe("maintenance routes", () => {
     });
     expect(response.statusCode).toBe(409);
     expect(response.json().message).toContain("confirme ciência");
+  });
+
+  it("isola a decisão de garantia em permissão própria", async () => {
+    const getWarranty = vi.fn(async () => ({
+      location: {
+        id: "99500000-0000-4000-8000-000000000001",
+        hotel_id: HOTEL_ID,
+        parent_location_id: null,
+        parent_name: null,
+        kind: "equipment" as const,
+        name: "Ar-condicionado",
+        description: null,
+        display_order: 0,
+        is_active: true,
+        asset_tag: "PAT-1",
+        manufacturer: null,
+        model: null,
+        serial_number: null,
+        installed_on: null,
+        warranty_ends_on: "2026-09-30",
+        supplier_id: null,
+        contract_id: null,
+        lifecycle_status: "active" as const,
+        version: 1,
+        created_at: "2026-09-01T00:00:00Z",
+        updated_at: "2026-09-01T00:00:00Z",
+      },
+      decisions: [],
+    }));
+    const recordWarrantyDecision = vi.fn(async () => ({
+      result: "ok",
+      id: "decision",
+    }));
+    const app = await appWith(
+      repository({ getWarranty, recordWarrantyDecision }),
+    );
+    expect(
+      (
+        await app.inject({
+          url: "/admin/maintenance/locations/99500000-0000-4000-8000-000000000001/warranty",
+          headers: headers([PERMISSIONS.MAINTENANCE_READ]),
+        })
+      ).statusCode,
+    ).toBe(200);
+    expect(
+      (
+        await app.inject({
+          method: "POST",
+          url: "/admin/maintenance/locations/99500000-0000-4000-8000-000000000001/warranty-decisions",
+          headers: headers([PERMISSIONS.MAINTENANCE_READ]),
+          payload: {
+            result: "expiry_acknowledged",
+            reason: "Ciência registrada",
+            expected_location_version: 1,
+          },
+        })
+      ).statusCode,
+    ).toBe(403);
+    const accepted = await app.inject({
+      method: "POST",
+      url: "/admin/maintenance/locations/99500000-0000-4000-8000-000000000001/warranty-decisions",
+      headers: headers([PERMISSIONS.MAINTENANCE_WARRANTIES_MANAGE]),
+      payload: {
+        result: "expiry_acknowledged",
+        reason: "Ciência registrada",
+        expected_location_version: 1,
+      },
+    });
+    expect(accepted.statusCode).toBe(201);
+    expect(recordWarrantyDecision).toHaveBeenCalledWith(
+      HOTEL_ID,
+      "99500000-0000-4000-8000-000000000001",
+      USER_ID,
+      expect.objectContaining({ result: "expiry_acknowledged" }),
+    );
   });
 });

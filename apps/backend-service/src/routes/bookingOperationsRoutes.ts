@@ -385,6 +385,15 @@ export function registerBookingOperationsRoutes(
       }),
     );
   });
+  app.get("/admin/booking-channels/reference-data", async (request, reply) => {
+    const c = context(request, reply, PERMISSIONS.BOOKING_CHANNELS_MANAGE);
+    if (!c) return;
+    return reply.send(
+      await repository.query("list_booking_channel_reference_data", {
+        p_hotel_id: c.hotelId,
+      }),
+    );
+  });
   app.post<{ Body: BookingChannelInput }>(
     "/admin/booking-channels",
     async (request, reply) => {

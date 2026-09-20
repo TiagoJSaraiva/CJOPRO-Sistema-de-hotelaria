@@ -125,6 +125,15 @@ export const GovernanceCycleSchema = Type.Object(
     ]),
     last_updated_at: Type.String(),
     released_at: nullableText,
+    maintenance_occurrence_id: Type.Optional(Type.Union([uuid(), Type.Null()])),
+    maintenance_occurrence_code: Type.Optional(
+      Type.Union([Type.String(), Type.Null()]),
+    ),
+    maintenance_block_id: Type.Optional(Type.Union([uuid(), Type.Null()])),
+    maintenance_href: Type.Optional(Type.Union([Type.String(), Type.Null()])),
+    maintenance_next_step: Type.Optional(
+      Type.Union([Type.String(), Type.Null()]),
+    ),
     tasks: Type.Array(Type.Ref("GovernanceTask")),
     events: Type.Array(Type.Ref("GovernanceEvent")),
   },

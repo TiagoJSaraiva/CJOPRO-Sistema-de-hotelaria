@@ -23,3 +23,5 @@ export * from "./maintenance-planning";
 export * from "./consumption-journey";
 export * from "./operations-finance";
 export * from "./booking";
+export * from "./training";
+export * from "./maintenance-warranty";

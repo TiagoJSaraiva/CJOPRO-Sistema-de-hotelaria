@@ -218,6 +218,37 @@ export type BookingChannelMappingInput = Static<
   typeof BookingChannelMappingInputSchema
 >;
 
+export const BookingChannelReferenceDataSchema = Type.Object(
+  {
+    room_types: Type.Array(
+      Type.Object(
+        {
+          value: Type.String(),
+          label: Type.String(),
+          room_count: Type.Integer({ minimum: 0 }),
+        },
+        strict,
+      ),
+    ),
+    rate_plans: Type.Array(
+      Type.Object(
+        {
+          id: uuid(),
+          code: Type.String(),
+          name: Type.String(),
+          version: Type.Integer({ minimum: 1 }),
+          channels: Type.Array(Type.String()),
+        },
+        strict,
+      ),
+    ),
+  },
+  { ...strict, $id: "BookingChannelReferenceData" },
+);
+export type BookingChannelReferenceData = Static<
+  typeof BookingChannelReferenceDataSchema
+>;
+
 export const BookingChannelEventInputSchema = Type.Object(
   {
     event_id: Type.String({ minLength: 1, maxLength: 160 }),

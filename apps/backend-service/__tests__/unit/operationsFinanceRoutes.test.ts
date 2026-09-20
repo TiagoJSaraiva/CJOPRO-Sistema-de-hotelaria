@@ -145,6 +145,25 @@ it("traduz conflito concorrente e separa aprovação de caixa", async () => {
   );
 });
 
+it("consulta a sessão com identidade do ator para a contagem cega", async () => {
+  const { app, repository } = await setup();
+  const response = await app.inject({
+    url: `/admin/cash-sessions/${id}`,
+    headers: headers([PERMISSIONS.CASH_MANAGEMENT_READ]),
+  });
+  expect(response.statusCode).toBe(200);
+  expect(repository.rpc).toHaveBeenCalledWith("get_cash_session_for_actor", {
+    p_hotel_id: hotel,
+    p_id: id,
+    p_actor_id: user,
+    p_can_approve: false,
+  });
+  expect(repository.rpc).not.toHaveBeenCalledWith(
+    "get_cash_session",
+    expect.anything(),
+  );
+});
+
 it("exige payload completo para baixa parcial", async () => {
   const { app, repository } = await setup();
   const response = await app.inject({

@@ -87,6 +87,22 @@ it("lista planos sem mutação", async () => {
   });
   expect(repository.mutate).not.toHaveBeenCalled();
 });
+it("retorna referências de canal no hotel ativo", async () => {
+  const { app, repository } = await setup();
+  vi.mocked(repository.query).mockResolvedValueOnce({
+    room_types: [],
+    rate_plans: [],
+  });
+  const response = await app.inject({
+    url: "/admin/booking-channels/reference-data",
+    headers: headers([PERMISSIONS.BOOKING_CHANNELS_MANAGE]),
+  });
+  expect(response.statusCode).toBe(200);
+  expect(repository.query).toHaveBeenCalledWith(
+    "list_booking_channel_reference_data",
+    { p_hotel_id: hotel },
+  );
+});
 it("valida e encaminha alteração versionada", async () => {
   const { app, repository } = await setup();
   const post = (payload: unknown) =>
