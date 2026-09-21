@@ -34,4 +34,10 @@ nunca deve ser usada fora do ambiente local.
 As soluções ficam recolhidas no final de cada lição. O objetivo não é decorar
 cliques, mas explicar por que cada função pode ou não executar uma ação.
 
+Uma lição só está pronta quando o comando de preparação cria todos os dados e
+permissões necessários, cada link de contexto abre a entidade correta, as ações
+descritas podem ser concluídas e o resultado final pode ser conferido na
+interface. Os verificadores SQL protegem o estado inicial, mas não substituem a
+jornada HTTP e visual ponta a ponta.
+
 Se algo divergir do esperado, consulte [solução de problemas](troubleshooting.md).

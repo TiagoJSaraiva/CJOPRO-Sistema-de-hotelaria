@@ -324,56 +324,16 @@
           "provider_type": {
             "anyOf": [
               {
-                "additionalProperties": false,
-                "properties": {
-                  "partner": {
-                    "nullable": true
-                  },
-                  "type": {
-                    "enum": [
-                      "hotel"
-                    ],
-                    "type": "string"
-                  }
-                },
-                "required": [
-                  "type",
-                  "partner"
+                "enum": [
+                  "hotel"
                 ],
-                "type": "object"
+                "type": "string"
               },
               {
-                "additionalProperties": false,
-                "properties": {
-                  "partner": {
-                    "additionalProperties": false,
-                    "properties": {
-                      "id": {
-                        "format": "uuid",
-                        "type": "string"
-                      },
-                      "trade_name": {
-                        "type": "string"
-                      }
-                    },
-                    "required": [
-                      "id",
-                      "trade_name"
-                    ],
-                    "type": "object"
-                  },
-                  "type": {
-                    "enum": [
-                      "partner"
-                    ],
-                    "type": "string"
-                  }
-                },
-                "required": [
-                  "type",
+                "enum": [
                   "partner"
                 ],
-                "type": "object"
+                "type": "string"
               }
             ]
           },
@@ -1036,56 +996,16 @@
                 "provider_type": {
                   "anyOf": [
                     {
-                      "additionalProperties": false,
-                      "properties": {
-                        "partner": {
-                          "nullable": true
-                        },
-                        "type": {
-                          "enum": [
-                            "hotel"
-                          ],
-                          "type": "string"
-                        }
-                      },
-                      "required": [
-                        "type",
-                        "partner"
+                      "enum": [
+                        "hotel"
                       ],
-                      "type": "object"
+                      "type": "string"
                     },
                     {
-                      "additionalProperties": false,
-                      "properties": {
-                        "partner": {
-                          "additionalProperties": false,
-                          "properties": {
-                            "id": {
-                              "format": "uuid",
-                              "type": "string"
-                            },
-                            "trade_name": {
-                              "type": "string"
-                            }
-                          },
-                          "required": [
-                            "id",
-                            "trade_name"
-                          ],
-                          "type": "object"
-                        },
-                        "type": {
-                          "enum": [
-                            "partner"
-                          ],
-                          "type": "string"
-                        }
-                      },
-                      "required": [
-                        "type",
+                      "enum": [
                         "partner"
                       ],
-                      "type": "object"
+                      "type": "string"
                     }
                   ]
                 },
@@ -1706,56 +1626,16 @@
           "provider_type": {
             "anyOf": [
               {
-                "additionalProperties": false,
-                "properties": {
-                  "partner": {
-                    "nullable": true
-                  },
-                  "type": {
-                    "enum": [
-                      "hotel"
-                    ],
-                    "type": "string"
-                  }
-                },
-                "required": [
-                  "type",
-                  "partner"
+                "enum": [
+                  "hotel"
                 ],
-                "type": "object"
+                "type": "string"
               },
               {
-                "additionalProperties": false,
-                "properties": {
-                  "partner": {
-                    "additionalProperties": false,
-                    "properties": {
-                      "id": {
-                        "format": "uuid",
-                        "type": "string"
-                      },
-                      "trade_name": {
-                        "type": "string"
-                      }
-                    },
-                    "required": [
-                      "id",
-                      "trade_name"
-                    ],
-                    "type": "object"
-                  },
-                  "type": {
-                    "enum": [
-                      "partner"
-                    ],
-                    "type": "string"
-                  }
-                },
-                "required": [
-                  "type",
+                "enum": [
                   "partner"
                 ],
-                "type": "object"
+                "type": "string"
               }
             ]
           },
@@ -2192,56 +2072,16 @@
                 "provider_type": {
                   "anyOf": [
                     {
-                      "additionalProperties": false,
-                      "properties": {
-                        "partner": {
-                          "nullable": true
-                        },
-                        "type": {
-                          "enum": [
-                            "hotel"
-                          ],
-                          "type": "string"
-                        }
-                      },
-                      "required": [
-                        "type",
-                        "partner"
+                      "enum": [
+                        "hotel"
                       ],
-                      "type": "object"
+                      "type": "string"
                     },
                     {
-                      "additionalProperties": false,
-                      "properties": {
-                        "partner": {
-                          "additionalProperties": false,
-                          "properties": {
-                            "id": {
-                              "format": "uuid",
-                              "type": "string"
-                            },
-                            "trade_name": {
-                              "type": "string"
-                            }
-                          },
-                          "required": [
-                            "id",
-                            "trade_name"
-                          ],
-                          "type": "object"
-                        },
-                        "type": {
-                          "enum": [
-                            "partner"
-                          ],
-                          "type": "string"
-                        }
-                      },
-                      "required": [
-                        "type",
+                      "enum": [
                         "partner"
                       ],
-                      "type": "object"
+                      "type": "string"
                     }
                   ]
                 },
@@ -2771,56 +2611,16 @@
                       "provider_type": {
                         "anyOf": [
                           {
-                            "additionalProperties": false,
-                            "properties": {
-                              "partner": {
-                                "nullable": true
-                              },
-                              "type": {
-                                "enum": [
-                                  "hotel"
-                                ],
-                                "type": "string"
-                              }
-                            },
-                            "required": [
-                              "type",
-                              "partner"
+                            "enum": [
+                              "hotel"
                             ],
-                            "type": "object"
+                            "type": "string"
                           },
                           {
-                            "additionalProperties": false,
-                            "properties": {
-                              "partner": {
-                                "additionalProperties": false,
-                                "properties": {
-                                  "id": {
-                                    "format": "uuid",
-                                    "type": "string"
-                                  },
-                                  "trade_name": {
-                                    "type": "string"
-                                  }
-                                },
-                                "required": [
-                                  "id",
-                                  "trade_name"
-                                ],
-                                "type": "object"
-                              },
-                              "type": {
-                                "enum": [
-                                  "partner"
-                                ],
-                                "type": "string"
-                              }
-                            },
-                            "required": [
-                              "type",
+                            "enum": [
                               "partner"
                             ],
-                            "type": "object"
+                            "type": "string"
                           }
                         ]
                       },
@@ -18652,56 +18452,16 @@
                       "provider_type": {
                         "anyOf": [
                           {
-                            "additionalProperties": false,
-                            "properties": {
-                              "partner": {
-                                "nullable": true
-                              },
-                              "type": {
-                                "enum": [
-                                  "hotel"
-                                ],
-                                "type": "string"
-                              }
-                            },
-                            "required": [
-                              "type",
-                              "partner"
+                            "enum": [
+                              "hotel"
                             ],
-                            "type": "object"
+                            "type": "string"
                           },
                           {
-                            "additionalProperties": false,
-                            "properties": {
-                              "partner": {
-                                "additionalProperties": false,
-                                "properties": {
-                                  "id": {
-                                    "format": "uuid",
-                                    "type": "string"
-                                  },
-                                  "trade_name": {
-                                    "type": "string"
-                                  }
-                                },
-                                "required": [
-                                  "id",
-                                  "trade_name"
-                                ],
-                                "type": "object"
-                              },
-                              "type": {
-                                "enum": [
-                                  "partner"
-                                ],
-                                "type": "string"
-                              }
-                            },
-                            "required": [
-                              "type",
+                            "enum": [
                               "partner"
                             ],
-                            "type": "object"
+                            "type": "string"
                           }
                         ]
                       },
@@ -41977,56 +41737,16 @@
             "schema": {
               "anyOf": [
                 {
-                  "additionalProperties": false,
-                  "properties": {
-                    "partner": {
-                      "nullable": true
-                    },
-                    "type": {
-                      "enum": [
-                        "hotel"
-                      ],
-                      "type": "string"
-                    }
-                  },
-                  "required": [
-                    "type",
-                    "partner"
+                  "enum": [
+                    "hotel"
                   ],
-                  "type": "object"
+                  "type": "string"
                 },
                 {
-                  "additionalProperties": false,
-                  "properties": {
-                    "partner": {
-                      "additionalProperties": false,
-                      "properties": {
-                        "id": {
-                          "format": "uuid",
-                          "type": "string"
-                        },
-                        "trade_name": {
-                          "type": "string"
-                        }
-                      },
-                      "required": [
-                        "id",
-                        "trade_name"
-                      ],
-                      "type": "object"
-                    },
-                    "type": {
-                      "enum": [
-                        "partner"
-                      ],
-                      "type": "string"
-                    }
-                  },
-                  "required": [
-                    "type",
+                  "enum": [
                     "partner"
                   ],
-                  "type": "object"
+                  "type": "string"
                 }
               ]
             }
@@ -51222,56 +50942,16 @@
             "schema": {
               "anyOf": [
                 {
-                  "additionalProperties": false,
-                  "properties": {
-                    "partner": {
-                      "nullable": true
-                    },
-                    "type": {
-                      "enum": [
-                        "hotel"
-                      ],
-                      "type": "string"
-                    }
-                  },
-                  "required": [
-                    "type",
-                    "partner"
+                  "enum": [
+                    "hotel"
                   ],
-                  "type": "object"
+                  "type": "string"
                 },
                 {
-                  "additionalProperties": false,
-                  "properties": {
-                    "partner": {
-                      "additionalProperties": false,
-                      "properties": {
-                        "id": {
-                          "format": "uuid",
-                          "type": "string"
-                        },
-                        "trade_name": {
-                          "type": "string"
-                        }
-                      },
-                      "required": [
-                        "id",
-                        "trade_name"
-                      ],
-                      "type": "object"
-                    },
-                    "type": {
-                      "enum": [
-                        "partner"
-                      ],
-                      "type": "string"
-                    }
-                  },
-                  "required": [
-                    "type",
+                  "enum": [
                     "partner"
                   ],
-                  "type": "object"
+                  "type": "string"
                 }
               ]
             }
@@ -51621,56 +51301,16 @@
                                 "provider_type": {
                                   "anyOf": [
                                     {
-                                      "additionalProperties": false,
-                                      "properties": {
-                                        "partner": {
-                                          "nullable": true
-                                        },
-                                        "type": {
-                                          "enum": [
-                                            "hotel"
-                                          ],
-                                          "type": "string"
-                                        }
-                                      },
-                                      "required": [
-                                        "type",
-                                        "partner"
+                                      "enum": [
+                                        "hotel"
                                       ],
-                                      "type": "object"
+                                      "type": "string"
                                     },
                                     {
-                                      "additionalProperties": false,
-                                      "properties": {
-                                        "partner": {
-                                          "additionalProperties": false,
-                                          "properties": {
-                                            "id": {
-                                              "format": "uuid",
-                                              "type": "string"
-                                            },
-                                            "trade_name": {
-                                              "type": "string"
-                                            }
-                                          },
-                                          "required": [
-                                            "id",
-                                            "trade_name"
-                                          ],
-                                          "type": "object"
-                                        },
-                                        "type": {
-                                          "enum": [
-                                            "partner"
-                                          ],
-                                          "type": "string"
-                                        }
-                                      },
-                                      "required": [
-                                        "type",
+                                      "enum": [
                                         "partner"
                                       ],
-                                      "type": "object"
+                                      "type": "string"
                                     }
                                   ]
                                 },
@@ -52592,56 +52232,16 @@
                               "provider_type": {
                                 "anyOf": [
                                   {
-                                    "additionalProperties": false,
-                                    "properties": {
-                                      "partner": {
-                                        "nullable": true
-                                      },
-                                      "type": {
-                                        "enum": [
-                                          "hotel"
-                                        ],
-                                        "type": "string"
-                                      }
-                                    },
-                                    "required": [
-                                      "type",
-                                      "partner"
+                                    "enum": [
+                                      "hotel"
                                     ],
-                                    "type": "object"
+                                    "type": "string"
                                   },
                                   {
-                                    "additionalProperties": false,
-                                    "properties": {
-                                      "partner": {
-                                        "additionalProperties": false,
-                                        "properties": {
-                                          "id": {
-                                            "format": "uuid",
-                                            "type": "string"
-                                          },
-                                          "trade_name": {
-                                            "type": "string"
-                                          }
-                                        },
-                                        "required": [
-                                          "id",
-                                          "trade_name"
-                                        ],
-                                        "type": "object"
-                                      },
-                                      "type": {
-                                        "enum": [
-                                          "partner"
-                                        ],
-                                        "type": "string"
-                                      }
-                                    },
-                                    "required": [
-                                      "type",
+                                    "enum": [
                                       "partner"
                                     ],
-                                    "type": "object"
+                                    "type": "string"
                                   }
                                 ]
                               },
@@ -53182,56 +52782,16 @@
                               "provider_type": {
                                 "anyOf": [
                                   {
-                                    "additionalProperties": false,
-                                    "properties": {
-                                      "partner": {
-                                        "nullable": true
-                                      },
-                                      "type": {
-                                        "enum": [
-                                          "hotel"
-                                        ],
-                                        "type": "string"
-                                      }
-                                    },
-                                    "required": [
-                                      "type",
-                                      "partner"
+                                    "enum": [
+                                      "hotel"
                                     ],
-                                    "type": "object"
+                                    "type": "string"
                                   },
                                   {
-                                    "additionalProperties": false,
-                                    "properties": {
-                                      "partner": {
-                                        "additionalProperties": false,
-                                        "properties": {
-                                          "id": {
-                                            "format": "uuid",
-                                            "type": "string"
-                                          },
-                                          "trade_name": {
-                                            "type": "string"
-                                          }
-                                        },
-                                        "required": [
-                                          "id",
-                                          "trade_name"
-                                        ],
-                                        "type": "object"
-                                      },
-                                      "type": {
-                                        "enum": [
-                                          "partner"
-                                        ],
-                                        "type": "string"
-                                      }
-                                    },
-                                    "required": [
-                                      "type",
+                                    "enum": [
                                       "partner"
                                     ],
-                                    "type": "object"
+                                    "type": "string"
                                   }
                                 ]
                               },
@@ -53987,56 +53547,16 @@
                               "provider_type": {
                                 "anyOf": [
                                   {
-                                    "additionalProperties": false,
-                                    "properties": {
-                                      "partner": {
-                                        "nullable": true
-                                      },
-                                      "type": {
-                                        "enum": [
-                                          "hotel"
-                                        ],
-                                        "type": "string"
-                                      }
-                                    },
-                                    "required": [
-                                      "type",
-                                      "partner"
+                                    "enum": [
+                                      "hotel"
                                     ],
-                                    "type": "object"
+                                    "type": "string"
                                   },
                                   {
-                                    "additionalProperties": false,
-                                    "properties": {
-                                      "partner": {
-                                        "additionalProperties": false,
-                                        "properties": {
-                                          "id": {
-                                            "format": "uuid",
-                                            "type": "string"
-                                          },
-                                          "trade_name": {
-                                            "type": "string"
-                                          }
-                                        },
-                                        "required": [
-                                          "id",
-                                          "trade_name"
-                                        ],
-                                        "type": "object"
-                                      },
-                                      "type": {
-                                        "enum": [
-                                          "partner"
-                                        ],
-                                        "type": "string"
-                                      }
-                                    },
-                                    "required": [
-                                      "type",
+                                    "enum": [
                                       "partner"
                                     ],
-                                    "type": "object"
+                                    "type": "string"
                                   }
                                 ]
                               },
@@ -55865,56 +55385,16 @@
                               "provider_type": {
                                 "anyOf": [
                                   {
-                                    "additionalProperties": false,
-                                    "properties": {
-                                      "partner": {
-                                        "nullable": true
-                                      },
-                                      "type": {
-                                        "enum": [
-                                          "hotel"
-                                        ],
-                                        "type": "string"
-                                      }
-                                    },
-                                    "required": [
-                                      "type",
-                                      "partner"
+                                    "enum": [
+                                      "hotel"
                                     ],
-                                    "type": "object"
+                                    "type": "string"
                                   },
                                   {
-                                    "additionalProperties": false,
-                                    "properties": {
-                                      "partner": {
-                                        "additionalProperties": false,
-                                        "properties": {
-                                          "id": {
-                                            "format": "uuid",
-                                            "type": "string"
-                                          },
-                                          "trade_name": {
-                                            "type": "string"
-                                          }
-                                        },
-                                        "required": [
-                                          "id",
-                                          "trade_name"
-                                        ],
-                                        "type": "object"
-                                      },
-                                      "type": {
-                                        "enum": [
-                                          "partner"
-                                        ],
-                                        "type": "string"
-                                      }
-                                    },
-                                    "required": [
-                                      "type",
+                                    "enum": [
                                       "partner"
                                     ],
-                                    "type": "object"
+                                    "type": "string"
                                   }
                                 ]
                               },
@@ -143612,56 +143092,16 @@
                               "provider_type": {
                                 "anyOf": [
                                   {
-                                    "additionalProperties": false,
-                                    "properties": {
-                                      "partner": {
-                                        "nullable": true
-                                      },
-                                      "type": {
-                                        "enum": [
-                                          "hotel"
-                                        ],
-                                        "type": "string"
-                                      }
-                                    },
-                                    "required": [
-                                      "type",
-                                      "partner"
+                                    "enum": [
+                                      "hotel"
                                     ],
-                                    "type": "object"
+                                    "type": "string"
                                   },
                                   {
-                                    "additionalProperties": false,
-                                    "properties": {
-                                      "partner": {
-                                        "additionalProperties": false,
-                                        "properties": {
-                                          "id": {
-                                            "format": "uuid",
-                                            "type": "string"
-                                          },
-                                          "trade_name": {
-                                            "type": "string"
-                                          }
-                                        },
-                                        "required": [
-                                          "id",
-                                          "trade_name"
-                                        ],
-                                        "type": "object"
-                                      },
-                                      "type": {
-                                        "enum": [
-                                          "partner"
-                                        ],
-                                        "type": "string"
-                                      }
-                                    },
-                                    "required": [
-                                      "type",
+                                    "enum": [
                                       "partner"
                                     ],
-                                    "type": "object"
+                                    "type": "string"
                                   }
                                 ]
                               },
@@ -144797,56 +144237,16 @@
                                 "provider_type": {
                                   "anyOf": [
                                     {
-                                      "additionalProperties": false,
-                                      "properties": {
-                                        "partner": {
-                                          "nullable": true
-                                        },
-                                        "type": {
-                                          "enum": [
-                                            "hotel"
-                                          ],
-                                          "type": "string"
-                                        }
-                                      },
-                                      "required": [
-                                        "type",
-                                        "partner"
+                                      "enum": [
+                                        "hotel"
                                       ],
-                                      "type": "object"
+                                      "type": "string"
                                     },
                                     {
-                                      "additionalProperties": false,
-                                      "properties": {
-                                        "partner": {
-                                          "additionalProperties": false,
-                                          "properties": {
-                                            "id": {
-                                              "format": "uuid",
-                                              "type": "string"
-                                            },
-                                            "trade_name": {
-                                              "type": "string"
-                                            }
-                                          },
-                                          "required": [
-                                            "id",
-                                            "trade_name"
-                                          ],
-                                          "type": "object"
-                                        },
-                                        "type": {
-                                          "enum": [
-                                            "partner"
-                                          ],
-                                          "type": "string"
-                                        }
-                                      },
-                                      "required": [
-                                        "type",
+                                      "enum": [
                                         "partner"
                                       ],
-                                      "type": "object"
+                                      "type": "string"
                                     }
                                   ]
                                 },
@@ -145941,56 +145341,16 @@
                               "provider_type": {
                                 "anyOf": [
                                   {
-                                    "additionalProperties": false,
-                                    "properties": {
-                                      "partner": {
-                                        "nullable": true
-                                      },
-                                      "type": {
-                                        "enum": [
-                                          "hotel"
-                                        ],
-                                        "type": "string"
-                                      }
-                                    },
-                                    "required": [
-                                      "type",
-                                      "partner"
+                                    "enum": [
+                                      "hotel"
                                     ],
-                                    "type": "object"
+                                    "type": "string"
                                   },
                                   {
-                                    "additionalProperties": false,
-                                    "properties": {
-                                      "partner": {
-                                        "additionalProperties": false,
-                                        "properties": {
-                                          "id": {
-                                            "format": "uuid",
-                                            "type": "string"
-                                          },
-                                          "trade_name": {
-                                            "type": "string"
-                                          }
-                                        },
-                                        "required": [
-                                          "id",
-                                          "trade_name"
-                                        ],
-                                        "type": "object"
-                                      },
-                                      "type": {
-                                        "enum": [
-                                          "partner"
-                                        ],
-                                        "type": "string"
-                                      }
-                                    },
-                                    "required": [
-                                      "type",
+                                    "enum": [
                                       "partner"
                                     ],
-                                    "type": "object"
+                                    "type": "string"
                                   }
                                 ]
                               },
@@ -147061,56 +146421,16 @@
                               "provider_type": {
                                 "anyOf": [
                                   {
-                                    "additionalProperties": false,
-                                    "properties": {
-                                      "partner": {
-                                        "nullable": true
-                                      },
-                                      "type": {
-                                        "enum": [
-                                          "hotel"
-                                        ],
-                                        "type": "string"
-                                      }
-                                    },
-                                    "required": [
-                                      "type",
-                                      "partner"
+                                    "enum": [
+                                      "hotel"
                                     ],
-                                    "type": "object"
+                                    "type": "string"
                                   },
                                   {
-                                    "additionalProperties": false,
-                                    "properties": {
-                                      "partner": {
-                                        "additionalProperties": false,
-                                        "properties": {
-                                          "id": {
-                                            "format": "uuid",
-                                            "type": "string"
-                                          },
-                                          "trade_name": {
-                                            "type": "string"
-                                          }
-                                        },
-                                        "required": [
-                                          "id",
-                                          "trade_name"
-                                        ],
-                                        "type": "object"
-                                      },
-                                      "type": {
-                                        "enum": [
-                                          "partner"
-                                        ],
-                                        "type": "string"
-                                      }
-                                    },
-                                    "required": [
-                                      "type",
+                                    "enum": [
                                       "partner"
                                     ],
-                                    "type": "object"
+                                    "type": "string"
                                   }
                                 ]
                               },
@@ -148224,56 +147544,16 @@
                               "provider_type": {
                                 "anyOf": [
                                   {
-                                    "additionalProperties": false,
-                                    "properties": {
-                                      "partner": {
-                                        "nullable": true
-                                      },
-                                      "type": {
-                                        "enum": [
-                                          "hotel"
-                                        ],
-                                        "type": "string"
-                                      }
-                                    },
-                                    "required": [
-                                      "type",
-                                      "partner"
+                                    "enum": [
+                                      "hotel"
                                     ],
-                                    "type": "object"
+                                    "type": "string"
                                   },
                                   {
-                                    "additionalProperties": false,
-                                    "properties": {
-                                      "partner": {
-                                        "additionalProperties": false,
-                                        "properties": {
-                                          "id": {
-                                            "format": "uuid",
-                                            "type": "string"
-                                          },
-                                          "trade_name": {
-                                            "type": "string"
-                                          }
-                                        },
-                                        "required": [
-                                          "id",
-                                          "trade_name"
-                                        ],
-                                        "type": "object"
-                                      },
-                                      "type": {
-                                        "enum": [
-                                          "partner"
-                                        ],
-                                        "type": "string"
-                                      }
-                                    },
-                                    "required": [
-                                      "type",
+                                    "enum": [
                                       "partner"
                                     ],
-                                    "type": "object"
+                                    "type": "string"
                                   }
                                 ]
                               },
@@ -149427,56 +148707,16 @@
                               "provider_type": {
                                 "anyOf": [
                                   {
-                                    "additionalProperties": false,
-                                    "properties": {
-                                      "partner": {
-                                        "nullable": true
-                                      },
-                                      "type": {
-                                        "enum": [
-                                          "hotel"
-                                        ],
-                                        "type": "string"
-                                      }
-                                    },
-                                    "required": [
-                                      "type",
-                                      "partner"
+                                    "enum": [
+                                      "hotel"
                                     ],
-                                    "type": "object"
+                                    "type": "string"
                                   },
                                   {
-                                    "additionalProperties": false,
-                                    "properties": {
-                                      "partner": {
-                                        "additionalProperties": false,
-                                        "properties": {
-                                          "id": {
-                                            "format": "uuid",
-                                            "type": "string"
-                                          },
-                                          "trade_name": {
-                                            "type": "string"
-                                          }
-                                        },
-                                        "required": [
-                                          "id",
-                                          "trade_name"
-                                        ],
-                                        "type": "object"
-                                      },
-                                      "type": {
-                                        "enum": [
-                                          "partner"
-                                        ],
-                                        "type": "string"
-                                      }
-                                    },
-                                    "required": [
-                                      "type",
+                                    "enum": [
                                       "partner"
                                     ],
-                                    "type": "object"
+                                    "type": "string"
                                   }
                                 ]
                               },
@@ -150567,56 +149807,16 @@
                               "provider_type": {
                                 "anyOf": [
                                   {
-                                    "additionalProperties": false,
-                                    "properties": {
-                                      "partner": {
-                                        "nullable": true
-                                      },
-                                      "type": {
-                                        "enum": [
-                                          "hotel"
-                                        ],
-                                        "type": "string"
-                                      }
-                                    },
-                                    "required": [
-                                      "type",
-                                      "partner"
+                                    "enum": [
+                                      "hotel"
                                     ],
-                                    "type": "object"
+                                    "type": "string"
                                   },
                                   {
-                                    "additionalProperties": false,
-                                    "properties": {
-                                      "partner": {
-                                        "additionalProperties": false,
-                                        "properties": {
-                                          "id": {
-                                            "format": "uuid",
-                                            "type": "string"
-                                          },
-                                          "trade_name": {
-                                            "type": "string"
-                                          }
-                                        },
-                                        "required": [
-                                          "id",
-                                          "trade_name"
-                                        ],
-                                        "type": "object"
-                                      },
-                                      "type": {
-                                        "enum": [
-                                          "partner"
-                                        ],
-                                        "type": "string"
-                                      }
-                                    },
-                                    "required": [
-                                      "type",
+                                    "enum": [
                                       "partner"
                                     ],
-                                    "type": "object"
+                                    "type": "string"
                                   }
                                 ]
                               },
@@ -151707,56 +150907,16 @@
                               "provider_type": {
                                 "anyOf": [
                                   {
-                                    "additionalProperties": false,
-                                    "properties": {
-                                      "partner": {
-                                        "nullable": true
-                                      },
-                                      "type": {
-                                        "enum": [
-                                          "hotel"
-                                        ],
-                                        "type": "string"
-                                      }
-                                    },
-                                    "required": [
-                                      "type",
-                                      "partner"
+                                    "enum": [
+                                      "hotel"
                                     ],
-                                    "type": "object"
+                                    "type": "string"
                                   },
                                   {
-                                    "additionalProperties": false,
-                                    "properties": {
-                                      "partner": {
-                                        "additionalProperties": false,
-                                        "properties": {
-                                          "id": {
-                                            "format": "uuid",
-                                            "type": "string"
-                                          },
-                                          "trade_name": {
-                                            "type": "string"
-                                          }
-                                        },
-                                        "required": [
-                                          "id",
-                                          "trade_name"
-                                        ],
-                                        "type": "object"
-                                      },
-                                      "type": {
-                                        "enum": [
-                                          "partner"
-                                        ],
-                                        "type": "string"
-                                      }
-                                    },
-                                    "required": [
-                                      "type",
+                                    "enum": [
                                       "partner"
                                     ],
-                                    "type": "object"
+                                    "type": "string"
                                   }
                                 ]
                               },
@@ -174093,56 +173253,16 @@
                                     "provider_type": {
                                       "anyOf": [
                                         {
-                                          "additionalProperties": false,
-                                          "properties": {
-                                            "partner": {
-                                              "nullable": true
-                                            },
-                                            "type": {
-                                              "enum": [
-                                                "hotel"
-                                              ],
-                                              "type": "string"
-                                            }
-                                          },
-                                          "required": [
-                                            "type",
-                                            "partner"
+                                          "enum": [
+                                            "hotel"
                                           ],
-                                          "type": "object"
+                                          "type": "string"
                                         },
                                         {
-                                          "additionalProperties": false,
-                                          "properties": {
-                                            "partner": {
-                                              "additionalProperties": false,
-                                              "properties": {
-                                                "id": {
-                                                  "format": "uuid",
-                                                  "type": "string"
-                                                },
-                                                "trade_name": {
-                                                  "type": "string"
-                                                }
-                                              },
-                                              "required": [
-                                                "id",
-                                                "trade_name"
-                                              ],
-                                              "type": "object"
-                                            },
-                                            "type": {
-                                              "enum": [
-                                                "partner"
-                                              ],
-                                              "type": "string"
-                                            }
-                                          },
-                                          "required": [
-                                            "type",
+                                          "enum": [
                                             "partner"
                                           ],
-                                          "type": "object"
+                                          "type": "string"
                                         }
                                       ]
                                     },
@@ -178785,56 +177905,16 @@
                                     "provider_type": {
                                       "anyOf": [
                                         {
-                                          "additionalProperties": false,
-                                          "properties": {
-                                            "partner": {
-                                              "nullable": true
-                                            },
-                                            "type": {
-                                              "enum": [
-                                                "hotel"
-                                              ],
-                                              "type": "string"
-                                            }
-                                          },
-                                          "required": [
-                                            "type",
-                                            "partner"
+                                          "enum": [
+                                            "hotel"
                                           ],
-                                          "type": "object"
+                                          "type": "string"
                                         },
                                         {
-                                          "additionalProperties": false,
-                                          "properties": {
-                                            "partner": {
-                                              "additionalProperties": false,
-                                              "properties": {
-                                                "id": {
-                                                  "format": "uuid",
-                                                  "type": "string"
-                                                },
-                                                "trade_name": {
-                                                  "type": "string"
-                                                }
-                                              },
-                                              "required": [
-                                                "id",
-                                                "trade_name"
-                                              ],
-                                              "type": "object"
-                                            },
-                                            "type": {
-                                              "enum": [
-                                                "partner"
-                                              ],
-                                              "type": "string"
-                                            }
-                                          },
-                                          "required": [
-                                            "type",
+                                          "enum": [
                                             "partner"
                                           ],
-                                          "type": "object"
+                                          "type": "string"
                                         }
                                       ]
                                     },
@@ -185811,56 +184891,16 @@
                                     "provider_type": {
                                       "anyOf": [
                                         {
-                                          "additionalProperties": false,
-                                          "properties": {
-                                            "partner": {
-                                              "nullable": true
-                                            },
-                                            "type": {
-                                              "enum": [
-                                                "hotel"
-                                              ],
-                                              "type": "string"
-                                            }
-                                          },
-                                          "required": [
-                                            "type",
-                                            "partner"
+                                          "enum": [
+                                            "hotel"
                                           ],
-                                          "type": "object"
+                                          "type": "string"
                                         },
                                         {
-                                          "additionalProperties": false,
-                                          "properties": {
-                                            "partner": {
-                                              "additionalProperties": false,
-                                              "properties": {
-                                                "id": {
-                                                  "format": "uuid",
-                                                  "type": "string"
-                                                },
-                                                "trade_name": {
-                                                  "type": "string"
-                                                }
-                                              },
-                                              "required": [
-                                                "id",
-                                                "trade_name"
-                                              ],
-                                              "type": "object"
-                                            },
-                                            "type": {
-                                              "enum": [
-                                                "partner"
-                                              ],
-                                              "type": "string"
-                                            }
-                                          },
-                                          "required": [
-                                            "type",
+                                          "enum": [
                                             "partner"
                                           ],
-                                          "type": "object"
+                                          "type": "string"
                                         }
                                       ]
                                     },
@@ -189663,56 +188703,16 @@
                                     "provider_type": {
                                       "anyOf": [
                                         {
-                                          "additionalProperties": false,
-                                          "properties": {
-                                            "partner": {
-                                              "nullable": true
-                                            },
-                                            "type": {
-                                              "enum": [
-                                                "hotel"
-                                              ],
-                                              "type": "string"
-                                            }
-                                          },
-                                          "required": [
-                                            "type",
-                                            "partner"
+                                          "enum": [
+                                            "hotel"
                                           ],
-                                          "type": "object"
+                                          "type": "string"
                                         },
                                         {
-                                          "additionalProperties": false,
-                                          "properties": {
-                                            "partner": {
-                                              "additionalProperties": false,
-                                              "properties": {
-                                                "id": {
-                                                  "format": "uuid",
-                                                  "type": "string"
-                                                },
-                                                "trade_name": {
-                                                  "type": "string"
-                                                }
-                                              },
-                                              "required": [
-                                                "id",
-                                                "trade_name"
-                                              ],
-                                              "type": "object"
-                                            },
-                                            "type": {
-                                              "enum": [
-                                                "partner"
-                                              ],
-                                              "type": "string"
-                                            }
-                                          },
-                                          "required": [
-                                            "type",
+                                          "enum": [
                                             "partner"
                                           ],
-                                          "type": "object"
+                                          "type": "string"
                                         }
                                       ]
                                     },

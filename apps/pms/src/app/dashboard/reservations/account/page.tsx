@@ -1,3 +1,4 @@
+import Link from "next/link";
 import { redirect } from "next/navigation";
 import { getStayAccount, getStayPayerAccounts } from "../../../../lib/adminApi";
 import { getUserFromSession } from "../../../../lib/auth";
@@ -33,7 +34,38 @@ export default async function StayAccountPage({
       />
     );
   if (!params?.stay_id) redirect("/dashboard/reservations/view");
-  const account = await getStayAccount(params.stay_id).catch(() => null);
+  let account: Awaited<ReturnType<typeof getStayAccount>>;
+  try {
+    account = await getStayAccount(params.stay_id);
+  } catch (cause) {
+    const statusCode = (cause as Error & { statusCode?: number }).statusCode;
+    if (statusCode === 403)
+      return (
+        <DashboardAccessDeniedCard
+          title="Conta da estadia"
+          message="Sem permissão para consultar esta conta no hotel ativo."
+        />
+      );
+    if (statusCode === 404)
+      return (
+        <DashboardAccessDeniedCard
+          title="Conta da estadia"
+          message="Conta não encontrada no hotel ativo."
+        />
+      );
+    return (
+      <section className="pms-surface-card" role="alert">
+        <h2 className="mt-0">Conta da estadia</h2>
+        <p>Não foi possível carregar a conta. Tente novamente.</p>
+        <Link
+          className="inline-flex rounded-lg border border-slate-300 bg-white px-3 py-2 no-underline"
+          href={`/dashboard/reservations/account?stay_id=${encodeURIComponent(params.stay_id)}`}
+        >
+          Tentar novamente
+        </Link>
+      </section>
+    );
+  }
   if (!account)
     return (
       <DashboardAccessDeniedCard

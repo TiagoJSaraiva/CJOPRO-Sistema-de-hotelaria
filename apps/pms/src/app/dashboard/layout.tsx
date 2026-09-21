@@ -14,7 +14,7 @@ import {
   resolveActiveHotelForUser,
 } from "../../lib/activeHotel";
 import { logoutAction, setActiveHotelAction } from "./actions";
-import { ActiveHotelSelector } from "./_components/ActiveHotelSelector";
+import { ActiveHotelContext } from "./_components/ActiveHotelSelector";
 import { getRoomsAccess } from "./rooms/access";
 import { getMaintenanceAccess } from "./maintenance/access";
 import { getMaintenanceNotificationSummary } from "../../lib/adminApi";
@@ -211,13 +211,11 @@ export default async function DashboardLayout({
                 : ""}
             </Link>
           ) : null}
-          {activeHotelOptions.length > 1 ? (
-            <ActiveHotelSelector
-              options={activeHotelOptions}
-              initialHotelId={activeHotelId}
-              onChangeAction={setActiveHotelAction}
-            />
-          ) : null}
+          <ActiveHotelContext
+            options={activeHotelOptions}
+            initialHotelId={activeHotelId}
+            onChangeAction={setActiveHotelAction}
+          />
 
           <span className="whitespace-nowrap text-[0.95rem] text-[#3f3f3f]">
             {userDisplayName}

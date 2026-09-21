@@ -58,7 +58,7 @@ export default defineConfig({
       },
     },
     {
-      command: "pnpm dev",
+      command: `pnpm exec next dev --port ${appPort}`,
       url: `${baseURL}/login`,
       reuseExistingServer: false,
       timeout: 120_000,

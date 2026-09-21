@@ -13,6 +13,21 @@ type ActiveHotelSelectorProps = {
   onChangeAction: (formData: FormData) => Promise<void>;
 };
 
+export function ActiveHotelContext(props: ActiveHotelSelectorProps) {
+  const activeLabel =
+    props.options.find((option) => option.hotelId === props.initialHotelId)
+      ?.label || "Hotel não definido";
+
+  return (
+    <div className="flex flex-wrap items-center justify-end gap-2 text-[0.88rem] text-[#3f3f3f]">
+      <span className="whitespace-nowrap">
+        Hotel ativo: <strong>{activeLabel}</strong>
+      </span>
+      {props.options.length > 1 ? <ActiveHotelSelector {...props} /> : null}
+    </div>
+  );
+}
+
 function toSelectValue(hotelId: string | null): string {
   return hotelId || ACTIVE_HOTEL_GLOBAL_VALUE;
 }
@@ -52,7 +67,7 @@ export function ActiveHotelSelector({
 
   return (
     <label className="inline-flex items-center gap-[0.35rem] text-[0.88rem] text-[#3f3f3f]">
-      Hotel
+      Trocar hotel
       <select
         name="hotelId"
         value={value}

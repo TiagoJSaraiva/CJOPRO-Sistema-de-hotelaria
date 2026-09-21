@@ -243,6 +243,42 @@ test.describe("PMS UI quality", () => {
     },
   );
   test(
+    "orientação abre o saldo assumido no hotel ativo",
+    { tag: "@a11y" },
+    async ({ page, context, request, baseURL, auditAccessibility }) => {
+      await request.post(`${MOCK_BACKEND_URL}/test/orientation`);
+      await authenticate(context, baseURL!, "management-e2e-token");
+      await preparePage(page);
+      await page.goto("/dashboard/pending");
+
+      await expect(
+        page.locator("header").getByText(/Hotel ativo:/),
+      ).toBeVisible();
+      await expect(
+        page.getByText("Saldo pendente no quarto 102", { exact: true }),
+      ).toBeVisible();
+      await page.getByRole("button", { name: "Marcar lida" }).click();
+      await page.getByRole("button", { name: "Assumir" }).click();
+      await expect(page.getByText("Responsável: Marina Costa")).toBeVisible();
+      await page.getByRole("button", { name: "Abrir contexto" }).click();
+
+      await expect(page).toHaveURL(
+        /\/dashboard\/reservations\/account\?stay_id=stay-2$/,
+      );
+      await expect(
+        page.getByRole("heading", { name: "Conta da estadia", exact: true }),
+      ).toBeVisible();
+      await expect(
+        page.getByRole("heading", { name: "Quarto 102", exact: true }),
+      ).toBeVisible();
+      await expect(
+        page.getByText("R$ 360,00", { exact: true }).first(),
+      ).toBeVisible();
+      await auditAccessibility("orientation-stay-account");
+      await request.post(`${MOCK_BACKEND_URL}/test/reset-state`);
+    },
+  );
+  test(
     "governança prioriza, orienta e sincroniza o responsável",
     { tag: TEST_TAGS },
     async ({ page, context, baseURL, auditAccessibility }) => {

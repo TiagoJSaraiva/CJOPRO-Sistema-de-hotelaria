@@ -898,7 +898,7 @@ function sendJson(response, statusCode, payload) {
   response.end(JSON.stringify(payload));
 }
 
-let pendingFixture = {
+const defaultPendingFixture = () => ({
   id: "a0900000-0000-4000-8000-000000000001",
   entity_id: "a0900000-0000-4000-8000-000000000002",
   source: "consumption",
@@ -914,7 +914,8 @@ let pendingFixture = {
   resolved_at: null,
   resolution_reason: null,
   read: false,
-};
+});
+let pendingFixture = defaultPendingFixture();
 const governanceCycle = {
   id: "cycle-governance-e2e",
   hotel_id: "hotel-e2e",
@@ -1069,16 +1070,30 @@ const server = http.createServer(async (request, response) => {
     sendJson(response, 200, { ok: true });
     return;
   }
-  if (method === "POST" && url.pathname === "/test/reset-state") {
-    splitConsumption = false;
+  if (method === "POST" && url.pathname === "/test/orientation") {
     pendingFixture = {
-      ...pendingFixture,
+      id: "orientation-guest-balance",
+      entity_id: "stay-2",
+      source: "consumption",
+      kind: "guest_balance",
+      title: "Saldo pendente no quarto 102",
+      href: "/dashboard/reservations/account?stay_id=stay-2",
+      severity: "warning",
       status: "open",
       assigned_to: null,
       assignee_name: null,
       version: 1,
+      opened_at: "2026-05-12T12:00:00Z",
+      resolved_at: null,
+      resolution_reason: null,
       read: false,
     };
+    sendJson(response, 200, { ok: true });
+    return;
+  }
+  if (method === "POST" && url.pathname === "/test/reset-state") {
+    splitConsumption = false;
+    pendingFixture = defaultPendingFixture();
     governanceCycle.version = 1;
     governanceCycle.tasks[0].status = "pending";
     governanceCycle.tasks[0].assigned_to = null;

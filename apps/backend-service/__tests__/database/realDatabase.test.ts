@@ -24,6 +24,7 @@ describe.sequential("Supabase local com Fastify real", () => {
   let adminToken: string;
   let managerAToken: string;
   let managerBToken: string;
+  let receptionToken: string;
   const today = new Intl.DateTimeFormat("en-CA", {
     timeZone: "America/Sao_Paulo",
     year: "numeric",
@@ -140,6 +141,7 @@ describe.sequential("Supabase local com Fastify real", () => {
     adminToken = await login("admin@hotelaria.local");
     managerAToken = await login("gerente.aurora@hotelaria.local");
     managerBToken = await login("gerente.horizonte@hotelaria.local");
+    receptionToken = await login("recepcao.aurora@hotelaria.local");
   }, 90_000); // Includes complete contract compilation and local authentication.
 
   afterAll(async () => {
@@ -153,6 +155,32 @@ describe.sequential("Supabase local com Fastify real", () => {
     expect(() => assertLocalApiUrl("http://127.0.0.1:54322")).toThrow(
       /Recusado ambiente Supabase nao local/,
     );
+  });
+
+  it("abre a conta sintética da recepção e a oculta do Hotel Horizonte", async () => {
+    const stayId = "91000000-0000-4000-8000-000000000002";
+    const account = await app.inject({
+      method: "GET",
+      url: `/admin/stays/${stayId}/account`,
+      headers: managerHeaders(receptionToken, HOTEL_A),
+    });
+    expect(account.statusCode).toBe(200);
+    expect(account.json().item).toMatchObject({
+      stay_id: stayId,
+      reservation_code: "LOCAL-AUR-002",
+      room_number: "102",
+    });
+    expect(account.json().item.folio.balance).toBe(380);
+    expect(
+      account.json().item.consumption_orders[0].items[0].provider_type,
+    ).toBe("hotel");
+
+    const hidden = await app.inject({
+      method: "GET",
+      url: `/admin/stays/${stayId}/account`,
+      headers: managerHeaders(managerBToken, HOTEL_B),
+    });
+    expect(hidden.statusCode).toBe(404);
   });
 
   it("consulta todos os modulos e mantem o isolamento entre os dois hoteis", async () => {

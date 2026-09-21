@@ -1135,6 +1135,10 @@ export const CommercialPartnerSummarySchema = Type.Object(
   },
   { ...strict, $id: "CommercialPartnerSummary" },
 );
+export const ProductProviderTypeSchema = Type.Union([
+  Type.Literal("hotel"),
+  Type.Literal("partner"),
+]);
 export const ProductProviderSchema = Type.Union(
   [
     Type.Object({ type: Type.Literal("hotel"), partner: Type.Null() }, strict),
@@ -1635,7 +1639,7 @@ export const ConsumptionContextOfferSchema = Type.Object(
     category_name: Type.String(),
     unit_price: Type.Number(),
     currency: Type.String(),
-    provider_type: ProductProviderSchema,
+    provider_type: ProductProviderTypeSchema,
     partner_id: nullable(uuid()),
     partner_name: nullable(Type.String()),
     agreement_id: nullable(uuid()),
@@ -1718,7 +1722,7 @@ export const ConsumptionOrderItemSchema = Type.Object(
     category_name: Type.String(),
     product_kind: ProductKindSchema,
     sales_unit: ProductSalesUnitSchema,
-    provider_type: ProductProviderSchema,
+    provider_type: ProductProviderTypeSchema,
     partner_id: nullable(uuid()),
     partner_name: nullable(Type.String()),
     agreement_id: nullable(uuid()),
@@ -1995,7 +1999,7 @@ export const PartnerSettlementSourceSchema = Type.Object(
     billing_mode: nullable(ConsumptionBillingModeSchema),
     payment_method: nullable(ConsumptionPaymentMethodSchema),
     disposition: ConsumptionOrderDispositionSchema,
-    provider_type: ProductProviderSchema,
+    provider_type: ProductProviderTypeSchema,
     gross_amount: Type.Number(),
     discount_amount: Type.Number(),
     reversal_amount: Type.Number(),
@@ -5035,7 +5039,7 @@ export const API_ROUTE_CONTRACTS: Readonly<Record<string, ApiRouteContract>> = {
           point_id: Type.Optional(uuid()),
           billing_mode: Type.Optional(ConsumptionBillingModeSchema),
           disposition: Type.Optional(ConsumptionOrderDispositionSchema),
-          provider_type: Type.Optional(ProductProviderSchema),
+          provider_type: Type.Optional(ProductProviderTypeSchema),
           operator_id: Type.Optional(uuid()),
         },
         strict,
@@ -6427,7 +6431,7 @@ export const API_ROUTE_CONTRACTS: Readonly<Record<string, ApiRouteContract>> = {
           disposition: Type.Optional(ConsumptionOrderDispositionSchema),
           billing_mode: Type.Optional(ConsumptionBillingModeSchema),
           payment_method: Type.Optional(ConsumptionPaymentMethodSchema),
-          provider_type: Type.Optional(ProductProviderSchema),
+          provider_type: Type.Optional(ProductProviderTypeSchema),
           partner_id: Type.Optional(uuid()),
           operator_id: Type.Optional(uuid()),
           cursor: Type.Optional(Type.String({ pattern: "^[0-9]+$" })),
