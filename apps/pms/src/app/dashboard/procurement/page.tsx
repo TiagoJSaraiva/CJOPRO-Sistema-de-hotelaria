@@ -5,6 +5,7 @@ import { getUserFromSession } from "../../../lib/auth";
 import {
   listInventoryLocations,
   listProducts,
+  getConsumptionManagementSettings,
   requestOperationsFinanceEndpoint,
 } from "../../../lib/adminApi";
 import {
@@ -49,12 +50,14 @@ export default async function ProcurementPage({
         message="Sem permissão para consultar compras do hotel ativo."
       />
     );
-  const [board, products, locations, { status }] = await Promise.all([
-    requestOperationsFinanceEndpoint<Board>("procurement/board", "GET"),
-    listProducts(true),
-    listInventoryLocations(false),
-    searchParams,
-  ]);
+  const [board, products, locations, managementSettings, { status }] =
+    await Promise.all([
+      requestOperationsFinanceEndpoint<Board>("procurement/board", "GET"),
+      listProducts(true),
+      listInventoryLocations(false),
+      getConsumptionManagementSettings(),
+      searchParams,
+    ]);
   const physical = products.filter(
     (p) => p.kind === "physical" && !p.archived_at,
   );
@@ -499,6 +502,11 @@ export default async function ProcurementPage({
                         key={String(line.id)}
                       >
                         <input type="hidden" name="id" value={String(o.id)} />
+                        <input
+                          type="hidden"
+                          name="occurred_at"
+                          value={managementSettings.operational_now}
+                        />
                         <input
                           type="hidden"
                           name="version"

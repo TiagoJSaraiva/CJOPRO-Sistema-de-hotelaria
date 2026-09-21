@@ -211,6 +211,8 @@ function createSupabaseMock(options: SupabaseMockOptions = {}) {
 
   const rpc = vi.fn(async (name: string) => {
     if (name === "governance_room_state") return { data: null, error: null };
+    if (name === "hotel_operational_now")
+      return { data: "2026-05-18T13:00:00.000Z", error: null };
     return { data: null, error: null };
   });
   return { from, rpc };

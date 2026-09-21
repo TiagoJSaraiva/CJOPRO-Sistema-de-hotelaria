@@ -7,12 +7,14 @@ const mocks = vi.hoisted(() => ({
   request: vi.fn(),
   products: vi.fn(),
   locations: vi.fn(),
+  settings: vi.fn(),
 }));
 vi.mock("../../../src/lib/auth", () => ({ getUserFromSession: mocks.user }));
 vi.mock("../../../src/lib/adminApi", () => ({
   requestOperationsFinanceEndpoint: mocks.request,
   listProducts: mocks.products,
   listInventoryLocations: mocks.locations,
+  getConsumptionManagementSettings: mocks.settings,
 }));
 vi.mock(
   "../../../src/app/dashboard/_components/DashboardEntityPageShell",
@@ -40,6 +42,10 @@ beforeEach(() => {
   vi.clearAllMocks();
   mocks.products.mockResolvedValue([]);
   mocks.locations.mockResolvedValue([]);
+  mocks.settings.mockResolvedValue({
+    operational_date: "2026-09-14",
+    operational_now: "2026-09-14T15:00:00.000Z",
+  });
 });
 
 it("shows the procurement board only to authorized users", async () => {

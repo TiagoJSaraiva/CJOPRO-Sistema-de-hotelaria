@@ -203,6 +203,7 @@ with role_permission_seed(role_id, permission_name) as (
     ('70000000-0000-4000-8000-000000000009'::uuid,'post_inventory_movements'),
     ('70000000-0000-4000-8000-000000000009'::uuid,'perform_inventory_counts'),
     ('70000000-0000-4000-8000-000000000009'::uuid,'manage_inventory_lots'),
+    ('70000000-0000-4000-8000-000000000009'::uuid,'manage_minibar_compositions'),
     ('70000000-0000-4000-8000-000000000009'::uuid,'read_procurement'),
     ('70000000-0000-4000-8000-000000000009'::uuid,'request_procurement'),
     ('70000000-0000-4000-8000-000000000009'::uuid,'receive_procurement'),
@@ -215,7 +216,9 @@ with role_permission_seed(role_id, permission_name) as (
     ('70000000-0000-4000-8000-000000000010'::uuid,'review_procurement_invoices'),
     ('70000000-0000-4000-8000-000000000010'::uuid,'settle_supplier_payables'),
     ('70000000-0000-4000-8000-000000000010'::uuid,'read_partner_settlements'),
-    ('70000000-0000-4000-8000-000000000010'::uuid,'prepare_partner_settlements')
+    ('70000000-0000-4000-8000-000000000010'::uuid,'prepare_partner_settlements'),
+    ('70000000-0000-4000-8000-000000000010'::uuid,'settle_partner_settlements'),
+    ('70000000-0000-4000-8000-000000000010'::uuid,'manage_partner_disputes')
 )
 insert into public.role_permissions(role_id,permission_id)
 select seed.role_id,permission.id

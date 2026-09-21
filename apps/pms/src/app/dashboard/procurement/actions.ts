@@ -142,7 +142,7 @@ export async function receivePurchaseOrderAction(form: FormData) {
     "POST",
     {
       expected_version: number(form, "version"),
-      occurred_at: new Date().toISOString(),
+      occurred_at: text(form, "occurred_at"),
       reference_code: text(form, "reference_code") || undefined,
       notes: text(form, "notes") || undefined,
       idempotency_key: crypto.randomUUID(),

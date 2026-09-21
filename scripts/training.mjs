@@ -11,6 +11,10 @@ const SCENARIO_DIRECTORY = resolve(
   ROOT_DIRECTORY,
   "supabase/training/scenarios",
 );
+const VERIFICATION_DIRECTORY = resolve(
+  ROOT_DIRECTORY,
+  "supabase/training/verification",
+);
 const PROJECT_ID = "IFSP_PROJETO";
 const DATABASE_CONTAINER = `supabase_db_${PROJECT_ID}`;
 const AURORA_ID = "10000000-0000-4000-8000-000000000001";
@@ -29,6 +33,18 @@ export const TRAINING_SCENARIOS = Object.freeze([
   ["partner-settlement", "Parceiros, apuração e contestação"],
   ["integrated-shift", "Turno integrado final"],
 ]);
+
+const SCENARIO_DEPENDENCIES = Object.freeze({
+  "integrated-shift": [
+    "reservations-arrival",
+    "governance-maintenance",
+    "warranty",
+    "consumption-account",
+    "inventory-procurement",
+    "cash-close",
+    "partner-settlement",
+  ],
+});
 
 function fail(message, correction) {
   throw new Error(`${message}${correction ? `\nCorreção: ${correction}` : ""}`);
@@ -152,6 +168,24 @@ function environmentSql() {
   return `select public.get_training_environment('${AURORA_ID}'::uuid);`;
 }
 
+function knownScenario(key) {
+  return TRAINING_SCENARIOS.find(([candidate]) => candidate === key);
+}
+
+function scenarioFile(directory, key) {
+  if (!knownScenario(key)) {
+    fail(
+      `Cenário desconhecido: ${key || "(ausente)"}.`,
+      "Execute pnpm training scenarios.",
+    );
+  }
+  const file = resolve(directory, `${key}.sql`);
+  if (!file.startsWith(`${directory}\\`) && !file.startsWith(`${directory}/`))
+    fail("Caminho de cenário recusado.");
+  if (!existsSync(file)) fail(`Contrato SQL ausente para o cenário ${key}.`);
+  return file;
+}
+
 function showClock() {
   validateLocalEnvironment();
   process.stdout.write(`${runSql(environmentSql(), { capture: true })}\n`);
@@ -192,21 +226,7 @@ async function confirmReset() {
 }
 
 async function resetScenario(key, yes) {
-  const scenario = TRAINING_SCENARIOS.find(([candidate]) => candidate === key);
-  if (!scenario) {
-    fail(
-      `Cenário desconhecido: ${key || "(ausente)"}.`,
-      "Execute pnpm training scenarios.",
-    );
-  }
-  const fixture = resolve(SCENARIO_DIRECTORY, `${key}.sql`);
-  if (
-    !fixture.startsWith(`${SCENARIO_DIRECTORY}\\`) &&
-    !fixture.startsWith(`${SCENARIO_DIRECTORY}/`)
-  ) {
-    fail("Caminho de cenário recusado.");
-  }
-  if (!existsSync(fixture)) fail(`Fixture ausente para o cenário ${key}.`);
+  const fixture = scenarioFile(SCENARIO_DIRECTORY, key);
   validateLocalEnvironment();
   if (!yes && !(await confirmReset())) {
     process.stdout.write("Reset cancelado; nenhum dado foi alterado.\n");
@@ -216,10 +236,43 @@ async function resetScenario(key, yes) {
   const reset = runPnpm(["db:reset"]);
   if (reset.status !== 0) fail("O reset do Supabase local falhou.");
   validateLocalEnvironment();
+  for (const dependency of SCENARIO_DEPENDENCIES[key] || []) {
+    runSql(readFileSync(scenarioFile(SCENARIO_DIRECTORY, dependency), "utf8"));
+  }
   runSql(readFileSync(fixture, "utf8"));
   process.stdout.write(
     `Cenário ${key} preparado e relógio do Hotel Aurora congelado.\n`,
   );
+}
+
+function verifyScenario(key) {
+  const verification = scenarioFile(VERIFICATION_DIRECTORY, key);
+  const common = resolve(VERIFICATION_DIRECTORY, "common.sql");
+  if (!existsSync(common)) fail("Contrato comum de verificação ausente.");
+  validateLocalEnvironment();
+  const environment = JSON.parse(runSql(environmentSql(), { capture: true }));
+  if (environment.scenario_key !== key || environment.clock_mode !== "frozen") {
+    fail(
+      `O banco local está no cenário ${environment.scenario_key || "nenhum"} e relógio ${environment.clock_mode}.`,
+      `Execute pnpm training reset --scenario ${key}.`,
+    );
+  }
+  runSql(
+    `${readFileSync(common, "utf8")}\n${readFileSync(verification, "utf8")}`,
+  );
+  process.stdout.write(`Cenário ${key} verificado com sucesso.\n`);
+}
+
+async function verifyAllScenarios() {
+  validateLocalEnvironment();
+  process.stdout.write(
+    "A verificação completa recriará somente o Supabase local para cada cenário.\n",
+  );
+  for (const [key] of TRAINING_SCENARIOS) {
+    await resetScenario(key, true);
+    verifyScenario(key);
+  }
+  process.stdout.write("Todos os cenários didáticos foram verificados.\n");
 }
 
 export function parseTrainingArguments(argv) {
@@ -231,6 +284,14 @@ export function parseTrainingArguments(argv) {
       kind: "reset",
       scenario: scenarioIndex >= 0 ? argv[scenarioIndex + 1] : undefined,
       yes: argv.includes("--yes"),
+    };
+  }
+  if (command === "verify") {
+    const scenarioIndex = argv.indexOf("--scenario");
+    return {
+      kind: "verify",
+      scenario: scenarioIndex >= 0 ? argv[scenarioIndex + 1] : undefined,
+      all: argv.includes("--all"),
     };
   }
   if (command === "clock" && subject === "show")
@@ -259,6 +320,16 @@ async function main(argv) {
   }
   if (parsed.kind === "reset")
     return resetScenario(parsed.scenario, parsed.yes);
+  if (parsed.kind === "verify") {
+    if (parsed.all && parsed.scenario)
+      fail("Use --all ou --scenario, nunca os dois ao mesmo tempo.");
+    if (parsed.all) return verifyAllScenarios();
+    if (!parsed.scenario)
+      fail(
+        "Informe --scenario <cenário> ou --all para verificar o treinamento.",
+      );
+    return verifyScenario(parsed.scenario);
+  }
   if (parsed.kind === "clock") {
     if (parsed.action === "show") return showClock();
     if (parsed.action === "set") {
@@ -284,7 +355,7 @@ async function main(argv) {
     return clockAction(parsed.action);
   }
   process.stdout.write(
-    "Uso:\n  pnpm training reset --scenario <cenário> [--yes]\n  pnpm training clock show|freeze|resume\n  pnpm training clock set <data-hora ISO>\n  pnpm training clock advance <quantidade> <hours|days>\n  pnpm training scenarios\n",
+    "Uso:\n  pnpm training reset --scenario <cenário> [--yes]\n  pnpm training verify --scenario <cenário>\n  pnpm training verify --all\n  pnpm training clock show|freeze|resume\n  pnpm training clock set <data-hora ISO>\n  pnpm training clock advance <quantidade> <hours|days>\n  pnpm training scenarios\n",
   );
   process.exitCode = 1;
 }

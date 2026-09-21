@@ -4,6 +4,7 @@ import { DashboardEntityPageShell } from "../../_components/DashboardEntityPageS
 import { getUserFromSession } from "../../../../lib/auth";
 import {
   getInventoryOverview,
+  getConsumptionManagementSettings,
   listInventoryAuditEvents,
   listInventoryCounts,
   listInventoryLocations,
@@ -327,9 +328,10 @@ async function InventoryMovements({
   positions: Awaited<ReturnType<typeof getInventoryOverview>>["items"];
   locations: Awaited<ReturnType<typeof listInventoryLocations>>;
 }) {
-  const [history, audit] = await Promise.all([
+  const [history, audit, managementSettings] = await Promise.all([
     listInventoryMovements(),
     listInventoryAuditEvents(),
+    getConsumptionManagementSettings(),
   ]);
   return (
     <section className="grid gap-4">
@@ -346,6 +348,11 @@ async function InventoryMovements({
             action={postInventoryDocumentAction}
             className="grid gap-3 md:grid-cols-3"
           >
+            <input
+              type="hidden"
+              name="occurred_at"
+              value={managementSettings.operational_now}
+            />
             <label className="pms-field">
               Tipo
               <select name="kind" className="pms-field-input">
@@ -433,6 +440,11 @@ async function InventoryMovements({
             action={transferInventoryAction}
             className="grid gap-3 border-t pt-4 md:grid-cols-3"
           >
+            <input
+              type="hidden"
+              name="occurred_at"
+              value={managementSettings.operational_now}
+            />
             <h3 className="md:col-span-3 m-0 text-lg font-semibold">
               Transferir entre locais
             </h3>

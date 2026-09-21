@@ -301,13 +301,25 @@ export class SupabaseConsumptionManagementRepository implements ConsumptionManag
   }
 
   async getSettings(hotelId: string) {
-    const { data, error } = await this.client
-      .from("consumption_management_settings")
-      .select("*")
-      .eq("hotel_id", hotelId)
-      .maybeSingle();
-    if (error) throw error;
-    return data;
+    const [settings, operationalDate, operationalNow] = await Promise.all([
+      this.client
+        .from("consumption_management_settings")
+        .select("*")
+        .eq("hotel_id", hotelId)
+        .maybeSingle(),
+      this.client.rpc("hotel_operational_date", { p_hotel_id: hotelId }),
+      this.client.rpc("hotel_operational_now", { p_hotel_id: hotelId }),
+    ]);
+    if (settings.error) throw settings.error;
+    if (operationalDate.error) throw operationalDate.error;
+    if (operationalNow.error) throw operationalNow.error;
+    return settings.data
+      ? {
+          ...settings.data,
+          operational_date: String(operationalDate.data),
+          operational_now: String(operationalNow.data),
+        }
+      : null;
   }
 
   async updateSettings(
@@ -315,14 +327,14 @@ export class SupabaseConsumptionManagementRepository implements ConsumptionManag
     actorId: string,
     input: AdminConsumptionManagementSettingsInput,
   ) {
-    const { data, error } = await this.client
+    const { error } = await this.client
       .from("consumption_management_settings")
       .update({ ...input, last_changed_by: actorId })
       .eq("hotel_id", hotelId)
-      .select("*")
+      .select("hotel_id")
       .maybeSingle();
     if (error) throw error;
-    return data;
+    return this.getSettings(hotelId);
   }
 
   async getAnalytics(hotelId: string, filters: ConsumptionAnalyticsFilters) {

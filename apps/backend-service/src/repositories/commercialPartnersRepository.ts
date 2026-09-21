@@ -55,10 +55,10 @@ function effectiveStatus(
   revisions: Array<
     Omit<AdminCommercialAgreementRevision, "effective_status" | "point_ids">
   >,
+  today: string,
 ): AdminCommercialAgreementRevision["effective_status"] {
   if (revision.status === "draft") return "draft";
   if (revision.status === "terminated") return "terminated";
-  const today = new Date().toISOString().slice(0, 10);
   if (revision.starts_on > today) return "scheduled";
   if (
     revisions.some(
@@ -76,17 +76,21 @@ function effectiveStatus(
 function mapRevision(
   row: RevisionRow,
   allRows: RevisionRow[],
+  today: string,
 ): AdminCommercialAgreementRevision {
   const { points, ...revision } = row;
   const pointRows = Array.isArray(points) ? points : points ? [points] : [];
   return {
     ...revision,
     point_ids: pointRows.map((point) => point.point_id),
-    effective_status: effectiveStatus(revision, allRows),
+    effective_status: effectiveStatus(revision, allRows, today),
   };
 }
 
-function mapAgreement(row: AgreementRow): AdminCommercialAgreement {
+function mapAgreement(
+  row: AgreementRow,
+  today: string,
+): AdminCommercialAgreement {
   const partner = Array.isArray(row.partner) ? row.partner[0] : row.partner;
   if (!partner) throw new Error("Acordo sem parceiro associado.");
   const revisionRows = Array.isArray(row.revisions)
@@ -95,7 +99,7 @@ function mapAgreement(row: AgreementRow): AdminCommercialAgreement {
       ? [row.revisions]
       : [];
   const revisions = revisionRows
-    .map((revision) => mapRevision(revision, revisionRows))
+    .map((revision) => mapRevision(revision, revisionRows, today))
     .sort((a, b) => b.version - a.version);
   return {
     ...row,
@@ -384,39 +388,61 @@ class SupabaseCommercialPartnersRepository implements CommercialPartnersReposito
   }
 
   async listAgreements(hotelId: string, includeArchived = false) {
-    let query = createServerClient()
-      .from("commercial_agreements")
-      .select(AGREEMENT_FIELDS);
+    const client = createServerClient();
+    let query = client.from("commercial_agreements").select(AGREEMENT_FIELDS);
     query = applyHotelContextFilter(query, hotelId);
     if (!includeArchived) query = query.is("archived_at", null);
-    const { data, error } = await query.order("internal_number");
+    const [{ data, error }, operationalDate] = await Promise.all([
+      query.order("internal_number"),
+      client.rpc("hotel_operational_date", { p_hotel_id: hotelId }),
+    ]);
     if (error) throw error;
-    return ((data || []) as unknown as AgreementRow[]).map(mapAgreement);
+    if (operationalDate.error) throw operationalDate.error;
+    return ((data || []) as unknown as AgreementRow[]).map((row) =>
+      mapAgreement(row, String(operationalDate.data)),
+    );
   }
 
   async getAgreement(id: string, hotelId: string) {
-    let query = createServerClient()
+    const client = createServerClient();
+    let query = client
       .from("commercial_agreements")
       .select(AGREEMENT_FIELDS)
       .eq("id", id);
     query = applyHotelContextFilter(query, hotelId);
-    const { data, error } = await query.maybeSingle();
+    const [{ data, error }, operationalDate] = await Promise.all([
+      query.maybeSingle(),
+      client.rpc("hotel_operational_date", { p_hotel_id: hotelId }),
+    ]);
     if (error) throw error;
-    return data ? mapAgreement(data as unknown as AgreementRow) : null;
+    if (operationalDate.error) throw operationalDate.error;
+    return data
+      ? mapAgreement(
+          data as unknown as AgreementRow,
+          String(operationalDate.data),
+        )
+      : null;
   }
 
   async getRevision(id: string, hotelId: string) {
-    let query = createServerClient()
+    const client = createServerClient();
+    let query = client
       .from("commercial_agreement_revisions")
       .select(REVISION_FIELDS)
       .eq("id", id);
     query = applyHotelContextFilter(query, hotelId);
-    const { data, error } = await query.maybeSingle();
+    const [{ data, error }, operationalDate] = await Promise.all([
+      query.maybeSingle(),
+      client.rpc("hotel_operational_date", { p_hotel_id: hotelId }),
+    ]);
     if (error) throw error;
+    if (operationalDate.error) throw operationalDate.error;
     return data
-      ? mapRevision(data as unknown as RevisionRow, [
+      ? mapRevision(
           data as unknown as RevisionRow,
-        ])
+          [data as unknown as RevisionRow],
+          String(operationalDate.data),
+        )
       : null;
   }
 

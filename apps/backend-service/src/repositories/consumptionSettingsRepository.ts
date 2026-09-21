@@ -184,6 +184,7 @@ function mapPoint(
 
 function mapOffer(
   row: OfferRow,
+  today: string,
   inventoryPositions: Array<{
     product_id: string;
     location_id: string;
@@ -259,7 +260,6 @@ function mapOffer(
     )
       reasons.push("inventory_position_inactive");
   }
-  const today = new Date().toISOString().slice(0, 10);
   const revisions = agreement?.revisions || [];
   const scopedRevisions = revisions.filter((revision) => {
     const points = Array.isArray(revision.points)
@@ -676,17 +676,22 @@ class SupabaseConsumptionSettingsRepository implements ConsumptionSettingsReposi
       query = query.eq("point_id", typedFilters.pointId);
     if (typedFilters.productId)
       query = query.eq("product_id", typedFilters.productId);
-    const [offersResult, positionsResult] = await Promise.all([
+    const [offersResult, positionsResult, operationalDate] = await Promise.all([
       query.order("display_order").order("created_at"),
       createServerClient()
         .from("inventory_positions")
         .select("product_id,location_id,is_active,archived_at")
         .eq("hotel_id", hotelId),
+      createServerClient().rpc("hotel_operational_date", {
+        p_hotel_id: hotelId,
+      }),
     ]);
-    if (offersResult.error || positionsResult.error)
-      throw offersResult.error || positionsResult.error;
+    if (offersResult.error || positionsResult.error || operationalDate.error)
+      throw (
+        offersResult.error || positionsResult.error || operationalDate.error
+      );
     return ((offersResult.data || []) as unknown as OfferRow[]).map((row) =>
-      mapOffer(row, positionsResult.data || []),
+      mapOffer(row, String(operationalDate.data), positionsResult.data || []),
     );
   }
 

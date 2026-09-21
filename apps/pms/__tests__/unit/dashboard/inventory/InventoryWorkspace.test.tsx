@@ -13,6 +13,7 @@ const mocks = vi.hoisted(() => ({
   movements: vi.fn(),
   audit: vi.fn(),
   counts: vi.fn(),
+  settings: vi.fn(),
 }));
 
 vi.mock("../../../../src/lib/auth", () => ({
@@ -25,6 +26,7 @@ vi.mock("../../../../src/lib/adminApi", () => ({
   listInventoryMovements: mocks.movements,
   listInventoryAuditEvents: mocks.audit,
   listInventoryCounts: mocks.counts,
+  getConsumptionManagementSettings: mocks.settings,
 }));
 vi.mock(
   "../../../../src/app/dashboard/_components/DashboardEntityPageShell",
@@ -119,6 +121,10 @@ beforeEach(() => {
   });
   mocks.locations.mockResolvedValue([location]);
   mocks.products.mockResolvedValue([product]);
+  mocks.settings.mockResolvedValue({
+    operational_date: "2026-09-14",
+    operational_now: "2026-09-14T15:00:00.000Z",
+  });
   mocks.movements.mockResolvedValue({
     items: [
       {

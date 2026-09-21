@@ -42,8 +42,8 @@ const money = (value: number) =>
   new Intl.NumberFormat("pt-BR", { style: "currency", currency: "BRL" }).format(
     value,
   );
-function previousMonth() {
-  const date = new Date();
+function previousMonth(operationalDate: string) {
+  const date = new Date(`${operationalDate}T12:00:00.000Z`);
   date.setUTCDate(1);
   date.setUTCMonth(date.getUTCMonth() - 1);
   return date.toISOString().slice(0, 7);
@@ -68,10 +68,10 @@ export default async function PartnerSettlementsPage({
         message="Sem permissão para consultar apurações."
       />
     );
-  const month = params.month || previousMonth();
+  const settings = await getConsumptionManagementSettings();
+  const month = params.month || previousMonth(settings.operational_date);
   const periodStart = `${month}-01`;
-  const [settings, candidates, list, selected] = await Promise.all([
-    getConsumptionManagementSettings(),
+  const [candidates, list, selected] = await Promise.all([
     listPartnerSettlementCandidates(periodStart),
     listPartnerSettlements({
       period_start: params.only_month === "true" ? periodStart : undefined,
@@ -80,7 +80,7 @@ export default async function PartnerSettlementsPage({
     }),
     params.id ? getPartnerSettlement(params.id) : Promise.resolve(null),
   ]);
-  const now = new Date().toISOString().slice(0, 16);
+  const now = settings.operational_now.slice(0, 16);
   return (
     <DashboardEntityPageShell
       title="Vendas e consumo"

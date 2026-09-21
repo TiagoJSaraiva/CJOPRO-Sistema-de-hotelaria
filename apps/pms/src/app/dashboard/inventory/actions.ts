@@ -298,7 +298,7 @@ export async function postInventoryDocumentAction(formData: FormData) {
       reason,
       reference_code:
         String(formData.get("reference_code") || "").trim() || null,
-      occurred_at: new Date().toISOString(),
+      occurred_at: String(formData.get("occurred_at")),
       idempotency_key: uuid(),
       lines: [{ position_id: positionId, quantity, unit_cost: unitCost }],
     });
@@ -333,7 +333,7 @@ export async function transferInventoryAction(formData: FormData) {
       quantity,
       reason,
       reference_code: null,
-      occurred_at: new Date().toISOString(),
+      occurred_at: String(formData.get("occurred_at")),
       idempotency_key: uuid(),
     });
   } catch {

@@ -4,6 +4,7 @@ import { DashboardAccessDeniedCard } from "../../_components/DashboardAccessDeni
 import { DashboardEntityPageShell } from "../../_components/DashboardEntityPageShell";
 import {
   getConsumptionAnalytics,
+  getConsumptionManagementSettings,
   getOperationalPending,
 } from "../../../../lib/adminApi";
 import { getUserFromSession } from "../../../../lib/auth";
@@ -30,8 +31,8 @@ const money = (value: number) =>
     value,
   );
 
-function defaultPeriod() {
-  const today = new Date();
+function defaultPeriod(operationalDate: string) {
+  const today = new Date(`${operationalDate}T12:00:00.000Z`);
   const end = today.toISOString().slice(0, 10);
   today.setUTCDate(1);
   return { from: today.toISOString().slice(0, 10), to: end };
@@ -51,7 +52,8 @@ export default async function ConsumptionAnalyticsPage({
         message="Sem permissão para consultar indicadores de consumo."
       />
     );
-  const fallback = defaultPeriod();
+  const settings = await getConsumptionManagementSettings();
+  const fallback = defaultPeriod(settings.operational_date);
   const from = params.from || fallback.from;
   const to = params.to || fallback.to;
   const dimension = dimensions.some(([value]) => value === params.dimension)

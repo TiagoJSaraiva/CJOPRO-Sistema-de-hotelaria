@@ -1,5 +1,5 @@
 begin;
-select plan(55);
+select plan(59);
 
 select has_table('public','hotel_training_environments','training environment exists');
 select has_table('public','hotel_training_clock_events','clock history exists');
@@ -413,6 +413,35 @@ select is(
 select ok(
   exists(select 1 from public.inventory_positions where hotel_id='10000000-0000-4000-8000-000000000001'),
   'Aurora seed contains an inventory position'
+);
+select lives_ok(
+  $$update public.products set lot_tracking_mode='lot_expiry'
+    where id='40000000-0000-4000-8000-000000000001'$$,
+  'catalog audit trigger accepts product-specific fields'
+);
+select ok(
+  exists(
+    select 1 from public.role_permissions rp
+    join public.permissions p on p.id=rp.permission_id
+    where rp.role_id='70000000-0000-4000-8000-000000000010'
+      and p.name in('settle_partner_settlements','manage_partner_disputes')
+    group by rp.role_id having count(*)=2
+  ),
+  'finance can settle approved partner statements and open disputes'
+);
+select ok(
+  exists(
+    select 1 from public.role_permissions rp
+    join public.permissions p on p.id=rp.permission_id
+    where rp.role_id='70000000-0000-4000-8000-000000000009'
+      and p.name='manage_minibar_compositions'
+  ),
+  'inventory role can configure minibar compositions used by the lesson'
+);
+select ok(
+  pg_get_functiondef('public.decide_partner_settlement(uuid,uuid,uuid,bigint,text,text)'::regprocedure)
+    like '%hotel_operational_date%',
+  'partner settlement approval compares the operational date'
 );
 
 select * from finish();

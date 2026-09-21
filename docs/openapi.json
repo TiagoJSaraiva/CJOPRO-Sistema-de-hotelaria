@@ -45535,6 +45535,14 @@
                           "nullable": true,
                           "type": "string"
                         },
+                        "operational_date": {
+                          "format": "date",
+                          "type": "string"
+                        },
+                        "operational_now": {
+                          "format": "date-time",
+                          "type": "string"
+                        },
                         "payment_due_days": {
                           "maximum": 90,
                           "minimum": 0,
@@ -45552,6 +45560,8 @@
                       },
                       "required": [
                         "hotel_id",
+                        "operational_date",
+                        "operational_now",
                         "settlement_tracking_starts_on",
                         "payment_due_days",
                         "agreement_expiry_alert_days",
@@ -45848,6 +45858,14 @@
                           "nullable": true,
                           "type": "string"
                         },
+                        "operational_date": {
+                          "format": "date",
+                          "type": "string"
+                        },
+                        "operational_now": {
+                          "format": "date-time",
+                          "type": "string"
+                        },
                         "payment_due_days": {
                           "maximum": 90,
                           "minimum": 0,
@@ -45865,6 +45883,8 @@
                       },
                       "required": [
                         "hotel_id",
+                        "operational_date",
+                        "operational_now",
                         "settlement_tracking_starts_on",
                         "payment_due_days",
                         "agreement_expiry_alert_days",

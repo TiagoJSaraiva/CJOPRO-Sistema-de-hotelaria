@@ -90,8 +90,10 @@ function parseTimeToMinutes(value: string | null | undefined): number | null {
   return hour * 60 + minute;
 }
 
-function getNowInTimezone(timezone: string): { date: string; minutes: number } {
-  const now = new Date();
+function getNowInTimezone(
+  timezone: string,
+  reference: Date,
+): { date: string; minutes: number } {
   const parts = new Intl.DateTimeFormat("en-CA", {
     timeZone: timezone,
     year: "numeric",
@@ -100,7 +102,7 @@ function getNowInTimezone(timezone: string): { date: string; minutes: number } {
     hour: "2-digit",
     minute: "2-digit",
     hourCycle: "h23",
-  }).formatToParts(now);
+  }).formatToParts(reference);
 
   const year = parts.find((part) => part.type === "year")?.value || "1970";
   const month = parts.find((part) => part.type === "month")?.value || "01";
@@ -183,7 +185,15 @@ async function loadStayPanel(
   const checkoutStartMinutes = parseTimeToMinutes(checkoutStart);
   const checkoutLimitMinutes = parseTimeToMinutes(checkoutLimit);
 
-  const nowInHotelTz = getNowInTimezone(timezone);
+  const operationalNowResult = await createServerClient().rpc(
+    "hotel_operational_now",
+    { p_hotel_id: activeHotelId },
+  );
+  if (operationalNowResult.error) throw operationalNowResult.error;
+  const nowInHotelTz = getNowInTimezone(
+    timezone,
+    new Date(String(operationalNowResult.data)),
+  );
   const expectedCheckinDate = toIsoDate(stay.checkin_date_expected);
   const expectedCheckoutDate = toIsoDate(stay.checkout_date_expected);
   const stayStatus = (stay.stay_status || "confirmed") as ReservationStatus;

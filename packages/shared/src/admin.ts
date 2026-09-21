@@ -614,6 +614,8 @@ export type ConsumptionAnalyticsDimension =
 
 export type AdminConsumptionManagementSettings = {
   hotel_id: string;
+  operational_date: string;
+  operational_now: string;
   settlement_tracking_starts_on: string;
   payment_due_days: number;
   agreement_expiry_alert_days: number;

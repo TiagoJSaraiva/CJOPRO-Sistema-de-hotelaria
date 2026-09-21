@@ -324,7 +324,17 @@ async function computeBooking(
     }
   }
 
-  const today = new Date().toISOString().slice(0, 10);
+  const operationalDateResult = await supabase.rpc("hotel_operational_date", {
+    p_hotel_id: activeHotelId,
+  });
+  if (operationalDateResult.error) {
+    return {
+      ok: false,
+      statusCode: 500,
+      message: "Falha ao consultar a data operacional do hotel.",
+    };
+  }
+  const today = String(operationalDateResult.data);
   const blocksResult = await supabase
     .from("room_blocks")
     .select("room_id,start_date,end_date,released_at")

@@ -1824,6 +1824,8 @@ export const ConsumptionManagementSettingsBodySchema = Type.Object(
 export const ConsumptionManagementSettingsSchema = Type.Object(
   {
     hotel_id: uuid(),
+    operational_date: Type.String({ format: "date" }),
+    operational_now: dateTime(),
     ...ConsumptionManagementSettingsBodySchema.properties,
     last_changed_by: nullable(uuid()),
     created_at: dateTime(),

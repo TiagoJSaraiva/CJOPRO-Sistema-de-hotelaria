@@ -177,6 +177,8 @@ const operationsUser = {
 
 const managementSettings = {
   hotel_id: "hotel-e2e",
+  operational_date: "2026-05-15",
+  operational_now: "2026-05-15T10:00:00.000Z",
   settlement_tracking_starts_on: "2026-01-01",
   payment_due_days: 5,
   agreement_expiry_alert_days: 30,

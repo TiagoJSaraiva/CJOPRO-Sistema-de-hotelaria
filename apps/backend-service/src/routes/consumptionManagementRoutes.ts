@@ -151,6 +151,8 @@ export function registerConsumptionManagementRoutes(
   app.get("/admin/consumption-management/settings", async (request, reply) => {
     const context = anyScope(request, reply, [
       PERMISSIONS.CONSUMPTION_ANALYTICS_READ,
+      PERMISSIONS.INVENTORY_READ,
+      PERMISSIONS.PROCUREMENT_READ,
       ...SETTLEMENT_READ_PERMISSIONS,
     ]);
     if (!context) return;
@@ -300,12 +302,20 @@ export function registerConsumptionManagementRoutes(
     async (request, reply) => {
       const context = anyScope(request, reply, SETTLEMENT_READ_PERMISSIONS);
       if (!context) return;
-      const now = new Date();
-      const previous = new Date(
-        Date.UTC(now.getUTCFullYear(), now.getUTCMonth() - 1, 1),
-      )
-        .toISOString()
-        .slice(0, 10);
+      const settings = await repository.getSettings(context.hotelId);
+      if (!settings)
+        return send(
+          reply,
+          404,
+          ADMIN_ERROR_CODE.NOT_FOUND,
+          "Configuração gerencial não encontrada.",
+        );
+      const operationalDate = new Date(
+        `${settings.operational_date}T12:00:00.000Z`,
+      );
+      operationalDate.setUTCDate(1);
+      operationalDate.setUTCMonth(operationalDate.getUTCMonth() - 1);
+      const previous = operationalDate.toISOString().slice(0, 10);
       const periodStart = request.query.period_start
         ? firstOfMonth(request.query.period_start)
         : previous;

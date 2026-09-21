@@ -93,6 +93,8 @@ function repository(): ConsumptionManagementRepository {
   return {
     getSettings: vi.fn(async () => ({
       hotel_id: hotelId,
+      operational_date: "2026-09-14",
+      operational_now: "2026-09-14T15:00:00.000Z",
       settlement_tracking_starts_on: "2026-08-01",
       payment_due_days: 5,
       agreement_expiry_alert_days: 30,
