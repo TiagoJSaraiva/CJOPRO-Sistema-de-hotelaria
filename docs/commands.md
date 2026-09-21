@@ -57,19 +57,21 @@ deliberadamente manifests ou overrides.
 
 ## API e banco
 
-| Comando                                 | Finalidade                                       | Requisito adicional      | Versionados |
-| --------------------------------------- | ------------------------------------------------ | ------------------------ | ----------- |
-| `pnpm api:openapi`                      | atualiza os contratos administrativos e públicos | nenhum                   | sim         |
-| `pnpm api:openapi:check`                | valida ambos os contratos OpenAPI e seu drift    | nenhum                   | não         |
-| `pnpm db:start`                         | inicia o Supabase local                          | Docker                   | não         |
-| `pnpm db:status`                        | inspeciona a instância local sem imprimir chaves | Docker                   | não         |
-| `pnpm db:reset`                         | recria e semeia exclusivamente o banco local     | Docker; destrutivo local | não         |
-| `pnpm db:stop`                          | encerra containers preservando volumes           | Docker                   | não         |
-| `pnpm db:types`                         | reseta localmente e atualiza os tipos gerados    | Docker                   | sim         |
-| `pnpm db:types:check`                   | compara tipos gerados sem escrever               | Docker                   | não         |
-| `pnpm training scenarios`               | lista os cenários didáticos disponíveis          | nenhum                   | não         |
-| `pnpm training reset --scenario <nome>` | recria o banco local e prepara uma lição         | Docker; destrutivo local | não         |
-| `pnpm training clock ...`               | consulta ou controla o relógio operacional local | Docker e Supabase local  | não         |
+| Comando                                  | Finalidade                                       | Requisito adicional      | Versionados |
+| ---------------------------------------- | ------------------------------------------------ | ------------------------ | ----------- |
+| `pnpm api:openapi`                       | atualiza os contratos administrativos e públicos | nenhum                   | sim         |
+| `pnpm api:openapi:check`                 | valida ambos os contratos OpenAPI e seu drift    | nenhum                   | não         |
+| `pnpm db:start`                          | inicia o Supabase local                          | Docker                   | não         |
+| `pnpm db:status`                         | inspeciona a instância local sem imprimir chaves | Docker                   | não         |
+| `pnpm db:reset`                          | recria e semeia exclusivamente o banco local     | Docker; destrutivo local | não         |
+| `pnpm db:stop`                           | encerra containers preservando volumes           | Docker                   | não         |
+| `pnpm db:types`                          | reseta localmente e atualiza os tipos gerados    | Docker                   | sim         |
+| `pnpm db:types:check`                    | compara tipos gerados sem escrever               | Docker                   | não         |
+| `pnpm training scenarios`                | lista os cenários didáticos disponíveis          | nenhum                   | não         |
+| `pnpm training reset --scenario <nome>`  | recria o banco local e prepara uma lição         | Docker; destrutivo local | não         |
+| `pnpm training verify --scenario <nome>` | valida a fixture atualmente preparada            | Docker e Supabase local  | não         |
+| `pnpm training verify --all`             | recria e valida todos os cenários                | Docker; destrutivo local | não         |
+| `pnpm training clock ...`                | consulta ou controla o relógio operacional local | Docker e Supabase local  | não         |
 
 Nenhum comando do projeto usa `--linked`. Publicação ou consulta ao Supabase
 hospedado exige autorização explícita e segue o [workflow do banco](database-workflow.md).

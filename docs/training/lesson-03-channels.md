@@ -9,6 +9,7 @@ digitar IDs internos e encaminhar eventos sem mapeamento para revisão.
 
 ```powershell
 pnpm training reset --scenario channels
+pnpm training verify --scenario channels
 ```
 
 Use `gerente.aurora@hotelaria.local`. A data é a mostrada em Treinamento local.
@@ -41,4 +42,5 @@ site direto não precisa dessa tradução porque já usa o catálogo do Aurora.
 
 </details>
 
-Para repetir: `pnpm training reset --scenario channels`.
+Para repetir: `pnpm training reset --scenario channels` e
+`pnpm training verify --scenario channels`.

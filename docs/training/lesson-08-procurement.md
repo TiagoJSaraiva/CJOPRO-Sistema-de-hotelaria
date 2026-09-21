@@ -9,6 +9,7 @@ recebimento e conta, mantendo separação entre quem pede e quem aprova.
 
 ```powershell
 pnpm training reset --scenario inventory-procurement
+pnpm training verify --scenario inventory-procurement
 ```
 
 Contas: estoque/compras, gerente e financeiro. Use a mesma data operacional da
@@ -39,4 +40,5 @@ liquida.
 
 </details>
 
-Para repetir: `pnpm training reset --scenario inventory-procurement`.
+Para repetir: `pnpm training reset --scenario inventory-procurement` e
+`pnpm training verify --scenario inventory-procurement`.

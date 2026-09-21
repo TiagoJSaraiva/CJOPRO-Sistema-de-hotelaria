@@ -9,6 +9,7 @@ entender por que quarto disponível não é necessariamente quarto pronto.
 
 ```powershell
 pnpm training reset --scenario reservations-arrival
+pnpm training verify --scenario reservations-arrival
 ```
 
 Use a data operacional exibida pelo relógio. Contas: recepção para execução e
@@ -43,4 +44,5 @@ origem da falta de prontidão em Governança em vez de forçar a chegada.
 
 </details>
 
-Para repetir: `pnpm training reset --scenario reservations-arrival`.
+Para repetir: `pnpm training reset --scenario reservations-arrival` e
+`pnpm training verify --scenario reservations-arrival`.

@@ -9,6 +9,7 @@ contagem, transferência e origem de oferta sempre dependem dessa combinação.
 
 ```powershell
 pnpm training reset --scenario inventory-procurement
+pnpm training verify --scenario inventory-procurement
 ```
 
 Use estoque/compras e, para o frigobar, governança. A posição Água mineral +
@@ -17,7 +18,8 @@ Estoque central começa ativa no Aurora.
 ## Missão e passos orientados
 
 1. Abra Estoque e identifique produto, local, posição, saldo mínimo e ideal.
-2. Registre uma entrada com lote e validade posteriores à data operacional.
+2. Confira o lote sintético e sua validade posterior à data operacional; depois
+   registre um movimento na posição central.
 3. Inicie uma contagem, informe o físico e conclua a diferença justificada.
 4. Configure ou confira a composição do frigobar.
 5. Como governança, execute uma reposição pendente e confirme sua origem.
@@ -38,4 +40,5 @@ procurar o responsável de estoque; uma opção vazia não é um valor selecion�
 
 </details>
 
-Para repetir: `pnpm training reset --scenario inventory-procurement`.
+Para repetir: `pnpm training reset --scenario inventory-procurement` e
+`pnpm training verify --scenario inventory-procurement`.

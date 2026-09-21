@@ -10,6 +10,7 @@ responsabilidade; **Abrir contexto** leva à origem que resolve o problema.
 
 ```powershell
 pnpm training reset --scenario orientation
+pnpm training verify --scenario orientation
 ```
 
 Anote a data de `pnpm training clock show`. Use primeiro
@@ -46,4 +47,5 @@ jornada. O isolamento do Horizonte é intencional.
 
 </details>
 
-Para repetir: `pnpm training reset --scenario orientation`.
+Para repetir: `pnpm training reset --scenario orientation` e
+`pnpm training verify --scenario orientation`.

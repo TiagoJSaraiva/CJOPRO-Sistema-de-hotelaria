@@ -10,6 +10,8 @@
 | garantia e automações de manutenção            | `created_at` e eventos técnicos de auditoria |
 | sessão de caixa, data operacional e fechamento | saúde, locks e timeouts de infraestrutura    |
 | reconciliação e pendências operacionais        | segurança criptográfica                      |
+| lotes, recebimentos e compras                  | timestamps imutáveis de criação              |
+| acordos, apurações, pagamentos e alertas       | logs técnicos e telemetria                   |
 
 `hotel_operational_now(hotel_id)` e `hotel_operational_date(hotel_id)` são as
 fontes de verdade para novas regras operacionais. Overrides `p_now` explícitos
@@ -26,17 +28,16 @@ Os usos foram classificados assim:
 - funções que já recebem `p_now` permanecem testáveis e a reconciliação passa o
   instante operacional resolvido por hotel; backend de manutenção e agenda
   resolve esse instante antes de calcular atraso, janela e indicadores;
-- datas de seed continuam relativas ao reset real e a fixture congela o relógio
-  imediatamente depois, mantendo os exercícios coerentes;
+- datas de seed e fixtures são relativas ao instante operacional congelado,
+  mantendo os exercícios coerentes mesmo quando repetidos em outro dia;
 - timestamps de criação, autenticação e trilhas imutáveis permanecem reais de
   propósito;
 - JavaScript usado apenas para formatar datas ou gerar chaves não altera regras
   de negócio.
 
-Validades de lotes, compras, contas e regras comerciais ainda não ligadas às
-jornadas locais continuam usando seus contratos históricos. Elas não devem ser
-apresentadas como efeitos do relógio até receberem uma migration e testes
-específicos.
+As jornadas de estoque, compras, contas e regras comerciais do curso resolvem
+data e hora pelo hotel ativo. Campos com valor inicial de data/hora recebem o
+instante operacional; timestamps técnicos de criação continuam reais.
 
 Qualquer nova regra que compare prazo, “hoje” ou disponibilidade deve receber
 `hotel_id` e usar o helper operacional. Usar `now()` diretamente exige registrar

@@ -22,11 +22,16 @@ do Aurora vê **Treinamento local**.
 
 ```powershell
 pnpm training reset --scenario cash-close
+pnpm training verify --scenario cash-close
 ```
 
 O comando valida Docker, Supabase e a URL local, executa o reset local, aplica
 somente a fixture escolhida, registra nome e versão do cenário e congela o Aurora
 no instante de preparação. Cada cenário é independente.
+
+`verify --scenario` confere cenário, relógio, contas, permissões, isolamento e
+os pré-requisitos da lição atualmente carregada. `verify --all` recria e
+verifica todos os cenários; portanto, o último cenário fica carregado ao final.
 
 Retomar o tempo real pode tornar prazos vencidos imediatamente. A página não
 oferece reset porque essa operação destrói os dados locais; ela fica restrita ao

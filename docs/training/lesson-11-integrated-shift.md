@@ -9,6 +9,7 @@ usando pendências como fila e preservando segregação, isolamento e trilhas.
 
 ```powershell
 pnpm training reset --scenario integrated-shift
+pnpm training verify --scenario integrated-shift
 ```
 
 Registre a data operacional e prepare uma tabela com responsável, tarefa e
@@ -16,8 +17,10 @@ resultado. Todas as oito contas serão usadas.
 
 ## Estado inicial e missão
 
-Há chegada, quarto retido, garantia, consumo, estoque, compra, caixa e apuração.
-Encerre o turno sem ação pendente que possa ser concluída naquela data.
+Há chegada prevista para a data operacional, ocorrência/ordem/bloqueio do
+quarto 103, garantia sem decisão, conta com consumo, reposição e compra pendentes,
+caixa/fechamento e venda elegível para apuração. Encerre o turno sem ação
+pendente que possa ser concluída naquela data.
 
 ## Passos orientados
 
@@ -48,4 +51,5 @@ marque como resolvida manualmente.
 
 </details>
 
-Para repetir: `pnpm training reset --scenario integrated-shift`.
+Para repetir: `pnpm training reset --scenario integrated-shift` e
+`pnpm training verify --scenario integrated-shift`.

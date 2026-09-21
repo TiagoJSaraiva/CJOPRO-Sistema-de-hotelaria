@@ -10,6 +10,7 @@ diário não é soma fiscal nem depósito bancário.
 
 ```powershell
 pnpm training reset --scenario cash-close
+pnpm training verify --scenario cash-close
 ```
 
 Contas: caixa, financeiro e gerente. O Aurora possui `Caixa da recepção`
@@ -44,4 +45,5 @@ afirmação operacional auditável.
 
 </details>
 
-Para repetir: `pnpm training reset --scenario cash-close`.
+Para repetir: `pnpm training reset --scenario cash-close` e
+`pnpm training verify --scenario cash-close`.

@@ -9,6 +9,7 @@ auditável. O alerta não significa defeito e não cria ocorrência automaticame
 
 ```powershell
 pnpm training reset --scenario warranty
+pnpm training verify --scenario warranty
 ```
 
 Use supervisor de manutenção; depois confira como gerente. A garantia vence em
@@ -45,4 +46,5 @@ equipamento; o sistema não inventa esse fato.
 
 </details>
 
-Para repetir: `pnpm training reset --scenario warranty`.
+Para repetir: `pnpm training reset --scenario warranty` e
+`pnpm training verify --scenario warranty`.

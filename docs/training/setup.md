@@ -18,7 +18,8 @@ hospedado.
 ```powershell
 pnpm db:start
 pnpm training scenarios
-pnpm training reset --scenario orientation
+pnpm training reset --scenario orientation --yes
+pnpm training verify --scenario orientation
 pnpm dev:pms-backend
 ```
 
@@ -37,6 +38,11 @@ pnpm training clock show
 
 O JSON deve mostrar `scenario_key: "orientation"`, `clock_mode: "frozen"` e os
 campos separados `operational_now` e `real_now`.
+
+Antes de iniciar outra lição, execute o `reset` indicado nela e a respectiva
+verificação. Para auditar todas as fixtures de uma vez, use
+`pnpm training verify --all`; esse comando é demorado e destrutivo apenas para o
+banco local, pois recria cada cenário em sequência.
 
 ## Segurança dos dados
 

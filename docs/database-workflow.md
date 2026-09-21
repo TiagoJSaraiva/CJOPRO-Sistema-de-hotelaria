@@ -161,7 +161,11 @@ do usuário na tarefa atual. Também não deve executar `db reset --linked`.
 - Correções pontuais em dados hospedados exigem script revisável, backup e
   autorização específica. Não devem ser feitas silenciosamente pelo Dashboard.
 
-O seed atual usa UUIDs estáveis, contas no domínio reservado `.local` e datas operacionais relativas a `current_date`. A senha `Hotelaria123!` serve exclusivamente para as três contas sintéticas documentadas no README e nunca deve ser reutilizada fora do Supabase local.
+O seed atual usa UUIDs estáveis, contas no domínio reservado `.local` e datas
+operacionais relativas ao relógio do hotel. A senha `Hotelaria123!` serve
+exclusivamente para as oito contas operacionais sintéticas do Hotel Aurora,
+além das contas locais administrativa e de isolamento documentadas no curso, e
+nunca deve ser reutilizada fora do Supabase local.
 
 ## Drift e alterações emergenciais no remoto
 

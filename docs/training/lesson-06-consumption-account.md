@@ -9,6 +9,7 @@ estadia sem misturar consumo imediato, cortesia e cobrança posterior.
 
 ```powershell
 pnpm training reset --scenario consumption-account
+pnpm training verify --scenario consumption-account
 ```
 
 Use recepção para lançar e financeiro para conferir. A hospedagem
@@ -37,4 +38,5 @@ histórico legado só deve ser reclassificado com a origem e o pagador conhecido
 
 </details>
 
-Para repetir: `pnpm training reset --scenario consumption-account`.
+Para repetir: `pnpm training reset --scenario consumption-account` e
+`pnpm training verify --scenario consumption-account`.

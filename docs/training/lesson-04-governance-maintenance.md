@@ -10,6 +10,7 @@ distintas.
 
 ```powershell
 pnpm training reset --scenario governance-maintenance
+pnpm training verify --scenario governance-maintenance
 ```
 
 Contas em ordem: técnico, supervisor de manutenção, governança e gerente (como
@@ -46,4 +47,5 @@ o quarto pronto.
 
 </details>
 
-Para repetir: `pnpm training reset --scenario governance-maintenance`.
+Para repetir: `pnpm training reset --scenario governance-maintenance` e
+`pnpm training verify --scenario governance-maintenance`.
