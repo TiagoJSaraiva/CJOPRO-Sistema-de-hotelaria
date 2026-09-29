@@ -749,6 +749,16 @@ test.describe("PMS UI quality", () => {
       ).toBeVisible();
       await stabilizeVisualState(page);
       await expect(page).toHaveScreenshot("consumption-order-launch.png");
+      await page
+        .getByRole("textbox", {
+          name: "Buscar estadia por quarto, reserva ou hóspede",
+        })
+        .fill("Quarto 102");
+      await page.getByRole("button", { name: "Buscar" }).click();
+      await page.getByRole("link", { name: /Quarto 102/ }).click();
+      await expect(
+        page.getByRole("spinbutton", { name: "Quantidade de Café espresso" }),
+      ).toBeVisible();
       await page.getByRole("button", { name: "Guia desta página" }).click();
       await expect(
         page.getByRole("dialog", { name: "Localize a estadia" }),

@@ -24,11 +24,30 @@ export default async function ConsumptionLaunchPage({
         message="Sem permissão para lançar consumos."
       />
     );
-  const stays = await listConsumptionEligibleStays(params?.search || "");
+  let stays: Awaited<ReturnType<typeof listConsumptionEligibleStays>> = [];
+  let searchFailed = false;
+  try {
+    stays = await listConsumptionEligibleStays(params?.search || "");
+  } catch {
+    searchFailed = true;
+  }
   const selectedStayId = params?.stay_id || stays[0]?.id;
-  const context = selectedStayId
-    ? await getConsumptionOperationalContext(selectedStayId).catch(() => null)
-    : null;
+  let context: Awaited<
+    ReturnType<typeof getConsumptionOperationalContext>
+  > | null = null;
+  let contextError: number | null = null;
+  if (selectedStayId && !searchFailed) {
+    try {
+      context = await getConsumptionOperationalContext(selectedStayId);
+    } catch (cause) {
+      contextError =
+        (cause as Error & { statusCode?: number }).statusCode || 500;
+    }
+  }
+  const retryParams = new URLSearchParams();
+  if (params?.search) retryParams.set("search", params.search);
+  if (params?.stay_id) retryParams.set("stay_id", params.stay_id);
+  const retryHref = `/dashboard/consumption/launch${retryParams.size ? `?${retryParams}` : ""}`;
   const tabs = consumptionTabs(access);
   return (
     <DashboardEntityPageShell
@@ -52,6 +71,7 @@ export default async function ConsumptionLaunchPage({
             <input
               className="pms-field-input min-w-64 flex-1"
               name="search"
+              aria-label="Buscar estadia por quarto, reserva ou hóspede"
               defaultValue={params?.search}
               placeholder="Quarto, reserva ou hóspede"
             />
@@ -68,7 +88,7 @@ export default async function ConsumptionLaunchPage({
                     ? "pms-button-primary"
                     : "pms-button-secondary"
                 }
-                href={`/dashboard/consumption/launch?stay_id=${stay.id}`}
+                href={`/dashboard/consumption/launch?stay_id=${encodeURIComponent(stay.id)}`}
               >
                 Quarto {stay.room_number} · {stay.primary_guest_name}
               </a>
@@ -81,8 +101,22 @@ export default async function ConsumptionLaunchPage({
             canReceivePayment={access.canReceivePayment}
             canGrantCourtesy={access.canGrantCourtesy}
           />
+        ) : searchFailed || contextError ? (
+          <section className="pms-surface-card" role="alert">
+            <p className="m-0">
+              {contextError === 404 || contextError === 409
+                ? "Esta estadia não está mais disponível para lançamento de consumo. Busque outra estadia em check-in."
+                : "Não foi possível carregar as estadias para consumo. Tente novamente."}
+            </p>
+            <a
+              className="pms-button-secondary mt-3 inline-flex"
+              href={retryHref}
+            >
+              Tentar novamente
+            </a>
+          </section>
         ) : (
-          <section className="pms-surface-card">
+          <section className="pms-surface-card" role="status">
             <p className="m-0">Nenhuma estadia em check-in foi encontrada.</p>
           </section>
         )}

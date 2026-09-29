@@ -30,11 +30,18 @@ const guide: UsageGuideDefinition = {
   title: "Relacionamento com o hóspede",
   steps: [
     {
+      id: "lookup",
+      target: "guest-relationship-lookup",
+      title: "Consulte o histórico do hóspede",
+      description:
+        "Selecione o hóspede e consulte reservas, estadias e preferências declaradas. O histórico não cria preferências automaticamente.",
+    },
+    {
       id: "declared",
       target: "guest-declared-preferences",
       title: "Registre somente o que foi declarado",
       description:
-        "Informe a origem, o consentimento e a vigência; o histórico nunca vira preferência automática.",
+        "Registre apenas o que foi declarado com consentimento: categoria, origem, texto e versão da autorização. A vigência é opcional. Registrar não altera a reserva nem garante o pedido.",
     },
   ],
 };
@@ -85,7 +92,10 @@ export default async function CustomerRelationshipPage({
       usageGuide={guide}
       status={params.status}
     >
-      <section className="pms-surface-card">
+      <section
+        className="pms-surface-card"
+        data-usage-guide="guest-relationship-lookup"
+      >
         <form method="get" className="flex flex-wrap gap-3">
           <label className="pms-field">
             Hóspede
@@ -116,6 +126,11 @@ export default async function CustomerRelationshipPage({
             {relationship.reservations?.length || 0} reserva(s) ·{" "}
             {relationship.stays?.length || 0} estadia(s)
           </p>
+          <p className="text-sm text-slate-600">
+            Preferências são informações declaradas pelo hóspede ou registradas
+            pela equipe com consentimento. Elas ajudam no atendimento, mas não
+            alteram a reserva nem garantem disponibilidade.
+          </p>
           {(relationship.preferences || []).map((item) => (
             <p key={item.id}>
               <strong>{item.category}</strong>: {item.value} · origem{" "}
@@ -129,6 +144,11 @@ export default async function CustomerRelationshipPage({
               action={createGuestPreferenceAction}
               className="grid gap-3 md:grid-cols-2"
             >
+              <p className="m-0 text-sm text-slate-600 md:col-span-2">
+                Escolha a categoria e a origem, descreva o pedido e informe a
+                versão do consentimento obtido. Use a vigência se a preferência
+                tiver prazo.
+              </p>
               <input type="hidden" name="customer_id" value={customerId} />
               <label className="pms-field">
                 Categoria

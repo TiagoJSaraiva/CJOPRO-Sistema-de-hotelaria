@@ -37,6 +37,7 @@ saldo sem assumir trabalho de outra função e provar o isolamento com o Horizon
 4. Assuma o mesmo item e confirme que você aparece como responsável.
 5. Abra seu contexto: a conta da estadia `LOCAL-AUR-002`. Identifique o saldo
    e a ação de negócio necessária, mas não registre pagamento nesta lição.
+   O saldo inicial é R$ 780,00 da estadia menos R$ 400,00 pagos: R$ 380,00.
 6. Use **Sair** e entre explicitamente com
    `gerente.horizonte@hotelaria.local`. Confirme **Gerente Horizonte** e
    **Hotel ativo: Hotel Horizonte** no cabeçalho. Abra Pendências e tente
@@ -50,6 +51,25 @@ recepção; o saldo da estadia permanece até uma ação real na conta.
 
 No banco mudam o recibo de leitura e, se usado, o responsável da pendência. A
 entidade operacional de origem não muda até a ação correta.
+
+### Ao explorar outras telas
+
+O Histórico de consumo mostra duas águas minerais, R$ 16,00, para o quarto 102.
+Esse lançamento sintético foi importado sem classificação de cobrança para a
+lição 6: **Migrado/Legacy** descreve sua origem, **Cobrança não classificada**
+indica que nenhum pagador foi definido, **Operador Sistema** indica que não houve
+lançamento manual e **Ponto não informado** é um dado ausente do registro antigo.
+Ele não representa dívida e não soma R$ 16,00 ao saldo de R$ 380,00. Classificar
+e lançar novos consumos são tarefas da [lição 6](lesson-06-consumption-account.md).
+
+Em **Clientes → Relacionamento**, selecione um hóspede para consultar o número de
+reservas e estadias e as preferências que ele declarou. Categoria organiza o
+assunto; origem informa quem comunicou a preferência; o texto descreve o pedido;
+versão do consentimento registra a autorização usada; vigência opcional define
+até quando a informação vale. Por exemplo, “quarto em andar silencioso” ajuda a
+equipe a atender Bruno, mas não troca seu quarto nem garante disponibilidade.
+Histórico de estadias e consumos não cria preferências automaticamente. Esta
+consulta é opcional na primeira lição.
 
 <details><summary>Solução</summary>
 

@@ -148,10 +148,8 @@ export function registerConsumptionOrderRoutes(
       const context = scope(request, reply);
       if (!context) return;
       const stayId = normalizeOptionalText(request.query.stay_id);
-      const occurredAt =
-        normalizeOptionalText(request.query.occurred_at) ||
-        new Date().toISOString();
-      if (!stayId || Number.isNaN(Date.parse(occurredAt)))
+      const occurredAt = normalizeOptionalText(request.query.occurred_at);
+      if (!stayId || (occurredAt && Number.isNaN(Date.parse(occurredAt))))
         return sendError(
           reply,
           400,
@@ -162,7 +160,7 @@ export function registerConsumptionOrderRoutes(
         const result = await repository.getContext(
           context.hotelId,
           stayId,
-          occurredAt,
+          occurredAt || undefined,
         );
         if (!("item" in result)) {
           const notFound = result.result === "not_found";

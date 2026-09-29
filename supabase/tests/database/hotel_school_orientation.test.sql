@@ -1,5 +1,5 @@
 begin;
-select plan(13);
+select plan(15);
 
 create function pg_temp.orientation_permissions(p_user_id uuid)
 returns text[] language sql stable as $$
@@ -35,6 +35,21 @@ update public.stays set
 where id='91000000-0000-4000-8000-000000000002';
 update public.consumption_management_settings set guest_balance_alert_days=1
 where hotel_id='10000000-0000-4000-8000-000000000001';
+
+select is(
+  (select sum(case when direction='debit' then amount else -amount end)
+   from public.stay_folio_entries
+   where stay_id='91000000-0000-4000-8000-000000000002'),
+  380.00::numeric,'orientation starts with a R$ 380 stay balance'
+);
+select ok(
+  exists(select 1 from public.consumption_orders
+    where id='93000000-0000-4000-8000-000000000001'
+      and disposition='legacy_unclassified' and net_amount=16 and is_legacy)
+  and not exists(select 1 from public.stay_folio_entries
+    where consumption_order_id='93000000-0000-4000-8000-000000000001'),
+  'the R$ 16 legacy order is present but does not create a stay debt'
+);
 
 select is(
   jsonb_array_length(public.get_management_alerts('10000000-0000-4000-8000-000000000001')->'guest_balances'),

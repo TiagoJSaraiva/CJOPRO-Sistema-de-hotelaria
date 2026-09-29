@@ -174,7 +174,7 @@ export interface ConsumptionOrdersRepository {
   getContext(
     hotelId: string,
     stayId: string,
-    occurredAt: string,
+    occurredAt?: string,
   ): Promise<ConsumptionOperationalContextResult>;
   post(
     hotelId: string,
@@ -222,7 +222,12 @@ class SupabaseConsumptionOrdersRepository implements ConsumptionOrdersRepository
       )
       .filter((stay) =>
         needle
-          ? [stay.reservation_code, stay.room_number, stay.primary_guest_name]
+          ? [
+              stay.reservation_code,
+              stay.room_number,
+              `Quarto ${stay.room_number}`,
+              stay.primary_guest_name,
+            ]
               .join(" ")
               .toLocaleLowerCase("pt-BR")
               .includes(needle)
@@ -232,18 +237,38 @@ class SupabaseConsumptionOrdersRepository implements ConsumptionOrdersRepository
       .slice(0, 20);
   }
 
-  async getContext(hotelId: string, stayId: string, occurredAt: string) {
+  async getContext(hotelId: string, stayId: string, occurredAt?: string) {
     const { data, error } = await createServerClient().rpc(
       "get_consumption_operational_context",
-      { p_hotel_id: hotelId, p_stay_id: stayId, p_occurred_at: occurredAt },
+      {
+        p_hotel_id: hotelId,
+        p_stay_id: stayId,
+        ...(occurredAt ? { p_occurred_at: occurredAt } : {}),
+      },
     );
     if (error) throw error;
     const payload = asObject(data);
     if (!payload || payload.result !== "ok")
       return { result: String(payload?.result || "not_found") };
+    const guests = Array.isArray(payload.guests)
+      ? payload.guests.map((guest) => {
+          const item = asObject(guest as Json);
+          return { id: item?.id, full_name: item?.full_name || item?.name };
+        })
+      : [];
+    const offers = Array.isArray(payload.offers)
+      ? payload.offers.map((offer) => {
+          const item = asObject(offer as Json);
+          return { ...item, id: item?.id || item?.offer_id };
+        })
+      : [];
     return {
       result: "ok",
-      item: payload as unknown as AdminConsumptionOperationalContext,
+      item: {
+        ...payload,
+        guests,
+        offers,
+      } as unknown as AdminConsumptionOperationalContext,
     };
   }
 

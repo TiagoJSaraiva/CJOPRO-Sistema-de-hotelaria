@@ -114,7 +114,7 @@ export const consumptionLaunchGuide: UsageGuideDefinition = {
       target: "consumption-stay-search",
       title: "Localize a estadia",
       description:
-        "Busque pelo quarto, código da reserva ou nome do hóspede com check-in.",
+        "Busque por 102, Quarto 102, código da reserva ou nome do hóspede com check-in. Sem resultados, confira o termo e o hotel ativo; se a consulta falhar, use Tentar novamente.",
     },
     {
       id: "cart",

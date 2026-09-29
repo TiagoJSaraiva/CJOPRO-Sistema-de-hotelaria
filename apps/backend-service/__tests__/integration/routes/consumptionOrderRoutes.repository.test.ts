@@ -151,6 +151,18 @@ describe("consumption operation routes", () => {
     expect(repo.getContext).toHaveBeenCalledWith(hotelId, stayId, now);
   });
 
+  it("uses the database default time for a context request without a timestamp", async () => {
+    const repo = repository();
+    const app = await appWith(repo);
+    const response = await app.inject({
+      method: "GET",
+      url: `/admin/consumption-orders/context?stay_id=${stayId}`,
+      headers: headers([PERMISSIONS.CONSUMPTION_POST]),
+    });
+    expect(response.statusCode).toBe(200);
+    expect(repo.getContext).toHaveBeenCalledWith(hotelId, stayId, undefined);
+  });
+
   it("preserves the public reason when the operational context is stale", async () => {
     const repo = repository();
     vi.mocked(repo.getContext).mockResolvedValue({

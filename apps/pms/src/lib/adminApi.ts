@@ -1430,9 +1430,9 @@ export function listConsumptionEligibleStays(
   search = "",
 ): Promise<AdminConsumptionEligibleStay[]> {
   const query = search ? `?search=${encodeURIComponent(search)}` : "";
-  return getAdminList<AdminConsumptionEligibleStay>(
+  return getAdminData<AdminListResponse<AdminConsumptionEligibleStay>>(
     `/admin/consumption-orders/eligible-stays${query}`,
-  );
+  ).then((payload) => payload.items || []);
 }
 
 export function getConsumptionOperationalContext(
