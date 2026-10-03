@@ -141574,6 +141574,7 @@
                       "type": "array"
                     },
                     "summary": {
+                      "description": "Totais de todas as pendências autorizadas do hotel ativo, independentes dos filtros e da paginação. Não lidas exclui resolvidas e considera a leitura do usuário.",
                       "properties": {
                         "claimed": {
                           "type": "integer"

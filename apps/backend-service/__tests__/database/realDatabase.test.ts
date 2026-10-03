@@ -124,6 +124,94 @@ describe.sequential("Supabase local com Fastify real", () => {
       listed.json().items.some((item: { id: string }) => item.id === id),
     ).toBe(true);
   });
+  it("resumo global acompanha assumir e devolver em filas filtradas", async () => {
+    const id = "a1030000-0000-4000-8000-000000000099";
+    const insertion = await supabase.from("operational_pending").insert({
+      id,
+      hotel_id: HOTEL_A,
+      source: "consumption",
+      source_key: "summary-http-test",
+      kind: "guest_balance",
+      entity_type: "guest_balance",
+      entity_id: CUSTOMER_A,
+      episode: 1,
+      title: "Saldo HTTP de teste",
+      href: "/dashboard/reservations",
+      severity: "warning",
+    });
+    expect(insertion.error).toBeNull();
+    const list = async (query = "") => {
+      const response = await app.inject({
+        url: `/admin/operational-pending${query ? "?" + query : ""}`,
+        headers: managerHeaders(receptionToken, HOTEL_A),
+      });
+      expect(response.statusCode).toBe(200);
+      return response.json();
+    };
+    const action = async (action: string, version?: number) => {
+      const response = await app.inject({
+        method: "POST",
+        url: "/admin/operational-pending/actions",
+        headers: managerHeaders(receptionToken, HOTEL_A),
+        payload: {
+          ids: [id],
+          action,
+          ...(version ? { expected_version: version } : {}),
+        },
+      });
+      expect(response.statusCode).toBe(200);
+    };
+    // Os eventos são imutáveis. O reset local da suíte remove estas entidades
+    // sintéticas; a preparação final restaura orientation depois dos testes.
+    {
+      const baseline = await list();
+      await action("read");
+      await action("claim", 1);
+      const opened = await list("status=open");
+      const claimed = await list("status=claimed");
+      expect(opened.items.some((item: { id: string }) => item.id === id)).toBe(
+        false,
+      );
+      expect(
+        claimed.items.find((item: { id: string }) => item.id === id),
+      ).toMatchObject({
+        status: "claimed",
+        version: 2,
+        assigned_to: "80000000-0000-4000-8000-000000000004",
+        read: true,
+      });
+      expect(opened.summary).toEqual(claimed.summary);
+      expect(opened.summary).toEqual({
+        ...baseline.summary,
+        open: baseline.summary.open - 1,
+        claimed: baseline.summary.claimed + 1,
+        unread: baseline.summary.unread - 1,
+      });
+      await action("release", 2);
+      const restored = await list("status=open");
+      expect(
+        restored.items.find((item: { id: string }) => item.id === id),
+      ).toMatchObject({
+        status: "open",
+        version: 3,
+        assigned_to: null,
+        read: true,
+      });
+      expect((await list("status=claimed")).summary).toEqual(restored.summary);
+      expect(restored.summary).toEqual({
+        ...baseline.summary,
+        unread: baseline.summary.unread - 1,
+      });
+      const hidden = await app.inject({
+        url: "/admin/operational-pending?status=open",
+        headers: managerHeaders(managerBToken, HOTEL_B),
+      });
+      expect(hidden.statusCode).toBe(200);
+      expect(
+        hidden.json().items.some((item: { id: string }) => item.id === id),
+      ).toBe(false);
+    }
+  });
 
   beforeAll(async () => {
     const apiUrl = assertLocalApiUrl(String(process.env.SUPABASE_URL || ""));

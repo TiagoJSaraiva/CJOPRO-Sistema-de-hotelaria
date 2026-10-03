@@ -234,7 +234,7 @@ test.describe("PMS UI quality", () => {
       ).toBeVisible();
       await page.getByRole("button", { name: "Guia desta página" }).click();
       await expect(
-        page.getByText("Encontre sua fila", { exact: true }),
+        page.getByText("Confira os totais do hotel", { exact: true }),
       ).toBeVisible();
       await page.keyboard.press("Escape");
       await auditAccessibility("operational-pending");
@@ -276,6 +276,130 @@ test.describe("PMS UI quality", () => {
       ).toBeVisible();
       await auditAccessibility("orientation-stay-account");
       await request.post(`${MOCK_BACKEND_URL}/test/reset-state`);
+    },
+  );
+  test(
+    "filas de pendências preservam totais ao assumir, devolver e navegar",
+    { tag: TEST_TAGS },
+    async ({ page, context, request, baseURL, auditAccessibility }) => {
+      test.setTimeout(90_000);
+      await request.post(`${MOCK_BACKEND_URL}/test/orientation`);
+      try {
+        for (const query of [
+          "status=claimed",
+          "source=inventory",
+          "kind=critical_stock",
+          "severity=critical",
+          "read=read",
+          "assignee=me",
+          "page=2",
+        ]) {
+          const response = await request.get(
+            `${MOCK_BACKEND_URL}/admin/operational-pending?${query}`,
+          );
+          expect(await response.json()).toMatchObject({
+            items: [],
+            summary: { open: 1, claimed: 0, resolved: 0, unread: 1 },
+          });
+        }
+        await authenticate(context, baseURL!, "management-e2e-token");
+        await preparePage(page);
+        const cards = page.getByRole("region", {
+          name: "Resumo de pendências do hotel ativo",
+        });
+        const assertCounts = async (
+          open: number,
+          claimed: number,
+          unread: number,
+        ) => {
+          await expect(
+            cards.getByRole("link", { name: /^Aberta/ }).locator("strong"),
+          ).toHaveText(String(open));
+          await expect(
+            cards.getByRole("link", { name: /^Assumida/ }).locator("strong"),
+          ).toHaveText(String(claimed));
+          await expect(
+            cards.getByRole("link", { name: /^Resolvida/ }).locator("strong"),
+          ).toHaveText("0");
+          await expect(
+            cards.getByRole("link", { name: /^Não lidas/ }).locator("strong"),
+          ).toHaveText(String(unread));
+        };
+        await page.goto("/dashboard/pending");
+        await assertCounts(1, 0, 1);
+        await page
+          .getByRole("button", { name: "Marcar lida", exact: true })
+          .click();
+        await assertCounts(1, 0, 0);
+        await page
+          .getByRole("button", { name: "Assumir", exact: true })
+          .click();
+        await assertCounts(0, 1, 0);
+        await expect(page.getByText("Responsável: Marina Costa")).toBeVisible();
+        await page.reload();
+        await expect(page.getByLabel("Situação")).toHaveValue("");
+        await assertCounts(0, 1, 0);
+        await page.getByRole("button", { name: "Devolver à fila" }).click();
+        await assertCounts(1, 0, 0);
+
+        await cards.getByRole("link", { name: /^Aberta/ }).click();
+        await expect(page).toHaveURL(/status=open$/);
+        await expect(page.getByLabel("Situação")).toHaveValue("open");
+        await page
+          .getByRole("button", { name: "Assumir", exact: true })
+          .click();
+        await assertCounts(0, 1, 0);
+        await expect(
+          page.getByText("Nenhuma pendência neste filtro."),
+        ).toBeVisible();
+        await expect(
+          page.getByRole("link", { name: "Abrir fila de destino" }),
+        ).toHaveAttribute("href", "/dashboard/pending?status=claimed");
+        await auditAccessibility("pending-open-after-claim");
+        await expect(page.getByRole("status")).toBeFocused();
+        await page.evaluate(() => window.scrollTo(0, 0));
+        await stabilizeVisualState(page);
+        await expect(page).toHaveScreenshot("operational-pending-filtered.png");
+        await page.reload();
+        await assertCounts(0, 1, 0);
+        await expect(
+          page.getByText("Nenhuma pendência neste filtro."),
+        ).toBeVisible();
+        await cards.getByRole("link", { name: /^Assumida/ }).click();
+        await expect(page.getByLabel("Situação")).toHaveValue("claimed");
+        await expect(page.getByText("Responsável: Marina Costa")).toBeVisible();
+        await page.goBack();
+        await expect(page.getByLabel("Situação")).toHaveValue("open");
+        await expect(
+          page.getByText("Nenhuma pendência neste filtro."),
+        ).toBeVisible();
+        await page.goForward();
+        await expect(page.getByLabel("Situação")).toHaveValue("claimed");
+        await page.getByRole("button", { name: "Devolver à fila" }).click();
+        await assertCounts(1, 0, 0);
+        await expect(
+          page.getByText("Nenhuma pendência neste filtro."),
+        ).toBeVisible();
+        await cards.getByRole("link", { name: /^Aberta/ }).click();
+        await expect(
+          page.getByText("Responsável: Sem responsável"),
+        ).toBeVisible();
+        await expect(page.getByText(/Lida por você/)).toBeVisible();
+        await page.getByLabel("Minha leitura").selectOption("unread");
+        await page.getByRole("button", { name: "Aplicar filtros" }).click();
+        await expect(page).toHaveURL(/status=open&read=unread$/);
+        await expect(
+          page.getByText("Nenhuma pendência neste filtro."),
+        ).toBeVisible();
+        await assertCounts(1, 0, 0);
+        await cards.getByRole("link", { name: /^Aberta/ }).click();
+        await expect(page.getByLabel("Minha leitura")).toHaveValue("");
+        await expect(
+          page.getByText("Saldo pendente no quarto 102", { exact: true }),
+        ).toBeVisible();
+      } finally {
+        await request.post(`${MOCK_BACKEND_URL}/test/reset-state`);
+      }
     },
   );
   test(

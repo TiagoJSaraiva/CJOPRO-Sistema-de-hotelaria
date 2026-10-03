@@ -37,7 +37,7 @@ export default async function MaintenanceNotificationsPage() {
     >
       {pending && (
         <>
-          <PendingCards data={pending} source="maintenance" />
+          <PendingCards data={pending} />
           <Link
             className="pms-link"
             href="/dashboard/pending?source=maintenance"

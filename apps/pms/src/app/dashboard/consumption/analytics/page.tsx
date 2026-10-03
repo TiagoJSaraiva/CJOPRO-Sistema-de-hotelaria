@@ -282,7 +282,7 @@ export default async function ConsumptionAnalyticsPage({
           data-usage-guide="consumption-management-alerts"
         >
           <h2 className="mt-0 text-xl">Alertas gerenciais</h2>
-          <PendingCards data={alerts} source="consumption" />
+          <PendingCards data={alerts} />
           <Link
             className="pms-link inline-flex min-h-8 items-center"
             href="/dashboard/pending?source=consumption"

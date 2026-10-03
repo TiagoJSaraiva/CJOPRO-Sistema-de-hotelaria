@@ -418,6 +418,12 @@ examina o hotel completo, sem paginação ou filtro do solicitante, e só encerr
 episódios após consulta bem-sucedida às origens. Uma falha preserva o estado
 anterior e registra a indisponibilidade. As listagens são estritamente de leitura.
 
+O resumo da central conta todo o conjunto autorizado do hotel ativo, independentemente
+dos filtros e da paginação. Filtros afetam os itens e o total da lista; não lidas
+considera a leitura pessoal e exclui episódios resolvidos. A URL determina a fila
+aplicada no PMS; navegação e atualização após ações recebem novamente a lista e
+o resumo do servidor.
+
 ```mermaid
 flowchart LR
   sources[Condições operacionais] --> reconcile[Reconciliação periódica ou explícita]

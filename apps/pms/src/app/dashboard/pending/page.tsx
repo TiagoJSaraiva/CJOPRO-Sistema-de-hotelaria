@@ -51,6 +51,7 @@ export default async function PendingPage({
       usageGuide={pendingGuide}
     >
       <PendingWorkspace
+        key={`${user.id}:${query.toString()}`}
         initial={initial}
         userId={user.id}
         initialQuery={query.toString()}

@@ -1,5 +1,7 @@
 "use client";
-import { useState } from "react";
+import { useEffect, useRef, useState, useTransition } from "react";
+import Link from "next/link";
+import { useRouter } from "next/navigation";
 import type {
   OperationalPendingList,
   OperationalPending,
@@ -43,24 +45,48 @@ const kinds = {
 };
 export function PendingCards({
   data,
-  source,
+  query = "",
+  disabled = false,
 }: {
   data: OperationalPendingList;
-  source?: string;
+  query?: string;
+  disabled?: boolean;
 }) {
+  const params = new URLSearchParams(query);
   return (
-    <div className="grid gap-3 sm:grid-cols-4">
-      {(["open", "claimed", "resolved", "unread"] as const).map((key) => (
-        <a
-          key={key}
-          className="pms-surface-card text-inherit no-underline"
-          href={`/dashboard/pending?${source ? `source=${encodeURIComponent(source)}&` : ""}${key === "unread" ? "read=unread" : "status=" + key}`}
-        >
-          <span>{key === "unread" ? "Não lidas" : statusLabels[key]}</span>
-          <strong className="block text-2xl">{data.summary[key]}</strong>
-        </a>
-      ))}
-    </div>
+    <section
+      aria-label="Resumo de pendências do hotel ativo"
+      data-usage-guide="pending-summary"
+    >
+      <p>
+        Totais do hotel ativo para sua conta. Os filtros da lista não alteram
+        estes números.
+      </p>
+      <div className="grid gap-3 sm:grid-cols-4">
+        {(["open", "claimed", "resolved", "unread"] as const).map((key) => {
+          const active =
+            key === "unread"
+              ? params.get("read") === "unread"
+              : params.get("status") === key;
+          return (
+            <Link
+              key={key}
+              className={`pms-surface-card text-inherit no-underline ${active ? "ring-2 ring-teal-700" : ""}`}
+              href={`/dashboard/pending?${key === "unread" ? "read=unread" : "status=" + key}`}
+              aria-current={active ? "page" : undefined}
+              aria-disabled={disabled || undefined}
+              onClick={(event) => {
+                if (disabled) event.preventDefault();
+              }}
+            >
+              <span>{key === "unread" ? "Não lidas" : statusLabels[key]}</span>
+              <strong className="block text-2xl">{data.summary[key]}</strong>
+              {active && <span className="text-sm">Filtro aplicado</span>}
+            </Link>
+          );
+        })}
+      </div>
+    </section>
   );
 }
 export function PendingWorkspace({
@@ -72,24 +98,34 @@ export function PendingWorkspace({
   userId: string;
   initialQuery?: string;
 }) {
-  const [data, setData] = useState(initial),
-    [query, setQuery] = useState(initialQuery),
-    [busy, setBusy] = useState(false),
+  const router = useRouter();
+  const [navigating, startTransition] = useTransition();
+  const actionInFlight = useRef(false);
+  const statusRef = useRef<HTMLParagraphElement>(null);
+  const data = initial;
+  const [acting, setActing] = useState(false),
     [message, setMessage] = useState("");
-  async function load(nextQuery = query) {
-    const response = await fetch(`/api/operational-pending?${nextQuery}`);
-    const payload = await response.json();
-    if (!response.ok)
-      throw new Error(payload.message || "Falha ao consultar pendências.");
-    setData(payload);
-    setQuery(nextQuery);
+  const [destination, setDestination] = useState<string | null>(null);
+  const busy = acting || navigating;
+  useEffect(() => {
+    if (message && !busy) statusRef.current?.focus({ preventScroll: true });
+  }, [message, busy, initial]);
+  function navigate(nextQuery: string) {
+    setMessage("");
+    setDestination(null);
+    startTransition(() =>
+      router.push(`/dashboard/pending${nextQuery ? "?" + nextQuery : ""}`),
+    );
   }
   async function act(
     body: OperationalPendingAction | { action: "reconcile" },
     href?: string,
   ) {
-    setBusy(true);
+    if (actionInFlight.current || navigating) return;
+    actionInFlight.current = true;
+    setActing(true);
     setMessage("");
+    setDestination(null);
     try {
       const response = await fetch("/api/operational-pending", {
         method: "POST",
@@ -98,46 +134,68 @@ export function PendingWorkspace({
       });
       const payload = await response.json();
       if (!response.ok) {
-        await load();
+        startTransition(() => router.refresh());
         throw new Error(payload.message || "Falha ao atualizar.");
       }
       if (href) {
         window.location.assign(href);
         return;
       }
-      await load();
-      setMessage("Pendências atualizadas.");
+      startTransition(() => router.refresh());
+      const target =
+        body.action === "claim"
+          ? "claimed"
+          : body.action === "release"
+            ? "open"
+            : null;
+      const excluded =
+        target &&
+        ((params.has("status") && params.get("status") !== target) ||
+          (body.action === "claim" &&
+            params.get("assignee") === "unassigned") ||
+          (body.action === "release" && params.get("assignee") === "me"));
+      if (excluded) {
+        setMessage(
+          body.action === "claim"
+            ? "Pendência assumida. Ela saiu da lista porque não corresponde aos filtros aplicados."
+            : "Pendência devolvida à fila. Ela saiu da lista porque não corresponde aos filtros aplicados.",
+        );
+        setDestination(`status=${target}`);
+      } else if (
+        (body.action === "read" && params.get("read") === "unread") ||
+        (body.action === "unread" && params.get("read") === "read")
+      ) {
+        setMessage(
+          "Leitura atualizada. Os itens alterados saíram da lista porque não correspondem ao filtro de leitura.",
+        );
+        setDestination(body.action === "read" ? "read=read" : "read=unread");
+      } else setMessage("Pendências atualizadas.");
     } catch (cause) {
       setMessage(cause instanceof Error ? cause.message : "Falha na operação.");
     } finally {
-      setBusy(false);
+      actionInFlight.current = false;
+      setActing(false);
     }
   }
-  const params = new URLSearchParams(query),
+  const params = new URLSearchParams(initialQuery),
     page = Number(params.get("page") || 1);
   function read(item: OperationalPending, href?: string) {
     void act({ ids: [item.id], action: "read" }, href);
   }
   return (
-    <div className="grid gap-4">
-      <PendingCards data={data} source={params.get("source") || undefined} />
+    <div className="grid gap-4" aria-busy={busy}>
+      <PendingCards data={data} query={initialQuery} disabled={busy} />
       <form
+        key={initialQuery}
         data-usage-guide="pending-filters"
         className="pms-surface-card grid gap-3 sm:grid-cols-3"
-        onSubmit={async (event) => {
+        onSubmit={(event) => {
           event.preventDefault();
           const filters = new URLSearchParams();
           new FormData(event.currentTarget).forEach((value, key) => {
             if (value) filters.set(key, String(value));
           });
-          setBusy(true);
-          try {
-            await load(filters.toString());
-          } catch {
-            setMessage("Falha ao filtrar. A lista anterior foi preservada.");
-          } finally {
-            setBusy(false);
-          }
+          navigate(filters.toString());
         }}
       >
         <label className="pms-field">
@@ -251,8 +309,16 @@ export function PendingWorkspace({
           Atualizar pendências
         </button>
       </section>
-      <p role="status" aria-live="polite">
+      <p ref={statusRef} tabIndex={-1} role="status" aria-live="polite">
         {message}
+        {destination && (
+          <>
+            {" "}
+            <Link href={`/dashboard/pending?${destination}`}>
+              Abrir fila de destino
+            </Link>
+          </>
+        )}
       </p>
       <button
         disabled={busy || !data.items.length}
@@ -333,9 +399,7 @@ export function PendingWorkspace({
           disabled={busy || page <= 1}
           onClick={() => {
             params.set("page", String(page - 1));
-            void load(params.toString()).catch(() =>
-              setMessage("Falha ao mudar página."),
-            );
+            navigate(params.toString());
           }}
         >
           Anterior
@@ -347,9 +411,7 @@ export function PendingWorkspace({
           disabled={busy || page * 30 >= data.total}
           onClick={() => {
             params.set("page", String(page + 1));
-            void load(params.toString()).catch(() =>
-              setMessage("Falha ao mudar página."),
-            );
+            navigate(params.toString());
           }}
         >
           Próxima

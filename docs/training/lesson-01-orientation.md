@@ -34,7 +34,12 @@ saldo sem assumir trabalho de outra função e provar o isolamento com o Horizon
    severidade, estado de leitura e responsável. A recepção não precisa enxergar
    as pendências de manutenção para concluir esta lição.
 3. Marque esse item como lido e observe que ele continua aberto.
-4. Assuma o mesmo item e confirme que você aparece como responsável.
+4. Assuma o mesmo item e confirme que você aparece como responsável. Com
+   **Situação: Todas**, o item permanece visível. Os cards devem mostrar
+   **Aberta = 0, Assumida = 1, Resolvida = 0, Não lidas = 0**.
+   Se estiver na fila **Aberta**, o item sai da lista; clique em **Assumida**
+   para encontrá-lo. Os números dos cards são totais do hotel acessíveis à sua
+   conta e não dependem dos filtros da lista.
 5. Abra seu contexto: a conta da estadia `LOCAL-AUR-002`. Identifique o saldo
    e a ação de negócio necessária, mas não registre pagamento nesta lição.
    O saldo inicial é R$ 780,00 da estadia menos R$ 400,00 pagos: R$ 380,00.
@@ -46,11 +51,16 @@ saldo sem assumir trabalho de outra função e provar o isolamento com o Horizon
    ao Aurora e pode visualizar esse trabalho.
 
 Erro proposital: procurar o quarto 103 no Horizonte. Resultado correto: ele não
-aparece. Verificação final: o item lido continua aberto e o responsável é a
+aparece. Verificação final: o item lido continua pendente, agora assumido, e o responsável é a
 recepção; o saldo da estadia permanece até uma ação real na conta.
 
 No banco mudam o recibo de leitura e, se usado, o responsável da pendência. A
 entidade operacional de origem não muda até a ação correta.
+
+Verificação opcional: na fila **Assumida**, use **Devolver à fila**. O item
+deixa essa lista e os cards passam a **Aberta = 1, Assumida = 0,
+Resolvida = 0, Não lidas = 0**. Abra **Aberta**: o item está sem responsável
+e continua lido por você. Assuma novamente para manter o resultado da missão.
 
 ### Ao explorar outras telas
 

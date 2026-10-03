@@ -1017,16 +1017,37 @@ const server = http.createServer(async (request, response) => {
 
   if (method === "GET" && url.pathname === "/admin/operational-pending") {
     const source = url.searchParams.get("source");
-    const items =
-      !source || source === pendingFixture.source ? [pendingFixture] : [];
+    const visible = [pendingFixture];
+    const filtered = visible.filter(
+      (item) =>
+        (!source || source === item.source) &&
+        (!url.searchParams.get("kind") ||
+          url.searchParams.get("kind") === item.kind) &&
+        (!url.searchParams.get("severity") ||
+          url.searchParams.get("severity") === item.severity) &&
+        (!url.searchParams.get("status") ||
+          url.searchParams.get("status") === item.status) &&
+        (!url.searchParams.get("read") ||
+          ((url.searchParams.get("read") === "read") === item.read &&
+            (url.searchParams.get("read") !== "unread" ||
+              item.status !== "resolved"))) &&
+        (!url.searchParams.get("assignee") ||
+          (url.searchParams.get("assignee") === "me" &&
+            item.assigned_to === "user-e2e") ||
+          (url.searchParams.get("assignee") === "unassigned" &&
+            item.status === "open")),
+    );
+    const offset = (Number(url.searchParams.get("page") || 1) - 1) * 30;
+    const items = filtered.slice(offset, offset + 30);
     sendJson(response, 200, {
       items,
-      total: items.length,
+      total: filtered.length,
       summary: {
-        open: items.filter((i) => i.status === "open").length,
-        claimed: items.filter((i) => i.status === "claimed").length,
-        resolved: 0,
-        unread: items.filter((i) => !i.read).length,
+        open: visible.filter((i) => i.status === "open").length,
+        claimed: visible.filter((i) => i.status === "claimed").length,
+        resolved: visible.filter((i) => i.status === "resolved").length,
+        unread: visible.filter((i) => !i.read && i.status !== "resolved")
+          .length,
       },
       sync: { last_success_at: "2026-05-12T15:00:00Z", error_message: null },
     });

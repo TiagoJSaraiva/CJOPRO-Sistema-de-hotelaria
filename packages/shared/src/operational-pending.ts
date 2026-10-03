@@ -40,12 +40,18 @@ export const OperationalPendingSchema = Type.Object(
 export const OperationalPendingListSchema = Type.Object({
   items: Type.Array(OperationalPendingSchema),
   total: Type.Integer(),
-  summary: Type.Object({
-    open: Type.Integer(),
-    claimed: Type.Integer(),
-    resolved: Type.Integer(),
-    unread: Type.Integer(),
-  }),
+  summary: Type.Object(
+    {
+      open: Type.Integer(),
+      claimed: Type.Integer(),
+      resolved: Type.Integer(),
+      unread: Type.Integer(),
+    },
+    {
+      description:
+        "Totais de todas as pendências autorizadas do hotel ativo, independentes dos filtros e da paginação. Não lidas exclui resolvidas e considera a leitura do usuário.",
+    },
+  ),
   sync: Type.Object({
     last_success_at: nullableText,
     error_message: nullableText,
