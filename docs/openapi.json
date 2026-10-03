@@ -141295,6 +141295,18 @@
                     "partner"
                   ],
                   "type": "string"
+                },
+                {
+                  "enum": [
+                    "reservations"
+                  ],
+                  "type": "string"
+                },
+                {
+                  "enum": [
+                    "booking_channels"
+                  ],
+                  "type": "string"
                 }
               ]
             }
@@ -141522,6 +141534,18 @@
                               {
                                 "enum": [
                                   "partner"
+                                ],
+                                "type": "string"
+                              },
+                              {
+                                "enum": [
+                                  "reservations"
+                                ],
+                                "type": "string"
+                              },
+                              {
+                                "enum": [
+                                  "booking_channels"
                                 ],
                                 "type": "string"
                               }

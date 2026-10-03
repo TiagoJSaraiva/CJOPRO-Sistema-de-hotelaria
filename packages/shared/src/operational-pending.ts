@@ -1,18 +1,21 @@
 import { Type, type Static } from "typebox";
 import { PERMISSIONS } from "./permissions";
 const nullableText = Type.Union([Type.String(), Type.Null()]);
+const operationalPendingSourceSchema = Type.Union([
+  Type.Literal("maintenance"),
+  Type.Literal("consumption"),
+  Type.Literal("governance"),
+  Type.Literal("inventory"),
+  Type.Literal("procurement"),
+  Type.Literal("cash"),
+  Type.Literal("partner"),
+  Type.Literal("reservations"),
+  Type.Literal("booking_channels"),
+]);
 export const OperationalPendingSchema = Type.Object(
   {
     id: Type.String({ format: "uuid" }),
-    source: Type.Union([
-      Type.Literal("maintenance"),
-      Type.Literal("consumption"),
-      Type.Literal("governance"),
-      Type.Literal("inventory"),
-      Type.Literal("procurement"),
-      Type.Literal("cash"),
-      Type.Literal("partner"),
-    ]),
+    source: operationalPendingSourceSchema,
     kind: Type.String(),
     entity_id: Type.String({ format: "uuid" }),
     title: Type.String(),
@@ -60,17 +63,7 @@ export const OperationalPendingListSchema = Type.Object({
 export const OperationalPendingQuerySchema = Type.Object(
   {
     page: Type.Optional(Type.String({ pattern: "^[1-9][0-9]{0,5}$" })),
-    source: Type.Optional(
-      Type.Union([
-        Type.Literal("maintenance"),
-        Type.Literal("consumption"),
-        Type.Literal("governance"),
-        Type.Literal("inventory"),
-        Type.Literal("procurement"),
-        Type.Literal("cash"),
-        Type.Literal("partner"),
-      ]),
-    ),
+    source: Type.Optional(operationalPendingSourceSchema),
     kind: Type.Optional(Type.String({ maxLength: 60 })),
     severity: Type.Optional(
       Type.Union([

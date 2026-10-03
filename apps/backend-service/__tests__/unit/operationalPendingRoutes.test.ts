@@ -1,6 +1,10 @@
 import Fastify from "fastify";
 import { afterEach, expect, it, vi } from "vitest";
-import { ACTIVE_HOTEL_HEADER_NAME, type SessionPayload } from "@hotel/shared";
+import {
+  ACTIVE_HOTEL_HEADER_NAME,
+  type OperationalPendingList,
+  type SessionPayload,
+} from "@hotel/shared";
 import {
   API_ROUTE_CONTRACTS,
   API_COMPONENT_SCHEMAS,
@@ -45,7 +49,7 @@ const empty = {
 };
 async function setup() {
   const repo = {
-    list: vi.fn().mockResolvedValue(empty),
+    list: vi.fn(async (): Promise<OperationalPendingList> => empty),
     act: vi.fn().mockResolvedValue("ok"),
     reconcile: vi.fn().mockResolvedValue("ok"),
   };
@@ -108,7 +112,64 @@ it("GET é somente leitura e filtros inválidos são recusados", async () => {
       })
     ).statusCode,
   ).toBe(400);
+  expect(
+    (
+      await app.inject({
+        url: "/admin/operational-pending?source=unknown",
+        headers: headers(),
+      })
+    ).statusCode,
+  ).toBe(400);
 });
+it.each(["reservations", "booking_channels"] as const)(
+  "serializa pendências da origem %s",
+  async (source) => {
+    const { app, repo } = await setup();
+    const item = {
+      id,
+      source,
+      kind: "example",
+      entity_id: "a0000000-0000-4000-8000-000000000002",
+      title: "Pendência de teste",
+      href: "/dashboard/reservations",
+      severity: "warning" as const,
+      status: "open" as const,
+      assigned_to: null,
+      assignee_name: null,
+      version: 1,
+      opened_at: "2026-10-03T12:00:00.000Z",
+      resolved_at: null,
+      resolution_reason: null,
+      read: false,
+    };
+    repo.list.mockResolvedValueOnce({ ...empty, items: [item] });
+
+    const response = await app.inject({
+      url: "/admin/operational-pending",
+      headers: headers(),
+    });
+
+    expect(response.statusCode).toBe(200);
+    expect(response.json().items).toEqual([item]);
+    expect(repo.list).toHaveBeenCalledWith(hotel, user, ["read_inventory"], {});
+  },
+);
+it.each(["reservations", "booking_channels"] as const)(
+  "aceita a origem %s no filtro",
+  async (source) => {
+    const { app, repo } = await setup();
+
+    const response = await app.inject({
+      url: `/admin/operational-pending?source=${source}`,
+      headers: headers(),
+    });
+
+    expect(response.statusCode).toBe(200);
+    expect(repo.list).toHaveBeenCalledWith(hotel, user, ["read_inventory"], {
+      source,
+    });
+  },
+);
 it("valida ações e traduz conflitos sem expor dados de outra origem", async () => {
   const { app, repo } = await setup();
   const post = (payload: unknown) =>
