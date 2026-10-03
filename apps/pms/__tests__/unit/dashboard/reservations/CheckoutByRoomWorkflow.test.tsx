@@ -48,6 +48,7 @@ function createPanel(
       code: "RES-1002",
       total_due: 960,
       total_paid: 960,
+      guarantee_unapplied: 0,
       payment_status: "paid",
     },
     hotel: {

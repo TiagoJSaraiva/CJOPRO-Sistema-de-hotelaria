@@ -8,9 +8,12 @@ o titular responde pela reserva, mas os acompanhantes também ficam hospedados.
 
 ## Preparação
 
-Mantenha PMS, backend, site público e Booking API locais em execução conforme o
-[guia de desenvolvimento](../development-guide.md). O PMS usa `PUBLIC_SITE_URL`
-para abrir o site público; localmente, o padrão é `http://localhost:3000`.
+Para esta lição, inicie todos os serviços em um terminal com `pnpm dev`. O link
+de pré-chegada abre o site público na porta 3000; ele não estará disponível se
+somente PMS/backend estiverem rodando. O padrão local é
+`http://localhost:3000`, que só pode ser aberto no computador onde os serviços
+estão em execução. Consulte o [guia de desenvolvimento](../development-guide.md)
+se precisar configurar outra origem.
 
 ```powershell
 pnpm training reset --scenario reservations-arrival
@@ -36,12 +39,19 @@ O quarto 101 está pronto; o 103 possui um bloqueio de limpeza programada.
    chegada**, confira **Quantidade de hóspedes: 2**, dois adultos, categoria
    Standard e as duas diárias de R$ 250. Confira chegada hoje e saída dois dias
    depois. Antes do sinal, o valor contratado é R$ 500 e o saldo é R$ 500.
-3. Confira **Garantia: primeira diária**, **Sinal exigido: R$ 250** e
-   **Recebido: R$ 0**. Preencha **Sinal via PIX (R$)** com `250`, use a referência
-   sintética `PIX-LESSON-02` e clique em **Registrar sinal via PIX**. Confira
-   recebido de R$ 250 e restante de sinal zero. O sinal é um adiantamento:
-   não precisa pagar os R$ 500 para executar esta lição. Não registre o mesmo
-   PIX também como pagamento da estadia; o crédito será transferido no check-in.
+3. Confira **Política: primeira diária**, **Exigido: R$ 250** e
+   **Recebido: R$ 0**. O sinal é um adiantamento da hospedagem, não uma taxa
+   adicional. O PMS não cobra nem processa Pix/cartão: a recepção registra um
+   recebimento que já ocorreu. Escolha **Pix** em **Meio de pagamento recebido**,
+   confira `250` em **Valor efetivamente recebido (R$)**, use a referência
+   sintética `PIX-LESSON-02` e clique em **Registrar adiantamento recebido**.
+   Dinheiro também é aceito quando você tem uma sessão de caixa aberta; crédito,
+   débito e transferência são registrados conforme o meio já recebido.
+   Confira o sinal atendido e, em **Financeiro**, total de R$ 500, adiantamento
+   a transferir de R$ 250, crédito aplicado de R$ 0 e saldo a pagar de R$ 250.
+   Não registre o mesmo recebimento outra vez como pagamento da estadia. No
+   check-in, o adiantamento entra na conta da estadia uma única vez; o preço
+   continua R$ 500 e o saldo permanece R$ 250.
 4. Conserve o quarto **101**: ele é Standard, comporta duas pessoas e atende ao
    período contratado. Leia **Prontidão do quarto**: ocupação com chegada
    prevista, governança pronta e manutenção sem interdição. “Disponível”
@@ -51,7 +61,8 @@ O quarto 101 está pronto; o 103 possui um bloqueio de limpeza programada.
    data da faixa **Limpeza programada**. O bloqueio deve explicar o motivo e o
    período. Isso não troca o quarto da reserva. Não use exceção para contorná-lo.
 5. No painel de `LOCAL-AUR-001`, clique em **Gerar link de pré-chegada** e em
-   **Abrir pré-chegada**. Na página pública, preencha titular com dados
+   **Abrir formulário público**. Se a página não abrir, confirme que `pnpm dev`
+   segue executando e que a porta 3000 responde. Na página pública, preencha titular com dados
    exclusivamente sintéticos: nome `Ana Treinamento`, tipo de documento
    `treinamento`, número `LOCAL-ANA-02`, nascimento `1990-01-10`; informe
    acompanhante `Bruno Treinamento` e horário previsto `14:00`.

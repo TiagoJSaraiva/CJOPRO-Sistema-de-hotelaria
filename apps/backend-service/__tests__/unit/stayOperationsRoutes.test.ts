@@ -26,6 +26,13 @@ type SupabaseMockOptions = {
     total_price_estimated: number | null;
     total_paid: number | null;
   }>;
+  reservationAccountEntries?: Array<{
+    id: string;
+    direction: string;
+    kind: string;
+    amount: number;
+    reversed_entry_id: string | null;
+  }>;
   payments?: Array<Record<string, unknown>>;
 };
 
@@ -158,6 +165,17 @@ function createSupabaseMock(options: SupabaseMockOptions = {}) {
     if (table === "financial_transactions") {
       return {
         data: options.payments || [],
+        error: null,
+      };
+    }
+
+    if (table === "reservation_account_entries") {
+      return {
+        data: (options.reservationAccountEntries || []).filter(
+          () =>
+            filters.hotel_id === "hotel-1" &&
+            filters.reservation_id === "reservation-2",
+        ),
         error: null,
       };
     }
@@ -381,6 +399,93 @@ describe("routes/stays checkout candidate", () => {
           checkout_block_reason: null,
         },
       },
+    });
+  });
+});
+
+describe("routes/stays panel reservation balance", () => {
+  async function readPanel(options: SupabaseMockOptions) {
+    vi.mocked(createServerClient).mockReturnValue(
+      createSupabaseMock({
+        panelStay: createPanelStay({
+          stay_status: "confirmed",
+          checkin_date_actual: null,
+          total_price_estimated: 500,
+          total_paid: options.reservationStays?.[0]?.total_paid ?? 0,
+        }),
+        reservationStays: [
+          {
+            id: "stay-2",
+            total_price_estimated: 500,
+            total_paid: options.reservationStays?.[0]?.total_paid ?? 0,
+          },
+        ],
+        ...options,
+      }) as any,
+    );
+    const app = await createTestApp();
+    const response = await app.inject({
+      method: "GET",
+      url: "/admin/stays/stay-2/panel",
+      headers: {
+        authorization: `Bearer ${createToken()}`,
+        [ACTIVE_HOTEL_HEADER_NAME]: "hotel-1",
+      },
+    });
+    return response;
+  }
+
+  it("abate adiantamento ainda não transferido do saldo da reserva", async () => {
+    const response = await readPanel({
+      reservationAccountEntries: [
+        {
+          id: "guarantee-1",
+          direction: "credit",
+          kind: "guarantee",
+          amount: 250,
+          reversed_entry_id: null,
+        },
+      ],
+    });
+
+    expect(response.statusCode).toBe(200);
+    expect(response.json().item.reservation).toMatchObject({
+      total_due: 500,
+      total_paid: 0,
+      guarantee_unapplied: 250,
+      payment_status: "partial",
+    });
+  });
+
+  it("não desconta duas vezes o adiantamento depois da transferência", async () => {
+    const response = await readPanel({
+      reservationStays: [
+        { id: "stay-2", total_price_estimated: 500, total_paid: 250 },
+      ],
+      reservationAccountEntries: [
+        {
+          id: "guarantee-1",
+          direction: "credit",
+          kind: "guarantee",
+          amount: 250,
+          reversed_entry_id: null,
+        },
+        {
+          id: "transfer-1",
+          direction: "debit",
+          kind: "stay_transfer",
+          amount: 250,
+          reversed_entry_id: "guarantee-1",
+        },
+      ],
+    });
+
+    expect(response.statusCode).toBe(200);
+    expect(response.json().item.reservation).toMatchObject({
+      total_due: 500,
+      total_paid: 250,
+      guarantee_unapplied: 0,
+      payment_status: "partial",
     });
   });
 });

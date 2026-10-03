@@ -49,6 +49,12 @@ respondem. PMS e backend permanecem vinculados ao terminal; um único `Ctrl+C`
 encerra toda a árvore e libera as duas portas. Ele não inicia nem encerra o
 Supabase.
 
+Jornadas que abrem o site público, como o link de pré-chegada da lesson-02,
+precisam também do app público na porta `3000`. Use `pnpm dev` para iniciar os
+workspaces em watch. `PUBLIC_SITE_URL=http://localhost:3000` só funciona no
+mesmo computador que executa o app; para abrir o link em outro dispositivo,
+configure uma origem acessível por ele.
+
 Use `pnpm dev` quando precisar de todos os workspaces em modo watch, inclusive
 o booking engine e a recompilação contínua de `@hotel/shared`. Para executar um
 serviço isoladamente, use, por exemplo, `pnpm --filter @hotel/pms dev`. O Swagger

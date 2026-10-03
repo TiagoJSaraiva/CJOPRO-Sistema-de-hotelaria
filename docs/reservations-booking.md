@@ -33,11 +33,14 @@ stateDiagram-v2
   confirmed --> no_show: não comparecimento
 ```
 
-A garantia e a política de cancelamento são copiadas da versão tarifária. O
-sinal é registrado na conta da reserva e pode usar vários meios; dinheiro exige
-sessão de caixa. A confirmação, a garantia e a reserva mudam na mesma transação.
-No check-in, créditos são transferidos por lançamentos compensatórios para as
-subcontas da estadia.
+A garantia e a política de cancelamento são copiadas da versão tarifária. A
+garantia define o adiantamento exigido pela tarifa; a regra de cancelamento é
+independente e define eventual penalidade. A recepção registra meios de
+pagamento já recebidos (Pix, dinheiro, cartão ou transferência); o PMS não gera
+uma cobrança Pix nem processa cartões. Dinheiro exige sessão de caixa aberta
+pelo próprio operador. O adiantamento reduz o saldo da reserva antes da chegada
+e, no check-in, é transferido por lançamentos compensatórios para a conta da
+estadia, sem registrar um segundo recebimento.
 
 ## Pré-chegada e relacionamento
 
@@ -127,16 +130,21 @@ Os testes de referência estão em `packages/shared/__tests__/unit/booking.test.
 ## Conferência da chegada no PMS
 
 O painel do calendário separa quantidade contratada, titular e acompanhantes.
-Em **Preparação da chegada**, a recepção consulta a política e registra o sinal
-via PIX. O sinal recebido pertence à reserva até o check-in; então vira crédito
-na conta da estadia, sem outro recebimento. Reservas legadas sem plano aparecem
-como **sem exigência definida**, sem inventar garantia.
+Em **Chegada e adiantamento**, a recepção consulta a política e registra apenas
+recebimentos confirmados. O meio selecionado descreve como o hotel recebeu o
+valor; dinheiro fica associado à sessão aberta do operador. O saldo da reserva
+considera o adiantamento não transferido, enquanto o crédito ainda não aparece
+na conta individual da estadia. No check-in, esse valor entra na conta uma vez.
+Reservas legadas sem plano aparecem como **sem exigência definida**, sem
+inventar garantia.
 
 O mesmo painel gera o link de pré-chegada por 24 horas reais. O PMS usa
-`PUBLIC_SITE_URL` (padrão local `http://localhost:3000`). Gerar outro acesso revoga
-o anterior. Após o envio público, **Atualizar dados da pré-chegada** consulta o
-horário e as pessoas. O formulário não realiza check-in nem confirma pedidos
-especiais; a recepção pode atender uma chegada sem envio público.
+`PUBLIC_SITE_URL` (padrão local `http://localhost:3000`); o app público precisa
+estar em execução na porta 3000. Um endereço localhost só abre no computador que
+executa o app. Gerar outro acesso revoga o anterior. Após o envio público,
+**Atualizar envio** consulta o horário e as pessoas. O formulário não realiza
+check-in nem confirma pedidos especiais; a recepção pode atender uma chegada
+sem envio público.
 
 Bloqueios sem ocorrência também aparecem com motivo e período no calendário.
 A chegada informa o relógio operacional, a janela do hotel e o impedimento

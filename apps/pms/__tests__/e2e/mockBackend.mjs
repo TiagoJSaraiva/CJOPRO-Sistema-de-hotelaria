@@ -752,6 +752,8 @@ function buildPanel(stayId, options = {}) {
       code: isSecondStay ? "RES-1002" : "RES-1001",
       total_due: total,
       total_paid: paid,
+      guarantee_unapplied:
+        !isSecondStay && stayStatus === "confirmed" ? arrivalSignalReceived : 0,
       payment_status: paid >= total ? "paid" : "partial",
     },
     hotel: {

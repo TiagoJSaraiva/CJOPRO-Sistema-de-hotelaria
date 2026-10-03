@@ -4830,6 +4830,10 @@
                 "nullable": true,
                 "type": "string"
               },
+              "guarantee_unapplied": {
+                "minimum": 0,
+                "type": "number"
+              },
               "id": {
                 "format": "uuid",
                 "type": "string"
@@ -4868,6 +4872,7 @@
               "code",
               "total_due",
               "total_paid",
+              "guarantee_unapplied",
               "payment_status"
             ],
             "type": "object"
@@ -175696,6 +175701,10 @@
                               "nullable": true,
                               "type": "string"
                             },
+                            "guarantee_unapplied": {
+                              "minimum": 0,
+                              "type": "number"
+                            },
                             "id": {
                               "format": "uuid",
                               "type": "string"
@@ -175734,6 +175743,7 @@
                             "code",
                             "total_due",
                             "total_paid",
+                            "guarantee_unapplied",
                             "payment_status"
                           ],
                           "type": "object"
@@ -176989,6 +176999,10 @@
                               "nullable": true,
                               "type": "string"
                             },
+                            "guarantee_unapplied": {
+                              "minimum": 0,
+                              "type": "number"
+                            },
                             "id": {
                               "format": "uuid",
                               "type": "string"
@@ -177027,6 +177041,7 @@
                             "code",
                             "total_due",
                             "total_paid",
+                            "guarantee_unapplied",
                             "payment_status"
                           ],
                           "type": "object"
@@ -181256,6 +181271,10 @@
                               "nullable": true,
                               "type": "string"
                             },
+                            "guarantee_unapplied": {
+                              "minimum": 0,
+                              "type": "number"
+                            },
                             "id": {
                               "format": "uuid",
                               "type": "string"
@@ -181294,6 +181313,7 @@
                             "code",
                             "total_due",
                             "total_paid",
+                            "guarantee_unapplied",
                             "payment_status"
                           ],
                           "type": "object"
@@ -182527,6 +182547,10 @@
                               "nullable": true,
                               "type": "string"
                             },
+                            "guarantee_unapplied": {
+                              "minimum": 0,
+                              "type": "number"
+                            },
                             "id": {
                               "format": "uuid",
                               "type": "string"
@@ -182565,6 +182589,7 @@
                             "code",
                             "total_due",
                             "total_paid",
+                            "guarantee_unapplied",
                             "payment_status"
                           ],
                           "type": "object"
@@ -187513,6 +187538,10 @@
                               "nullable": true,
                               "type": "string"
                             },
+                            "guarantee_unapplied": {
+                              "minimum": 0,
+                              "type": "number"
+                            },
                             "id": {
                               "format": "uuid",
                               "type": "string"
@@ -187551,6 +187580,7 @@
                             "code",
                             "total_due",
                             "total_paid",
+                            "guarantee_unapplied",
                             "payment_status"
                           ],
                           "type": "object"
@@ -191462,6 +191492,10 @@
                               "nullable": true,
                               "type": "string"
                             },
+                            "guarantee_unapplied": {
+                              "minimum": 0,
+                              "type": "number"
+                            },
                             "id": {
                               "format": "uuid",
                               "type": "string"
@@ -191500,6 +191534,7 @@
                             "code",
                             "total_due",
                             "total_paid",
+                            "guarantee_unapplied",
                             "payment_status"
                           ],
                           "type": "object"

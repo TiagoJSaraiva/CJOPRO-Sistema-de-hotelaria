@@ -26,9 +26,9 @@ export function reservationsOperationsGuide(access: {
       {
         id: "guarantee",
         target: "arrival-guarantee",
-        title: "Confira e registre o sinal",
+        title: "Confira e registre o adiantamento",
         description:
-          "O sinal segue a política contratada e vira crédito na chegada. Não registre o mesmo recebimento também como pagamento da estadia.",
+          "A política define o valor exigido. Registre somente o que o hotel já recebeu: dinheiro exige sua sessão de caixa aberta; Pix e cartão não são processados pelo PMS. O adiantamento reduz o saldo e é transferido uma vez no check-in.",
       },
       {
         id: "prearrival",

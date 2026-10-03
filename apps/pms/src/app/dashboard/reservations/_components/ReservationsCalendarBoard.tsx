@@ -47,6 +47,7 @@ type ReservationsCalendarBoardProps = {
   canManageGuarantees?: boolean;
   canManagePrearrival?: boolean;
   publicSiteUrl?: string;
+  cashSession?: { id: string; registerName: string } | null;
 };
 
 export function operationalStateLabel(value: string): string {
@@ -177,6 +178,7 @@ export function ReservationsCalendarBoard({
   canManageGuarantees = false,
   canManagePrearrival = false,
   publicSiteUrl = "http://localhost:3000",
+  cashSession = null,
 }: ReservationsCalendarBoardProps) {
   const router = useRouter();
   const [selectedStayId, setSelectedStayId] = useState<string | null>(null);
@@ -1121,6 +1123,17 @@ export function ReservationsCalendarBoard({
                       canManageGuarantees={canManageGuarantees}
                       canManagePrearrival={canManagePrearrival}
                       publicSiteUrl={publicSiteUrl}
+                      cashSession={cashSession}
+                      onGuaranteeRegistered={() => {
+                        if (!selectedStayId) return;
+                        void getJson<AdminStayOperationalPanelResponse>(
+                          `/api/stays/${selectedStayId}/panel`,
+                        )
+                          .then(setPanelData)
+                          .catch((requestError: Error) =>
+                            setError(requestError.message),
+                          );
+                      }}
                     />
                   ) : null}
                   {panelData.room_operational_state ? (
@@ -1266,48 +1279,46 @@ export function ReservationsCalendarBoard({
                     ) : null}
                     <div className="grid grid-cols-2 gap-2">
                       <PaymentSummaryCard
-                        label="Total estadia"
-                        value={formatMoney(
-                          panelData.stay.total_price_estimated,
-                        )}
-                        detail={paymentStatusLabel(
-                          panelData.stay.stay_payment_status,
-                        )}
-                        tone={
-                          panelData.stay.stay_payment_status === "paid"
-                            ? "good"
-                            : "neutral"
-                        }
+                        label="Total devido da reserva"
+                        value={formatMoney(panelData.reservation.total_due)}
+                        detail="Hospedagem e lançamentos"
                       />
                       <PaymentSummaryCard
-                        label="Saldo"
+                        label="Saldo a pagar"
                         value={formatMoney(
                           Math.max(
-                            panelData.stay.total_price_estimated -
-                              panelData.stay.total_paid,
+                            panelData.reservation.total_due -
+                              panelData.reservation.total_paid -
+                              panelData.reservation.guarantee_unapplied,
                             0,
                           ),
                         )}
-                        detail={`${formatMoney(panelData.stay.total_paid)} pago`}
+                        detail="Após pagamentos e adiantamento"
                         tone={
-                          panelData.stay.total_price_estimated -
-                            panelData.stay.total_paid >
+                          panelData.reservation.total_due -
+                            panelData.reservation.total_paid -
+                            panelData.reservation.guarantee_unapplied >
                           0
                             ? "danger"
                             : "good"
                         }
                       />
                       <PaymentSummaryCard
-                        label="Total reserva"
-                        value={formatMoney(panelData.reservation.total_due)}
-                        detail={paymentStatusLabel(
-                          panelData.reservation.payment_status,
+                        label="Adiantamento a transferir"
+                        value={formatMoney(
+                          panelData.reservation.guarantee_unapplied,
                         )}
+                        detail="Entra na conta no check-in"
+                        tone={
+                          panelData.reservation.guarantee_unapplied > 0
+                            ? "neutral"
+                            : "good"
+                        }
                       />
                       <PaymentSummaryCard
-                        label="Pago reserva"
+                        label="Crédito já aplicado"
                         value={formatMoney(panelData.reservation.total_paid)}
-                        detail="Consolidado"
+                        detail="Na conta da estadia"
                         tone={
                           panelData.reservation.total_paid > 0
                             ? "good"

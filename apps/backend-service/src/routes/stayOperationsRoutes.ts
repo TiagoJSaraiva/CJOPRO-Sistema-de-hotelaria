@@ -284,7 +284,17 @@ async function loadStayPanel(
       financeRepository.getStayFolio(activeHotelId, stay.id),
     ]);
 
-  if (reservationStaysResult.error || paymentsResult.error) {
+  const reservationAccountResult = await createServerClient()
+    .from("reservation_account_entries")
+    .select("id,direction,kind,amount,reversed_entry_id")
+    .eq("hotel_id", activeHotelId)
+    .eq("reservation_id", reservationId);
+
+  if (
+    reservationStaysResult.error ||
+    paymentsResult.error ||
+    reservationAccountResult.error
+  ) {
     return null;
   }
 
@@ -318,8 +328,35 @@ async function loadStayPanel(
         (sum, row) => sum + Number(row.total_paid || 0),
         0,
       );
+  const guaranteeCredits = new Map<string, number>();
+  const guaranteeTransfers = new Map<string, number>();
+  for (const entry of reservationAccountResult.data || []) {
+    if (entry.kind === "guarantee" && entry.direction === "credit") {
+      guaranteeCredits.set(entry.id, Number(entry.amount));
+    }
+    if (
+      entry.kind === "stay_transfer" &&
+      entry.direction === "debit" &&
+      entry.reversed_entry_id
+    ) {
+      guaranteeTransfers.set(
+        entry.reversed_entry_id,
+        (guaranteeTransfers.get(entry.reversed_entry_id) || 0) +
+          Number(entry.amount),
+      );
+    }
+  }
+  const reservationGuaranteeUnapplied = Number(
+    [...guaranteeCredits.entries()]
+      .reduce(
+        (sum, [id, amount]) =>
+          sum + Math.max(0, amount - (guaranteeTransfers.get(id) || 0)),
+        0,
+      )
+      .toFixed(2),
+  );
   const reservationPaymentStatus = derivePaymentStatus(
-    reservationTotalPaid,
+    reservationTotalPaid + reservationGuaranteeUnapplied,
     reservationTotalDue,
   );
 
@@ -397,6 +434,7 @@ async function loadStayPanel(
       code: stay.reservations?.reservation_code || null,
       total_due: Number(reservationTotalDue.toFixed(2)),
       total_paid: Number(reservationTotalPaid.toFixed(2)),
+      guarantee_unapplied: reservationGuaranteeUnapplied,
       payment_status: reservationPaymentStatus,
     },
     hotel: {

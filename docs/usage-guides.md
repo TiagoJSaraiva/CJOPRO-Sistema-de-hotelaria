@@ -66,6 +66,13 @@ realocação preserva o valor contratado. A ajuda da exceção de check-in infor
 que interdição de manutenção não pode ser ignorada. Conflitos atualizam o
 contexto e são anunciados em região `aria-live`.
 
+No fluxo de chegada, a orientação distingue a garantia contratual do valor já
+recebido: o PMS registra pagamentos confirmados, não inicia cobrança Pix nem
+processa cartões. Dinheiro exige sessão aberta pelo operador. O adiantamento
+reduz o saldo da reserva e só aparece na conta da estadia após o check-in; o
+link público exige o site público em execução e não confirma pedidos especiais
+nem faz check-in.
+
 Formulários e painéis precisam funcionar por teclado e em viewport móvel. As
 ações não dependem de cor, os grupos têm nomes acessíveis e o foco permanece no
 contexto após recarregar uma fila.

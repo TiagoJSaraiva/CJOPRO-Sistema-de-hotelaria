@@ -35,13 +35,19 @@ afterEach(() => {
   cleanup();
   vi.unstubAllGlobals();
 });
-function show(manage = true) {
+function show(
+  manage = true,
+  cashSession: { id: string; registerName: string } | null = null,
+  onGuaranteeRegistered?: () => void,
+) {
   return render(
     <ReservationArrivalPanel
       reservationId="r"
       canManageGuarantees={manage}
       canManagePrearrival={manage}
       publicSiteUrl="https://hotel.example"
+      cashSession={cashSession}
+      onGuaranteeRegistered={onGuaranteeRegistered}
     />,
   );
 }
@@ -52,15 +58,18 @@ it("mostra ocupação e política sem oferecer ações não autorizadas", async 
   );
   show(false);
   expect(await screen.findByText(/Quantidade de hóspedes/)).toBeTruthy();
-  expect(screen.getByText(/primeira diária/)).toBeTruthy();
+  expect(screen.getByText(/Primeira diária/)).toBeTruthy();
   expect(
-    screen.queryByRole("button", { name: "Registrar sinal via PIX" }),
+    screen.queryByRole("button", {
+      name: "Registrar adiantamento recebido",
+    }),
   ).toBeNull();
   expect(
     screen.queryByRole("button", { name: "Gerar link de pré-chegada" }),
   ).toBeNull();
 });
-it("registra PIX com versão e chave, atualiza e impede duplo envio", async () => {
+it("registra Pix com versão e chave, atualiza e impede duplo envio", async () => {
+  const onGuaranteeRegistered = vi.fn();
   const fetch = vi.fn().mockImplementation((_url: string, init?: RequestInit) =>
     response(
       init?.method === "POST"
@@ -74,22 +83,82 @@ it("registra PIX com versão e chave, atualiza e impede duplo envio", async () =
     ),
   );
   vi.stubGlobal("fetch", fetch);
-  show();
-  fireEvent.change(await screen.findByLabelText("Sinal via PIX (R$)"), {
-    target: { value: "250" },
-  });
+  show(true, null, onGuaranteeRegistered);
+  fireEvent.change(
+    await screen.findByLabelText("Valor efetivamente recebido (R$)"),
+    {
+      target: { value: "250" },
+    },
+  );
   const form = screen
-    .getByRole("button", { name: "Registrar sinal via PIX" })
+    .getByRole("button", { name: "Registrar adiantamento recebido" })
     .closest("form")!;
   fireEvent.submit(form);
   fireEvent.submit(form);
-  await screen.findByText(/Sinal via PIX registrado/);
+  await screen.findByText(/registrado como adiantamento/);
   const writes = fetch.mock.calls.filter((call) => call[1]?.method === "POST");
   expect(writes).toHaveLength(1);
   expect(JSON.parse(String(writes[0]![1]!.body))).toMatchObject({
     expected_version: 1,
     idempotency_key: expect.any(String),
     tenders: [{ method: "pix", amount: 250 }],
+  });
+  await waitFor(() => expect(onGuaranteeRegistered).toHaveBeenCalledOnce());
+});
+it("permite registrar dinheiro na sessão aberta da própria recepção", async () => {
+  const fetch = vi.fn((_url: string, init?: RequestInit) =>
+    response(init?.method === "POST" ? { ok: true } : { arrival }),
+  );
+  vi.stubGlobal("fetch", fetch);
+  show(true, { id: "cash-session-1", registerName: "Recepção" });
+  fireEvent.change(await screen.findByLabelText("Meio de pagamento recebido"), {
+    target: { value: "cash" },
+  });
+  fireEvent.click(
+    screen.getByRole("button", { name: "Registrar adiantamento recebido" }),
+  );
+  await screen.findByText(/registrado como adiantamento/);
+  const write = fetch.mock.calls.find((call) => call[1]?.method === "POST");
+  expect(JSON.parse(String(write?.[1]?.body))).toMatchObject({
+    tenders: [
+      {
+        method: "cash",
+        amount: 250,
+        cash_session_id: "cash-session-1",
+      },
+    ],
+  });
+});
+it("não permite dinheiro sem sessão de caixa aberta", async () => {
+  vi.stubGlobal(
+    "fetch",
+    vi.fn(() => response({ arrival })),
+  );
+  show();
+  const select = (await screen.findByLabelText(
+    "Meio de pagamento recebido",
+  )) as HTMLSelectElement;
+  const option = select.querySelector<HTMLOptionElement>(
+    'option[value="cash"]',
+  )!;
+  expect(option.disabled).toBe(true);
+});
+it("usa cartão de crédito como meio recebido, sem mudar o contrato da API", async () => {
+  const fetch = vi.fn((_url: string, init?: RequestInit) =>
+    response(init?.method === "POST" ? { ok: true } : { arrival }),
+  );
+  vi.stubGlobal("fetch", fetch);
+  show();
+  fireEvent.change(await screen.findByLabelText("Meio de pagamento recebido"), {
+    target: { value: "credit_card" },
+  });
+  fireEvent.click(
+    screen.getByRole("button", { name: "Registrar adiantamento recebido" }),
+  );
+  await screen.findByText(/registrado como adiantamento/);
+  const write = fetch.mock.calls.find((call) => call[1]?.method === "POST");
+  expect(JSON.parse(String(write?.[1]?.body))).toMatchObject({
+    tenders: [{ method: "credit_card", amount: 250 }],
   });
 });
 it("gera acesso usando o site configurado e permite consultar o envio", async () => {
@@ -123,13 +192,11 @@ it("gera acesso usando o site configurado e permite consultar o envio", async ()
   );
   expect(
     (
-      await screen.findByRole("link", { name: "Abrir pré-chegada" })
+      await screen.findByRole("link", { name: "Abrir formulário público" })
     ).getAttribute("href"),
   ).toBe("https://hotel.example/pre-chegada/opaque");
   expect(screen.getByText("Acompanhante: Bruno")).toBeTruthy();
-  fireEvent.click(
-    screen.getByRole("button", { name: "Atualizar dados da pré-chegada" }),
-  );
+  fireEvent.click(screen.getByRole("button", { name: "Atualizar envio" }));
   await waitFor(() =>
     expect(fetch.mock.calls.length).toBeGreaterThanOrEqual(4),
   );
@@ -145,18 +212,23 @@ it("anuncia conflito e recarrega o contexto sem perder os dados digitados", asyn
     ),
   );
   show();
-  fireEvent.change(await screen.findByLabelText("Sinal via PIX (R$)"), {
-    target: { value: "250" },
-  });
-  fireEvent.submit(
-    screen
-      .getByRole("button", { name: "Registrar sinal via PIX" })
-      .closest("form")!,
+  fireEvent.change(
+    await screen.findByLabelText("Valor efetivamente recebido (R$)"),
+    {
+      target: { value: "200" },
+    },
+  );
+  fireEvent.click(
+    screen.getByRole("button", { name: "Registrar adiantamento recebido" }),
   );
   await screen.findByText("Reserva mudou");
   expect(
-    (screen.getByLabelText("Sinal via PIX (R$)") as HTMLInputElement).value,
-  ).toBe("250");
+    (
+      screen.getByLabelText(
+        "Valor efetivamente recebido (R$)",
+      ) as HTMLInputElement
+    ).value,
+  ).toBe("200");
 });
 it("explica política legada e falha de consulta", async () => {
   vi.stubGlobal(
@@ -173,7 +245,7 @@ it("explica política legada e falha de consulta", async () => {
     ),
   );
   show();
-  expect(await screen.findByText(/sem exigência definida/)).toBeTruthy();
+  expect(await screen.findByText(/Sem exigência definida/)).toBeTruthy();
   cleanup();
   vi.stubGlobal(
     "fetch",

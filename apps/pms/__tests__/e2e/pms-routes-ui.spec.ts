@@ -548,7 +548,9 @@ test.describe("PMS UI quality", () => {
 
       await auditAccessibility("calendario-painel-reserva");
       await stabilizeVisualState(page);
-      await expect(page.getByText(/Quantidade de hóspedes:/)).toBeVisible();
+      await expect(
+        page.getByText("Quantidade de hóspedes", { exact: true }),
+      ).toBeVisible();
       await page.getByRole("button", { name: "Guia desta página" }).click();
       await expect(
         page.getByRole("heading", { name: "Entenda os bloqueios" }),
@@ -558,28 +560,32 @@ test.describe("PMS UI quality", () => {
         page.getByRole("heading", { name: "Confira quem ficará hospedado" }),
       ).toBeVisible();
       await page.getByRole("button", { name: "Fechar", exact: true }).click();
-      await page.getByLabel("Sinal via PIX (R$)").fill("250");
+      await page.getByLabel("Valor efetivamente recebido (R$)").fill("250");
       await page
-        .getByRole("button", { name: "Registrar sinal via PIX" })
+        .getByRole("button", { name: "Registrar adiantamento recebido" })
         .click();
-      await expect(page.getByText(/Sinal via PIX registrado/)).toBeVisible();
+      await expect(
+        page.getByText(/registrado como adiantamento/),
+      ).toBeVisible();
+      await expect(page.getByText("R$ 390,00")).toBeVisible();
       await page
         .getByRole("button", { name: "Gerar link de pré-chegada" })
         .click();
       await expect(
-        page.getByRole("link", { name: "Abrir pré-chegada" }),
+        page.getByRole("link", { name: "Abrir formulário público" }),
       ).toHaveAttribute("href", /pre-chegada\/access$/);
       await expect(page.getByText(/Horário operacional:/)).toContainText(
         "14:00:00",
       );
       await auditAccessibility("calendario-pre-chegada-link");
       await page.addStyleTag({
-        content: "nextjs-portal { display: none !important; }",
+        content:
+          'nextjs-portal { display: none !important; } a[href="#pms-main-content"] { visibility: hidden !important; }',
       });
       const arrivalPanel = page
         .locator("section")
         .filter({
-          has: page.getByRole("heading", { name: "Preparação da chegada" }),
+          has: page.getByRole("heading", { name: "Chegada e adiantamento" }),
         })
         .last();
       await arrivalPanel.scrollIntoViewIfNeeded();

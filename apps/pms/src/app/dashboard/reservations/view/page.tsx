@@ -12,7 +12,8 @@ import {
 } from "../access";
 import { ReservationsCalendarBoard } from "../_components/ReservationsCalendarBoard";
 import { CALENDAR_WINDOW_DAYS } from "../_components/calendarUtils";
-import { PERMISSIONS } from "@hotel/shared";
+import { PERMISSIONS, type CashRegisterListView } from "@hotel/shared";
+import { requestOperationsFinanceEndpoint } from "../../../../lib/adminApi";
 import { reservationsOperationsGuide } from "../usageGuide";
 import { reservationOperationsTabs } from "../stage6Tabs";
 
@@ -58,11 +59,27 @@ export default async function ReservationsCalendarViewPage({
     false;
   const canExecuteGovernance =
     user?.permissions.includes(PERMISSIONS.GOVERNANCE_EXECUTE) || false;
-  const [data, customers] = await Promise.all([
+  const cashRegistersRequest =
+    user?.permissions.includes(PERMISSIONS.RESERVATION_GUARANTEES_MANAGE) &&
+    user.permissions.includes(PERMISSIONS.CASH_MANAGEMENT_READ)
+      ? requestOperationsFinanceEndpoint<CashRegisterListView>(
+          "cash-registers",
+          "GET",
+        ).catch(() => null)
+      : Promise.resolve(null);
+  const [data, customers, cashRegisters] = await Promise.all([
     getReservationsCalendar(requestedStartDate, CALENDAR_WINDOW_DAYS),
     listCustomers(),
+    cashRegistersRequest,
   ]);
   const startDate = data.window_start;
+  const cashSession = cashRegisters?.registers
+    .filter((register) => register.kind === "reception")
+    .find(
+      (register) =>
+        register.active_session?.status === "open" &&
+        register.active_session.operator_id === user?.id,
+    );
 
   return (
     <DashboardEntityPageShell
@@ -80,6 +97,14 @@ export default async function ReservationsCalendarViewPage({
         startDate={startDate}
         customers={customers}
         publicSiteUrl={process.env.PUBLIC_SITE_URL || "http://localhost:3000"}
+        cashSession={
+          cashSession?.active_session
+            ? {
+                id: cashSession.active_session.id,
+                registerName: cashSession.name,
+              }
+            : null
+        }
         canReadArrival={
           user?.permissions.includes(PERMISSIONS.RESERVATION_READ) || false
         }

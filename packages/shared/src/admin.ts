@@ -1878,6 +1878,7 @@ export type AdminStayOperationalPanelResponse = {
     code: string | null;
     total_due: number;
     total_paid: number;
+    guarantee_unapplied: number;
     payment_status: AdminStayPaymentStatus;
   };
   hotel: {

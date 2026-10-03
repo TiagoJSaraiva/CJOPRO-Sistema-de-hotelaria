@@ -3704,6 +3704,7 @@ export const StayPanelSchema = Type.Object(
         code: nullable(Type.String()),
         total_due: Type.Number(),
         total_paid: Type.Number(),
+        guarantee_unapplied: Type.Number({ minimum: 0 }),
         payment_status: PaymentStatusSchema,
       },
       strict,
