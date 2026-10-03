@@ -1889,6 +1889,7 @@ export type AdminStayOperationalPanelResponse = {
     checkout_time_limit: string | null;
   };
   eligibility: {
+    operational_now?: string;
     can_checkin: boolean;
     checkin_block_reason: string | null;
     can_checkout: boolean;

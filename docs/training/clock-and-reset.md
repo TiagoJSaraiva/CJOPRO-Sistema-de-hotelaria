@@ -27,7 +27,8 @@ pnpm training verify --scenario cash-close
 
 O comando valida Docker, Supabase e a URL local, executa o reset local, aplica
 somente a fixture escolhida, registra nome e versão do cenário e congela o Aurora
-no instante de preparação. Cada cenário é independente.
+no instante de preparação. A exceção é `reservations-arrival`, que começa às
+14h no fuso do Aurora para permitir a chegada. Cada cenário é independente.
 
 `verify --scenario` confere cenário, relógio, contas, permissões, isolamento e
 os pré-requisitos da lição atualmente carregada. `verify --all` recria e

@@ -123,3 +123,21 @@ Os testes de referência estão em `packages/shared/__tests__/unit/booking.test.
 `apps/booking-engine-service/__tests__`,
 `apps/backend-service/__tests__/unit/bookingOperationsRoutes.test.ts` e
 `supabase/tests/database/booking_stage6.test.sql`.
+
+## Conferência da chegada no PMS
+
+O painel do calendário separa quantidade contratada, titular e acompanhantes.
+Em **Preparação da chegada**, a recepção consulta a política e registra o sinal
+via PIX. O sinal recebido pertence à reserva até o check-in; então vira crédito
+na conta da estadia, sem outro recebimento. Reservas legadas sem plano aparecem
+como **sem exigência definida**, sem inventar garantia.
+
+O mesmo painel gera o link de pré-chegada por 24 horas reais. O PMS usa
+`PUBLIC_SITE_URL` (padrão local `http://localhost:3000`). Gerar outro acesso revoga
+o anterior. Após o envio público, **Atualizar dados da pré-chegada** consulta o
+horário e as pessoas. O formulário não realiza check-in nem confirma pedidos
+especiais; a recepção pode atender uma chegada sem envio público.
+
+Bloqueios sem ocorrência também aparecem com motivo e período no calendário.
+A chegada informa o relógio operacional, a janela do hotel e o impedimento
+visível. Exceção de governança não ignora horário ou interdição.

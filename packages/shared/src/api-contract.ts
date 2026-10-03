@@ -98,6 +98,7 @@ import {
   RatePlanVersionInputSchema,
   ReservationAmendmentInputSchema,
   ReservationGuaranteeInputSchema,
+  ReservationArrivalSummarySchema,
   RoomAssignmentInputSchema,
   VersionedBookingActionSchema,
 } from "./booking";
@@ -3720,6 +3721,7 @@ export const StayPanelSchema = Type.Object(
     ),
     eligibility: Type.Object(
       {
+        operational_now: Type.Optional(dateTime()),
         can_checkin: Type.Boolean(),
         checkin_block_reason: nullable(Type.String()),
         can_checkout: Type.Boolean(),
@@ -6970,8 +6972,11 @@ export const API_ROUTE_CONTRACTS: Readonly<Record<string, ApiRouteContract>> = {
   "GET /admin/reservations/:id": admin(
     "getReservationOperations",
     "Reservations",
-    "Consulta acomodações, diárias, conta e eventos.",
-    Type.Record(Type.String(), Type.Any()),
+    "Consulta acomodações, diárias, conta, pré-chegada e eventos.",
+    Type.Object(
+      { arrival: Type.Optional(ReservationArrivalSummarySchema) },
+      { additionalProperties: true },
+    ),
     { params: IdParamsSchema },
   ),
   "POST /admin/reservations/:id/amendments/simulate": admin(

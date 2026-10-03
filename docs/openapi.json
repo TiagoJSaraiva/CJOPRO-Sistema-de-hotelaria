@@ -4164,6 +4164,10 @@
               "no_show_block_reason": {
                 "nullable": true,
                 "type": "string"
+              },
+              "operational_now": {
+                "format": "date-time",
+                "type": "string"
               }
             },
             "required": [
@@ -163569,7 +163573,7 @@
     },
     "/admin/reservations/{id}": {
       "get": {
-        "description": "Consulta acomodações, diárias, conta e eventos.",
+        "description": "Consulta acomodações, diárias, conta, pré-chegada e eventos.",
         "operationId": "getReservationOperations",
         "parameters": [
           {
@@ -163595,7 +163599,144 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "additionalProperties": {},
+                  "additionalProperties": true,
+                  "properties": {
+                    "arrival": {
+                      "properties": {
+                        "accommodations": {
+                          "items": {
+                            "properties": {
+                              "adults": {
+                                "type": "integer"
+                              },
+                              "checkin_date": {
+                                "format": "date",
+                                "type": "string"
+                              },
+                              "checkout_date": {
+                                "format": "date",
+                                "type": "string"
+                              },
+                              "children": {
+                                "type": "integer"
+                              },
+                              "guarantee_type": {
+                                "nullable": true,
+                                "type": "string"
+                              },
+                              "id": {
+                                "format": "uuid",
+                                "type": "string"
+                              },
+                              "nights": {
+                                "items": {
+                                  "properties": {
+                                    "amount": {
+                                      "type": "number"
+                                    },
+                                    "date": {
+                                      "format": "date",
+                                      "type": "string"
+                                    }
+                                  },
+                                  "required": [
+                                    "date",
+                                    "amount"
+                                  ],
+                                  "type": "object"
+                                },
+                                "type": "array"
+                              },
+                              "room_type": {
+                                "type": "string"
+                              }
+                            },
+                            "required": [
+                              "id",
+                              "room_type",
+                              "adults",
+                              "children",
+                              "checkin_date",
+                              "checkout_date",
+                              "nights",
+                              "guarantee_type"
+                            ],
+                            "type": "object"
+                          },
+                          "type": "array"
+                        },
+                        "guarantee_received": {
+                          "type": "number"
+                        },
+                        "guarantee_required": {
+                          "type": "number"
+                        },
+                        "guest_count": {
+                          "minimum": 1,
+                          "type": "integer"
+                        },
+                        "guests": {
+                          "items": {
+                            "properties": {
+                              "accommodation_id": {
+                                "format": "uuid",
+                                "nullable": true,
+                                "type": "string"
+                              },
+                              "full_name": {
+                                "type": "string"
+                              },
+                              "role": {
+                                "type": "string"
+                              }
+                            },
+                            "required": [
+                              "role",
+                              "full_name",
+                              "accommodation_id"
+                            ],
+                            "type": "object"
+                          },
+                          "type": "array"
+                        },
+                        "submission": {
+                          "nullable": true,
+                          "properties": {
+                            "arrival_time": {
+                              "nullable": true,
+                              "type": "string"
+                            },
+                            "submitted_at": {
+                              "type": "string"
+                            },
+                            "version": {
+                              "type": "integer"
+                            }
+                          },
+                          "required": [
+                            "version",
+                            "arrival_time",
+                            "submitted_at"
+                          ],
+                          "type": "object"
+                        },
+                        "version": {
+                          "minimum": 1,
+                          "type": "integer"
+                        }
+                      },
+                      "required": [
+                        "version",
+                        "guest_count",
+                        "accommodations",
+                        "guarantee_required",
+                        "guarantee_received",
+                        "guests",
+                        "submission"
+                      ],
+                      "type": "object"
+                    }
+                  },
                   "type": "object"
                 }
               }
@@ -174865,6 +175006,10 @@
                             "no_show_block_reason": {
                               "nullable": true,
                               "type": "string"
+                            },
+                            "operational_now": {
+                              "format": "date-time",
+                              "type": "string"
                             }
                           },
                           "required": [
@@ -176153,6 +176298,10 @@
                             },
                             "no_show_block_reason": {
                               "nullable": true,
+                              "type": "string"
+                            },
+                            "operational_now": {
+                              "format": "date-time",
                               "type": "string"
                             }
                           },
@@ -180417,6 +180566,10 @@
                             "no_show_block_reason": {
                               "nullable": true,
                               "type": "string"
+                            },
+                            "operational_now": {
+                              "format": "date-time",
+                              "type": "string"
                             }
                           },
                           "required": [
@@ -181683,6 +181836,10 @@
                             },
                             "no_show_block_reason": {
                               "nullable": true,
+                              "type": "string"
+                            },
+                            "operational_now": {
+                              "format": "date-time",
                               "type": "string"
                             }
                           },
@@ -186666,6 +186823,10 @@
                             "no_show_block_reason": {
                               "nullable": true,
                               "type": "string"
+                            },
+                            "operational_now": {
+                              "format": "date-time",
+                              "type": "string"
                             }
                           },
                           "required": [
@@ -190610,6 +190771,10 @@
                             },
                             "no_show_block_reason": {
                               "nullable": true,
+                              "type": "string"
+                            },
+                            "operational_now": {
+                              "format": "date-time",
                               "type": "string"
                             }
                           },

@@ -77,8 +77,8 @@ type CheckoutCandidateQuery = {
 
 type StayCheckoutBody = Partial<AdminStayCheckoutInput>;
 
-function toIsoDate(value: string): string {
-  return new Date(value).toISOString().slice(0, 10);
+function toIsoDate(value: string, timezone = "UTC"): string {
+  return getNowInTimezone(timezone, new Date(value)).date;
 }
 
 function parseTimeToMinutes(value: string | null | undefined): number | null {
@@ -194,8 +194,8 @@ async function loadStayPanel(
     timezone,
     new Date(String(operationalNowResult.data)),
   );
-  const expectedCheckinDate = toIsoDate(stay.checkin_date_expected);
-  const expectedCheckoutDate = toIsoDate(stay.checkout_date_expected);
+  const expectedCheckinDate = toIsoDate(stay.checkin_date_expected, timezone);
+  const expectedCheckoutDate = toIsoDate(stay.checkout_date_expected, timezone);
   const stayStatus = (stay.stay_status || "confirmed") as ReservationStatus;
 
   let canCheckin = false;
@@ -408,6 +408,7 @@ async function loadStayPanel(
       checkout_time_limit: checkoutLimit,
     },
     eligibility: {
+      operational_now: String(operationalNowResult.data),
       can_checkin: canCheckin,
       checkin_block_reason: checkinBlockReason,
       can_checkout: canCheckout,

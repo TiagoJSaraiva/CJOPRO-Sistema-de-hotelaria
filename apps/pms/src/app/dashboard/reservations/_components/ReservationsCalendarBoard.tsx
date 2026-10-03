@@ -1,6 +1,7 @@
 "use client";
 
 import Link from "next/link";
+import { ReservationArrivalPanel } from "./ReservationArrivalPanel";
 import { useEffect, useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
 import type {
@@ -42,8 +43,34 @@ type ReservationsCalendarBoardProps = {
   canRelocate: boolean;
   canOverrideReadiness: boolean;
   canExecuteGovernance: boolean;
+  canReadArrival?: boolean;
+  canManageGuarantees?: boolean;
+  canManagePrearrival?: boolean;
+  publicSiteUrl?: string;
 };
 
+export function operationalStateLabel(value: string): string {
+  return (
+    (
+      {
+        arrival_expected: "Chegada prevista",
+        vacant: "Livre",
+        occupied: "Ocupado",
+        ready: "Pronto",
+        not_ready: "Não liberado",
+        blocked: "Bloqueado",
+        clear: "Sem interdição",
+        departure_review: "Conferência de saída",
+        released: "Liberado",
+        canceled: "Cancelado",
+        cleaning_pending: "Limpeza pendente",
+        cleaning_in_progress: "Limpeza em andamento",
+        inspection_pending: "Inspeção pendente",
+        maintenance_hold: "Retido pela manutenção",
+      } as Record<string, string>
+    )[value] || value
+  );
+}
 const CELL_WIDTH = 44;
 const ROW_HEIGHT = 58;
 const LEFT_PANEL_WIDTH = 200;
@@ -146,6 +173,10 @@ export function ReservationsCalendarBoard({
   canRelocate,
   canOverrideReadiness,
   canExecuteGovernance,
+  canReadArrival = false,
+  canManageGuarantees = false,
+  canManagePrearrival = false,
+  publicSiteUrl = "http://localhost:3000",
 }: ReservationsCalendarBoardProps) {
   const router = useRouter();
   const [selectedStayId, setSelectedStayId] = useState<string | null>(null);
@@ -281,7 +312,6 @@ export function ReservationsCalendarBoard({
     const lastDate = data.days[data.days.length - 1]?.date;
     if (!firstDate || !lastDate) return grouped;
     for (const block of data.blocks) {
-      if (!block.maintenance_occurrence_id) continue;
       const visibleStart =
         block.start_date < firstDate ? firstDate : block.start_date;
       const visibleEnd = block.end_date > lastDate ? lastDate : block.end_date;
@@ -738,6 +768,32 @@ export function ReservationsCalendarBoard({
         </div>
       </section>
 
+      {data.blocks.length ? (
+        <ul
+          data-usage-guide="arrival-blocks"
+          aria-label="Bloqueios no período"
+          className="m-0 grid gap-1 rounded-lg border border-red-200 bg-red-50 p-4 pl-8 text-sm text-red-900"
+        >
+          {data.blocks.map((block) => (
+            <li key={block.id}>
+              Quarto{" "}
+              {data.rooms.find((room) => room.room_id === block.room_id)
+                ?.room_number || "—"}
+              : {block.label || "Bloqueio"} · {block.start_date} a{" "}
+              {block.end_date}.
+              {block.maintenance_occurrence_id ? (
+                <Link
+                  className="ml-2 underline"
+                  href={`/dashboard/maintenance/occurrences/${block.maintenance_occurrence_id}`}
+                >
+                  Consultar ocorrência
+                </Link>
+              ) : null}
+            </li>
+          ))}
+        </ul>
+      ) : null}
+
       <p className="pms-status-muted">
         Exibindo {data.rooms.length} quarto(s), {data.stays.length} estadia(s) e{" "}
         {data.blocks.length} bloqueio(s) no período.
@@ -915,7 +971,7 @@ export function ReservationsCalendarBoard({
                         ({ block, left, width }) => {
                           const className =
                             "pointer-events-auto absolute block truncate rounded-md border border-white/70 bg-[#b42318] px-2 py-1 text-left text-[11px] font-semibold text-white no-underline shadow-sm focus:outline-none focus:ring-2 focus:ring-[#0f766e]";
-                          const label = `${block.occurrence_code || block.label || "Bloqueio"}${block.is_overdue ? " · atrasado" : ""}`;
+                          const label = `${block.occurrence_code || block.label || "Bloqueio"} · ${block.start_date} a ${block.end_date}${block.is_overdue ? " · atrasado" : ""}`;
                           return block.maintenance_occurrence_id ? (
                             <Link
                               key={block.id}
@@ -929,6 +985,7 @@ export function ReservationsCalendarBoard({
                           ) : (
                             <span
                               key={block.id}
+                              title={label}
                               className={className}
                               style={{ left, width, height: BLOCK_HEIGHT }}
                             >
@@ -1057,6 +1114,15 @@ export function ReservationsCalendarBoard({
                     </div>
                   </PanelSection>
 
+                  {canReadArrival ? (
+                    <ReservationArrivalPanel
+                      key={`${panelData.stay.reservation_id}:${panelData.stay.stay_status}`}
+                      reservationId={panelData.stay.reservation_id}
+                      canManageGuarantees={canManageGuarantees}
+                      canManagePrearrival={canManagePrearrival}
+                      publicSiteUrl={publicSiteUrl}
+                    />
+                  ) : null}
                   {panelData.room_operational_state ? (
                     <PanelSection
                       title="Prontidão do quarto"
@@ -1068,19 +1134,27 @@ export function ReservationsCalendarBoard({
                       >
                         <DetailItem
                           label="Ocupação"
-                          value={panelData.room_operational_state.occupancy}
+                          value={operationalStateLabel(
+                            panelData.room_operational_state.occupancy,
+                          )}
                         />
                         <DetailItem
                           label="Governança"
-                          value={panelData.room_operational_state.housekeeping}
+                          value={operationalStateLabel(
+                            panelData.room_operational_state.housekeeping,
+                          )}
                         />
                         <DetailItem
                           label="Manutenção"
-                          value={panelData.room_operational_state.maintenance}
+                          value={operationalStateLabel(
+                            panelData.room_operational_state.maintenance,
+                          )}
                         />
                         <DetailItem
                           label="Prontidão"
-                          value={panelData.room_operational_state.readiness}
+                          value={operationalStateLabel(
+                            panelData.room_operational_state.readiness,
+                          )}
                         />
                       </div>
                       {panelData.room_operational_state.blockers.length ? (
@@ -1129,6 +1203,29 @@ export function ReservationsCalendarBoard({
                     </PanelSection>
                   ) : null}
 
+                  <div data-usage-guide="arrival-checkin" role="status">
+                    {panelData.eligibility.operational_now ? (
+                      <p>
+                        Horário operacional:{" "}
+                        {new Date(
+                          panelData.eligibility.operational_now,
+                        ).toLocaleString("pt-BR", {
+                          timeZone: panelData.hotel.timezone,
+                        })}{" "}
+                        ({panelData.hotel.timezone})
+                      </p>
+                    ) : null}
+                    <p>
+                      Janela de check-in: {panelData.hotel.checkin_time_start}–
+                      {panelData.hotel.checkin_time_limit}.
+                    </p>
+                    {!panelData.eligibility.can_checkin ? (
+                      <p>
+                        Check-in indisponível:{" "}
+                        {panelData.eligibility.checkin_block_reason}
+                      </p>
+                    ) : null}
+                  </div>
                   {(panelData.maintenance_occurrences || []).length ? (
                     <PanelSection title="Ocorrências e danos">
                       <ul className="m-0 grid gap-2 pl-5">
@@ -1319,7 +1416,12 @@ export function ReservationsCalendarBoard({
                             !(
                               canOverrideReadiness &&
                               panelData.room_operational_state?.readiness ===
-                                "not_ready"
+                                "not_ready" &&
+                              panelData.eligibility.checkin_block_reason ===
+                                (panelData.room_operational_state.blockers.join(
+                                  ". ",
+                                ) ||
+                                  "Quarto ainda não liberado pela governança.")
                             ))
                         }
                         className={panelActionButtonClassName}

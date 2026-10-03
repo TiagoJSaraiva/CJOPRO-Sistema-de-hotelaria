@@ -66,6 +66,8 @@ const server = http.createServer((request, response) => {
       accommodations: [
         {
           id: "accommodation",
+          adults: 2,
+          children: 0,
           room_type: "Standard",
           check_date: "2026-10-10",
           checkin_date: "2026-10-10",

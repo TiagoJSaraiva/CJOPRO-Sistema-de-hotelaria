@@ -184,7 +184,7 @@ describe("booking public API", () => {
   });
 
   it("handles secure prearrival without exposing existence", async () => {
-    const { repo } = repository();
+    const { repo, calls } = repository();
     const app = createBookingApp({ repository: repo, now: () => now });
     expect(
       (await app.inject({ url: "/public/booking-access/token" })).statusCode,
@@ -208,6 +208,18 @@ describe("booking public API", () => {
       ).statusCode,
     ).toBe(201);
     await app.close();
+
+    expect(calls).toContainEqual([
+      "resolve_prearrival_token",
+      { p_token: "token" },
+    ]);
+    expect(calls).toContainEqual([
+      "submit_prearrival",
+      {
+        p_token: "token",
+        p_input: { expected_version: 1, arrival_time: "14:30" },
+      },
+    ]);
 
     const missing = repository({
       resolve_prearrival_token: "missing",

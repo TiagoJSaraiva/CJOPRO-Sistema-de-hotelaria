@@ -1,3 +1,4 @@
+import { resolve } from "node:path";
 import type { BrowserContext, Page } from "@playwright/test";
 import { expect, test } from "./axe-test";
 
@@ -482,8 +483,24 @@ test.describe("PMS UI quality", () => {
     "calendário com painel de reserva aberto",
     { tag: TEST_TAGS },
     async ({ page, context, baseURL, auditAccessibility }) => {
+      test.setTimeout(90_000);
+      await page.route("**/_next/image?*", async (route) => {
+        if (
+          new URL(route.request().url()).searchParams.get("url") ===
+          "/img/logo.png"
+        ) {
+          await route.fulfill({
+            path: resolve("public/img/logo.png"),
+            contentType: "image/png",
+          });
+        } else await route.continue();
+      });
       await preparePage(page);
-      await authenticate(context, baseURL || "http://127.0.0.1:3001");
+      await authenticate(
+        context,
+        baseURL || "http://127.0.0.1:3001",
+        "operations-e2e-token",
+      );
       await page.goto("/dashboard/reservations/view?start_date=2026-05-12");
 
       await expect(page).toHaveTitle(/PMS/);
@@ -531,6 +548,54 @@ test.describe("PMS UI quality", () => {
 
       await auditAccessibility("calendario-painel-reserva");
       await stabilizeVisualState(page);
+      await expect(page.getByText(/Quantidade de hóspedes:/)).toBeVisible();
+      await page.getByRole("button", { name: "Guia desta página" }).click();
+      await expect(
+        page.getByRole("heading", { name: "Entenda os bloqueios" }),
+      ).toBeVisible();
+      await page.getByRole("button", { name: "Próximo", exact: true }).click();
+      await expect(
+        page.getByRole("heading", { name: "Confira quem ficará hospedado" }),
+      ).toBeVisible();
+      await page.getByRole("button", { name: "Fechar", exact: true }).click();
+      await page.getByLabel("Sinal via PIX (R$)").fill("250");
+      await page
+        .getByRole("button", { name: "Registrar sinal via PIX" })
+        .click();
+      await expect(page.getByText(/Sinal via PIX registrado/)).toBeVisible();
+      await page
+        .getByRole("button", { name: "Gerar link de pré-chegada" })
+        .click();
+      await expect(
+        page.getByRole("link", { name: "Abrir pré-chegada" }),
+      ).toHaveAttribute("href", /pre-chegada\/access$/);
+      await expect(page.getByText(/Horário operacional:/)).toContainText(
+        "14:00:00",
+      );
+      await auditAccessibility("calendario-pre-chegada-link");
+      await page.addStyleTag({
+        content: "nextjs-portal { display: none !important; }",
+      });
+      const arrivalPanel = page
+        .locator("section")
+        .filter({
+          has: page.getByRole("heading", { name: "Preparação da chegada" }),
+        })
+        .last();
+      await arrivalPanel.scrollIntoViewIfNeeded();
+      await stabilizeVisualState(page);
+      await expect(arrivalPanel).toHaveScreenshot(
+        "reservations-arrival-panel.png",
+      );
+      await page.evaluate(() => window.scrollTo(0, 0));
+      await stabilizeVisualState(page);
+      await expect
+        .poll(async () =>
+          page
+            .getByRole("img", { name: "PMS Hotelaria" })
+            .evaluate((image) => (image as HTMLImageElement).naturalWidth),
+        )
+        .toBeGreaterThan(0);
       await expect(page).toHaveScreenshot("reservations-calendar.png");
     },
   );

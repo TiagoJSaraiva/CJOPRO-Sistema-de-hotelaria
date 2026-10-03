@@ -1,3 +1,4 @@
+let arrivalSignalReceived = 0;
 import http from "node:http";
 import { createManagerAuthFixture } from "../../../backend-service/__tests__/fixtures/managerAuth.ts";
 
@@ -83,6 +84,7 @@ const maintenancePermissions = [
 ];
 const operationsPermissions = [
   ...managementPermissions,
+  "read_reservation",
   "read_business_organizations",
   "manage_business_organizations",
   "read_procurement",
@@ -761,6 +763,7 @@ function buildPanel(stayId, options = {}) {
       checkout_time_limit: "12:00",
     },
     eligibility: {
+      operational_now: "2026-05-13T17:00:00.000Z",
       can_checkin: !isSecondStay && stayStatus === "confirmed",
       checkin_block_reason: isSecondStay ? "Estadia ja em check-in." : null,
       can_checkout: isSecondStay && stayStatus === "checked_in",
@@ -2931,7 +2934,52 @@ const server = http.createServer(async (request, response) => {
   }
 
   if (method === "GET" && url.pathname === "/admin/reservations/calendar") {
+    arrivalSignalReceived = 0;
     sendJson(response, 200, buildCalendar(url));
+    return;
+  }
+
+  if (
+    method === "GET" &&
+    /^\/admin\/reservations\/reservation-[12]$/.test(url.pathname)
+  ) {
+    sendJson(response, 200, {
+      arrival: {
+        version: 1,
+        guest_count: 2,
+        accommodations: [
+          {
+            id: "accommodation-1",
+            room_type: "Suite Luxo",
+            adults: 2,
+            children: 0,
+            checkin_date: "2026-05-13",
+            checkout_date: "2026-05-16",
+            nights: [{ date: "2026-05-13", amount: 250 }],
+            guarantee_type: "first_night",
+          },
+        ],
+        guarantee_required: 250,
+        guarantee_received: arrivalSignalReceived,
+        guests: [],
+        submission: null,
+      },
+    });
+    return;
+  }
+  if (
+    method === "POST" &&
+    url.pathname === "/admin/reservations/reservation-1/guarantees"
+  ) {
+    arrivalSignalReceived = 250;
+    sendJson(response, 200, { ok: true, result: "ok" });
+    return;
+  }
+  if (
+    method === "POST" &&
+    url.pathname === "/admin/reservations/reservation-1/prearrival-links"
+  ) {
+    sendJson(response, 201, { ok: true, result: "ok", token: "access" });
     return;
   }
 

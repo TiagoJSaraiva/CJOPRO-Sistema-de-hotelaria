@@ -97,6 +97,15 @@ select is(public.relocate_confirmed_stay('10000000-0000-4000-8000-000000000001',
 select is((select applied_daily_rate::numeric from public.stays where id='91000000-0000-4000-8000-000000000001'),250.00::numeric,'relocation preserves contracted rate');
 select is((select count(*)::integer from public.stay_relocation_events where stay_id='91000000-0000-4000-8000-000000000001'),1,'relocation writes immutable history');
 select is(public.create_governance_cycle('10000000-0000-4000-8000-000000000001',(select room_id from public.stays where id='91000000-0000-4000-8000-000000000001'),null,'manual','80000000-0000-4000-8000-000000000002','Limpeza antes da chegada')->>'result','ok','manual cleaning can make a future arrival not ready');
+
+-- A seleção de realocação acima não pertence ao cenário de interdição.
+update public.room_blocks set start_date=start_date+30,end_date=end_date+30 where room_id=(select room_id from public.stays where id='91000000-0000-4000-8000-000000000001');
+
+-- As regras transacionais de chegada também exigem data e janela operacional.
+select public.prepare_training_scenario('10000000-0000-4000-8000-000000000001','governance-test',1,'Chegada de teste','80000000-0000-4000-8000-000000000002');
+select public.act_training_clock('10000000-0000-4000-8000-000000000001','80000000-0000-4000-8000-000000000002',
+jsonb_build_object('action','set','local_at',(select (checkin_date_expected at time zone 'America/Sao_Paulo')::date+time '14:00' from public.stays where id='91000000-0000-4000-8000-000000000001'),
+'expected_version',(select version from public.hotel_training_environments where hotel_id='10000000-0000-4000-8000-000000000001'),'reason','Janela válida para testar prontidão'));
 select is(public.checkin_stay_with_readiness('10000000-0000-4000-8000-000000000001','91000000-0000-4000-8000-000000000001','80000000-0000-4000-8000-000000000002',(select version from public.governance_cycles where room_id=(select room_id from public.stays where id='91000000-0000-4000-8000-000000000001') and status not in ('released','canceled')),null,false)->>'result','room_not_ready','check-in refuses a room that governance has not released');
 select is(public.checkin_stay_with_readiness('10000000-0000-4000-8000-000000000001','91000000-0000-4000-8000-000000000001','80000000-0000-4000-8000-000000000002',(select version from public.governance_cycles where room_id=(select room_id from public.stays where id='91000000-0000-4000-8000-000000000001') and status not in ('released','canceled')),'Chegada antecipada autorizada',true)->>'result','ok','authorized readiness override completes check-in');
 select is((select count(*)::integer from public.governance_events e join public.governance_cycles c on c.id=e.cycle_id where c.room_id=(select room_id from public.stays where id='91000000-0000-4000-8000-000000000001') and e.action='readiness_override'),1,'readiness override is audited');

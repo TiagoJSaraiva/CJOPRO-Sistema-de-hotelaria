@@ -82,9 +82,8 @@ export function createBookingApp(options: {
   }
 
   async function tokenCall(token: string, name: string, input?: unknown) {
-    const tokenHash = createHash("sha256").update(token).digest("hex");
     return repository.call(name, {
-      p_token_hash: tokenHash,
+      p_token: token,
       ...(input === undefined ? {} : { p_input: input }),
     });
   }

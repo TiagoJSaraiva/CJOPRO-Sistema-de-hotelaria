@@ -14,6 +14,8 @@ type Access = {
     room_type: string;
     checkin_date: string;
     checkout_date: string;
+    adults?: number;
+    children?: number;
   }>;
   requests: unknown[];
 };
@@ -30,39 +32,64 @@ export function PrearrivalJourney({ token }: { token: string }) {
       );
   }, [token]);
   async function submit(form: FormData) {
-    setMessage("Salvando dados…");
-    const response = await fetch(
-      `${api}/public/booking-access/${token}/prearrival`,
-      {
-        method: "POST",
-        headers: { "content-type": "application/json" },
-        body: JSON.stringify({
-          expected_version: access?.reservation.version,
-          arrival_time: form.get("arrival_time") || undefined,
-          primary_guest: {
-            full_name: form.get("name"),
-            document_type: form.get("document_type"),
-            document_number: form.get("document_number"),
-            birth_date: form.get("birth_date"),
-          },
-          requests: form.get("request")
-            ? [
-                {
-                  category: form.get("request_category"),
-                  description: form.get("request"),
-                },
-              ]
-            : [],
-        }),
-      },
-    );
-    if (!response.ok)
-      return setMessage(
-        "A reserva mudou desde a abertura. Recarregue e revise antes de reenviar.",
+    try {
+      setMessage("Salvando dados…");
+      const response = await fetch(
+        `${api}/public/booking-access/${token}/prearrival`,
+        {
+          method: "POST",
+          headers: { "content-type": "application/json" },
+          body: JSON.stringify({
+            expected_version: access?.reservation.version,
+            arrival_time: form.get("arrival_time") || undefined,
+            primary_guest: {
+              full_name: form.get("name"),
+              document_type: form.get("document_type"),
+              document_number: form.get("document_number"),
+              birth_date: form.get("birth_date"),
+            },
+            companions: (access?.accommodations || []).flatMap(
+              (item, accommodationIndex) =>
+                Array.from(
+                  {
+                    length: Math.max(
+                      0,
+                      (item.adults || 1) +
+                        (item.children || 0) -
+                        (accommodationIndex === 0 ? 1 : 0),
+                    ),
+                  },
+                  (_, index) => ({
+                    accommodation_id: item.id,
+                    full_name: String(
+                      form.get(`companion_${item.id}_${index}`) || "",
+                    ).trim(),
+                  }),
+                ).filter((guest) => guest.full_name),
+            ),
+            requests: form.get("request")
+              ? [
+                  {
+                    category: form.get("request_category"),
+                    description: form.get("request"),
+                  },
+                ]
+              : [],
+          }),
+        },
       );
-    setMessage(
-      "Pré-chegada registrada. A equipe revisará pedidos especiais antes de confirmá-los.",
-    );
+      if (!response.ok)
+        return setMessage(
+          "A reserva mudou desde a abertura. Recarregue e revise antes de reenviar.",
+        );
+      setMessage(
+        "Pré-chegada registrada. A equipe revisará pedidos especiais antes de confirmá-los.",
+      );
+    } catch {
+      setMessage(
+        "Não foi possível salvar. Verifique a conexão e tente novamente.",
+      );
+    }
   }
   async function requestChange(form: FormData) {
     const response = await fetch(
@@ -101,6 +128,11 @@ export function PrearrivalJourney({ token }: { token: string }) {
       </header>
       <section className="card">
         <h2>Complete os dados de chegada</h2>
+        <p>
+          Informe quem ficará hospedado. O titular responde pela reserva;
+          acompanhantes também são hóspedes. Enviar estes dados não realiza
+          check-in nem confirma pedidos especiais.
+        </p>
         <form action={submit} className="grid">
           <label>
             Horário previsto
@@ -122,6 +154,28 @@ export function PrearrivalJourney({ token }: { token: string }) {
             Nascimento
             <input name="birth_date" type="date" required />
           </label>
+          {(access.accommodations || []).flatMap((item, accommodationIndex) =>
+            Array.from(
+              {
+                length: Math.max(
+                  0,
+                  (item.adults || 1) +
+                    (item.children || 0) -
+                    (accommodationIndex === 0 ? 1 : 0),
+                ),
+              },
+              (_, index) => (
+                <label key={`${item.id}-${index}`}>
+                  Nome do acompanhante {index + 1} ({item.room_type})
+                  <input
+                    name={`companion_${item.id}_${index}`}
+                    minLength={2}
+                    maxLength={160}
+                  />
+                </label>
+              ),
+            ),
+          )}
           <label>
             Pedido especial
             <select name="request_category">

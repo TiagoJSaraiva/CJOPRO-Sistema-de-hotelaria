@@ -61,8 +61,8 @@ function createPanelStay(overrides: Record<string, unknown> = {}) {
     reservation_id: "reservation-2",
     room_id: "room-102",
     stay_status: "checked_in",
-    checkin_date_expected: "2026-05-15T00:00:00.000Z",
-    checkout_date_expected: "2026-05-18T00:00:00.000Z",
+    checkin_date_expected: "2026-05-15T17:00:00.000Z",
+    checkout_date_expected: "2026-05-18T14:00:00.000Z",
     checkin_date_actual: "2026-05-15T17:30:00.000Z",
     checkout_date_actual: null,
     total_price_estimated: 960,
@@ -376,6 +376,7 @@ describe("routes/stays checkout candidate", () => {
           stay_status: "checked_in",
         },
         eligibility: {
+          operational_now: "2026-05-18T13:00:00.000Z",
           can_checkout: true,
           checkout_block_reason: null,
         },

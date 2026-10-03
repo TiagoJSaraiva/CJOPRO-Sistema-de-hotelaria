@@ -166,3 +166,45 @@ describe("public booking journeys", () => {
     expect(document.body.textContent).not.toContain("missing");
   });
 });
+
+it("pré-chegada envia acompanhante na acomodação e explica o efeito do envio", async () => {
+  const fetch = vi
+    .fn()
+    .mockReturnValueOnce(
+      response({
+        reservation: {
+          reservation_code: "LOCAL-AUR-001",
+          version: 1,
+          lifecycle_status: "confirmed",
+        },
+        accommodations: [
+          {
+            id: "a",
+            room_type: "Standard",
+            adults: 2,
+            children: 0,
+            checkin_date: "2026-10-03",
+            checkout_date: "2026-10-05",
+          },
+        ],
+        requests: [],
+      }),
+    )
+    .mockReturnValueOnce(response({ result: "ok" }));
+  vi.stubGlobal("fetch", fetch);
+  render(<PrearrivalJourney token="access" />);
+  const companion = await screen.findByLabelText(
+    "Nome do acompanhante 1 (Standard)",
+  );
+  fireEvent.change(companion, { target: { value: "Bruno Treinamento" } });
+  fireEvent.submit(
+    screen.getByRole("button", { name: "Salvar pré-chegada" }).closest("form")!,
+  );
+  await screen.findByText(/Pré-chegada registrada/);
+  expect(JSON.parse(fetch.mock.calls[1]![1].body)).toMatchObject({
+    companions: [{ accommodation_id: "a", full_name: "Bruno Treinamento" }],
+  });
+  expect(
+    screen.getByText(/Enviar estes dados não realiza check-in/),
+  ).toBeTruthy();
+});

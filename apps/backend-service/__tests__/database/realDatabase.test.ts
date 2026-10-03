@@ -535,7 +535,7 @@ describe.sequential("Supabase local com Fastify real", () => {
     const { error: stayDatesError } = await supabase
       .from("stays")
       .update({
-        checkin_date_expected: `${today}T00:00:00.000Z`,
+        checkin_date_expected: `${today}T03:00:00.000Z`,
         checkout_date_expected: `${today}T23:00:00.000Z`,
       })
       .eq("id", stayId);
@@ -936,4 +936,208 @@ describe.sequential("Supabase local com Fastify real", () => {
     });
     expect(protectedUpdate.statusCode).toBe(409);
   });
+  it("jornada de chegada mantém sinal e pré-chegada consistentes no HTTP real", async () => {
+    const reservationId = "a3060000-0000-4000-8000-000000000001";
+    const stayId = "a3070000-0000-4000-8000-000000000001";
+    const roomId = "a3080000-0000-4000-8000-000000000001";
+    const accommodationId = "a3090000-0000-4000-8000-000000000001";
+    const planId = "a3100000-0000-4000-8000-000000000001";
+    const versionId = "a3110000-0000-4000-8000-000000000001";
+    const headers = managerHeaders(receptionToken, HOTEL_A);
+    for (const result of [
+      await supabase.from("rooms").insert({
+        id: roomId,
+        hotel_id: HOTEL_A,
+        room_number: "107",
+        room_type: "Standard",
+        max_occupancy: 2,
+        base_daily_rate: 250,
+        status: "available",
+      }),
+      await supabase.from("reservations").insert({
+        id: reservationId,
+        hotel_id: HOTEL_A,
+        booking_customer_id: CUSTOMER_A,
+        reservation_code: "HTTP-ARRIVAL-02",
+        guest_count: 2,
+        estimated_total_price: 500,
+      }),
+      await supabase.from("stays").insert({
+        id: stayId,
+        reservation_id: reservationId,
+        room_id: roomId,
+        applied_daily_rate: 250,
+        total_price_estimated: 500,
+        total_paid: 0,
+        stay_status: "confirmed",
+        checkin_date_expected: "2032-01-10T17:00:00Z",
+        checkout_date_expected: "2032-01-12T14:00:00Z",
+      }),
+      await supabase.from("rate_plans").insert({
+        id: planId,
+        hotel_id: HOTEL_A,
+        code: "HTTP-ARRIVAL-02",
+        name: "Chegada HTTP",
+        kind: "flexible",
+      }),
+      await supabase.from("rate_plan_versions").insert({
+        id: versionId,
+        hotel_id: HOTEL_A,
+        rate_plan_id: planId,
+        version_number: 1,
+        currency: "BRL",
+        adjustment_type: "fixed",
+        adjustment_value: 0,
+        included_adults: 2,
+        guarantee_type: "first_night",
+      }),
+      await supabase.from("reservation_accommodations").insert({
+        id: accommodationId,
+        hotel_id: HOTEL_A,
+        reservation_id: reservationId,
+        room_type: "Standard",
+        checkin_date: "2032-01-10",
+        checkout_date: "2032-01-12",
+        adults: 2,
+        status: "assigned",
+        stay_id: stayId,
+        assigned_room_id: roomId,
+        rate_plan_version_id: versionId,
+      }),
+      await supabase.from("reservation_nightly_prices").insert(
+        ["2032-01-10", "2032-01-11"].map((date) => ({
+          hotel_id: HOTEL_A,
+          accommodation_id: accommodationId,
+          stay_date: date,
+          base_amount: 250,
+          final_amount: 250,
+        })),
+      ),
+    ])
+      expect(result.error).toBeNull();
+    const prepared = await supabase.rpc("prepare_training_scenario", {
+      p_hotel_id: HOTEL_A,
+      p_scenario_key: "arrival-http",
+      p_scenario_version: 1,
+      p_description: "Chegada HTTP",
+      p_actor_id: "80000000-0000-4000-8000-000000000002",
+    });
+    expect(prepared.error).toBeNull();
+    const environment = prepared.data as { version: number };
+    expect(
+      (
+        await supabase.rpc("act_training_clock", {
+          p_hotel_id: HOTEL_A,
+          p_actor_id: "80000000-0000-4000-8000-000000000002",
+          p_input: {
+            action: "set",
+            local_at: "2032-01-10T14:00",
+            expected_version: environment.version,
+            reason: "Chegada HTTP",
+          },
+        })
+      ).error,
+    ).toBeNull();
+    const detail = await app.inject({
+      url: `/admin/reservations/${reservationId}`,
+      headers,
+    });
+    expect(detail.statusCode).toBe(200);
+    expect(detail.json().arrival).toMatchObject({
+      guest_count: 2,
+      guarantee_required: 250,
+    });
+    const signal = await app.inject({
+      method: "POST",
+      url: `/admin/reservations/${reservationId}/guarantees`,
+      headers,
+      payload: {
+        expected_version: 1,
+        idempotency_key: "a3120000-0000-4000-8000-000000000001",
+        tenders: [{ method: "pix", amount: 250 }],
+      },
+    });
+    expect(signal.statusCode).toBe(200);
+    const link = await app.inject({
+      method: "POST",
+      url: `/admin/reservations/${reservationId}/prearrival-links`,
+      headers,
+      payload: { expires_in_hours: 24 },
+    });
+    expect(link.statusCode).toBe(201);
+    const { createBookingApp } =
+      await import("../../../booking-engine-service/src/app");
+    const publicApp = createBookingApp({
+      repository: {
+        call: async (name, args) => {
+          const result = await supabase.rpc(
+            name as "submit_prearrival",
+            args as { p_token: string; p_input: Record<string, string> },
+          );
+          if (result.error) throw result.error;
+          return result.data;
+        },
+      },
+    });
+    try {
+      const opened = await publicApp.inject({
+        url: `/public/booking-access/${link.json().token}`,
+      });
+      expect(opened.statusCode, opened.body).toBe(200);
+      const sent = await publicApp.inject({
+        method: "POST",
+        url: `/public/booking-access/${link.json().token}/prearrival`,
+        payload: {
+          expected_version: 2,
+          arrival_time: "14:00",
+          primary_guest: {
+            full_name: "Ana Treinamento",
+            document_type: "test",
+            document_number: "LOCAL-HTTP-02",
+            birth_date: "1990-01-10",
+          },
+          companions: [
+            {
+              accommodation_id: accommodationId,
+              full_name: "Bruno Treinamento",
+            },
+          ],
+        },
+      });
+      expect(sent.statusCode, sent.body).toBe(200);
+    } finally {
+      await publicApp.close();
+    }
+    const reviewed = await app.inject({
+      url: `/admin/reservations/${reservationId}`,
+      headers,
+    });
+    expect(reviewed.json().arrival.guests).toHaveLength(2);
+    const checkin = await app.inject({
+      method: "POST",
+      url: `/admin/stays/${stayId}/checkin`,
+      headers,
+      payload: {},
+    });
+    expect(checkin.statusCode).toBe(200);
+    expect(checkin.json().item.stay).toMatchObject({
+      stay_status: "checked_in",
+      total_paid: 250,
+      checkin_date_actual: "2032-01-10T17:00:00+00:00",
+    });
+    const account = await app.inject({
+      url: `/admin/stays/${stayId}/account`,
+      headers,
+    });
+    expect(account.statusCode).toBe(200);
+    expect(account.json().item.folio.checkout_balance).toBe(250);
+    expect(
+      (
+        await app.inject({
+          url: `/admin/reservations/${reservationId}`,
+          headers: managerHeaders(managerBToken, HOTEL_B),
+        })
+      ).statusCode,
+    ).toBe(404);
+  }, 90000);
 });

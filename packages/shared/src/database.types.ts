@@ -16764,6 +16764,10 @@ export type Database = {
         }
         Returns: Json
       }
+      reservation_arrival_summary: {
+        Args: { p_hotel_id: string; p_reservation_id: string }
+        Returns: Json
+      }
       resolve_booking_channel: { Args: { p_id: string }; Returns: Json }
       resolve_consumption_offer_snapshot: {
         Args: { p_hotel_id: string; p_occurred_at: string; p_offer_id: string }

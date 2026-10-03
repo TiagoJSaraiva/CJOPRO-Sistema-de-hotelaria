@@ -4,6 +4,43 @@ const strict = { additionalProperties: false } as const;
 const uuid = () => Type.String({ format: "uuid" });
 const date = () => Type.String({ format: "date" });
 
+export const ReservationArrivalSummarySchema = Type.Object({
+  version: Type.Integer({ minimum: 1 }),
+  guest_count: Type.Integer({ minimum: 1 }),
+  accommodations: Type.Array(
+    Type.Object({
+      id: uuid(),
+      room_type: Type.String(),
+      adults: Type.Integer(),
+      children: Type.Integer(),
+      checkin_date: date(),
+      checkout_date: date(),
+      nights: Type.Array(Type.Object({ date: date(), amount: Type.Number() })),
+      guarantee_type: Type.Union([Type.String(), Type.Null()]),
+    }),
+  ),
+  guarantee_required: Type.Number(),
+  guarantee_received: Type.Number(),
+  guests: Type.Array(
+    Type.Object({
+      role: Type.String(),
+      full_name: Type.String(),
+      accommodation_id: Type.Union([uuid(), Type.Null()]),
+    }),
+  ),
+  submission: Type.Union([
+    Type.Object({
+      version: Type.Integer(),
+      arrival_time: Type.Union([Type.String(), Type.Null()]),
+      submitted_at: Type.String(),
+    }),
+    Type.Null(),
+  ]),
+});
+export type ReservationArrivalSummary = Static<
+  typeof ReservationArrivalSummarySchema
+>;
+
 export const RatePlanInputSchema = Type.Object(
   {
     name: Type.String({ minLength: 2, maxLength: 120 }),

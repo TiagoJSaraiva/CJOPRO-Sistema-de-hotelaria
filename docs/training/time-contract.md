@@ -42,3 +42,12 @@ instante operacional; timestamps técnicos de criação continuam reais.
 Qualquer nova regra que compare prazo, “hoje” ou disponibilidade deve receber
 `hotel_id` e usar o helper operacional. Usar `now()` diretamente exige registrar
 por que o caso pertence à coluna de tempo real.
+
+## Chegada da lesson-02
+
+O cenário `reservations-arrival` inicia às 14h locais do Aurora. Chegada e saída
+previstas são convertidas do fuso do hotel para instantes; elegibilidade e
+check-in transacional usam o relógio operacional e a mesma data local.
+O timestamp efetivo da chegada e a postagem do crédito do sinal são operacionais;
+eventos técnicos continuam com criação real. Links de pré-chegada expiram pelo
+tempo real, mesmo quando o hotel-escola está congelado.

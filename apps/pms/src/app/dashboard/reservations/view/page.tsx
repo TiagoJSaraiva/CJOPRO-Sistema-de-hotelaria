@@ -79,6 +79,18 @@ export default async function ReservationsCalendarViewPage({
         data={data}
         startDate={startDate}
         customers={customers}
+        publicSiteUrl={process.env.PUBLIC_SITE_URL || "http://localhost:3000"}
+        canReadArrival={
+          user?.permissions.includes(PERMISSIONS.RESERVATION_READ) || false
+        }
+        canManageGuarantees={
+          user?.permissions.includes(
+            PERMISSIONS.RESERVATION_GUARANTEES_MANAGE,
+          ) || false
+        }
+        canManagePrearrival={
+          user?.permissions.includes(PERMISSIONS.PREARRIVAL_MANAGE) || false
+        }
         canPostConsumption={
           user?.permissions.includes(PERMISSIONS.CONSUMPTION_POST) || false
         }

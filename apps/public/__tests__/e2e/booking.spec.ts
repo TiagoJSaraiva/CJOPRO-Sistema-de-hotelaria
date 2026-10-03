@@ -28,6 +28,9 @@ test("reserva direta e pré-chegada funcionam por categoria", async ({
   await page.getByLabel("Tipo do documento").fill("CPF");
   await page.getByLabel("Número do documento").fill("12345678900");
   await page.getByLabel("Nascimento").fill("1990-01-01");
+  await page
+    .getByLabel("Nome do acompanhante 1 (Standard)")
+    .fill("Bruno Treinamento");
   await page.getByRole("button", { name: "Salvar pré-chegada" }).click();
   await expect(page.getByRole("status")).toContainText(
     "Pré-chegada registrada",
