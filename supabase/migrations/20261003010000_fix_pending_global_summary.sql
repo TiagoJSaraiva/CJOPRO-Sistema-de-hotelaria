@@ -29,4 +29,3 @@ returns jsonb language sql stable set search_path=public as $$
   'summary',jsonb_build_object('open',(select count(*) from visible where status='open'),'claimed',(select count(*) from visible where status='claimed'),'resolved',(select count(*) from visible where status='resolved'),'unread',(select count(*) from visible where read_at is null and status<>'resolved')),
   'sync',jsonb_build_object('last_success_at',(select last_success_at from public.operational_pending_sync where hotel_id=p_hotel_id),'error_message',(select error_message from public.operational_pending_sync where hotel_id=p_hotel_id)));
 $$;
-
