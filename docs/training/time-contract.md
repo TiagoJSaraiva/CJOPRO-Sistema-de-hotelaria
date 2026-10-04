@@ -51,3 +51,12 @@ check-in transacional usam o relógio operacional e a mesma data local.
 O timestamp efetivo da chegada e a postagem do crédito do sinal são operacionais;
 eventos técnicos continuam com criação real. Links de pré-chegada expiram pelo
 tempo real, mesmo quando o hotel-escola está congelado.
+
+## Consumo após a chegada
+
+Consulta e lançamento de consumo usam `hotel_operational_now(hotel_id)`.
+O horário do consumo deve estar entre o check-in efetivo e esse instante,
+inclusive nos limites. O contexto devolve `operational_now` separadamente de
+`occurred_at`, que pode representar um consumo retroativo. Comanda e recebimento
+imediato são postados no instante operacional; criação e auditoria técnica
+continuam no tempo real. A entrega de pedidos usa a mesma referência operacional.

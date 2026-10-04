@@ -13,6 +13,7 @@ import {
   deleteHotel,
   getUsersReferenceData,
   listHotels,
+  getConsumptionOperationalContext,
 } from "../../../src/lib/adminApi";
 
 function mockSessionToken(token: string | null, activeHotelId?: string | null) {
@@ -166,5 +167,28 @@ describe("lib/adminApi", () => {
     await expect(getUsersReferenceData()).rejects.toThrow(
       "Falha na consulta administrativa.",
     );
+  });
+});
+
+it("preserves code and details for operational context conflicts", async () => {
+  mockSessionToken("token", "hotel-id");
+  vi.stubGlobal(
+    "fetch",
+    vi.fn().mockResolvedValue({
+      ok: false,
+      status: 409,
+      json: async () => ({
+        message: "Conflict",
+        code: "CONFLICT",
+        details: "occurred_before_checkin",
+      }),
+    }),
+  );
+  await expect(
+    getConsumptionOperationalContext("stay-id"),
+  ).rejects.toMatchObject({
+    statusCode: 409,
+    code: "CONFLICT",
+    details: "occurred_before_checkin",
   });
 });

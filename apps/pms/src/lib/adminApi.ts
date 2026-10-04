@@ -250,10 +250,12 @@ async function requestAdmin<T>(
       payload.message || "Falha na operação administrativa.",
     ) as Error & {
       statusCode?: number;
+      code?: string;
       details?: string;
       context?: unknown;
     };
     error.statusCode = response.status;
+    error.code = payload.code;
     error.details = payload.details;
     error.context = payload.context;
     throw error;
@@ -355,8 +357,10 @@ async function getAdminData<T>(path: string): Promise<T> {
       .catch(() => ({}))) as AdminErrorResponse;
     const error = new Error(
       payload.message || "Falha na consulta administrativa.",
-    ) as Error & { statusCode?: number };
+    ) as Error & { statusCode?: number; code?: string; details?: string };
     error.statusCode = response.status;
+    error.code = payload.code;
+    error.details = payload.details;
     throw error;
   }
 

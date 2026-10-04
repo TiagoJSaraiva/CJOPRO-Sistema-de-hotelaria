@@ -227,6 +227,12 @@ export function ConsumptionOrderComposer({
     setReviewData(null);
   }
 
+  function occurrence(value: string) {
+    return value === localDateTimeInput(context.occurred_at)
+      ? context.occurred_at
+      : new Date(value).toISOString();
+  }
+
   function submit(formData: FormData) {
     if (!mode) return;
     const occurredAtRaw = String(formData.get("occurred_at") || "");
@@ -238,7 +244,7 @@ export function ConsumptionOrderComposer({
             point_id: pointId,
             guest_customer_id:
               String(formData.get("guest_customer_id") || "") || null,
-            occurred_at: new Date(occurredAtRaw).toISOString(),
+            occurred_at: occurrence(occurredAtRaw),
             disposition:
               mode === "courtesy"
                 ? ("courtesy" as const)
@@ -349,7 +355,7 @@ export function ConsumptionOrderComposer({
                 required
                 className="pms-field-input"
                 min={localDateTimeInput(context.stay.checkin_date_actual)}
-                max={localDateTimeInput(context.occurred_at)}
+                max={localDateTimeInput(context.operational_now)}
                 defaultValue={localDateTimeInput(context.occurred_at)}
               />
             </label>
@@ -551,9 +557,7 @@ export function ConsumptionOrderComposer({
               const data = new FormData(formRef.current!);
               setSplit({
                 guest: String(data.get("guest_customer_id") || ""),
-                occurredAt: new Date(
-                  String(data.get("occurred_at")),
-                ).toISOString(),
+                occurredAt: occurrence(String(data.get("occurred_at"))),
                 notes: String(data.get("notes") || ""),
               });
             }}

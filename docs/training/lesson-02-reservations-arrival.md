@@ -97,3 +97,12 @@ operacionais. O 103 serve para observar o bloqueio explicado, não para a chegad
 
 Para repetir: `pnpm training reset --scenario reservations-arrival`, seguido de
 `pnpm training verify --scenario reservations-arrival`. Isso remove o progresso local.
+
+## Verificação opcional: consumo após a chegada
+
+Após concluir o check-in de `LOCAL-AUR-001`, abra **Lançar consumo**
+no painel. Escolha um item disponível, informe uma unidade e selecione
+**Lançamento no fólio**. Mantenha o horário inicial, revise e
+confirme a comanda. Confira o recibo e o débito em **Ver conta**.
+O horário deve estar entre a chegada efetiva e o horário operacional
+do hotel, mesmo quando o relógio de treinamento estiver congelado.

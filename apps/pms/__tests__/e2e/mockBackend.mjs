@@ -1961,6 +1961,7 @@ const server = http.createServer(async (request, response) => {
         },
         guests: [{ id: "customer-2", full_name: "Bruno Lima" }],
         occurred_at: consumptionOccurredAt,
+        operational_now: consumptionOccurredAt,
         offers: consumptionOffers.map((offer) => ({
           id: offer.id,
           point_id: splitConsumption ? "point-reception" : offer.point.id,

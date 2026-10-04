@@ -1318,6 +1318,7 @@ export type AdminConsumptionOperationalContext = {
   guests: AdminConsumptionContextGuest[];
   offers: AdminConsumptionContextOffer[];
   occurred_at: string;
+  operational_now: string;
 };
 
 export type AdminConsumptionOrderLineInput = {

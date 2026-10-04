@@ -101,3 +101,37 @@ describe("consumption operation action", () => {
     });
   });
 });
+
+it.each(["occurred_before_checkin", "occurred_in_future"])(
+  "allows correcting temporal conflict %s without rebuilding the cart",
+  async (details) => {
+    mocks.getUser.mockResolvedValue({
+      permissions: [PERMISSIONS.CONSUMPTION_POST],
+    });
+    mocks.post.mockRejectedValue(
+      Object.assign(new Error("Conflict"), { statusCode: 409, details }),
+    );
+    expect(await postConsumptionOrderAction(input)).toMatchObject({
+      receipt: null,
+      conflict: false,
+      error: expect.stringContaining("Corrija"),
+    });
+  },
+);
+
+it("explains a stay that closed while the cart was open", async () => {
+  mocks.getUser.mockResolvedValue({
+    permissions: [PERMISSIONS.CONSUMPTION_POST],
+  });
+  mocks.post.mockRejectedValue(
+    Object.assign(new Error("Conflict"), {
+      statusCode: 409,
+      details: "stay_not_checked_in",
+    }),
+  );
+  expect(await postConsumptionOrderAction(input)).toMatchObject({
+    receipt: null,
+    conflict: true,
+    error: expect.stringContaining("A estadia"),
+  });
+});

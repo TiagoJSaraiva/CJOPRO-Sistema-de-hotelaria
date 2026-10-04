@@ -35,13 +35,12 @@ export default async function ConsumptionLaunchPage({
   let context: Awaited<
     ReturnType<typeof getConsumptionOperationalContext>
   > | null = null;
-  let contextError: number | null = null;
+  let contextError: { statusCode?: number; details?: string } | null = null;
   if (selectedStayId && !searchFailed) {
     try {
       context = await getConsumptionOperationalContext(selectedStayId);
     } catch (cause) {
-      contextError =
-        (cause as Error & { statusCode?: number }).statusCode || 500;
+      contextError = cause as Error & { statusCode?: number; details?: string };
     }
   }
   const retryParams = new URLSearchParams();
@@ -104,9 +103,14 @@ export default async function ConsumptionLaunchPage({
         ) : searchFailed || contextError ? (
           <section className="pms-surface-card" role="alert">
             <p className="m-0">
-              {contextError === 404 || contextError === 409
-                ? "Esta estadia não está mais disponível para lançamento de consumo. Busque outra estadia em check-in."
-                : "Não foi possível carregar as estadias para consumo. Tente novamente."}
+              {contextError?.details === "occurred_before_checkin"
+                ? "O horário operacional está anterior ao check-in desta estadia. Confira o relógio do hotel."
+                : contextError?.details === "occurred_in_future"
+                  ? "O horário do consumo está no futuro em relação ao relógio operacional do hotel."
+                  : contextError?.statusCode === 404 ||
+                      contextError?.details === "stay_not_checked_in"
+                    ? "Esta estadia não está mais disponível para lançamento de consumo. Busque outra estadia em check-in."
+                    : "Não foi possível carregar as estadias para consumo. Tente novamente."}
             </p>
             <a
               className="pms-button-secondary mt-3 inline-flex"

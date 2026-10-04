@@ -83,6 +83,7 @@ const context: AdminConsumptionOperationalContext = {
     },
   ],
   occurred_at: "2026-09-04T15:00:00.000Z",
+  operational_now: "2026-09-04T15:00:00.000Z",
 };
 
 const receipt: AdminConsumptionOrder = {
@@ -272,4 +273,59 @@ describe("ConsumptionOrderComposer", () => {
       screen.getByRole("button", { name: "Atualizar preços e políticas" }),
     ).toBeTruthy();
   });
+});
+
+it("uses the operational clock as maximum even for a historical context", () => {
+  render(
+    <ConsumptionOrderComposer
+      context={{ ...context, occurred_at: "2026-09-04T14:00:00.000Z" }}
+      canReceivePayment={true}
+      canGrantCourtesy={false}
+    />,
+  );
+  const field = screen.getByLabelText("Horário do consumo") as HTMLInputElement;
+  expect(new Date(field.max).getTime()).toBe(
+    new Date(context.operational_now).setSeconds(0, 0),
+  );
+  expect(new Date(field.value).getTime()).toBe(
+    new Date("2026-09-04T14:00:00.000Z").getTime(),
+  );
+});
+
+it("preserves seconds and milliseconds of the suggested occurrence at arrival", async () => {
+  const instant = "2026-09-04T15:00:22.123Z";
+  postMock.mockResolvedValue({
+    receipt: null,
+    error: "Confirmed",
+    conflict: false,
+  });
+  render(
+    <ConsumptionOrderComposer
+      context={{
+        ...context,
+        occurred_at: instant,
+        operational_now: instant,
+        stay: { ...context.stay, checkin_date_actual: instant },
+      }}
+      canReceivePayment={true}
+      canGrantCourtesy={false}
+    />,
+  );
+  const user = userEvent.setup();
+  await user.clear(
+    screen.getByRole("spinbutton", { name: "Quantidade de Água" }),
+  );
+  await user.type(
+    screen.getByRole("spinbutton", { name: "Quantidade de Água" }),
+    "1",
+  );
+  await user.click(screen.getByRole("button", { name: "Revisar comanda" }));
+  await user.click(
+    screen.getByRole("button", { name: "Confirmar lançamento" }),
+  );
+  await waitFor(() =>
+    expect(postMock).toHaveBeenCalledWith(
+      expect.objectContaining({ occurred_at: instant }),
+    ),
+  );
 });

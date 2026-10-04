@@ -203,6 +203,7 @@ it("lança o frigobar pela governança com versão, cobrança e reposição", as
     },
     guests: [],
     occurred_at: "2026-09-09T10:00:00Z",
+    operational_now: "2026-09-09T10:00:00Z",
     offers: [
       {
         id: "50000000-0000-4000-8000-000000000001",

@@ -121,7 +121,7 @@ export const consumptionLaunchGuide: UsageGuideDefinition = {
       target: "consumption-cart",
       title: "Monte o carrinho",
       description:
-        "Escolha um ponto e informe as quantidades. Produtos indisponíveis explicam o motivo.",
+        "Escolha um ponto e informe as quantidades. O horário deve estar entre o check-in e o horário operacional do hotel. Produtos indisponíveis explicam o motivo.",
     },
     {
       id: "billing",

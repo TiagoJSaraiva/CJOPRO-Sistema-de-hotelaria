@@ -937,7 +937,14 @@ test.describe("PMS UI quality", () => {
         baseURL || "http://127.0.0.1:3001",
         "consumption-e2e-token",
       );
-      await page.goto("/dashboard/consumption/launch?stay_id=stay-2");
+      await page.goto("/dashboard/reservations/view?start_date=2026-05-12");
+      await page
+        .getByRole("button", { name: /Abrir reserva RES-1002/ })
+        .click();
+      await page
+        .getByRole("link", { name: "Lançar consumo", exact: true })
+        .click();
+      await expect(page).toHaveURL(/consumption\/launch\?stay_id=stay-2/);
 
       await expect(
         page.getByRole("heading", { name: "1. Localize a estadia" }),
@@ -983,6 +990,9 @@ test.describe("PMS UI quality", () => {
         page.getByText("Café espresso", { exact: true }).last(),
       ).toBeVisible();
       await expect(page.getByText("Lançamento no fólio").first()).toBeVisible();
+      await expect(
+        page.getByRole("button", { name: "Guia desta página" }),
+      ).toBeVisible();
       await auditAccessibility("historico-consumo");
       await stabilizeVisualState(page);
       await page.evaluate(() => window.scrollTo(0, 0));

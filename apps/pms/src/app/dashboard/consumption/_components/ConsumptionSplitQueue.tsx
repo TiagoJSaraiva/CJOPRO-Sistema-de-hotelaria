@@ -33,6 +33,8 @@ export function ConsumptionSplitQueue({
   close: () => void;
 }) {
   const [context, setContext] = useState(initialContext);
+  const [occurredAt, setOccurredAt] = useState(metadata.occurredAt);
+  const [temporalConflict, setTemporalConflict] = useState(false);
   const [remaining, setRemaining] = useState(quantities);
   const offers = context.offers.filter(
     (offer) => offer.point_id === pointId && (remaining[offer.id] || 0) > 0,
@@ -127,6 +129,7 @@ export function ConsumptionSplitQueue({
       } else {
         setError(result.error || "Falha ao confirmar grupo.");
         setConflict(result.conflict);
+        setTemporalConflict(!!result.temporalConflict);
         setUncertain(!!result.uncertain);
         if (!result.uncertain) setRequest(null);
       }
@@ -140,14 +143,16 @@ export function ConsumptionSplitQueue({
       setPending(false);
     }
   }
-  async function refresh() {
+  async function refresh(useOperationalTime = false) {
     setPending(true);
     try {
       const updated = await refreshConsumptionContext(
         context.stay.id,
-        metadata.occurredAt,
+        useOperationalTime ? undefined : occurredAt,
       );
       setContext(updated);
+      if (useOperationalTime) setOccurredAt(updated.operational_now);
+      setTemporalConflict(false);
       setChoices(
         Object.fromEntries(
           updated.offers.map((offer) => [
@@ -180,6 +185,16 @@ export function ConsumptionSplitQueue({
         <Receipt key={receipt.id} order={receipt} />
       ))}
       {error && <p role="alert">{error}</p>}
+      {temporalConflict && (
+        <button
+          type="button"
+          className="pms-button-secondary"
+          disabled={pending}
+          onClick={() => void refresh(true)}
+        >
+          Usar horário operacional
+        </button>
+      )}
       {uncertain && request ? (
         <button
           disabled={pending}
@@ -199,7 +214,7 @@ export function ConsumptionSplitQueue({
         </button>
       )}
       <fieldset
-        disabled={pending || uncertain || conflict}
+        disabled={pending || uncertain || conflict || temporalConflict}
         className="grid gap-3 border-0 p-0"
       >
         <legend>Itens ainda não lançados</legend>
@@ -257,12 +272,19 @@ export function ConsumptionSplitQueue({
           onSubmit={(event) => {
             event.preventDefault();
             const data = new FormData(event.currentTarget);
-            if (pending || incomplete || uncertain || conflict) return;
+            if (
+              pending ||
+              incomplete ||
+              uncertain ||
+              conflict ||
+              temporalConflict
+            )
+              return;
             void send({
               stay_id: context.stay.id,
               point_id: pointId,
               guest_customer_id: metadata.guest || null,
-              occurred_at: metadata.occurredAt,
+              occurred_at: occurredAt,
               notes: metadata.notes || null,
               disposition: "charged",
               billing_mode: group.mode,
@@ -321,7 +343,9 @@ export function ConsumptionSplitQueue({
             )}
           </strong>
           <fieldset
-            disabled={pending || uncertain || conflict || incomplete}
+            disabled={
+              pending || uncertain || conflict || incomplete || temporalConflict
+            }
             className="grid gap-2 border-0 p-0"
           >
             {group.mode === "hotel_immediate" && (

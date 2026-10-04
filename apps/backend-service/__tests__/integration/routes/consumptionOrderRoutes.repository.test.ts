@@ -34,6 +34,7 @@ const context: AdminConsumptionOperationalContext = {
   guests: [],
   offers: [],
   occurred_at: now,
+  operational_now: now,
 };
 const order: AdminConsumptionOrder = {
   id: "c2000000-0000-4000-8000-000000000001",
@@ -161,12 +162,17 @@ describe("consumption operation routes", () => {
     });
     expect(response.statusCode).toBe(200);
     expect(repo.getContext).toHaveBeenCalledWith(hotelId, stayId, undefined);
+    expect(response.json().item.operational_now).toBe(now);
   });
 
-  it("preserves the public reason when the operational context is stale", async () => {
+  it.each([
+    "stay_not_checked_in",
+    "occurred_before_checkin",
+    "occurred_in_future",
+  ])("preserves the public conflict reason %s", async (reason) => {
     const repo = repository();
     vi.mocked(repo.getContext).mockResolvedValue({
-      result: "stay_not_checked_in",
+      result: reason,
     });
     const app = await appWith(repo);
     const response = await app.inject({
@@ -175,7 +181,7 @@ describe("consumption operation routes", () => {
       headers: headers([PERMISSIONS.CONSUMPTION_POST]),
     });
     expect(response.statusCode).toBe(409);
-    expect(response.json().details).toBe("stay_not_checked_in");
+    expect(response.json().details).toBe(reason);
   });
 
   it("requires the financial permission for immediate payment", async () => {

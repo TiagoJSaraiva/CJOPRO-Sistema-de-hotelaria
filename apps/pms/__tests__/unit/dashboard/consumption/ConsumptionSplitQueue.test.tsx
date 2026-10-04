@@ -117,3 +117,31 @@ it("mantém a chave para nova tentativa com o mesmo conteúdo após erro confirm
   );
   expect(mocks.post.mock.calls[0]?.[0]).toEqual(mocks.post.mock.calls[1]?.[0]);
 });
+
+it("recovers a temporal conflict without losing pending groups", async () => {
+  mocks.post.mockResolvedValue({
+    receipt: null,
+    error: "Corrija o horário",
+    conflict: false,
+    temporalConflict: true,
+  });
+  mocks.refresh.mockResolvedValue({
+    ...context,
+    operational_now: "2026-09-08T13:00:00Z",
+  });
+  setup();
+  const user = userEvent.setup();
+  await user.click(
+    screen.getAllByRole("button", { name: "Confirmar este grupo" })[0]!,
+  );
+  await user.click(
+    await screen.findByRole("button", { name: "Usar horário operacional" }),
+  );
+  expect(mocks.refresh).toHaveBeenCalledWith("stay", undefined);
+  await user.click(
+    screen.getAllByRole("button", { name: "Confirmar este grupo" })[0]!,
+  );
+  expect(mocks.post).toHaveBeenLastCalledWith(
+    expect.objectContaining({ occurred_at: "2026-09-08T13:00:00Z" }),
+  );
+});

@@ -97,7 +97,10 @@ it("distinguishes no search results from a failed search", async () => {
 it("reports a stale selected stay separately", async () => {
   mocks.stays.mockResolvedValue([stay]);
   mocks.context.mockRejectedValue(
-    Object.assign(new Error("Conflict"), { statusCode: 409 }),
+    Object.assign(new Error("Conflict"), {
+      statusCode: 409,
+      details: "stay_not_checked_in",
+    }),
   );
 
   await renderPage({ stay_id: stay.id });
@@ -105,4 +108,16 @@ it("reports a stale selected stay separately", async () => {
   expect(screen.getByRole("alert").textContent).toContain(
     "não está mais disponível",
   );
+});
+
+it.each([
+  ["occurred_before_checkin", "anterior ao check-in"],
+  ["occurred_in_future", "no futuro"],
+])("explains temporal conflict %s", async (details, message) => {
+  mocks.stays.mockResolvedValue([stay]);
+  mocks.context.mockRejectedValue(
+    Object.assign(new Error("Conflict"), { statusCode: 409, details }),
+  );
+  await renderPage({ stay_id: stay.id });
+  expect(screen.getByRole("alert").textContent).toContain(message);
 });

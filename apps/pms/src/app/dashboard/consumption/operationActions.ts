@@ -16,6 +16,7 @@ export type ConsumptionPostState = {
   error: string | null;
   conflict: boolean;
   uncertain?: boolean;
+  temporalConflict?: boolean;
 };
 
 export async function postConsumptionOrderAction(
@@ -43,10 +44,25 @@ export async function postConsumptionOrderAction(
     return {
       receipt: null,
       error:
-        error.statusCode === 409
-          ? "A configuração mudou enquanto a comanda estava aberta. O carrinho foi preservado; atualize o contexto e confirme novamente."
-          : error.message || "Não foi possível lançar a comanda.",
-      conflict: error.statusCode === 409,
+        error.details === "occurred_before_checkin"
+          ? "O consumo deve ocorrer a partir do check-in. Corrija o horário; o carrinho foi preservado."
+          : error.details === "occurred_in_future"
+            ? "O consumo não pode ultrapassar o horário operacional do hotel. Corrija o horário; o carrinho foi preservado."
+            : error.details === "stay_not_checked_in"
+              ? "A estadia não está mais em check-in. Confira a estadia antes de tentar novamente."
+              : error.statusCode === 409
+                ? "A configuração mudou enquanto a comanda estava aberta. O carrinho foi preservado; atualize o contexto e confirme novamente."
+                : error.message || "Não foi possível lançar a comanda.",
+      conflict:
+        error.statusCode === 409 &&
+        !["occurred_before_checkin", "occurred_in_future"].includes(
+          error.details || "",
+        ),
+      ...(["occurred_before_checkin", "occurred_in_future"].includes(
+        error.details || "",
+      )
+        ? { temporalConflict: true }
+        : {}),
       ...(!error.statusCode || error.statusCode >= 500
         ? { uncertain: true }
         : {}),

@@ -1696,6 +1696,7 @@ export const ConsumptionOperationalContextSchema = Type.Object(
     guests: Type.Array(Type.Ref("ConsumptionContextGuest")),
     offers: Type.Array(Type.Ref("ConsumptionContextOffer")),
     occurred_at: dateTime(),
+    operational_now: dateTime(),
   },
   { ...strict, $id: "ConsumptionOperationalContext" },
 );

@@ -1131,6 +1131,77 @@ describe.sequential("Supabase local com Fastify real", () => {
     });
     expect(account.statusCode).toBe(200);
     expect(account.json().item.folio.checkout_balance).toBe(250);
+    const consumptionContext = await app.inject({
+      url: `/admin/consumption-orders/context?stay_id=${stayId}`,
+      headers,
+    });
+    expect(consumptionContext.statusCode).toBe(200);
+    const context = consumptionContext.json().item;
+    expect(new Date(context.operational_now).toISOString()).toBe(
+      "2032-01-10T17:00:00.000Z",
+    );
+    expect(context.occurred_at).toBe(context.operational_now);
+    const offer = context.offers.find(
+      (item: {
+        available: boolean;
+        provider_type: string;
+        allowed_modes: string[];
+      }) =>
+        item.available &&
+        item.provider_type === "hotel" &&
+        item.allowed_modes.includes("stay_folio"),
+    );
+    expect(offer).toBeTruthy();
+    const input = {
+      stay_id: stayId,
+      point_id: offer.point_id,
+      occurred_at: context.occurred_at,
+      disposition: "charged",
+      billing_mode: "stay_folio",
+      idempotency_key: "c9400000-0000-4000-8000-000000000001",
+      lines: [
+        { offer_id: offer.id, quantity: 1, version_token: offer.version_token },
+      ],
+    };
+    const post = () =>
+      app.inject({
+        method: "POST",
+        url: "/admin/consumption-orders",
+        headers,
+        payload: input,
+      });
+    const launched = await post();
+    expect(launched.statusCode).toBe(201);
+    expect(new Date(launched.json().item.posted_at).toISOString()).toBe(
+      "2032-01-10T17:00:00.000Z",
+    );
+    const replay = await post();
+    expect(replay.statusCode).toBe(200);
+    expect(replay.json().item.id).toBe(launched.json().item.id);
+    const updatedAccount = await app.inject({
+      url: `/admin/stays/${stayId}/account`,
+      headers,
+    });
+    expect(updatedAccount.json().item.folio.checkout_balance).toBe(
+      250 + offer.unit_price,
+    );
+    for (const [occurred_at, details] of [
+      ["2032-01-10T16:59:59Z", "occurred_before_checkin"],
+      ["2032-01-10T17:00:01Z", "occurred_in_future"],
+    ]) {
+      const invalid = await app.inject({
+        url: `/admin/consumption-orders/context?stay_id=${stayId}&occurred_at=${occurred_at}`,
+        headers,
+      });
+      expect(invalid.statusCode).toBe(409);
+      expect(invalid.json().details).toBe(details);
+    }
+    const hiddenContext = await app.inject({
+      url: `/admin/consumption-orders/context?stay_id=${stayId}`,
+      headers: managerHeaders(managerBToken, HOTEL_B),
+    });
+    expect(hiddenContext.statusCode).toBe(404);
+
     expect(
       (
         await app.inject({

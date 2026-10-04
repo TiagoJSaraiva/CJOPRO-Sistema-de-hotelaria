@@ -1438,6 +1438,10 @@
             },
             "type": "array"
           },
+          "operational_now": {
+            "format": "date-time",
+            "type": "string"
+          },
           "stay": {
             "additionalProperties": false,
             "properties": {
@@ -1499,7 +1503,8 @@
           "stay",
           "guests",
           "offers",
-          "occurred_at"
+          "occurred_at",
+          "operational_now"
         ],
         "title": "ConsumptionOperationalContext",
         "type": "object"
@@ -55836,6 +55841,10 @@
                           },
                           "type": "array"
                         },
+                        "operational_now": {
+                          "format": "date-time",
+                          "type": "string"
+                        },
                         "stay": {
                           "additionalProperties": false,
                           "properties": {
@@ -55897,7 +55906,8 @@
                         "stay",
                         "guests",
                         "offers",
-                        "occurred_at"
+                        "occurred_at",
+                        "operational_now"
                       ],
                       "type": "object"
                     }
