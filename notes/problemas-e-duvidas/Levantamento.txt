@@ -1,0 +1,20 @@
+Todas as imagens referenciadas estão em notes\problemas-encontrados\img
+
+PROBLEMAS LEVANTADOS NO FLUXO DE TREINAMENTO
+
+1 - Usuário recepção aurora, img1: Lançamento de consumo não identificando estadias checked in nesta página de "Localize estadia". No db do aurora no estado de "treino" atual (primeira lição), há a estadia LOCAL-AUR-002. Ao clicar no botão "Lançar consumo", o usuário é redirecionado a interface /consumption/launch, onde era suposto aparecer a estadia LOCAL-AUR-002 para lançamento de consumo, mas como pode ser visto no print, a estadia não está sendo exibida para lançamento de consumo.
+
+1.1 - Anexado ao problema 1. parece que, ao procurar apenas "102", como pode ser visto na img1.1, ainda aparece "nenhuma estatida em check in foi encontrada.", mas também aparece logo abaixo do input, "Quarto 102 Bruno Exemplo", um texto clicável, mas que ao ser clicável não faz acontecer nada, a página apenas recarrega.
+
+DUVIDAS
+
+1 - Usuário recepção aurora, img2: Acho que um dado de consumo da estadia LOCAL-AUR-002 gerado para popular o sistema foi gerado de forma incompleta ou indevida, pois há campos com dados que não fazem sentido ou não entendo, como "Situação efetiva: Legacy", "Cobrança: Não classificada", "Operador: Sistema" e "Ponto: Não informado". Eu entendi todos esses campos, só o populamento que está feito de forma não-natural pelo visto, além de que parece que as compras estão num estado "Migrado", e os 16 reais da compra não estão acrescentados ao saldo do cliente, como pode ser visto na img4.
+
+2 - img3, oque é esta página de preferência de cada cliente, de forma didática e bem explicada. Eu meio que consigo inferir oque ela se trata mais gostaria de uma explicação elaborada.
+
+Todos esses problemas se referem a primeira "Lição".
+O objetivo de caçar problemas e esclarecer essas dúvidas é fazer com que o fluxo proposto pela primeira lição seja 100% realizável sem contratempos. Assim o fluxo de recepção vai sendo refinado e eu vou aprendendo a usar as ferramentas.
+
+Analise os problemas levantados juntamente às imagens, esclareça minhas dúvidas e proponha soluções dos problemas.
+
+Faça um planejamento.

@@ -2,15 +2,16 @@
 
 ## Camadas
 
-| Camada         | Ferramenta               | Escopo                                     | Serviço externo |
-| -------------- | ------------------------ | ------------------------------------------ | --------------- |
-| Unitária       | Vitest e Testing Library | regras isoladas, componentes e utilitários | nenhum          |
-| Integração     | Vitest e Fastify inject  | rotas com dependências controladas         | nenhum          |
-| Cobertura      | Vitest V8                | todos os arquivos TypeScript elegíveis     | nenhum          |
-| E2E            | Playwright               | quatro fluxos do PMS com backend mockado   | nenhum          |
-| Visual         | Playwright snapshots     | desktop e mobile, Windows e Linux          | nenhum          |
-| Acessibilidade | axe + Playwright         | WCAG automatizável e estados interativos   | nenhum          |
-| Banco          | pgTAP e Vitest/Fastify   | schema, seed, RLS, RPCs e fluxos reais     | Docker local    |
+| Camada         | Ferramenta               | Escopo                                       | Serviço externo |
+| -------------- | ------------------------ | -------------------------------------------- | --------------- |
+| Unitária       | Vitest e Testing Library | regras isoladas, componentes e utilitários   | nenhum          |
+| Integração     | Vitest e Fastify inject  | rotas com dependências controladas           | nenhum          |
+| Cobertura      | Vitest V8                | todos os arquivos TypeScript elegíveis       | nenhum          |
+| E2E            | Playwright               | quatro fluxos do PMS com backend mockado     | nenhum          |
+| Visual         | Playwright snapshots     | desktop e mobile, Windows e Linux            | nenhum          |
+| Acessibilidade | axe + Playwright         | WCAG automatizável e estados interativos     | nenhum          |
+| Banco          | pgTAP e Vitest/Fastify   | schema, seed, RLS, RPCs e fluxos reais       | Docker local    |
+| Jornada real   | Playwright               | lições do curso no sistema inteiro, sem mock | Docker local    |
 
 Testes Vitest ficam em `__tests__/unit`, `__tests__/integration`, `fixtures` e
 `helpers` conforme sua função. A suíte real de banco é separada para manter o
@@ -20,6 +21,15 @@ O E2E de sessão passa pelo formulário de login com as rotas reais de autentica
 assinatura e verificação de tokens, usando repositório sintético em memória. Ele
 cobre perfis com todas as permissões operacionais, troca de conta, persistência no
 navegador e logout. Os dados operacionais das demais telas continuam mockados.
+
+As jornadas reais ficam em `apps/pms/__tests__/journeys` e rodam com
+`pnpm test:journeys`. Cada uma recria o Supabase local com o cenário da lição e
+percorre navegador, PMS, site público, backend, booking engine e banco. A jornada
+falha ao encontrar resposta 5xx, erro não tratado ou `console.error`, mesmo com a
+tela aparentemente correta. Os mocks continuam servindo para testes visuais e de
+acessibilidade, mas não provam que as camadas conversam entre si. Elas ainda não
+fazem parte do CI nem de `pnpm check:full`. Encerre `pnpm dev` antes de executá-las,
+pois o PMS e o site público compartilham a pasta `.next`.
 
 ## Política para novas features e correções
 

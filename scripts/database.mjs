@@ -36,7 +36,7 @@ function run(executable, args, options = {}) {
   });
 }
 
-function runPnpm(args, options = {}) {
+export function runPnpm(args, options = {}) {
   const inheritedPnpmEntry = process.env.npm_execpath;
   if (inheritedPnpmEntry && existsSync(inheritedPnpmEntry)) {
     return spawnSync(process.execPath, [inheritedPnpmEntry, ...args], {
@@ -60,7 +60,7 @@ function fail(message, correction) {
   throw new Error(`${message}${suffix}`);
 }
 
-function validatePrerequisites() {
+export function validatePrerequisites() {
   const docker = run("docker", ["info", "--format", "{{.ServerVersion}}"], {
     capture: true,
   });
@@ -134,7 +134,7 @@ function readLocalKongSecretKey() {
   );
 }
 
-function getLocalCredentials({ allowDerivedKey = false } = {}) {
+export function getLocalCredentials({ allowDerivedKey = false } = {}) {
   const status = readLocalStatus();
   if (!status) {
     fail("Supabase local nao esta em execucao.", "Execute pnpm db:start.");

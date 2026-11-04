@@ -41,19 +41,20 @@ deliberadamente manifests ou overrides.
 
 ## Testes
 
-| Comando                   | Finalidade                                       | Requisito adicional | Versionados |
-| ------------------------- | ------------------------------------------------ | ------------------- | ----------- |
-| `pnpm test`               | executa todas as suítes Vitest normais           | nenhum              | não         |
-| `pnpm test:unit`          | executa testes unitários                         | nenhum              | não         |
-| `pnpm test:integration`   | executa integrações sem banco real               | nenhum              | não         |
-| `pnpm test:coverage`      | aplica cobertura e gera relatórios               | nenhum              | não         |
-| `pnpm coverage:report`    | reconstrói o consolidado de JSONs existentes     | relatórios prévios  | não         |
-| `pnpm test:watch`         | executa Vitest em modo watch                     | terminal interativo | não         |
-| `pnpm test:e2e`           | executa Playwright funcional, visual e axe       | Chromium            | não         |
-| `pnpm test:visual`        | compara snapshots da plataforma atual            | Chromium            | não         |
-| `pnpm test:a11y`          | executa auditorias axe                           | Chromium            | não         |
-| `pnpm test:visual:update` | atualiza snapshots alterados da plataforma atual | revisão visual      | sim         |
-| `pnpm test:db`            | recria e testa o Supabase exclusivamente local   | Docker              | não         |
+| Comando                   | Finalidade                                       | Requisito adicional                                 | Versionados |
+| ------------------------- | ------------------------------------------------ | --------------------------------------------------- | ----------- |
+| `pnpm test`               | executa todas as suítes Vitest normais           | nenhum                                              | não         |
+| `pnpm test:unit`          | executa testes unitários                         | nenhum                                              | não         |
+| `pnpm test:integration`   | executa integrações sem banco real               | nenhum                                              | não         |
+| `pnpm test:coverage`      | aplica cobertura e gera relatórios               | nenhum                                              | não         |
+| `pnpm coverage:report`    | reconstrói o consolidado de JSONs existentes     | relatórios prévios                                  | não         |
+| `pnpm test:watch`         | executa Vitest em modo watch                     | terminal interativo                                 | não         |
+| `pnpm test:e2e`           | executa Playwright funcional, visual e axe       | Chromium                                            | não         |
+| `pnpm test:visual`        | compara snapshots da plataforma atual            | Chromium                                            | não         |
+| `pnpm test:a11y`          | executa auditorias axe                           | Chromium                                            | não         |
+| `pnpm test:visual:update` | atualiza snapshots alterados da plataforma atual | revisão visual                                      | sim         |
+| `pnpm test:db`            | recria e testa o Supabase exclusivamente local   | Docker                                              | não         |
+| `pnpm test:journeys`      | executa as lições no sistema real pelo navegador | Docker, Supabase local e Chromium; destrutivo local | não         |
 
 ## API e banco
 

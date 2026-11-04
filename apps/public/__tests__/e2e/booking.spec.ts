@@ -1,6 +1,11 @@
 import AxeBuilder from "@axe-core/playwright";
 import { expect, test } from "@playwright/test";
 
+// O formulário exige chegada futura; datas fixas fariam o teste expirar sozinho.
+function isoDateFromNow(days: number): string {
+  return new Date(Date.now() + days * 86_400_000).toISOString().slice(0, 10);
+}
+
 test("reserva direta e pré-chegada funcionam por categoria", async ({
   page,
 }) => {
@@ -8,8 +13,8 @@ test("reserva direta e pré-chegada funcionam por categoria", async ({
   await expect(
     page.getByRole("heading", { name: "Hotel Aurora" }),
   ).toBeVisible();
-  await page.getByLabel("Chegada").fill("2026-10-10");
-  await page.getByLabel("Saída").fill("2026-10-12");
+  await page.getByLabel("Chegada").fill(isoDateFromNow(30));
+  await page.getByLabel("Saída").fill(isoDateFromNow(32));
   await page.getByRole("button", { name: "Consultar categorias" }).click();
   await page.getByRole("radio").check();
   await expect(page.getByText(/Garantia: first_night/)).toBeVisible();

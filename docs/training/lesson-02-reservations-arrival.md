@@ -35,8 +35,8 @@ O quarto 101 está pronto; o 103 possui um bloqueio de limpeza programada.
 ## Passos orientados
 
 1. Em **Reservas → Calendário**, abra `LOCAL-AUR-001`.
-2. Em **Dados da estadia** confira o titular e o quarto. Em **Preparação da
-   chegada**, confira **Quantidade de hóspedes: 2**, dois adultos, categoria
+2. Em **Dados da estadia** confira o titular e o quarto. Em **Chegada e
+   adiantamento**, confira **Quantidade de hóspedes: 2**, dois adultos, categoria
    Standard e as duas diárias de R$ 250. Confira chegada hoje e saída dois dias
    depois. Antes do sinal, o valor contratado é R$ 500 e o saldo é R$ 500.
 3. Confira **Política: primeira diária**, **Exigido: R$ 250** e
@@ -68,7 +68,7 @@ O quarto 101 está pronto; o 103 possui um bloqueio de limpeza programada.
    acompanhante `Bruno Treinamento` e horário previsto `14:00`.
    Deixe o pedido especial vazio para o caminho principal. Clique em
    **Salvar pré-chegada**. Volte ao PMS e clique em
-   **Atualizar dados da pré-chegada**; confira o envio, horário e as duas pessoas.
+   **Atualizar envio**; confira o envio, horário e as duas pessoas.
    O link vale 24 horas reais; regenerar revoga o anterior. O formulário não
    realiza check-in e não é obrigatório para toda chegada atendida pela recepção.
 6. Confira o **Horário operacional**, a janela **14h–22h** e a prontidão.
