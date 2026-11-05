@@ -1,6 +1,7 @@
 import type { Page } from "@playwright/test";
 import {
   expect,
+  findInvariantViolations,
   prepareScenario,
   queryLocal,
   signIn,
@@ -132,5 +133,9 @@ test("lição 1: orientação, papéis e pendências", async ({ page }) => {
     await expect.soft(page.getByText(PENDING_TITLE)).toHaveCount(0);
     await expect.soft(page.getByText("quarto 103")).toHaveCount(0);
     await expect.soft(page.getByText("LOCAL-AUR-002")).toHaveCount(0);
+  });
+
+  await test.step("Invariantes de negócio ao final da jornada", async () => {
+    expect.soft(findInvariantViolations()).toEqual([]);
   });
 });

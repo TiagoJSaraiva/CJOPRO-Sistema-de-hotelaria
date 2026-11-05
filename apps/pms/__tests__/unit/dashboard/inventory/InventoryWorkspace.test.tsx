@@ -14,6 +14,7 @@ const mocks = vi.hoisted(() => ({
   audit: vi.fn(),
   counts: vi.fn(),
   settings: vi.fn(),
+  operations: vi.fn(),
 }));
 
 vi.mock("../../../../src/lib/auth", () => ({
@@ -27,6 +28,7 @@ vi.mock("../../../../src/lib/adminApi", () => ({
   listInventoryAuditEvents: mocks.audit,
   listInventoryCounts: mocks.counts,
   getConsumptionManagementSettings: mocks.settings,
+  requestOperationsFinanceEndpoint: mocks.operations,
 }));
 vi.mock(
   "../../../../src/app/dashboard/_components/DashboardEntityPageShell",
@@ -180,6 +182,31 @@ afterEach(() => {
 });
 
 describe("InventoryWorkspace", () => {
+  it("keeps the minibar screen working without access to the replenishment board", async () => {
+    mocks.getUser.mockResolvedValue({
+      permissions: [...allPermissions, PERMISSIONS.MINIBAR_COMPOSITIONS_MANAGE],
+    });
+    mocks.operations.mockImplementation(async (path: string) => {
+      if (path === "minibar/compositions") return { items: [] };
+      throw Object.assign(new Error("Sem permissão"), { statusCode: 403 });
+    });
+
+    render(await InventoryWorkspace({ tab: "minibar" }));
+
+    expect(screen.getByRole("heading", { name: "Estoque" })).toBeTruthy();
+  });
+
+  it("does not hide other failures of the replenishment board", async () => {
+    mocks.operations.mockImplementation(async (path: string) => {
+      if (path === "minibar/compositions") return { items: [] };
+      throw Object.assign(new Error("Falha"), { statusCode: 500 });
+    });
+
+    await expect(InventoryWorkspace({ tab: "minibar" })).rejects.toThrow(
+      "Falha",
+    );
+  });
+
   it("renders alerts, costs and editable thresholds on the overview", async () => {
     render(await InventoryWorkspace({ tab: "overview", status: "updated" }));
     expect(screen.getByText("Água mineral")).toBeTruthy();

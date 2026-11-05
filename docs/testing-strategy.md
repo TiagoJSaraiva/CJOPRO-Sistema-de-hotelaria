@@ -29,7 +29,25 @@ falha ao encontrar resposta 5xx, erro não tratado ou `console.error`, mesmo com
 tela aparentemente correta. Os mocks continuam servindo para testes visuais e de
 acessibilidade, mas não provam que as camadas conversam entre si. Elas ainda não
 fazem parte do CI nem de `pnpm check:full`. Encerre `pnpm dev` antes de executá-las,
-pois o PMS e o site público compartilham a pasta `.next`.
+pois o PMS e o site público compartilham a pasta `.next`. Não rode outras suítes em
+paralelo: sob carga, testes com tempo limite falham sem haver defeito.
+
+O backend das jornadas também registra o que o navegador não enxerga: respostas de
+erro e corpos fora do contrato, antes que o serializador remova os campos não
+declarados. Três varreduras completam as lições:
+
+- `sweep-invariants.spec.ts` confere as regras de `supabase/training/invariants.sql`
+  nos dez cenários do curso;
+- `sweep-pages.spec.ts` abre todas as páginas com as dez contas e grava o relatório em
+  `node_modules/.cache/pms-journeys-sweep.json`. Leva cerca de 1h40, e o `next dev`
+  reinicia por memória durante a execução, então um tempo limite isolado que não se
+  repete entre rodadas não é defeito. Selecione com `pnpm test:journeys --grep varredura`;
+- `rpc_runtime_regressions.test.sql` passa `plpgsql_check` em todas as funções, que
+  de outra forma só falhariam ao executar.
+
+`apiContractSerializers.test.ts` serializa um exemplo completo de cada resposta de
+sucesso. Compilar o schema não basta, porque alguns erros só surgem ao responder. Os
+defeitos encontrados ficam no [registro de bugs](qa/bug-ledger.md).
 
 ## Política para novas features e correções
 

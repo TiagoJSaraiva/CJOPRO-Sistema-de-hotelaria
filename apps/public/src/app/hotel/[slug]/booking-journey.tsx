@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useMemo, useRef, useState } from "react";
+import { nextLocalDate } from "./bookingDates";
 
 type Config = {
   hotel: { name: string; city?: string; currency: string };
@@ -42,10 +43,7 @@ export function BookingJourney({ slug }: { slug: string }) {
   const holdAttempt = useRef<{ fingerprint: string; key: string } | undefined>(
     undefined,
   );
-  const tomorrow = useMemo(
-    () => new Date(Date.now() + 86400000).toISOString().slice(0, 10),
-    [],
-  );
+  const tomorrow = useMemo(() => nextLocalDate(new Date()), []);
   useEffect(() => {
     fetch(`${api}/public/hotels/${slug}/booking-config`)
       .then((r) => (r.ok ? r.json() : Promise.reject()))

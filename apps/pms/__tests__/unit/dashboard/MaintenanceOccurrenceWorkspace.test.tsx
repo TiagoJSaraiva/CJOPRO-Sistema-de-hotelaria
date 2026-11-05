@@ -70,6 +70,27 @@ it("preserva contexto, histórico e restrições do leitor", () => {
   ).toBeNull();
 });
 
+it("traduz responsabilidade e componentes do impacto", () => {
+  render(
+    <MaintenanceOccurrenceWorkspace
+      initial={
+        {
+          ...initial,
+          impact_components: [{ key: "guest_present", points: 20 }],
+        } as never
+      }
+      suppliers={[]}
+      referenceData={referenceData}
+      access={access}
+    />,
+  );
+
+  expect(screen.getByText("Não avaliada")).toBeTruthy();
+  expect(screen.getByText(/Hóspede no quarto/)).toBeTruthy();
+  expect(screen.queryByText(/guest_present/)).toBeNull();
+  expect(screen.queryByText("not_assessed")).toBeNull();
+});
+
 it("identifica as datas do bloqueio para quem pode gerenciá-lo", () => {
   render(
     <MaintenanceOccurrenceWorkspace

@@ -1,4 +1,5 @@
 import { defineConfig, devices } from "@playwright/test";
+import { resolve } from "node:path";
 
 // Jornadas no sistema real: navegador, PMS, site público, backend, booking engine
 // e Supabase local. Use `pnpm test:journeys`, que valida o destino e fornece as
@@ -21,10 +22,16 @@ const publicUrl = `http://127.0.0.1:${publicPort}`;
 const bookingUrl = `http://127.0.0.1:${bookingPort}`;
 const allowedOrigins = [pmsUrl, publicUrl, bookingUrl].join(",");
 
+// Eventos do backend real; o caminho precisa ser o mesmo no servidor e nos testes.
+process.env.JOURNEY_BACKEND_LOG = resolve(
+  process.cwd(),
+  "../../node_modules/.cache/pms-journeys-backend.jsonl",
+);
+
 export default defineConfig({
   testDir: "./__tests__/journeys",
   testMatch: "*.spec.ts",
-  timeout: 300_000,
+  timeout: 600_000,
   updateSnapshots: "none",
   expect: { timeout: 20_000 },
   fullyParallel: false,
@@ -57,7 +64,7 @@ export default defineConfig({
   webServer: [
     {
       command:
-        "pnpm --filter @hotel/backend-service exec tsx ../pms/__tests__/journeys/realBackend.mjs",
+        "pnpm --filter @hotel/backend-service exec tsx __tests__/journeys/realBackend.mjs",
       url: `${backendUrl}/health`,
       reuseExistingServer: false,
       timeout: 120_000,

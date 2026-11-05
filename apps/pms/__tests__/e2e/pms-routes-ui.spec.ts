@@ -618,7 +618,7 @@ test.describe("PMS UI quality", () => {
       await expect(
         page.getByRole("heading", { level: 2, name: "Checkout", exact: true }),
       ).toBeVisible();
-      await page.getByLabel("Numero do quarto").fill("102");
+      await page.getByLabel("Número do quarto").fill("102");
       await page.getByRole("button", { name: "Buscar" }).click();
 
       await expect(page.getByTestId("checkout-by-room-workflow")).toContainText(

@@ -106,7 +106,7 @@ function TransactionDataPreview({
           label="Centro de custo"
           value={transaction.cost_center || "-"}
         />
-        <DetailItem label="Metodo" value={transaction.payment_method || "-"} />
+        <DetailItem label="Método" value={transaction.payment_method || "-"} />
         <DetailItem
           label="Referência"
           value={transaction.reference_code || "-"}
@@ -265,7 +265,7 @@ function TransactionEditForm({
         </label>
 
         <label className="pms-field">
-          <span>Metodo</span>
+          <span>Método</span>
           <input
             name="payment_method"
             defaultValue={transaction.payment_method || ""}

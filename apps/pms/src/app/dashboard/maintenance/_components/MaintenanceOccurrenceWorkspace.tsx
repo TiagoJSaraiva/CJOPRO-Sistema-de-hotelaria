@@ -18,6 +18,24 @@ import {
 import { useState } from "react";
 import { ContextHelp } from "../../_components/ContextHelp";
 
+const LIABILITY_LABELS: Record<string, string> = {
+  not_applicable: "Não se aplica",
+  not_assessed: "Não avaliada",
+  suspected: "Suspeita",
+  confirmed: "Confirmada",
+  dismissed: "Descartada",
+};
+
+const IMPACT_LABELS: Record<string, string> = {
+  technical_priority: "Prioridade técnica",
+  guest_present: "Hóspede no quarto",
+  next_arrival: "Próxima chegada",
+  affected_rooms: "Quartos afetados",
+  active_block: "Bloqueio ativo",
+  impact_duration: "Duração do impacto",
+  recurrence: "Recorrência",
+};
+
 type Access = {
   canCreate: boolean;
   canTriage: boolean;
@@ -235,7 +253,9 @@ export function MaintenanceOccurrenceWorkspace({
             {item.recommended_priority || item.priority}
           </dd>
           <dt>Responsabilidade</dt>
-          <dd>{item.liability_status}</dd>
+          <dd>
+            {LIABILITY_LABELS[item.liability_status] || item.liability_status}
+          </dd>
           <dt>Estadia</dt>
           <dd>{item.stay_id || "Não vinculada"}</dd>
           <dt>Bloqueio</dt>
@@ -754,7 +774,8 @@ export function MaintenanceOccurrenceWorkspace({
           <ul>
             {item.impact_components.map((component) => (
               <li key={component.key}>
-                {component.key}: +{component.points}
+                {IMPACT_LABELS[component.key] || component.key}: +
+                {component.points}
               </li>
             ))}
           </ul>

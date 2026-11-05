@@ -1401,16 +1401,23 @@ export const ConsumptionOfferSchema = Type.Object(
     display_order: Type.Integer(),
     is_active: Type.Boolean(),
     policy: Type.Ref("ConsumptionOfferPolicyInput"),
-    resolved_policy: Type.Intersect([
-      Type.Ref("ConsumptionBillingPolicy"),
-      Type.Object({ source: ConsumptionPolicySourceSchema }, strict),
-    ]),
+    resolved_policy: Type.Object(
+      {
+        ...ConsumptionBillingPolicySchema.properties,
+        source: ConsumptionPolicySourceSchema,
+      },
+      strict,
+    ),
     effective_available: Type.Boolean(),
     unavailable_reasons: Type.Array(ConsumptionUnavailableReasonSchema),
     commercial_agreement: nullable(
       Type.Object({ id: uuid(), internal_number: Type.String() }, strict),
     ),
-    commercial_revision: nullable(Type.Ref("CommercialAgreementRevision")),
+    // Em anyOf, o serializador valida com uma referência que ainda não conhece e falha
+    // ao responder, mesmo com o campo nulo. Por isso o objeto é repetido aqui.
+    commercial_revision: nullable(
+      Type.Object({ ...CommercialAgreementRevisionSchema.properties }, strict),
+    ),
     archived_at: nullable(dateTime()),
     inventory_location: Type.Optional(
       nullable(
@@ -1645,7 +1652,25 @@ export const ConsumptionContextOfferSchema = Type.Object(
     partner_name: nullable(Type.String()),
     agreement_id: nullable(uuid()),
     agreement_number: nullable(Type.String()),
-    revision: nullable(Type.Ref("CommercialAgreementRevision")),
+    // Recorte vigente da revisão, não a revisão completa do acordo.
+    revision: nullable(
+      Type.Object(
+        {
+          id: uuid(),
+          version: Type.Integer(),
+          starts_on: date(),
+          ends_on: nullable(date()),
+          commercial_model: CommercialModelSchema,
+          fixed_rent: nullable(Type.Number()),
+          rent_frequency: nullable(CommercialRentFrequencySchema),
+          commission_percentage: nullable(Type.Number()),
+          minimum_guarantee: nullable(Type.Number()),
+          payment_recipient: CommercialPaymentRecipientSchema,
+          currency: Type.String(),
+        },
+        strict,
+      ),
+    ),
     allowed_modes: Type.Array(ConsumptionBillingModeSchema),
     default_mode: nullable(ConsumptionBillingModeSchema),
     policy_source: ConsumptionPolicySourceSchema,
@@ -2391,6 +2416,14 @@ export const MaintenanceOccurrenceSummarySchema = Type.Object(
     sla_response_due_at: Type.Optional(nullable(dateTime())),
     sla_resolution_due_at: Type.Optional(nullable(dateTime())),
     operational_resolved_at: Type.Optional(nullable(dateTime())),
+    impact_score: Type.Optional(Type.Number()),
+    recommended_priority: Type.Optional(MaintenancePrioritySchema),
+    impact_components: Type.Optional(
+      Type.Array(
+        Type.Object({ key: Type.String(), points: Type.Number() }, strict),
+      ),
+    ),
+    recurrent: Type.Optional(Type.Boolean()),
     created_at: dateTime(),
     updated_at: dateTime(),
   },
@@ -2422,6 +2455,65 @@ export const MaintenanceWorkOrderSchema = Type.Object(
     resolution_notes: nullable(Type.String()),
     started_at: nullable(dateTime()),
     completed_at: nullable(dateTime()),
+    supplier_id: optionalNullable(uuid()),
+    supplier_name: optionalNullable(Type.String()),
+    contract_id: optionalNullable(uuid()),
+    contract_number: optionalNullable(Type.String()),
+    supplier_status: optionalNullable(
+      Type.Union([
+        Type.Literal("not_sent"),
+        Type.Literal("sent"),
+        Type.Literal("accepted"),
+        Type.Literal("in_service"),
+        Type.Literal("completed"),
+        Type.Literal("canceled"),
+      ]),
+    ),
+    supplier_external_reference: optionalNullable(Type.String()),
+    version: Type.Optional(Type.Integer()),
+    waiting_episode: optionalNullable(
+      Type.Object(
+        {
+          id: uuid(),
+          owner_id: uuid(),
+          owner_name: Type.String(),
+          next_follow_up_at: dateTime(),
+          version: Type.Integer(),
+          started_at: dateTime(),
+        },
+        strict,
+      ),
+    ),
+    schedule: optionalNullable(
+      Type.Object(
+        {
+          id: uuid(),
+          planned_start: dateTime(),
+          planned_end: dateTime(),
+          estimated_minutes: Type.Number(),
+          access_kind: Type.String(),
+          version: Type.Integer(),
+        },
+        strict,
+      ),
+    ),
+    checklist: Type.Optional(
+      Type.Array(
+        Type.Object(
+          {
+            id: uuid(),
+            work_order_id: uuid(),
+            position: Type.Integer(),
+            description: Type.String(),
+            is_required: Type.Boolean(),
+            completed_by: nullable(uuid()),
+            completed_at: nullable(dateTime()),
+            completion_notes: nullable(Type.String()),
+          },
+          strict,
+        ),
+      ),
+    ),
     created_at: dateTime(),
     updated_at: dateTime(),
   },
@@ -2485,30 +2577,54 @@ const MaintenanceRoomBlockSchema = Type.Object(
   },
   strict,
 );
-export const MaintenanceOccurrenceDetailSchema = Type.Intersect(
-  [
-    Type.Ref("MaintenanceOccurrenceSummary"),
-    Type.Object(
-      {
-        discovered_at: dateTime(),
-        triaged_by: nullable(uuid()),
-        triaged_at: nullable(dateTime()),
-        suspected_party: nullable(MaintenanceResponsiblePartySchema),
-        confirmed_party: nullable(MaintenanceResponsiblePartySchema),
-        liability_notes: nullable(Type.String()),
-        duplicate_of_id: nullable(uuid()),
-        canceled_reason: nullable(Type.String()),
-        resolved_at: nullable(dateTime()),
-        work_orders: Type.Array(Type.Ref("MaintenanceWorkOrder")),
-        inspections: Type.Array(MaintenanceInspectionSchema),
-        events: Type.Array(MaintenanceEventSchema),
-        attachments: Type.Array(MaintenanceAttachmentSchema),
-        room_blocks: Type.Array(MaintenanceRoomBlockSchema),
-      },
-      strict,
+export const MaintenanceOccurrenceDetailSchema = Type.Object(
+  {
+    ...MaintenanceOccurrenceSummarySchema.properties,
+    discovered_at: dateTime(),
+    triaged_by: nullable(uuid()),
+    triaged_at: nullable(dateTime()),
+    suspected_party: nullable(MaintenanceResponsiblePartySchema),
+    confirmed_party: nullable(MaintenanceResponsiblePartySchema),
+    liability_notes: nullable(Type.String()),
+    duplicate_of_id: nullable(uuid()),
+    canceled_reason: nullable(Type.String()),
+    resolved_at: nullable(dateTime()),
+    work_orders: Type.Array(Type.Ref("MaintenanceWorkOrder")),
+    inspections: Type.Array(MaintenanceInspectionSchema),
+    events: Type.Array(MaintenanceEventSchema),
+    attachments: Type.Array(MaintenanceAttachmentSchema),
+    room_blocks: Type.Array(MaintenanceRoomBlockSchema),
+    affected_rooms: Type.Optional(
+      Type.Array(
+        Type.Object(
+          {
+            id: uuid(),
+            room_id: uuid(),
+            room_number: Type.String(),
+            source: Type.String(),
+            reason: Type.String(),
+            impact_started_at: nullable(dateTime()),
+            impact_ended_at: nullable(dateTime()),
+          },
+          strict,
+        ),
+      ),
     ),
-  ],
-  { $id: "MaintenanceOccurrenceDetail" },
+    recurrence: Type.Optional(
+      Type.Object(
+        {
+          active: Type.Boolean(),
+          group_id: nullable(uuid()),
+          occurrence_count: Type.Integer(),
+        },
+        strict,
+      ),
+    ),
+    lifecycle_decisions: Type.Optional(
+      Type.Array(Type.Object({}, { additionalProperties: true })),
+    ),
+  },
+  { ...strict, $id: "MaintenanceOccurrenceDetail" },
 );
 export const MaintenanceOccurrenceBodySchema = Type.Object(
   {
@@ -2750,35 +2866,30 @@ export const MaintenancePreventivePlanBodySchema = Type.Object(
   },
   { ...strict, $id: "MaintenancePreventivePlanInput" },
 );
-export const MaintenancePreventivePlanSchema = Type.Intersect(
-  [
-    Type.Ref("MaintenancePreventivePlanInput"),
-    Type.Object(
-      {
-        id: uuid(),
-        hotel_id: uuid(),
-        recurrence_interval: Type.Integer(),
-        recurrence_day: Type.Integer(),
-        generation_lead_days: Type.Integer(),
-        completion_due_hours: Type.Integer(),
-        next_due_date: date(),
-        status: Type.Union([
-          Type.Literal("active"),
-          Type.Literal("paused"),
-          Type.Literal("inactive"),
-        ]),
-        category_name: Type.Optional(Type.String()),
-        target_name: Type.Optional(Type.String()),
-        assignee_name: Type.Optional(Type.String()),
-        supplier_name: Type.Optional(nullable(Type.String())),
-        contract_number: Type.Optional(nullable(Type.String())),
-        created_at: dateTime(),
-        updated_at: dateTime(),
-      },
-      strict,
-    ),
-  ],
-  { $id: "MaintenancePreventivePlan" },
+export const MaintenancePreventivePlanSchema = Type.Object(
+  {
+    ...MaintenancePreventivePlanBodySchema.properties,
+    id: uuid(),
+    hotel_id: uuid(),
+    recurrence_interval: Type.Integer(),
+    recurrence_day: Type.Integer(),
+    generation_lead_days: Type.Integer(),
+    completion_due_hours: Type.Integer(),
+    next_due_date: date(),
+    status: Type.Union([
+      Type.Literal("active"),
+      Type.Literal("paused"),
+      Type.Literal("inactive"),
+    ]),
+    category_name: Type.Optional(Type.String()),
+    target_name: Type.Optional(Type.String()),
+    assignee_name: Type.Optional(Type.String()),
+    supplier_name: Type.Optional(nullable(Type.String())),
+    contract_number: Type.Optional(nullable(Type.String())),
+    created_at: dateTime(),
+    updated_at: dateTime(),
+  },
+  { ...strict, $id: "MaintenancePreventivePlan" },
 );
 export const MaintenancePreventiveRunSchema = Type.Object(
   {
@@ -2947,6 +3058,14 @@ export const MaintenanceAnalyticsSchema = Type.Object(
     recurring_occurrences: Type.Integer(),
     blocked_room_days: Type.Number(),
     supplier_completion_rate: Type.Number(),
+    scheduled_capacity_minutes: Type.Optional(Type.Number()),
+    schedule_adherence_rate: Type.Optional(Type.Number()),
+    execution_hours: Type.Optional(Type.Number()),
+    waiting_hours: Type.Optional(Type.Number()),
+    affected_room_hours: Type.Optional(Type.Number()),
+    active_recurrence_groups: Type.Optional(Type.Integer()),
+    lifecycle_pending_approval: Type.Optional(Type.Integer()),
+    warranty_followups: Type.Optional(Type.Integer()),
     aging: Type.Array(
       Type.Object({ bucket: Type.String(), count: Type.Integer() }, strict),
     ),
@@ -3684,6 +3803,7 @@ export const StayPanelSchema = Type.Object(
         id: uuid(),
         reservation_id: uuid(),
         reservation_code: nullable(Type.String()),
+        account_version: Type.Optional(Type.Integer()),
         room_id: uuid(),
         room_number: Type.String(),
         room_type: Type.String(),
@@ -4033,6 +4153,16 @@ const AuthHeadersSchema = Type.Object(
 );
 const IdParamsSchema = Type.Object({ id: uuid() }, strict);
 const OkSchema = Type.Object({ ok: Type.Boolean() }, strict);
+const ReservationGuaranteeResultSchema = Type.Object(
+  {
+    ok: Type.Boolean(),
+    result: Type.Optional(Type.String()),
+    id: Type.Optional(uuid()),
+    paid: Type.Optional(Type.Number()),
+    required: Type.Optional(Type.Number()),
+  },
+  strict,
+);
 const IncludeArchivedQuerySchema = Type.Object(
   { include_archived: Type.Optional(Type.Boolean()) },
   strict,
@@ -6999,7 +7129,7 @@ export const API_ROUTE_CONTRACTS: Readonly<Record<string, ApiRouteContract>> = {
     "recordReservationGuarantee",
     "Reservations",
     "Registra sinal ou dispensa auditada.",
-    OkSchema,
+    ReservationGuaranteeResultSchema,
     { params: IdParamsSchema, body: ReservationGuaranteeInputSchema },
   ),
   "POST /admin/reservations/:id/actions": admin(

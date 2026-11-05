@@ -28,6 +28,7 @@ import {
   STATUS_META,
   StatusPill,
   formatDateDisplay,
+  formatTimeDisplay,
   formatMoney,
   formatPercent,
   paymentMethodLabel,
@@ -781,8 +782,9 @@ export function ReservationsCalendarBoard({
               Quarto{" "}
               {data.rooms.find((room) => room.room_id === block.room_id)
                 ?.room_number || "—"}
-              : {block.label || "Bloqueio"} · {block.start_date} a{" "}
-              {block.end_date}.
+              : {block.label || "Bloqueio"} ·{" "}
+              {formatDateDisplay(block.start_date)} a{" "}
+              {formatDateDisplay(block.end_date)}.
               {block.maintenance_occurrence_id ? (
                 <Link
                   className="ml-2 underline"
@@ -973,7 +975,7 @@ export function ReservationsCalendarBoard({
                         ({ block, left, width }) => {
                           const className =
                             "pointer-events-auto absolute block truncate rounded-md border border-white/70 bg-[#b42318] px-2 py-1 text-left text-[11px] font-semibold text-white no-underline shadow-sm focus:outline-none focus:ring-2 focus:ring-[#0f766e]";
-                          const label = `${block.occurrence_code || block.label || "Bloqueio"} · ${block.start_date} a ${block.end_date}${block.is_overdue ? " · atrasado" : ""}`;
+                          const label = `${block.occurrence_code || block.label || "Bloqueio"} · ${formatDateDisplay(block.start_date)} a ${formatDateDisplay(block.end_date)}${block.is_overdue ? " · atrasado" : ""}`;
                           return block.maintenance_occurrence_id ? (
                             <Link
                               key={block.id}
@@ -1229,8 +1231,9 @@ export function ReservationsCalendarBoard({
                       </p>
                     ) : null}
                     <p>
-                      Janela de check-in: {panelData.hotel.checkin_time_start}–
-                      {panelData.hotel.checkin_time_limit}.
+                      Janela de check-in:{" "}
+                      {formatTimeDisplay(panelData.hotel.checkin_time_start)}–
+                      {formatTimeDisplay(panelData.hotel.checkin_time_limit)}.
                     </p>
                     {!panelData.eligibility.can_checkin ? (
                       <p>
@@ -1344,7 +1347,7 @@ export function ReservationsCalendarBoard({
                       />
                     </label>
                     <label className="pms-field">
-                      <span>Metodo</span>
+                      <span>Método</span>
                       <select
                         value={paymentMethod}
                         onChange={(event) =>
@@ -1554,7 +1557,7 @@ export function ReservationsCalendarBoard({
                   ) : null}
 
                   {panelData.payments.length ? (
-                    <PanelSection title="Historico de pagamentos">
+                    <PanelSection title="Histórico de pagamentos">
                       <div className="max-h-36 overflow-auto rounded-lg border border-[#eef2f6]">
                         {panelData.payments.map((payment) => (
                           <div

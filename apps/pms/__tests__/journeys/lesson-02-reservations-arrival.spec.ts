@@ -1,4 +1,11 @@
-import { expect, prepareScenario, queryLocal, signIn, test } from "./support";
+import {
+  expect,
+  findInvariantViolations,
+  prepareScenario,
+  queryLocal,
+  signIn,
+  test,
+} from "./support";
 
 // Fonte das expectativas: docs/training/lesson-02-reservations-arrival.md
 const STAY_ID = "91000000-0000-4000-8000-000000000001";
@@ -78,7 +85,7 @@ test("lição 2: reserva, garantia e chegada", async ({ page, context }) => {
     await expect.soft(blockText, "o bloqueio mostra o motivo").toBeVisible();
     await expect
       .soft(blockText, "o bloqueio mostra o período")
-      .toContainText(tomorrow);
+      .toContainText(displayDate(tomorrow));
 
     // Erro proposital: a data bloqueada não pode ser selecionada pela tela...
     const blockedCell = page.getByRole("button", {
@@ -102,12 +109,27 @@ test("lição 2: reserva, garantia e chegada", async ({ page, context }) => {
         },
       },
     );
-    // O proxy do PMS devolve 400 para qualquer falha (QA-003), e o 103 é recusado
-    // antes pelo status global do quarto (QA-004); a mensagem é a prova da regra.
-    expect.soft(bypass.ok(), "API recusa data bloqueada").toBe(false);
+    expect.soft(bypass.status(), "API recusa data bloqueada").toBe(409);
     expect
-      .soft(await bypass.text(), "recusa vem da indisponibilidade do quarto")
-      .toMatch(/indisponíveis|bloqueados/);
+      .soft(await bypass.text(), "a recusa explica o bloqueio do período")
+      .toContain("bloqueados no período selecionado");
+
+    // QA-004: o bloqueio vale só para o período; fora dele o 103 pode ser reservado.
+    const later = queryLocal(`
+      select (public.hotel_operational_date('${AURORA_ID}') + 10)::text;
+    `);
+    const available = await page.request.post(
+      "/api/reservations-calendar/simulate",
+      {
+        data: {
+          booking_customer: { mode: "existing", customer_id: CUSTOMER_ID },
+          selected_cells: [{ room_id: ROOM_103_ID, date: later, side: "full" }],
+          reservation_source: null,
+          notes: null,
+        },
+      },
+    );
+    expect.soft(available.status(), "103 livre fora do bloqueio").toBe(200);
   });
 
   const publicPage =
@@ -204,5 +226,9 @@ test("lição 2: reserva, garantia e chegada", async ({ page, context }) => {
       where o.stay_id = '${STAY_ID}';
     `);
     expect.soft(consumption).toBe("1|true");
+  });
+
+  await test.step("Invariantes de negócio ao final da jornada", async () => {
+    expect.soft(findInvariantViolations()).toEqual([]);
   });
 });

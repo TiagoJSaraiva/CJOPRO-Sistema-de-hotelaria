@@ -9,6 +9,7 @@ import { DashboardEntityPageShell } from "../_components/DashboardEntityPageShel
 import type { UsageGuideDefinition } from "../_components/UsageGuide";
 import { getUserFromSession } from "../../../lib/auth";
 import { requestOperationsFinanceEndpoint } from "../../../lib/adminApi";
+import { paymentMethodLabel } from "../reservations/_components/OperationalPanelPrimitives";
 import {
   approveDailyCloseAction,
   countCashSessionAction,
@@ -205,7 +206,8 @@ export default async function CashPage({
             <ul>
               {daily.projection.transactions.map((transaction) => (
                 <li key={`${transaction.type}-${transaction.payment_method}`}>
-                  {transaction.type} · {transaction.payment_method}:{" "}
+                  {transaction.type === "EXPENSE" ? "Saída" : "Entrada"} ·{" "}
+                  {paymentMethodLabel(String(transaction.payment_method))}:{" "}
                   {Number(transaction.amount).toLocaleString("pt-BR", {
                     style: "currency",
                     currency: data.currency,

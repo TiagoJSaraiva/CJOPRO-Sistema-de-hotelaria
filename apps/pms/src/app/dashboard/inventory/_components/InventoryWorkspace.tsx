@@ -149,7 +149,14 @@ export async function InventoryWorkspace({
       ? await requestOperationsFinanceEndpoint<{
           version: number;
           items: Array<Record<string, unknown>>;
-        }>("minibar/replenishment-board", "GET")
+        }>("minibar/replenishment-board", "GET").catch(
+          (cause: { statusCode?: number }) => {
+            // O painel de reposição exige leitura da governança; quem só mantém a
+            // composição continua trabalhando sem ele.
+            if (cause.statusCode === 403) return null;
+            throw cause;
+          },
+        )
       : null;
   return (
     <DashboardEntityPageShell

@@ -27,7 +27,11 @@ export default async function ConsumptionServicePage({
     );
   const [board, stays] = await Promise.all([
     getConsumptionServiceBoard(),
-    listConsumptionEligibleStays(""),
+    // Consultar pedidos não exige poder lançar consumo, que é o que esta busca pede.
+    listConsumptionEligibleStays("").catch((cause: { statusCode?: number }) => {
+      if (cause.statusCode === 403) return [];
+      throw cause;
+    }),
   ]);
   const selectedStayId = params?.stay_id || stays[0]?.id;
   const context = selectedStayId

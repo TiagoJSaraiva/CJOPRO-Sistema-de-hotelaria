@@ -1,6 +1,10 @@
 -- Dados sinteticos e deterministas para desenvolvimento e testes locais.
 -- A senha de todas as contas abaixo e: Hotelaria123!
 
+-- As datas e horas relativas seguem o dia do hotel, nao o dia em UTC. Sem isso, das 21h
+-- a meia-noite em Sao Paulo o seed fica um dia a frente do relogio operacional.
+set time zone 'America/Sao_Paulo';
+
 insert into public.hotels (
   id, name, legal_name, tax_id, email, phone, address_line, address_number,
   district, city, state, country, zip_code, checkin_time_start,
@@ -28,7 +32,7 @@ insert into public.rooms (
 ) values
   ('20000000-0000-4000-8000-000000000101', '10000000-0000-4000-8000-000000000001', '101', 'Standard', 2, 220.00, 'available', 'Quarto sintetico'),
   ('20000000-0000-4000-8000-000000000102', '10000000-0000-4000-8000-000000000001', '102', 'Luxo', 3, 340.00, 'occupied', 'Quarto sintetico'),
-  ('20000000-0000-4000-8000-000000000103', '10000000-0000-4000-8000-000000000001', '103', 'Standard', 2, 220.00, 'blocked', 'Quarto sintetico'),
+  ('20000000-0000-4000-8000-000000000103', '10000000-0000-4000-8000-000000000001', '103', 'Standard', 2, 220.00, 'available', 'Quarto sintetico'),
   ('20000000-0000-4000-8000-000000000201', '10000000-0000-4000-8000-000000000002', '201', 'Standard', 2, 190.00, 'available', 'Quarto sintetico'),
   ('20000000-0000-4000-8000-000000000202', '10000000-0000-4000-8000-000000000002', '202', 'Familia', 4, 310.00, 'available', 'Quarto sintetico'),
   ('20000000-0000-4000-8000-000000000203', '10000000-0000-4000-8000-000000000002', '203', 'Standard', 2, 190.00, 'maintenance', 'Quarto sintetico');

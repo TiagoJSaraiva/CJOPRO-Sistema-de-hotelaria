@@ -193,7 +193,8 @@ select throws_ok(
     values (
       '10000000-0000-4000-8000-000000000001',
       '20000000-0000-4000-8000-000000000103', 'blocked', 'Conflito pgTAP',
-      current_date + 2, current_date + 3
+      public.hotel_operational_date('10000000-0000-4000-8000-000000000001') + 2,
+      public.hotel_operational_date('10000000-0000-4000-8000-000000000001') + 3
     )
   $$,
   '23P01',

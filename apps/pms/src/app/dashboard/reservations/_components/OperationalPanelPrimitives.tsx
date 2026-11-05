@@ -46,7 +46,7 @@ export const STATUS_META: Record<string, StatusMeta> = {
     toneClassName: "border-[#f2a2a2] bg-[#fff2f2] text-[#a12b2b]",
   },
   maintenance: {
-    label: "Manutencao",
+    label: "Manutenção",
     color: "#b91c1c",
     toneClassName: "border-[#f2a2a2] bg-[#fff2f2] text-[#a12b2b]",
   },
@@ -70,11 +70,11 @@ export function paymentStatusLabel(status: string): string {
 
 export function paymentMethodLabel(method: string): string {
   if (method === "cash") return "Dinheiro";
-  if (method === "card") return "Cartao";
-  if (method === "credit_card") return "Cartao de credito";
-  if (method === "debit_card") return "Cartao de debito";
+  if (method === "card") return "Cartão";
+  if (method === "credit_card") return "Cartão de crédito";
+  if (method === "debit_card") return "Cartão de débito";
   if (method === "pix") return "Pix";
-  if (method === "bank_transfer") return "Transferencia bancaria";
+  if (method === "bank_transfer") return "Transferência bancária";
   return method;
 }
 
@@ -96,6 +96,10 @@ export function formatDateDisplay(value: string | null | undefined): string {
     return `${day}/${month}/${year}`;
   }
   return value;
+}
+
+export function formatTimeDisplay(value: string | null | undefined): string {
+  return value ? value.slice(0, 5) : "-";
 }
 
 export function formatPercent(value: number): string {

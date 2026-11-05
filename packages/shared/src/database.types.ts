@@ -16803,6 +16803,10 @@ export type Database = {
         }
         Returns: Json
       }
+      room_type_sellable_units: {
+        Args: { p_date: string; p_hotel_id: string; p_room_type: string }
+        Returns: number
+      }
       save_booking_channel: {
         Args: { p_actor_id: string; p_hotel_id: string; p_input: Json }
         Returns: Json
@@ -17148,10 +17152,6 @@ export type Database = {
       }
       validate_commercial_actor: {
         Args: { p_actor_id: string; p_hotel_id: string }
-        Returns: undefined
-      }
-      validate_reservation_capacity: {
-        Args: { p_reservation_id: string }
         Returns: undefined
       }
       version_minibar_composition: {

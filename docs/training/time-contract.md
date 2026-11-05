@@ -29,7 +29,9 @@ Os usos foram classificados assim:
   instante operacional resolvido por hotel; backend de manutenção e agenda
   resolve esse instante antes de calcular atraso, janela e indicadores;
 - datas de seed e fixtures são relativas ao instante operacional congelado,
-  mantendo os exercícios coerentes mesmo quando repetidos em outro dia;
+  mantendo os exercícios coerentes mesmo quando repetidos em outro dia; o seed
+  fixa o fuso do hotel na sessão, porque `current_date` em UTC fica um dia à frente
+  das 21h à meia-noite em São Paulo;
 - timestamps de criação, autenticação e trilhas imutáveis permanecem reais de
   propósito;
 - JavaScript usado apenas para formatar datas ou gerar chaves não altera regras
@@ -42,6 +44,32 @@ instante operacional; timestamps técnicos de criação continuam reais.
 Qualquer nova regra que compare prazo, “hoje” ou disponibilidade deve receber
 `hotel_id` e usar o helper operacional. Usar `now()` diretamente exige registrar
 por que o caso pertence à coluna de tempo real.
+
+## Transações financeiras
+
+`paid_at` não tem mais valor padrão. Pagamento concluído sem data informada é
+carimbado com `hotel_operational_now`, e `business_date` deriva de `paid_at` no fuso
+do hotel ou, sem pagamento, de `hotel_operational_date`. Uma data de pagamento
+informada mantém a própria data de negócio.
+
+## Auditoria das funções do banco
+
+Nenhuma função usa mais `current_date`. Os usos restantes de `now()` foram
+classificados em novembro de 2026:
+
+| Uso                                                                  | Situação                          |
+| -------------------------------------------------------------------- | --------------------------------- |
+| `updated_at`, `read_at`, `last_used_at`, sessão, link de pré-chegada | tempo real, por serem técnicos    |
+| `feed_version` de canais e `generated_at` de painéis                 | tempo real, por serem técnicos    |
+| `triaged_at`, `liability_decided_at`                                 | tempo real, coerentes com criação |
+| `DEFAULT now()` em parâmetro `p_now`                                 | correto, o chamador informa       |
+| decisão no checkout, vencimento de faturado e atraso de pedidos      | a corrigir: QA-019                |
+| `paid_at` em lote, reembolso e pagamento a fornecedor                | a corrigir: QA-019                |
+| validação de data futura em estoque e manutenção                     | a corrigir: QA-019                |
+| carimbo de ação, como `closed_at`, `approved_at` e `delivered_at`    | a corrigir: QA-020                |
+
+Em produção os dois relógios coincidem. O efeito aparece no hotel-escola, com o
+relógio em outro instante.
 
 ## Chegada da lesson-02
 

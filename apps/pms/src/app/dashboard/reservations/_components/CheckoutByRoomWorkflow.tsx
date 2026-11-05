@@ -234,7 +234,7 @@ export function CheckoutByRoomWorkflow({
     if (!panelData) return;
     const amount = Number(paymentAmount.replace(",", ".") || "0");
     if (!Number.isFinite(amount) || amount <= 0) {
-      setError("Valor de pagamento invalido.");
+      setError("Valor de pagamento inválido.");
       return;
     }
     try {
@@ -310,7 +310,7 @@ export function CheckoutByRoomWorkflow({
 
     const amount = Number(paymentAmount.replace(",", ".") || "0");
     if (!Number.isFinite(amount) || amount <= 0) {
-      setError("Valor de pagamento invalido.");
+      setError("Valor de pagamento inválido.");
       setSuccess(null);
       return;
     }
@@ -463,7 +463,7 @@ export function CheckoutByRoomWorkflow({
           className="mt-4 flex flex-col gap-3 md:flex-row md:items-end"
         >
           <label className="pms-field min-w-0 md:w-72">
-            <span>Numero do quarto</span>
+            <span>Número do quarto</span>
             <input
               value={roomNumber}
               onChange={(event) => setRoomNumber(event.target.value)}
@@ -529,7 +529,7 @@ export function CheckoutByRoomWorkflow({
 
               <div className="grid grid-cols-1 gap-3 md:grid-cols-2 xl:grid-cols-3">
                 <DetailItem
-                  label="Hospede"
+                  label="Hóspede"
                   value={panelData.stay.customer_name || "Nao informado"}
                 />
                 <DetailItem
@@ -705,7 +705,7 @@ export function CheckoutByRoomWorkflow({
             ) : null}
 
             {panelData.payments.length ? (
-              <PanelSection title="Historico de pagamentos">
+              <PanelSection title="Histórico de pagamentos">
                 <div className="max-h-52 overflow-auto rounded-lg border border-[#eef2f6]">
                   {panelData.payments.map((payment) => (
                     <div
@@ -751,7 +751,7 @@ export function CheckoutByRoomWorkflow({
                 />
               </label>
               <label className="pms-field">
-                <span>Metodo</span>
+                <span>Método</span>
                 <select
                   value={paymentMethod}
                   onChange={(event) => setPaymentMethod(event.target.value)}
@@ -771,7 +771,7 @@ export function CheckoutByRoomWorkflow({
                 </select>
               </label>
               <label className="pms-field">
-                <span>Observacao</span>
+                <span>Observação</span>
                 <input
                   value={paymentNote}
                   onChange={(event) => setPaymentNote(event.target.value)}
@@ -1047,7 +1047,7 @@ export function CheckoutByRoomWorkflow({
               ) : (
                 <p className="m-0 rounded-lg border border-[#f5d08a] bg-[#fff9eb] p-3 text-[0.86rem] text-[#8a5a00]">
                   {panelData.eligibility.checkout_block_reason ||
-                    "Checkout nao permitido para esta estadia."}
+                    "Checkout não permitido para esta estadia."}
                 </p>
               )}
               {hasPendingAccountAction ? (

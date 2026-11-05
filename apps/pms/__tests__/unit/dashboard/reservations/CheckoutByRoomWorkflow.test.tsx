@@ -161,7 +161,7 @@ async function searchRoom(
   user: ReturnType<typeof userEvent.setup>,
   roomNumber = "102",
 ) {
-  await user.type(screen.getByLabelText("Numero do quarto"), roomNumber);
+  await user.type(screen.getByLabelText("Número do quarto"), roomNumber);
   await user.click(screen.getByRole("button", { name: "Buscar" }));
 }
 

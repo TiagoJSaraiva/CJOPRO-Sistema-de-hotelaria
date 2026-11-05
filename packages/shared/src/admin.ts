@@ -2128,6 +2128,7 @@ export type AdminMaintenanceOccurrenceDetail =
       room_id: string;
       room_number: string;
       source: string;
+      reason: string;
       impact_started_at: string | null;
       impact_ended_at: string | null;
     }>;

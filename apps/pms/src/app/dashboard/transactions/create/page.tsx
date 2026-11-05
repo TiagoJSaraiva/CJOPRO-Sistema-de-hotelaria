@@ -184,7 +184,7 @@ export default async function TransactionsCreatePage({
         </FormField>
 
         <FormField
-          label="Metodo de pagamento"
+          label="Método de pagamento"
           htmlFor="create-transaction-payment-method"
         >
           <input

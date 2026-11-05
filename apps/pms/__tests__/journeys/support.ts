@@ -1,6 +1,6 @@
 import { expect, test as base, type Page } from "@playwright/test";
 import { execFileSync, spawnSync } from "node:child_process";
-import { existsSync } from "node:fs";
+import { existsSync, readFileSync, statSync } from "node:fs";
 import { resolve } from "node:path";
 
 export const LOCAL_PASSWORD = "Hotelaria123!";
@@ -15,13 +15,39 @@ type Diagnostics = {
   allow: (pattern: RegExp) => void;
 };
 
+export type BackendEvent = {
+  kind: "contract" | "http";
+  status: number;
+  route: string;
+  url?: string;
+  errors?: string[];
+};
+
 function isOwnTraffic(url: string): boolean {
   return /^http:\/\/(127\.0\.0\.1|localhost):\d+/.test(url);
 }
 
+function backendLogSize(): number {
+  const path = process.env.JOURNEY_BACKEND_LOG;
+  return path && existsSync(path) ? statSync(path).size : 0;
+}
+
+/** Eventos gravados pelo backend real a partir de uma posição do arquivo. */
+export function readBackendEvents(from = 0): BackendEvent[] {
+  const path = process.env.JOURNEY_BACKEND_LOG;
+  if (!path || !existsSync(path)) return [];
+  return readFileSync(path)
+    .subarray(from)
+    .toString("utf8")
+    .split("\n")
+    .filter(Boolean)
+    .map((line) => JSON.parse(line) as BackendEvent);
+}
+
 /**
- * Toda jornada falha se o sistema real responder 5xx, lançar erro não tratado ou
- * registrar console.error, mesmo que a tela pareça correta.
+ * Toda jornada falha se o sistema real responder 5xx, lançar erro não tratado,
+ * registrar console.error ou devolver uma resposta fora do contrato, mesmo que a tela
+ * pareça correta.
  */
 export const test = base.extend<{ diagnostics: Diagnostics }>({
   diagnostics: [
@@ -53,7 +79,25 @@ export const test = base.extend<{ diagnostics: Diagnostics }>({
         }
       });
 
+      const backendStart = backendLogSize();
+
       await use({ allow: (pattern) => allowed.push(pattern) });
+
+      for (const event of readBackendEvents(backendStart)) {
+        if (event.kind === "contract") {
+          problems.push({
+            kind: "contrato",
+            detail: `${event.route} ${event.status}: ${event.errors?.join("; ")}`,
+          });
+        } else if (event.status >= 500) {
+          problems.push({
+            kind: "backend",
+            detail: `${event.status} ${event.route}`,
+          });
+        } else {
+          clientErrors.push(`backend ${event.status} ${event.url}`);
+        }
+      }
 
       const unexpected = problems.filter(
         (problem) => !allowed.some((pattern) => pattern.test(problem.detail)),
@@ -144,6 +188,41 @@ export function queryLocal(sql: string): string {
       input: `begin read only;\n${sql}\nrollback;\n`,
     },
   ).trim();
+}
+
+/** Regras de supabase/training/invariants.sql; cada item devolvido é uma violação. */
+export function findInvariantViolations(): string[] {
+  const output = execFileSync(
+    "docker",
+    [
+      "exec",
+      "-i",
+      DATABASE_CONTAINER,
+      "psql",
+      "-X",
+      "-U",
+      "postgres",
+      "-d",
+      "postgres",
+      "-v",
+      "ON_ERROR_STOP=1",
+      "-q",
+      "-t",
+      "-A",
+    ],
+    {
+      encoding: "utf8",
+      windowsHide: true,
+      input: readFileSync(
+        resolve(ROOT_DIRECTORY, "supabase/training/invariants.sql"),
+        "utf8",
+      ),
+    },
+  );
+  return output
+    .split(/\r?\n/)
+    .map((line) => line.trim())
+    .filter(Boolean);
 }
 
 export async function signIn(page: Page, email: string): Promise<void> {

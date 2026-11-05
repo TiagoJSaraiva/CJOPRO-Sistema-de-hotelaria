@@ -41,7 +41,7 @@ function UserDataPreview({ userItem }: { userItem: AdminUser }) {
         <strong>Criado em:</strong> {createdAt}
       </p>
       <p className="m-0">
-        <strong>Ultimo acesso:</strong> {lastLogin}
+        <strong>Último acesso:</strong> {lastLogin}
       </p>
 
       <div>

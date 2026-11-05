@@ -371,7 +371,7 @@ async function computeBooking(
     return {
       ok: false,
       statusCode: 409,
-      message: "Um ou mais quartos estão bloqueados por manutenção.",
+      message: "Um ou mais quartos estão bloqueados no período selecionado.",
     };
   }
 

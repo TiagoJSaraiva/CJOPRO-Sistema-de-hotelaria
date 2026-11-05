@@ -1019,9 +1019,9 @@ class SupabaseMaintenanceRepository implements MaintenanceRepository {
       .order("display_order")
       .order("name");
     if (error) throw error;
-    return ((data || []) as any[]).map((item) => ({
+    return ((data || []) as any[]).map(({ parent, ...item }) => ({
       ...item,
-      parent_name: relation(item.parent)?.name || null,
+      parent_name: relation(parent)?.name || null,
     })) as AdminMaintenanceLocation[];
   }
   async writeLocation(

@@ -157,7 +157,7 @@ describe("routes/financial-transactions with injected repository", () => {
         description: null,
         status: "COMPLETED",
         payment_method: null,
-        paid_at: expect.any(String),
+        paid_at: null,
         due_date: null,
         counterparty: null,
         cost_center: null,

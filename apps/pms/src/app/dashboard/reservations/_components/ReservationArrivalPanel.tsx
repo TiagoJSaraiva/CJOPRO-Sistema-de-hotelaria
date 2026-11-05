@@ -5,6 +5,7 @@ import type { ReservationArrivalSummary } from "@hotel/shared";
 import {
   PanelSection,
   PaymentSummaryCard,
+  formatDateDisplay,
   formatMoney,
 } from "./OperationalPanelPrimitives";
 
@@ -186,7 +187,8 @@ export function ReservationArrivalPanel({
                 <div className="flex flex-wrap items-baseline justify-between gap-x-3 gap-y-1">
                   <strong className="text-[#202939]">{item.room_type}</strong>
                   <span className="text-xs text-[#52606d]">
-                    {item.checkin_date} → {item.checkout_date}
+                    {formatDateDisplay(item.checkin_date)} →{" "}
+                    {formatDateDisplay(item.checkout_date)}
                   </span>
                 </div>
                 <p className="mb-1 mt-2 text-sm text-[#344054]">
@@ -195,7 +197,8 @@ export function ReservationArrivalPanel({
                 <p className="m-0 text-xs text-[#52606d]">
                   {item.nights
                     .map(
-                      (night) => `${night.date}: ${formatMoney(night.amount)}`,
+                      (night) =>
+                        `${formatDateDisplay(night.date)}: ${formatMoney(night.amount)}`,
                     )
                     .join(" · ")}
                 </p>

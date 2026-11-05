@@ -68,6 +68,40 @@ body {
   .pms-empty-state {
     @apply rounded-xl border border-[#e2e2e2] bg-white p-4 text-[#666];
   }
+
+  .pms-button-primary {
+    @apply cursor-pointer rounded-lg border border-slate-800 bg-slate-800 px-3 py-2 text-white no-underline hover:bg-slate-700 disabled:cursor-not-allowed disabled:opacity-50;
+  }
+
+  .pms-button-secondary {
+    @apply cursor-pointer rounded-lg border border-slate-300 bg-white px-3 py-2 text-slate-800 no-underline hover:bg-slate-100 disabled:cursor-not-allowed disabled:opacity-50;
+  }
+
+  .pms-link {
+    @apply text-teal-800 underline underline-offset-2 hover:text-teal-900;
+  }
+
+  .pms-field-label {
+    @apply grid min-w-0 gap-[0.35rem];
+  }
+
+  .pms-badge,
+  .pms-status-pill {
+    @apply inline-flex w-fit items-center rounded-full border border-slate-300 bg-slate-100 px-2 py-[0.15rem] text-xs font-semibold text-slate-800;
+  }
+
+  .pms-status-info {
+    @apply m-0 rounded-lg border border-sky-200 bg-sky-50 px-3 py-2 text-sky-900;
+  }
+
+  .pms-status-success,
+  .pms-alert-success {
+    @apply m-0 rounded-lg border border-emerald-200 bg-emerald-50 px-3 py-2 text-emerald-900;
+  }
+
+  .pms-status-error {
+    @apply m-0 rounded-lg border border-red-200 bg-red-50 px-3 py-2 text-red-900;
+  }
 }
 
 @keyframes pms-spin {

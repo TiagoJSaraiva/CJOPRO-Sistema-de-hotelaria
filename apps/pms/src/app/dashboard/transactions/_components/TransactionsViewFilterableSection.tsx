@@ -460,7 +460,7 @@ export function TransactionsViewFilterableSection({
           </label>
 
           <label className="pms-field">
-            <span>Metodo</span>
+            <span>Método</span>
             <input
               value={draftFilters.paymentMethod}
               onChange={(event) =>

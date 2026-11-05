@@ -10,6 +10,13 @@ import type {
 } from "@hotel/shared";
 import { createServerClient } from "../common/supabaseServer";
 
+// Campos que a função SQL usa internamente e que não fazem parte do contrato da API.
+const INTERNAL_CONTEXT_OFFER_FIELDS = new Set([
+  "found",
+  "point_code",
+  "billing_policy",
+]);
+
 export type ConsumptionOrderPostResult =
   | { result: "ok"; item: AdminConsumptionOrder; created: boolean }
   | { result: string; reasons?: string[] };
@@ -258,14 +265,22 @@ class SupabaseConsumptionOrdersRepository implements ConsumptionOrdersRepository
       : [];
     const offers = Array.isArray(payload.offers)
       ? payload.offers.map((offer) => {
-          const item = asObject(offer as Json);
-          return { ...item, id: item?.id || item?.offer_id };
+          const { offer_id: offerId, ...raw } = asObject(offer as Json) || {};
+          const item = Object.fromEntries(
+            Object.entries(raw).filter(
+              ([key]) => !INTERNAL_CONTEXT_OFFER_FIELDS.has(key),
+            ),
+          );
+          return { ...item, id: item.id || offerId };
         })
       : [];
+    const context = Object.fromEntries(
+      Object.entries(payload).filter(([key]) => key !== "result"),
+    );
     return {
       result: "ok",
       item: {
-        ...payload,
+        ...context,
         guests,
         offers,
       } as unknown as AdminConsumptionOperationalContext,

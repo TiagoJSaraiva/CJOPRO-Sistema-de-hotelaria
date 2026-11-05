@@ -48,6 +48,16 @@ type Overview = Org & {
   purchase_orders?: unknown[] | null;
   corporate_authorizations?: unknown[] | null;
 };
+const ROLE_LABELS: Record<string, string> = {
+  stock_supplier_id: "Fornecedor de estoque",
+  maintenance_supplier_id: "Fornecedor de manutenção",
+  commercial_partner_id: "Parceiro comercial",
+};
+
+function roleLabel(role: string): string {
+  return ROLE_LABELS[role] || role;
+}
+
 export default async function OrganizationsPage({
   searchParams,
 }: {
@@ -158,7 +168,10 @@ export default async function OrganizationsPage({
                   {o.legal_name} · {o.tax_id || "sem documento"}
                 </p>
                 <p className="m-0 text-sm">
-                  Papéis: {Object.keys(o.roles || {}).join(", ") || "nenhum"}
+                  Papéis:{" "}
+                  {Object.keys(o.roles || {})
+                    .map(roleLabel)
+                    .join(", ") || "nenhum"}
                 </p>
                 <Link
                   className="pms-button-secondary mt-2 inline-flex"
@@ -316,7 +329,7 @@ export default async function OrganizationsPage({
                           value={`${role.replace("_id", "")}:${id}`}
                           key={role}
                         >
-                          {role}
+                          {roleLabel(role)}
                         </option>
                       ))}
                     </select>

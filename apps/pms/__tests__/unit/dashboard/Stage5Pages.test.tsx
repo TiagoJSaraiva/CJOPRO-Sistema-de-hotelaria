@@ -90,7 +90,8 @@ it("renders centralized organization roles", async () => {
   ]);
   render(await OrganizationsPage({ searchParams: Promise.resolve({}) }));
   expect(screen.getByText("Fornecedor")).toBeTruthy();
-  expect(screen.getByText(/stock_supplier_id/)).toBeTruthy();
+  expect(screen.getByText(/Fornecedor de estoque/)).toBeTruthy();
+  expect(screen.queryByText(/stock_supplier_id/)).toBeNull();
 });
 
 it("renders the authorized organization overview and its review actions", async () => {

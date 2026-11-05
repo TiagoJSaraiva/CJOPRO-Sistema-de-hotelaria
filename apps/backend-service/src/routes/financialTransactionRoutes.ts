@@ -218,9 +218,8 @@ export function registerFinancialTransactionRoutes(
           description,
           status: resolvedStatus,
           payment_method: paymentMethod,
-          paid_at: shouldStampPaidAt(resolvedStatus)
-            ? paidAt || new Date().toISOString()
-            : null,
+          // Sem data informada, o banco usa o instante operacional do hotel.
+          paid_at: shouldStampPaidAt(resolvedStatus) ? paidAt : null,
           due_date: dueDate,
           counterparty,
           cost_center: costCenter,
@@ -453,8 +452,9 @@ export function registerFinancialTransactionRoutes(
 
       if (payload.status) {
         const nextStatus = payload.status as TransactionStatus;
+        // Sem data informada, o banco usa o instante operacional do hotel.
         payload.paid_at = shouldStampPaidAt(nextStatus)
-          ? payload.paid_at || new Date().toISOString()
+          ? payload.paid_at || null
           : null;
       }
 
