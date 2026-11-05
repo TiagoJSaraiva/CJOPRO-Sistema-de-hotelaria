@@ -5,7 +5,59 @@ import {
   isFinancialTransactionDueSoon,
   isFinancialTransactionOverdue,
   isFinancialTransactionSettled,
+  financialReferenceDate,
+  getFinancialTransactionEffectiveDateKey,
 } from "../../src/financial";
+
+describe("data de referência do hotel", () => {
+  const today = financialReferenceDate("2026-11-04");
+
+  it("o que vence no dia operacional não está atrasado", () => {
+    const pending = { status: "PENDING" as const };
+    expect(
+      isFinancialTransactionOverdue(
+        { ...pending, due_date: "2026-11-04" },
+        today,
+      ),
+    ).toBe(false);
+    expect(
+      isFinancialTransactionOverdue(
+        { ...pending, due_date: "2026-11-03" },
+        today,
+      ),
+    ).toBe(true);
+    expect(
+      isFinancialTransactionDueSoon(
+        { ...pending, due_date: "2026-11-04" },
+        today,
+      ),
+    ).toBe(true);
+  });
+
+  it("conta o lançamento no dia do hotel", () => {
+    const zone = "America/Sao_Paulo";
+    const empty = { paid_at: null, due_date: null, created_at: null };
+    expect(
+      getFinancialTransactionEffectiveDateKey(
+        { ...empty, paid_at: "2026-11-05T01:30:00.000Z" },
+        zone,
+      ),
+    ).toBe("2026-11-04");
+    expect(
+      getFinancialTransactionEffectiveDateKey(
+        { ...empty, due_date: "2026-11-05" },
+        zone,
+      ),
+    ).toBe("2026-11-05");
+    expect(
+      getFinancialTransactionEffectiveDateKey(
+        { ...empty, created_at: "2026-11-05T01:30:00.000Z" },
+        zone,
+      ),
+    ).toBe("2026-11-04");
+    expect(getFinancialTransactionEffectiveDateKey(empty, zone)).toBe("");
+  });
+});
 
 describe("financial helpers", () => {
   it("calcula sinal financeiro ignorando transacoes canceladas ou falhas", () => {

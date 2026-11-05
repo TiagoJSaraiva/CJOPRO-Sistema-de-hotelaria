@@ -7,13 +7,14 @@ import {
   createPostCheckoutConsumptionCase,
   payPostCheckoutConsumptionCase,
 } from "../../../../lib/adminApi";
+import { readHotelInstant } from "../../../../lib/hotelClock";
 
 const path = "/dashboard/consumption/post-checkout";
 
 export async function createPostCheckoutCaseAction(formData: FormData) {
   await createPostCheckoutConsumptionCase({
     stay_id: String(formData.get("stay_id")),
-    occurred_at: new Date(String(formData.get("occurred_at"))).toISOString(),
+    occurred_at: await readHotelInstant(formData.get("occurred_at")),
     report: String(formData.get("report")),
     items: [
       {

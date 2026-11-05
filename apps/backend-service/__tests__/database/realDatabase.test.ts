@@ -245,6 +245,45 @@ describe.sequential("Supabase local com Fastify real", () => {
     );
   });
 
+  it("entrega o relógio do hotel ativo sem exigir permissão de domínio", async () => {
+    const own = await app.inject({
+      method: "GET",
+      url: "/admin/hotel-clock",
+      headers: managerHeaders(receptionToken, HOTEL_A),
+    });
+    expect(own.statusCode).toBe(200);
+    expect(own.json()).toMatchObject({
+      timezone: "America/Sao_Paulo",
+      operational_date: today,
+    });
+
+    const other = await app.inject({
+      method: "GET",
+      url: "/admin/hotel-clock",
+      headers: managerHeaders(managerAToken, HOTEL_B),
+    });
+    expect(other.statusCode).toBe(403);
+  });
+
+  it("o contrato recusa data e hora sem fuso no estorno a parceiro", async () => {
+    const reverse = (reversedAt: string) =>
+      app.inject({
+        method: "POST",
+        url: "/admin/partner-settlement-payments/00000000-0000-4000-8000-000000000000/reversal",
+        headers: managerHeaders(managerAToken, HOTEL_A),
+        payload: {
+          reason: "Estorno de teste",
+          reversed_at: reversedAt,
+          idempotency_key: "00000000-0000-4000-8000-000000000001",
+        },
+      });
+
+    expect((await reverse("2026-11-04T17:00")).statusCode).toBe(400);
+    expect((await reverse("2026-11-04T17:00:00.000Z")).statusCode).not.toBe(
+      400,
+    );
+  });
+
   it("abre a conta sintética da recepção e a oculta do Hotel Horizonte", async () => {
     const stayId = "91000000-0000-4000-8000-000000000002";
     const account = await app.inject({

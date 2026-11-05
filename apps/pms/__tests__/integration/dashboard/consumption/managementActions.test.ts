@@ -25,6 +25,11 @@ vi.mock("../../../../src/lib/auth", () => ({
   getUserFromSession: getUserFromSessionMock,
 }));
 vi.mock("../../../../src/lib/adminApi", () => ({
+  getHotelClock: vi.fn(async () => ({
+    timezone: "America/Sao_Paulo",
+    operational_date: "2026-09-05",
+    operational_now: "2026-09-05T15:00:00.000Z",
+  })),
   createPartnerSettlement: createPartnerSettlementMock,
   decidePartnerSettlement: decidePartnerSettlementMock,
   payPartnerSettlement: payPartnerSettlementMock,
@@ -102,7 +107,7 @@ describe("dashboard/consumption/managementActions", () => {
     formData.set("expected_version", "4");
     formData.set("amount", "275.50");
     formData.set("payment_method", "pix");
-    formData.set("paid_at", "2026-09-05T12:00:00.000Z");
+    formData.set("paid_at", "2026-09-05T09:00");
 
     await expect(paySettlementAction(formData)).rejects.toThrow(
       "REDIRECT:/dashboard/consumption/settlements?status=settled&id=settlement-1",
@@ -113,6 +118,7 @@ describe("dashboard/consumption/managementActions", () => {
         expected_version: 4,
         amount: 275.5,
         payment_method: "pix",
+        paid_at: "2026-09-05T12:00:00.000Z",
         idempotency_key: expect.any(String),
       }),
     );

@@ -4,7 +4,7 @@ import type {
   TransactionType,
 } from "@hotel/shared";
 import {
-  getFinancialTransactionEffectiveDate,
+  getFinancialTransactionEffectiveDateKey,
   isFinancialTransactionDueSoon,
   isFinancialTransactionOverdue,
   isFinancialTransactionSettled,
@@ -58,7 +58,8 @@ export function countAppliedTransactionFilters(
 export function applyTransactionViewFilters(
   transactions: AdminFinancialTransaction[],
   filters: TransactionViewFilters,
-  referenceDate: Date = new Date(),
+  referenceDate: Date,
+  timeZone: string,
 ): AdminFinancialTransaction[] {
   const search = filters.search.trim().toLocaleLowerCase();
   const costCenter = filters.costCenter.trim().toLocaleLowerCase();
@@ -139,8 +140,10 @@ export function applyTransactionViewFilters(
     }
 
     if (dateFrom || dateTo) {
-      const effectiveDate = getFinancialTransactionEffectiveDate(transaction);
-      const dateKey = effectiveDate ? effectiveDate.slice(0, 10) : "";
+      const dateKey = getFinancialTransactionEffectiveDateKey(
+        transaction,
+        timeZone,
+      );
 
       if (!dateKey) {
         return false;

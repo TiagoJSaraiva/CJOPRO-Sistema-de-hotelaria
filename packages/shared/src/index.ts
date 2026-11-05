@@ -6,6 +6,7 @@ export * from "./admin";
 export * from "./validation";
 export * from "./i18n";
 export * from "./financial";
+export * from "./hotelTime";
 export type {
   CompositeTypes,
   Database,

@@ -12,6 +12,7 @@ type FinancialTransactionReportMenuProps = {
   generatedBy: string;
   hasActiveHotel: boolean;
   referenceDate: Date;
+  timeZone: string;
 };
 
 const menuButtonClassName =
@@ -28,6 +29,7 @@ export function FinancialTransactionReportMenu({
   generatedBy,
   hasActiveHotel,
   referenceDate,
+  timeZone,
 }: FinancialTransactionReportMenuProps) {
   const [isOpen, setIsOpen] = useState(false);
   const [generatingScope, setGeneratingScope] =
@@ -104,6 +106,7 @@ export function FinancialTransactionReportMenu({
         generatedBy,
         generatedAt: new Date(),
         referenceDate,
+        timeZone,
       });
     } catch {
       setErrorMessage("Não foi possível gerar o relatório.");

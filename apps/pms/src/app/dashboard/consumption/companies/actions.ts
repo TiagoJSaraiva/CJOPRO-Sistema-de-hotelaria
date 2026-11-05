@@ -7,6 +7,7 @@ import {
   payCorporateReceivable,
   requestCorporateCredit,
 } from "../../../../lib/adminApi";
+import { readHotelInstant } from "../../../../lib/hotelClock";
 
 export async function createCorporateAccountAction(formData: FormData) {
   try {
@@ -35,7 +36,7 @@ export async function requestCorporateCreditAction(formData: FormData) {
     amount_limit: Number(formData.get("amount_limit")),
     covered_category_ids: [],
     covers_maintenance: formData.get("covers_maintenance") === "on",
-    expires_at: new Date(String(formData.get("expires_at"))).toISOString(),
+    expires_at: await readHotelInstant(formData.get("expires_at")),
     reason: String(formData.get("reason")),
   });
   revalidatePath("/dashboard/consumption/companies");

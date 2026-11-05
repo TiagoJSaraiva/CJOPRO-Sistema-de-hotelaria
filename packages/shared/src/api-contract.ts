@@ -106,6 +106,7 @@ import {
   TrainingClockActionSchema,
   TrainingEnvironmentSchema,
 } from "./training";
+import { HotelClockSchema } from "./hotelTime";
 import {
   MaintenanceWarrantyDecisionInputSchema,
   MaintenanceWarrantyDecisionSchema,
@@ -4140,6 +4141,7 @@ export const API_COMPONENT_SCHEMAS = [
   BookingChannelReferenceDataSchema,
   TrainingClockActionSchema,
   TrainingEnvironmentSchema,
+  HotelClockSchema,
   MaintenanceWarrantyDecisionInputSchema,
   MaintenanceWarrantyDecisionSchema,
 ] as const;
@@ -7245,6 +7247,12 @@ export const API_ROUTE_CONTRACTS: Readonly<Record<string, ApiRouteContract>> = {
     "Decide um evento recebido do canal.",
     OkSchema,
     { params: IdParamsSchema, body: BookingChannelEventActionSchema },
+  ),
+  "GET /admin/hotel-clock": admin(
+    "getHotelClock",
+    "Hotels",
+    "Retorna fuso, data e instante operacionais do hotel ativo.",
+    HotelClockSchema,
   ),
   "GET /admin/training/environment": admin(
     "getTrainingEnvironment",

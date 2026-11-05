@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { instantToHotelLocalInput } from "@hotel/shared";
 import { DashboardAccessDeniedCard } from "../../_components/DashboardAccessDeniedCard";
 import { DashboardEntityPageShell } from "../../_components/DashboardEntityPageShell";
 import {
@@ -6,6 +7,7 @@ import {
   getPartnerSettlement,
   listPartnerSettlementCandidates,
   listPartnerSettlements,
+  getHotelClock,
 } from "../../../../lib/adminApi";
 import { getUserFromSession } from "../../../../lib/auth";
 import {
@@ -68,7 +70,10 @@ export default async function PartnerSettlementsPage({
         message="Sem permissão para consultar apurações."
       />
     );
-  const settings = await getConsumptionManagementSettings();
+  const [settings, hotelClock] = await Promise.all([
+    getConsumptionManagementSettings(),
+    getHotelClock(),
+  ]);
   const month = params.month || previousMonth(settings.operational_date);
   const periodStart = `${month}-01`;
   const [candidates, list, selected] = await Promise.all([
@@ -80,7 +85,10 @@ export default async function PartnerSettlementsPage({
     }),
     params.id ? getPartnerSettlement(params.id) : Promise.resolve(null),
   ]);
-  const now = settings.operational_now.slice(0, 16);
+  const now = instantToHotelLocalInput(
+    settings.operational_now,
+    hotelClock.timezone,
+  );
   return (
     <DashboardEntityPageShell
       title="Vendas e consumo"

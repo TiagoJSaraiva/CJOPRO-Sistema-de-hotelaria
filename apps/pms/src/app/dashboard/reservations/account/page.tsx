@@ -1,10 +1,23 @@
 import Link from "next/link";
 import { redirect } from "next/navigation";
-import { getStayAccount, getStayPayerAccounts } from "../../../../lib/adminApi";
+import {
+  getHotelClock,
+  getStayAccount,
+  getStayPayerAccounts,
+} from "../../../../lib/adminApi";
 import { getUserFromSession } from "../../../../lib/auth";
 import { DashboardAccessDeniedCard } from "../../_components/DashboardAccessDeniedCard";
 import { DashboardEntityPageShell } from "../../_components/DashboardEntityPageShell";
 import { getReservationsCalendarAccess } from "../access";
+import {
+  accountActionMessage,
+  accountStatusLabel,
+  correctionStatusLabel,
+  folioKindLabel,
+  formatAccountInstant,
+  orderSituationLabel,
+  paymentMethodLabel,
+} from "./accountLabels";
 import { PrintStatementButton } from "../_components/PrintStatementButton";
 import { getConsumptionAccess } from "../../consumption/access";
 import {
@@ -35,8 +48,12 @@ export default async function StayAccountPage({
     );
   if (!params?.stay_id) redirect("/dashboard/reservations/view");
   let account: Awaited<ReturnType<typeof getStayAccount>>;
+  let timeZone: string;
   try {
-    account = await getStayAccount(params.stay_id);
+    [account, { timezone: timeZone }] = await Promise.all([
+      getStayAccount(params.stay_id),
+      getHotelClock(),
+    ]);
   } catch (cause) {
     const statusCode = (cause as Error & { statusCode?: number }).statusCode;
     if (statusCode === 403)
@@ -76,6 +93,7 @@ export default async function StayAccountPage({
   const payerAccounts = await getStayPayerAccounts(account.stay_id).catch(
     () => null,
   );
+  const actionMessage = accountActionMessage(params?.status);
   return (
     <DashboardEntityPageShell
       title="Conta da estadia"
@@ -103,9 +121,14 @@ export default async function StayAccountPage({
       ]}
     >
       <div className="grid gap-4">
-        {params?.status ? (
+        {actionMessage?.tone === "success" ? (
           <p className="pms-alert-success" role="status">
-            Situação: {params.status}.
+            {actionMessage.text}
+          </p>
+        ) : null}
+        {actionMessage?.tone === "error" ? (
+          <p className="pms-status-error" role="alert">
+            {actionMessage.text}
           </p>
         ) : null}
         <section
@@ -120,7 +143,9 @@ export default async function StayAccountPage({
                 {account.guest_name || "Hóspede não informado"}
               </p>
             </div>
-            <span className="pms-status-pill">{account.status}</span>
+            <span className="pms-status-pill">
+              {accountStatusLabel(account.status)}
+            </span>
           </div>
           <dl className="grid gap-3 sm:grid-cols-3">
             <div>
@@ -187,9 +212,9 @@ export default async function StayAccountPage({
               {account.folio.entries.map((entry) => (
                 <tr className="border-t border-slate-200" key={entry.id}>
                   <td className="py-2">
-                    {new Date(entry.posted_at).toLocaleString("pt-BR")}
+                    {formatAccountInstant(entry.posted_at, timeZone)}
                   </td>
-                  <td>{entry.kind}</td>
+                  <td>{folioKindLabel(entry.kind)}</td>
                   <td>{entry.description}</td>
                   <td className="text-right">
                     {entry.direction === "credit" ? "− " : ""}
@@ -214,10 +239,7 @@ export default async function StayAccountPage({
                     order.effective_net_amount ?? order.net_amount,
                     account.currency,
                   )}{" "}
-                  ·{" "}
-                  {order.effective_status ||
-                    order.billing_mode ||
-                    order.disposition}
+                  · {orderSituationLabel(order)}
                 </li>
               ))}
             </ul>
@@ -226,7 +248,7 @@ export default async function StayAccountPage({
                 {account.corrections.map((item) => (
                   <li key={item.id}>
                     Correção: −{money(item.net_reduction, account.currency)} ·{" "}
-                    {item.status}
+                    {correctionStatusLabel(item.status)}
                   </li>
                 ))}
               </ul>
@@ -237,8 +259,14 @@ export default async function StayAccountPage({
             <ul className="grid gap-3 pl-5">
               {account.payment_batches.map((batch) => (
                 <li key={batch.id}>
-                  {money(batch.amount, batch.currency)} ·{" "}
-                  {batch.tenders.map((item) => item.payment_method).join(" + ")}
+                  {[
+                    money(batch.amount, batch.currency),
+                    batch.tenders
+                      .map((item) => paymentMethodLabel(item.payment_method))
+                      .join(" + "),
+                  ]
+                    .filter(Boolean)
+                    .join(" · ")}
                   {account.stay_status === "checked_in" &&
                   consumptionAccess.canReceivePayment ? (
                     <div className="mt-2 grid gap-2">
@@ -402,7 +430,7 @@ export default async function StayAccountPage({
                       <li key={item.id}>
                         {item.reason} · −
                         {money(item.net_reduction, account.currency)} ·{" "}
-                        {item.status}
+                        {correctionStatusLabel(item.status)}
                       </li>
                     ))}
                 </ul>

@@ -2,10 +2,11 @@
 
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
-import { PERMISSIONS } from "@hotel/shared";
+import { PERMISSIONS, hotelLocalInputToInstant } from "@hotel/shared";
 import {
   createFinancialTransaction,
   deleteFinancialTransaction,
+  getHotelClock,
   updateFinancialTransaction,
 } from "../../../lib/adminApi";
 import { getUserFromSession } from "../../../lib/auth";
@@ -82,14 +83,22 @@ function normalizeOptionalDateOnly(
     : text;
 }
 
-function normalizeOptionalDateTime(
+// O campo é digitado na hora do hotel. Sem o relógio não há como saber o instante, então a
+// gravação é recusada em vez de usar o fuso do servidor.
+async function readPaidAt(
   value: FormDataEntryValue | null,
-): string | null | undefined {
+  failure: { status: string; section: "create" | "view" },
+): Promise<string | null | undefined> {
   const text = normalizeOptionalText(value);
   if (!text) return null;
 
-  const parsed = new Date(text);
-  return Number.isNaN(parsed.getTime()) ? undefined : parsed.toISOString();
+  let timeZone: string;
+  try {
+    timeZone = (await getHotelClock()).timezone;
+  } catch {
+    redirectWithStatus(failure.status, failure.section);
+  }
+  return hotelLocalInputToInstant(text, timeZone) ?? undefined;
 }
 
 export async function createTransactionAction(
@@ -111,7 +120,10 @@ export async function createTransactionAction(
   const description = normalizeOptionalText(formData.get("description"));
   const status = normalizeStatus(String(formData.get("status") || "COMPLETED"));
   const paymentMethod = normalizeOptionalText(formData.get("payment_method"));
-  const paidAt = normalizeOptionalDateTime(formData.get("paid_at"));
+  const paidAt = await readPaidAt(formData.get("paid_at"), {
+    status: "create_error",
+    section: "create",
+  });
   const dueDate = normalizeOptionalDateOnly(formData.get("due_date"));
   const counterparty = normalizeOptionalText(formData.get("counterparty"));
   const costCenter = normalizeOptionalText(formData.get("cost_center"));
@@ -180,7 +192,10 @@ export async function updateTransactionAction(
   const description = normalizeOptionalText(formData.get("description"));
   const status = normalizeStatus(String(formData.get("status") || "COMPLETED"));
   const paymentMethod = normalizeOptionalText(formData.get("payment_method"));
-  const paidAt = normalizeOptionalDateTime(formData.get("paid_at"));
+  const paidAt = await readPaidAt(formData.get("paid_at"), {
+    status: "update_error",
+    section: "view",
+  });
   const dueDate = normalizeOptionalDateOnly(formData.get("due_date"));
   const counterparty = normalizeOptionalText(formData.get("counterparty"));
   const costCenter = normalizeOptionalText(formData.get("cost_center"));

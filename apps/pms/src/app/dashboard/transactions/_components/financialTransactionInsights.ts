@@ -47,7 +47,7 @@ function isActiveExpense(transaction: AdminFinancialTransaction): boolean {
 
 export function buildFinancialTransactionInsights(
   transactions: AdminFinancialTransaction[],
-  referenceDate: Date = new Date(),
+  referenceDate: Date,
 ): FinancialTransactionInsights {
   let realizedIncome = 0;
   let realizedExpenses = 0;

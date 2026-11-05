@@ -1,7 +1,10 @@
 import { redirect } from "next/navigation";
 import { DashboardAccessDeniedCard } from "../../_components/DashboardAccessDeniedCard";
 import { DashboardEntityPageShell } from "../../_components/DashboardEntityPageShell";
-import { listFinancialTransactions } from "../../../../lib/adminApi";
+import {
+  getHotelClock,
+  listFinancialTransactions,
+} from "../../../../lib/adminApi";
 import {
   getActiveHotelCookieValue,
   resolveActiveHotelForUser,
@@ -56,7 +59,10 @@ export default async function TransactionsViewPage({
     );
   }
 
-  const transactions = await listFinancialTransactions();
+  const [transactions, hotelClock] = await Promise.all([
+    listFinancialTransactions(),
+    getHotelClock(),
+  ]);
   const preferredHotelId = await getActiveHotelCookieValue();
   const activeHotelId = user
     ? resolveActiveHotelForUser(user, preferredHotelId)
@@ -91,6 +97,7 @@ export default async function TransactionsViewPage({
     >
       <TransactionsViewFilterableSection
         transactions={transactions}
+        hotelClock={hotelClock}
         canCreate={access.canCreate}
         canRead={access.canRead}
         canUpdate={access.canUpdate}

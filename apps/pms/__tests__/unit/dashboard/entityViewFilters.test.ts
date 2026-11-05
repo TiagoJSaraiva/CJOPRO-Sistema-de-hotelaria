@@ -238,14 +238,19 @@ describe("entity view filters", () => {
       },
     ];
 
-    const result = applyTransactionViewFilters(transactions, {
-      ...DEFAULT_TRANSACTION_VIEW_FILTERS,
-      search: "reserva",
-      type: "INCOME",
-      status: "COMPLETED",
-      minAmount: "1000",
-      maxAmount: "2000",
-    });
+    const result = applyTransactionViewFilters(
+      transactions,
+      {
+        ...DEFAULT_TRANSACTION_VIEW_FILTERS,
+        search: "reserva",
+        type: "INCOME",
+        status: "COMPLETED",
+        minAmount: "1000",
+        maxAmount: "2000",
+      },
+      new Date("2026-05-12T12:00:00.000Z"),
+      "America/Sao_Paulo",
+    );
 
     expect(result.map((item) => item.id)).toEqual(["t1"]);
     expect(
@@ -265,6 +270,7 @@ describe("entity view filters", () => {
         dateTo: "2026-05-12",
       },
       new Date("2026-05-12T12:00:00.000Z"),
+      "America/Sao_Paulo",
     );
 
     expect(overdueResult.map((item) => item.id)).toEqual(["t2"]);

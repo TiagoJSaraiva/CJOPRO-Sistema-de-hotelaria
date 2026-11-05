@@ -13,6 +13,7 @@ import {
   updateConsumptionManagementSettings,
   requestOperationsFinanceEndpoint,
 } from "../../../lib/adminApi";
+import { readHotelInstant } from "../../../lib/hotelClock";
 import { getUserFromSession } from "../../../lib/auth";
 
 const settlementsPath = "/dashboard/consumption/settlements";
@@ -53,7 +54,7 @@ export async function paySettlementPartialAction(formData: FormData) {
       {
         expected_version: Number(formData.get("expected_version")),
         idempotency_key: crypto.randomUUID(),
-        paid_at: new Date(String(formData.get("paid_at"))).toISOString(),
+        paid_at: await readHotelInstant(formData.get("paid_at")),
         cash_session_id:
           String(formData.get("cash_session_id") || "") || undefined,
         tenders: [
@@ -208,7 +209,7 @@ export async function paySettlementAction(formData: FormData) {
       amount: Number(formData.get("amount")),
       payment_method: String(formData.get("payment_method")) as
         "cash" | "pix" | "credit_card" | "debit_card" | "bank_transfer",
-      paid_at: String(formData.get("paid_at")),
+      paid_at: await readHotelInstant(formData.get("paid_at")),
       reference_code:
         String(formData.get("reference_code") || "").trim() || null,
       notes: String(formData.get("notes") || "").trim() || null,
@@ -227,7 +228,7 @@ export async function reverseSettlementPaymentAction(formData: FormData) {
   try {
     await reversePartnerSettlementPayment(String(formData.get("payment_id")), {
       reason: String(formData.get("reason") || ""),
-      reversed_at: String(formData.get("reversed_at")),
+      reversed_at: await readHotelInstant(formData.get("reversed_at")),
       idempotency_key: crypto.randomUUID(),
     });
   } catch (error) {

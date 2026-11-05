@@ -9,3 +9,15 @@ select pg_temp.assert_training_scenario(
       and disposition='legacy_unclassified' and is_legacy),
   'assert_training_scenario unclassified consumption is missing'
 );
+select pg_temp.assert_training_scenario(
+  exists(select 1 from public.inventory_positions
+    where id='a6000000-0000-4000-8000-000000000001' and is_active and quantity=18),
+  'assert_training_scenario water position is missing'
+);
+select pg_temp.assert_training_scenario(
+  (public.resolve_inventory_source(
+    '10000000-0000-4000-8000-000000000001',
+    'a6100000-0000-4000-8000-000000000001'
+  )->>'source')='missing',
+  'assert_training_scenario offer without inventory source is missing'
+);

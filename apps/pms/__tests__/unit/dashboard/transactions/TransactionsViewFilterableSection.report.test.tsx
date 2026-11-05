@@ -85,6 +85,11 @@ function renderTransactionsSection() {
   render(
     <TransactionsViewFilterableSection
       transactions={transactions}
+      hotelClock={{
+        timezone: "America/Sao_Paulo",
+        operational_date: "2026-05-12",
+        operational_now: "2026-05-12T15:00:00.000Z",
+      }}
       canCreate
       canRead
       canUpdate

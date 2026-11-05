@@ -153,8 +153,11 @@ export function MaintenancePlanningWorkspace({
                         send(
                           `work-orders/${item.work_order_id}/reschedule-requests`,
                           {
-                            requested_start:
-                              data.get("requested_start") || undefined,
+                            requested_start: data.get("requested_start")
+                              ? new Date(
+                                  String(data.get("requested_start")),
+                                ).toISOString()
+                              : undefined,
                             reason: data.get("reason"),
                           },
                         ),

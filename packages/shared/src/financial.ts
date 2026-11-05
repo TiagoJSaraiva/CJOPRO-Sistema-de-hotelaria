@@ -1,4 +1,5 @@
 import type { AdminFinancialTransaction } from "./admin";
+import { instantToHotelDate } from "./hotelTime";
 
 const SETTLED_TRANSACTION_STATUSES = new Set(["COMPLETED", "REFUNDED"]);
 const IGNORED_CASHFLOW_STATUSES = new Set(["FAILED", "CANCELLED"]);
@@ -50,9 +51,31 @@ export function getFinancialTransactionEffectiveDate(
   );
 }
 
+/**
+ * Dia do hotel em que o lançamento conta. Vencimento já é uma data; pagamento e criação
+ * são instantes e precisam do fuso, senão o que acontece à noite cai no dia seguinte.
+ */
+export function getFinancialTransactionEffectiveDateKey(
+  transaction: Pick<
+    AdminFinancialTransaction,
+    "paid_at" | "due_date" | "created_at"
+  >,
+  timeZone: string,
+): string {
+  if (transaction.paid_at)
+    return instantToHotelDate(transaction.paid_at, timeZone);
+  if (transaction.due_date) return transaction.due_date;
+  return instantToHotelDate(transaction.created_at, timeZone);
+}
+
+/** Converte a data operacional na referência esperada pelas regras de vencimento. */
+export function financialReferenceDate(operationalDate: string): Date {
+  return new Date(`${operationalDate}T12:00:00.000Z`);
+}
+
 export function isFinancialTransactionOverdue(
   transaction: Pick<AdminFinancialTransaction, "status" | "due_date">,
-  referenceDate: Date = new Date(),
+  referenceDate: Date,
 ): boolean {
   if (transaction.status !== "PENDING") {
     return false;
@@ -68,7 +91,7 @@ export function isFinancialTransactionOverdue(
 
 export function isFinancialTransactionDueSoon(
   transaction: Pick<AdminFinancialTransaction, "status" | "due_date">,
-  referenceDate: Date = new Date(),
+  referenceDate: Date,
   daysAhead = 7,
 ): boolean {
   if (transaction.status !== "PENDING") {

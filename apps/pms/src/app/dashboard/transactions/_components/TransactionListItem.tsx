@@ -3,6 +3,7 @@
 import Link from "next/link";
 import type { AdminFinancialTransaction } from "@hotel/shared";
 import {
+  instantToHotelLocalInput,
   isFinancialTransactionOverdue,
   translateTransactionStatus,
   translateTransactionType,
@@ -11,6 +12,8 @@ import { deleteTransactionAction, updateTransactionAction } from "../actions";
 
 type TransactionListItemProps = {
   transaction: AdminFinancialTransaction;
+  timeZone: string;
+  referenceDate: Date;
   canRead: boolean;
   canUpdate: boolean;
   canDelete: boolean;
@@ -43,33 +46,32 @@ function formatMoney(amount: number, currency: string): string {
   }
 }
 
+// O vencimento é uma data, sem hora: formatar em UTC mantém o mesmo dia em qualquer fuso.
 function formatDate(value: string | null | undefined): string {
   if (!value) return "-";
 
   return new Intl.DateTimeFormat("pt-BR", {
+    timeZone: "UTC",
     day: "2-digit",
     month: "2-digit",
     year: "numeric",
   }).format(new Date(value));
 }
 
-function formatDateTime(value: string | null | undefined): string {
+function formatDateTime(
+  value: string | null | undefined,
+  timeZone: string,
+): string {
   if (!value) return "-";
 
   return new Intl.DateTimeFormat("pt-BR", {
+    timeZone,
     day: "2-digit",
     month: "2-digit",
     year: "numeric",
     hour: "2-digit",
     minute: "2-digit",
   }).format(new Date(value));
-}
-
-function toDateTimeLocalValue(value: string | null | undefined): string {
-  if (!value) return "";
-
-  const date = new Date(value);
-  return Number.isNaN(date.getTime()) ? "" : date.toISOString().slice(0, 16);
 }
 
 function getSignedAmountLabel(transaction: AdminFinancialTransaction): string {
@@ -92,8 +94,10 @@ function DetailItem({ label, value }: { label: string; value: string }) {
 
 function TransactionDataPreview({
   transaction,
+  timeZone,
 }: {
   transaction: AdminFinancialTransaction;
+  timeZone: string;
 }) {
   return (
     <div className="mt-4 grid gap-3 border-t border-[#e5e7eb] pt-4">
@@ -125,11 +129,11 @@ function TransactionDataPreview({
         />
         <DetailItem
           label="Criado em"
-          value={formatDateTime(transaction.created_at)}
+          value={formatDateTime(transaction.created_at, timeZone)}
         />
         <DetailItem
           label="Atualizado em"
-          value={formatDateTime(transaction.updated_at)}
+          value={formatDateTime(transaction.updated_at, timeZone)}
         />
       </div>
 
@@ -142,8 +146,10 @@ function TransactionDataPreview({
 
 function TransactionEditForm({
   transaction,
+  timeZone,
 }: {
   transaction: AdminFinancialTransaction;
+  timeZone: string;
 }) {
   return (
     <form
@@ -241,7 +247,10 @@ function TransactionEditForm({
           <input
             name="paid_at"
             type="datetime-local"
-            defaultValue={toDateTimeLocalValue(transaction.paid_at)}
+            defaultValue={instantToHotelLocalInput(
+              transaction.paid_at,
+              timeZone,
+            )}
             className="pms-field-input"
           />
         </label>
@@ -323,6 +332,8 @@ function TransactionEditForm({
 
 export function TransactionListItem({
   transaction,
+  timeZone,
+  referenceDate,
   canRead,
   canUpdate,
   canDelete,
@@ -331,7 +342,7 @@ export function TransactionListItem({
 }: TransactionListItemProps) {
   const viewHref = `/dashboard/transactions/view?transactionId=${transaction.id}&mode=view`;
   const editHref = `/dashboard/transactions/view?transactionId=${transaction.id}&mode=edit`;
-  const overdue = isFinancialTransactionOverdue(transaction);
+  const overdue = isFinancialTransactionOverdue(transaction, referenceDate);
   const generatedByMaintenance = Boolean(
     transaction.maintenance_cost_item_id || transaction.maintenance_recovery_id,
   );
@@ -429,8 +440,12 @@ export function TransactionListItem({
         </div>
       </div>
 
-      {isViewing ? <TransactionDataPreview transaction={transaction} /> : null}
-      {isEditing ? <TransactionEditForm transaction={transaction} /> : null}
+      {isViewing ? (
+        <TransactionDataPreview transaction={transaction} timeZone={timeZone} />
+      ) : null}
+      {isEditing ? (
+        <TransactionEditForm transaction={transaction} timeZone={timeZone} />
+      ) : null}
     </article>
   );
 }

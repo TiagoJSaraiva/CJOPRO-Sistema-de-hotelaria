@@ -47,6 +47,7 @@ describe("financialTransactionReportData", () => {
       generatedBy: "Marina Costa",
       generatedAt: new Date("2026-06-09T12:30:00.000Z"),
       referenceDate: new Date("2026-05-12T12:00:00.000Z"),
+      timeZone: "America/Sao_Paulo",
     });
 
     expect(report.fileName).toBe(
@@ -82,6 +83,7 @@ describe("financialTransactionReportData", () => {
       generatedBy: "Marina Costa",
       generatedAt: new Date("2026-06-09T12:30:00.000Z"),
       referenceDate: new Date("2026-05-12T12:00:00.000Z"),
+      timeZone: "America/Sao_Paulo",
     });
 
     expect(report.fileName).toBe(

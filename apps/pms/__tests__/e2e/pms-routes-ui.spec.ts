@@ -37,6 +37,16 @@ async function preparePage(page: Page) {
 async function stabilizeVisualState(page: Page) {
   await page.addStyleTag({ content: "* { cursor: none !important; }" });
   await page.evaluate(() => document.fonts.ready);
+  // Uma imagem que não carregou não pode virar referência visual (QA-031).
+  await expect
+    .poll(() =>
+      page.evaluate(() =>
+        Array.from(document.images)
+          .filter((image) => image.complete && image.naturalWidth === 0)
+          .map((image) => image.currentSrc || image.src),
+      ),
+    )
+    .toEqual([]);
 }
 
 test.describe("PMS UI quality", () => {

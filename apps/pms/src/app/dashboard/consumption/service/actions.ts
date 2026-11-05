@@ -9,12 +9,20 @@ import {
   actConsumptionServiceOrder,
   createConsumptionServiceOrder,
 } from "../../../../lib/adminApi";
+import { readHotelInstant } from "../../../../lib/hotelClock";
 
 export async function createServiceOrderAction(
   input: ConsumptionServiceOrderCreate,
 ) {
   try {
-    await createConsumptionServiceOrder(input);
+    await createConsumptionServiceOrder(
+      input.expected_at
+        ? {
+            ...input,
+            expected_at: await readHotelInstant(input.expected_at),
+          }
+        : input,
+    );
     revalidatePath("/dashboard/consumption/service");
     return { ok: true, error: null };
   } catch (cause) {

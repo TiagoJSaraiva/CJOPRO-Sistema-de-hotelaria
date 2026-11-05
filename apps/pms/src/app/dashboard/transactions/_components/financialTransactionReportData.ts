@@ -1,7 +1,8 @@
 import type { AdminFinancialTransaction } from "@hotel/shared";
 import {
-  getFinancialTransactionEffectiveDate,
+  getFinancialTransactionEffectiveDateKey,
   getFinancialTransactionSignedAmount,
+  instantToHotelDate,
   translateTransactionStatus,
   translateTransactionType,
 } from "@hotel/shared";
@@ -17,6 +18,7 @@ export type FinancialTransactionReportInput = {
   generatedBy: string;
   generatedAt: Date;
   referenceDate: Date;
+  timeZone: string;
 };
 
 export type FinancialTransactionReportData = {
@@ -87,18 +89,15 @@ function formatDateKey(value: string | null | undefined): string {
   }).format(date);
 }
 
-function formatDateTime(value: Date): string {
+function formatDateTime(value: Date, timeZone: string): string {
   return new Intl.DateTimeFormat("pt-BR", {
+    timeZone,
     day: "2-digit",
     month: "2-digit",
     year: "numeric",
     hour: "2-digit",
     minute: "2-digit",
   }).format(value);
-}
-
-function toDateKey(value: Date): string {
-  return value.toISOString().slice(0, 10);
 }
 
 function sanitizeFilePart(value: string): string {
@@ -132,9 +131,15 @@ function buildTransactionCountLabel(
   return `${count} lançamento(s)`;
 }
 
-function buildTableRows(transactions: AdminFinancialTransaction[]): string[][] {
+function buildTableRows(
+  transactions: AdminFinancialTransaction[],
+  timeZone: string,
+): string[][] {
   return transactions.map((transaction) => {
-    const effectiveDate = getFinancialTransactionEffectiveDate(transaction);
+    const effectiveDate = getFinancialTransactionEffectiveDateKey(
+      transaction,
+      timeZone,
+    );
     const signedAmount = getFinancialTransactionSignedAmount(transaction);
 
     return [
@@ -159,7 +164,7 @@ export function buildFinancialTransactionReportData(
   );
   const scopeLabel = getScopeLabel(input.scope);
   const safeHotelName = sanitizeFilePart(input.hotelLabel);
-  const fileName = `relatorio-financeiro-${safeHotelName}-${toDateKey(input.generatedAt)}-${getScopeFilePart(input.scope)}.pdf`;
+  const fileName = `relatorio-financeiro-${safeHotelName}-${instantToHotelDate(input.generatedAt.toISOString(), input.timeZone)}-${getScopeFilePart(input.scope)}.pdf`;
 
   return {
     title: "Relatório financeiro",
@@ -167,7 +172,7 @@ export function buildFinancialTransactionReportData(
     scopeLabel,
     hotelLabel: input.hotelLabel,
     generatedBy: input.generatedBy,
-    generatedAtLabel: formatDateTime(input.generatedAt),
+    generatedAtLabel: formatDateTime(input.generatedAt, input.timeZone),
     transactionCountLabel: buildTransactionCountLabel(
       input.scope,
       input.transactions.length,
@@ -213,6 +218,6 @@ export function buildFinancialTransactionReportData(
       count: `${category.count}`,
       share: `${category.share}%`,
     })),
-    tableRows: buildTableRows(input.transactions),
+    tableRows: buildTableRows(input.transactions, input.timeZone),
   };
 }

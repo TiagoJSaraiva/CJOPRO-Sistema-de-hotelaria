@@ -45,6 +45,20 @@ Qualquer nova regra que compare prazo, “hoje” ou disponibilidade deve recebe
 `hotel_id` e usar o helper operacional. Usar `now()` diretamente exige registrar
 por que o caso pertence à coluna de tempo real.
 
+## Campos de data e hora
+
+Um campo `datetime-local` é digitado na hora do hotel. O PMS consulta
+`GET /admin/hotel-clock`, que devolve fuso, data e instante operacionais do hotel
+ativo, e usa `hotelLocalInputToInstant` e `instantToHotelLocalInput` de
+`@hotel/shared`. Em Server Action, `new Date(texto)` lê o fuso do servidor e não deve
+ser usado; `readHotelInstant` já faz a conversão e recusa data inválida. O contrato
+`date-time` recusa hora sem fuso com 400.
+
+Vencimento é uma data, sem hora: compare e formate como data, nunca como instante.
+Pagamento e criação contam no dia do hotel, por
+`getFinancialTransactionEffectiveDateKey`, e as regras de atraso exigem a data
+operacional como referência.
+
 ## Transações financeiras
 
 `paid_at` não tem mais valor padrão. Pagamento concluído sem data informada é

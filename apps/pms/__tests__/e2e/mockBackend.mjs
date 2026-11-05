@@ -3046,6 +3046,15 @@ const server = http.createServer(async (request, response) => {
     sendJson(response, 200, { items: [] });
     return;
   }
+  if (method === "GET" && url.pathname === "/admin/hotel-clock") {
+    sendJson(response, 200, {
+      timezone: "America/Sao_Paulo",
+      operational_date: "2026-05-12",
+      operational_now: "2026-05-12T15:00:00.000Z",
+    });
+    return;
+  }
+
   if (method === "GET" && url.pathname === "/admin/training/environment") {
     sendJson(response, 200, {
       hotel_id: "hotel-e2e",

@@ -2,8 +2,9 @@
 
 import Link from "next/link";
 import { useMemo } from "react";
-import type { AdminFinancialTransaction } from "@hotel/shared";
+import type { AdminFinancialTransaction, HotelClock } from "@hotel/shared";
 import {
+  financialReferenceDate,
   translateTransactionStatus,
   translateTransactionType,
 } from "@hotel/shared";
@@ -28,6 +29,7 @@ import { useViewFiltersState } from "../../_components/useViewFiltersState";
 
 type TransactionsViewFilterableSectionProps = {
   transactions: AdminFinancialTransaction[];
+  hotelClock: HotelClock;
   canCreate: boolean;
   canRead: boolean;
   canUpdate: boolean;
@@ -52,10 +54,12 @@ function formatMoney(amount: number, currency = "BRL"): string {
   }
 }
 
+// O vencimento é uma data, sem hora: formatar em UTC mantém o mesmo dia em qualquer fuso.
 function formatDate(value: string | null | undefined): string {
   if (!value) return "Sem vencimento";
 
   return new Intl.DateTimeFormat("pt-BR", {
+    timeZone: "UTC",
     day: "2-digit",
     month: "2-digit",
     year: "numeric",
@@ -211,6 +215,7 @@ function UpcomingExpensesPanel({
 
 export function TransactionsViewFilterableSection({
   transactions,
+  hotelClock,
   canCreate,
   canRead,
   canUpdate,
@@ -219,7 +224,11 @@ export function TransactionsViewFilterableSection({
   mode,
   reportContext,
 }: TransactionsViewFilterableSectionProps) {
-  const referenceDate = useMemo(() => new Date(), []);
+  const timeZone = hotelClock.timezone;
+  const referenceDate = useMemo(
+    () => financialReferenceDate(hotelClock.operational_date),
+    [hotelClock.operational_date],
+  );
   const tabsContext = useDashboardEntityTabs();
   const viewTabs =
     tabsContext && shouldPlaceTabsInFilterBar(tabsContext.activeTabKey) ? (
@@ -244,8 +253,13 @@ export function TransactionsViewFilterableSection({
 
   const filteredTransactions = useMemo(
     () =>
-      applyTransactionViewFilters(transactions, appliedFilters, referenceDate),
-    [transactions, appliedFilters, referenceDate],
+      applyTransactionViewFilters(
+        transactions,
+        appliedFilters,
+        referenceDate,
+        timeZone,
+      ),
+    [transactions, appliedFilters, referenceDate, timeZone],
   );
   const appliedFilterCount = countAppliedTransactionFilters(appliedFilters);
   const insights = useMemo(
@@ -292,6 +306,7 @@ export function TransactionsViewFilterableSection({
           <FinancialTransactionReportMenu
             allTransactions={transactions}
             filteredTransactions={filteredTransactions}
+            timeZone={timeZone}
             hotelLabel={reportContext.hotelLabel}
             generatedBy={reportContext.generatedBy}
             hasActiveHotel={reportContext.hasActiveHotel}
@@ -320,6 +335,8 @@ export function TransactionsViewFilterableSection({
               <TransactionListItem
                 key={transaction.id}
                 transaction={transaction}
+                timeZone={timeZone}
+                referenceDate={referenceDate}
                 canRead={canRead}
                 canUpdate={canUpdate}
                 canDelete={canDelete}

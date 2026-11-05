@@ -33,7 +33,7 @@ movimento imutável de estoque.
 
 <details><summary>Solução</summary>
 
-Use o ponto Recepção, a oferta Água mineral e a hospedagem `LOCAL-AUR-002`. O
+Use o ponto Balcão Aurora, a oferta Água mineral e a hospedagem `LOCAL-AUR-002`. O
 histórico legado só deve ser reclassificado com a origem e o pagador conhecidos.
 
 </details>

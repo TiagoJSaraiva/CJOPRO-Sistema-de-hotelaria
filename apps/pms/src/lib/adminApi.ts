@@ -1,4 +1,5 @@
 import type {
+  HotelClock,
   OperationalPendingList,
   OperationalPendingAction,
   GovernanceBoard,
@@ -1042,6 +1043,10 @@ export function executeStayCancel(
     "POST",
     {},
   );
+}
+
+export function getHotelClock(): Promise<HotelClock> {
+  return getAdminData<HotelClock>("/admin/hotel-clock");
 }
 
 export function listFinancialTransactions(): Promise<
