@@ -1,5 +1,11 @@
 "use client";
 
+import {
+  HotelInstant,
+  useHotelInputInstant,
+  useHotelTimeZone,
+} from "../../_components/HotelTimeZone";
+import { DEFAULT_DISPLAY_TIME_ZONE, instantToHotelDate } from "@hotel/shared";
 import type {
   MaintenancePlanningBoard,
   MaintenanceScheduleSimulation,
@@ -41,13 +47,15 @@ export function MaintenancePlanningWorkspace({
   const [simulation, setSimulation] =
     useState<MaintenanceScheduleSimulation | null>(null);
   const [pending, setPending] = useState(false);
+  const displayZone = useHotelTimeZone() ?? DEFAULT_DISPLAY_TIME_ZONE;
+  const readInstant = useHotelInputInstant();
   const schedules = useMemo(() => {
     if (view === "week") return board.schedules;
-    const today = board.generated_at.slice(0, 10);
-    return board.schedules.filter((item) =>
-      item.planned_start.startsWith(today),
+    const today = instantToHotelDate(board.generated_at, displayZone);
+    return board.schedules.filter(
+      (item) => instantToHotelDate(item.planned_start, displayZone) === today,
     );
-  }, [board.generated_at, board.schedules, view]);
+  }, [board.generated_at, board.schedules, displayZone, view]);
 
   async function reload() {
     const response = await fetch("/api/maintenance/planning/board");
@@ -131,11 +139,11 @@ export function MaintenancePlanningWorkspace({
               </strong>
               <p className="text-sm text-slate-600">
                 {item.room_number ? `Quarto ${item.room_number} · ` : ""}
-                {new Date(item.planned_start).toLocaleString("pt-BR")}–
-                {new Date(item.planned_end).toLocaleTimeString("pt-BR", {
-                  hour: "2-digit",
-                  minute: "2-digit",
-                })}
+                <HotelInstant value={item.planned_start} />–
+                <HotelInstant
+                  value={item.planned_end}
+                  options={{ hour: "2-digit", minute: "2-digit" }}
+                />
               </p>
               <p className="text-sm">
                 {item.team_name || "Sem equipe"} ·{" "}
@@ -154,9 +162,7 @@ export function MaintenancePlanningWorkspace({
                           `work-orders/${item.work_order_id}/reschedule-requests`,
                           {
                             requested_start: data.get("requested_start")
-                              ? new Date(
-                                  String(data.get("requested_start")),
-                                ).toISOString()
+                              ? readInstant(data.get("requested_start"))
                               : undefined,
                             reason: data.get("reason"),
                           },
@@ -242,9 +248,14 @@ export function MaintenancePlanningWorkspace({
                   </strong>
                   <p className="text-sm">
                     {request.requester_name}: {request.reason}
-                    {request.requested_start
-                      ? ` · ${new Date(request.requested_start).toLocaleString("pt-BR")}`
-                      : ""}
+                    {request.requested_start ? (
+                      <>
+                        {" "}
+                        · <HotelInstant value={request.requested_start} />
+                      </>
+                    ) : (
+                      ""
+                    )}
                   </p>
                   <form
                     className="flex flex-wrap gap-2"
@@ -294,12 +305,15 @@ export function MaintenancePlanningWorkspace({
   );
 }
 
-function scheduleBody(form: HTMLFormElement) {
+function scheduleBody(
+  form: HTMLFormElement,
+  readInstant: ReturnType<typeof useHotelInputInstant>,
+) {
   const data = new FormData(form);
   return {
     team_id: data.get("team_id") || undefined,
     technician_id: data.get("technician_id") || undefined,
-    planned_start: new Date(String(data.get("planned_start"))).toISOString(),
+    planned_start: readInstant(data.get("planned_start")),
     estimated_minutes: Number(data.get("estimated_minutes")),
     access_kind: data.get("access_kind"),
     access_notes: data.get("access_notes") || undefined,
@@ -327,6 +341,7 @@ function ScheduleForm({
   setSimulation: (value: MaintenanceScheduleSimulation | null) => void;
   run: (action: () => Promise<unknown>, success: string) => Promise<void>;
 }) {
+  const readInstant = useHotelInputInstant();
   return (
     <form
       className="rounded-lg border p-4"
@@ -336,7 +351,7 @@ function ScheduleForm({
           () =>
             send(
               `work-orders/${item.work_order_id}/schedule`,
-              scheduleBody(event.currentTarget),
+              scheduleBody(event.currentTarget, readInstant),
             ),
           "Agendamento confirmado.",
         );
@@ -432,7 +447,7 @@ function ScheduleForm({
             try {
               const payload = await send(
                 `work-orders/${item.work_order_id}/schedule/simulate`,
-                scheduleBody(form),
+                scheduleBody(form, readInstant),
               );
               setSimulation(payload.item);
             } catch (error) {
@@ -463,6 +478,7 @@ function TeamForm({
   pending: boolean;
   run: (action: () => Promise<unknown>, success: string) => Promise<void>;
 }) {
+  const readInstant = useHotelInputInstant();
   return (
     <section
       className="rounded-xl border bg-white p-5"
@@ -606,10 +622,8 @@ function TeamForm({
               send("availability-exceptions", {
                 team_id: data.get("team_id"),
                 kind: data.get("kind"),
-                starts_at: new Date(
-                  String(data.get("starts_at")),
-                ).toISOString(),
-                ends_at: new Date(String(data.get("ends_at"))).toISOString(),
+                starts_at: readInstant(data.get("starts_at")),
+                ends_at: readInstant(data.get("ends_at")),
                 capacity_delta: Number(data.get("capacity_delta") || 0),
                 reason: data.get("reason"),
               }),

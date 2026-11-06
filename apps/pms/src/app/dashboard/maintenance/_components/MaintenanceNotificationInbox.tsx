@@ -1,5 +1,6 @@
 "use client";
 
+import { HotelInstant } from "../../_components/HotelTimeZone";
 import Link from "next/link";
 import { useState } from "react";
 import type { AdminMaintenanceNotification } from "@hotel/shared";
@@ -92,8 +93,7 @@ export function MaintenanceNotificationInbox({
               <div className="flex flex-wrap items-start justify-between gap-3">
                 <div>
                   <span className="text-xs font-semibold uppercase text-slate-500">
-                    {item.severity} ·{" "}
-                    {new Date(item.created_at).toLocaleString("pt-BR")}
+                    {item.severity} · <HotelInstant value={item.created_at} />
                   </span>
                   <h2 className="my-1 text-base font-semibold">{item.title}</h2>
                   <p className="m-0 text-sm text-slate-700">{item.message}</p>

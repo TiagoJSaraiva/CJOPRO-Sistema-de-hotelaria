@@ -9,8 +9,8 @@ const go = (s: string): never =>
 async function run(path: string, body: unknown, status: string) {
   try {
     await requestOperationsFinanceEndpoint(path, "POST", body);
-  } catch {
-    go("conflict");
+  } catch (error) {
+    go((error as { details?: string }).details || "failed");
   }
   revalidatePath("/dashboard/cash");
   go(status);
@@ -52,7 +52,7 @@ export async function postCashMovementAction(f: FormData) {
       reason: value(f, "reason"),
       idempotency_key: crypto.randomUUID(),
     },
-    "updated",
+    "moved",
   );
 }
 export async function countCashSessionAction(f: FormData) {
@@ -70,14 +70,14 @@ export async function countCashSessionAction(f: FormData) {
 }
 export async function decideCashDifferenceAction(f: FormData) {
   await run(
-    `cash-sessions/${value(f, "id")}/actions`,
+    `cash-sessions/${value(f, "record_id")}/actions`,
     {
       action: value(f, "action"),
       expected_version: num(f, "version"),
       reason: value(f, "reason"),
       idempotency_key: crypto.randomUUID(),
     },
-    "updated",
+    "decided",
   );
 }
 export async function prepareDailyCloseAction(f: FormData) {
@@ -88,6 +88,8 @@ export async function prepareDailyCloseAction(f: FormData) {
   );
 }
 export async function approveDailyCloseAction(f: FormData) {
+  const rejecting = value(f, "action") === "reject";
+  if (rejecting && !value(f, "reason")) go("reason_required");
   await run(
     `daily-close/${value(f, "date")}/actions`,
     {
@@ -96,6 +98,6 @@ export async function approveDailyCloseAction(f: FormData) {
       expected_fingerprint: value(f, "fingerprint"),
       reason: value(f, "reason") || "Conferência diária aprovada.",
     },
-    "closed",
+    rejecting ? "returned" : "closed",
   );
 }

@@ -1,5 +1,6 @@
 "use client";
 
+import { HotelInstant } from "../../_components/HotelTimeZone";
 import { useCallback, useEffect, useRef, useState } from "react";
 import type { ReservationArrivalSummary } from "@hotel/shared";
 import {
@@ -346,9 +347,14 @@ export function ReservationArrivalPanel({
                   {data.submission
                     ? `Recebida · chegada prevista ${data.submission.arrival_time || "não informada"}`
                     : "Ainda não enviada"}
-                  {data.submission?.submitted_at
-                    ? ` · ${new Date(data.submission.submitted_at).toLocaleString("pt-BR")}`
-                    : ""}
+                  {data.submission?.submitted_at ? (
+                    <>
+                      {" "}
+                      · <HotelInstant value={data.submission.submitted_at} />
+                    </>
+                  ) : (
+                    ""
+                  )}
                 </p>
               </div>
               {data.guests.length ? (

@@ -1,6 +1,6 @@
 begin;
 
-select plan(264);
+select plan(265);
 
 select ok(to_regclass('public.room_blocks') is not null, 'room_blocks exists');
 
@@ -1710,6 +1710,11 @@ select is(
   ))->>'result',
   'ok',
   'a draft may be recalculated with its current version'
+);
+select is(
+  (select version::integer from public.partner_settlements where partner_id='b1000000-0000-4000-8000-000000000002'),
+  2,
+  'the first recalculation also increments the version, so the previous one becomes stale'
 );
 select is(
   (select count(*)::integer from public.partner_settlements where partner_id='b1000000-0000-4000-8000-000000000002'),

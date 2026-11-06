@@ -83,7 +83,7 @@ describe("dashboard/consumption/managementActions", () => {
       permissions: [PERMISSIONS.PARTNER_SETTLEMENTS_APPROVE],
     });
     const formData = new FormData();
-    formData.set("id", "settlement-1");
+    formData.set("record_id", "settlement-1");
     formData.set("expected_version", "3");
     formData.set("decision", "reject");
     formData.set("reason", "Revisar fonte divergente");

@@ -1474,7 +1474,7 @@ export function listConsumptionOrders(
   const suffix = params.size ? `?${params}` : "";
   return getAdminData<AdminConsumptionOrderHistory>(
     `/admin/consumption-orders${suffix}`,
-  ).catch(() => ({ items: [], next_cursor: null }));
+  );
 }
 
 export function getConsumptionOrder(
@@ -1484,7 +1484,10 @@ export function getConsumptionOrder(
     `/admin/consumption-orders/${id}`,
   )
     .then((payload) => payload.item)
-    .catch(() => null);
+    .catch((cause: { statusCode?: number }) => {
+      if (cause.statusCode === 404) return null;
+      throw cause;
+    });
 }
 
 export function getConsumptionManagementSettings(): Promise<AdminConsumptionManagementSettings> {

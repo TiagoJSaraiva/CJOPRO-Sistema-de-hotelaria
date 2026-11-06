@@ -1,12 +1,13 @@
 // @vitest-environment jsdom
 import { cleanup, render, screen } from "@testing-library/react";
 import type { ReactNode } from "react";
-import { afterEach, expect, it, vi } from "vitest";
+import { afterEach, beforeEach, expect, it, vi } from "vitest";
 
 const mocks = vi.hoisted(() => ({
   user: vi.fn(),
   stays: vi.fn(),
   context: vi.fn(),
+  clock: vi.fn(),
 }));
 
 vi.mock("../../../../src/lib/auth", () => ({
@@ -15,11 +16,14 @@ vi.mock("../../../../src/lib/auth", () => ({
 vi.mock("../../../../src/lib/adminApi", () => ({
   listConsumptionEligibleStays: mocks.stays,
   getConsumptionOperationalContext: mocks.context,
+  getHotelClock: mocks.clock,
 }));
 vi.mock(
   "../../../../src/app/dashboard/consumption/_components/ConsumptionOrderComposer",
   () => ({
-    ConsumptionOrderComposer: () => <p>Formulário de consumo</p>,
+    ConsumptionOrderComposer: ({ timeZone }: { timeZone: string }) => (
+      <p data-time-zone={timeZone}>Formulário de consumo</p>
+    ),
   }),
 );
 vi.mock(
@@ -32,6 +36,14 @@ vi.mock(
 );
 
 import ConsumptionLaunchPage from "../../../../src/app/dashboard/consumption/launch/page";
+
+beforeEach(() => {
+  mocks.clock.mockResolvedValue({
+    timezone: "Asia/Tokyo",
+    operational_date: "2026-09-04",
+    operational_now: "2026-09-04T15:00:00.000Z",
+  });
+});
 
 afterEach(() => {
   cleanup();
@@ -120,4 +132,22 @@ it.each([
   );
   await renderPage({ stay_id: stay.id });
   expect(screen.getByRole("alert").textContent).toContain(message);
+});
+
+it("hands the hotel zone to the composer", async () => {
+  mocks.stays.mockResolvedValue([stay]);
+  mocks.context.mockResolvedValue({ stay: { id: stay.id } });
+  await renderPage();
+  expect(
+    screen.getByText("Formulário de consumo").getAttribute("data-time-zone"),
+  ).toBe("Asia/Tokyo");
+});
+
+it("does not open the composer when the hotel clock is unavailable", async () => {
+  mocks.stays.mockResolvedValue([stay]);
+  mocks.context.mockResolvedValue({ stay: { id: stay.id } });
+  mocks.clock.mockRejectedValue(new Error("Clock unavailable"));
+  await renderPage();
+  expect(screen.queryByText("Formulário de consumo")).toBeNull();
+  expect(screen.getByRole("alert")).toBeTruthy();
 });

@@ -1,11 +1,18 @@
 // @vitest-environment jsdom
-import { cleanup, render, screen } from "@testing-library/react";
+import {
+  cleanup,
+  fireEvent,
+  render,
+  screen,
+  waitFor,
+} from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
-import { afterEach, expect, it, vi } from "vitest";
+import { afterEach, describe, expect, it, vi } from "vitest";
 import type {
   AdminMaintenanceOccurrenceDetail,
   AdminMaintenanceReferenceData,
 } from "@hotel/shared";
+import { HotelTimeZoneProvider } from "../../../src/app/dashboard/_components/HotelTimeZone";
 import { MaintenanceOccurrenceWorkspace } from "../../../src/app/dashboard/maintenance/_components/MaintenanceOccurrenceWorkspace";
 
 const initial = {
@@ -222,4 +229,75 @@ it("pede motivo de cancelamento e preserva o foco ao voltar", async () => {
       body: JSON.stringify({ reason: "Registro aberto no quarto incorreto" }),
     }),
   );
+});
+
+describe("datas da ordem de serviço na hora do hotel", () => {
+  const waiting = {
+    ...initial,
+    sla_response_due_at: "2026-05-12T15:30:00.000Z",
+    work_orders: [
+      {
+        id: "order",
+        status: "waiting",
+        title: "Trocar lâmpada",
+        waiting_episode: {
+          owner_name: "Marina",
+          next_follow_up_at: "2026-05-12T15:30:00.000Z",
+          version: 3,
+        },
+      },
+    ],
+  } as unknown as typeof initial;
+
+  function renderIn(timeZone: string | null) {
+    render(
+      <HotelTimeZoneProvider timeZone={timeZone}>
+        <MaintenanceOccurrenceWorkspace
+          initial={waiting}
+          referenceData={referenceData}
+          access={access}
+        />
+      </HotelTimeZoneProvider>,
+    );
+    const form = screen
+      .getByRole("button", { name: "Registrar cobrança" })
+      .closest("form") as HTMLFormElement;
+    fireEvent.change(form.querySelector('[name="notes"]') as HTMLInputElement, {
+      target: { value: "Fornecedor respondeu" },
+    });
+    fireEvent.change(
+      form.querySelector('[name="next_follow_up_at"]') as HTMLInputElement,
+      { target: { value: "2026-05-13T00:30" } },
+    );
+    return form;
+  }
+
+  it("mostra prazo e cobrança no fuso do hotel", () => {
+    renderIn("Asia/Tokyo");
+    expect(screen.getByText("13/05/2026, 00:30:00")).toBeTruthy();
+    expect(
+      screen.getByText(/Marina · cobrar em 13\/05\/2026, 00:30:00/),
+    ).toBeTruthy();
+  });
+
+  it("grava a próxima cobrança na hora digitada no fuso do hotel", async () => {
+    const fetchMock = vi.fn().mockResolvedValue({
+      ok: true,
+      json: async () => ({ item: waiting }),
+    });
+    vi.stubGlobal("fetch", fetchMock);
+    fireEvent.submit(renderIn("Asia/Tokyo"));
+    await waitFor(() => expect(fetchMock).toHaveBeenCalled());
+    expect(JSON.parse(fetchMock.mock.calls[0]![1].body).next_follow_up_at).toBe(
+      "2026-05-12T15:30:00.000Z",
+    );
+  });
+
+  it("sem o relógio do hotel, avisa e não grava em outro fuso", async () => {
+    const fetchMock = vi.fn();
+    vi.stubGlobal("fetch", fetchMock);
+    fireEvent.submit(renderIn(null));
+    expect(await screen.findByText("Data e hora inválidas.")).toBeTruthy();
+    expect(fetchMock).not.toHaveBeenCalled();
+  });
 });

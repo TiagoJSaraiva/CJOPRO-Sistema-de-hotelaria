@@ -1,5 +1,9 @@
 "use client";
 
+import {
+  HotelInstant,
+  useHotelInputInstant,
+} from "../../_components/HotelTimeZone";
 import type {
   AdminItemResponse,
   AdminMaintenanceOccurrenceDetail,
@@ -80,13 +84,14 @@ export function MaintenanceOccurrenceWorkspace({
   viewerId,
 }: Props) {
   const [decision, setDecision] = useState<MaintenanceDecision | null>(null);
+  const readInstant = useHotelInputInstant();
   const [item, setItem] = useState(initial);
   const [pending, setPending] = useState(false);
   const [message, setMessage] = useState("");
 
   async function mutate(
     path: string,
-    body: Record<string, unknown>,
+    body: Record<string, unknown> | (() => Record<string, unknown>),
     method: "POST" | "PUT" = "POST",
   ) {
     setPending(true);
@@ -95,7 +100,7 @@ export function MaintenanceOccurrenceWorkspace({
       const response = await fetch(`/api/maintenance/${path}`, {
         method,
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(body),
+        body: JSON.stringify(typeof body === "function" ? body() : body),
       });
       const payload = (await response
         .json()
@@ -264,15 +269,19 @@ export function MaintenanceOccurrenceWorkspace({
           <dd>{item.preventive_plan_id ? "Preventiva" : "Corretiva"}</dd>
           <dt>SLA de resposta</dt>
           <dd>
-            {item.sla_response_due_at
-              ? new Date(item.sla_response_due_at).toLocaleString("pt-BR")
-              : "Não acompanhado"}
+            {item.sla_response_due_at ? (
+              <HotelInstant value={item.sla_response_due_at} />
+            ) : (
+              "Não acompanhado"
+            )}
           </dd>
           <dt>SLA de resolução</dt>
           <dd>
-            {item.sla_resolution_due_at
-              ? new Date(item.sla_resolution_due_at).toLocaleString("pt-BR")
-              : "Não acompanhado"}
+            {item.sla_resolution_due_at ? (
+              <HotelInstant value={item.sla_resolution_due_at} />
+            ) : (
+              "Não acompanhado"
+            )}
           </dd>
         </dl>
       </section>
@@ -551,10 +560,7 @@ export function MaintenanceOccurrenceWorkspace({
               {order.waiting_notes && <p>Espera: {order.waiting_notes}</p>}
               {order.schedule ? (
                 <p>
-                  Agenda:{" "}
-                  {new Date(order.schedule.planned_start).toLocaleString(
-                    "pt-BR",
-                  )}{" "}
+                  Agenda: <HotelInstant value={order.schedule.planned_start} />{" "}
                   · {order.schedule.estimated_minutes} min · acesso{" "}
                   {order.schedule.access_kind}
                 </p>
@@ -565,20 +571,23 @@ export function MaintenanceOccurrenceWorkspace({
                   onSubmit={(event) => {
                     event.preventDefault();
                     const data = new FormData(event.currentTarget);
-                    void mutate(`work-orders/${order.id}/waiting-follow-ups`, {
-                      notes: data.get("notes"),
-                      next_follow_up_at: new Date(
-                        String(data.get("next_follow_up_at")),
-                      ).toISOString(),
-                      expected_version: order.waiting_episode!.version,
-                    });
+                    void mutate(
+                      `work-orders/${order.id}/waiting-follow-ups`,
+                      () => ({
+                        notes: data.get("notes"),
+                        next_follow_up_at: readInstant(
+                          data.get("next_follow_up_at"),
+                        ),
+                        expected_version: order.waiting_episode!.version,
+                      }),
+                    );
                   }}
                 >
                   <p className="col-span-full m-0 text-sm">
                     Desbloqueio: {order.waiting_episode.owner_name} · cobrar em{" "}
-                    {new Date(
-                      order.waiting_episode.next_follow_up_at,
-                    ).toLocaleString("pt-BR")}
+                    <HotelInstant
+                      value={order.waiting_episode.next_follow_up_at}
+                    />
                   </p>
                   <input
                     className="pms-field-input"
@@ -609,14 +618,12 @@ export function MaintenanceOccurrenceWorkspace({
                     const data = new FormData(event.currentTarget);
                     void mutate(
                       `work-orders/${order.id}/service-communications`,
-                      {
+                      () => ({
                         audience: data.get("audience"),
                         channel: data.get("channel"),
-                        promised_at: new Date(
-                          String(data.get("promised_at")),
-                        ).toISOString(),
+                        promised_at: readInstant(data.get("promised_at")),
                         notes: data.get("notes"),
-                      },
+                      }),
                     );
                   }}
                 >

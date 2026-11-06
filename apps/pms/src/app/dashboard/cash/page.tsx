@@ -19,6 +19,12 @@ import {
   prepareDailyCloseAction,
 } from "./actions";
 import { CashRegisterCreateForm } from "./CashRegisterCreateForm";
+import {
+  cashMovementLabel,
+  cashOutcome,
+  cashSessionStatusLabel,
+  dailyCloseStatusLabel,
+} from "./cashLabels";
 const guide: UsageGuideDefinition = {
   id: "cash",
   title: "Caixa e fechamento",
@@ -50,6 +56,8 @@ const formatMoney = (value: number | null | undefined, currency: string) =>
   value == null
     ? "protegido"
     : Number(value).toLocaleString("pt-BR", { style: "currency", currency });
+const capitalize = (text: string) =>
+  text.charAt(0).toUpperCase() + text.slice(1);
 export default async function CashPage({
   searchParams,
 }: {
@@ -82,6 +90,7 @@ export default async function CashPage({
     approve = user.permissions.includes(PERMISSIONS.CASH_DIFFERENCES_APPROVE),
     prepare = user.permissions.includes(PERMISSIONS.DAILY_CLOSE_PREPARE),
     approveDaily = user.permissions.includes(PERMISSIONS.DAILY_CLOSE_APPROVE);
+  const outcome = params.status ? cashOutcome(params.status) : null;
   return (
     <DashboardEntityPageShell
       title="Caixa e fechamento"
@@ -95,7 +104,18 @@ export default async function CashPage({
         },
       ]}
       usageGuide={guide}
-      status={params.status}
+      statusContent={
+        outcome ? (
+          <p
+            className={
+              outcome.tone === "error" ? "pms-alert-error" : "pms-alert-success"
+            }
+            role={outcome.tone === "error" ? "alert" : "status"}
+          >
+            {outcome.message}
+          </p>
+        ) : null
+      }
     >
       <div className="grid gap-4">
         <section className="pms-surface-card" data-usage-guide="cash-registers">
@@ -230,7 +250,7 @@ export default async function CashPage({
                   <strong>{session.register_name || "Caixa"}</strong>
                   <p className="m-0 text-sm text-slate-600">
                     {session.operator_name || "Operador não identificado"} ·{" "}
-                    {session.status.replaceAll("_", " ")}
+                    {capitalize(cashSessionStatusLabel(session.status))}
                     {session.closed_by_name
                       ? ` · encerrado por ${session.closed_by_name}`
                       : ""}
@@ -265,7 +285,7 @@ export default async function CashPage({
           ) : null}
           {daily.close ? (
             <p className="text-sm text-slate-600">
-              Estado: {daily.close.status}
+              Estado: {dailyCloseStatusLabel(daily.close.status)}
               {daily.close.prepared_by_name
                 ? ` · preparado por ${daily.close.prepared_by_name}`
                 : ""}
@@ -302,7 +322,7 @@ export default async function CashPage({
                 value={daily.close.fingerprint || ""}
               />
               <label className="pms-field">
-                Observação
+                Observação (obrigatória ao devolver)
                 <input className="pms-field-input" name="reason" />
               </label>
               <div className="flex items-end gap-2">
@@ -342,7 +362,7 @@ function SessionCard({
   return (
     <div className="mt-3 rounded bg-slate-50 p-3" data-usage-guide="cash-count">
       <p>
-        <strong>Sessão {session.status.replaceAll("_", " ")}</strong>
+        <strong>Sessão {cashSessionStatusLabel(session.status)}</strong>
         {session.operator_name ? ` · operador ${session.operator_name}` : ""}
       </p>
       <p>
@@ -366,7 +386,7 @@ function SessionCard({
         <ul className="text-sm">
           {Object.entries(session.movement_totals).map(([kind, amount]) => (
             <li key={kind}>
-              {kind.replaceAll("_", " ")}:{" "}
+              {cashMovementLabel(kind)}:{" "}
               {Number(amount).toLocaleString("pt-BR", {
                 style: "currency",
                 currency,
@@ -382,7 +402,11 @@ function SessionCard({
             className="grid gap-2 md:grid-cols-4"
           >
             <input type="hidden" name="id" value={session.id} />
-            <select className="pms-field-input" name="kind">
+            <select
+              className="pms-field-input"
+              name="kind"
+              aria-label="Tipo de movimento"
+            >
               <option value="cash_in">Suprimento</option>
               <option value="cash_out">Retirada</option>
               <option value="deposit">Depósito</option>
@@ -394,6 +418,7 @@ function SessionCard({
               min="0.01"
               step="0.01"
               placeholder="Valor"
+              aria-label="Valor do movimento"
               required
             />
             <input
@@ -401,6 +426,7 @@ function SessionCard({
               name="reason"
               minLength={3}
               placeholder="Motivo"
+              aria-label="Motivo do movimento"
               required
             />
             <button className="pms-button-secondary">Registrar</button>
@@ -439,13 +465,14 @@ function SessionCard({
               action={decideCashDifferenceAction}
               className="flex flex-wrap gap-2"
             >
-              <input type="hidden" name="id" value={session.id} />
+              <input type="hidden" name="record_id" value={session.id} />
               <input type="hidden" name="version" value={session.version} />
               <input
                 className="pms-field-input"
                 name="reason"
                 minLength={3}
                 placeholder="Justificativa"
+                aria-label="Justificativa da decisão"
                 required
               />
               <button

@@ -1,5 +1,6 @@
 "use client";
 
+import { HotelInstant } from "../../_components/HotelTimeZone";
 import { useRef, useState, type KeyboardEvent } from "react";
 import type {
   AdminCatalogAuditEvent,
@@ -205,8 +206,8 @@ export function ProductListItem({
                 <ul className="m-0 grid gap-1 pl-5">
                   {history.map((event) => (
                     <li key={event.id}>
-                      {new Date(event.created_at).toLocaleString("pt-BR")} ·{" "}
-                      {event.action} · {event.actor_name || "Sistema"}
+                      <HotelInstant value={event.created_at} /> · {event.action}{" "}
+                      · {event.actor_name || "Sistema"}
                     </li>
                   ))}
                 </ul>

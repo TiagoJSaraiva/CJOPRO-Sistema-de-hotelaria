@@ -72,7 +72,7 @@ export async function createReplenishmentAction(form: FormData) {
 }
 export async function actReplenishmentAction(form: FormData) {
   await run(
-    `procurement/replenishment-requests/${text(form, "id")}/actions`,
+    `procurement/replenishment-requests/${text(form, "record_id")}/actions`,
     "POST",
     {
       action: text(form, "action"),
@@ -126,7 +126,7 @@ export async function createPurchaseOrderAction(form: FormData) {
 }
 export async function actPurchaseOrderAction(form: FormData) {
   await run(
-    `procurement/purchase-orders/${text(form, "id")}/actions`,
+    `procurement/purchase-orders/${text(form, "record_id")}/actions`,
     "POST",
     {
       action: text(form, "action"),
@@ -179,7 +179,7 @@ export async function createProcurementInvoiceAction(form: FormData) {
 }
 export async function actProcurementInvoiceAction(form: FormData) {
   await run(
-    `procurement/invoices/${text(form, "id")}/actions`,
+    `procurement/invoices/${text(form, "record_id")}/actions`,
     "POST",
     {
       action: text(form, "action"),

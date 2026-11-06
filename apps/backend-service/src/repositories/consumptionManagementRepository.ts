@@ -101,11 +101,20 @@ function mapPartner(
   if (!partner) throw new Error("Apuração sem parceiro associado.");
   return partner;
 }
+/** Colunas internas ficam fora do contrato: o serializador as recusaria na resposta. */
+function withoutColumns<T extends object, K extends keyof T>(
+  row: T,
+  columns: readonly K[],
+): Omit<T, K> {
+  return Object.fromEntries(
+    Object.entries(row).filter(([key]) => !columns.includes(key as K)),
+  ) as Omit<T, K>;
+}
 function mapComponent(
   row: Tables<"partner_settlement_components">,
 ): AdminPartnerSettlementComponent {
   return {
-    ...row,
+    ...withoutColumns(row, ["hotel_id", "settlement_id", "created_at"]),
     fixed_rent: row.fixed_rent == null ? null : number(row.fixed_rent),
     commission_percentage:
       row.commission_percentage == null
@@ -133,7 +142,12 @@ function mapSource(
   row: Tables<"partner_settlement_sources">,
 ): AdminPartnerSettlementSource {
   return {
-    ...row,
+    ...withoutColumns(row, [
+      "hotel_id",
+      "settlement_id",
+      "component_id",
+      "created_at",
+    ]),
     gross_amount: number(row.gross_amount),
     discount_amount: number(row.discount_amount),
     reversal_amount: number(row.reversal_amount),

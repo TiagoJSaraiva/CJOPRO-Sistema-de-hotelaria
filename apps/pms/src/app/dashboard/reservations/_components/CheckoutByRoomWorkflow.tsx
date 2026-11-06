@@ -1,5 +1,6 @@
 "use client";
 
+import { HotelInstant } from "../../_components/HotelTimeZone";
 import { useMemo, useState, type FormEvent } from "react";
 import type {
   AdminStayAccount,
@@ -1117,9 +1118,9 @@ export function CheckoutByRoomWorkflow({
             </p>
             <p className="m-0 text-sm">
               Fechado em{" "}
-              {new Date(
-                accountData.checkout_record.checked_out_at,
-              ).toLocaleString("pt-BR")}
+              <HotelInstant
+                value={accountData.checkout_record.checked_out_at}
+              />
             </p>
           </header>
           <table className="w-full text-left text-sm">

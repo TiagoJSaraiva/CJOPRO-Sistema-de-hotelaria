@@ -7,12 +7,13 @@ const mockBackendURL = `http://127.0.0.1:${mockBackendPort}`;
 
 export default defineConfig({
   testDir: "./__tests__/e2e",
-  timeout: 45_000,
+  timeout: 90_000,
   updateSnapshots: "none",
   snapshotPathTemplate:
     "{testDir}/__screenshots__/{platform}/{projectName}/{arg}{ext}",
   expect: {
-    timeout: 10_000,
+    // A primeira visita a uma rota compila em `next dev` e pode passar de 10 s (QA-008).
+    timeout: 30_000,
     toHaveScreenshot: {
       animations: "disabled",
       caret: "hide",
@@ -65,6 +66,7 @@ export default defineConfig({
       env: {
         BACKEND_SERVICE_URL: mockBackendURL,
         LOCAL_TRAINING_ENABLED: "true",
+        PMS_DEV_KEEP_ROUTES: "true",
       },
     },
   ],

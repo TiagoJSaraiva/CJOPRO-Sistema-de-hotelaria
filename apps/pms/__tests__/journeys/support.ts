@@ -162,6 +162,11 @@ export async function prepareScenario(scenario: string): Promise<void> {
   training(["verify", "--scenario", scenario]);
 }
 
+/** Avança o relógio operacional do hotel local, como `pnpm training clock advance`. */
+export function advanceClock(amount: number, unit: "days" | "hours"): void {
+  training(["clock", "advance", String(amount), unit]);
+}
+
 /** Consulta somente leitura ao banco local, para conferir o estado final. */
 export function queryLocal(sql: string): string {
   return execFileSync(

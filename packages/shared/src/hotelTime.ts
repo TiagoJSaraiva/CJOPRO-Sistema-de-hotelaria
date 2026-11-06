@@ -130,6 +130,25 @@ export function instantToHotelLocalInput(
   }
 }
 
+/** Mostra um instante na hora do hotel, sem depender do fuso de quem renderiza. */
+/** Fuso das telas de escopo global, sem hotel ativo: nunca o de quem renderiza. */
+export const DEFAULT_DISPLAY_TIME_ZONE = "America/Sao_Paulo";
+
+export function formatHotelInstant(
+  value: string | null | undefined,
+  timeZone: string,
+  options?: Intl.DateTimeFormatOptions,
+): string {
+  const instant = parseInstant(value);
+  if (!instant) return "—";
+
+  try {
+    return instant.toLocaleString("pt-BR", { ...options, timeZone });
+  } catch {
+    return "—";
+  }
+}
+
 /** Devolve o dia do hotel (`AAAA-MM-DD`) em que um instante aconteceu. */
 export function instantToHotelDate(
   value: string | null | undefined,

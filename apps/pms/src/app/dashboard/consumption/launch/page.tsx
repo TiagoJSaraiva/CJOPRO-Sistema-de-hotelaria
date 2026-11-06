@@ -2,6 +2,7 @@ import { DashboardAccessDeniedCard } from "../../_components/DashboardAccessDeni
 import { DashboardEntityPageShell } from "../../_components/DashboardEntityPageShell";
 import {
   getConsumptionOperationalContext,
+  getHotelClock,
   listConsumptionEligibleStays,
 } from "../../../../lib/adminApi";
 import { getUserFromSession } from "../../../../lib/auth";
@@ -36,9 +37,15 @@ export default async function ConsumptionLaunchPage({
     ReturnType<typeof getConsumptionOperationalContext>
   > | null = null;
   let contextError: { statusCode?: number; details?: string } | null = null;
+  let timeZone = "";
   if (selectedStayId && !searchFailed) {
     try {
-      context = await getConsumptionOperationalContext(selectedStayId);
+      const [loaded, clock] = await Promise.all([
+        getConsumptionOperationalContext(selectedStayId),
+        getHotelClock(),
+      ]);
+      context = loaded;
+      timeZone = clock.timezone;
     } catch (cause) {
       contextError = cause as Error & { statusCode?: number; details?: string };
     }
@@ -96,6 +103,7 @@ export default async function ConsumptionLaunchPage({
         </section>
         {context ? (
           <ConsumptionOrderComposer
+            timeZone={timeZone}
             context={context}
             canReceivePayment={access.canReceivePayment}
             canGrantCourtesy={access.canGrantCourtesy}

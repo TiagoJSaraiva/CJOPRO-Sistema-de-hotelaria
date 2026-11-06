@@ -16,6 +16,8 @@ export default defineConfig({
     environment: "node",
     globals: true,
     maxWorkers: 2,
+    // Registrar os contratos de rota custa cerca de 4,4 s por caso sob cobertura.
+    testTimeout: 15_000,
     setupFiles: ["./__tests__/setup.ts"],
     include: ["__tests__/**/*.test.ts"],
     exclude: ["__tests__/database/**"],

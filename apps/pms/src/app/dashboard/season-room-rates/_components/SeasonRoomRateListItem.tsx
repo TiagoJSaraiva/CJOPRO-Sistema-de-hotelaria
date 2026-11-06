@@ -1,5 +1,6 @@
 "use client";
 
+import { HotelInstant } from "../../_components/HotelTimeZone";
 import type { AdminSeason, AdminSeasonRoomRate } from "@hotel/shared";
 import {
   deleteSeasonRoomRateAction,
@@ -26,12 +27,16 @@ function SeasonRoomRateDataPreview({
   item: AdminSeasonRoomRate;
   seasons: AdminSeason[];
 }) {
-  const createdAt = item.created_at
-    ? new Date(item.created_at).toLocaleString("pt-BR")
-    : "-";
-  const updatedAt = item.updated_at
-    ? new Date(item.updated_at).toLocaleString("pt-BR")
-    : "-";
+  const createdAt = item.created_at ? (
+    <HotelInstant value={item.created_at} />
+  ) : (
+    "-"
+  );
+  const updatedAt = item.updated_at ? (
+    <HotelInstant value={item.updated_at} />
+  ) : (
+    "-"
+  );
 
   const season = seasons.find((entry) => entry.id === item.season_id);
   return (

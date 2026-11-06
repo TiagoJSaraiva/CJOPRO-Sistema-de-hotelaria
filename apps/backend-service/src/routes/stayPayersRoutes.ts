@@ -2,6 +2,7 @@ import type { FastifyInstance, FastifyReply, FastifyRequest } from "fastify";
 import {
   ADMIN_ERROR_CODE,
   PERMISSIONS,
+  type PermissionName,
   type CorporateAccountInput,
   type CorporateCreditAction,
   type CorporateCreditAuthorizationInput,
@@ -9,10 +10,7 @@ import {
   type StayPayerAllocationInput,
   type StayPayerPaymentInput,
 } from "@hotel/shared";
-import {
-  ensureAuthorizedAnyWithScope,
-  ensureAuthorizedWithScope,
-} from "../auth/authorization";
+import { ensureAuthorizedAnyWithScope } from "../auth/authorization";
 import { adminError } from "../common/adminError";
 import { requireActiveHotelId } from "../common/requireActiveHotelScope";
 import {
@@ -24,9 +22,13 @@ type Params = { id: string };
 function scope(
   request: FastifyRequest,
   reply: FastifyReply,
-  permission: (typeof PERMISSIONS)[keyof typeof PERMISSIONS],
+  permission: PermissionName | PermissionName[],
 ) {
-  const auth = ensureAuthorizedWithScope(request, reply, permission);
+  const auth = ensureAuthorizedAnyWithScope(
+    request,
+    reply,
+    [permission].flat(),
+  );
   if (!auth) return null;
   const hotelId = requireActiveHotelId(reply, auth.activeHotelId);
   return hotelId ? { auth, hotelId } : null;
@@ -66,7 +68,10 @@ export function registerStayPayersRoutes(
   app.get<{ Params: Params }>(
     "/admin/stays/:id/payer-accounts",
     async (request, reply) => {
-      const context = scope(request, reply, PERMISSIONS.CONSUMPTION_READ);
+      const context = scope(request, reply, [
+        PERMISSIONS.CONSUMPTION_READ,
+        PERMISSIONS.TRANSACTION_READ,
+      ]);
       if (!context) return;
       return reply.send(
         await repository.list(context.hotelId, request.params.id),

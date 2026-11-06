@@ -1,3 +1,4 @@
+import { HotelInstant } from "../../_components/HotelTimeZone";
 import Link from "next/link";
 import { instantToHotelLocalInput } from "@hotel/shared";
 import { DashboardAccessDeniedCard } from "../../_components/DashboardAccessDeniedCard";
@@ -27,6 +28,13 @@ import {
   updateManagementSettingsAction,
 } from "../managementActions";
 import { consumptionSettlementsGuide } from "../usageGuides";
+import {
+  disputeStateLabel,
+  disputeStatusLabel,
+  paymentStateLabel,
+  settlementEventLabel,
+  settlementOutcome,
+} from "./settlementLabels";
 import { consumptionTabs } from "../tabs";
 
 const statusLabel = {
@@ -89,6 +97,7 @@ export default async function PartnerSettlementsPage({
     settings.operational_now,
     hotelClock.timezone,
   );
+  const outcome = params.status ? settlementOutcome(params.status) : null;
   return (
     <DashboardEntityPageShell
       title="Vendas e consumo"
@@ -96,9 +105,14 @@ export default async function PartnerSettlementsPage({
       tabs={consumptionTabs(access)}
       usageGuide={consumptionSettlementsGuide}
       statusContent={
-        params.status ? (
-          <p className="pms-alert-success" role="status">
-            Operação concluída: {params.status.replaceAll("_", " ")}.
+        outcome ? (
+          <p
+            className={
+              outcome.tone === "error" ? "pms-alert-error" : "pms-alert-success"
+            }
+            role={outcome.tone === "error" ? "alert" : "status"}
+          >
+            {outcome.message}
           </p>
         ) : null
       }
@@ -291,6 +305,16 @@ export default async function PartnerSettlementsPage({
               <div className="text-right">
                 <strong>{statusLabel[selected.status]}</strong>
                 <p className="my-1">{directionLabel[selected.direction]}</p>
+                {selected.payment_state ? (
+                  <p className="my-1 text-sm">
+                    {paymentStateLabel(selected.payment_state)}
+                  </p>
+                ) : null}
+                {selected.dispute_state ? (
+                  <p className="my-1 text-sm">
+                    {disputeStateLabel(selected.dispute_state)}
+                  </p>
+                ) : null}
                 <strong className="text-xl">
                   {money(Math.abs(selected.net_settlement))}
                 </strong>
@@ -398,7 +422,7 @@ export default async function PartnerSettlementsPage({
                     {selected.sources.map((source) => (
                       <tr key={source.id} className="border-t border-slate-200">
                         <td>
-                          {new Date(source.occurred_at).toLocaleString("pt-BR")}
+                          <HotelInstant value={source.occurred_at} />
                         </td>
                         <td>{source.product_name}</td>
                         <td>
@@ -459,7 +483,7 @@ export default async function PartnerSettlementsPage({
                 className="mt-5 grid gap-3 rounded border border-slate-200 p-4"
                 data-usage-guide="settlement-decision"
               >
-                <input type="hidden" name="id" value={selected.id} />
+                <input type="hidden" name="record_id" value={selected.id} />
                 <input
                   type="hidden"
                   name="expected_version"
@@ -478,6 +502,8 @@ export default async function PartnerSettlementsPage({
                     Rejeitar
                   </button>
                   <ConfirmSubmitButton
+                    name="decision"
+                    value="approve"
                     message={`Aprovar e tornar imutável a versão ${selected.version}?`}
                   >
                     Aprovar
@@ -648,7 +674,8 @@ export default async function PartnerSettlementsPage({
                       className="rounded bg-slate-50 p-3"
                     >
                       <strong>
-                        {money(dispute.disputed_amount)} · {dispute.status}
+                        {money(dispute.disputed_amount)} ·{" "}
+                        {disputeStatusLabel(dispute.status)}
                       </strong>
                       <p>{dispute.reason}</p>
                       {dispute.status === "open" &&
@@ -662,7 +689,11 @@ export default async function PartnerSettlementsPage({
                             name="settlement_id"
                             value={selected.id}
                           />
-                          <input type="hidden" name="id" value={dispute.id} />
+                          <input
+                            type="hidden"
+                            name="record_id"
+                            value={dispute.id}
+                          />
                           <input
                             type="hidden"
                             name="version"
@@ -753,8 +784,8 @@ export default async function PartnerSettlementsPage({
               <ol>
                 {selected.events.map((event) => (
                   <li key={event.id}>
-                    {new Date(event.created_at).toLocaleString("pt-BR")} —{" "}
-                    {event.action}
+                    <HotelInstant value={event.created_at} /> —{" "}
+                    {settlementEventLabel(event.action)}
                     {event.actor_name ? ` por ${event.actor_name}` : ""}
                   </li>
                 ))}

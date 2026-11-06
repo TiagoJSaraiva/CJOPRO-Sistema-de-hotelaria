@@ -108,6 +108,25 @@ it("separa leitura, gestão de pagadores e recebimento", async () => {
   expect(repository.pay).not.toHaveBeenCalled();
 });
 
+it("o financeiro lê os pagadores da conta sem poder alterá-los", async () => {
+  const { app, repository } = await setup();
+  const read = await app.inject({
+    url: `/admin/stays/${stayId}/payer-accounts`,
+    headers: headers([PERMISSIONS.TRANSACTION_READ]),
+  });
+  expect(read.statusCode).toBe(200);
+  expect(repository.list).toHaveBeenCalledWith(hotelId, stayId);
+
+  const created = await app.inject({
+    method: "POST",
+    url: `/admin/stays/${stayId}/payer-accounts`,
+    headers: headers([PERMISSIONS.TRANSACTION_READ]),
+    payload: { kind: "companion", customer_id: entityId },
+  });
+  expect(created.statusCode).toBe(403);
+  expect(repository.create).not.toHaveBeenCalled();
+});
+
 it("exige permissão de aprovação para decidir crédito", async () => {
   const { app, repository } = await setup();
   const payload = {

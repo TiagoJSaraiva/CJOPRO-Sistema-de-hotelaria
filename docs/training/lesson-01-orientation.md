@@ -65,12 +65,12 @@ e continua lido por você. Assuma novamente para manter o resultado da missão.
 ### Ao explorar outras telas
 
 O Histórico de consumo mostra duas águas minerais, R$ 16,00, para o quarto 102.
-Esse lançamento sintético foi importado sem classificação de cobrança para a
-lição 6: **Migrado/Legacy** descreve sua origem, **Cobrança não classificada**
+Esse lançamento sintético foi importado sem classificação de cobrança e fica só
+para consulta: **Migrado/Legacy** descreve sua origem, **Cobrança não classificada**
 indica que nenhum pagador foi definido, **Operador Sistema** indica que não houve
 lançamento manual e **Ponto não informado** é um dado ausente do registro antigo.
-Ele não representa dívida e não soma R$ 16,00 ao saldo de R$ 380,00. Classificar
-e lançar novos consumos são tarefas da [lição 6](lesson-06-consumption-account.md).
+Ele não representa dívida e não soma R$ 16,00 ao saldo de R$ 380,00. Lançar novos
+consumos é tarefa da [lição 6](lesson-06-consumption-account.md).
 
 Em **Clientes → Relacionamento**, selecione um hóspede para consultar o número de
 reservas e estadias e as preferências que ele declarou. Categoria organiza o

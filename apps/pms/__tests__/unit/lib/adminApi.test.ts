@@ -14,6 +14,8 @@ import {
   getUsersReferenceData,
   listHotels,
   getConsumptionOperationalContext,
+  getConsumptionOrder,
+  listConsumptionOrders,
 } from "../../../src/lib/adminApi";
 
 function mockSessionToken(token: string | null, activeHotelId?: string | null) {
@@ -36,6 +38,35 @@ describe("lib/adminApi", () => {
   beforeEach(() => {
     vi.clearAllMocks();
     vi.unstubAllGlobals();
+  });
+
+  describe("histórico de consumo não esconde falhas", () => {
+    function backendAnswers(status: number) {
+      mockSessionToken("token");
+      vi.stubGlobal(
+        "fetch",
+        vi
+          .fn()
+          .mockResolvedValue(
+            new Response(JSON.stringify({ message: "Falha" }), { status }),
+          ),
+      );
+    }
+
+    it("listConsumptionOrders propaga o erro do backend", async () => {
+      backendAnswers(400);
+      await expect(listConsumptionOrders({ from: "x" })).rejects.toThrow();
+    });
+
+    it("getConsumptionOrder trata 404 como comanda inexistente", async () => {
+      backendAnswers(404);
+      await expect(getConsumptionOrder("id")).resolves.toBeNull();
+    });
+
+    it("getConsumptionOrder propaga as demais falhas", async () => {
+      backendAnswers(500);
+      await expect(getConsumptionOrder("id")).rejects.toThrow();
+    });
   });
 
   it("listHotels retorna lista vazia quando sessao nao existe", async () => {

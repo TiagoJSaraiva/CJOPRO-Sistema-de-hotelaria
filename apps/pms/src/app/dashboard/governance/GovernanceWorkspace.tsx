@@ -1,5 +1,6 @@
 "use client";
 
+import { HotelInstant } from "../_components/HotelTimeZone";
 import { useRef, useState } from "react";
 import Link from "next/link";
 import type {
@@ -444,13 +445,17 @@ export function GovernanceWorkspace({
                       : "Normal"}
                 </strong>
                 <p>
-                  {cycle.next_arrival_at
-                    ? `Próxima chegada: ${new Date(cycle.next_arrival_at).toLocaleString("pt-BR")}`
-                    : "Sem próxima chegada"}
+                  {cycle.next_arrival_at ? (
+                    <>
+                      Próxima chegada:{" "}
+                      <HotelInstant value={cycle.next_arrival_at} />
+                    </>
+                  ) : (
+                    "Sem próxima chegada"
+                  )}
                 </p>
                 <p>
-                  Atualizado em{" "}
-                  {new Date(cycle.last_updated_at).toLocaleString("pt-BR")}
+                  Atualizado em <HotelInstant value={cycle.last_updated_at} />
                 </p>
               </div>
             </div>
@@ -914,8 +919,7 @@ export function GovernanceWorkspace({
                           </strong>
                           <span>
                             {" "}
-                            ·{" "}
-                            {new Date(event.created_at).toLocaleString("pt-BR")}
+                            · <HotelInstant value={event.created_at} />
                           </span>
                           {event.actor_name ? (
                             <span> · {event.actor_name}</span>

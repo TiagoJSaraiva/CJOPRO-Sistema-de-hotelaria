@@ -1,4 +1,5 @@
 import {
+  PartnerSettlementSchema,
   API_COMPONENT_SCHEMAS,
   API_ROUTE_CONTRACTS,
   ConsumptionContextOfferSchema,
@@ -377,5 +378,80 @@ describe("serializadores do contrato da API", () => {
     const schema = ConsumptionOfferSchema.properties.resolved_policy;
 
     expect(await serialize(schema, policy)).toEqual(policy);
+  });
+});
+
+describe("apuração de parceiro", () => {
+  it("entrega à tela os estados e as contestações", async () => {
+    const id = "10000000-0000-4000-8000-000000000001";
+    const at = "2026-05-12T15:30:00.000Z";
+    const settlement = {
+      id,
+      hotel_id: id,
+      partner: {
+        id,
+        trade_name: "Parceiro",
+        is_active: true,
+        archived_at: null,
+      },
+      period_start: "2026-04-01",
+      period_end: "2026-04-30",
+      currency: "BRL",
+      status: "approved",
+      approval_state: "approved",
+      payment_state: "partially_settled",
+      dispute_state: "disputed",
+      direction: "hotel_to_partner",
+      version: 3,
+      gross_sales: 0,
+      discount_total: 0,
+      courtesy_total: 0,
+      reversal_total: 0,
+      operational_net: 0,
+      hotel_collected: 0,
+      partner_direct: 0,
+      rent_total: 0,
+      commission_total: 0,
+      minimum_guarantee_topup: 0,
+      contribution_total: 0,
+      net_settlement: 160,
+      due_on: "2026-05-05",
+      prepared_by: null,
+      prepared_at: null,
+      submitted_by: null,
+      submitted_at: null,
+      approved_by: null,
+      approved_at: null,
+      settled_by: null,
+      settled_at: null,
+      statement_snapshot: null,
+      components: [],
+      sources: [],
+      payments: [],
+      events: [],
+      disputes: [
+        {
+          id,
+          component_id: id,
+          disputed_amount: 10,
+          status: "open",
+          reason: "Nota não confere",
+          version: 1,
+          opened_by: id,
+          responsible_id: null,
+          created_at: at,
+        },
+      ],
+      created_at: at,
+      updated_at: at,
+    };
+    const body = (await serialize(
+      PartnerSettlementSchema,
+      settlement,
+    )) as typeof settlement;
+    expect(body.payment_state).toBe("partially_settled");
+    expect(body.dispute_state).toBe("disputed");
+    expect(body.approval_state).toBe("approved");
+    expect(body.disputes).toEqual(settlement.disputes);
   });
 });

@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useTransition } from "react";
+import { formatHotelInstant } from "@hotel/shared";
 import type {
   AdminConsumptionEligibleStay,
   AdminConsumptionOperationalContext,
@@ -31,6 +32,7 @@ const labels: Record<ConsumptionServiceStatus, string> = {
 };
 
 export function ConsumptionServiceWorkspace({
+  timeZone,
   items,
   stays,
   context,
@@ -38,6 +40,7 @@ export function ConsumptionServiceWorkspace({
   canManage,
   canCancel,
 }: {
+  timeZone: string;
   items: Order[];
   stays: AdminConsumptionEligibleStay[];
   context: AdminConsumptionOperationalContext | null;
@@ -220,8 +223,7 @@ export function ConsumptionServiceWorkspace({
                 </p>
                 {order.expected_at ? (
                   <p className="text-sm">
-                    Previsão:{" "}
-                    {new Date(order.expected_at).toLocaleString("pt-BR")}
+                    Previsão: {formatHotelInstant(order.expected_at, timeZone)}
                   </p>
                 ) : null}
                 <div className="flex flex-wrap gap-2">

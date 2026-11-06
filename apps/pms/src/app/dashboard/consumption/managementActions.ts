@@ -91,7 +91,7 @@ export async function decideSettlementDisputeAction(formData: FormData) {
   const settlementId = String(formData.get("settlement_id") || "");
   try {
     await requestOperationsFinanceEndpoint(
-      `consumption/partner-disputes/${String(formData.get("id"))}/actions`,
+      `consumption/partner-disputes/${String(formData.get("record_id"))}/actions`,
       "POST",
       {
         action: String(formData.get("action")),
@@ -185,8 +185,11 @@ export async function submitSettlementAction(formData: FormData) {
 
 export async function decideSettlementAction(formData: FormData) {
   await requirePermission(PERMISSIONS.PARTNER_SETTLEMENTS_APPROVE);
-  const id = String(formData.get("id") || "");
-  const decision = formData.get("decision") === "reject" ? "reject" : "approve";
+  const id = String(formData.get("record_id") || "");
+  const decision = formData.get("decision");
+  // Sem a intenção declarada pelo botão, nada é aprovado por omissão.
+  if (decision !== "approve" && decision !== "reject")
+    return returnTo("invalid_decision", id);
   try {
     await decidePartnerSettlement(id, {
       expected_version: Number(formData.get("expected_version")),

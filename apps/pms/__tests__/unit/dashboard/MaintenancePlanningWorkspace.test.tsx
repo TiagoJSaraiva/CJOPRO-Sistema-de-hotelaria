@@ -6,8 +6,9 @@ import {
   screen,
   waitFor,
 } from "@testing-library/react";
-import { afterEach, expect, it, vi } from "vitest";
+import { afterEach, describe, expect, it, vi } from "vitest";
 import type { MaintenancePlanningBoard } from "@hotel/shared";
+import { HotelTimeZoneProvider } from "../../../src/app/dashboard/_components/HotelTimeZone";
 import { MaintenancePlanningWorkspace } from "../../../src/app/dashboard/maintenance/_components/MaintenancePlanningWorkspace";
 
 const board: MaintenancePlanningBoard = {
@@ -159,6 +160,123 @@ it("o reagendamento envia a data pedida como instante, aceito pelo contrato", as
   ];
   expect(url).toContain("reschedule-requests");
   expect(JSON.parse(String(init.body)).requested_start).toBe(
-    new Date("2026-09-10T09:30").toISOString(),
+    "2026-09-10T12:30:00.000Z",
   );
+});
+
+describe("agenda na hora do hotel", () => {
+  const scheduled = (
+    id: string,
+    planned_start: string,
+    planned_end: string,
+  ) => ({
+    id,
+    work_order_id: "20000000-0000-4000-8000-000000000010",
+    occurrence_id: "30000000-0000-4000-8000-000000000010",
+    occurrence_code: id,
+    title: "Revisar quadro",
+    room_number: "101",
+    team_id: null,
+    team_name: null,
+    technician_id: "80000000-0000-4000-8000-000000000002",
+    technician_name: "Técnico",
+    planned_start,
+    planned_end,
+    estimated_minutes: 60,
+    status: "scheduled" as const,
+    access_kind: "free" as const,
+    access_notes: null,
+    version: 1,
+    impact_score: 80,
+    recommended_priority: "high" as const,
+    next_arrival_at: null,
+  });
+  const access = {
+    canExecute: true,
+    canManageTeams: false,
+    canManageSchedule: false,
+    canOverrideSchedule: false,
+  };
+
+  function renderInTokyo(initial: MaintenancePlanningBoard) {
+    render(
+      <HotelTimeZoneProvider timeZone="Asia/Tokyo">
+        <MaintenancePlanningWorkspace
+          initial={initial}
+          viewerId="80000000-0000-4000-8000-000000000002"
+          access={access}
+        />
+      </HotelTimeZoneProvider>,
+    );
+  }
+
+  it("a visão Dia usa o dia do hotel, não o dia em UTC", () => {
+    renderInTokyo({
+      ...board,
+      // 05:00 do dia 10 em Tóquio; em UTC ainda é dia 9.
+      generated_at: "2026-09-09T20:00:00Z",
+      schedules: [
+        // 01:00 do dia 10 em Tóquio: é hoje no hotel, embora em UTC seja dia 9.
+        scheduled(
+          "HOJE-NO-HOTEL",
+          "2026-09-09T16:00:00Z",
+          "2026-09-09T17:00:00Z",
+        ),
+        // 14:00 do dia 9 em Tóquio: já passou, embora em UTC também seja dia 9.
+        scheduled(
+          "ONTEM-NO-HOTEL",
+          "2026-09-09T05:00:00Z",
+          "2026-09-09T06:00:00Z",
+        ),
+      ],
+    });
+    fireEvent.click(screen.getByRole("button", { name: "Dia" }));
+    expect(screen.getByText(/HOJE-NO-HOTEL/)).toBeTruthy();
+    expect(screen.queryByText(/ONTEM-NO-HOTEL/)).toBeNull();
+  });
+
+  it("mostra o agendamento na hora do hotel", () => {
+    renderInTokyo({
+      ...board,
+      schedules: [
+        scheduled("MAN-1", "2026-09-09T16:00:00Z", "2026-09-09T17:30:00Z"),
+      ],
+    });
+    expect(screen.getByText(/10\/09\/2026, 01:00:00–02:30/)).toBeTruthy();
+  });
+
+  it("o reagendamento grava a hora digitada no fuso do hotel", async () => {
+    const fetchMock = vi.fn(
+      async () => new Response(JSON.stringify(board), { status: 200 }),
+    );
+    vi.stubGlobal("fetch", fetchMock);
+    renderInTokyo({
+      ...board,
+      schedules: [
+        scheduled("MAN-1", "2026-09-09T13:00:00Z", "2026-09-09T14:00:00Z"),
+      ],
+    });
+    const form = screen
+      .getByRole("button", { name: "Solicitar reagendamento" })
+      .closest("form") as HTMLFormElement;
+    fireEvent.change(
+      form.querySelector('input[name="requested_start"]') as HTMLInputElement,
+      { target: { value: "2026-09-10T09:30" } },
+    );
+    fireEvent.change(
+      form.querySelector('[name="reason"]') as HTMLInputElement,
+      {
+        target: { value: "Hóspede pediu outro horário" },
+      },
+    );
+    fireEvent.submit(form);
+    await waitFor(() => expect(fetchMock).toHaveBeenCalled());
+    const [, init] = fetchMock.mock.calls[0] as unknown as [
+      string,
+      RequestInit,
+    ];
+    expect(JSON.parse(String(init.body)).requested_start).toBe(
+      "2026-09-10T00:30:00.000Z",
+    );
+  });
 });

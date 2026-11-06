@@ -1,6 +1,7 @@
 import { describe, expect, it } from "vitest";
 import {
   hotelLocalInputToInstant,
+  formatHotelInstant,
   instantToHotelDate,
   instantToHotelLocalInput,
 } from "../../src/hotelTime";
@@ -126,5 +127,43 @@ describe("instantToHotelDate", () => {
     expect(instantToHotelDate(null, SAO_PAULO)).toBe("");
     expect(instantToHotelDate("inválido", SAO_PAULO)).toBe("");
     expect(instantToHotelDate("2026-11-05T01:30:00Z", "Marte/Base")).toBe("");
+  });
+});
+
+describe("formatHotelInstant", () => {
+  it("formata o instante na hora do hotel", () => {
+    expect(formatHotelInstant("2026-05-12T15:30:00.000Z", "Asia/Tokyo")).toBe(
+      "13/05/2026, 00:30:00",
+    );
+    expect(
+      formatHotelInstant("2026-05-12T15:30:00.000Z", "America/Sao_Paulo"),
+    ).toBe("12/05/2026, 12:30:00");
+  });
+
+  it("não inventa data para valor ausente, inválido ou fuso desconhecido", () => {
+    expect(formatHotelInstant(null, "Asia/Tokyo")).toBe("—");
+    expect(formatHotelInstant("não é data", "Asia/Tokyo")).toBe("—");
+    expect(
+      formatHotelInstant("2026-05-12T15:30:00.000Z", "Fuso/Inexistente"),
+    ).toBe("—");
+  });
+});
+
+describe("formatHotelInstant com formato parcial", () => {
+  it("mantém o fuso do hotel mesmo com opções de formato", () => {
+    expect(
+      formatHotelInstant("2026-05-12T15:30:00.000Z", "Asia/Tokyo", {
+        day: "2-digit",
+        month: "2-digit",
+        year: "numeric",
+      }),
+    ).toBe("13/05/2026");
+    expect(
+      formatHotelInstant("2026-05-12T15:30:00.000Z", "Asia/Tokyo", {
+        timeZone: "UTC",
+        hour: "2-digit",
+        minute: "2-digit",
+      }),
+    ).toBe("00:30");
   });
 });

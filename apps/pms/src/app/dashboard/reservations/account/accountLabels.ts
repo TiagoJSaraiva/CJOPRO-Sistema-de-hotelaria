@@ -81,6 +81,12 @@ export function paymentMethodLabel(method: ConsumptionPaymentMethod): string {
   return PAYMENT_METHOD_LABELS[method];
 }
 
+export function effectiveStatusLabel(
+  status: StayAccountOrder["effective_status"],
+): string {
+  return ORDER_STATUS_LABELS[status || "active"];
+}
+
 /** Comanda em vigor mostra como foi cobrada; as demais, sua situação. */
 export function orderSituationLabel(order: StayAccountOrder): string {
   const status = order.effective_status;
@@ -116,8 +122,4 @@ export function accountActionMessage(status: string | undefined) {
   return status && Object.hasOwn(ACTION_MESSAGES, status)
     ? ACTION_MESSAGES[status]
     : null;
-}
-
-export function formatAccountInstant(value: string, timeZone: string): string {
-  return new Date(value).toLocaleString("pt-BR", { timeZone });
 }

@@ -257,6 +257,13 @@ export const stayAccountGuide: UsageGuideDefinition = {
   title: "Conta e extrato da estadia",
   steps: [
     {
+      id: "readonly",
+      target: "stay-account-readonly",
+      title: "Confira sem alterar",
+      description:
+        "O financeiro consulta a conta para validar o saldo. Se algo estiver errado, peça a correção a quem registra pagamentos e estornos na recepção.",
+    },
+    {
       id: "summary",
       target: "stay-account-summary",
       title: "Confira a posição da conta",

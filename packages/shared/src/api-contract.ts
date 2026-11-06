@@ -2065,6 +2065,25 @@ export const PartnerSettlementEventSchema = Type.Object(
   },
   { ...strict, $id: "PartnerSettlementEvent" },
 );
+export const PartnerSettlementDisputeSchema = Type.Object(
+  {
+    id: uuid(),
+    component_id: uuid(),
+    disputed_amount: Type.Number(),
+    status: Type.Union([
+      Type.Literal("open"),
+      Type.Literal("accepted"),
+      Type.Literal("rejected"),
+      Type.Literal("canceled"),
+    ]),
+    reason: Type.String(),
+    version: Type.Integer(),
+    opened_by: uuid(),
+    responsible_id: nullable(uuid()),
+    created_at: dateTime(),
+  },
+  { ...strict, $id: "PartnerSettlementDispute" },
+);
 export const PartnerSettlementSchema = Type.Object(
   {
     id: uuid(),
@@ -2074,6 +2093,22 @@ export const PartnerSettlementSchema = Type.Object(
     period_end: date(),
     currency: Type.String(),
     status: PartnerSettlementStatusSchema,
+    approval_state: Type.Union([
+      Type.Literal("draft"),
+      Type.Literal("in_review"),
+      Type.Literal("approved"),
+      Type.Literal("rejected"),
+    ]),
+    payment_state: Type.Union([
+      Type.Literal("open"),
+      Type.Literal("partially_settled"),
+      Type.Literal("settled"),
+    ]),
+    dispute_state: Type.Union([
+      Type.Literal("clear"),
+      Type.Literal("disputed"),
+      Type.Literal("resolved"),
+    ]),
     direction: PartnerSettlementDirectionSchema,
     version: Type.Integer(),
     gross_sales: Type.Number(),
@@ -2102,6 +2137,7 @@ export const PartnerSettlementSchema = Type.Object(
     sources: Type.Array(PartnerSettlementSourceSchema),
     payments: Type.Array(PartnerSettlementPaymentSchema),
     events: Type.Array(PartnerSettlementEventSchema),
+    disputes: Type.Array(PartnerSettlementDisputeSchema),
     created_at: dateTime(),
     updated_at: dateTime(),
   },
@@ -4154,7 +4190,33 @@ const AuthHeadersSchema = Type.Object(
   { additionalProperties: true },
 );
 const IdParamsSchema = Type.Object({ id: uuid() }, strict);
-const OkSchema = Type.Object({ ok: Type.Boolean() }, strict);
+const OkSchema = Type.Object(
+  {
+    ok: Type.Boolean(),
+    result: Type.Optional(Type.String()),
+    id: Type.Optional(Type.String()),
+  },
+  strict,
+);
+const CashSessionActionResultSchema = Type.Object(
+  {
+    ok: Type.Boolean(),
+    result: Type.Optional(Type.String()),
+    id: Type.Optional(Type.String()),
+    difference: Type.Optional(nullable(Type.Number())),
+    expected_cash: Type.Optional(nullable(Type.Number())),
+  },
+  strict,
+);
+const DailyClosePrepareResultSchema = Type.Object(
+  {
+    ok: Type.Boolean(),
+    result: Type.Optional(Type.String()),
+    id: Type.Optional(Type.String()),
+    fingerprint: Type.Optional(Type.String()),
+  },
+  strict,
+);
 const ReservationGuaranteeResultSchema = Type.Object(
   {
     ok: Type.Boolean(),
@@ -7018,7 +7080,7 @@ export const API_ROUTE_CONTRACTS: Readonly<Record<string, ApiRouteContract>> = {
     "actCashSession",
     "Cash",
     "Conta, aprova, transfere ou cancela uma sessão.",
-    OkSchema,
+    CashSessionActionResultSchema,
     { params: IdParamsSchema, body: CashSessionActionSchema },
   ),
   "POST /admin/cash-sessions/:id/movements": admin(
@@ -7039,7 +7101,7 @@ export const API_ROUTE_CONTRACTS: Readonly<Record<string, ApiRouteContract>> = {
     "prepareDailyClose",
     "Daily close",
     "Prepara snapshot e fingerprint do fechamento.",
-    OkSchema,
+    DailyClosePrepareResultSchema,
     {
       params: Type.Object({ businessDate: date() }, strict),
       body: DailyClosePrepareSchema,

@@ -1,4 +1,8 @@
 "use client";
+import {
+  HotelInstant,
+  useHotelInputInstant,
+} from "../../_components/HotelTimeZone";
 import { useState } from "react";
 import type {
   AdminMaintenanceOccurrenceSummary,
@@ -41,6 +45,7 @@ export function MaintenanceDecisionDialog({
   submit: (path: string, body: Record<string, unknown>) => Promise<boolean>;
   close: () => void;
 }) {
+  const readInstant = useHotelInputInstant();
   const [pending, setPending] = useState(false);
   const [error, setError] = useState("");
   const [items, setItems] = useState<AdminMaintenanceOccurrenceSummary[]>([]);
@@ -197,7 +202,14 @@ export function MaintenanceDecisionDialog({
                   {item.code} · {item.description} ·{" "}
                   {item.room_number || item.location_name} ·{" "}
                   {occurrenceLabels[item.status]} ·{" "}
-                  {new Date(item.created_at).toLocaleDateString("pt-BR")}{" "}
+                  <HotelInstant
+                    value={item.created_at}
+                    options={{
+                      day: "2-digit",
+                      month: "2-digit",
+                      year: "numeric",
+                    }}
+                  />{" "}
                   <a
                     href={`/dashboard/maintenance/occurrences/${item.id}`}
                     target="_blank"
@@ -237,10 +249,16 @@ export function MaintenanceDecisionDialog({
             data.forEach((value, key) => {
               body[key] = String(value).trim();
             });
-            if (body.next_follow_up_at)
-              body.next_follow_up_at = new Date(
-                String(body.next_follow_up_at),
-              ).toISOString();
+            if (body.next_follow_up_at) {
+              try {
+                body.next_follow_up_at = readInstant(
+                  String(body.next_follow_up_at),
+                );
+              } catch (failure) {
+                setError((failure as Error).message);
+                return;
+              }
+            }
             const minimum =
               decision.field === "reason" || decision.path.endsWith("/inspect")
                 ? 3

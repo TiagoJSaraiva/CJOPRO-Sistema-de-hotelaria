@@ -1,4 +1,5 @@
 "use client";
+import { HotelInstant } from "../_components/HotelTimeZone";
 import { useEffect, useRef, useState, useTransition } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
@@ -294,9 +295,11 @@ export function PendingWorkspace({
       <section className="pms-surface-card" data-usage-guide="pending-sync">
         <p>
           Última atualização:{" "}
-          {data.sync.last_success_at
-            ? new Date(data.sync.last_success_at).toLocaleString("pt-BR")
-            : "Ainda não executada"}
+          {data.sync.last_success_at ? (
+            <HotelInstant value={data.sync.last_success_at} />
+          ) : (
+            "Ainda não executada"
+          )}
         </p>
         {data.sync.error_message && (
           <p role="alert">{data.sync.error_message}</p>

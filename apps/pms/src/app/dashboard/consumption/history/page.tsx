@@ -1,3 +1,4 @@
+import { formatHotelInstant, hotelLocalInputToInstant } from "@hotel/shared";
 import { DashboardAccessDeniedCard } from "../../_components/DashboardAccessDeniedCard";
 import { DashboardEntityPageShell } from "../../_components/DashboardEntityPageShell";
 import {
@@ -7,9 +8,11 @@ import {
   listInventoryLocations,
   listConsumptionEligibleStays,
   getConsumptionOperationalContext,
+  getHotelClock,
   getStayPayerAccounts,
 } from "../../../../lib/adminApi";
 import { getUserFromSession } from "../../../../lib/auth";
+import { effectiveStatusLabel } from "../../reservations/account/accountLabels";
 import { getConsumptionAccess } from "../access";
 import { billingModeLabel } from "../_components/BillingModeFields";
 import { consumptionHistoryGuide } from "../usageGuides";
@@ -22,6 +25,16 @@ function money(value: number, currency: string) {
     value,
   );
 }
+
+const LIST_FILTERS = [
+  "search",
+  "from",
+  "to",
+  "point_id",
+  "billing_mode",
+  "disposition",
+  "provider_type",
+] as const;
 
 export default async function ConsumptionHistoryPage({
   searchParams,
@@ -37,19 +50,57 @@ export default async function ConsumptionHistoryPage({
         message="Sem permissão para consultar comandas."
       />
     );
+  const clock = await getHotelClock().catch(() => null);
+  if (!clock)
+    return (
+      <section className="pms-surface-card" role="alert">
+        <h2 className="mt-0">Histórico de consumo</h2>
+        <p>Não foi possível carregar o histórico. Tente novamente.</p>
+        <a
+          className="pms-button-secondary inline-flex"
+          href="/dashboard/consumption/history"
+        >
+          Tentar novamente
+        </a>
+      </section>
+    );
+  const timeZone = clock.timezone;
+  // Os campos são digitados na hora do hotel; o contrato só aceita instantes.
+  const from = params.from
+    ? hotelLocalInputToInstant(params.from, timeZone)
+    : null;
+  const to = params.to ? hotelLocalInputToInstant(params.to, timeZone) : null;
+  const invalidPeriod = Boolean((params.from && !from) || (params.to && !to));
+  const historyHref = (extra: Record<string, string | undefined> = {}) => {
+    const query = new URLSearchParams();
+    for (const key of LIST_FILTERS) {
+      const value = params[key];
+      if (value) query.set(key, value);
+    }
+    for (const [key, value] of Object.entries(extra)) {
+      if (value) query.set(key, value);
+    }
+    return `/dashboard/consumption/history${query.size ? `?${query}` : ""}`;
+  };
+  let selectedFailed = false;
   const [history, points, selected, inventoryLocations] = await Promise.all([
     listConsumptionOrders({
       search: params.search,
-      from: params.from,
-      to: params.to,
+      from: from ?? undefined,
+      to: to ?? undefined,
       point_id: params.point_id,
       billing_mode: params.billing_mode,
       disposition: params.disposition,
       provider_type: params.provider_type,
       cursor: params.cursor,
-    }),
+    }).catch(() => null),
     listConsumptionPoints(false),
-    params.id ? getConsumptionOrder(params.id) : Promise.resolve(null),
+    params.id
+      ? getConsumptionOrder(params.id).catch(() => {
+          selectedFailed = true;
+          return null;
+        })
+      : Promise.resolve(null),
     listInventoryLocations().catch(() => []),
   ]);
   const transferStays = access.canTransferConsumption
@@ -159,6 +210,18 @@ export default async function ConsumptionHistoryPage({
           </button>
         </form>
 
+        {invalidPeriod ? (
+          <p className="pms-status-error" role="alert">
+            Confira o período informado: essa data não existe, e o filtro não
+            foi aplicado.
+          </p>
+        ) : null}
+        {selectedFailed ? (
+          <p className="pms-status-error" role="alert">
+            Não foi possível abrir esta comanda. Tente novamente.
+          </p>
+        ) : null}
+
         {selected ? (
           <section
             className="pms-surface-card grid gap-4"
@@ -176,7 +239,7 @@ export default async function ConsumptionHistoryPage({
               </div>
               <a
                 className="pms-button-secondary"
-                href="/dashboard/consumption/history"
+                href={historyHref({ cursor: params.cursor })}
               >
                 Fechar ficha
               </a>
@@ -213,16 +276,15 @@ export default async function ConsumptionHistoryPage({
               <div>
                 <dt className="text-sm text-slate-600">Horários</dt>
                 <dd className="m-0 text-sm">
-                  Consumido{" "}
-                  {new Date(selected.occurred_at).toLocaleString("pt-BR")}
+                  Consumido {formatHotelInstant(selected.occurred_at, timeZone)}
                   <br />
-                  Lançado {new Date(selected.posted_at).toLocaleString("pt-BR")}
+                  Lançado {formatHotelInstant(selected.posted_at, timeZone)}
                 </dd>
               </div>
               <div>
                 <dt className="text-sm text-slate-600">Situação efetiva</dt>
                 <dd className="m-0 font-semibold">
-                  {selected.effective_status || "active"}
+                  {effectiveStatusLabel(selected.effective_status)}
                 </dd>
               </div>
             </dl>
@@ -546,76 +608,94 @@ export default async function ConsumptionHistoryPage({
           </section>
         ) : null}
 
-        <section
-          className="pms-surface-card overflow-x-auto"
-          data-usage-guide="consumption-history-list"
-        >
-          <table className="w-full min-w-[760px] border-collapse text-left">
-            <thead>
-              <tr className="border-b border-slate-200">
-                <th className="p-2">Quando</th>
-                <th className="p-2">Estadia</th>
-                <th className="p-2">Ponto</th>
-                <th className="p-2">Cobrança</th>
-                <th className="p-2">Total</th>
-                <th className="p-2">Operador</th>
-                <th className="p-2">
-                  <span className="sr-only">Ações</span>
-                </th>
-              </tr>
-            </thead>
-            <tbody>
-              {history.items.map((order) => (
-                <tr className="border-b border-slate-100" key={order.id}>
-                  <td className="p-2">
-                    {new Date(order.occurred_at).toLocaleString("pt-BR")}
-                  </td>
-                  <td className="p-2">
-                    {order.room_number
-                      ? `Quarto ${order.room_number}`
-                      : "Legado"}
-                    <br />
-                    <span className="text-sm text-slate-500">
-                      {order.reservation_code}
-                    </span>
-                  </td>
-                  <td className="p-2">{order.point_name || "—"}</td>
-                  <td className="p-2">
-                    {order.is_legacy
-                      ? "Migrado sem forma de cobrança"
-                      : order.disposition === "courtesy"
-                        ? "Cortesia"
-                        : order.billing_mode
-                          ? billingModeLabel(order.billing_mode)
-                          : "—"}
-                  </td>
-                  <td className="p-2 font-semibold">
-                    {money(
-                      order.effective_net_amount ?? order.net_amount,
-                      order.currency,
-                    )}
-                  </td>
-                  <td className="p-2">{order.operator_name || "Sistema"}</td>
-                  <td className="p-2">
-                    <a
-                      className="pms-button-secondary"
-                      href={`/dashboard/consumption/history?id=${order.id}`}
-                    >
-                      Ver recibo
-                    </a>
-                  </td>
+        {history ? null : (
+          <section className="pms-surface-card" role="alert">
+            <p className="m-0">
+              Não foi possível carregar o histórico. Tente novamente.
+            </p>
+            <a
+              className="pms-button-secondary mt-3 inline-flex"
+              href={historyHref()}
+            >
+              Tentar novamente
+            </a>
+          </section>
+        )}
+        {history ? (
+          <section
+            className="pms-surface-card overflow-x-auto"
+            data-usage-guide="consumption-history-list"
+          >
+            <table className="w-full min-w-[760px] border-collapse text-left">
+              <thead>
+                <tr className="border-b border-slate-200">
+                  <th className="p-2">Quando</th>
+                  <th className="p-2">Estadia</th>
+                  <th className="p-2">Ponto</th>
+                  <th className="p-2">Cobrança</th>
+                  <th className="p-2">Total</th>
+                  <th className="p-2">Operador</th>
+                  <th className="p-2">
+                    <span className="sr-only">Ações</span>
+                  </th>
                 </tr>
-              ))}
-            </tbody>
-          </table>
-          {history.items.length === 0 ? (
-            <p>Nenhuma comanda encontrada.</p>
-          ) : null}
-        </section>
-        {history.next_cursor ? (
+              </thead>
+              <tbody>
+                {history.items.map((order) => (
+                  <tr className="border-b border-slate-100" key={order.id}>
+                    <td className="p-2">
+                      {formatHotelInstant(order.occurred_at, timeZone)}
+                    </td>
+                    <td className="p-2">
+                      {order.room_number
+                        ? `Quarto ${order.room_number}`
+                        : "Legado"}
+                      <br />
+                      <span className="text-sm text-slate-500">
+                        {order.reservation_code}
+                      </span>
+                    </td>
+                    <td className="p-2">{order.point_name || "—"}</td>
+                    <td className="p-2">
+                      {order.is_legacy
+                        ? "Migrado sem forma de cobrança"
+                        : order.disposition === "courtesy"
+                          ? "Cortesia"
+                          : order.billing_mode
+                            ? billingModeLabel(order.billing_mode)
+                            : "—"}
+                    </td>
+                    <td className="p-2 font-semibold">
+                      {money(
+                        order.effective_net_amount ?? order.net_amount,
+                        order.currency,
+                      )}
+                    </td>
+                    <td className="p-2">{order.operator_name || "Sistema"}</td>
+                    <td className="p-2">
+                      <a
+                        className="pms-button-secondary"
+                        href={historyHref({
+                          cursor: params.cursor,
+                          id: order.id,
+                        })}
+                      >
+                        Ver recibo
+                      </a>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+            {history.items.length === 0 ? (
+              <p>Nenhuma comanda encontrada.</p>
+            ) : null}
+          </section>
+        ) : null}
+        {history?.next_cursor ? (
           <a
             className="pms-button-secondary w-fit"
-            href={`/dashboard/consumption/history?cursor=${encodeURIComponent(history.next_cursor)}`}
+            href={historyHref({ cursor: history.next_cursor })}
           >
             Próxima página
           </a>

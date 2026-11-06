@@ -10,6 +10,7 @@ Use este índice para localizar a fonte de verdade adequada à tarefa.
 | entender componentes e fluxos                | [Arquitetura](architecture.md)                             |
 | escolher testes e interpretar relatórios     | [Estratégia de testes](testing-strategy.md)                |
 | consultar defeitos em depuração              | [Registro de bugs](qa/bug-ledger.md)                       |
+| consultar regras do domínio financeiro       | [Regras financeiras](qa/rules-finance.md)                  |
 | alterar migrations, seed ou tipos Supabase   | [Workflow do banco](database-workflow.md)                  |
 | revisar snapshots ou acessibilidade          | [Qualidade de UI](ui-quality.md)                           |
 | planejar orientação de uma nova feature      | [Guias de uso no PMS](usage-guides.md)                     |

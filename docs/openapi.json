@@ -25316,8 +25316,14 @@
                 "schema": {
                   "additionalProperties": false,
                   "properties": {
+                    "id": {
+                      "type": "string"
+                    },
                     "ok": {
                       "type": "boolean"
+                    },
+                    "result": {
+                      "type": "string"
                     }
                   },
                   "required": [
@@ -25599,8 +25605,14 @@
                 "schema": {
                   "additionalProperties": false,
                   "properties": {
+                    "id": {
+                      "type": "string"
+                    },
                     "ok": {
                       "type": "boolean"
+                    },
+                    "result": {
+                      "type": "string"
                     }
                   },
                   "required": [
@@ -26069,8 +26081,14 @@
                 "schema": {
                   "additionalProperties": false,
                   "properties": {
+                    "id": {
+                      "type": "string"
+                    },
                     "ok": {
                       "type": "boolean"
+                    },
+                    "result": {
+                      "type": "string"
                     }
                   },
                   "required": [
@@ -26341,8 +26359,14 @@
                 "schema": {
                   "additionalProperties": false,
                   "properties": {
+                    "id": {
+                      "type": "string"
+                    },
                     "ok": {
                       "type": "boolean"
+                    },
+                    "result": {
+                      "type": "string"
                     }
                   },
                   "required": [
@@ -27686,8 +27710,14 @@
                 "schema": {
                   "additionalProperties": false,
                   "properties": {
+                    "id": {
+                      "type": "string"
+                    },
                     "ok": {
                       "type": "boolean"
+                    },
+                    "result": {
+                      "type": "string"
                     }
                   },
                   "required": [
@@ -28210,8 +28240,14 @@
                 "schema": {
                   "additionalProperties": false,
                   "properties": {
+                    "id": {
+                      "type": "string"
+                    },
                     "ok": {
                       "type": "boolean"
+                    },
+                    "result": {
+                      "type": "string"
                     }
                   },
                   "required": [
@@ -28533,8 +28569,14 @@
                 "schema": {
                   "additionalProperties": false,
                   "properties": {
+                    "id": {
+                      "type": "string"
+                    },
                     "ok": {
                       "type": "boolean"
+                    },
+                    "result": {
+                      "type": "string"
                     }
                   },
                   "required": [
@@ -29322,8 +29364,14 @@
                 "schema": {
                   "additionalProperties": false,
                   "properties": {
+                    "id": {
+                      "type": "string"
+                    },
                     "ok": {
                       "type": "boolean"
+                    },
+                    "result": {
+                      "type": "string"
                     }
                   },
                   "required": [
@@ -29581,8 +29629,14 @@
                 "schema": {
                   "additionalProperties": false,
                   "properties": {
+                    "id": {
+                      "type": "string"
+                    },
                     "ok": {
                       "type": "boolean"
+                    },
+                    "result": {
+                      "type": "string"
                     }
                   },
                   "required": [
@@ -30114,8 +30168,22 @@
                 "schema": {
                   "additionalProperties": false,
                   "properties": {
+                    "difference": {
+                      "nullable": true,
+                      "type": "number"
+                    },
+                    "expected_cash": {
+                      "nullable": true,
+                      "type": "number"
+                    },
+                    "id": {
+                      "type": "string"
+                    },
                     "ok": {
                       "type": "boolean"
+                    },
+                    "result": {
+                      "type": "string"
                     }
                   },
                   "required": [
@@ -30409,8 +30477,14 @@
                 "schema": {
                   "additionalProperties": false,
                   "properties": {
+                    "id": {
+                      "type": "string"
+                    },
                     "ok": {
                       "type": "boolean"
+                    },
+                    "result": {
+                      "type": "string"
                     }
                   },
                   "required": [
@@ -42816,8 +42890,14 @@
                 "schema": {
                   "additionalProperties": false,
                   "properties": {
+                    "id": {
+                      "type": "string"
+                    },
                     "ok": {
                       "type": "boolean"
+                    },
+                    "result": {
+                      "type": "string"
                     }
                   },
                   "required": [
@@ -43148,8 +43228,14 @@
                 "schema": {
                   "additionalProperties": false,
                   "properties": {
+                    "id": {
+                      "type": "string"
+                    },
                     "ok": {
                       "type": "boolean"
+                    },
+                    "result": {
+                      "type": "string"
                     }
                   },
                   "required": [
@@ -54961,8 +55047,14 @@
                 "schema": {
                   "additionalProperties": false,
                   "properties": {
+                    "id": {
+                      "type": "string"
+                    },
                     "ok": {
                       "type": "boolean"
+                    },
+                    "result": {
+                      "type": "string"
                     }
                   },
                   "required": [
@@ -55265,8 +55357,14 @@
                 "schema": {
                   "additionalProperties": false,
                   "properties": {
+                    "id": {
+                      "type": "string"
+                    },
                     "ok": {
                       "type": "boolean"
+                    },
+                    "result": {
+                      "type": "string"
                     }
                   },
                   "required": [
@@ -59936,8 +60034,14 @@
                 "schema": {
                   "additionalProperties": false,
                   "properties": {
+                    "id": {
+                      "type": "string"
+                    },
                     "ok": {
                       "type": "boolean"
+                    },
+                    "result": {
+                      "type": "string"
                     }
                   },
                   "required": [
@@ -60570,8 +60674,14 @@
                 "schema": {
                   "additionalProperties": false,
                   "properties": {
+                    "id": {
+                      "type": "string"
+                    },
                     "ok": {
                       "type": "boolean"
+                    },
+                    "result": {
+                      "type": "string"
                     }
                   },
                   "required": [
@@ -62441,8 +62551,14 @@
                 "schema": {
                   "additionalProperties": false,
                   "properties": {
+                    "id": {
+                      "type": "string"
+                    },
                     "ok": {
                       "type": "boolean"
+                    },
+                    "result": {
+                      "type": "string"
                     }
                   },
                   "required": [
@@ -62711,8 +62827,14 @@
                 "schema": {
                   "additionalProperties": false,
                   "properties": {
+                    "id": {
+                      "type": "string"
+                    },
                     "ok": {
                       "type": "boolean"
+                    },
+                    "result": {
+                      "type": "string"
                     }
                   },
                   "required": [
@@ -63012,8 +63134,14 @@
                 "schema": {
                   "additionalProperties": false,
                   "properties": {
+                    "id": {
+                      "type": "string"
+                    },
                     "ok": {
                       "type": "boolean"
+                    },
+                    "result": {
+                      "type": "string"
                     }
                   },
                   "required": [
@@ -63532,8 +63660,14 @@
                 "schema": {
                   "additionalProperties": false,
                   "properties": {
+                    "id": {
+                      "type": "string"
+                    },
                     "ok": {
                       "type": "boolean"
+                    },
+                    "result": {
+                      "type": "string"
                     }
                   },
                   "required": [
@@ -63811,8 +63945,14 @@
                 "schema": {
                   "additionalProperties": false,
                   "properties": {
+                    "id": {
+                      "type": "string"
+                    },
                     "ok": {
                       "type": "boolean"
+                    },
+                    "result": {
+                      "type": "string"
                     }
                   },
                   "required": [
@@ -64100,8 +64240,14 @@
                 "schema": {
                   "additionalProperties": false,
                   "properties": {
+                    "id": {
+                      "type": "string"
+                    },
                     "ok": {
                       "type": "boolean"
+                    },
+                    "result": {
+                      "type": "string"
                     }
                   },
                   "required": [
@@ -64388,8 +64534,14 @@
                 "schema": {
                   "additionalProperties": false,
                   "properties": {
+                    "id": {
+                      "type": "string"
+                    },
                     "ok": {
                       "type": "boolean"
+                    },
+                    "result": {
+                      "type": "string"
                     }
                   },
                   "required": [
@@ -65252,8 +65404,14 @@
                 "schema": {
                   "additionalProperties": false,
                   "properties": {
+                    "id": {
+                      "type": "string"
+                    },
                     "ok": {
                       "type": "boolean"
+                    },
+                    "result": {
+                      "type": "string"
                     }
                   },
                   "required": [
@@ -65917,8 +66075,14 @@
                 "schema": {
                   "additionalProperties": false,
                   "properties": {
+                    "id": {
+                      "type": "string"
+                    },
                     "ok": {
                       "type": "boolean"
+                    },
+                    "result": {
+                      "type": "string"
                     }
                   },
                   "required": [
@@ -66652,8 +66816,14 @@
                 "schema": {
                   "additionalProperties": false,
                   "properties": {
+                    "id": {
+                      "type": "string"
+                    },
                     "ok": {
                       "type": "boolean"
+                    },
+                    "result": {
+                      "type": "string"
                     }
                   },
                   "required": [
@@ -66941,8 +67111,17 @@
                 "schema": {
                   "additionalProperties": false,
                   "properties": {
+                    "fingerprint": {
+                      "type": "string"
+                    },
+                    "id": {
+                      "type": "string"
+                    },
                     "ok": {
                       "type": "boolean"
+                    },
+                    "result": {
+                      "type": "string"
                     }
                   },
                   "required": [
@@ -68042,8 +68221,14 @@
                 "schema": {
                   "additionalProperties": false,
                   "properties": {
+                    "id": {
+                      "type": "string"
+                    },
                     "ok": {
                       "type": "boolean"
+                    },
+                    "result": {
+                      "type": "string"
                     }
                   },
                   "required": [
@@ -74723,8 +74908,14 @@
                 "schema": {
                   "additionalProperties": false,
                   "properties": {
+                    "id": {
+                      "type": "string"
+                    },
                     "ok": {
                       "type": "boolean"
+                    },
+                    "result": {
+                      "type": "string"
                     }
                   },
                   "required": [
@@ -79841,8 +80032,14 @@
                 "schema": {
                   "additionalProperties": false,
                   "properties": {
+                    "id": {
+                      "type": "string"
+                    },
                     "ok": {
                       "type": "boolean"
+                    },
+                    "result": {
+                      "type": "string"
                     }
                   },
                   "required": [
@@ -80351,8 +80548,14 @@
                 "schema": {
                   "additionalProperties": false,
                   "properties": {
+                    "id": {
+                      "type": "string"
+                    },
                     "ok": {
                       "type": "boolean"
+                    },
+                    "result": {
+                      "type": "string"
                     }
                   },
                   "required": [
@@ -82821,8 +83024,14 @@
                 "schema": {
                   "additionalProperties": false,
                   "properties": {
+                    "id": {
+                      "type": "string"
+                    },
                     "ok": {
                       "type": "boolean"
+                    },
+                    "result": {
+                      "type": "string"
                     }
                   },
                   "required": [
@@ -87056,8 +87265,14 @@
                 "schema": {
                   "additionalProperties": false,
                   "properties": {
+                    "id": {
+                      "type": "string"
+                    },
                     "ok": {
                       "type": "boolean"
+                    },
+                    "result": {
+                      "type": "string"
                     }
                   },
                   "required": [
@@ -94564,8 +94779,14 @@
                 "schema": {
                   "additionalProperties": false,
                   "properties": {
+                    "id": {
+                      "type": "string"
+                    },
                     "ok": {
                       "type": "boolean"
+                    },
+                    "result": {
+                      "type": "string"
                     }
                   },
                   "required": [
@@ -96708,8 +96929,14 @@
                 "schema": {
                   "additionalProperties": false,
                   "properties": {
+                    "id": {
+                      "type": "string"
+                    },
                     "ok": {
                       "type": "boolean"
+                    },
+                    "result": {
+                      "type": "string"
                     }
                   },
                   "required": [
@@ -102708,8 +102935,14 @@
                 "schema": {
                   "additionalProperties": false,
                   "properties": {
+                    "id": {
+                      "type": "string"
+                    },
                     "ok": {
                       "type": "boolean"
+                    },
+                    "result": {
+                      "type": "string"
                     }
                   },
                   "required": [
@@ -114981,8 +115214,14 @@
                 "schema": {
                   "additionalProperties": false,
                   "properties": {
+                    "id": {
+                      "type": "string"
+                    },
                     "ok": {
                       "type": "boolean"
+                    },
+                    "result": {
+                      "type": "string"
                     }
                   },
                   "required": [
@@ -122484,8 +122723,14 @@
                 "schema": {
                   "additionalProperties": false,
                   "properties": {
+                    "id": {
+                      "type": "string"
+                    },
                     "ok": {
                       "type": "boolean"
+                    },
+                    "result": {
+                      "type": "string"
                     }
                   },
                   "required": [
@@ -129756,8 +130001,14 @@
                 "schema": {
                   "additionalProperties": false,
                   "properties": {
+                    "id": {
+                      "type": "string"
+                    },
                     "ok": {
                       "type": "boolean"
+                    },
+                    "result": {
+                      "type": "string"
                     }
                   },
                   "required": [
@@ -130016,8 +130267,14 @@
                 "schema": {
                   "additionalProperties": false,
                   "properties": {
+                    "id": {
+                      "type": "string"
+                    },
                     "ok": {
                       "type": "boolean"
+                    },
+                    "result": {
+                      "type": "string"
                     }
                   },
                   "required": [
@@ -130870,8 +131127,14 @@
                 "schema": {
                   "additionalProperties": false,
                   "properties": {
+                    "id": {
+                      "type": "string"
+                    },
                     "ok": {
                       "type": "boolean"
+                    },
+                    "result": {
+                      "type": "string"
                     }
                   },
                   "required": [
@@ -136853,8 +137116,14 @@
                 "schema": {
                   "additionalProperties": false,
                   "properties": {
+                    "id": {
+                      "type": "string"
+                    },
                     "ok": {
                       "type": "boolean"
+                    },
+                    "result": {
+                      "type": "string"
                     }
                   },
                   "required": [
@@ -137186,8 +137455,14 @@
                 "schema": {
                   "additionalProperties": false,
                   "properties": {
+                    "id": {
+                      "type": "string"
+                    },
                     "ok": {
                       "type": "boolean"
+                    },
+                    "result": {
+                      "type": "string"
                     }
                   },
                   "required": [
@@ -140277,8 +140552,14 @@
                 "schema": {
                   "additionalProperties": false,
                   "properties": {
+                    "id": {
+                      "type": "string"
+                    },
                     "ok": {
                       "type": "boolean"
+                    },
+                    "result": {
+                      "type": "string"
                     }
                   },
                   "required": [
@@ -140590,8 +140871,14 @@
                 "schema": {
                   "additionalProperties": false,
                   "properties": {
+                    "id": {
+                      "type": "string"
+                    },
                     "ok": {
                       "type": "boolean"
+                    },
+                    "result": {
+                      "type": "string"
                     }
                   },
                   "required": [
@@ -141253,8 +141540,14 @@
                 "schema": {
                   "additionalProperties": false,
                   "properties": {
+                    "id": {
+                      "type": "string"
+                    },
                     "ok": {
                       "type": "boolean"
+                    },
+                    "result": {
+                      "type": "string"
                     }
                   },
                   "required": [
@@ -141537,8 +141830,14 @@
                 "schema": {
                   "additionalProperties": false,
                   "properties": {
+                    "id": {
+                      "type": "string"
+                    },
                     "ok": {
                       "type": "boolean"
+                    },
+                    "result": {
+                      "type": "string"
                     }
                   },
                   "required": [
@@ -144763,8 +145062,14 @@
                 "schema": {
                   "additionalProperties": false,
                   "properties": {
+                    "id": {
+                      "type": "string"
+                    },
                     "ok": {
                       "type": "boolean"
+                    },
+                    "result": {
+                      "type": "string"
                     }
                   },
                   "required": [
@@ -145833,8 +146138,14 @@
                 "schema": {
                   "additionalProperties": false,
                   "properties": {
+                    "id": {
+                      "type": "string"
+                    },
                     "ok": {
                       "type": "boolean"
+                    },
+                    "result": {
+                      "type": "string"
                     }
                   },
                   "required": [
@@ -146115,8 +146426,14 @@
                 "schema": {
                   "additionalProperties": false,
                   "properties": {
+                    "id": {
+                      "type": "string"
+                    },
                     "ok": {
                       "type": "boolean"
+                    },
+                    "result": {
+                      "type": "string"
                     }
                   },
                   "required": [
@@ -146592,8 +146909,14 @@
                 "schema": {
                   "additionalProperties": false,
                   "properties": {
+                    "id": {
+                      "type": "string"
+                    },
                     "ok": {
                       "type": "boolean"
+                    },
+                    "result": {
+                      "type": "string"
                     }
                   },
                   "required": [
@@ -146862,8 +147185,14 @@
                 "schema": {
                   "additionalProperties": false,
                   "properties": {
+                    "id": {
+                      "type": "string"
+                    },
                     "ok": {
                       "type": "boolean"
+                    },
+                    "result": {
+                      "type": "string"
                     }
                   },
                   "required": [
@@ -147761,8 +148090,14 @@
                 "schema": {
                   "additionalProperties": false,
                   "properties": {
+                    "id": {
+                      "type": "string"
+                    },
                     "ok": {
                       "type": "boolean"
+                    },
+                    "result": {
+                      "type": "string"
                     }
                   },
                   "required": [
@@ -147986,8 +148321,14 @@
                 "schema": {
                   "additionalProperties": false,
                   "properties": {
+                    "id": {
+                      "type": "string"
+                    },
                     "ok": {
                       "type": "boolean"
+                    },
+                    "result": {
+                      "type": "string"
                     }
                   },
                   "required": [
@@ -148284,6 +148625,34 @@
                     "item": {
                       "additionalProperties": false,
                       "properties": {
+                        "approval_state": {
+                          "anyOf": [
+                            {
+                              "enum": [
+                                "draft"
+                              ],
+                              "type": "string"
+                            },
+                            {
+                              "enum": [
+                                "in_review"
+                              ],
+                              "type": "string"
+                            },
+                            {
+                              "enum": [
+                                "approved"
+                              ],
+                              "type": "string"
+                            },
+                            {
+                              "enum": [
+                                "rejected"
+                              ],
+                              "type": "string"
+                            }
+                          ]
+                        },
                         "approved_at": {
                           "format": "date-time",
                           "nullable": true,
@@ -148544,6 +148913,106 @@
                         "discount_total": {
                           "type": "number"
                         },
+                        "dispute_state": {
+                          "anyOf": [
+                            {
+                              "enum": [
+                                "clear"
+                              ],
+                              "type": "string"
+                            },
+                            {
+                              "enum": [
+                                "disputed"
+                              ],
+                              "type": "string"
+                            },
+                            {
+                              "enum": [
+                                "resolved"
+                              ],
+                              "type": "string"
+                            }
+                          ]
+                        },
+                        "disputes": {
+                          "items": {
+                            "additionalProperties": false,
+                            "properties": {
+                              "component_id": {
+                                "format": "uuid",
+                                "type": "string"
+                              },
+                              "created_at": {
+                                "format": "date-time",
+                                "type": "string"
+                              },
+                              "disputed_amount": {
+                                "type": "number"
+                              },
+                              "id": {
+                                "format": "uuid",
+                                "type": "string"
+                              },
+                              "opened_by": {
+                                "format": "uuid",
+                                "type": "string"
+                              },
+                              "reason": {
+                                "type": "string"
+                              },
+                              "responsible_id": {
+                                "format": "uuid",
+                                "nullable": true,
+                                "type": "string"
+                              },
+                              "status": {
+                                "anyOf": [
+                                  {
+                                    "enum": [
+                                      "open"
+                                    ],
+                                    "type": "string"
+                                  },
+                                  {
+                                    "enum": [
+                                      "accepted"
+                                    ],
+                                    "type": "string"
+                                  },
+                                  {
+                                    "enum": [
+                                      "rejected"
+                                    ],
+                                    "type": "string"
+                                  },
+                                  {
+                                    "enum": [
+                                      "canceled"
+                                    ],
+                                    "type": "string"
+                                  }
+                                ]
+                              },
+                              "version": {
+                                "type": "integer"
+                              }
+                            },
+                            "required": [
+                              "id",
+                              "component_id",
+                              "disputed_amount",
+                              "status",
+                              "reason",
+                              "version",
+                              "opened_by",
+                              "responsible_id",
+                              "created_at"
+                            ],
+                            "type": "object"
+                          },
+                          "type": "array"
+                        },
                         "due_on": {
                           "format": "date",
                           "type": "string"
@@ -148642,6 +149111,28 @@
                         },
                         "partner_direct": {
                           "type": "number"
+                        },
+                        "payment_state": {
+                          "anyOf": [
+                            {
+                              "enum": [
+                                "open"
+                              ],
+                              "type": "string"
+                            },
+                            {
+                              "enum": [
+                                "partially_settled"
+                              ],
+                              "type": "string"
+                            },
+                            {
+                              "enum": [
+                                "settled"
+                              ],
+                              "type": "string"
+                            }
+                          ]
                         },
                         "payments": {
                           "items": {
@@ -149097,6 +149588,9 @@
                         "period_end",
                         "currency",
                         "status",
+                        "approval_state",
+                        "payment_state",
+                        "dispute_state",
                         "direction",
                         "version",
                         "gross_sales",
@@ -149125,6 +149619,7 @@
                         "sources",
                         "payments",
                         "events",
+                        "disputes",
                         "created_at",
                         "updated_at"
                       ],
@@ -149426,6 +149921,34 @@
                       "items": {
                         "additionalProperties": false,
                         "properties": {
+                          "approval_state": {
+                            "anyOf": [
+                              {
+                                "enum": [
+                                  "draft"
+                                ],
+                                "type": "string"
+                              },
+                              {
+                                "enum": [
+                                  "in_review"
+                                ],
+                                "type": "string"
+                              },
+                              {
+                                "enum": [
+                                  "approved"
+                                ],
+                                "type": "string"
+                              },
+                              {
+                                "enum": [
+                                  "rejected"
+                                ],
+                                "type": "string"
+                              }
+                            ]
+                          },
                           "approved_at": {
                             "format": "date-time",
                             "nullable": true,
@@ -149687,6 +150210,107 @@
                           "discount_total": {
                             "type": "number"
                           },
+                          "dispute_state": {
+                            "anyOf": [
+                              {
+                                "enum": [
+                                  "clear"
+                                ],
+                                "type": "string"
+                              },
+                              {
+                                "enum": [
+                                  "disputed"
+                                ],
+                                "type": "string"
+                              },
+                              {
+                                "enum": [
+                                  "resolved"
+                                ],
+                                "type": "string"
+                              }
+                            ]
+                          },
+                          "disputes": {
+                            "items": {
+                              "additionalProperties": false,
+                              "properties": {
+                                "component_id": {
+                                  "format": "uuid",
+                                  "type": "string"
+                                },
+                                "created_at": {
+                                  "format": "date-time",
+                                  "type": "string"
+                                },
+                                "disputed_amount": {
+                                  "type": "number"
+                                },
+                                "id": {
+                                  "format": "uuid",
+                                  "type": "string"
+                                },
+                                "opened_by": {
+                                  "format": "uuid",
+                                  "type": "string"
+                                },
+                                "reason": {
+                                  "type": "string"
+                                },
+                                "responsible_id": {
+                                  "format": "uuid",
+                                  "nullable": true,
+                                  "type": "string"
+                                },
+                                "status": {
+                                  "anyOf": [
+                                    {
+                                      "enum": [
+                                        "open"
+                                      ],
+                                      "type": "string"
+                                    },
+                                    {
+                                      "enum": [
+                                        "accepted"
+                                      ],
+                                      "type": "string"
+                                    },
+                                    {
+                                      "enum": [
+                                        "rejected"
+                                      ],
+                                      "type": "string"
+                                    },
+                                    {
+                                      "enum": [
+                                        "canceled"
+                                      ],
+                                      "type": "string"
+                                    }
+                                  ]
+                                },
+                                "version": {
+                                  "type": "integer"
+                                }
+                              },
+                              "required": [
+                                "id",
+                                "component_id",
+                                "disputed_amount",
+                                "status",
+                                "reason",
+                                "version",
+                                "opened_by",
+                                "responsible_id",
+                                "created_at"
+                              ],
+                              "title": "PartnerSettlementDispute",
+                              "type": "object"
+                            },
+                            "type": "array"
+                          },
                           "due_on": {
                             "format": "date",
                             "type": "string"
@@ -149786,6 +150410,28 @@
                           },
                           "partner_direct": {
                             "type": "number"
+                          },
+                          "payment_state": {
+                            "anyOf": [
+                              {
+                                "enum": [
+                                  "open"
+                                ],
+                                "type": "string"
+                              },
+                              {
+                                "enum": [
+                                  "partially_settled"
+                                ],
+                                "type": "string"
+                              },
+                              {
+                                "enum": [
+                                  "settled"
+                                ],
+                                "type": "string"
+                              }
+                            ]
                           },
                           "payments": {
                             "items": {
@@ -150243,6 +150889,9 @@
                           "period_end",
                           "currency",
                           "status",
+                          "approval_state",
+                          "payment_state",
+                          "dispute_state",
                           "direction",
                           "version",
                           "gross_sales",
@@ -150271,6 +150920,7 @@
                           "sources",
                           "payments",
                           "events",
+                          "disputes",
                           "created_at",
                           "updated_at"
                         ],
@@ -150533,6 +151183,34 @@
                     "item": {
                       "additionalProperties": false,
                       "properties": {
+                        "approval_state": {
+                          "anyOf": [
+                            {
+                              "enum": [
+                                "draft"
+                              ],
+                              "type": "string"
+                            },
+                            {
+                              "enum": [
+                                "in_review"
+                              ],
+                              "type": "string"
+                            },
+                            {
+                              "enum": [
+                                "approved"
+                              ],
+                              "type": "string"
+                            },
+                            {
+                              "enum": [
+                                "rejected"
+                              ],
+                              "type": "string"
+                            }
+                          ]
+                        },
                         "approved_at": {
                           "format": "date-time",
                           "nullable": true,
@@ -150793,6 +151471,106 @@
                         "discount_total": {
                           "type": "number"
                         },
+                        "dispute_state": {
+                          "anyOf": [
+                            {
+                              "enum": [
+                                "clear"
+                              ],
+                              "type": "string"
+                            },
+                            {
+                              "enum": [
+                                "disputed"
+                              ],
+                              "type": "string"
+                            },
+                            {
+                              "enum": [
+                                "resolved"
+                              ],
+                              "type": "string"
+                            }
+                          ]
+                        },
+                        "disputes": {
+                          "items": {
+                            "additionalProperties": false,
+                            "properties": {
+                              "component_id": {
+                                "format": "uuid",
+                                "type": "string"
+                              },
+                              "created_at": {
+                                "format": "date-time",
+                                "type": "string"
+                              },
+                              "disputed_amount": {
+                                "type": "number"
+                              },
+                              "id": {
+                                "format": "uuid",
+                                "type": "string"
+                              },
+                              "opened_by": {
+                                "format": "uuid",
+                                "type": "string"
+                              },
+                              "reason": {
+                                "type": "string"
+                              },
+                              "responsible_id": {
+                                "format": "uuid",
+                                "nullable": true,
+                                "type": "string"
+                              },
+                              "status": {
+                                "anyOf": [
+                                  {
+                                    "enum": [
+                                      "open"
+                                    ],
+                                    "type": "string"
+                                  },
+                                  {
+                                    "enum": [
+                                      "accepted"
+                                    ],
+                                    "type": "string"
+                                  },
+                                  {
+                                    "enum": [
+                                      "rejected"
+                                    ],
+                                    "type": "string"
+                                  },
+                                  {
+                                    "enum": [
+                                      "canceled"
+                                    ],
+                                    "type": "string"
+                                  }
+                                ]
+                              },
+                              "version": {
+                                "type": "integer"
+                              }
+                            },
+                            "required": [
+                              "id",
+                              "component_id",
+                              "disputed_amount",
+                              "status",
+                              "reason",
+                              "version",
+                              "opened_by",
+                              "responsible_id",
+                              "created_at"
+                            ],
+                            "type": "object"
+                          },
+                          "type": "array"
+                        },
                         "due_on": {
                           "format": "date",
                           "type": "string"
@@ -150891,6 +151669,28 @@
                         },
                         "partner_direct": {
                           "type": "number"
+                        },
+                        "payment_state": {
+                          "anyOf": [
+                            {
+                              "enum": [
+                                "open"
+                              ],
+                              "type": "string"
+                            },
+                            {
+                              "enum": [
+                                "partially_settled"
+                              ],
+                              "type": "string"
+                            },
+                            {
+                              "enum": [
+                                "settled"
+                              ],
+                              "type": "string"
+                            }
+                          ]
                         },
                         "payments": {
                           "items": {
@@ -151346,6 +152146,9 @@
                         "period_end",
                         "currency",
                         "status",
+                        "approval_state",
+                        "payment_state",
+                        "dispute_state",
                         "direction",
                         "version",
                         "gross_sales",
@@ -151374,6 +152177,7 @@
                         "sources",
                         "payments",
                         "events",
+                        "disputes",
                         "created_at",
                         "updated_at"
                       ],
@@ -151613,6 +152417,34 @@
                     "item": {
                       "additionalProperties": false,
                       "properties": {
+                        "approval_state": {
+                          "anyOf": [
+                            {
+                              "enum": [
+                                "draft"
+                              ],
+                              "type": "string"
+                            },
+                            {
+                              "enum": [
+                                "in_review"
+                              ],
+                              "type": "string"
+                            },
+                            {
+                              "enum": [
+                                "approved"
+                              ],
+                              "type": "string"
+                            },
+                            {
+                              "enum": [
+                                "rejected"
+                              ],
+                              "type": "string"
+                            }
+                          ]
+                        },
                         "approved_at": {
                           "format": "date-time",
                           "nullable": true,
@@ -151873,6 +152705,106 @@
                         "discount_total": {
                           "type": "number"
                         },
+                        "dispute_state": {
+                          "anyOf": [
+                            {
+                              "enum": [
+                                "clear"
+                              ],
+                              "type": "string"
+                            },
+                            {
+                              "enum": [
+                                "disputed"
+                              ],
+                              "type": "string"
+                            },
+                            {
+                              "enum": [
+                                "resolved"
+                              ],
+                              "type": "string"
+                            }
+                          ]
+                        },
+                        "disputes": {
+                          "items": {
+                            "additionalProperties": false,
+                            "properties": {
+                              "component_id": {
+                                "format": "uuid",
+                                "type": "string"
+                              },
+                              "created_at": {
+                                "format": "date-time",
+                                "type": "string"
+                              },
+                              "disputed_amount": {
+                                "type": "number"
+                              },
+                              "id": {
+                                "format": "uuid",
+                                "type": "string"
+                              },
+                              "opened_by": {
+                                "format": "uuid",
+                                "type": "string"
+                              },
+                              "reason": {
+                                "type": "string"
+                              },
+                              "responsible_id": {
+                                "format": "uuid",
+                                "nullable": true,
+                                "type": "string"
+                              },
+                              "status": {
+                                "anyOf": [
+                                  {
+                                    "enum": [
+                                      "open"
+                                    ],
+                                    "type": "string"
+                                  },
+                                  {
+                                    "enum": [
+                                      "accepted"
+                                    ],
+                                    "type": "string"
+                                  },
+                                  {
+                                    "enum": [
+                                      "rejected"
+                                    ],
+                                    "type": "string"
+                                  },
+                                  {
+                                    "enum": [
+                                      "canceled"
+                                    ],
+                                    "type": "string"
+                                  }
+                                ]
+                              },
+                              "version": {
+                                "type": "integer"
+                              }
+                            },
+                            "required": [
+                              "id",
+                              "component_id",
+                              "disputed_amount",
+                              "status",
+                              "reason",
+                              "version",
+                              "opened_by",
+                              "responsible_id",
+                              "created_at"
+                            ],
+                            "type": "object"
+                          },
+                          "type": "array"
+                        },
                         "due_on": {
                           "format": "date",
                           "type": "string"
@@ -151971,6 +152903,28 @@
                         },
                         "partner_direct": {
                           "type": "number"
+                        },
+                        "payment_state": {
+                          "anyOf": [
+                            {
+                              "enum": [
+                                "open"
+                              ],
+                              "type": "string"
+                            },
+                            {
+                              "enum": [
+                                "partially_settled"
+                              ],
+                              "type": "string"
+                            },
+                            {
+                              "enum": [
+                                "settled"
+                              ],
+                              "type": "string"
+                            }
+                          ]
                         },
                         "payments": {
                           "items": {
@@ -152426,6 +153380,9 @@
                         "period_end",
                         "currency",
                         "status",
+                        "approval_state",
+                        "payment_state",
+                        "dispute_state",
                         "direction",
                         "version",
                         "gross_sales",
@@ -152454,6 +153411,7 @@
                         "sources",
                         "payments",
                         "events",
+                        "disputes",
                         "created_at",
                         "updated_at"
                       ],
@@ -152736,6 +153694,34 @@
                     "item": {
                       "additionalProperties": false,
                       "properties": {
+                        "approval_state": {
+                          "anyOf": [
+                            {
+                              "enum": [
+                                "draft"
+                              ],
+                              "type": "string"
+                            },
+                            {
+                              "enum": [
+                                "in_review"
+                              ],
+                              "type": "string"
+                            },
+                            {
+                              "enum": [
+                                "approved"
+                              ],
+                              "type": "string"
+                            },
+                            {
+                              "enum": [
+                                "rejected"
+                              ],
+                              "type": "string"
+                            }
+                          ]
+                        },
                         "approved_at": {
                           "format": "date-time",
                           "nullable": true,
@@ -152996,6 +153982,106 @@
                         "discount_total": {
                           "type": "number"
                         },
+                        "dispute_state": {
+                          "anyOf": [
+                            {
+                              "enum": [
+                                "clear"
+                              ],
+                              "type": "string"
+                            },
+                            {
+                              "enum": [
+                                "disputed"
+                              ],
+                              "type": "string"
+                            },
+                            {
+                              "enum": [
+                                "resolved"
+                              ],
+                              "type": "string"
+                            }
+                          ]
+                        },
+                        "disputes": {
+                          "items": {
+                            "additionalProperties": false,
+                            "properties": {
+                              "component_id": {
+                                "format": "uuid",
+                                "type": "string"
+                              },
+                              "created_at": {
+                                "format": "date-time",
+                                "type": "string"
+                              },
+                              "disputed_amount": {
+                                "type": "number"
+                              },
+                              "id": {
+                                "format": "uuid",
+                                "type": "string"
+                              },
+                              "opened_by": {
+                                "format": "uuid",
+                                "type": "string"
+                              },
+                              "reason": {
+                                "type": "string"
+                              },
+                              "responsible_id": {
+                                "format": "uuid",
+                                "nullable": true,
+                                "type": "string"
+                              },
+                              "status": {
+                                "anyOf": [
+                                  {
+                                    "enum": [
+                                      "open"
+                                    ],
+                                    "type": "string"
+                                  },
+                                  {
+                                    "enum": [
+                                      "accepted"
+                                    ],
+                                    "type": "string"
+                                  },
+                                  {
+                                    "enum": [
+                                      "rejected"
+                                    ],
+                                    "type": "string"
+                                  },
+                                  {
+                                    "enum": [
+                                      "canceled"
+                                    ],
+                                    "type": "string"
+                                  }
+                                ]
+                              },
+                              "version": {
+                                "type": "integer"
+                              }
+                            },
+                            "required": [
+                              "id",
+                              "component_id",
+                              "disputed_amount",
+                              "status",
+                              "reason",
+                              "version",
+                              "opened_by",
+                              "responsible_id",
+                              "created_at"
+                            ],
+                            "type": "object"
+                          },
+                          "type": "array"
+                        },
                         "due_on": {
                           "format": "date",
                           "type": "string"
@@ -153094,6 +154180,28 @@
                         },
                         "partner_direct": {
                           "type": "number"
+                        },
+                        "payment_state": {
+                          "anyOf": [
+                            {
+                              "enum": [
+                                "open"
+                              ],
+                              "type": "string"
+                            },
+                            {
+                              "enum": [
+                                "partially_settled"
+                              ],
+                              "type": "string"
+                            },
+                            {
+                              "enum": [
+                                "settled"
+                              ],
+                              "type": "string"
+                            }
+                          ]
                         },
                         "payments": {
                           "items": {
@@ -153549,6 +154657,9 @@
                         "period_end",
                         "currency",
                         "status",
+                        "approval_state",
+                        "payment_state",
+                        "dispute_state",
                         "direction",
                         "version",
                         "gross_sales",
@@ -153577,6 +154688,7 @@
                         "sources",
                         "payments",
                         "events",
+                        "disputes",
                         "created_at",
                         "updated_at"
                       ],
@@ -153899,6 +155011,34 @@
                     "item": {
                       "additionalProperties": false,
                       "properties": {
+                        "approval_state": {
+                          "anyOf": [
+                            {
+                              "enum": [
+                                "draft"
+                              ],
+                              "type": "string"
+                            },
+                            {
+                              "enum": [
+                                "in_review"
+                              ],
+                              "type": "string"
+                            },
+                            {
+                              "enum": [
+                                "approved"
+                              ],
+                              "type": "string"
+                            },
+                            {
+                              "enum": [
+                                "rejected"
+                              ],
+                              "type": "string"
+                            }
+                          ]
+                        },
                         "approved_at": {
                           "format": "date-time",
                           "nullable": true,
@@ -154159,6 +155299,106 @@
                         "discount_total": {
                           "type": "number"
                         },
+                        "dispute_state": {
+                          "anyOf": [
+                            {
+                              "enum": [
+                                "clear"
+                              ],
+                              "type": "string"
+                            },
+                            {
+                              "enum": [
+                                "disputed"
+                              ],
+                              "type": "string"
+                            },
+                            {
+                              "enum": [
+                                "resolved"
+                              ],
+                              "type": "string"
+                            }
+                          ]
+                        },
+                        "disputes": {
+                          "items": {
+                            "additionalProperties": false,
+                            "properties": {
+                              "component_id": {
+                                "format": "uuid",
+                                "type": "string"
+                              },
+                              "created_at": {
+                                "format": "date-time",
+                                "type": "string"
+                              },
+                              "disputed_amount": {
+                                "type": "number"
+                              },
+                              "id": {
+                                "format": "uuid",
+                                "type": "string"
+                              },
+                              "opened_by": {
+                                "format": "uuid",
+                                "type": "string"
+                              },
+                              "reason": {
+                                "type": "string"
+                              },
+                              "responsible_id": {
+                                "format": "uuid",
+                                "nullable": true,
+                                "type": "string"
+                              },
+                              "status": {
+                                "anyOf": [
+                                  {
+                                    "enum": [
+                                      "open"
+                                    ],
+                                    "type": "string"
+                                  },
+                                  {
+                                    "enum": [
+                                      "accepted"
+                                    ],
+                                    "type": "string"
+                                  },
+                                  {
+                                    "enum": [
+                                      "rejected"
+                                    ],
+                                    "type": "string"
+                                  },
+                                  {
+                                    "enum": [
+                                      "canceled"
+                                    ],
+                                    "type": "string"
+                                  }
+                                ]
+                              },
+                              "version": {
+                                "type": "integer"
+                              }
+                            },
+                            "required": [
+                              "id",
+                              "component_id",
+                              "disputed_amount",
+                              "status",
+                              "reason",
+                              "version",
+                              "opened_by",
+                              "responsible_id",
+                              "created_at"
+                            ],
+                            "type": "object"
+                          },
+                          "type": "array"
+                        },
                         "due_on": {
                           "format": "date",
                           "type": "string"
@@ -154257,6 +155497,28 @@
                         },
                         "partner_direct": {
                           "type": "number"
+                        },
+                        "payment_state": {
+                          "anyOf": [
+                            {
+                              "enum": [
+                                "open"
+                              ],
+                              "type": "string"
+                            },
+                            {
+                              "enum": [
+                                "partially_settled"
+                              ],
+                              "type": "string"
+                            },
+                            {
+                              "enum": [
+                                "settled"
+                              ],
+                              "type": "string"
+                            }
+                          ]
                         },
                         "payments": {
                           "items": {
@@ -154712,6 +155974,9 @@
                         "period_end",
                         "currency",
                         "status",
+                        "approval_state",
+                        "payment_state",
+                        "dispute_state",
                         "direction",
                         "version",
                         "gross_sales",
@@ -154740,6 +156005,7 @@
                         "sources",
                         "payments",
                         "events",
+                        "disputes",
                         "created_at",
                         "updated_at"
                       ],
@@ -154999,6 +156265,34 @@
                     "item": {
                       "additionalProperties": false,
                       "properties": {
+                        "approval_state": {
+                          "anyOf": [
+                            {
+                              "enum": [
+                                "draft"
+                              ],
+                              "type": "string"
+                            },
+                            {
+                              "enum": [
+                                "in_review"
+                              ],
+                              "type": "string"
+                            },
+                            {
+                              "enum": [
+                                "approved"
+                              ],
+                              "type": "string"
+                            },
+                            {
+                              "enum": [
+                                "rejected"
+                              ],
+                              "type": "string"
+                            }
+                          ]
+                        },
                         "approved_at": {
                           "format": "date-time",
                           "nullable": true,
@@ -155259,6 +156553,106 @@
                         "discount_total": {
                           "type": "number"
                         },
+                        "dispute_state": {
+                          "anyOf": [
+                            {
+                              "enum": [
+                                "clear"
+                              ],
+                              "type": "string"
+                            },
+                            {
+                              "enum": [
+                                "disputed"
+                              ],
+                              "type": "string"
+                            },
+                            {
+                              "enum": [
+                                "resolved"
+                              ],
+                              "type": "string"
+                            }
+                          ]
+                        },
+                        "disputes": {
+                          "items": {
+                            "additionalProperties": false,
+                            "properties": {
+                              "component_id": {
+                                "format": "uuid",
+                                "type": "string"
+                              },
+                              "created_at": {
+                                "format": "date-time",
+                                "type": "string"
+                              },
+                              "disputed_amount": {
+                                "type": "number"
+                              },
+                              "id": {
+                                "format": "uuid",
+                                "type": "string"
+                              },
+                              "opened_by": {
+                                "format": "uuid",
+                                "type": "string"
+                              },
+                              "reason": {
+                                "type": "string"
+                              },
+                              "responsible_id": {
+                                "format": "uuid",
+                                "nullable": true,
+                                "type": "string"
+                              },
+                              "status": {
+                                "anyOf": [
+                                  {
+                                    "enum": [
+                                      "open"
+                                    ],
+                                    "type": "string"
+                                  },
+                                  {
+                                    "enum": [
+                                      "accepted"
+                                    ],
+                                    "type": "string"
+                                  },
+                                  {
+                                    "enum": [
+                                      "rejected"
+                                    ],
+                                    "type": "string"
+                                  },
+                                  {
+                                    "enum": [
+                                      "canceled"
+                                    ],
+                                    "type": "string"
+                                  }
+                                ]
+                              },
+                              "version": {
+                                "type": "integer"
+                              }
+                            },
+                            "required": [
+                              "id",
+                              "component_id",
+                              "disputed_amount",
+                              "status",
+                              "reason",
+                              "version",
+                              "opened_by",
+                              "responsible_id",
+                              "created_at"
+                            ],
+                            "type": "object"
+                          },
+                          "type": "array"
+                        },
                         "due_on": {
                           "format": "date",
                           "type": "string"
@@ -155357,6 +156751,28 @@
                         },
                         "partner_direct": {
                           "type": "number"
+                        },
+                        "payment_state": {
+                          "anyOf": [
+                            {
+                              "enum": [
+                                "open"
+                              ],
+                              "type": "string"
+                            },
+                            {
+                              "enum": [
+                                "partially_settled"
+                              ],
+                              "type": "string"
+                            },
+                            {
+                              "enum": [
+                                "settled"
+                              ],
+                              "type": "string"
+                            }
+                          ]
                         },
                         "payments": {
                           "items": {
@@ -155812,6 +157228,9 @@
                         "period_end",
                         "currency",
                         "status",
+                        "approval_state",
+                        "payment_state",
+                        "dispute_state",
                         "direction",
                         "version",
                         "gross_sales",
@@ -155840,6 +157259,7 @@
                         "sources",
                         "payments",
                         "events",
+                        "disputes",
                         "created_at",
                         "updated_at"
                       ],
@@ -156099,6 +157519,34 @@
                     "item": {
                       "additionalProperties": false,
                       "properties": {
+                        "approval_state": {
+                          "anyOf": [
+                            {
+                              "enum": [
+                                "draft"
+                              ],
+                              "type": "string"
+                            },
+                            {
+                              "enum": [
+                                "in_review"
+                              ],
+                              "type": "string"
+                            },
+                            {
+                              "enum": [
+                                "approved"
+                              ],
+                              "type": "string"
+                            },
+                            {
+                              "enum": [
+                                "rejected"
+                              ],
+                              "type": "string"
+                            }
+                          ]
+                        },
                         "approved_at": {
                           "format": "date-time",
                           "nullable": true,
@@ -156359,6 +157807,106 @@
                         "discount_total": {
                           "type": "number"
                         },
+                        "dispute_state": {
+                          "anyOf": [
+                            {
+                              "enum": [
+                                "clear"
+                              ],
+                              "type": "string"
+                            },
+                            {
+                              "enum": [
+                                "disputed"
+                              ],
+                              "type": "string"
+                            },
+                            {
+                              "enum": [
+                                "resolved"
+                              ],
+                              "type": "string"
+                            }
+                          ]
+                        },
+                        "disputes": {
+                          "items": {
+                            "additionalProperties": false,
+                            "properties": {
+                              "component_id": {
+                                "format": "uuid",
+                                "type": "string"
+                              },
+                              "created_at": {
+                                "format": "date-time",
+                                "type": "string"
+                              },
+                              "disputed_amount": {
+                                "type": "number"
+                              },
+                              "id": {
+                                "format": "uuid",
+                                "type": "string"
+                              },
+                              "opened_by": {
+                                "format": "uuid",
+                                "type": "string"
+                              },
+                              "reason": {
+                                "type": "string"
+                              },
+                              "responsible_id": {
+                                "format": "uuid",
+                                "nullable": true,
+                                "type": "string"
+                              },
+                              "status": {
+                                "anyOf": [
+                                  {
+                                    "enum": [
+                                      "open"
+                                    ],
+                                    "type": "string"
+                                  },
+                                  {
+                                    "enum": [
+                                      "accepted"
+                                    ],
+                                    "type": "string"
+                                  },
+                                  {
+                                    "enum": [
+                                      "rejected"
+                                    ],
+                                    "type": "string"
+                                  },
+                                  {
+                                    "enum": [
+                                      "canceled"
+                                    ],
+                                    "type": "string"
+                                  }
+                                ]
+                              },
+                              "version": {
+                                "type": "integer"
+                              }
+                            },
+                            "required": [
+                              "id",
+                              "component_id",
+                              "disputed_amount",
+                              "status",
+                              "reason",
+                              "version",
+                              "opened_by",
+                              "responsible_id",
+                              "created_at"
+                            ],
+                            "type": "object"
+                          },
+                          "type": "array"
+                        },
                         "due_on": {
                           "format": "date",
                           "type": "string"
@@ -156457,6 +158005,28 @@
                         },
                         "partner_direct": {
                           "type": "number"
+                        },
+                        "payment_state": {
+                          "anyOf": [
+                            {
+                              "enum": [
+                                "open"
+                              ],
+                              "type": "string"
+                            },
+                            {
+                              "enum": [
+                                "partially_settled"
+                              ],
+                              "type": "string"
+                            },
+                            {
+                              "enum": [
+                                "settled"
+                              ],
+                              "type": "string"
+                            }
+                          ]
                         },
                         "payments": {
                           "items": {
@@ -156912,6 +158482,9 @@
                         "period_end",
                         "currency",
                         "status",
+                        "approval_state",
+                        "payment_state",
+                        "dispute_state",
                         "direction",
                         "version",
                         "gross_sales",
@@ -156940,6 +158513,7 @@
                         "sources",
                         "payments",
                         "events",
+                        "disputes",
                         "created_at",
                         "updated_at"
                       ],
@@ -158061,8 +159635,14 @@
                 "schema": {
                   "additionalProperties": false,
                   "properties": {
+                    "id": {
+                      "type": "string"
+                    },
                     "ok": {
                       "type": "boolean"
+                    },
+                    "result": {
+                      "type": "string"
                     }
                   },
                   "required": [
@@ -158940,8 +160520,14 @@
                 "schema": {
                   "additionalProperties": false,
                   "properties": {
+                    "id": {
+                      "type": "string"
+                    },
                     "ok": {
                       "type": "boolean"
+                    },
+                    "result": {
+                      "type": "string"
                     }
                   },
                   "required": [
@@ -159496,8 +161082,14 @@
                 "schema": {
                   "additionalProperties": false,
                   "properties": {
+                    "id": {
+                      "type": "string"
+                    },
                     "ok": {
                       "type": "boolean"
+                    },
+                    "result": {
+                      "type": "string"
                     }
                   },
                   "required": [
@@ -159757,8 +161349,14 @@
                 "schema": {
                   "additionalProperties": false,
                   "properties": {
+                    "id": {
+                      "type": "string"
+                    },
                     "ok": {
                       "type": "boolean"
+                    },
+                    "result": {
+                      "type": "string"
                     }
                   },
                   "required": [
@@ -160045,8 +161643,14 @@
                 "schema": {
                   "additionalProperties": false,
                   "properties": {
+                    "id": {
+                      "type": "string"
+                    },
                     "ok": {
                       "type": "boolean"
+                    },
+                    "result": {
+                      "type": "string"
                     }
                   },
                   "required": [
@@ -160355,8 +161959,14 @@
                 "schema": {
                   "additionalProperties": false,
                   "properties": {
+                    "id": {
+                      "type": "string"
+                    },
                     "ok": {
                       "type": "boolean"
+                    },
+                    "result": {
+                      "type": "string"
                     }
                   },
                   "required": [
@@ -161070,8 +162680,14 @@
                 "schema": {
                   "additionalProperties": false,
                   "properties": {
+                    "id": {
+                      "type": "string"
+                    },
                     "ok": {
                       "type": "boolean"
+                    },
+                    "result": {
+                      "type": "string"
                     }
                   },
                   "required": [
@@ -161340,8 +162956,14 @@
                 "schema": {
                   "additionalProperties": false,
                   "properties": {
+                    "id": {
+                      "type": "string"
+                    },
                     "ok": {
                       "type": "boolean"
+                    },
+                    "result": {
+                      "type": "string"
                     }
                   },
                   "required": [
@@ -161641,8 +163263,14 @@
                 "schema": {
                   "additionalProperties": false,
                   "properties": {
+                    "id": {
+                      "type": "string"
+                    },
                     "ok": {
                       "type": "boolean"
+                    },
+                    "result": {
+                      "type": "string"
                     }
                   },
                   "required": [
@@ -161958,8 +163586,14 @@
                 "schema": {
                   "additionalProperties": false,
                   "properties": {
+                    "id": {
+                      "type": "string"
+                    },
                     "ok": {
                       "type": "boolean"
+                    },
+                    "result": {
+                      "type": "string"
                     }
                   },
                   "required": [
@@ -162293,8 +163927,14 @@
                 "schema": {
                   "additionalProperties": false,
                   "properties": {
+                    "id": {
+                      "type": "string"
+                    },
                     "ok": {
                       "type": "boolean"
+                    },
+                    "result": {
+                      "type": "string"
                     }
                   },
                   "required": [
@@ -162563,8 +164203,14 @@
                 "schema": {
                   "additionalProperties": false,
                   "properties": {
+                    "id": {
+                      "type": "string"
+                    },
                     "ok": {
                       "type": "boolean"
+                    },
+                    "result": {
+                      "type": "string"
                     }
                   },
                   "required": [
@@ -162881,8 +164527,14 @@
                 "schema": {
                   "additionalProperties": false,
                   "properties": {
+                    "id": {
+                      "type": "string"
+                    },
                     "ok": {
                       "type": "boolean"
+                    },
+                    "result": {
+                      "type": "string"
                     }
                   },
                   "required": [
@@ -163106,8 +164758,14 @@
                 "schema": {
                   "additionalProperties": false,
                   "properties": {
+                    "id": {
+                      "type": "string"
+                    },
                     "ok": {
                       "type": "boolean"
+                    },
+                    "result": {
+                      "type": "string"
                     }
                   },
                   "required": [
@@ -163405,8 +165063,14 @@
                 "schema": {
                   "additionalProperties": false,
                   "properties": {
+                    "id": {
+                      "type": "string"
+                    },
                     "ok": {
                       "type": "boolean"
+                    },
+                    "result": {
+                      "type": "string"
                     }
                   },
                   "required": [
@@ -163694,8 +165358,14 @@
                 "schema": {
                   "additionalProperties": false,
                   "properties": {
+                    "id": {
+                      "type": "string"
+                    },
                     "ok": {
                       "type": "boolean"
+                    },
+                    "result": {
+                      "type": "string"
                     }
                   },
                   "required": [
@@ -168296,8 +169966,14 @@
                 "schema": {
                   "additionalProperties": false,
                   "properties": {
+                    "id": {
+                      "type": "string"
+                    },
                     "ok": {
                       "type": "boolean"
+                    },
+                    "result": {
+                      "type": "string"
                     }
                   },
                   "required": [
@@ -168790,8 +170466,14 @@
                 "schema": {
                   "additionalProperties": false,
                   "properties": {
+                    "id": {
+                      "type": "string"
+                    },
                     "ok": {
                       "type": "boolean"
+                    },
+                    "result": {
+                      "type": "string"
                     }
                   },
                   "required": [
@@ -169223,8 +170905,14 @@
                 "schema": {
                   "additionalProperties": false,
                   "properties": {
+                    "id": {
+                      "type": "string"
+                    },
                     "ok": {
                       "type": "boolean"
+                    },
+                    "result": {
+                      "type": "string"
                     }
                   },
                   "required": [
@@ -169851,8 +171539,14 @@
                 "schema": {
                   "additionalProperties": false,
                   "properties": {
+                    "id": {
+                      "type": "string"
+                    },
                     "ok": {
                       "type": "boolean"
+                    },
+                    "result": {
+                      "type": "string"
                     }
                   },
                   "required": [
@@ -170152,8 +171846,14 @@
                 "schema": {
                   "additionalProperties": false,
                   "properties": {
+                    "id": {
+                      "type": "string"
+                    },
                     "ok": {
                       "type": "boolean"
+                    },
+                    "result": {
+                      "type": "string"
                     }
                   },
                   "required": [
@@ -171280,8 +172980,14 @@
                 "schema": {
                   "additionalProperties": false,
                   "properties": {
+                    "id": {
+                      "type": "string"
+                    },
                     "ok": {
                       "type": "boolean"
+                    },
+                    "result": {
+                      "type": "string"
                     }
                   },
                   "required": [
@@ -174093,8 +175799,14 @@
                 "schema": {
                   "additionalProperties": false,
                   "properties": {
+                    "id": {
+                      "type": "string"
+                    },
                     "ok": {
                       "type": "boolean"
+                    },
+                    "result": {
+                      "type": "string"
                     }
                   },
                   "required": [
@@ -175932,8 +177644,14 @@
                 "schema": {
                   "additionalProperties": false,
                   "properties": {
+                    "id": {
+                      "type": "string"
+                    },
                     "ok": {
                       "type": "boolean"
+                    },
+                    "result": {
+                      "type": "string"
                     }
                   },
                   "required": [
@@ -177231,8 +178949,14 @@
                 "schema": {
                   "additionalProperties": false,
                   "properties": {
+                    "id": {
+                      "type": "string"
+                    },
                     "ok": {
                       "type": "boolean"
+                    },
+                    "result": {
+                      "type": "string"
                     }
                   },
                   "required": [
@@ -178315,8 +180039,14 @@
                 "schema": {
                   "additionalProperties": false,
                   "properties": {
+                    "id": {
+                      "type": "string"
+                    },
                     "ok": {
                       "type": "boolean"
+                    },
+                    "result": {
+                      "type": "string"
                     }
                   },
                   "required": [
@@ -180608,8 +182338,14 @@
                 "schema": {
                   "additionalProperties": false,
                   "properties": {
+                    "id": {
+                      "type": "string"
+                    },
                     "ok": {
                       "type": "boolean"
+                    },
+                    "result": {
+                      "type": "string"
                     }
                   },
                   "required": [
@@ -189542,8 +191278,14 @@
                 "schema": {
                   "additionalProperties": false,
                   "properties": {
+                    "id": {
+                      "type": "string"
+                    },
                     "ok": {
                       "type": "boolean"
+                    },
+                    "result": {
+                      "type": "string"
                     }
                   },
                   "required": [
@@ -189830,8 +191572,14 @@
                 "schema": {
                   "additionalProperties": false,
                   "properties": {
+                    "id": {
+                      "type": "string"
+                    },
                     "ok": {
                       "type": "boolean"
+                    },
+                    "result": {
+                      "type": "string"
                     }
                   },
                   "required": [
@@ -190118,8 +191866,14 @@
                 "schema": {
                   "additionalProperties": false,
                   "properties": {
+                    "id": {
+                      "type": "string"
+                    },
                     "ok": {
                       "type": "boolean"
+                    },
+                    "result": {
+                      "type": "string"
                     }
                   },
                   "required": [
@@ -190416,8 +192170,14 @@
                 "schema": {
                   "additionalProperties": false,
                   "properties": {
+                    "id": {
+                      "type": "string"
+                    },
                     "ok": {
                       "type": "boolean"
+                    },
+                    "result": {
+                      "type": "string"
                     }
                   },
                   "required": [
@@ -196388,8 +198148,14 @@
                 "schema": {
                   "additionalProperties": false,
                   "properties": {
+                    "id": {
+                      "type": "string"
+                    },
                     "ok": {
                       "type": "boolean"
+                    },
+                    "result": {
+                      "type": "string"
                     }
                   },
                   "required": [
@@ -199603,8 +201369,14 @@
                 "schema": {
                   "additionalProperties": false,
                   "properties": {
+                    "id": {
+                      "type": "string"
+                    },
                     "ok": {
                       "type": "boolean"
+                    },
+                    "result": {
+                      "type": "string"
                     }
                   },
                   "required": [

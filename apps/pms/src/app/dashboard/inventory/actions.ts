@@ -376,10 +376,13 @@ export async function updateInventoryCountAction(formData: FormData) {
 }
 export async function finishInventoryCountAction(formData: FormData) {
   await requirePermission(PERMISSIONS.INVENTORY_COUNTS_PERFORM, "counts");
-  const id = String(formData.get("id") || "");
-  if (!id) go("counts", "invalid");
+  const id = String(formData.get("record_id") || "");
+  const action = formData.get("action");
+  // Sem a intenção declarada pelo botão, a contagem não é concluída por omissão.
+  if (!id || (action !== "cancel" && action !== "complete"))
+    go("counts", "invalid");
   try {
-    if (formData.get("action") === "cancel") await cancelInventoryCount(id);
+    if (action === "cancel") await cancelInventoryCount(id);
     else await completeInventoryCount(id);
   } catch {
     go("counts", "concurrent");

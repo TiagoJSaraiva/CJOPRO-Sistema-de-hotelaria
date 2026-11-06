@@ -15,6 +15,8 @@ import {
 } from "../../lib/activeHotel";
 import { logoutAction, setActiveHotelAction } from "./actions";
 import { ActiveHotelContext } from "./_components/ActiveHotelSelector";
+import { HotelTimeZoneProvider } from "./_components/HotelTimeZone";
+import { resolveHotelTimeZone } from "../../lib/hotelClock";
 import { getRoomsAccess } from "./rooms/access";
 import { getMaintenanceAccess } from "./maintenance/access";
 import { getMaintenanceNotificationSummary } from "../../lib/adminApi";
@@ -134,6 +136,7 @@ export default async function DashboardLayout({
   const activeHotelOptions = listActiveHotelOptions(user);
   const preferredHotelId = await getActiveHotelCookieValue();
   const activeHotelId = resolveActiveHotelForUser(user, preferredHotelId);
+  const hotelTimeZone = await resolveHotelTimeZone(activeHotelId);
   const maintenanceNotifications =
     maintenanceAccess.canEnter && activeHotelId
       ? await getMaintenanceNotificationSummary().catch(() => ({ unread: 0 }))
@@ -233,7 +236,9 @@ export default async function DashboardLayout({
       </header>
 
       <main id="pms-main-content" tabIndex={-1}>
-        {children}
+        <HotelTimeZoneProvider timeZone={hotelTimeZone}>
+          {children}
+        </HotelTimeZoneProvider>
       </main>
     </div>
   );

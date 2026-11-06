@@ -1,6 +1,12 @@
 // @vitest-environment jsdom
 
-import { cleanup, render, screen, waitFor } from "@testing-library/react";
+import {
+  cleanup,
+  fireEvent,
+  render,
+  screen,
+  waitFor,
+} from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { afterEach, describe, expect, it, vi } from "vitest";
 import type {
@@ -152,6 +158,7 @@ describe("ConsumptionOrderComposer", () => {
     const user = userEvent.setup();
     render(
       <ConsumptionOrderComposer
+        timeZone="America/Sao_Paulo"
         context={context}
         canReceivePayment
         canGrantCourtesy
@@ -202,6 +209,7 @@ describe("ConsumptionOrderComposer", () => {
     });
     render(
       <ConsumptionOrderComposer
+        timeZone="America/Sao_Paulo"
         context={context}
         canReceivePayment
         canGrantCourtesy={false}
@@ -246,6 +254,7 @@ describe("ConsumptionOrderComposer", () => {
     });
     render(
       <ConsumptionOrderComposer
+        timeZone="America/Sao_Paulo"
         context={context}
         canReceivePayment={false}
         canGrantCourtesy
@@ -278,18 +287,53 @@ describe("ConsumptionOrderComposer", () => {
 it("uses the operational clock as maximum even for a historical context", () => {
   render(
     <ConsumptionOrderComposer
+      timeZone="America/Sao_Paulo"
       context={{ ...context, occurred_at: "2026-09-04T14:00:00.000Z" }}
       canReceivePayment={true}
       canGrantCourtesy={false}
     />,
   );
   const field = screen.getByLabelText("Horário do consumo") as HTMLInputElement;
-  expect(new Date(field.max).getTime()).toBe(
-    new Date(context.operational_now).setSeconds(0, 0),
+  expect(field.max).toBe("2026-09-04T12:00");
+  expect(field.value).toBe("2026-09-04T11:00");
+  expect(field.min).toBe("2026-09-03T11:00");
+});
+
+it("reads the consumption time in the hotel zone, whatever the browser zone", async () => {
+  const user = userEvent.setup();
+  postMock.mockResolvedValue({
+    receipt: null,
+    error: "Confirmed",
+    conflict: false,
+  });
+  vi.stubGlobal("crypto", {
+    randomUUID: () => "c1000000-0000-4000-8000-000000000001",
+  });
+  render(
+    <ConsumptionOrderComposer
+      timeZone="Asia/Tokyo"
+      context={context}
+      canReceivePayment
+      canGrantCourtesy={false}
+    />,
   );
-  expect(new Date(field.value).getTime()).toBe(
-    new Date("2026-09-04T14:00:00.000Z").getTime(),
+  const field = screen.getByLabelText("Horário do consumo") as HTMLInputElement;
+  expect(field.value).toBe("2026-09-05T00:00");
+
+  const quantity = screen.getByRole("spinbutton", {
+    name: "Quantidade de Água",
+  });
+  await user.clear(quantity);
+  await user.type(quantity, "1");
+  fireEvent.change(field, { target: { value: "2026-09-04T23:30" } });
+  await user.click(screen.getByRole("button", { name: "Revisar comanda" }));
+  await user.click(
+    screen.getByRole("button", { name: "Confirmar lançamento" }),
   );
+  await waitFor(() => expect(postMock).toHaveBeenCalled());
+  expect(postMock.mock.lastCall![0]).toMatchObject({
+    occurred_at: "2026-09-04T14:30:00.000Z",
+  });
 });
 
 it("preserves seconds and milliseconds of the suggested occurrence at arrival", async () => {
@@ -301,6 +345,7 @@ it("preserves seconds and milliseconds of the suggested occurrence at arrival", 
   });
   render(
     <ConsumptionOrderComposer
+      timeZone="America/Sao_Paulo"
       context={{
         ...context,
         occurred_at: instant,

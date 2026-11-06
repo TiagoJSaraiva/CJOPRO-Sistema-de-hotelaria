@@ -1,7 +1,13 @@
 begin;
 select no_plan();
--- Estado independente do seed; toda alteração é revertida ao final.
+-- Estado independente do seed e do ciclo de 15 minutos do pg_cron, que reconcilia
+-- pendências e grava eventos imutáveis a qualquer momento. A trava segura esse ciclo
+-- até o fim do teste; toda alteração é revertida ao final.
+lock table public.operational_pending, public.operational_pending_events in share row exclusive mode;
+set local session_replication_role = replica;
+delete from public.operational_pending_events where hotel_id='10000000-0000-4000-8000-000000000001';
 delete from public.operational_pending where hotel_id='10000000-0000-4000-8000-000000000001';
+set local session_replication_role = origin;
 insert into public.operational_pending(id,hotel_id,source,source_key,kind,entity_type,entity_id,episode,title,href,severity)
 select ('a1030000-0000-4000-8000-' || lpad(n::text,12,'0'))::uuid,
  '10000000-0000-4000-8000-000000000001','consumption','summary-'||n,'guest_balance','guest_balance',

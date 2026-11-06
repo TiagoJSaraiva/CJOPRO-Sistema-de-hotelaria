@@ -54,6 +54,19 @@ ativo, e usa `hotelLocalInputToInstant` e `instantToHotelLocalInput` de
 ser usado; `readHotelInstant` já faz a conversão e recusa data inválida. O contrato
 `date-time` recusa hora sem fuso com 400.
 
+No navegador, as telas do painel usam `useHotelInputInstant`, e `new Date(texto)` leria o
+fuso de quem preenche.
+
+## Instantes exibidos
+
+Telas do painel mostram instantes com `<HotelInstant value={...} />`, que funciona em
+componentes de cliente e dentro de páginas de servidor. O layout resolve o fuso do hotel ativo
+uma vez e o entrega por contexto. Formatar sem `timeZone` usa o fuso de quem renderiza: mostra
+a hora errada e, com servidor e navegador em fusos diferentes, quebra a hidratação da página.
+Sem hotel ativo vale `DEFAULT_DISPLAY_TIME_ZONE`; se o relógio falhar, a tela mostra "—" e os
+campos recusam a data, em vez de assumir outro fuso. `hotelTimeGuard.test.ts` reprova o padrão
+antigo em qualquer tela do painel.
+
 Vencimento é uma data, sem hora: compare e formate como data, nunca como instante.
 Pagamento e criação contam no dia do hotel, por
 `getFinancialTransactionEffectiveDateKey`, e as regras de atraso exigem a data

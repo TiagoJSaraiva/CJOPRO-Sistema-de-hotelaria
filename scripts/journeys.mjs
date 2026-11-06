@@ -27,6 +27,7 @@ export function buildJourneyEnvironment(
     SUPABASE_SERVICE_ROLE_KEY: serviceRoleKey,
     AUTH_SESSION_SECRET: JOURNEY_SESSION_SECRET,
     LOCAL_TRAINING_ENABLED: "true",
+    PMS_DEV_KEEP_ROUTES: "true",
   };
 }
 

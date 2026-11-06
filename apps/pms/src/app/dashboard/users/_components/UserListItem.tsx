@@ -1,5 +1,6 @@
 "use client";
 
+import { HotelInstant } from "../../_components/HotelTimeZone";
 import {
   type AdminHotelOption,
   type AdminRoleOption,
@@ -25,12 +26,16 @@ type UserListItemProps = {
 };
 
 function UserDataPreview({ userItem }: { userItem: AdminUser }) {
-  const createdAt = userItem.created_at
-    ? new Date(userItem.created_at).toLocaleString("pt-BR")
-    : "-";
-  const lastLogin = userItem.last_login_at
-    ? new Date(userItem.last_login_at).toLocaleString("pt-BR")
-    : "-";
+  const createdAt = userItem.created_at ? (
+    <HotelInstant value={userItem.created_at} />
+  ) : (
+    "-"
+  );
+  const lastLogin = userItem.last_login_at ? (
+    <HotelInstant value={userItem.last_login_at} />
+  ) : (
+    "-"
+  );
 
   return (
     <div className="mt-[0.85rem] grid gap-[0.7rem]">

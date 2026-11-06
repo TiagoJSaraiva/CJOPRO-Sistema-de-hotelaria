@@ -1,3 +1,4 @@
+import { HotelInstant } from "../../_components/HotelTimeZone";
 import { DashboardAccessDeniedCard } from "../../_components/DashboardAccessDeniedCard";
 import Link from "next/link";
 import { DashboardEntityPageShell } from "../../_components/DashboardEntityPageShell";
@@ -533,7 +534,7 @@ async function InventoryMovements({
               {item.quantity_after}
             </p>
             <small>
-              {new Date(item.occurred_at).toLocaleString("pt-BR")}
+              <HotelInstant value={item.occurred_at} />
               {access.canReadCosts ? ` · ${money(item.total_cost)}` : ""}
             </small>
           </article>
@@ -546,7 +547,7 @@ async function InventoryMovements({
             <strong>{item.action}</strong> · {item.entity_type}
             <p className="m-0 text-sm">
               {item.actor_name || "Sistema"} ·{" "}
-              {new Date(item.created_at).toLocaleString("pt-BR")}
+              <HotelInstant value={item.created_at} />
             </p>
           </article>
         ))}
@@ -660,7 +661,7 @@ async function InventoryCounts({
           ))}
           {canCount && count.status === "draft" ? (
             <form action={finishInventoryCountAction} className="flex gap-2">
-              <input type="hidden" name="id" value={count.id} />
+              <input type="hidden" name="record_id" value={count.id} />
               <button
                 name="action"
                 value="complete"

@@ -1,5 +1,6 @@
 "use client";
 
+import { HotelInstant } from "../../_components/HotelTimeZone";
 import type { AdminSeason } from "@hotel/shared";
 import { deleteSeasonAction, updateSeasonAction } from "../actions";
 import { DashboardEntityActionButtons } from "../../_components/DashboardEntityActionButtons";
@@ -15,12 +16,16 @@ type SeasonListItemProps = {
 };
 
 function SeasonDataPreview({ season }: { season: AdminSeason }) {
-  const createdAt = season.created_at
-    ? new Date(season.created_at).toLocaleString("pt-BR")
-    : "-";
-  const updatedAt = season.updated_at
-    ? new Date(season.updated_at).toLocaleString("pt-BR")
-    : "-";
+  const createdAt = season.created_at ? (
+    <HotelInstant value={season.created_at} />
+  ) : (
+    "-"
+  );
+  const updatedAt = season.updated_at ? (
+    <HotelInstant value={season.updated_at} />
+  ) : (
+    "-"
+  );
 
   return (
     <div className="mt-[0.85rem] grid grid-cols-[repeat(auto-fit,minmax(200px,1fr))] gap-[0.75rem]">

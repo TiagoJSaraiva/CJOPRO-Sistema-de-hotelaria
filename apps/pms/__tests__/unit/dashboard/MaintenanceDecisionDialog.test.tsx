@@ -1,7 +1,14 @@
 // @vitest-environment jsdom
-import { cleanup, render, screen } from "@testing-library/react";
+import {
+  cleanup,
+  fireEvent,
+  render,
+  screen,
+  waitFor,
+} from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
-import { afterEach, expect, it, vi } from "vitest";
+import { afterEach, describe, expect, it, vi } from "vitest";
+import { HotelTimeZoneProvider } from "../../../src/app/dashboard/_components/HotelTimeZone";
 import { MaintenanceDecisionDialog } from "../../../src/app/dashboard/maintenance/_components/MaintenanceDecisionDialog";
 
 afterEach(() => {
@@ -126,4 +133,59 @@ it("mostra falha de busca sem inventar resultados", async () => {
     "Busca indisponível",
   );
   expect(screen.queryByRole("radio")).toBeNull();
+});
+
+describe("colocar a ordem em espera", () => {
+  function renderWait(timeZone: string | null) {
+    const submit = vi.fn().mockResolvedValue(true);
+    const { container } = render(
+      <HotelTimeZoneProvider timeZone={timeZone}>
+        <MaintenanceDecisionDialog
+          decision={{
+            title: "Colocar em espera",
+            path: "/wait",
+            body: {},
+            field: "reason",
+            wait: true,
+          }}
+          occurrenceId="origin"
+          occurrenceCode="OCO-1"
+          referenceData={{
+            operational_date: "2026-09-01",
+            rooms: [],
+            locations: [],
+            stays: [],
+            categories: [],
+            assignable_users: [],
+          }}
+          submit={submit}
+          close={vi.fn()}
+        />
+      </HotelTimeZoneProvider>,
+    );
+    const form = container.querySelector("form") as HTMLFormElement;
+    fireEvent.change(form.querySelector('[name="reason"]') as HTMLElement, {
+      target: { value: "Peça em falta" },
+    });
+    fireEvent.change(
+      form.querySelector('[name="next_follow_up_at"]') as HTMLInputElement,
+      { target: { value: "2026-05-13T00:30" } },
+    );
+    fireEvent.submit(form);
+    return submit;
+  }
+
+  it("grava a próxima cobrança na hora digitada no fuso do hotel", async () => {
+    const submit = renderWait("Asia/Tokyo");
+    await waitFor(() => expect(submit).toHaveBeenCalled());
+    expect(submit.mock.calls[0]![1].next_follow_up_at).toBe(
+      "2026-05-12T15:30:00.000Z",
+    );
+  });
+
+  it("sem o relógio do hotel, avisa e não envia", async () => {
+    const submit = renderWait(null);
+    expect(await screen.findByText("Data e hora inválidas.")).toBeTruthy();
+    expect(submit).not.toHaveBeenCalled();
+  });
 });

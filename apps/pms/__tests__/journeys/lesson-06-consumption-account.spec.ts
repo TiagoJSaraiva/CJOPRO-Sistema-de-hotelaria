@@ -6,6 +6,7 @@ import {
   prepareScenario,
   queryLocal,
   signIn,
+  signOut,
   test,
 } from "./support";
 
@@ -127,14 +128,17 @@ test("lição 6: pedidos, pagadores e conta da estadia", async ({
     const quantity = page.getByRole("spinbutton", {
       name: "Quantidade de Agua mineral",
     });
-    await quantity.fill("1");
-    await expect
-      .soft(page.getByRole("radio", { name: "Lançamento no fólio" }))
-      .toBeChecked();
+    // Antes da hidratação, o campo controlado descarta o valor digitado.
+    await expect(async () => {
+      await quantity.fill("1");
+      await expect(
+        page.getByRole("radio", { name: "Lançamento no fólio" }),
+      ).toBeChecked({ timeout: 2_000 });
+    }).toPass({ timeout: 30_000 });
     await quantity.fill("0");
   });
 
-  await test.step("3. Consumo legado: visível como migrado, sem efeito na conta (QA-036)", async () => {
+  await test.step("3. Consumo legado: visível como migrado, sem efeito na conta", async () => {
     await page.goto(
       "/dashboard/consumption/history?disposition=legacy_unclassified",
     );
@@ -149,6 +153,33 @@ test("lição 6: pedidos, pagadores e conta da estadia", async ({
       from public.consumption_orders o where o.id = '${LEGACY_ORDER_ID}';
     `);
     expect.soft(legacy).toBe("legacy_unclassified|true|0");
+  });
+
+  await test.step("Histórico: o filtro por período encontra a comanda", async () => {
+    const zone = `(select timezone from public.hotels where id = '${AURORA_ID}')`;
+    const moment = queryLocal(`
+      select to_char(occurred_at at time zone ${zone}, 'YYYY-MM-DD"T"HH24:MI')
+        || '|' || to_char((occurred_at + interval '1 minute') at time zone ${zone}, 'YYYY-MM-DD"T"HH24:MI')
+        || '|' || to_char((occurred_at - interval '1 day') at time zone ${zone}, 'YYYY-MM-DD"T"HH24:MI')
+      from public.consumption_orders where id = '${LEGACY_ORDER_ID}';
+    `);
+    const [from, to, dayBefore] = moment.split("|") as [string, string, string];
+
+    await page.goto("/dashboard/consumption/history");
+    await page.getByLabel("De", { exact: true }).fill(from);
+    await page.getByLabel("Até", { exact: true }).fill(to);
+    await page.getByRole("button", { name: "Filtrar" }).click();
+    await expect(page).toHaveURL(/from=/);
+    await expect
+      .soft(page.getByText("Migrado sem forma de cobrança").first())
+      .toBeVisible();
+
+    await page.getByLabel("De", { exact: true }).fill(dayBefore);
+    await page.getByLabel("Até", { exact: true }).fill(dayBefore);
+    await page.getByRole("button", { name: "Filtrar" }).click();
+    await expect
+      .soft(page.getByText("Nenhuma comanda encontrada."))
+      .toBeVisible();
   });
 
   await test.step("Erro proposital: oferta física sem posição ativa", async () => {
@@ -291,6 +322,20 @@ test("lição 6: pedidos, pagadores e conta da estadia", async ({
       .not.toContainText("checked_in");
   });
 
+  await test.step("6. Como financeiro, chegar à conta pelo Painel financeiro", async () => {
+    await signOut(page);
+    await signIn(page, "financeiro.aurora@hotelaria.local");
+    await page.goto("/dashboard/transactions/view");
+    const payment = queryLocal(`
+      select id from public.financial_transactions
+      where stay_id = '${STAY_ID}' and category = 'STAY_PAYMENT';
+    `);
+    await page.locator(`a[href*="transactionId=${payment}"]`).click();
+    await page.getByRole("link", { name: "Ver conta da estadia" }).click();
+    await expect(page).toHaveURL(new RegExp(`stay_id=${STAY_ID}`));
+    await expect.soft(page.getByText("somente leitura")).toBeVisible();
+  });
+
   await test.step("6. O razão explica o saldo mostrado", async () => {
     const summary = accountSummary(page);
     await expect.soft(summary("Hospedagem")).toContainText(/R\$\s*780,00/);
@@ -303,24 +348,52 @@ test("lição 6: pedidos, pagadores e conta da estadia", async ({
       from public.stay_folio_entries where stay_id = '${STAY_ID}';
     `);
     expect.soft(balance, "o razão explica o saldo mostrado").toBe("396.00");
+    await expect.soft(page.getByText("Subcontas por pagador")).toBeVisible();
+  });
+
+  await test.step("O financeiro confere, mas não opera a conta", async () => {
+    for (const action of [
+      "Estornar pagamento",
+      "Registrar reembolso",
+      "Registrar pagamento",
+    ]) {
+      await expect
+        .soft(page.getByRole("button", { name: action }))
+        .toHaveCount(0);
+    }
+    await expect
+      .soft(page.getByRole("link", { name: "Calendário" }))
+      .toHaveCount(0);
+
+    const session = (await context.cookies()).find(
+      (cookie) => cookie.name === "pms_session_token",
+    );
+    const before = movementSnapshot();
+    const refused = await page.request.post(
+      `${BACKEND_URL}/admin/stays/${STAY_ID}/payment-batches`,
+      {
+        headers: { authorization: `Bearer ${session?.value}` },
+        data: {
+          expected_version: 1,
+          idempotency_key: randomUUID(),
+          tenders: [{ payment_method: "pix", amount: 10 }],
+        },
+      },
+    );
+    expect.soft(refused.status(), "a API recusa o pagamento").toBe(403);
+    expect.soft(movementSnapshot(), "nada mudou na conta").toBe(before);
+  });
+
+  await test.step("O financeiro não vê a conta de outro hotel", async () => {
+    await page.goto(
+      `/dashboard/reservations/account?stay_id=${HORIZON_STAY_ID}`,
+    );
+    await expect
+      .soft(page.getByText("Conta não encontrada no hotel ativo."))
+      .toBeVisible();
   });
 
   await test.step("Invariantes de negócio ao final da jornada", async () => {
     expect.soft(findInvariantViolations()).toEqual([]);
   });
-});
-
-test("lição 6, passo 6: financeiro confere a conta da estadia", async ({
-  page,
-}) => {
-  // QA-037: sem permissão de consulta, o passo 6 não é executável. Decisão pendente.
-  test.fail();
-  await prepareScenario("consumption-account");
-  await signIn(page, "financeiro.aurora@hotelaria.local");
-  await page.goto(`/dashboard/reservations/account?stay_id=${STAY_ID}`);
-  const summary = accountSummary(page);
-  await expect(summary("Hospedagem")).toContainText(/R\$\s*780,00/, {
-    timeout: 5_000,
-  });
-  await expect(summary("Saldo de checkout")).toContainText(/R\$\s*380,00/);
 });

@@ -8,6 +8,7 @@ const mocks = vi.hoisted(() => ({
   board: vi.fn(),
   stays: vi.fn(),
   context: vi.fn(),
+  clock: vi.fn(),
 }));
 
 vi.mock("../../../../src/lib/auth", () => ({
@@ -17,13 +18,18 @@ vi.mock("../../../../src/lib/adminApi", () => ({
   getConsumptionServiceBoard: mocks.board,
   listConsumptionEligibleStays: mocks.stays,
   getConsumptionOperationalContext: mocks.context,
+  getHotelClock: mocks.clock,
 }));
 vi.mock(
   "../../../../src/app/dashboard/consumption/service/ConsumptionServiceWorkspace",
   () => ({
-    ConsumptionServiceWorkspace: ({ stays }: { stays: unknown[] }) => (
-      <p>Estadias disponíveis: {stays.length}</p>
-    ),
+    ConsumptionServiceWorkspace: ({
+      stays,
+      timeZone,
+    }: {
+      stays: unknown[];
+      timeZone: string;
+    }) => <p data-time-zone={timeZone}>Estadias disponíveis: {stays.length}</p>,
   }),
 );
 vi.mock(
@@ -40,6 +46,11 @@ import ConsumptionServicePage from "../../../../src/app/dashboard/consumption/se
 beforeEach(() => {
   mocks.user.mockResolvedValue({ permissions: ["read_consumption"] });
   mocks.board.mockResolvedValue({ items: [], summary: {}, updated_at: "" });
+  mocks.clock.mockResolvedValue({
+    timezone: "Asia/Tokyo",
+    operational_date: "2026-09-04",
+    operational_now: "2026-09-04T15:00:00.000Z",
+  });
 });
 
 afterEach(() => {
@@ -77,4 +88,12 @@ it("denies access to anyone who cannot read or manage orders", async () => {
 
   expect(screen.getByText(/Sem permissão para consultar pedidos/)).toBeTruthy();
   expect(mocks.board).not.toHaveBeenCalled();
+});
+
+it("hands the hotel zone to the workspace", async () => {
+  mocks.stays.mockResolvedValue([]);
+  await renderPage();
+  expect(
+    screen.getByText(/Estadias disponíveis/).getAttribute("data-time-zone"),
+  ).toBe("Asia/Tokyo");
 });

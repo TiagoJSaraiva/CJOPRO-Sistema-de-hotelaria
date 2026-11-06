@@ -6,6 +6,7 @@ import type {
   AdminConsumptionOperationalContext,
   GovernanceBoard,
 } from "@hotel/shared";
+import { HotelTimeZoneProvider } from "../../../src/app/dashboard/_components/HotelTimeZone";
 import { GovernanceWorkspace } from "../../../src/app/dashboard/governance/GovernanceWorkspace";
 import { governanceGuide } from "../../../src/app/dashboard/governance/usageGuide";
 
@@ -267,4 +268,16 @@ it("lança o frigobar pela governança com versão, cobrança e reposição", as
       },
     ],
   });
+});
+
+it("chegada e atualização do ciclo aparecem na hora do hotel", () => {
+  render(
+    <HotelTimeZoneProvider timeZone="Asia/Tokyo">
+      <GovernanceWorkspace initial={board} templates={[]} access={access} />
+    </HotelTimeZoneProvider>,
+  );
+  expect(
+    screen.getByText("Próxima chegada: 09/09/2026, 23:00:00"),
+  ).toBeTruthy();
+  expect(screen.getByText(/Atualizado em 08\/09\/2026, 21:00:00/)).toBeTruthy();
 });

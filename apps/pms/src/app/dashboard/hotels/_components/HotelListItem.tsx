@@ -1,5 +1,6 @@
 "use client";
 
+import { HotelInstant } from "../../_components/HotelTimeZone";
 import type { AdminHotel } from "../../../../lib/adminApi";
 import { deleteHotelAction, updateHotelAction } from "../actions";
 import { DashboardEntityActionButtons } from "../../_components/DashboardEntityActionButtons";
@@ -15,12 +16,16 @@ type HotelListItemProps = {
 };
 
 function HotelDataPreview({ hotel }: { hotel: AdminHotel }) {
-  const createdAt = hotel.created_at
-    ? new Date(hotel.created_at).toLocaleString("pt-BR")
-    : "-";
-  const updatedAt = hotel.updated_at
-    ? new Date(hotel.updated_at).toLocaleString("pt-BR")
-    : "-";
+  const createdAt = hotel.created_at ? (
+    <HotelInstant value={hotel.created_at} />
+  ) : (
+    "-"
+  );
+  const updatedAt = hotel.updated_at ? (
+    <HotelInstant value={hotel.updated_at} />
+  ) : (
+    "-"
+  );
 
   return (
     <div className="mt-[0.9rem] grid grid-cols-[repeat(auto-fit,minmax(200px,1fr))] gap-[0.75rem]">

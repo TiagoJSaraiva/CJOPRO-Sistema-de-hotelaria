@@ -3,6 +3,7 @@ import { DashboardEntityPageShell } from "../../_components/DashboardEntityPageS
 import {
   getConsumptionOperationalContext,
   getConsumptionServiceBoard,
+  getHotelClock,
   listConsumptionEligibleStays,
 } from "../../../../lib/adminApi";
 import { getUserFromSession } from "../../../../lib/auth";
@@ -25,8 +26,9 @@ export default async function ConsumptionServicePage({
         message="Sem permissão para consultar pedidos de consumo."
       />
     );
-  const [board, stays] = await Promise.all([
+  const [board, clock, stays] = await Promise.all([
     getConsumptionServiceBoard(),
+    getHotelClock(),
     // Consultar pedidos não exige poder lançar consumo, que é o que esta busca pede.
     listConsumptionEligibleStays("").catch((cause: { statusCode?: number }) => {
       if (cause.statusCode === 403) return [];
@@ -45,6 +47,7 @@ export default async function ConsumptionServicePage({
       usageGuide={consumptionServiceGuide}
     >
       <ConsumptionServiceWorkspace
+        timeZone={clock.timezone}
         items={board.items as never[]}
         stays={stays}
         context={context}

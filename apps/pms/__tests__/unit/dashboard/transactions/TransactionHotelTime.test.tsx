@@ -68,6 +68,40 @@ function renderItem(transaction: AdminFinancialTransaction, isEditing = false) {
 
 afterEach(cleanup);
 
+describe("caminho do financeiro até a conta da estadia", () => {
+  function renderPreview(transaction: AdminFinancialTransaction) {
+    render(
+      <TransactionListItem
+        transaction={transaction}
+        timeZone={SAO_PAULO}
+        referenceDate={NOVEMBER_4}
+        canRead
+        canUpdate={false}
+        canDelete={false}
+        isViewing
+        isEditing={false}
+      />,
+    );
+  }
+
+  it("transação de estadia leva à conta, sem expor o identificador", () => {
+    renderPreview({ ...base, stay_id: "stay 1" });
+    expect(
+      screen
+        .getByRole("link", { name: "Ver conta da estadia" })
+        .getAttribute("href"),
+    ).toBe("/dashboard/reservations/account?stay_id=stay%201");
+    expect(screen.queryByText("stay 1")).toBeNull();
+  });
+
+  it("transação sem estadia não oferece o caminho", () => {
+    renderPreview({ ...base, stay_id: null });
+    expect(
+      screen.queryByRole("link", { name: "Ver conta da estadia" }),
+    ).toBeNull();
+  });
+});
+
 describe("horários da transação no fuso do hotel", () => {
   it("o campo de edição mostra o pagamento na hora do hotel", () => {
     renderItem(

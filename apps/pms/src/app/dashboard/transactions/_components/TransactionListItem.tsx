@@ -116,7 +116,21 @@ function TransactionDataPreview({
           value={transaction.reference_code || "-"}
         />
         <DetailItem label="Reserva" value={transaction.reservation_id || "-"} />
-        <DetailItem label="Estadia" value={transaction.stay_id || "-"} />
+        {transaction.stay_id ? (
+          <div className="min-w-0">
+            <span className="block text-[0.72rem] font-semibold uppercase tracking-[0.04em] text-[#52606d]">
+              Estadia
+            </span>
+            <Link
+              className="mt-[0.2rem] block text-[0.92rem] font-semibold text-[#1b4db3] underline"
+              href={`/dashboard/reservations/account?stay_id=${encodeURIComponent(transaction.stay_id)}`}
+            >
+              Ver conta da estadia
+            </Link>
+          </div>
+        ) : (
+          <DetailItem label="Estadia" value="-" />
+        )}
         <DetailItem
           label="Origem"
           value={

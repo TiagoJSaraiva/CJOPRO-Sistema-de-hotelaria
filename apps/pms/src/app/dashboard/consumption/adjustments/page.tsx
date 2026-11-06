@@ -116,7 +116,7 @@ export default async function ConsumptionAdjustmentsPage({
                   className="grid gap-2"
                   data-usage-guide="consumption-adjustment-decision"
                 >
-                  <input type="hidden" name="id" value={correction.id} />
+                  <input type="hidden" name="record_id" value={correction.id} />
                   <label className="pms-field">
                     <span>Motivo da rejeição (obrigatório ao rejeitar)</span>
                     <input name="reason" className="pms-field-input" />

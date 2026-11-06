@@ -137,7 +137,7 @@ describe("dashboard/consumption account actions", () => {
       permissions: [PERMISSIONS.CONSUMPTION_ADJUSTMENT_APPROVE],
     });
     const decision = new FormData();
-    decision.set("id", "correction-1");
+    decision.set("record_id", "correction-1");
     decision.set("decision", "approve");
     await expect(decideConsumptionCorrectionAction(decision)).rejects.toThrow(
       "REDIRECT:/dashboard/consumption/adjustments?status=approved",

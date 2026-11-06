@@ -1,6 +1,10 @@
 "use client";
 
 import { useEffect, useMemo, useState, useTransition, useRef } from "react";
+import {
+  hotelLocalInputToInstant,
+  instantToHotelLocalInput,
+} from "@hotel/shared";
 import type {
   AdminConsumptionOperationalContext,
   AdminConsumptionOrder,
@@ -45,13 +49,6 @@ function currency(value: number, code: string) {
     style: "currency",
     currency: code,
   }).format(value);
-}
-
-function localDateTimeInput(value: string) {
-  const date = new Date(value);
-  return new Date(date.getTime() - date.getTimezoneOffset() * 60_000)
-    .toISOString()
-    .slice(0, 16);
 }
 
 export function Receipt({ order }: { order: AdminConsumptionOrder }) {
@@ -115,10 +112,12 @@ export function Receipt({ order }: { order: AdminConsumptionOrder }) {
 }
 
 export function ConsumptionOrderComposer({
+  timeZone,
   context: initialContext,
   canReceivePayment,
   canGrantCourtesy,
 }: {
+  timeZone: string;
   context: AdminConsumptionOperationalContext;
   canReceivePayment: boolean;
   canGrantCourtesy: boolean;
@@ -228,9 +227,9 @@ export function ConsumptionOrderComposer({
   }
 
   function occurrence(value: string) {
-    return value === localDateTimeInput(context.occurred_at)
+    return value === instantToHotelLocalInput(context.occurred_at, timeZone)
       ? context.occurred_at
-      : new Date(value).toISOString();
+      : (hotelLocalInputToInstant(value, timeZone) ?? value);
   }
 
   function submit(formData: FormData) {
@@ -354,9 +353,18 @@ export function ConsumptionOrderComposer({
                 type="datetime-local"
                 required
                 className="pms-field-input"
-                min={localDateTimeInput(context.stay.checkin_date_actual)}
-                max={localDateTimeInput(context.operational_now)}
-                defaultValue={localDateTimeInput(context.occurred_at)}
+                min={instantToHotelLocalInput(
+                  context.stay.checkin_date_actual,
+                  timeZone,
+                )}
+                max={instantToHotelLocalInput(
+                  context.operational_now,
+                  timeZone,
+                )}
+                defaultValue={instantToHotelLocalInput(
+                  context.occurred_at,
+                  timeZone,
+                )}
               />
             </label>
           </div>

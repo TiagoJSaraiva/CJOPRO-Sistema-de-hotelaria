@@ -1,3 +1,4 @@
+import { HotelInstant } from "../../_components/HotelTimeZone";
 import { DashboardAccessDeniedCard } from "../../_components/DashboardAccessDeniedCard";
 import { DashboardEntityPageShell } from "../../_components/DashboardEntityPageShell";
 import {
@@ -363,7 +364,7 @@ export default async function CommercialPartnersPage({
                     {selectedHistory.map((event) => (
                       <li key={event.id}>
                         <time dateTime={event.created_at}>
-                          {new Date(event.created_at).toLocaleString("pt-BR")}
+                          <HotelInstant value={event.created_at} />
                         </time>{" "}
                         · {event.action} · {event.actor_name || "Sistema"}
                       </li>

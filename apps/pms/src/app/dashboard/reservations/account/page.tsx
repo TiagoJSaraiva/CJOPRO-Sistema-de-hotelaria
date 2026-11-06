@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { redirect } from "next/navigation";
+import { formatHotelInstant } from "@hotel/shared";
 import {
   getHotelClock,
   getStayAccount,
@@ -8,13 +9,12 @@ import {
 import { getUserFromSession } from "../../../../lib/auth";
 import { DashboardAccessDeniedCard } from "../../_components/DashboardAccessDeniedCard";
 import { DashboardEntityPageShell } from "../../_components/DashboardEntityPageShell";
-import { getReservationsCalendarAccess } from "../access";
+import { getStayAccountAccess } from "../access";
 import {
   accountActionMessage,
   accountStatusLabel,
   correctionStatusLabel,
   folioKindLabel,
-  formatAccountInstant,
   orderSituationLabel,
   paymentMethodLabel,
 } from "./accountLabels";
@@ -37,16 +37,21 @@ export default async function StayAccountPage({
 }) {
   const params = await searchParams;
   const user = await getUserFromSession();
-  const access = getReservationsCalendarAccess(user);
+  const access = getStayAccountAccess(user);
   const consumptionAccess = getConsumptionAccess(user);
-  if (!access.canAccess)
+  if (!access.canRead)
     return (
       <DashboardAccessDeniedCard
         title="Conta da estadia"
         message="Sem permissão para consultar a conta."
       />
     );
-  if (!params?.stay_id) redirect("/dashboard/reservations/view");
+  if (!params?.stay_id)
+    redirect(
+      access.canOperate
+        ? "/dashboard/reservations/view"
+        : "/dashboard/transactions/view",
+    );
   let account: Awaited<ReturnType<typeof getStayAccount>>;
   let timeZone: string;
   try {
@@ -104,13 +109,19 @@ export default async function StayAccountPage({
           key: "calendar",
           label: "Calendário",
           href: "/dashboard/reservations/view",
-          isVisible: true,
+          isVisible: access.canOperate,
+        },
+        {
+          key: "finance",
+          label: "Painel financeiro",
+          href: "/dashboard/transactions/view",
+          isVisible: !access.canOperate,
         },
         {
           key: "checkout",
           label: "Checkout",
           href: `/dashboard/reservations/checkout?room_number=${encodeURIComponent(account.room_number)}`,
-          isVisible: account.stay_status === "checked_in",
+          isVisible: access.canOperate && account.stay_status === "checked_in",
         },
         {
           key: "account",
@@ -121,6 +132,16 @@ export default async function StayAccountPage({
       ]}
     >
       <div className="grid gap-4">
+        {!access.canOperate && !consumptionAccess.canReceivePayment ? (
+          <p
+            className="pms-surface-card m-0"
+            data-usage-guide="stay-account-readonly"
+            role="status"
+          >
+            Consulta financeira, somente leitura. Pagamentos, estornos e
+            reembolsos são registrados pela recepção.
+          </p>
+        ) : null}
         {actionMessage?.tone === "success" ? (
           <p className="pms-alert-success" role="status">
             {actionMessage.text}
@@ -212,7 +233,7 @@ export default async function StayAccountPage({
               {account.folio.entries.map((entry) => (
                 <tr className="border-t border-slate-200" key={entry.id}>
                   <td className="py-2">
-                    {formatAccountInstant(entry.posted_at, timeZone)}
+                    {formatHotelInstant(entry.posted_at, timeZone)}
                   </td>
                   <td>{folioKindLabel(entry.kind)}</td>
                   <td>{entry.description}</td>
@@ -293,7 +314,8 @@ export default async function StayAccountPage({
                           />
                           <label className="pms-field">
                             <span>
-                              Valor a estornar ({tender.payment_method})
+                              Valor a estornar (
+                              {paymentMethodLabel(tender.payment_method)})
                             </span>
                             <input
                               className="pms-field-input"
@@ -321,7 +343,7 @@ export default async function StayAccountPage({
                 {account.refunds.map((refund) => (
                   <li key={refund.id}>
                     Reembolso {money(refund.amount, refund.currency)} ·{" "}
-                    {refund.payment_method}
+                    {paymentMethodLabel(refund.payment_method)}
                   </li>
                 ))}
               </ul>
@@ -394,9 +416,10 @@ export default async function StayAccountPage({
               <div>
                 <h2 className="m-0">Fechamento original</h2>
                 <p className="m-0 text-sm">
-                  {new Date(
+                  {formatHotelInstant(
                     account.checkout_record.checked_out_at,
-                  ).toLocaleString("pt-BR")}{" "}
+                    timeZone,
+                  )}{" "}
                   · versão {account.checkout_record.account_version}
                 </p>
               </div>

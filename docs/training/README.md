@@ -24,7 +24,7 @@ nunca deve ser usada fora do ambiente local.
 | [3. Canais de reserva](lesson-03-channels.md)              | `channels`               | distinguir site direto, conexão, mapeamento e inbox |
 | [4. Quarto 103](lesson-04-governance-maintenance.md)       | `governance-maintenance` | conduzir manutenção até inspeção de governança      |
 | [5. Garantia](lesson-05-warranty.md)                       | `warranty`               | registrar uma decisão auditável de garantia         |
-| [6. Consumos e conta](lesson-06-consumption-account.md)    | `consumption-account`    | classificar consumo e conferir pagador              |
+| [6. Consumos e conta](lesson-06-consumption-account.md)    | `consumption-account`    | lançar consumo e conferir pagador                   |
 | [7. Estoque e frigobar](lesson-07-inventory.md)            | `inventory-procurement`  | operar posição, lote, contagem e reposição          |
 | [8. Compras](lesson-08-procurement.md)                     | `inventory-procurement`  | solicitar, aprovar, receber e conferir compra       |
 | [9. Caixa e fechamento](lesson-09-cash-close.md)           | `cash-close`             | contar às cegas e fechar um dia, inclusive zerado   |

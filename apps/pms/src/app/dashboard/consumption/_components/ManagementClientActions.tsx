@@ -41,15 +41,21 @@ export function ConfirmSubmitButton({
   children,
   message,
   className = "pms-button-primary",
+  name,
+  value,
 }: {
   children: string;
   message: string;
   className?: string;
+  name?: string;
+  value?: string;
 }) {
   return (
     <button
       type="submit"
       className={className}
+      name={name}
+      value={value}
       onClick={(event) => {
         if (!window.confirm(message)) event.preventDefault();
       }}

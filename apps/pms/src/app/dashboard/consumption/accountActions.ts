@@ -144,9 +144,11 @@ export async function decideConsumptionCorrectionAction(formData: FormData) {
   const user = await getUserFromSession();
   if (!user?.permissions.includes(PERMISSIONS.CONSUMPTION_ADJUSTMENT_APPROVE))
     back("forbidden");
-  const id = String(formData.get("id") || "");
-  const decision = formData.get("decision") === "reject" ? "reject" : "approve";
+  const id = String(formData.get("record_id") || "");
+  const decision = formData.get("decision");
   const reason = String(formData.get("reason") || "").trim() || null;
+  // Sem a intenção declarada pelo botão, nada é aprovado por omissão.
+  if (decision !== "approve" && decision !== "reject") return back("invalid");
   if (!id || (decision === "reject" && !reason)) back("invalid");
   try {
     await decideConsumptionCorrection(id, { decision, reason });

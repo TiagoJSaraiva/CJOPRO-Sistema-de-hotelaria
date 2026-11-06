@@ -3,6 +3,7 @@ import { cleanup, render, screen } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { afterEach, expect, it, vi } from "vitest";
 import type { OperationalPendingList } from "@hotel/shared";
+import { HotelTimeZoneProvider } from "../../../src/app/dashboard/_components/HotelTimeZone";
 import { PendingWorkspace } from "../../../src/app/dashboard/pending/PendingWorkspace";
 import { pendingGuide } from "../../../src/app/dashboard/pending/usageGuide";
 const router = vi.hoisted(() => ({ push: vi.fn(), refresh: vi.fn() }));
@@ -264,4 +265,22 @@ it("ler na fila não lida oferece acesso à leitura de destino", async () => {
       .getAttribute("href"),
   ).toBe("/dashboard/pending?read=read");
   expect(screen.getByRole("status").textContent).toContain("filtro de leitura");
+});
+
+it("a última atualização aparece na hora do hotel", () => {
+  render(
+    <HotelTimeZoneProvider timeZone="Asia/Tokyo">
+      <PendingWorkspace
+        initial={{
+          ...data,
+          sync: {
+            last_success_at: "2026-05-12T15:30:00.000Z",
+            error_message: null,
+          },
+        }}
+        userId="user"
+      />
+    </HotelTimeZoneProvider>,
+  );
+  expect(screen.getByText(/13\/05\/2026, 00:30:00/)).toBeTruthy();
 });

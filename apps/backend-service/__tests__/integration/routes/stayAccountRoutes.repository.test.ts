@@ -156,6 +156,65 @@ describe("stay account routes", () => {
     ).toBe(403);
   });
 
+  it("lets finance read the account of the active hotel without commercial terms", async () => {
+    const repo = repository();
+    const app = await appWith(repo);
+    const response = await app.inject({
+      method: "GET",
+      url: `/admin/stays/${stayId}/account`,
+      headers: headers([PERMISSIONS.TRANSACTION_READ]),
+    });
+    expect(response.statusCode).toBe(200);
+    expect(repo.getAccount).toHaveBeenCalledWith(hotelId, stayId, false);
+  });
+
+  it("refuses finance reads outside the active hotel and for unknown accounts", async () => {
+    const repo = repository();
+    const app = await appWith(repo);
+    const foreign = await app.inject({
+      method: "GET",
+      url: `/admin/stays/${stayId}/account`,
+      headers: {
+        ...headers([PERMISSIONS.TRANSACTION_READ]),
+        [ACTIVE_HOTEL_HEADER_NAME]: "10000000-0000-4000-8000-000000000002",
+      },
+    });
+    expect(foreign.statusCode).toBe(403);
+    expect(repo.getAccount).not.toHaveBeenCalled();
+
+    vi.mocked(repo.getAccount).mockResolvedValueOnce(null);
+    const missing = await app.inject({
+      method: "GET",
+      url: `/admin/stays/${stayId}/account`,
+      headers: headers([PERMISSIONS.TRANSACTION_READ]),
+    });
+    expect(missing.statusCode).toBe(404);
+  });
+
+  it("keeps account operations closed to the finance read permission", async () => {
+    const repo = repository();
+    const app = await appWith(repo);
+    const payload = {
+      expected_version: 4,
+      idempotency_key: "a4200000-0000-4000-8000-000000000002",
+      tenders: [{ payment_method: "pix", amount: 10 }],
+    };
+    for (const url of [
+      `/admin/stays/${stayId}/payment-batches/preview`,
+      `/admin/stays/${stayId}/payment-batches`,
+    ]) {
+      const response = await app.inject({
+        method: "POST",
+        url,
+        headers: headers([PERMISSIONS.TRANSACTION_READ]),
+        payload,
+      });
+      expect(response.statusCode).toBe(403);
+    }
+    expect(repo.previewPaymentBatch).not.toHaveBeenCalled();
+    expect(repo.createPaymentBatch).not.toHaveBeenCalled();
+  });
+
   it("scopes the account to the active hotel and protects commercial terms", async () => {
     const repo = repository();
     const app = await appWith(repo);

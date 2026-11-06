@@ -74,7 +74,7 @@ O quarto 101 está pronto; o 103 possui um bloqueio de limpeza programada.
 6. Confira o **Horário operacional**, a janela **14h–22h** e a prontidão.
    Clique em **Check-in** somente quando elegível. Se houver bloqueio,
    leia o motivo visível e resolva sua origem. Exceção gerencial não ignora
-   a janela do hotel nem interdição de manutenção.
+   a janela do hotel nem interdição de manutenção.abundante n
 
 ## Verificação final
 

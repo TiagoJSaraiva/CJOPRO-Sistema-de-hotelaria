@@ -10,7 +10,7 @@ import {
   type HotelIdParams,
   type PermissionName,
 } from "@hotel/shared";
-import { ensureAuthorizedWithScope } from "../auth/authorization";
+import { ensureAuthorizedAnyWithScope } from "../auth/authorization";
 import { adminError } from "../common/adminError";
 import { requireActiveHotelId } from "../common/requireActiveHotelScope";
 import { normalizeOptionalText } from "../common/text";
@@ -24,9 +24,13 @@ type CorrectionsQuery = { status?: string; stay_id?: string };
 function access(
   request: FastifyRequest,
   reply: FastifyReply,
-  permission: PermissionName,
+  permission: PermissionName | PermissionName[],
 ) {
-  const auth = ensureAuthorizedWithScope(request, reply, permission);
+  const auth = ensureAuthorizedAnyWithScope(
+    request,
+    reply,
+    [permission].flat(),
+  );
   if (!auth) return null;
   const hotelId = requireActiveHotelId(reply, auth.activeHotelId);
   return hotelId ? { auth, hotelId } : null;
@@ -104,11 +108,11 @@ export function registerStayAccountRoutes(
   app.get<{ Params: HotelIdParams }>(
     "/admin/stays/:id/account",
     async (request, reply) => {
-      const context = access(
-        request,
-        reply,
+      // O financeiro confere a conta; operar a estadia continua com a recepção.
+      const context = access(request, reply, [
         PERMISSIONS.RESERVATIONS_CALENDAR_ACCESS,
-      );
+        PERMISSIONS.TRANSACTION_READ,
+      ]);
       if (!context) return;
       const item = await repository.getAccount(
         context.hotelId,

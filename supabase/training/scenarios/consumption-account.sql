@@ -1,6 +1,6 @@
 select public.prepare_training_scenario(
   '10000000-0000-4000-8000-000000000001','consumption-account',1,
-  'Hospedagem ativa com consumo ainda não classificado na conta.',
+  'Hospedagem ativa com consumo legado migrado, apenas para consulta.',
   '80000000-0000-4000-8000-000000000002'
 );
 

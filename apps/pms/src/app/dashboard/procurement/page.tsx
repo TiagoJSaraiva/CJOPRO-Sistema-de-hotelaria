@@ -176,7 +176,11 @@ export default async function ProcurementPage({
                     action={actReplenishmentAction}
                     className="mt-2 flex flex-wrap gap-2"
                   >
-                    <input type="hidden" name="id" value={String(r.id)} />
+                    <input
+                      type="hidden"
+                      name="record_id"
+                      value={String(r.id)}
+                    />
                     <input
                       type="hidden"
                       name="version"
@@ -458,7 +462,7 @@ export default async function ProcurementPage({
                   action={actPurchaseOrderAction}
                   className="mt-2 flex gap-2"
                 >
-                  <input type="hidden" name="id" value={String(o.id)} />
+                  <input type="hidden" name="record_id" value={String(o.id)} />
                   <input
                     type="hidden"
                     name="version"
@@ -685,7 +689,11 @@ export default async function ProcurementPage({
                       action={actProcurementInvoiceAction}
                       className="mt-2 grid gap-2 md:grid-cols-3"
                     >
-                      <input type="hidden" name="id" value={String(i.id)} />
+                      <input
+                        type="hidden"
+                        name="record_id"
+                        value={String(i.id)}
+                      />
                       <input
                         type="hidden"
                         name="version"
