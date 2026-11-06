@@ -20,6 +20,10 @@ import {
   reconcileProcurementAction,
   saveProcurementPolicyAction,
 } from "./actions";
+import {
+  procurementPriorityLabel,
+  procurementStatusLabel,
+} from "./procurementLabels";
 import { procurementGuide } from "./usageGuide";
 
 type Board = {
@@ -36,7 +40,6 @@ type Board = {
   invoices: Array<Record<string, unknown>>;
   suppliers: Array<Record<string, unknown>>;
 };
-const label = (value: unknown) => String(value ?? "—").replaceAll("_", " ");
 export default async function ProcurementPage({
   searchParams,
 }: {
@@ -169,8 +172,14 @@ export default async function ProcurementPage({
             {board.replenishments.map((r) => (
               <article className="rounded border p-3" key={String(r.id)}>
                 <strong>{String(r.product_name)}</strong> ·{" "}
-                {String(r.location_name)} · {label(r.status)} ·{" "}
+                {String(r.location_name)} · {procurementStatusLabel(r.status)} ·{" "}
                 {String(r.requested_quantity)} un.
+                <p className="m-0 text-sm">
+                  Prioridade {procurementPriorityLabel(r.priority)} · Saldo{" "}
+                  {Number(r.current_quantity)} · mínimo{" "}
+                  {Number(r.minimum_quantity)} · ideal{" "}
+                  {Number(r.ideal_quantity)}
+                </p>
                 {canRequest || canApprove ? (
                   <form
                     action={actReplenishmentAction}
@@ -453,7 +462,8 @@ export default async function ProcurementPage({
           <div className="mt-4 grid gap-2">
             {board.orders.map((o) => (
               <article className="rounded border p-3" key={String(o.id)}>
-                <strong>{String(o.supplier_name)}</strong> · {label(o.status)} ·{" "}
+                <strong>{String(o.supplier_name)}</strong> ·{" "}
+                {procurementStatusLabel(o.status)} ·{" "}
                 {Number(o.total_amount).toLocaleString("pt-BR", {
                   style: "currency",
                   currency: String(o.currency),
@@ -678,13 +688,21 @@ export default async function ProcurementPage({
               board.invoices.map((i) => (
                 <article className="rounded border p-3" key={String(i.id)}>
                   <strong>Nota {String(i.invoice_number)}</strong> ·{" "}
-                  {label(i.status)} ·{" "}
+                  {procurementStatusLabel(i.status)} ·{" "}
                   {Number(i.total_amount).toLocaleString("pt-BR", {
                     style: "currency",
                     currency: "BRL",
                   })}
                   {canReviewInvoices &&
-                  ["draft", "exception"].includes(String(i.status)) ? (
+                  ["draft", "exception"].includes(String(i.status)) &&
+                  String(i.created_by) === user.id ? (
+                    <p className="m-0 text-sm">
+                      Você registrou esta nota. Outra pessoa precisa aprová-la.
+                    </p>
+                  ) : null}
+                  {canReviewInvoices &&
+                  ["draft", "exception"].includes(String(i.status)) &&
+                  String(i.created_by) !== user.id ? (
                     <form
                       action={actProcurementInvoiceAction}
                       className="mt-2 grid gap-2 md:grid-cols-3"

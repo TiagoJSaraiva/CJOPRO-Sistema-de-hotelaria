@@ -1,6 +1,7 @@
 import { registerOperationalPendingRoutes } from "./routes/operationalPendingRoutes";
 import Fastify, { type FastifyInstance } from "fastify";
 import cors from "@fastify/cors";
+import { databaseRuleError } from "./common/databaseRuleError";
 import swagger from "@fastify/swagger";
 import swaggerUi from "@fastify/swagger-ui";
 import {
@@ -165,6 +166,9 @@ export function createApp(options: CreateAppOptions = {}): FastifyInstance {
         message: "Dados inválidos para a requisição.",
       });
     }
+
+    const databaseRule = databaseRuleError(error);
+    if (databaseRule) return reply.status(409).send(databaseRule);
 
     return reply.send(error);
   });

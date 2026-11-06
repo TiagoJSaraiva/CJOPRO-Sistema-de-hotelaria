@@ -117,23 +117,35 @@ export function MaintenanceCatalogManager({
   const [locations, setLocations] = useState(initialLocations);
   const [kind, setKind] = useState<"area" | "equipment">("area");
   const [message, setMessage] = useState("");
+  const [messageFailed, setMessageFailed] = useState(false);
+  const fail = useCallback((text: string) => {
+    setMessageFailed(true);
+    setMessage(text);
+  }, []);
+  const succeed = useCallback((text: string) => {
+    setMessageFailed(false);
+    setMessage(text);
+  }, []);
   const [warranty, setWarranty] = useState<Record<string, WarrantyContext>>({});
   const focused = useRef(false);
 
-  const loadWarranty = useCallback(async (locationId: string) => {
-    const response = await fetch(
-      `/api/maintenance/locations/${locationId}/warranty`,
-    );
-    const payload = (await response
-      .json()
-      .catch(() => ({}))) as WarrantyContext & { message?: string };
-    if (!response.ok || !payload.location) {
-      setMessage(payload.message || "Falha ao consultar a garantia.");
-      return;
-    }
-    setWarranty((current) => ({ ...current, [locationId]: payload }));
-    setLocations((current) => upsert(current, payload.location));
-  }, []);
+  const loadWarranty = useCallback(
+    async (locationId: string) => {
+      const response = await fetch(
+        `/api/maintenance/locations/${locationId}/warranty`,
+      );
+      const payload = (await response
+        .json()
+        .catch(() => ({}))) as WarrantyContext & { message?: string };
+      if (!response.ok || !payload.location) {
+        fail(payload.message || "Falha ao consultar a garantia.");
+        return;
+      }
+      setWarranty((current) => ({ ...current, [locationId]: payload }));
+      setLocations((current) => upsert(current, payload.location));
+    },
+    [fail],
+  );
 
   useEffect(() => {
     if (!focusLocationId || focused.current) return;
@@ -164,11 +176,11 @@ export function MaintenanceCatalogManager({
       message?: string;
     };
     if (!response.ok || !payload.item) {
-      setMessage(payload.message || "Falha ao salvar catálogo.");
+      fail(payload.message || "Falha ao salvar catálogo.");
       return false;
     }
     update(payload.item);
-    setMessage("Catálogo atualizado.");
+    succeed("Catálogo atualizado.");
     return true;
   }
 
@@ -179,9 +191,8 @@ export function MaintenanceCatalogManager({
     <div className="grid gap-4 lg:grid-cols-2">
       {message ? (
         <p
-          role="status"
-          aria-live="polite"
-          className="col-span-full rounded-lg bg-[#eef6ff] p-3"
+          role={messageFailed ? "alert" : "status"}
+          className={`col-span-full ${messageFailed ? "pms-alert-error" : "pms-alert-success"}`}
         >
           {message}
         </p>
@@ -413,7 +424,8 @@ export function MaintenanceCatalogManager({
                             item.lifecycle_status === "active",
                         )}
                         onSaved={() => void loadWarranty(location.id)}
-                        setMessage={setMessage}
+                        fail={fail}
+                        succeed={succeed}
                       />
                     ) : null}
                   </div>
@@ -547,16 +559,29 @@ function LocationCard({
   );
 }
 
+const WARRANTY_RESULT_LABELS: Record<
+  MaintenanceWarrantyDecision["result"],
+  string
+> = {
+  expiry_acknowledged: "Ciência do vencimento",
+  claim_submitted: "Garantia acionada",
+  renewed: "Garantia renovada",
+  replaced: "Equipamento substituído",
+  retired: "Equipamento aposentado",
+};
+
 function WarrantyPanel({
   context,
   replacements,
   onSaved,
-  setMessage,
+  fail,
+  succeed,
 }: {
   context: WarrantyContext;
   replacements: AdminMaintenanceLocation[];
   onSaved: () => void;
-  setMessage: (message: string) => void;
+  fail: (message: string) => void;
+  succeed: (message: string) => void;
 }) {
   const [result, setResult] = useState<MaintenanceWarrantyDecision["result"]>(
     "expiry_acknowledged",
@@ -604,8 +629,8 @@ function WarrantyPanel({
             message?: string;
           };
           if (!response.ok)
-            return setMessage(payload.message || "Falha ao registrar decisão.");
-          setMessage(
+            return fail(payload.message || "Falha ao registrar decisão.");
+          succeed(
             "Decisão de garantia registrada. A pendência será encerrada na próxima reconciliação.",
           );
           onSaved();
@@ -717,7 +742,7 @@ function WarrantyPanel({
           <ol className="mt-2 grid gap-2">
             {context.decisions.map((decision) => (
               <li key={decision.id} className="rounded border p-2">
-                <strong>{decision.result.replaceAll("_", " ")}</strong> ·{" "}
+                <strong>{WARRANTY_RESULT_LABELS[decision.result]}</strong> ·{" "}
                 {decision.decided_by_name || "Usuário"}
                 <p>{decision.reason}</p>
               </li>

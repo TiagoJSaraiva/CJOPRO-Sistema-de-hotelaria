@@ -3,6 +3,7 @@ import {
   ADMIN_ERROR_CODE,
   PERMISSIONS,
   type CashMovementInput,
+  type CashTransactionAdopt,
   type CashRegisterInput,
   type CashSessionAction,
   type CashSessionOpen,
@@ -541,6 +542,22 @@ export function registerOperationsFinanceRoutes(
       return send(
         reply,
         await repository.mutation("act_cash_session", {
+          p_hotel_id: c.hotelId,
+          p_id: request.params.id,
+          p_actor_id: c.actorId,
+          p_input: request.body,
+        }),
+      );
+    },
+  );
+  app.post<{ Params: Params; Body: CashTransactionAdopt }>(
+    "/admin/cash-transactions/:id/adopt",
+    async (request, reply) => {
+      const c = scoped(request, reply, PERMISSIONS.CASH_REGISTER_OPERATE);
+      if (!c) return;
+      return send(
+        reply,
+        await repository.mutation("adopt_cash_transaction", {
           p_hotel_id: c.hotelId,
           p_id: request.params.id,
           p_actor_id: c.actorId,

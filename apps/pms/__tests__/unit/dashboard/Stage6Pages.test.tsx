@@ -12,6 +12,11 @@ vi.mock("../../../src/lib/auth", () => ({ getUserFromSession: mocks.user }));
 vi.mock("../../../src/lib/adminApi", () => ({
   requestOperationsFinanceEndpoint: mocks.request,
   listCustomers: mocks.customers,
+  getHotelClock: async () => ({
+    timezone: "America/Sao_Paulo",
+    operational_date: "2026-11-06",
+    operational_now: "2026-11-06T15:00:00.000Z",
+  }),
 }));
 vi.mock(
   "../../../src/app/dashboard/_components/DashboardEntityPageShell",
@@ -84,6 +89,64 @@ it("renders the stage 6 reservation workspaces with authorized source data", asy
   render(await AnalyticsPage({ searchParams: Promise.resolve({}) }));
   expect(screen.getByText("Previsão")).toBeTruthy();
   expect(screen.getByText("Realizado")).toBeTruthy();
+});
+
+it("separa o que aguarda decisão do que já foi decidido", async () => {
+  mocks.user.mockResolvedValue({
+    permissions: [PERMISSIONS.BOOKING_CHANNELS_MANAGE],
+  });
+  const event = {
+    channel_name: "HospedaLink Sandbox",
+    event_type: "create",
+    version: 1,
+  };
+  mocks.request.mockImplementation((path: string) => {
+    if (path === "booking-channels") return Promise.resolve({ items: [] });
+    if (path === "booking-configuration") return Promise.resolve({});
+    if (path === "booking-channels/inbox")
+      return Promise.resolve({
+        items: [
+          {
+            ...event,
+            id: "pending",
+            status: "needs_review",
+            reason: "mapping_missing",
+            external_reservation_id: "RES-PENDENTE",
+            normalized_payload: {
+              reservation: {
+                guest_name: "Hóspede Exemplo",
+                room_code: "STD",
+                rate_code: "FLEX",
+                checkin_date: "2026-11-20",
+                checkout_date: "2026-11-22",
+              },
+            },
+          },
+          {
+            ...event,
+            id: "done",
+            status: "applied",
+            reason: "Reserva conferida",
+            external_reservation_id: "RES-APLICADA",
+          },
+        ],
+      });
+    return Promise.resolve({ room_types: [], rate_plans: [] });
+  });
+
+  render(await ChannelsPage({ searchParams: Promise.resolve({}) }));
+
+  const pending = screen.getByText(/RES-PENDENTE/).closest("article")!;
+  expect(pending.textContent).toContain("Em revisão");
+  expect(pending.textContent).toContain("Hóspede Exemplo");
+  expect(pending.textContent).toContain("sem mapeamento");
+  expect(pending.textContent).not.toContain("needs_review");
+  expect(pending.querySelector("button")).toBeTruthy();
+
+  const done = screen.getByText(/RES-APLICADA/).closest("article")!;
+  expect(done.textContent).toContain("Aplicado");
+  expect(done.textContent).toContain("Reserva conferida");
+  expect(done.querySelector("button")).toBeNull();
 });
 
 it("maps a channel with readable room and rate-plan references", async () => {

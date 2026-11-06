@@ -77,7 +77,7 @@ select is(
 );
 select is(
   (select public.pay_corporate_receivable(hotel, 'b1000000-0000-4000-8000-000000000001', actor, 2,
-    '[{"amount": 60, "payment_method": "cash"}]', 'b1000000-0000-4000-8000-0000000000a2')->>'result' from ids),
+    '[{"amount": 60, "payment_method": "pix"}]', 'b1000000-0000-4000-8000-0000000000a2')->>'result' from ids),
   'ok', 'a corporate receivable accepts the final payment'
 );
 select is(

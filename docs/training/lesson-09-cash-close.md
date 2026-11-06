@@ -23,6 +23,8 @@ Contas: caixa, financeiro e gerente. O Aurora possui `Caixa da recepção`
 3. Inicie a contagem. Confirme que o valor esperado não veio na resposta nem na
    interface — não está apenas escondido por CSS.
 4. Informe o dinheiro contado. Depois disso, compare esperado, contado e diferença.
+   A próxima sessão deste caixa já vem com o valor contado; abrir com outro valor
+   exige justificativa.
 5. Se a diferença exceder R$ 5, troque para financeiro e aprove ou peça recontagem.
 6. Feche a sessão. Como financeiro, prepare o fechamento da data no link da
    pendência. Como gerente, aprove.

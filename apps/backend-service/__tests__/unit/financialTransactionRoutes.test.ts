@@ -182,4 +182,68 @@ describe("routes/financial-transactions with injected repository", () => {
       },
     });
   });
+
+  it.each([
+    ["POST", "/admin/financial-transactions", "createFinancialTransaction"],
+    ["PUT", "/admin/financial-transactions/tx-1", "updateFinancialTransaction"],
+    [
+      "DELETE",
+      "/admin/financial-transactions/tx-1",
+      "deleteFinancialTransaction",
+    ],
+  ] as const)(
+    "%s não transforma regra de caixa em falha interna",
+    async (method, url, operation) => {
+      const repository = createFinancialTransactionsRepositoryMock({
+        [operation]: vi.fn(async () => {
+          throw Object.assign(new Error("cash_session_required"), {
+            code: "P0001",
+          });
+        }),
+      });
+      const app = Fastify({ logger: false });
+      app.setErrorHandler((error, _request, reply) =>
+        reply.status(418).send({ repassado: (error as Error).message }),
+      );
+      registerFinancialTransactionRoutes(app, repository);
+      await app.ready();
+      appsToClose.push(app);
+      const response = await app.inject({
+        method,
+        url,
+        headers: {
+          authorization: `Bearer ${createToken(
+            [
+              PERMISSIONS.TRANSACTION_CREATE,
+              PERMISSIONS.TRANSACTION_UPDATE,
+              PERMISSIONS.TRANSACTION_DELETE,
+            ],
+            [
+              {
+                roleId: "role",
+                roleName: "Financeiro",
+                roleType: "HOTEL_ROLE",
+                hotelId: "hotel-1",
+                hotelName: "Hotel 1",
+              },
+            ],
+          )}`,
+          [ACTIVE_HOTEL_HEADER_NAME]: "hotel-1",
+        },
+        payload:
+          method === "DELETE"
+            ? undefined
+            : method === "POST"
+              ? {
+                  type: "INCOME",
+                  category: "MANUAL",
+                  amount: 10,
+                  currency: "BRL",
+                  payment_method: "cash",
+                }
+              : { status: "COMPLETED" },
+      });
+      expect(response.json()).toEqual({ repassado: "cash_session_required" });
+    },
+  );
 });

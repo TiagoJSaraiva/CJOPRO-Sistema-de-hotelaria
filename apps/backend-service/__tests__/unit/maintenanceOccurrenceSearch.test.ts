@@ -69,6 +69,18 @@ it("preserva busca textual paginada e escopo do hotel", async () => {
   expect(query.ilike).toHaveBeenCalledWith("description", "%Vazamento%");
   expect(query.range).toHaveBeenCalledWith(20, 39);
 });
+it.each(["MAN-000042", "man-42", "OCO-000042"])(
+  "acha a ocorrência pelo código %s",
+  async (search) => {
+    const query = setup();
+    await createMaintenanceRepository().listOccurrences("hotel", {
+      page: 1,
+      pageSize: 20,
+      search,
+    });
+    expect(query.eq).toHaveBeenCalledWith("occurrence_number", 42);
+  },
+);
 it("busca código canônico por alvo, período e situação", async () => {
   const query = setup();
   await createMaintenanceRepository().listOccurrences("hotel", {

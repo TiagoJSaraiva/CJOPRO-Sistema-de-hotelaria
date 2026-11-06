@@ -16,6 +16,7 @@ vi.mock("../../../src/app/dashboard/cash/actions", () => ({
   openCashSessionAction: vi.fn(),
   postCashMovementAction: vi.fn(),
   prepareDailyCloseAction: vi.fn(),
+  adoptCashTransactionAction: vi.fn(),
 }));
 
 import CashPage from "../../../src/app/dashboard/cash/page";
@@ -175,5 +176,128 @@ describe("campos acessíveis", () => {
     expect(screen.getByLabelText("Tipo de movimento")).toBeTruthy();
     expect(screen.getByLabelText("Valor do movimento")).toBeTruthy();
     expect(screen.getByLabelText("Motivo do movimento")).toBeTruthy();
+  });
+
+  describe("dinheiro sem sessão no fechamento", () => {
+    const blocked = daily({
+      projection: {
+        is_zero_activity: false,
+        totals: { income: 5, expense: 0, refund: 0 },
+        transactions: [],
+        cash_sessions: [],
+        blockers: [
+          {
+            kind: "cash_without_session",
+            entity_id: "tx-1",
+            title: "Dinheiro recebido sem sessão de caixa.",
+            amount: 5,
+          },
+        ],
+      },
+    });
+    const own = { ...session, operator_id: "cashier-1" };
+
+    function asUser(id: string, permissions: string[]) {
+      mocks.user.mockResolvedValue({ id, permissions, roles: [] });
+    }
+
+    it("quem tem sessão aberta assume o valor, com justificativa", async () => {
+      asUser("cashier-1", [
+        PERMISSIONS.CASH_MANAGEMENT_READ,
+        PERMISSIONS.CASH_REGISTER_OPERATE,
+      ]);
+      backend(own, blocked);
+      await renderPage();
+      expect(screen.getByText(/Valor: R\$\s*5,00/)).toBeTruthy();
+      const button = screen.getByRole<HTMLButtonElement>("button", {
+        name: "Assumir na minha sessão",
+      });
+      const form = button.closest("form")!;
+      expect(
+        form.querySelector<HTMLInputElement>('input[name="record_id"]')!.value,
+      ).toBe("tx-1");
+      expect(
+        form.querySelector<HTMLInputElement>('input[name="reason"]')!.required,
+      ).toBe(true);
+    });
+
+    it("sem sessão própria, explica o que fazer", async () => {
+      asUser("cashier-2", [
+        PERMISSIONS.CASH_MANAGEMENT_READ,
+        PERMISSIONS.CASH_REGISTER_OPERATE,
+      ]);
+      backend(own, blocked);
+      await renderPage();
+      expect(
+        screen.queryByRole("button", { name: "Assumir na minha sessão" }),
+      ).toBeNull();
+      expect(screen.getByText(/abre a própria sessão/)).toBeTruthy();
+    });
+
+    it("quem não opera caixa só vê o impedimento", async () => {
+      asUser("finance-1", [
+        PERMISSIONS.CASH_MANAGEMENT_READ,
+        PERMISSIONS.DAILY_CLOSE_PREPARE,
+      ]);
+      backend(null, blocked);
+      await renderPage();
+      expect(
+        screen.getByText(/Dinheiro recebido sem sessão de caixa/),
+      ).toBeTruthy();
+      expect(
+        screen.queryByRole("button", { name: "Assumir na minha sessão" }),
+      ).toBeNull();
+      expect(screen.queryByText(/abre a própria sessão/)).toBeNull();
+    });
+  });
+
+  describe("abrir a sessão seguinte", () => {
+    function registerWith(lastCounted: number | null) {
+      mocks.request.mockImplementation(async (path: string) => {
+        if (path === "cash-registers")
+          return {
+            operational_date: "2026-05-12",
+            currency: "BRL",
+            registers: [
+              {
+                id: "register",
+                name: "Caixa da recepção",
+                code: "REC-01",
+                kind: "reception",
+                currency: "BRL",
+                difference_tolerance: 5,
+                active_session: null,
+                last_counted_cash: lastCounted,
+              },
+            ],
+          };
+        if (path.startsWith("daily-close")) return daily();
+        return { items: [] };
+      });
+    }
+
+    it("parte da última contagem e pede justificativa para outro valor", async () => {
+      registerWith(150);
+      await renderPage();
+      expect(screen.getByText(/Última contagem:\s*R\$\s*150,00/)).toBeTruthy();
+      expect(
+        screen.getByLabelText<HTMLInputElement>("Fundo inicial").value,
+      ).toBe("150");
+      expect(
+        screen.getByLabelText("Justificativa, se o valor mudar"),
+      ).toBeTruthy();
+    });
+
+    it("na primeira sessão, não há contagem nem justificativa", async () => {
+      registerWith(null);
+      await renderPage();
+      expect(screen.queryByText(/Última contagem/)).toBeNull();
+      expect(
+        screen.getByLabelText<HTMLInputElement>("Fundo inicial").value,
+      ).toBe("");
+      expect(
+        screen.queryByLabelText("Justificativa, se o valor mudar"),
+      ).toBeNull();
+    });
   });
 });

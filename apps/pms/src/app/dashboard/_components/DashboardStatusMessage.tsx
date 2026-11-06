@@ -25,7 +25,10 @@ export function DashboardStatusMessage({
       : messages[status];
 
   return (
-    <p className={`mb-0 ${isError ? "text-[#b00020]" : "text-[#1f6f51]"}`}>
+    <p
+      role={isError ? "alert" : "status"}
+      className={`mb-0 ${isError ? "text-[#b00020]" : "text-[#1f6f51]"}`}
+    >
       {renderedText}
     </p>
   );

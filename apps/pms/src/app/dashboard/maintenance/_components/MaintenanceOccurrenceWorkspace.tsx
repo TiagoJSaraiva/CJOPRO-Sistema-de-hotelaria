@@ -22,6 +22,28 @@ import {
 import { useState } from "react";
 import { ContextHelp } from "../../_components/ContextHelp";
 
+const LIFECYCLE_STATUS_LABELS: Record<string, string> = {
+  draft: "rascunho",
+  submitted: "aguardando aprovação",
+  approved: "aprovada",
+  rejected: "rejeitada",
+  executed: "executada",
+  canceled: "cancelada",
+};
+
+const LIFECYCLE_OPTION_LABELS: Record<string, string> = {
+  repair: "Reparar",
+  replace: "Substituir",
+  warranty: "Acionar garantia",
+};
+
+const PRIORITY_LABELS: Record<string, string> = {
+  low: "Baixa",
+  normal: "Normal",
+  high: "Alta",
+  critical: "Crítica",
+};
+
 const LIABILITY_LABELS: Record<string, string> = {
   not_applicable: "Não se aplica",
   not_assessed: "Não avaliada",
@@ -88,14 +110,17 @@ export function MaintenanceOccurrenceWorkspace({
   const [item, setItem] = useState(initial);
   const [pending, setPending] = useState(false);
   const [message, setMessage] = useState("");
+  const [messageFailed, setMessageFailed] = useState(false);
 
   async function mutate(
     path: string,
     body: Record<string, unknown> | (() => Record<string, unknown>),
     method: "POST" | "PUT" = "POST",
+    successMessage = "Alteração registrada.",
   ) {
     setPending(true);
     setMessage("");
+    setMessageFailed(false);
     try {
       const response = await fetch(`/api/maintenance/${path}`, {
         method,
@@ -126,9 +151,10 @@ export function MaintenanceOccurrenceWorkspace({
           .catch(() => null);
         if (latest?.item) setItem(latest.item);
       }
-      setMessage("Alteração registrada.");
+      setMessage(successMessage);
       return true;
     } catch (error) {
+      setMessageFailed(true);
       setMessage(error instanceof Error ? error.message : "Falha na operação.");
       return false;
     } finally {
@@ -148,13 +174,17 @@ export function MaintenanceOccurrenceWorkspace({
     };
     if (payload.signed_url)
       window.open(payload.signed_url, "_blank", "noopener,noreferrer");
-    else setMessage(payload.message || "Foto indisponível.");
+    else {
+      setMessageFailed(true);
+      setMessage(payload.message || "Foto indisponível.");
+    }
   }
 
   async function uploadPhotos(files: File[]) {
     if (!files.length) return;
     setPending(true);
     setMessage("");
+    setMessageFailed(false);
     try {
       const intentResponse = await fetch(
         `/api/maintenance/occurrences/${item.id}/attachments/upload-intents`,
@@ -212,6 +242,7 @@ export function MaintenanceOccurrenceWorkspace({
       setItem(finalized.item);
       setMessage("Fotos adicionadas.");
     } catch (error) {
+      setMessageFailed(true);
       setMessage(
         error instanceof Error ? error.message : "Falha ao enviar fotos.",
       );
@@ -251,18 +282,20 @@ export function MaintenanceOccurrenceWorkspace({
           <dt>Situação</dt>
           <dd>{statusLabels[item.status] || item.status}</dd>
           <dt>Prioridade</dt>
-          <dd>{item.priority}</dd>
+          <dd>{PRIORITY_LABELS[item.priority] || item.priority}</dd>
           <dt>Impacto operacional</dt>
           <dd>
             {item.impact_score ?? 0}/100 · recomendação{" "}
-            {item.recommended_priority || item.priority}
+            {PRIORITY_LABELS[item.recommended_priority || item.priority] ||
+              item.recommended_priority ||
+              item.priority}
           </dd>
           <dt>Responsabilidade</dt>
           <dd>
             {LIABILITY_LABELS[item.liability_status] || item.liability_status}
           </dd>
           <dt>Estadia</dt>
-          <dd>{item.stay_id || "Não vinculada"}</dd>
+          <dd>{item.stay_id ? "Vinculada" : "Não vinculada"}</dd>
           <dt>Bloqueio</dt>
           <dd>{item.active_block ? "Ativo" : "Não"}</dd>
           <dt>Origem</dt>
@@ -287,9 +320,11 @@ export function MaintenanceOccurrenceWorkspace({
       </section>
       {message ? (
         <p
-          role="status"
+          role={messageFailed ? "alert" : "status"}
           aria-live="polite"
-          className="rounded-lg bg-[#eef6ff] p-3"
+          className={
+            messageFailed ? "pms-alert-error" : "rounded-lg bg-[#eef6ff] p-3"
+          }
         >
           {message}
         </p>
@@ -878,12 +913,22 @@ export function MaintenanceOccurrenceWorkspace({
                   key={String(entry.id || index)}
                   className="rounded border p-3"
                 >
-                  <strong>Avaliação {String(entry.status)}</strong>
-                  <p>Recomendação: {String(entry.recommendation)}</p>
+                  <strong>
+                    Avaliação:{" "}
+                    {LIFECYCLE_STATUS_LABELS[String(entry.status)] ||
+                      "situação desconhecida"}
+                  </strong>
+                  <p>
+                    Recomendação:{" "}
+                    {LIFECYCLE_OPTION_LABELS[String(entry.recommendation)] ||
+                      "não informada"}
+                  </p>
                   {options.map((option) => (
                     <p key={String(option.id)}>
-                      • {String(option.kind)} · R${" "}
-                      {Number(option.estimated_cost || 0).toFixed(2)} ·{" "}
+                      •{" "}
+                      {LIFECYCLE_OPTION_LABELS[String(option.kind)] ||
+                        "Alternativa"}{" "}
+                      · R$ {Number(option.estimated_cost || 0).toFixed(2)} ·{" "}
                       {String(option.estimated_downtime_hours)} h
                     </p>
                   ))}
@@ -935,7 +980,8 @@ export function MaintenanceOccurrenceWorkspace({
                             key={String(option.id)}
                             value={String(option.id)}
                           >
-                            {String(option.kind)}
+                            {LIFECYCLE_OPTION_LABELS[String(option.kind)] ||
+                              "Alternativa"}
                           </option>
                         ))}
                       </select>
@@ -1064,9 +1110,12 @@ export function MaintenanceOccurrenceWorkspace({
                   onSubmit={(event) => {
                     event.preventDefault();
                     const data = new FormData(event.currentTarget);
-                    void mutate(`room-blocks/${block.id}/release`, {
-                      reason: data.get("reason"),
-                    });
+                    void mutate(
+                      `room-blocks/${block.id}/release`,
+                      { reason: data.get("reason") },
+                      "POST",
+                      "Bloqueio liberado. A inspeção final da governança foi criada; o quarto ainda não está pronto.",
+                    );
                   }}
                 >
                   <label className="pms-field">

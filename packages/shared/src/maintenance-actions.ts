@@ -1,5 +1,10 @@
 import type { MaintenanceWorkOrderStatus } from "./admin";
 
+/** Código da ocorrência em todas as telas: uma pessoa precisa achar com ele o que viu em outra. */
+export function maintenanceOccurrenceCode(number: number): string {
+  return `MAN-${String(number).padStart(6, "0")}`;
+}
+
 export const maintenanceActionLabels = {
   assign: "Atribuir responsável",
   start: "Iniciar serviço",

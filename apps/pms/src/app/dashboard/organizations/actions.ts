@@ -2,6 +2,7 @@
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import { requestOperationsFinanceEndpoint } from "../../../lib/adminApi";
+import { failureStatus } from "../_components/operationOutcome";
 export async function createOrganizationAction(form: FormData) {
   try {
     await requestOperationsFinanceEndpoint("business-organizations", "POST", {
@@ -14,11 +15,11 @@ export async function createOrganizationAction(form: FormData) {
       active: true,
       roles: form.get("stock_supplier") === "on" ? ["stock_supplier"] : [],
     });
-    revalidatePath("/dashboard/organizations");
-    redirect("/dashboard/organizations?status=created");
-  } catch {
-    redirect("/dashboard/organizations?status=conflict");
+  } catch (error) {
+    redirect(`/dashboard/organizations?status=${failureStatus(error)}`);
   }
+  revalidatePath("/dashboard/organizations");
+  redirect("/dashboard/organizations?status=created");
 }
 export async function actOrganizationAction(form: FormData) {
   const id = String(form.get("id") || "");
@@ -39,9 +40,11 @@ export async function actOrganizationAction(form: FormData) {
         reason: String(form.get("reason") || "").trim(),
       },
     );
-    revalidatePath("/dashboard/organizations");
-    redirect("/dashboard/organizations?status=updated");
-  } catch {
-    redirect(`/dashboard/organizations?id=${id}&status=conflict`);
+  } catch (error) {
+    redirect(
+      `/dashboard/organizations?id=${id}&status=${failureStatus(error)}`,
+    );
   }
+  revalidatePath("/dashboard/organizations");
+  redirect("/dashboard/organizations?status=updated");
 }

@@ -7,7 +7,12 @@ import { consumptionTabs } from "../tabs";
 import { consumptionBenefitsGuide } from "../usageGuides";
 import { createBenefitPlanAction, createBenefitVersionAction } from "./actions";
 
-export default async function ConsumptionBenefitsPage() {
+export default async function ConsumptionBenefitsPage({
+  searchParams,
+}: {
+  searchParams?: Promise<{ status?: string }>;
+}) {
+  const params = await searchParams;
   const access = getConsumptionAccess(await getUserFromSession());
   if (!access.canManageBenefits && !access.canOverrideBenefits)
     return (
@@ -21,6 +26,7 @@ export default async function ConsumptionBenefitsPage() {
     <DashboardEntityPageShell
       title="Benefícios de consumo"
       activeTabKey="benefits"
+      status={params?.status}
       tabs={consumptionTabs(access)}
       usageGuide={consumptionBenefitsGuide}
     >

@@ -220,3 +220,54 @@ it("exige payload completo para baixa parcial", async () => {
   expect(response.statusCode).toBe(400);
   expect(repository.mutation).not.toHaveBeenCalled();
 });
+
+it("assumir dinheiro antigo exige quem opera caixa e fica no hotel ativo", async () => {
+  const { app, repository } = await setup();
+  const url = `/admin/cash-transactions/${id}/adopt`;
+  const payload = { reason: "Guardado no cofre" };
+  expect((await app.inject({ method: "POST", url, payload })).statusCode).toBe(
+    401,
+  );
+  expect(
+    (
+      await app.inject({
+        method: "POST",
+        url,
+        payload,
+        headers: headers([PERMISSIONS.CASH_MANAGEMENT_READ]),
+      })
+    ).statusCode,
+  ).toBe(403);
+  expect(repository.mutation).not.toHaveBeenCalled();
+  const operator = headers([PERMISSIONS.CASH_REGISTER_OPERATE]);
+  expect(
+    (
+      await app.inject({
+        method: "POST",
+        url,
+        payload: { reason: "x" },
+        headers: operator,
+      })
+    ).statusCode,
+  ).toBe(400);
+  expect(repository.mutation).not.toHaveBeenCalled();
+  expect(
+    (await app.inject({ method: "POST", url, payload, headers: operator }))
+      .statusCode,
+  ).toBe(200);
+  expect(repository.mutation).toHaveBeenCalledWith(
+    "adopt_cash_transaction",
+    expect.objectContaining({ p_id: id, p_input: payload }),
+  );
+  vi.mocked(repository.mutation).mockResolvedValue({
+    result: "cash_session_required",
+  });
+  const refused = await app.inject({
+    method: "POST",
+    url,
+    payload,
+    headers: operator,
+  });
+  expect(refused.statusCode).toBe(400);
+  expect(refused.json().details).toBe("cash_session_required");
+});

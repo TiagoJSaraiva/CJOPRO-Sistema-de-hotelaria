@@ -2,6 +2,8 @@ import { DashboardAccessDeniedCard } from "../../_components/DashboardAccessDeni
 import { DashboardEntityPageShell } from "../../_components/DashboardEntityPageShell";
 import { listCorporateAccounts } from "../../../../lib/adminApi";
 import { getUserFromSession } from "../../../../lib/auth";
+import { getOwnOpenCashSession } from "../../../../lib/ownCashSession";
+import { CashMethodOption } from "../../_components/CashMethodOption";
 import { getConsumptionAccess } from "../access";
 import { consumptionTabs } from "../tabs";
 import { corporateAccountsGuide } from "../usageGuides";
@@ -12,8 +14,14 @@ import {
   requestCorporateCreditAction,
 } from "./actions";
 
-export default async function CorporateAccountsPage() {
-  const access = getConsumptionAccess(await getUserFromSession());
+export default async function CorporateAccountsPage({
+  searchParams,
+}: {
+  searchParams?: Promise<{ status?: string }>;
+}) {
+  const params = await searchParams;
+  const user = await getUserFromSession();
+  const access = getConsumptionAccess(user);
   if (
     !access.canManageCorporate &&
     !access.canRequestCorporateCredit &&
@@ -26,13 +34,17 @@ export default async function CorporateAccountsPage() {
         message="Sem permissão para consultar faturamento empresarial."
       />
     );
-  const companies = await listCorporateAccounts();
+  const [companies, cashSession] = await Promise.all([
+    listCorporateAccounts(),
+    getOwnOpenCashSession(user),
+  ]);
   return (
     <DashboardEntityPageShell
       title="Empresas pagadoras"
       activeTabKey="companies"
       tabs={consumptionTabs(access)}
       usageGuide={corporateAccountsGuide}
+      status={params?.status}
     >
       <div className="grid gap-5">
         {access.canManageCorporate ? (
@@ -293,7 +305,9 @@ export default async function CorporateAccountsPage() {
                                   Transferência
                                 </option>
                                 <option value="pix">Pix</option>
-                                <option value="cash">Dinheiro</option>
+                                <CashMethodOption
+                                  hasSession={Boolean(cashSession)}
+                                />
                               </select>
                             </div>
                             <input

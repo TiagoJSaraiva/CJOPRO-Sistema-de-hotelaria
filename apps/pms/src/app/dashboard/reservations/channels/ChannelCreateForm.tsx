@@ -26,7 +26,10 @@ export function ChannelCreateForm() {
         {pending ? "Criando…" : "Criar conexão"}
       </button>
       {state.message ? (
-        <p role="status" className="md:col-span-3">
+        <p
+          role={state.failed ? "alert" : "status"}
+          className={`md:col-span-3 ${state.failed ? "pms-status-error" : ""}`}
+        >
           {state.message}
         </p>
       ) : null}

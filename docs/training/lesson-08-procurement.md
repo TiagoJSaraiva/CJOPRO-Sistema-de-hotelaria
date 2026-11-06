@@ -23,7 +23,9 @@ lição 7, mas lembre que o reset torna esta lição independente.
 4. Troque para gerente e aprove; tente antes aprovar como solicitante para ver a
    proteção de segregação.
 5. Como estoque, registre recebimento parcial e depois o saldo.
-6. Como financeiro, confira nota, tolerâncias e vencimentos antes da liquidação.
+6. Como financeiro, registre a nota e confira tolerâncias e vencimentos. Como
+   gerente, aprove a nota: quem a registrou não pode aprová-la. Como financeiro,
+   liquide.
 
 Erro proposital: receber quantidade maior que a autorizada sem decisão prevista
 na política. Resultado esperado: conflito explicado, sem inflar o estoque.

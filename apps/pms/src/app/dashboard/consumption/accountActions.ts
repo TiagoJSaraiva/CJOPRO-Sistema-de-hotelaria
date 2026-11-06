@@ -17,6 +17,12 @@ function back(status: string): never {
     `/dashboard/consumption/adjustments?status=${encodeURIComponent(status)}`,
   );
 }
+function accountFailureStatus(details: string | undefined) {
+  if (details === "version_conflict") return "version-conflict";
+  return details === "cash_session_required"
+    ? "cash-session-required"
+    : "conflict";
+}
 
 export async function createCorrectionRefundAction(formData: FormData) {
   const user = await getUserFromSession();
@@ -48,7 +54,7 @@ export async function createCorrectionRefundAction(formData: FormData) {
   } catch (error) {
     const details = (error as Error & { details?: string }).details;
     redirect(
-      `/dashboard/reservations/account?stay_id=${stayId}&status=${details === "version_conflict" ? "version-conflict" : "conflict"}`,
+      `/dashboard/reservations/account?stay_id=${stayId}&status=${accountFailureStatus(details)}`,
     );
   }
   revalidatePath("/dashboard/consumption/adjustments");
@@ -84,7 +90,7 @@ export async function reverseStayPaymentAction(formData: FormData) {
   } catch (error) {
     const details = (error as Error & { details?: string }).details;
     redirect(
-      `/dashboard/reservations/account?stay_id=${stayId}&status=${details === "version_conflict" ? "version-conflict" : "conflict"}`,
+      `/dashboard/reservations/account?stay_id=${stayId}&status=${accountFailureStatus(details)}`,
     );
   }
   revalidatePath("/dashboard/reservations/account");

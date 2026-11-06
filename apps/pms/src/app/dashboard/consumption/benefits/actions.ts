@@ -1,17 +1,31 @@
 "use server";
 
 import { revalidatePath } from "next/cache";
+import { redirect } from "next/navigation";
 import {
   createConsumptionBenefitPlan,
   createConsumptionBenefitVersion,
 } from "../../../../lib/adminApi";
+import { failureStatus } from "../../_components/operationOutcome";
+
+const path = "/dashboard/consumption/benefits";
+
+async function run(request: () => Promise<unknown>) {
+  try {
+    await request();
+  } catch (error) {
+    redirect(`${path}?status=${failureStatus(error)}`);
+  }
+  revalidatePath(path);
+}
 
 export async function createBenefitPlanAction(formData: FormData) {
-  await createConsumptionBenefitPlan({
-    name: String(formData.get("name")),
-    description: String(formData.get("description") || "") || undefined,
-  });
-  revalidatePath("/dashboard/consumption/benefits");
+  await run(() =>
+    createConsumptionBenefitPlan({
+      name: String(formData.get("name")),
+      description: String(formData.get("description") || "") || undefined,
+    }),
+  );
 }
 
 export async function createBenefitVersionAction(formData: FormData) {
@@ -25,17 +39,18 @@ export async function createBenefitVersionAction(formData: FormData) {
         : targetKind === "point_id"
           ? { point_id: targetId }
           : { category_id: targetId };
-  await createConsumptionBenefitVersion(String(formData.get("plan_id")), {
-    allowance_scope: String(formData.get("allowance_scope")) as
-      "stay" | "night" | "calendar_day",
-    activate: true,
-    rules: [
-      {
-        kind: "monetary_credit",
-        amount: Number(formData.get("amount")),
-        ...target,
-      },
-    ],
-  });
-  revalidatePath("/dashboard/consumption/benefits");
+  await run(() =>
+    createConsumptionBenefitVersion(String(formData.get("plan_id")), {
+      allowance_scope: String(formData.get("allowance_scope")) as
+        "stay" | "night" | "calendar_day",
+      activate: true,
+      rules: [
+        {
+          kind: "monetary_credit",
+          amount: Number(formData.get("amount")),
+          ...target,
+        },
+      ],
+    }),
+  );
 }

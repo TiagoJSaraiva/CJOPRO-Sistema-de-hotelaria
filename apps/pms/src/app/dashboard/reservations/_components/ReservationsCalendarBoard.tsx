@@ -195,7 +195,7 @@ export function ReservationsCalendarBoard({
     useState<AdminStayOperationalPanelResponse | null>(null);
   const [panelLoading, setPanelLoading] = useState(false);
   const [paymentAmount, setPaymentAmount] = useState<string>("");
-  const [paymentMethod, setPaymentMethod] = useState<string>("cash");
+  const [paymentMethod, setPaymentMethod] = useState<string>("pix");
   const [paymentNote, setPaymentNote] = useState<string>("");
   const [overrideReason, setOverrideReason] = useState("");
   const [relocation, setRelocation] = useState<{

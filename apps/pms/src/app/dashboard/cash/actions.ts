@@ -33,11 +33,19 @@ export async function createCashRegisterAction(f: FormData) {
     "created",
   );
 }
+export async function adoptCashTransactionAction(f: FormData) {
+  await run(
+    `cash-transactions/${value(f, "record_id")}/adopt`,
+    { reason: value(f, "reason") },
+    "adopted",
+  );
+}
 export async function openCashSessionAction(f: FormData) {
   await run(
     `cash-registers/${value(f, "id")}/sessions`,
     {
       opening_float: num(f, "opening_float"),
+      opening_reason: value(f, "opening_reason") || undefined,
       idempotency_key: crypto.randomUUID(),
     },
     "opened",

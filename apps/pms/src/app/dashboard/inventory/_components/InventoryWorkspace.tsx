@@ -2,6 +2,8 @@ import { HotelInstant } from "../../_components/HotelTimeZone";
 import { DashboardAccessDeniedCard } from "../../_components/DashboardAccessDeniedCard";
 import Link from "next/link";
 import { DashboardEntityPageShell } from "../../_components/DashboardEntityPageShell";
+import { OperationStatus } from "../../_components/OperationStatus";
+import type { OperationOutcome } from "../../_components/operationOutcome";
 import { getUserFromSession } from "../../../../lib/auth";
 import {
   getInventoryOverview,
@@ -17,6 +19,7 @@ import { getInventoryAccess } from "../access";
 import { inventoryGuide } from "../usageGuides";
 import {
   archiveInventoryLocationAction,
+  actMinibarRouteAction,
   createInventoryCountAction,
   createInventoryLocationAction,
   createInventoryPositionAction,
@@ -56,23 +59,48 @@ const tabs = [
   { key: "lots", label: "Lotes e validade", href: "/dashboard/inventory/lots" },
   { key: "minibar", label: "Frigobares", href: "/dashboard/inventory/minibar" },
 ];
-function statusText(status?: string) {
-  const labels: Record<string, string> = {
-    created: "Registro criado.",
-    updated: "Alteração salva.",
-    enabled: "Controle ativado.",
-    posted: "Movimento registrado.",
-    transferred: "Transferência concluída.",
-    concurrent: "O saldo mudou; atualize e reconte os itens afetados.",
-    "in-use": "O local ainda possui saldo ou vínculos operacionais ativos.",
-    ineligible:
+const MOVEMENT_LABELS: Record<string, string> = {
+  opening: "Saldo inicial",
+  receipt: "Entrada",
+  consumption: "Consumo",
+  courtesy: "Cortesia",
+  return: "Devolução",
+  transfer_out: "Transferência enviada",
+  transfer_in: "Transferência recebida",
+  loss: "Perda",
+  internal_use: "Consumo interno",
+  adjustment_in: "Ajuste de entrada",
+  adjustment_out: "Ajuste de saída",
+  count_gain: "Sobra em contagem",
+  count_loss: "Falta em contagem",
+};
+
+const INVENTORY_OUTCOMES: Record<string, OperationOutcome> = {
+  created: { tone: "success", message: "Registro criado." },
+  updated: { tone: "success", message: "Alteração salva." },
+  enabled: { tone: "success", message: "Controle ativado." },
+  posted: { tone: "success", message: "Movimento registrado." },
+  transferred: { tone: "success", message: "Transferência concluída." },
+  concurrent: {
+    tone: "error",
+    message: "O saldo mudou; atualize e reconte os itens afetados.",
+  },
+  "in-use": {
+    tone: "error",
+    message: "O local ainda possui saldo ou vínculos operacionais ativos.",
+  },
+  ineligible: {
+    tone: "error",
+    message:
       "Somente produtos físicos próprios vendidos por unidade ou porção podem ser controlados.",
-    conflict: "A operação conflita com o estado atual do estoque.",
-    invalid: "Revise os campos informados.",
-    forbidden: "Ação não autorizada.",
-  };
-  return status ? labels[status] || status : null;
-}
+  },
+  conflict: {
+    tone: "error",
+    message: "A operação conflita com o estado atual do estoque.",
+  },
+  invalid: { tone: "error", message: "Revise os campos informados." },
+  forbidden: { tone: "error", message: "Ação não autorizada." },
+};
 const money = (value: number | null | undefined) =>
   value == null
     ? "—"
@@ -85,7 +113,8 @@ export async function InventoryWorkspace({
   tab: InventoryTab;
   status?: string;
 }) {
-  const access = getInventoryAccess(await getUserFromSession());
+  const user = await getUserFromSession();
+  const access = getInventoryAccess(user);
   if (!access.canRead)
     return (
       <DashboardAccessDeniedCard
@@ -111,7 +140,6 @@ export async function InventoryWorkspace({
       ["unit", "portion"].includes(item.sales_unit) &&
       !item.archived_at,
   );
-  const message = statusText(status);
   const movementsContent =
     tab === "movements"
       ? await InventoryMovements({
@@ -150,6 +178,7 @@ export async function InventoryWorkspace({
       ? await requestOperationsFinanceEndpoint<{
           version: number;
           items: Array<Record<string, unknown>>;
+          routes?: MinibarRoute[];
         }>("minibar/replenishment-board", "GET").catch(
           (cause: { statusCode?: number }) => {
             // O painel de reposição exige leitura da governança; quem só mantém a
@@ -174,11 +203,7 @@ export async function InventoryWorkspace({
       }))}
       usageGuide={inventoryGuide}
       statusContent={
-        message ? (
-          <p role="status" className="pms-status-muted">
-            {message}
-          </p>
-        ) : null
+        <OperationStatus status={status} local={INVENTORY_OUTCOMES} />
       }
     >
       {tab === "overview" ? (
@@ -300,6 +325,7 @@ export async function InventoryWorkspace({
           locations={activeLocations}
           compositions={minibar?.items || []}
           board={minibarBoard || { version: 0, items: [] }}
+          viewerId={user?.id}
         />
       ) : null}
       {movementsContent}
@@ -529,10 +555,12 @@ async function InventoryMovements({
           <article className="pms-surface-card" key={item.id}>
             <strong>{item.product_name}</strong> · {item.location_name}
             <p className="m-0">
-              {item.kind}: {item.quantity_delta > 0 ? "+" : ""}
+              {MOVEMENT_LABELS[item.kind] ?? "Movimento"}:{" "}
+              {item.quantity_delta > 0 ? "+" : ""}
               {item.quantity_delta} · saldo {item.quantity_before} →{" "}
               {item.quantity_after}
             </p>
+            {item.reason ? <p className="m-0">{item.reason}</p> : null}
             <small>
               <HotelInstant value={item.occurred_at} />
               {access.canReadCosts ? ` · ${money(item.total_cost)}` : ""}
@@ -1117,18 +1145,102 @@ function EmptyPositionNotice({ canManage }: { canManage: boolean }) {
   );
 }
 
+type MinibarRoute = {
+  id: string;
+  status: "draft" | "in_progress";
+  version: number;
+  responsible_id?: string | null;
+  responsible_name?: string | null;
+  items: Array<{
+    id: string;
+    room_number: string;
+    product_name: string;
+    source_name: string;
+    quantity: number;
+  }>;
+};
+
+function MinibarRouteCard({
+  route,
+  viewerId,
+  canAct,
+}: {
+  route: MinibarRoute;
+  viewerId?: string;
+  canAct: boolean;
+}) {
+  const mine = route.responsible_id === viewerId;
+  return (
+    <article className="rounded border p-3" data-testid="minibar-route">
+      <strong>
+        {route.status === "draft"
+          ? "Aguardando responsável"
+          : `Em andamento com ${route.responsible_name || "responsável"}`}
+      </strong>
+      <ul className="my-2">
+        {route.items.map((item) => (
+          <li key={item.id}>
+            Quarto {item.room_number}: {Number(item.quantity)} ×{" "}
+            {item.product_name}, de {item.source_name}
+          </li>
+        ))}
+      </ul>
+      {canAct ? (
+        <form action={actMinibarRouteAction} className="flex flex-wrap gap-2">
+          <input type="hidden" name="record_id" value={route.id} />
+          <input type="hidden" name="version" value={route.version} />
+          {route.status === "draft" ? (
+            <button
+              className="pms-button-primary"
+              name="action"
+              value="assign"
+              type="submit"
+            >
+              Assumir rota
+            </button>
+          ) : null}
+          {route.status === "in_progress" && mine ? (
+            <button
+              className="pms-button-primary"
+              name="action"
+              value="complete"
+              type="submit"
+            >
+              Concluir reposição
+            </button>
+          ) : null}
+          <button
+            className="pms-button-secondary"
+            name="action"
+            value="cancel"
+            type="submit"
+          >
+            Cancelar rota
+          </button>
+        </form>
+      ) : null}
+    </article>
+  );
+}
+
 function MinibarInventory({
   access,
   products,
   locations,
   compositions,
   board,
+  viewerId,
 }: {
+  viewerId?: string;
   access: ReturnType<typeof getInventoryAccess>;
   products: Array<{ id: string; name: string }>;
   locations: Array<{ id: string; name: string }>;
   compositions: Array<Record<string, unknown>>;
-  board: { version: number; items: Array<Record<string, unknown>> };
+  board: {
+    version: number;
+    items: Array<Record<string, unknown>>;
+    routes?: MinibarRoute[];
+  };
 }) {
   const rooms = [
     ...new Map(
@@ -1219,6 +1331,21 @@ function MinibarInventory({
             <button className="pms-button-primary mt-3">Criar rota</button>
           </form>
         ) : null}
+        <h3>Rotas em aberto</h3>
+        {board.routes?.length ? (
+          <div className="grid gap-3">
+            {board.routes.map((route) => (
+              <MinibarRouteCard
+                key={route.id}
+                route={route}
+                viewerId={viewerId}
+                canAct={access.canReplenishMinibar}
+              />
+            ))}
+          </div>
+        ) : (
+          <p>Nenhuma rota em aberto.</p>
+        )}
       </article>
     </section>
   );

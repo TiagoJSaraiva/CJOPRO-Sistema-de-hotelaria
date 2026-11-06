@@ -220,7 +220,7 @@ select is(
 
 select is(
   (select count(*)::integer from public.role_permissions where role_id = '70000000-0000-4000-8000-000000000002'),
-  69,
+  73,
   'Aurora manager has an explicit approval and management permission matrix'
 );
 
@@ -1290,6 +1290,11 @@ select ok(
   (select account_version > 0 from public.stays where id = '91000000-0000-4000-8000-000000000002'),
   'financial mutations maintain a monotonic stay account version'
 );
+-- Dinheiro exige a sessão de quem recebe.
+insert into public.cash_registers(id,hotel_id,name,code,kind,currency,difference_tolerance,created_by)
+values('a7000000-0000-4000-8000-000000000001','10000000-0000-4000-8000-000000000001','Caixa do teste','TST-01','reception','BRL',5,'80000000-0000-4000-8000-000000000002');
+do $$ begin perform public.open_cash_session('10000000-0000-4000-8000-000000000001','a7000000-0000-4000-8000-000000000001','80000000-0000-4000-8000-000000000002',
+  jsonb_build_object('opening_float',100,'idempotency_key','a7000000-0000-4000-8000-000000000002')); end $$;
 select is(
   (public.create_stay_payment_batch(
     '10000000-0000-4000-8000-000000000001',

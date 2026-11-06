@@ -2,6 +2,7 @@ import type { ReactNode } from "react";
 import { PermissionTabs, type PermissionTabItem } from "./PermissionTabs";
 import { DashboardEntityTabsProvider } from "./DashboardEntityTabsContext";
 import { shouldPlaceTabsInFilterBar } from "./DashboardEntityTabsLayout";
+import { OperationStatus } from "./OperationStatus";
 import { UsageGuide, type UsageGuideDefinition } from "./UsageGuide";
 
 type DashboardEntityPageShellProps = {
@@ -46,10 +47,7 @@ export function DashboardEntityPageShell({
               className="pms-entity-tabs-header"
             />
           )}
-          {statusContent ||
-            (status ? (
-              <p className="pms-status-muted">Status: {status}</p>
-            ) : null)}
+          {statusContent || <OperationStatus status={status} />}
         </section>
 
         {children}

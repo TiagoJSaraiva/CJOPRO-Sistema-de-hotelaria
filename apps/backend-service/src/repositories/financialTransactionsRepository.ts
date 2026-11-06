@@ -39,6 +39,7 @@ export interface FinancialTransactionsRepository {
     id: string,
     activeHotelId: string,
     payload: FinancialTransactionUpdate,
+    actorId?: string,
   ): Promise<{
     result: FinancialTransactionWriteResult;
     item?: AdminFinancialTransaction;
@@ -98,6 +99,7 @@ class SupabaseFinancialTransactionsRepository implements FinancialTransactionsRe
     id: string,
     activeHotelId: string,
     payload: FinancialTransactionUpdate,
+    actorId?: string,
   ): Promise<{
     result: FinancialTransactionWriteResult;
     item?: AdminFinancialTransaction;
@@ -113,6 +115,24 @@ class SupabaseFinancialTransactionsRepository implements FinancialTransactionsRe
       .single();
 
     if (error) {
+      // Concluir em dinheiro coloca o valor na sessão de quem está concluindo.
+      if (error.message === "cash_session_required" && actorId) {
+        const { data: session } = await supabase
+          .from("cash_sessions")
+          .select("id")
+          .eq("hotel_id", activeHotelId)
+          .eq("operator_id", actorId)
+          .eq("status", "open")
+          .order("opened_at", { ascending: false })
+          .limit(1)
+          .maybeSingle();
+        if (session)
+          return this.updateFinancialTransaction(id, activeHotelId, {
+            ...payload,
+            cash_session_id: session.id,
+          });
+      }
+
       if (isSupabaseNotFoundError(error)) {
         return { result: "not-found" };
       }

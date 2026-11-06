@@ -24638,6 +24638,10 @@
                   "nullable": true,
                   "type": "number"
                 },
+                "difference": {
+                  "nullable": true,
+                  "type": "number"
+                },
                 "expected_quantity": {
                   "type": "number"
                 },
@@ -24667,7 +24671,8 @@
                 "product_name",
                 "expected_quantity",
                 "expected_version",
-                "counted_quantity"
+                "counted_quantity",
+                "difference"
               ],
               "type": "object"
             },
@@ -29610,6 +29615,11 @@
                   "opening_float": {
                     "minimum": 0,
                     "type": "number"
+                  },
+                  "opening_reason": {
+                    "maxLength": 1000,
+                    "minLength": 3,
+                    "type": "string"
                   }
                 },
                 "required": [
@@ -30463,6 +30473,267 @@
                   "amount",
                   "reason",
                   "idempotency_key"
+                ],
+                "type": "object"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "additionalProperties": false,
+                  "properties": {
+                    "id": {
+                      "type": "string"
+                    },
+                    "ok": {
+                      "type": "boolean"
+                    },
+                    "result": {
+                      "type": "string"
+                    }
+                  },
+                  "required": [
+                    "ok"
+                  ],
+                  "type": "object"
+                }
+              }
+            },
+            "description": "Default Response"
+          },
+          "400": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "additionalProperties": false,
+                  "properties": {
+                    "code": {
+                      "type": "string"
+                    },
+                    "context": {},
+                    "details": {
+                      "type": "string"
+                    },
+                    "message": {
+                      "type": "string"
+                    },
+                    "retryAfterSeconds": {
+                      "minimum": 1,
+                      "type": "integer"
+                    }
+                  },
+                  "required": [
+                    "message"
+                  ],
+                  "type": "object"
+                }
+              }
+            },
+            "description": "Default Response"
+          },
+          "401": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "additionalProperties": false,
+                  "properties": {
+                    "code": {
+                      "type": "string"
+                    },
+                    "context": {},
+                    "details": {
+                      "type": "string"
+                    },
+                    "message": {
+                      "type": "string"
+                    },
+                    "retryAfterSeconds": {
+                      "minimum": 1,
+                      "type": "integer"
+                    }
+                  },
+                  "required": [
+                    "message"
+                  ],
+                  "type": "object"
+                }
+              }
+            },
+            "description": "Default Response"
+          },
+          "403": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "additionalProperties": false,
+                  "properties": {
+                    "code": {
+                      "type": "string"
+                    },
+                    "context": {},
+                    "details": {
+                      "type": "string"
+                    },
+                    "message": {
+                      "type": "string"
+                    },
+                    "retryAfterSeconds": {
+                      "minimum": 1,
+                      "type": "integer"
+                    }
+                  },
+                  "required": [
+                    "message"
+                  ],
+                  "type": "object"
+                }
+              }
+            },
+            "description": "Default Response"
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "additionalProperties": false,
+                  "properties": {
+                    "code": {
+                      "type": "string"
+                    },
+                    "context": {},
+                    "details": {
+                      "type": "string"
+                    },
+                    "message": {
+                      "type": "string"
+                    },
+                    "retryAfterSeconds": {
+                      "minimum": 1,
+                      "type": "integer"
+                    }
+                  },
+                  "required": [
+                    "message"
+                  ],
+                  "type": "object"
+                }
+              }
+            },
+            "description": "Default Response"
+          },
+          "409": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "additionalProperties": false,
+                  "properties": {
+                    "code": {
+                      "type": "string"
+                    },
+                    "context": {},
+                    "details": {
+                      "type": "string"
+                    },
+                    "message": {
+                      "type": "string"
+                    },
+                    "retryAfterSeconds": {
+                      "minimum": 1,
+                      "type": "integer"
+                    }
+                  },
+                  "required": [
+                    "message"
+                  ],
+                  "type": "object"
+                }
+              }
+            },
+            "description": "Default Response"
+          },
+          "500": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "additionalProperties": false,
+                  "properties": {
+                    "code": {
+                      "type": "string"
+                    },
+                    "context": {},
+                    "details": {
+                      "type": "string"
+                    },
+                    "message": {
+                      "type": "string"
+                    },
+                    "retryAfterSeconds": {
+                      "minimum": 1,
+                      "type": "integer"
+                    }
+                  },
+                  "required": [
+                    "message"
+                  ],
+                  "type": "object"
+                }
+              }
+            },
+            "description": "Default Response"
+          }
+        },
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "tags": [
+          "Cash"
+        ]
+      }
+    },
+    "/admin/cash-transactions/{id}/adopt": {
+      "post": {
+        "description": "Assume na sessão do operador um dinheiro antigo gravado sem sessão.",
+        "operationId": "adoptCashTransaction",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "type": "string"
+            }
+          },
+          {
+            "in": "header",
+            "name": "x-active-hotel-id",
+            "required": false,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "additionalProperties": false,
+                "properties": {
+                  "reason": {
+                    "maxLength": 1000,
+                    "minLength": 3,
+                    "type": "string"
+                  }
+                },
+                "required": [
+                  "reason"
                 ],
                 "type": "object"
               }
@@ -75957,6 +76228,10 @@
                                   "nullable": true,
                                   "type": "number"
                                 },
+                                "difference": {
+                                  "nullable": true,
+                                  "type": "number"
+                                },
                                 "expected_quantity": {
                                   "type": "number"
                                 },
@@ -75986,7 +76261,8 @@
                                 "product_name",
                                 "expected_quantity",
                                 "expected_version",
-                                "counted_quantity"
+                                "counted_quantity",
+                                "difference"
                               ],
                               "type": "object"
                             },
@@ -76375,6 +76651,10 @@
                                 "nullable": true,
                                 "type": "number"
                               },
+                              "difference": {
+                                "nullable": true,
+                                "type": "number"
+                              },
                               "expected_quantity": {
                                 "type": "number"
                               },
@@ -76404,7 +76684,8 @@
                               "product_name",
                               "expected_quantity",
                               "expected_version",
-                              "counted_quantity"
+                              "counted_quantity",
+                              "difference"
                             ],
                             "type": "object"
                           },
@@ -76548,6 +76829,10 @@
                                 "nullable": true,
                                 "type": "number"
                               },
+                              "difference": {
+                                "nullable": true,
+                                "type": "number"
+                              },
                               "expected_quantity": {
                                 "type": "number"
                               },
@@ -76577,7 +76862,8 @@
                               "product_name",
                               "expected_quantity",
                               "expected_version",
-                              "counted_quantity"
+                              "counted_quantity",
+                              "difference"
                             ],
                             "type": "object"
                           },
@@ -76936,6 +77222,10 @@
                                 "nullable": true,
                                 "type": "number"
                               },
+                              "difference": {
+                                "nullable": true,
+                                "type": "number"
+                              },
                               "expected_quantity": {
                                 "type": "number"
                               },
@@ -76965,7 +77255,8 @@
                               "product_name",
                               "expected_quantity",
                               "expected_version",
-                              "counted_quantity"
+                              "counted_quantity",
+                              "difference"
                             ],
                             "type": "object"
                           },
@@ -77324,6 +77615,10 @@
                                 "nullable": true,
                                 "type": "number"
                               },
+                              "difference": {
+                                "nullable": true,
+                                "type": "number"
+                              },
                               "expected_quantity": {
                                 "type": "number"
                               },
@@ -77353,7 +77648,8 @@
                               "product_name",
                               "expected_quantity",
                               "expected_version",
-                              "counted_quantity"
+                              "counted_quantity",
+                              "difference"
                             ],
                             "type": "object"
                           },
@@ -77752,6 +78048,10 @@
                                 "nullable": true,
                                 "type": "number"
                               },
+                              "difference": {
+                                "nullable": true,
+                                "type": "number"
+                              },
                               "expected_quantity": {
                                 "type": "number"
                               },
@@ -77781,7 +78081,8 @@
                               "product_name",
                               "expected_quantity",
                               "expected_version",
-                              "counted_quantity"
+                              "counted_quantity",
+                              "difference"
                             ],
                             "type": "object"
                           },

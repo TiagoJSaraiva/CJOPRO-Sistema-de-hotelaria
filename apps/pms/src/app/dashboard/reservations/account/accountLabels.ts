@@ -111,6 +111,10 @@ const ACTION_MESSAGES: Record<
     tone: "error",
     text: "A conta mudou enquanto você trabalhava. Confira os valores e tente de novo.",
   },
+  "cash-session-required": {
+    tone: "error",
+    text: "Dinheiro exige uma sessão de caixa aberta por você. Abra a sessão em Caixa e tente de novo.",
+  },
   conflict: {
     tone: "error",
     text: "Não foi possível concluir a ação nesta conta.",

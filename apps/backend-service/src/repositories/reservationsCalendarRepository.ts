@@ -1,3 +1,4 @@
+import { maintenanceOccurrenceCode } from "@hotel/shared";
 import type {
   AdminReservationCalendarResponse,
   AdminReservationCalendarRoomBlock,
@@ -250,7 +251,7 @@ class SupabaseReservationsCalendarRepository implements ReservationsCalendarRepo
                 item.occurrence &&
                 !Array.isArray(item.occurrence) &&
                 item.occurrence.occurrence_number
-                  ? `OCO-${String(item.occurrence.occurrence_number).padStart(6, "0")}`
+                  ? maintenanceOccurrenceCode(item.occurrence.occurrence_number)
                   : null,
               is_overdue: String(item.end_date) < today,
             }) satisfies AdminReservationCalendarRoomBlock,

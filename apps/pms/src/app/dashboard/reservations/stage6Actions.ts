@@ -3,57 +3,86 @@
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import { requestOperationsFinanceEndpoint } from "../../../lib/adminApi";
+import {
+  failureStatus,
+  operationOutcome,
+} from "../_components/operationOutcome";
 
 const text = (form: FormData, key: string) =>
   String(form.get(key) || "").trim();
-function done(path: string, status: string) {
+async function run(
+  endpoint: string,
+  method: "POST" | "PUT",
+  body: unknown,
+  path: string,
+  status: string,
+) {
+  try {
+    await requestOperationsFinanceEndpoint(endpoint, method, body);
+  } catch (error) {
+    redirect(`${path}?status=${failureStatus(error)}`);
+  }
   revalidatePath(path);
-  redirect(`${path}?status=${encodeURIComponent(status)}`);
+  redirect(`${path}?status=${status}`);
 }
 export async function createRatePlanAction(form: FormData) {
-  await requestOperationsFinanceEndpoint("rate-plans", "POST", {
-    name: text(form, "name"),
-    code: text(form, "code"),
-    kind: text(form, "kind"),
-    description: text(form, "description") || undefined,
-  });
-  done("/dashboard/reservations/rates", "Plano tarifário criado em rascunho.");
+  await run(
+    "rate-plans",
+    "POST",
+    {
+      name: text(form, "name"),
+      code: text(form, "code"),
+      kind: text(form, "kind"),
+      description: text(form, "description") || undefined,
+    },
+    "/dashboard/reservations/rates",
+    "rate-plan-created",
+  );
 }
 export async function saveBookingConfigurationAction(form: FormData) {
-  await requestOperationsFinanceEndpoint("booking-configuration", "PUT", {
-    published: form.get("published") === "on",
-    primary_color: text(form, "primary_color"),
-    introduction: text(form, "introduction"),
-    guarantee_instructions: text(form, "guarantee_instructions"),
-    terms: text(form, "terms"),
-    consent_version: text(form, "consent_version"),
-  });
-  done(
+  await run(
+    "booking-configuration",
+    "PUT",
+    {
+      published: form.get("published") === "on",
+      primary_color: text(form, "primary_color"),
+      introduction: text(form, "introduction"),
+      guarantee_instructions: text(form, "guarantee_instructions"),
+      terms: text(form, "terms"),
+      consent_version: text(form, "consent_version"),
+    },
     "/dashboard/reservations/channels",
-    "Configuração de venda direta atualizada.",
+    "booking-configuration-saved",
   );
 }
 export async function createBookingChannelWithSecretAction(
-  _state: { message: string; secret?: string },
+  _state: { message: string; secret?: string; failed?: boolean },
   form: FormData,
 ) {
-  const result = await requestOperationsFinanceEndpoint<{
-    secret?: string;
-  }>("booking-channels", "POST", {
-    name: text(form, "name"),
-    code: text(form, "code"),
-    active: true,
-  });
-  revalidatePath("/dashboard/reservations/channels");
-  return {
-    message:
-      "Canal criado. Copie o segredo agora; ele não será exibido novamente.",
-    secret: result.secret,
-  };
+  try {
+    const result = await requestOperationsFinanceEndpoint<{
+      secret?: string;
+    }>("booking-channels", "POST", {
+      name: text(form, "name"),
+      code: text(form, "code"),
+      active: true,
+    });
+    revalidatePath("/dashboard/reservations/channels");
+    return {
+      message:
+        "Canal criado. Copie o segredo agora; ele não será exibido novamente.",
+      secret: result.secret,
+    };
+  } catch (error) {
+    return {
+      message: operationOutcome(failureStatus(error))?.message ?? "",
+      failed: true,
+    };
+  }
 }
 export async function saveBookingChannelMappingAction(form: FormData) {
   const channelId = text(form, "channel_id");
-  await requestOperationsFinanceEndpoint(
+  await run(
     `booking-channels/${channelId}/mappings`,
     "POST",
     {
@@ -62,12 +91,13 @@ export async function saveBookingChannelMappingAction(form: FormData) {
       external_rate_code: text(form, "external_rate_code"),
       rate_plan_id: text(form, "rate_plan_id"),
     },
+    "/dashboard/reservations/channels",
+    "channel-mapping-saved",
   );
-  done("/dashboard/reservations/channels", "Mapeamento salvo.");
 }
 export async function actBookingChannelEventAction(form: FormData) {
   const id = text(form, "id");
-  await requestOperationsFinanceEndpoint(
+  await run(
     `booking-channel-events/${id}/actions`,
     "POST",
     {
@@ -75,8 +105,9 @@ export async function actBookingChannelEventAction(form: FormData) {
       expected_version: Number(form.get("version")),
       reason: text(form, "reason"),
     },
+    "/dashboard/reservations/channels",
+    "channel-event-updated",
   );
-  done("/dashboard/reservations/channels", "Evento de canal atualizado.");
 }
 function parseCsvLine(line: string) {
   const values: string[] = [];
@@ -124,18 +155,17 @@ export async function importBookingChannelCsvAction(form: FormData) {
       },
     };
   });
-  await requestOperationsFinanceEndpoint("booking-channels/import", "POST", {
-    channel_id: text(form, "channel_id"),
-    rows,
-  });
-  done(
+  await run(
+    "booking-channels/import",
+    "POST",
+    { channel_id: text(form, "channel_id"), rows },
     "/dashboard/reservations/channels",
-    "Arquivo importado para a caixa de entrada.",
+    "channel-csv-imported",
   );
 }
 export async function actPrearrivalRequestAction(form: FormData) {
   const id = text(form, "id");
-  await requestOperationsFinanceEndpoint(
+  await run(
     `prearrival-requests/${id}/actions`,
     "POST",
     {
@@ -144,17 +174,19 @@ export async function actPrearrivalRequestAction(form: FormData) {
       reason: text(form, "reason"),
       next_action: text(form, "next_action") || undefined,
     },
+    "/dashboard/reservations/prearrival",
+    "prearrival-updated",
   );
-  done("/dashboard/reservations/prearrival", "Solicitação atualizada.");
 }
 export async function reconcileAnalyticsAction(form: FormData) {
-  await requestOperationsFinanceEndpoint(
+  await run(
     "analytics/operations/reconcile",
     "POST",
     {
       from: text(form, "from") || undefined,
       to: text(form, "to") || undefined,
     },
+    "/dashboard/reservations/analytics",
+    "analytics-reconciled",
   );
-  done("/dashboard/reservations/analytics", "Indicadores reconciliados.");
 }

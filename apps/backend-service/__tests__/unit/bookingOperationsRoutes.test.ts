@@ -60,13 +60,35 @@ async function setup() {
     const contract = API_ROUTE_CONTRACTS[`${options.method} ${options.url}`];
     if (contract) options.schema = contract;
   });
+  const payloads: unknown[] = [];
+  app.addHook("preSerialization", async (_request, _reply, payload) => {
+    payloads.push(payload);
+    return payload;
+  });
   registerBookingOperationsRoutes(app, repository);
   await app.ready();
   apps.push(app);
-  return { app, repository };
+  return { app, repository, payloads };
 }
 afterEach(async () => {
   while (apps.length) await apps.pop()!.close();
+});
+
+it("a decisão de evento de canal só devolve o que o contrato prevê", async () => {
+  const { app, repository, payloads } = await setup();
+  vi.mocked(repository.mutate).mockResolvedValueOnce({
+    result: "ok",
+    id,
+    reservation_id: "90000000-0000-4000-8000-000000000002",
+  });
+  const response = await app.inject({
+    method: "POST",
+    url: `/admin/booking-channel-events/${id}/actions`,
+    headers: headers([PERMISSIONS.BOOKING_CHANNELS_MANAGE]),
+    payload: { action: "apply", expected_version: 1, reason: "Conferido" },
+  });
+  expect(response.statusCode).toBe(200);
+  expect(payloads).toEqual([{ ok: true, result: "ok", id }]);
 });
 
 it("protege leitura por autenticação, permissão e hotel", async () => {

@@ -1,3 +1,4 @@
+import { maintenanceOccurrenceCode } from "@hotel/shared";
 import type {
   AdminMaintenanceCostItem,
   AdminMaintenanceCostItemInput,
@@ -40,7 +41,7 @@ function occurrenceCode(row: {
   occurrence?: { occurrence_number: number } | null;
 }) {
   return row.occurrence
-    ? `MAN-${String(row.occurrence.occurrence_number).padStart(6, "0")}`
+    ? maintenanceOccurrenceCode(row.occurrence.occurrence_number)
     : undefined;
 }
 

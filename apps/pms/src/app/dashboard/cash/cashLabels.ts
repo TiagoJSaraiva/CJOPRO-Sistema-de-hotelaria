@@ -41,6 +41,23 @@ const OUTCOMES: Record<string, CashOutcome> = {
   created: { tone: "success", message: "Caixa cadastrado." },
   opened: { tone: "success", message: "Sessão aberta." },
   moved: { tone: "success", message: "Movimento registrado." },
+  adopted: {
+    tone: "success",
+    message: "Dinheiro assumido na sua sessão. Ele entrou no valor esperado.",
+  },
+  opening_reason_required: {
+    tone: "error",
+    message:
+      "O fundo inicial difere da última contagem deste caixa. Justifique para abrir com outro valor.",
+  },
+  invalid_operator: {
+    tone: "error",
+    message: "Esta pessoa não opera caixa neste hotel.",
+  },
+  cash_session_required: {
+    tone: "error",
+    message: "Abra a sua sessão de caixa antes de assumir este dinheiro.",
+  },
   counted: { tone: "success", message: "Contagem registrada." },
   decided: { tone: "success", message: "Decisão registrada." },
   prepared: {

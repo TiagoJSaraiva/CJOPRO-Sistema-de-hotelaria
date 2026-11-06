@@ -258,6 +258,21 @@ test("lição 9: sessão, contagem cega e fechamento diário", async ({
 
   await test.step("Erro proposital: aprovar depois de a projeção mudar", async () => {
     await switchTo(page, CASHIER);
+    await expect
+      .soft(registerCard(page))
+      .toContainText(/Última contagem:\s*R\$\s*120,00/);
+    await expect
+      .soft(registerCard(page).getByLabel("Fundo inicial"))
+      .toHaveValue("120");
+    const refusedOpening = registerCard(page);
+    await refusedOpening.getByLabel("Fundo inicial").fill("10");
+    await refusedOpening.getByRole("button", { name: "Abrir sessão" }).click();
+    await expect
+      .soft(page.getByRole("alert").first())
+      .toContainText("difere da última contagem");
+    await registerCard(page)
+      .getByLabel("Justificativa, se o valor mudar")
+      .fill("Retirada para a tesouraria antes do turno");
     await openSession(page, "10");
     await count(page, "10");
     await expect

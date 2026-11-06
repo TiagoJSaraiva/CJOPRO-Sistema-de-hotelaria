@@ -34,6 +34,7 @@ import {
   requestConsumptionCorrectionAction,
   reverseStayPaymentAction,
 } from "../../../../src/app/dashboard/consumption/accountActions";
+import { accountActionMessage } from "../../../../src/app/dashboard/reservations/account/accountLabels";
 
 describe("dashboard/consumption account actions", () => {
   beforeEach(() => {
@@ -84,6 +85,25 @@ describe("dashboard/consumption account actions", () => {
     await expect(reverseStayPaymentAction(form)).rejects.toThrow(
       "REDIRECT:/dashboard/reservations/account?stay_id=stay-1&status=version-conflict",
     );
+  });
+
+  it("explains that cash needs the session of whoever receives it", async () => {
+    mocks.getUser.mockResolvedValue({
+      permissions: [PERMISSIONS.CONSUMPTION_PAYMENT_RECEIVE],
+    });
+    mocks.createRefund.mockRejectedValue(
+      Object.assign(new Error("x"), { details: "cash_session_required" }),
+    );
+    const form = new FormData();
+    form.set("stay_id", "stay-1");
+    form.set("original_tender_id", "tender-1");
+    form.set("amount", "10");
+    await expect(reverseStayPaymentAction(form)).rejects.toThrow(
+      "status=cash-session-required",
+    );
+    expect(accountActionMessage("cash-session-required")).toMatchObject({
+      tone: "error",
+    });
   });
 
   it("requests a partial correction with item reductions", async () => {

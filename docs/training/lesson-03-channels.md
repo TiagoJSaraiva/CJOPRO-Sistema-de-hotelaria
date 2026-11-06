@@ -37,7 +37,9 @@ mapeamento e eventos; códigos externos continuam texto do provedor fictício.
 
 <details><summary>Solução</summary>
 
-Crie o mapeamento ausente com os seletores internos e reprocesse o evento. O
+Crie o mapeamento ausente com os seletores internos e registre a decisão **Aplicar**
+no evento. Decidido, ele sai da fila e aparece em **Decididos recentemente**. Um
+evento com período já passado não vira reserva: fica em revisão, com o motivo. O
 site direto não precisa dessa tradução porque já usa o catálogo do Aurora.
 
 </details>

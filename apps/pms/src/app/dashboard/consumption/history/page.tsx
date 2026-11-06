@@ -1,6 +1,7 @@
 import { formatHotelInstant, hotelLocalInputToInstant } from "@hotel/shared";
 import { DashboardAccessDeniedCard } from "../../_components/DashboardAccessDeniedCard";
 import { DashboardEntityPageShell } from "../../_components/DashboardEntityPageShell";
+import { OperationStatus } from "../../_components/OperationStatus";
 import {
   getConsumptionOrder,
   listConsumptionOrders,
@@ -331,7 +332,9 @@ export default async function ConsumptionHistoryPage({
               <p className="pms-alert-success" role="status">
                 Correção concluída sem repetir a venda ou a baixa de estoque.
               </p>
-            ) : null}
+            ) : (
+              <OperationStatus status={params.transfer} />
+            )}
             {!selected.is_legacy &&
             selected.stay_id &&
             access.canTransferConsumption ? (

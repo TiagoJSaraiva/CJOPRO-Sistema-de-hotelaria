@@ -19,6 +19,7 @@ import {
   updateInventorySettings,
   requestOperationsFinanceEndpoint,
 } from "../../../lib/adminApi";
+import { failureStatus } from "../_components/operationOutcome";
 
 type Tab =
   "overview" | "movements" | "counts" | "settings" | "lots" | "minibar";
@@ -170,6 +171,32 @@ export async function createMinibarRouteAction(formData: FormData) {
   refresh();
   go("minibar", "created");
 }
+export async function actMinibarRouteAction(formData: FormData) {
+  await requirePermission(PERMISSIONS.MINIBAR_REPLENISHMENT_EXECUTE, "minibar");
+  const action = String(formData.get("action") || "");
+  if (!["assign", "complete", "cancel"].includes(action))
+    go("minibar", "invalid");
+  try {
+    await requestOperationsFinanceEndpoint(
+      `minibar/replenishment-routes/${String(formData.get("record_id"))}/actions`,
+      "POST",
+      {
+        action,
+        expected_version: Number(formData.get("version")),
+        reason:
+          action === "assign"
+            ? "Rota de reposição assumida"
+            : action === "complete"
+              ? "Reposição concluída nos quartos da rota"
+              : "Rota de reposição cancelada",
+      },
+    );
+  } catch (error) {
+    go("minibar", failureStatus(error));
+  }
+  refresh();
+  go("minibar", "updated");
+}
 export async function createInventoryLocationAction(formData: FormData) {
   await requirePermission(PERMISSIONS.INVENTORY_SETTINGS_MANAGE, "settings");
   const name = String(formData.get("name") || "").trim();
@@ -302,8 +329,8 @@ export async function postInventoryDocumentAction(formData: FormData) {
       idempotency_key: uuid(),
       lines: [{ position_id: positionId, quantity, unit_cost: unitCost }],
     });
-  } catch {
-    go("movements", "conflict");
+  } catch (error) {
+    go("movements", failureStatus(error));
   }
   refresh();
   go("movements", "posted");
@@ -336,8 +363,8 @@ export async function transferInventoryAction(formData: FormData) {
       occurred_at: String(formData.get("occurred_at")),
       idempotency_key: uuid(),
     });
-  } catch {
-    go("movements", "conflict");
+  } catch (error) {
+    go("movements", failureStatus(error));
   }
   refresh();
   go("movements", "transferred");

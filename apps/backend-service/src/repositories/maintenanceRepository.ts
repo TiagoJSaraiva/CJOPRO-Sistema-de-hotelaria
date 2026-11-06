@@ -1,3 +1,4 @@
+import { maintenanceOccurrenceCode } from "@hotel/shared";
 import type {
   AdminMaintenanceAttachment,
   AdminMaintenanceCategory,
@@ -58,10 +59,6 @@ function relation<T>(value: T | T[] | null | undefined): T | null {
   return Array.isArray(value) ? value[0] || null : value || null;
 }
 
-function occurrenceCode(number: number): string {
-  return `OCO-${String(number).padStart(6, "0")}`;
-}
-
 function mapOccurrenceSummary(
   row: OccurrenceRow,
 ): AdminMaintenanceOccurrenceSummary {
@@ -76,7 +73,7 @@ function mapOccurrenceSummary(
   return {
     id: String(row.id),
     occurrence_number: number,
-    code: occurrenceCode(number),
+    code: maintenanceOccurrenceCode(number),
     kind: row.kind,
     priority: row.priority,
     status: row.status,
@@ -393,7 +390,7 @@ class SupabaseMaintenanceRepository implements MaintenanceRepository {
     if (filters.createdTo)
       query = query.lte("created_at", filters.createdTo + "T23:59:59.999999Z");
     if (filters.search) {
-      const code = /^OCO-0*(\d+)$/i.exec(filters.search);
+      const code = /^(?:MAN|OCO)-0*(\d+)$/i.exec(filters.search);
       if (code) query = query.eq("occurrence_number", Number(code[1]));
       else query = query.ilike("description", `%${filters.search}%`);
     }

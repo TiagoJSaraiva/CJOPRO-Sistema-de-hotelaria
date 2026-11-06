@@ -15451,6 +15451,15 @@ export type Database = {
         }
         Returns: Json
       }
+      adopt_cash_transaction: {
+        Args: {
+          p_actor_id: string
+          p_hotel_id: string
+          p_id: string
+          p_input: Json
+        }
+        Returns: Json
+      }
       allocate_stay_account_credit: {
         Args: {
           p_actor_id: string

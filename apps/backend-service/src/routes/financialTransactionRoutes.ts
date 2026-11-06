@@ -1,3 +1,4 @@
+import { databaseRuleError } from "../common/databaseRuleError";
 import type { FastifyInstance } from "fastify";
 import {
   ADMIN_ERROR_CODE,
@@ -229,6 +230,7 @@ export function registerFinancialTransactionRoutes(
           created_by: auth.session.id,
         })
         .catch((error) => {
+          if (databaseRuleError(error)) throw error;
           request.log.error(error);
           return null;
         });
@@ -470,8 +472,9 @@ export function registerFinancialTransactionRoutes(
       }
 
       const updateResult = await repository
-        .updateFinancialTransaction(id, activeHotelId, payload)
+        .updateFinancialTransaction(id, activeHotelId, payload, auth.session.id)
         .catch((error) => {
+          if (databaseRuleError(error)) throw error;
           request.log.error(error);
           return null;
         });
@@ -535,6 +538,7 @@ export function registerFinancialTransactionRoutes(
       const result = await repository
         .deleteFinancialTransaction(id, activeHotelId)
         .catch((error) => {
+          if (databaseRuleError(error)) throw error;
           request.log.error(error);
           return null;
         });

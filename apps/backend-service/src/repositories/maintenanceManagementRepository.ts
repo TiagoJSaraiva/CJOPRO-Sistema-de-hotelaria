@@ -1,3 +1,4 @@
+import { maintenanceOccurrenceCode } from "@hotel/shared";
 import type {
   AdminMaintenanceAnalytics,
   AdminMaintenanceAutomationRun,
@@ -1489,7 +1490,7 @@ class SupabaseMaintenanceManagementRepository implements MaintenanceManagementRe
     if (result.error) throw result.error;
     const rows: Array<Record<string, unknown>> = (result.data || []).map(
       (item) => ({
-        code: `MAN-${String(item.occurrence_number).padStart(6, "0")}`,
+        code: maintenanceOccurrenceCode(item.occurrence_number),
         kind: item.kind,
         priority: item.priority,
         status: item.status,

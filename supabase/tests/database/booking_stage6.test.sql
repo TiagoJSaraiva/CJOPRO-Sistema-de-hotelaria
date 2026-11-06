@@ -63,7 +63,7 @@ select is((select value->>'result' from stage6_mapping),'ok','external category 
 create temporary table stage6_channel_event as
 select public.ingest_booking_channel_event(
  (select (value->>'id')::uuid from stage6_channel),
- jsonb_build_object('event_id','stage6-create-1','event_type','create','external_reservation_id','external-1','occurred_at',now(),'reservation',jsonb_build_object('room_code','STD','rate_code','FLEX','checkin_date',(current_date+20)::text,'checkout_date',(current_date+22)::text,'adults',1,'children',0,'currency','BRL','total',420,'guest_name','Hóspede do canal'))
+ jsonb_build_object('event_id','stage6-create-1','event_type','create','external_reservation_id','external-1','occurred_at',now(),'reservation',jsonb_build_object('room_code','STD','rate_code','FLEX','checkin_date',(public.hotel_operational_date('10000000-0000-4000-8000-000000000001')+20)::text,'checkout_date',(public.hotel_operational_date('10000000-0000-4000-8000-000000000001')+22)::text,'adults',1,'children',0,'currency','BRL','total',420,'guest_name','Hóspede do canal'))
 ) value;
 select is((select value->>'status' from stage6_channel_event),'received','mapped channel event enters the neutral inbox');
 
@@ -80,7 +80,7 @@ select ok(exists(select 1 from public.reservations where id=(select (value->>'re
 select is((public.import_booking_channel_events(
  '10000000-0000-4000-8000-000000000001',
  (select (value->>'id')::uuid from stage6_channel),
- jsonb_build_array(jsonb_build_object('event_id','stage6-create-1','event_type','create','external_reservation_id','external-1','occurred_at',now(),'reservation',jsonb_build_object('room_code','STD','rate_code','FLEX','checkin_date',(current_date+20)::text,'checkout_date',(current_date+22)::text,'adults',1,'children',0,'currency','BRL','total',420,'guest_name','Hóspede do canal')))
+ jsonb_build_array(jsonb_build_object('event_id','stage6-create-1','event_type','create','external_reservation_id','external-1','occurred_at',now(),'reservation',jsonb_build_object('room_code','STD','rate_code','FLEX','checkin_date',(public.hotel_operational_date('10000000-0000-4000-8000-000000000001')+20)::text,'checkout_date',(public.hotel_operational_date('10000000-0000-4000-8000-000000000001')+22)::text,'adults',1,'children',0,'currency','BRL','total',420,'guest_name','Hóspede do canal')))
 )->>'result'),'ok','CSV pipeline keeps row-level idempotency');
 
 select * from finish();

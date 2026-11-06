@@ -1,6 +1,9 @@
 import { PERMISSIONS, type BookingChannelReferenceData } from "@hotel/shared";
 import { getUserFromSession } from "../../../../lib/auth";
-import { requestOperationsFinanceEndpoint } from "../../../../lib/adminApi";
+import {
+  getHotelClock,
+  requestOperationsFinanceEndpoint,
+} from "../../../../lib/adminApi";
 import { DashboardAccessDeniedCard } from "../../_components/DashboardAccessDeniedCard";
 import { DashboardEntityPageShell } from "../../_components/DashboardEntityPageShell";
 import type { UsageGuideDefinition } from "../../_components/UsageGuide";
@@ -12,6 +15,44 @@ import {
 } from "../stage6Actions";
 import { reservationOperationsTabs } from "../stage6Tabs";
 import { ChannelCreateForm } from "./ChannelCreateForm";
+import {
+  channelCsvSample,
+  channelEventAwaitsDecision,
+  channelEventReasonLabel,
+  channelEventStatusLabel,
+  channelEventTypeLabel,
+} from "./channelLabels";
+function EventDetails({
+  item,
+}: {
+  item: {
+    external_reservation_id: string;
+    reason?: string;
+    normalized_payload?: {
+      reservation?: {
+        guest_name?: string;
+        room_code?: string;
+        rate_code?: string;
+        checkin_date?: string;
+        checkout_date?: string;
+      };
+    };
+  };
+}) {
+  const reservation = item.normalized_payload?.reservation;
+  return (
+    <>
+      <p className="pms-status-muted">
+        Reserva externa {item.external_reservation_id}
+        {reservation
+          ? ` · ${reservation.guest_name ?? ""} · categoria ${reservation.room_code ?? "—"} · tarifa ${reservation.rate_code ?? "—"} · ${reservation.checkin_date ?? "—"} a ${reservation.checkout_date ?? "—"}`
+          : ""}
+      </p>
+      {item.reason ? <p>{channelEventReasonLabel(item.reason)}</p> : null}
+    </>
+  );
+}
+
 type Channel = {
   id: string;
   code: string;
@@ -62,7 +103,7 @@ export default async function Page({
         message="Sem permissão para gerenciar conexões."
       />
     );
-  const [channels, config, inbox, referenceData] = await Promise.all([
+  const [channels, config, inbox, referenceData, clock] = await Promise.all([
     requestOperationsFinanceEndpoint<{ items: Channel[] }>(
       "booking-channels",
       "GET",
@@ -75,15 +116,33 @@ export default async function Page({
         status: string;
         reason?: string;
         event_type: string;
+        external_reservation_id: string;
         version: number;
+        normalized_payload?: {
+          reservation?: {
+            guest_name?: string;
+            room_code?: string;
+            rate_code?: string;
+            checkin_date?: string;
+            checkout_date?: string;
+          };
+        };
       }>;
     }>("booking-channels/inbox", "GET"),
     requestOperationsFinanceEndpoint<BookingChannelReferenceData>(
       "booking-channels/reference-data",
       "GET",
     ),
+    getHotelClock(),
   ]);
   const c = config.configuration;
+  const events = inbox.items || [];
+  const awaiting = events.filter((item) =>
+    channelEventAwaitsDecision(item.status),
+  );
+  const decided = events
+    .filter((item) => !channelEventAwaitsDecision(item.status))
+    .slice(0, 10);
   return (
     <DashboardEntityPageShell
       title="Reservas"
@@ -262,9 +321,7 @@ export default async function Page({
               <textarea
                 className="pms-field-input min-h-32"
                 name="csv_text"
-                defaultValue={
-                  "event_id,event_type,external_reservation_id,occurred_at,room_code,rate_code,checkin_date,checkout_date,adults,children,currency,total,guest_name,guest_email,guest_phone\nHL-001,create,RES-001,2026-09-19T12:00:00Z,STD,FLEX,2026-09-21,2026-09-23,2,0,BRL,500,Hóspede Exemplo,guest@example.invalid,+551100000000"
-                }
+                defaultValue={channelCsvSample(clock.operational_date)}
                 required
               />
             </label>
@@ -276,18 +333,20 @@ export default async function Page({
       ) : null}
       <section className="pms-surface-card" data-usage-guide="channel-inbox">
         <h2>Caixa de entrada</h2>
-        {(inbox.items || []).length === 0 ? (
+        {awaiting.length === 0 ? (
           <p>
             Nenhum evento aguardando decisão. Eventos importados aparecem aqui
             quando precisam ser aplicados, mapeados ou rejeitados.
           </p>
         ) : (
-          (inbox.items || []).map((item) => (
+          awaiting.map((item) => (
             <article key={item.id} className="border-t py-3">
               <p>
-                <strong>{item.channel_name}</strong>: {item.event_type} ·{" "}
-                {item.status} {item.reason ? `· ${item.reason}` : ""}
+                <strong>{item.channel_name}</strong>:{" "}
+                {channelEventTypeLabel(item.event_type)} ·{" "}
+                {channelEventStatusLabel(item.status)}
               </p>
+              <EventDetails item={item} />
               <form
                 action={actBookingChannelEventAction}
                 className="flex flex-wrap gap-2"
@@ -313,6 +372,21 @@ export default async function Page({
             </article>
           ))
         )}
+        {decided.length ? (
+          <>
+            <h3>Decididos recentemente</h3>
+            {decided.map((item) => (
+              <article key={item.id} className="border-t py-3">
+                <p>
+                  <strong>{item.channel_name}</strong>:{" "}
+                  {channelEventTypeLabel(item.event_type)} ·{" "}
+                  {channelEventStatusLabel(item.status)}
+                </p>
+                <EventDetails item={item} />
+              </article>
+            ))}
+          </>
+        ) : null}
       </section>
     </DashboardEntityPageShell>
   );

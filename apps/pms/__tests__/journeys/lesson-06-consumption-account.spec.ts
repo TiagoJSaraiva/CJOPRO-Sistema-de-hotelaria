@@ -393,6 +393,57 @@ test("lição 6: pedidos, pagadores e conta da estadia", async ({
       .toBeVisible();
   });
 
+  await test.step("Dinheiro na conta exige a sessão de quem recebe", async () => {
+    await signOut(page);
+    await signIn(page, "recepcao.aurora@hotelaria.local");
+    const token = (await context.cookies()).find(
+      (cookie) => cookie.name === "pms_session_token",
+    )?.value;
+    const pay = () =>
+      page.request.post(
+        `${BACKEND_URL}/admin/stays/${STAY_ID}/payment-batches`,
+        {
+          headers: { authorization: `Bearer ${token}` },
+          data: {
+            expected_version: Number(
+              queryLocal(
+                `select account_version from public.stays where id='${STAY_ID}';`,
+              ),
+            ),
+            idempotency_key: randomUUID(),
+            tenders: [{ payment_method: "cash", amount: 1 }],
+          },
+        },
+      );
+
+    const refused = await pay();
+    expect
+      .soft(refused.status(), "sem sessão, o dinheiro é recusado")
+      .toBe(409);
+    expect.soft((await refused.json()).details).toBe("cash_session_required");
+
+    await page.goto("/dashboard/cash");
+    const register = page
+      .locator("article")
+      .filter({ hasText: "Caixa da recepção" })
+      .first();
+    await register.getByLabel("Fundo inicial").fill("100");
+    await register.getByRole("button", { name: "Abrir sessão" }).click();
+    await expect(page.getByText("Sessão aberta.")).toBeVisible();
+
+    expect.soft((await pay()).status(), "com sessão, entra na conta").toBe(201);
+    expect
+      .soft(
+        queryLocal(`
+          select s.expected_cash::numeric(12,2)
+          from public.financial_transactions t
+          join public.cash_sessions s on s.id=t.cash_session_id
+          where t.stay_id='${STAY_ID}' and t.payment_method='cash';`),
+        "o valor entrou no esperado da sessão da recepção",
+      )
+      .toBe("101.00");
+  });
+
   await test.step("Invariantes de negócio ao final da jornada", async () => {
     expect.soft(findInvariantViolations()).toEqual([]);
   });

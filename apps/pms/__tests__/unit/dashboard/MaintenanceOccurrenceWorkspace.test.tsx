@@ -158,6 +158,98 @@ it("requires a real release reason and explains the governance inspection", asyn
       }),
     }),
   );
+  const message = await screen.findByRole("status");
+  expect(message.textContent).toContain(
+    "A inspeção final da governança foi criada",
+  );
+  expect(message.textContent).toContain("ainda não está pronto");
+});
+
+it("mostra a recusa como falha, não como sucesso", async () => {
+  const blocked = structuredClone(initial) as AdminMaintenanceOccurrenceDetail;
+  blocked.room_blocks = [
+    {
+      id: "block-1",
+      start_date: "2026-09-19",
+      planned_end_date: "2026-09-20",
+      released_at: null,
+      is_overdue: false,
+    },
+  ] as AdminMaintenanceOccurrenceDetail["room_blocks"];
+  vi.stubGlobal(
+    "fetch",
+    vi.fn().mockResolvedValue({
+      ok: false,
+      status: 400,
+      json: async () => ({ message: "Conclua a ordem antes de liberar." }),
+    }),
+  );
+  render(
+    <MaintenanceOccurrenceWorkspace
+      initial={blocked}
+      referenceData={referenceData}
+      access={{ ...access, canManageBlocks: true }}
+    />,
+  );
+  await userEvent.type(
+    screen.getByLabelText("Justificativa da liberação técnica"),
+    "Tentativa cedo",
+  );
+  await userEvent.click(
+    screen.getByRole("button", {
+      name: "Liberar para inspeção da governança",
+    }),
+  );
+  const message = await screen.findByText("Conclua a ordem antes de liberar.");
+  expect(message.getAttribute("role")).toBe("alert");
+  expect(message.className).toContain("pms-alert-error");
+});
+
+it("mostra a avaliação de reparar ou substituir em português", () => {
+  const item = structuredClone(initial) as AdminMaintenanceOccurrenceDetail;
+  item.lifecycle_decisions = [
+    {
+      id: "decision",
+      status: "submitted",
+      recommendation: "replace",
+      version: 1,
+      options: [
+        {
+          id: "option",
+          kind: "repair",
+          estimated_cost: 100,
+          estimated_downtime_hours: 2,
+        },
+      ],
+    },
+  ] as unknown as AdminMaintenanceOccurrenceDetail["lifecycle_decisions"];
+  const { container } = render(
+    <MaintenanceOccurrenceWorkspace
+      initial={item}
+      referenceData={referenceData}
+      access={access}
+    />,
+  );
+  expect(container.textContent).toContain("Avaliação: aguardando aprovação");
+  expect(container.textContent).toContain("Recomendação: Substituir");
+  expect(container.textContent).toContain("Reparar");
+  expect(container.textContent).not.toContain("submitted");
+});
+
+it("traduz a prioridade e não expõe o identificador da estadia", () => {
+  const item = structuredClone(initial) as AdminMaintenanceOccurrenceDetail;
+  item.priority = "critical";
+  item.stay_id = "91000000-0000-4000-8000-000000000001";
+  const { container } = render(
+    <MaintenanceOccurrenceWorkspace
+      initial={item}
+      referenceData={referenceData}
+      access={access}
+    />,
+  );
+  expect(container.textContent).toContain("Crítica");
+  expect(container.textContent).toContain("Vinculada");
+  expect(container.textContent).not.toContain("91000000-0000");
 });
 
 it("identifica a recomendação da avaliação de ciclo de vida", () => {

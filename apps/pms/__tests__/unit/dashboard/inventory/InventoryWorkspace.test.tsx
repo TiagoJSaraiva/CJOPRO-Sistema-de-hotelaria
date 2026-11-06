@@ -182,6 +182,64 @@ afterEach(() => {
 });
 
 describe("InventoryWorkspace", () => {
+  it("lista as rotas e só oferece concluir a quem assumiu", async () => {
+    const route = {
+      version: 2,
+      items: [
+        {
+          id: "item",
+          room_number: "101",
+          product_name: "Água mineral",
+          source_name: "Estoque central",
+          quantity: 2,
+        },
+      ],
+    };
+    mocks.operations.mockImplementation(async (path: string) => {
+      if (path === "minibar/compositions") return { items: [] };
+      if (path === "minibar/replenishment-board")
+        return {
+          version: 1,
+          items: [],
+          routes: [
+            { ...route, id: "nova", status: "draft" },
+            {
+              ...route,
+              id: "minha",
+              status: "in_progress",
+              responsible_id: "viewer",
+              responsible_name: "Governança",
+            },
+            {
+              ...route,
+              id: "de-outra",
+              status: "in_progress",
+              responsible_id: "outra",
+              responsible_name: "Outra pessoa",
+            },
+          ],
+        };
+      throw new Error(path);
+    });
+    mocks.getUser.mockResolvedValue({
+      id: "viewer",
+      permissions: [
+        ...allPermissions,
+        PERMISSIONS.MINIBAR_REPLENISHMENT_EXECUTE,
+      ],
+    });
+    render(await InventoryWorkspace({ tab: "minibar" }));
+    const cards = screen.getAllByTestId("minibar-route");
+    expect(cards).toHaveLength(3);
+    expect(cards[0]!.textContent).toContain(
+      "Quarto 101: 2 × Água mineral, de Estoque central",
+    );
+    expect(cards[0]!.textContent).toContain("Assumir rota");
+    expect(cards[1]!.textContent).toContain("Concluir reposição");
+    expect(cards[2]!.textContent).toContain("Outra pessoa");
+    expect(cards[2]!.textContent).not.toContain("Concluir reposição");
+  });
+
   it("keeps the minibar screen working without access to the replenishment board", async () => {
     mocks.getUser.mockResolvedValue({
       permissions: [...allPermissions, PERMISSIONS.MINIBAR_COMPOSITIONS_MANAGE],
@@ -220,6 +278,7 @@ describe("InventoryWorkspace", () => {
     expect(screen.getByRole("button", { name: "Registrar" })).toBeTruthy();
     expect(screen.getByRole("button", { name: "Transferir" })).toBeTruthy();
     expect(screen.getByText(/saldo 0 → 2/)).toBeTruthy();
+    expect(screen.queryByText(/opening:|receipt:/)).toBeNull();
     expect(screen.getByText("inventory.position.created")).toBeTruthy();
   });
 

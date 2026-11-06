@@ -2,6 +2,7 @@
 
 import { useState, useTransition } from "react";
 import type { AdminStayFolioEntry } from "@hotel/shared";
+import { CashMethodOption } from "../../_components/CashMethodOption";
 import { allocatePayersAction, payPayerAction } from "../payerActions";
 
 type Payer = {
@@ -21,6 +22,7 @@ export function PayerAccountsPanel({
   consumptionQuantities,
   canManage,
   canReceive,
+  hasCashSession,
 }: {
   stayId: string;
   accountVersion: number;
@@ -30,6 +32,7 @@ export function PayerAccountsPanel({
   consumptionQuantities: Record<string, number>;
   canManage: boolean;
   canReceive: boolean;
+  hasCashSession: boolean;
 }) {
   const money = (value: number) =>
     new Intl.NumberFormat("pt-BR", { style: "currency", currency }).format(
@@ -150,7 +153,7 @@ export function PayerAccountsPanel({
                   Meio
                   <select className="pms-field-input" name="method">
                     <option value="pix">PIX</option>
-                    <option value="cash">Dinheiro</option>
+                    <CashMethodOption hasSession={hasCashSession} />
                     <option value="credit_card">Crédito</option>
                     <option value="debit_card">Débito</option>
                     <option value="bank_transfer">Transferência</option>

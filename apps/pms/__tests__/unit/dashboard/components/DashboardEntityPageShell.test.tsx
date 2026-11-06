@@ -12,7 +12,7 @@ describe("DashboardEntityPageShell", () => {
       <DashboardEntityPageShell
         title="Entidades"
         activeTabKey="create"
-        status="Ativo"
+        status="updated"
         tabs={[
           { key: "view", label: "Consultar", href: "/view", isVisible: true },
           { key: "create", label: "Criar", href: "/create", isVisible: true },
@@ -23,7 +23,7 @@ describe("DashboardEntityPageShell", () => {
     );
 
     expect(screen.getByRole("heading", { name: "Entidades" })).toBeTruthy();
-    expect(screen.getByText("Status: Ativo")).toBeTruthy();
+    expect(screen.getByRole("status").textContent).toBe("Alteração salva.");
     expect(screen.getByText("Conteúdo da página")).toBeTruthy();
     expect(
       screen.getByRole("navigation", { name: "Seções do módulo" }),
@@ -31,6 +31,23 @@ describe("DashboardEntityPageShell", () => {
     expect(
       screen.queryByRole("button", { name: "Guia desta página" }),
     ).toBeNull();
+  });
+
+  it("nunca mostra o código da operação cru", () => {
+    render(
+      <DashboardEntityPageShell
+        title="Entidades"
+        activeTabKey="view"
+        status="conflict"
+        tabs={[]}
+      >
+        <p>Conteúdo</p>
+      </DashboardEntityPageShell>,
+    );
+    expect(screen.getByRole("alert").textContent).toContain(
+      "não foi concluída",
+    );
+    expect(screen.queryByText(/Status:/)).toBeNull();
   });
 
   it("integra o acionador quando a definição possui alvo renderizado", async () => {

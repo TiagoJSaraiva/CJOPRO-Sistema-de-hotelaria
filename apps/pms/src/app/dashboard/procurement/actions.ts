@@ -3,6 +3,7 @@
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import { requestOperationsFinanceEndpoint } from "../../../lib/adminApi";
+import { failureStatus } from "../_components/operationOutcome";
 
 const go = (status: string): never =>
   redirect(`/dashboard/procurement?status=${encodeURIComponent(status)}`);
@@ -17,11 +18,11 @@ async function run(
 ) {
   try {
     await requestOperationsFinanceEndpoint(path, method, body);
-    revalidatePath("/dashboard/procurement");
-    go(status);
-  } catch {
-    go("conflict");
+  } catch (error) {
+    go(failureStatus(error));
   }
+  revalidatePath("/dashboard/procurement");
+  go(status);
 }
 export async function reconcileProcurementAction() {
   await run("procurement/reconcile", "POST", {}, "updated");

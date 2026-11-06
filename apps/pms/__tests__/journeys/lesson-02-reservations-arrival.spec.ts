@@ -168,7 +168,15 @@ test("lição 2: reserva, garantia e chegada", async ({ page, context }) => {
 
   await test.step("6. Check-in dentro da janela operacional", async () => {
     await expect.soft(panel).toContainText("Horário operacional");
+    // No servidor de desenvolvimento, a primeira chamada compila a rota e pode passar de 20 s.
+    const response = page.waitForResponse(
+      (item) =>
+        item.request().method() === "POST" &&
+        item.url().endsWith(`/api/stays/${STAY_ID}/checkin`),
+      { timeout: 120_000 },
+    );
     await panel.getByRole("button", { name: "Check-in", exact: true }).click();
+    expect((await response).status()).toBe(200);
     await expect(panel).toContainText(/Checked-in|em andamento|hospedad/i);
   });
 

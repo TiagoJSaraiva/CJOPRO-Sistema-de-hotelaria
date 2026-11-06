@@ -40,13 +40,9 @@ export default async function ConsumptionAdjustmentsPage({
       activeTabKey="adjustments"
       tabs={tabs}
       usageGuide={consumptionAdjustmentsGuide}
+      status={params?.status}
     >
       <div className="grid gap-4">
-        {params?.status ? (
-          <p className="pms-alert-success" role="status">
-            Operação concluída: {params.status}.
-          </p>
-        ) : null}
         <section
           className="pms-surface-card"
           data-usage-guide="consumption-adjustment-filters"

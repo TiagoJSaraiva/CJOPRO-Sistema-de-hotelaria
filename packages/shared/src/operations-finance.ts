@@ -345,6 +345,9 @@ export type CashRegisterInput = Static<typeof CashRegisterInputSchema>;
 export const CashSessionOpenSchema = Type.Object(
   {
     opening_float: Type.Number({ minimum: 0 }),
+    opening_reason: Type.Optional(
+      Type.String({ minLength: 3, maxLength: 1000 }),
+    ),
     idempotency_key: uuid(),
   },
   strict,
@@ -383,6 +386,11 @@ export const CashMovementInputSchema = Type.Object(
   strict,
 );
 export type CashMovementInput = Static<typeof CashMovementInputSchema>;
+export const CashTransactionAdoptSchema = Type.Object(
+  { reason: Type.String({ minLength: 3, maxLength: 1000 }) },
+  strict,
+);
+export type CashTransactionAdopt = Static<typeof CashTransactionAdoptSchema>;
 
 export type CashMovementSummary = {
   kind: string;
@@ -417,6 +425,7 @@ export type CashRegisterView = {
   difference_tolerance: number;
   active: boolean;
   active_session: CashSessionView | null;
+  last_counted_cash?: number | null;
 };
 
 export type CashRegisterListView = {
@@ -436,7 +445,12 @@ export type DailyCloseProjection = {
   totals: { income: number; expense: number; refund: number };
   is_zero_activity: boolean;
   cash_sessions: CashSessionView[];
-  blockers: Array<{ kind: string; entity_id: string; title: string }>;
+  blockers: Array<{
+    kind: string;
+    entity_id: string;
+    title: string;
+    amount?: number | null;
+  }>;
 };
 
 export type DailyCloseView = {

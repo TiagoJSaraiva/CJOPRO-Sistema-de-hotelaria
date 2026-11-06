@@ -7,6 +7,8 @@ import {
   getStayPayerAccounts,
 } from "../../../../lib/adminApi";
 import { getUserFromSession } from "../../../../lib/auth";
+import { getOwnOpenCashSession } from "../../../../lib/ownCashSession";
+import { CashMethodOption } from "../../_components/CashMethodOption";
 import { DashboardAccessDeniedCard } from "../../_components/DashboardAccessDeniedCard";
 import { DashboardEntityPageShell } from "../../_components/DashboardEntityPageShell";
 import { getStayAccountAccess } from "../access";
@@ -95,9 +97,10 @@ export default async function StayAccountPage({
         message="Conta não encontrada no hotel ativo."
       />
     );
-  const payerAccounts = await getStayPayerAccounts(account.stay_id).catch(
-    () => null,
-  );
+  const [payerAccounts, cashSession] = await Promise.all([
+    getStayPayerAccounts(account.stay_id).catch(() => null),
+    getOwnOpenCashSession(user),
+  ]);
   const actionMessage = accountActionMessage(params?.status);
   return (
     <DashboardEntityPageShell
@@ -191,6 +194,7 @@ export default async function StayAccountPage({
         </section>
         {payerAccounts ? (
           <PayerAccountsPanel
+            hasCashSession={Boolean(cashSession)}
             stayId={account.stay_id}
             accountVersion={payerAccounts.account_version}
             currency={account.currency}
@@ -387,7 +391,7 @@ export default async function StayAccountPage({
                       <span>Meio</span>
                       <select className="pms-field-input" name="payment_method">
                         <option value="pix">PIX</option>
-                        <option value="cash">Dinheiro</option>
+                        <CashMethodOption hasSession={Boolean(cashSession)} />
                         <option value="credit_card">Cartão de crédito</option>
                         <option value="debit_card">Cartão de débito</option>
                         <option value="bank_transfer">Transferência</option>

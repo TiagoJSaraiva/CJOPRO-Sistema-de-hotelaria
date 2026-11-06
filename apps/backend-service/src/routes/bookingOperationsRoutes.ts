@@ -454,15 +454,15 @@ export function registerBookingOperationsRoutes(
     async (request, reply) => {
       const c = context(request, reply, PERMISSIONS.BOOKING_CHANNELS_MANAGE);
       if (!c) return;
-      return send(
-        reply,
-        await repository.mutate("act_booking_channel_event", {
-          p_hotel_id: c.hotelId,
-          p_id: request.params.id,
-          p_actor_id: c.actorId,
-          p_input: request.body,
-        }),
-      );
+      const decision = (await repository.mutate("act_booking_channel_event", {
+        p_hotel_id: c.hotelId,
+        p_id: request.params.id,
+        p_actor_id: c.actorId,
+        p_input: request.body,
+      })) as { result: string; context?: unknown; reservation_id?: string };
+      // A função também informa a reserva criada, que não faz parte do contrato desta rota.
+      delete decision.reservation_id;
+      return send(reply, decision);
     },
   );
   app.get("/admin/analytics/operations", async (request, reply) => {

@@ -11,6 +11,8 @@ import {
   createPostCheckoutCaseAction,
   payPostCheckoutCaseAction,
 } from "./actions";
+import { getOwnOpenCashSession } from "../../../../lib/ownCashSession";
+import { CashMethodOption } from "../../_components/CashMethodOption";
 
 const labels: Record<string, string> = {
   draft: "Rascunho",
@@ -25,8 +27,14 @@ const labels: Record<string, string> = {
   canceled: "Cancelado",
 };
 
-export default async function PostCheckoutConsumptionPage() {
-  const access = getConsumptionAccess(await getUserFromSession());
+export default async function PostCheckoutConsumptionPage({
+  searchParams,
+}: {
+  searchParams?: Promise<{ status?: string }>;
+}) {
+  const params = await searchParams;
+  const user = await getUserFromSession();
+  const access = getConsumptionAccess(user);
   if (
     !access.canReviewPostCheckout &&
     !access.canWaivePostCheckout &&
@@ -38,13 +46,17 @@ export default async function PostCheckoutConsumptionPage() {
         message="Sem permissão para revisar cobranças complementares."
       />
     );
-  const response = await listPostCheckoutConsumptionCases();
+  const [response, cashSession] = await Promise.all([
+    listPostCheckoutConsumptionCases(),
+    getOwnOpenCashSession(user),
+  ]);
   return (
     <DashboardEntityPageShell
       title="Consumo pós-saída"
       activeTabKey="post-checkout"
       tabs={consumptionTabs(access)}
       usageGuide={postCheckoutConsumptionGuide}
+      status={params?.status}
     >
       <div className="grid gap-5">
         {access.canReviewPostCheckout ? (
@@ -251,7 +263,7 @@ export default async function PostCheckoutConsumptionPage() {
                       defaultValue="pix"
                     >
                       <option value="pix">Pix</option>
-                      <option value="cash">Dinheiro</option>
+                      <CashMethodOption hasSession={Boolean(cashSession)} />
                       <option value="credit_card">Cartão de crédito</option>
                       <option value="debit_card">Cartão de débito</option>
                     </select>

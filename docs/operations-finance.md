@@ -71,8 +71,17 @@ apuração. Quartos sem composição ativa continuam no fluxo manual.
 Cada caixa físico aceita uma sessão ativa e um operador. Todos os recebimentos
 do ponto entram na conciliação; apenas dinheiro altera o valor físico esperado.
 Suprimento, retirada, depósito, reembolso e ajuste são movimentos imutáveis. A
-troca de operador encerra a sessão anterior por contagem e transporta o saldo
-para a seguinte.
+sessão seguinte de um caixa parte do valor contado na anterior; abrir com outro
+valor exige justificativa, registrada no movimento de abertura.
+
+Dinheiro entra na sessão aberta de quem recebe ou devolve e é recusado sem ela,
+em todos os caminhos. Por isso a recepção opera o próprio caixa. Hotéis existentes
+precisam atribuir `operate_cash_register` e `read_cash_management` em Papéis a
+quem recebe em dinheiro. Um dinheiro antigo, gravado sem sessão antes dessa regra,
+é assumido por quem está com ele, na própria sessão e com justificativa: a
+transação mantém a data original, e o movimento entra na sessão atual. Depois de
+entrar no caixa, valor, meio e situação da transação não mudam. Recebimentos de
+empresa e de consumo pós-checkout também geram transação.
 
 Na contagem cega, o operador informa o valor sem conhecer o esperado. O resultado
 só é apresentado depois. Diferença acima da tolerância exige justificativa e
@@ -103,6 +112,9 @@ Uma contestação atinge um componente e retém somente aquele valor; o saldo li
 pode ser pago ou recebido parcialmente e com vários meios. Se a contestação for
 aceita, seu valor permanece excluído do saldo liquidável. Ajustes posteriores
 referenciam a apuração original na competência aberta.
+
+O fechamento diário pendente vai para quem prepara ou aprova o fechamento; quem só
+opera caixa recebe as pendências de sessão.
 
 A central de pendências recebe episódios de ruptura, validade, compra, nota,
 conta vencida, caixa, fechamento, contestação e divergência cadastral. O

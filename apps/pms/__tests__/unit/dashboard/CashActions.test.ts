@@ -14,7 +14,9 @@ vi.mock("../../../src/lib/adminApi", () => ({
 }));
 
 import {
+  adoptCashTransactionAction,
   approveDailyCloseAction,
+  openCashSessionAction,
   decideCashDifferenceAction,
   postCashMovementAction,
   prepareDailyCloseAction,
@@ -56,6 +58,70 @@ describe("falhas das ações de caixa", () => {
       ),
     ).rejects.toThrow("REDIRECT:/dashboard/cash?status=failed");
     expect(cashOutcome("failed").tone).toBe("error");
+  });
+});
+
+describe("abrir sessão", () => {
+  it("envia a justificativa e explica quando ela falta", async () => {
+    const form = new FormData();
+    form.set("id", "register-1");
+    form.set("opening_float", "80");
+    form.set("opening_reason", "Retirada da tesouraria");
+    mocks.request.mockResolvedValue({ ok: true });
+    await expect(openCashSessionAction(form)).rejects.toThrow("status=opened");
+    expect(mocks.request).toHaveBeenCalledWith(
+      "cash-registers/register-1/sessions",
+      "POST",
+      expect.objectContaining({
+        opening_float: 80,
+        opening_reason: "Retirada da tesouraria",
+      }),
+    );
+    mocks.request.mockRejectedValue(
+      Object.assign(new Error("x"), { details: "opening_reason_required" }),
+    );
+    await expect(openCashSessionAction(form)).rejects.toThrow(
+      "status=opening_reason_required",
+    );
+    expect(cashOutcome("opening_reason_required").message).toContain(
+      "última contagem",
+    );
+    expect(cashOutcome("invalid_operator").tone).toBe("error");
+  });
+});
+
+describe("assumir dinheiro antigo", () => {
+  function form(reason: string) {
+    const data = new FormData();
+    data.set("record_id", "tx-1");
+    data.set("reason", reason);
+    return data;
+  }
+
+  it("envia a justificativa e confirma", async () => {
+    mocks.request.mockResolvedValue({ ok: true });
+    await expect(
+      adoptCashTransactionAction(form(" Guardado no cofre ")),
+    ).rejects.toThrow("REDIRECT:/dashboard/cash?status=adopted");
+    expect(mocks.request).toHaveBeenCalledWith(
+      "cash-transactions/tx-1/adopt",
+      "POST",
+      { reason: "Guardado no cofre" },
+    );
+  });
+
+  it("explica a falta de sessão", async () => {
+    mocks.request.mockRejectedValue(
+      Object.assign(new Error("x"), { details: "cash_session_required" }),
+    );
+    await expect(adoptCashTransactionAction(form("Motivo"))).rejects.toThrow(
+      "status=cash_session_required",
+    );
+    expect(cashOutcome("cash_session_required")).toEqual({
+      tone: "error",
+      message: "Abra a sua sessão de caixa antes de assumir este dinheiro.",
+    });
+    expect(cashOutcome("adopted").tone).toBe("success");
   });
 });
 

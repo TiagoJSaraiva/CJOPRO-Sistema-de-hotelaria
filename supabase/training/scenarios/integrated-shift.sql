@@ -4,6 +4,14 @@ select public.prepare_training_scenario(
   '80000000-0000-4000-8000-000000000002'
 );
 
+-- O turno começa dentro da janela de check-in, qualquer que seja a hora em que o cenário é preparado.
+select public.act_training_clock(
+ '10000000-0000-4000-8000-000000000001','80000000-0000-4000-8000-000000000002',
+ jsonb_build_object('action','set','local_at',public.hotel_operational_date('10000000-0000-4000-8000-000000000001')+time '14:00',
+ 'expected_version',(select version from public.hotel_training_environments where hotel_id='10000000-0000-4000-8000-000000000001'),
+ 'reason','Início do turno integrado dentro da janela de check-in.')
+);
+
 insert into public.replenishment_requests(
   id,hotel_id,product_id,location_id,episode,source,status,priority,
   current_quantity,minimum_quantity,ideal_quantity,requested_quantity,

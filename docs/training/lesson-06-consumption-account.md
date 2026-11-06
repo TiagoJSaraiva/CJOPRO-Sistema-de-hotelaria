@@ -30,6 +30,10 @@ Use recepção para lançar e financeiro para conferir. A hospedagem
 Erro proposital: lançar produto físico por uma oferta sem posição ativa ou usar
 uma estadia de outro hotel. A operação deve falhar sem movimento parcial.
 
+Dinheiro: como recepção, tente receber em dinheiro sem sessão de caixa. O sistema
+recusa. Abra sua sessão em **Caixa e fechamento** e repita: o valor entra no
+esperado da sua sessão.
+
 Resultado esperado: pedidos postados e folio reconciliado. No banco mudam
 pedido, itens, alocação do pagador, lançamentos do folio e, para produto físico,
 movimento imutável de estoque.

@@ -16,6 +16,7 @@ import {
   decideCashDifferenceAction,
   openCashSessionAction,
   postCashMovementAction,
+  adoptCashTransactionAction,
   prepareDailyCloseAction,
 } from "./actions";
 import { CashRegisterCreateForm } from "./CashRegisterCreateForm";
@@ -25,6 +26,7 @@ import {
   cashSessionStatusLabel,
   dailyCloseStatusLabel,
 } from "./cashLabels";
+import { findOwnOpenCashSession } from "../../../lib/ownCashSession";
 const guide: UsageGuideDefinition = {
   id: "cash",
   title: "Caixa e fechamento",
@@ -34,7 +36,7 @@ const guide: UsageGuideDefinition = {
       target: "cash-registers",
       title: "Abra uma sessão própria",
       description:
-        "Cada caixa aceita um único operador até a contagem ou troca auditada.",
+        "Cada caixa aceita um único operador até a contagem. Quem recebe em dinheiro precisa da própria sessão aberta, e a nova sessão parte da última contagem.",
     },
     {
       id: "blind",
@@ -91,6 +93,7 @@ export default async function CashPage({
     prepare = user.permissions.includes(PERMISSIONS.DAILY_CLOSE_PREPARE),
     approveDaily = user.permissions.includes(PERMISSIONS.DAILY_CLOSE_APPROVE);
   const outcome = params.status ? cashOutcome(params.status) : null;
+  const ownSession = findOwnOpenCashSession(data.registers, user.id);
   return (
     <DashboardEntityPageShell
       title="Caixa e fechamento"
@@ -147,26 +150,49 @@ export default async function CashPage({
                     : `Ponto de consumo: ${r.consumption_point_name || "não identificado"}`}
                 </p>
                 {!r.active_session && operate ? (
-                  <form
-                    action={openCashSessionAction}
-                    className="mt-2 flex flex-wrap gap-2"
-                  >
-                    <input type="hidden" name="id" value={r.id} />
-                    <label className="pms-field">
-                      Fundo inicial
-                      <input
-                        className="pms-field-input"
-                        name="opening_float"
-                        type="number"
-                        min="0"
-                        step="0.01"
-                        required
-                      />
-                    </label>
-                    <button className="pms-button-primary self-end">
-                      Abrir sessão
-                    </button>
-                  </form>
+                  <>
+                    {r.last_counted_cash != null ? (
+                      <p className="m-0 text-sm text-slate-600">
+                        Última contagem:{" "}
+                        {Number(r.last_counted_cash).toLocaleString("pt-BR", {
+                          style: "currency",
+                          currency: r.currency,
+                        })}
+                        . A nova sessão parte deste valor.
+                      </p>
+                    ) : null}
+                    <form
+                      action={openCashSessionAction}
+                      className="mt-2 flex flex-wrap gap-2"
+                    >
+                      <input type="hidden" name="id" value={r.id} />
+                      <label className="pms-field">
+                        Fundo inicial
+                        <input
+                          className="pms-field-input"
+                          name="opening_float"
+                          type="number"
+                          min="0"
+                          step="0.01"
+                          defaultValue={r.last_counted_cash ?? undefined}
+                          required
+                        />
+                      </label>
+                      {r.last_counted_cash != null ? (
+                        <label className="pms-field">
+                          Justificativa, se o valor mudar
+                          <input
+                            className="pms-field-input"
+                            name="opening_reason"
+                            minLength={3}
+                          />
+                        </label>
+                      ) : null}
+                      <button className="pms-button-primary self-end">
+                        Abrir sessão
+                      </button>
+                    </form>
+                  </>
                 ) : null}
                 {r.active_session ? (
                   <SessionCard
@@ -279,7 +305,46 @@ export default async function CashPage({
           {daily.projection.blockers.length ? (
             <ul>
               {daily.projection.blockers.map((b, i) => (
-                <li key={i}>{b.title}</li>
+                <li key={i}>
+                  {b.title}
+                  {b.amount != null
+                    ? ` Valor: ${Number(b.amount).toLocaleString("pt-BR", {
+                        style: "currency",
+                        currency: data.currency,
+                      })}.`
+                    : null}
+                  {b.kind === "cash_without_session" && operate ? (
+                    ownSession ? (
+                      <form
+                        action={adoptCashTransactionAction}
+                        className="mt-2 flex flex-wrap items-end gap-2"
+                      >
+                        <input
+                          type="hidden"
+                          name="record_id"
+                          value={b.entity_id}
+                        />
+                        <label className="pms-field">
+                          Justificativa
+                          <input
+                            className="pms-field-input"
+                            name="reason"
+                            minLength={3}
+                            required
+                          />
+                        </label>
+                        <button type="submit" className="pms-button-secondary">
+                          Assumir na minha sessão
+                        </button>
+                      </form>
+                    ) : (
+                      <p className="m-0 text-sm text-slate-600">
+                        Quem está com o dinheiro abre a própria sessão para
+                        assumi-lo.
+                      </p>
+                    )
+                  ) : null}
+                </li>
               ))}
             </ul>
           ) : null}
