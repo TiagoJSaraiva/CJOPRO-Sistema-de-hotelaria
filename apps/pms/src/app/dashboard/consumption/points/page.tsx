@@ -29,7 +29,7 @@ export default async function ConsumptionPointsPage({
     );
   const [points, inventoryLocations] = await Promise.all([
     listConsumptionPoints(true),
-    listInventoryLocations().catch(() => []),
+    listInventoryLocations(),
   ]);
   const active = points.filter((point) => !point.archived_at);
   const orderedIds = active.map((point) => point.id);

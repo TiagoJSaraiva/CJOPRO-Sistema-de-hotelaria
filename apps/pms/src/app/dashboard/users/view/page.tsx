@@ -39,7 +39,7 @@ export default async function UsersViewPage({
 
   const [users, referenceData] = await Promise.all([
     listUsers(),
-    getUsersReferenceData().catch(() => ({ hotels: [], roles: [] })),
+    getUsersReferenceData(),
   ]);
 
   const activeUserId = String(resolvedSearchParams?.userId || "").trim();

@@ -8,6 +8,7 @@ import { DashboardAccessDeniedCard } from "../_components/DashboardAccessDeniedC
 import { DashboardEntityPageShell } from "../_components/DashboardEntityPageShell";
 import type { UsageGuideDefinition } from "../_components/UsageGuide";
 import { getUserFromSession } from "../../../lib/auth";
+import { whenForbidden } from "../../../lib/whenForbidden";
 import { requestOperationsFinanceEndpoint } from "../../../lib/adminApi";
 import { paymentMethodLabel } from "../reservations/_components/OperationalPanelPrimitives";
 import {
@@ -86,7 +87,7 @@ export default async function CashPage({
     ),
     requestOperationsFinanceEndpoint<{
       items: Array<{ id: string; name: string }>;
-    }>("consumption-points", "GET").catch(() => ({ items: [] })),
+    }>("consumption-points", "GET").catch(whenForbidden({ items: [] })),
   ]);
   const operate = user.permissions.includes(PERMISSIONS.CASH_REGISTER_OPERATE),
     approve = user.permissions.includes(PERMISSIONS.CASH_DIFFERENCES_APPROVE),

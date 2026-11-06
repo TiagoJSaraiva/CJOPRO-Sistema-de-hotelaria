@@ -374,6 +374,11 @@ export function createMaintenancePlanningRepository(): MaintenancePlanningReposi
         .eq("id", orderId)
         .maybeSingle();
       if (order.error || !order.data) return { result: "not_found" };
+      const operationalNow = await createServerClient().rpc(
+        "hotel_operational_now",
+        { p_hotel_id: hotelId },
+      );
+      if (operationalNow.error) throw operationalNow.error;
       const { error } = await createServerClient()
         .from("maintenance_service_communications")
         .insert({
@@ -384,6 +389,7 @@ export function createMaintenancePlanningRepository(): MaintenancePlanningReposi
           promised_at: String(input.promised_at),
           notes: String(input.notes),
           communicated_by: actorId,
+          communicated_at: String(operationalNow.data),
         });
       return { result: error ? "invalid" : "ok" };
     },

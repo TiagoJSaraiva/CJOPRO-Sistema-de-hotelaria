@@ -76,13 +76,24 @@ async function navLinks(page: Page): Promise<string[]> {
     );
 }
 
-async function internalLinks(page: Page): Promise<string[]> {
-  return page.locator('main a[href^="/dashboard"]').evaluateAll((links) =>
-    links.map((link) => {
-      const url = new URL((link as HTMLAnchorElement).href);
-      return `${url.pathname}${url.search}`;
-    }),
-  );
+async function internalLinks(page: Page, retries = 2): Promise<string[]> {
+  try {
+    return await page
+      .locator('main a[href^="/dashboard"]')
+      .evaluateAll((links) =>
+        links.map((link) => {
+          const url = new URL((link as HTMLAnchorElement).href);
+          return `${url.pathname}${url.search}`;
+        }),
+      );
+  } catch (error) {
+    // O servidor de desenvolvimento pode recarregar a página ao recompilar. Isso não é defeito da tela, e
+    // perder a varredura inteira por causa disso esconderia o restante do relatório.
+    if (retries === 0 || !/context was destroyed/i.test(String(error)))
+      throw error;
+    await page.waitForLoadState("load");
+    return internalLinks(page, retries - 1);
+  }
 }
 
 async function inspect(

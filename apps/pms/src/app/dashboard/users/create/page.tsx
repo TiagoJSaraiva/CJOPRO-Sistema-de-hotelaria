@@ -36,10 +36,7 @@ export default async function UsersCreatePage({
     );
   }
 
-  const referenceData = await getUsersReferenceData().catch(() => ({
-    hotels: [],
-    roles: [],
-  }));
+  const referenceData = await getUsersReferenceData();
 
   return (
     <DashboardEntityPageShell

@@ -40,7 +40,7 @@ export default async function RolesViewPage({
 
   const [roles, referenceData] = await Promise.all([
     listRoles(),
-    getRolesReferenceData().catch(() => ({ hotels: [], permissions: [] })),
+    getRolesReferenceData(),
   ]);
 
   const activeRoleId = String(resolvedSearchParams?.roleId || "").trim();

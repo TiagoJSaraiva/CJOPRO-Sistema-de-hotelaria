@@ -90,13 +90,24 @@ classificados em novembro de 2026:
 | `feed_version` de canais e `generated_at` de painéis                 | tempo real, por serem técnicos    |
 | `triaged_at`, `liability_decided_at`                                 | tempo real, coerentes com criação |
 | `DEFAULT now()` em parâmetro `p_now`                                 | correto, o chamador informa       |
-| decisão no checkout, vencimento de faturado e atraso de pedidos      | a corrigir: QA-019                |
-| `paid_at` em lote, reembolso e pagamento a fornecedor                | a corrigir: QA-019                |
-| validação de data futura em estoque e manutenção                     | a corrigir: QA-019                |
-| carimbo de ação, como `closed_at`, `approved_at` e `delivered_at`    | a corrigir: QA-020                |
 
-Em produção os dois relógios coincidem. O efeito aparece no hotel-escola, com o
-relógio em outro instante.
+Decisão no checkout, vencimento de faturado, atraso de pedidos, `paid_at`, validação de
+data futura e carimbos de ação, como `closed_at`, `approved_at` e `delivered_at`, usam
+o relógio do hotel. Em produção os dois relógios coincidem. O efeito aparece no
+hotel-escola, com o relógio em outro instante.
+
+`operational_clock_stamps.test.sql` guarda essa classificação e reprova `now()` novo
+fora da lista justificada, assim como coluna operacional com `DEFAULT now()`.
+
+## Colunas operacionais sem valor informado
+
+O padrão de uma coluna não enxerga o hotel da linha. Por isso, colunas que registram um
+fato do hotel, como `stay_folio_entries.posted_at` e `cash_sessions.opened_at`, não têm
+padrão: o gatilho `a0_stamp_operational_time` preenche o que não veio com
+`hotel_operational_now`, e uma data informada continua valendo. Nova coluna desse tipo
+deve receber o mesmo gatilho. `inventory_documents.posted_at` e
+`inventory_movements.posted_at` continuam em tempo real, como instante técnico do
+registro, e o fato fica em `occurred_at`.
 
 ## Chegada da lesson-02
 

@@ -16,6 +16,10 @@ import {
   getConsumptionOperationalContext,
   getConsumptionOrder,
   listConsumptionOrders,
+  listFinancialTransactions,
+  listInventoryAuditEvents,
+  listInventoryLocations,
+  listInventoryMovements,
 } from "../../../src/lib/adminApi";
 
 function mockSessionToken(token: string | null, activeHotelId?: string | null) {
@@ -56,6 +60,31 @@ describe("lib/adminApi", () => {
     it("listConsumptionOrders propaga o erro do backend", async () => {
       backendAnswers(400);
       await expect(listConsumptionOrders({ from: "x" })).rejects.toThrow();
+    });
+
+    it.each([400, 404, 500])(
+      "listas propagam a falha %s em vez de parecer sem registros",
+      async (status) => {
+        backendAnswers(status);
+        await expect(listFinancialTransactions()).rejects.toMatchObject({
+          statusCode: status,
+        });
+      },
+    );
+
+    it("listas ficam vazias para quem não tem permissão", async () => {
+      backendAnswers(403);
+      await expect(listInventoryLocations()).resolves.toEqual([]);
+    });
+
+    it("listInventoryMovements propaga a falha em vez de parecer sem movimentos", async () => {
+      backendAnswers(500);
+      await expect(listInventoryMovements()).rejects.toThrow();
+    });
+
+    it("listInventoryAuditEvents propaga a falha em vez de parecer sem eventos", async () => {
+      backendAnswers(500);
+      await expect(listInventoryAuditEvents()).rejects.toThrow();
     });
 
     it("getConsumptionOrder trata 404 como comanda inexistente", async () => {

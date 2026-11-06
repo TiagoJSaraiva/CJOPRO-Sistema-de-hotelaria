@@ -36,10 +36,7 @@ export default async function RolesCreatePage({
     );
   }
 
-  const referenceData = await getRolesReferenceData().catch(() => ({
-    hotels: [],
-    permissions: [],
-  }));
+  const referenceData = await getRolesReferenceData();
 
   return (
     <DashboardEntityPageShell

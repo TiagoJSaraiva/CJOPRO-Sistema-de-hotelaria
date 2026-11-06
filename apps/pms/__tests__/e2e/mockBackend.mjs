@@ -2096,6 +2096,14 @@ const server = http.createServer(async (request, response) => {
     return;
   }
 
+  if (
+    method === "GET" &&
+    url.pathname === "/admin/consumption-inventory-origins"
+  ) {
+    sendJson(response, 200, { items: [] });
+    return;
+  }
+
   if (method === "GET" && url.pathname === "/admin/consumption-points") {
     sendJson(response, 200, { items: consumptionPoints });
     return;
@@ -3194,6 +3202,14 @@ const server = http.createServer(async (request, response) => {
   const stayPanelMatch = url.pathname.match(/^\/admin\/stays\/([^/]+)\/panel$/);
   if (method === "GET" && stayPanelMatch) {
     sendJson(response, 200, { item: buildPanel(stayPanelMatch[1]) });
+    return;
+  }
+
+  if (
+    method === "GET" &&
+    /^\/admin\/stays\/[^/]+\/payer-accounts$/.test(url.pathname)
+  ) {
+    sendJson(response, 200, { account_version: 1, items: [] });
     return;
   }
 

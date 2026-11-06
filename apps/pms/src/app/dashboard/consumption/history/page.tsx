@@ -102,7 +102,7 @@ export default async function ConsumptionHistoryPage({
           return null;
         })
       : Promise.resolve(null),
-    listInventoryLocations().catch(() => []),
+    listInventoryLocations(),
   ]);
   const transferStays = access.canTransferConsumption
     ? await listConsumptionEligibleStays("")

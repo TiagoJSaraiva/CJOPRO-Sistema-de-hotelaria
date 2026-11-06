@@ -195,7 +195,19 @@ async function getAdminList<T>(path: string): Promise<T[]> {
   });
 
   if (!response.ok) {
-    return [];
+    // Sem permissão, a tela segue sem esse dado. Qualquer outra falha precisa aparecer: uma lista vazia
+    // por erro parece ausência de registros.
+    if (response.status === 403) return [];
+    const payload = (await response
+      .json()
+      .catch(() => ({}))) as AdminErrorResponse;
+    const error = new Error(
+      payload.message || "Falha na consulta administrativa.",
+    ) as Error & { statusCode?: number; code?: string; details?: string };
+    error.statusCode = response.status;
+    error.code = payload.code;
+    error.details = payload.details;
+    throw error;
   }
 
   const payload = (await response.json()) as AdminListResponse<T>;
@@ -1706,10 +1718,7 @@ export function listInventoryMovements(
   return getAdminData<{
     items: AdminInventoryMovement[];
     next_cursor: string | null;
-  }>(`/admin/inventory/movements${suffix}`).catch(() => ({
-    items: [],
-    next_cursor: null,
-  }));
+  }>(`/admin/inventory/movements${suffix}`);
 }
 export function listInventoryAuditEvents(
   filters: Record<string, string> = {},
@@ -1719,10 +1728,7 @@ export function listInventoryAuditEvents(
   return getAdminData<{
     items: AdminInventoryAuditEvent[];
     next_cursor: string | null;
-  }>(`/admin/inventory/audit${suffix}`).catch(() => ({
-    items: [],
-    next_cursor: null,
-  }));
+  }>(`/admin/inventory/audit${suffix}`);
 }
 export function postInventoryDocument(
   input: AdminInventoryDocumentInput,

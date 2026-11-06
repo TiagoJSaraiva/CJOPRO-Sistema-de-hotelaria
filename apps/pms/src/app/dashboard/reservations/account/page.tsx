@@ -6,6 +6,7 @@ import {
   getStayAccount,
   getStayPayerAccounts,
 } from "../../../../lib/adminApi";
+import { whenForbidden } from "../../../../lib/whenForbidden";
 import { getUserFromSession } from "../../../../lib/auth";
 import { getOwnOpenCashSession } from "../../../../lib/ownCashSession";
 import { CashMethodOption } from "../../_components/CashMethodOption";
@@ -98,7 +99,7 @@ export default async function StayAccountPage({
       />
     );
   const [payerAccounts, cashSession] = await Promise.all([
-    getStayPayerAccounts(account.stay_id).catch(() => null),
+    getStayPayerAccounts(account.stay_id).catch(whenForbidden(null)),
     getOwnOpenCashSession(user),
   ]);
   const actionMessage = accountActionMessage(params?.status);

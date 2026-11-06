@@ -5,6 +5,7 @@ import {
   getReservationsCalendar,
   listCustomers,
 } from "../../../../lib/adminApi";
+import { whenForbidden } from "../../../../lib/whenForbidden";
 import { getUserFromSession } from "../../../../lib/auth";
 import {
   getReservationsCalendarAccess,
@@ -65,7 +66,7 @@ export default async function ReservationsCalendarViewPage({
       ? requestOperationsFinanceEndpoint<CashRegisterListView>(
           "cash-registers",
           "GET",
-        ).catch(() => null)
+        ).catch(whenForbidden(null))
       : Promise.resolve(null);
   const [data, customers, cashRegisters] = await Promise.all([
     getReservationsCalendar(requestedStartDate, CALENDAR_WINDOW_DAYS),

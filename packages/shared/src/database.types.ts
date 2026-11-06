@@ -609,7 +609,7 @@ export type Database = {
           updated_at: string
         }
         Insert: {
-          activated_at?: string
+          activated_at: string
           activated_by?: string | null
           daily_close_started_on: string
           hotel_id: string
@@ -667,7 +667,7 @@ export type Database = {
           id?: string
           idempotency_key: string
           kind: Database["public"]["Enums"]["cash_movement_kind"]
-          occurred_at?: string
+          occurred_at: string
           reason: string
           request_fingerprint: string
           reversal_of_id?: string | null
@@ -875,7 +875,7 @@ export type Database = {
           hotel_id: string
           id?: string
           idempotency_key: string
-          opened_at?: string
+          opened_at: string
           opening_float: number
           operator_id: string
           request_fingerprint: string
@@ -1571,7 +1571,7 @@ export type Database = {
         }
         Insert: {
           amount: number
-          applied_at?: string
+          applied_at: string
           consumption_order_id: string
           consumption_order_item_id: string
           explanation: string
@@ -1675,7 +1675,7 @@ export type Database = {
           id?: string
           quantity?: number
           released_at?: string | null
-          reserved_at?: string
+          reserved_at: string
           rule_id: string
           service_order_id: string
           service_order_item_id: string
@@ -1983,7 +1983,7 @@ export type Database = {
           net_reduction: number
           order_id: string
           reason: string
-          requested_at?: string
+          requested_at: string
           requested_by: string
           status: Database["public"]["Enums"]["consumption_correction_status"]
           stay_id?: string | null
@@ -2500,7 +2500,7 @@ export type Database = {
           payment_reference?: string | null
           point_id?: string | null
           point_name_snapshot?: string | null
-          posted_at?: string
+          posted_at: string
           posted_by?: string | null
           request_fingerprint: string
           reservation_code_snapshot?: string | null
@@ -3085,7 +3085,7 @@ export type Database = {
           inventory_position_id: string
           quantity: number
           released_at?: string | null
-          reserved_at?: string
+          reserved_at: string
           service_order_id: string
           service_order_item_id: string
           status?: Database["public"]["Enums"]["consumption_service_reservation_status"]
@@ -3737,7 +3737,7 @@ export type Database = {
         }
         Insert: {
           category: string
-          confirmed_at?: string
+          confirmed_at: string
           consent_version: string
           created_at?: string
           created_by?: string | null
@@ -5308,7 +5308,7 @@ export type Database = {
           id?: string
           lot_code: string
           product_id: string
-          received_at?: string
+          received_at: string
           status?: Database["public"]["Enums"]["inventory_lot_status"]
         }
         Update: {
@@ -5938,7 +5938,7 @@ export type Database = {
           stay_id: string
         }
         Insert: {
-          acknowledged_at?: string
+          acknowledged_at: string
           acknowledged_by: string
           hotel_id: string
           id?: string
@@ -6418,7 +6418,7 @@ export type Database = {
           ended_at?: string | null
           hotel_id: string
           id?: string
-          started_at?: string
+          started_at: string
           technician_id: string
           work_order_id: string
         }
@@ -6561,7 +6561,7 @@ export type Database = {
           stay_id: string
         }
         Insert: {
-          acknowledged_at?: string
+          acknowledged_at: string
           acknowledged_by: string
           folio_entry_id: string
           hotel_id: string
@@ -7381,7 +7381,7 @@ export type Database = {
             | null
           created_at?: string
           description: string
-          discovered_at?: string
+          discovered_at: string
           duplicate_of_id?: string | null
           hotel_id: string
           id?: string
@@ -8401,7 +8401,7 @@ export type Database = {
         Insert: {
           audience: string
           channel: string
-          communicated_at?: string
+          communicated_at: string
           communicated_by: string
           hotel_id: string
           id?: string
@@ -8455,7 +8455,7 @@ export type Database = {
           work_order_id: string
         }
         Insert: {
-          confirmed_at?: string
+          confirmed_at: string
           confirmed_by: string
           hotel_id: string
           id?: string
@@ -8887,7 +8887,7 @@ export type Database = {
           reason: Database["public"]["Enums"]["maintenance_waiting_reason"]
           resolved_at?: string | null
           resolved_by?: string | null
-          started_at?: string
+          started_at: string
           supplier_id?: string | null
           version?: number
           work_order_id: string
@@ -13800,7 +13800,7 @@ export type Database = {
         Insert: {
           expired_at?: string | null
           expires_at?: string | null
-          granted_at?: string
+          granted_at: string
           granted_by: string
           hotel_id: string
           id?: string
@@ -14164,7 +14164,7 @@ export type Database = {
           id?: string
           kind: Database["public"]["Enums"]["stay_folio_kind"]
           maintenance_occurrence_id?: string | null
-          posted_at?: string
+          posted_at: string
           posted_by?: string | null
           reservation_id: string
           reversed_entry_id?: string | null
