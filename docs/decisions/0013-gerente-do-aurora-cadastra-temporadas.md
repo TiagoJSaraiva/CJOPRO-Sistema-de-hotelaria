@@ -1,6 +1,6 @@
 # 0013: Gerente do Aurora cadastra temporadas
 
-- **Status:** a implementar
+- **Status:** aceita
 - **Data:** 2026-11-07
 - **Origem:** decisão do usuário
 - **Áreas:** permissões, tarifas
@@ -20,8 +20,9 @@ Nenhuma conta do Aurora criava nem alterava temporadas (QA-085).
 
 ## Consequências
 
-A jornada de temporadas pode usar o gerente do Aurora.
+A jornada de temporadas pode usar o gerente do Aurora. Hotéis já existentes no ambiente hospedado não
+mudam: lá, as permissões são atribuídas em Papéis.
 
 ## Prova
 
-Pendente: QA-085.
+- [Permissões do seed](../../supabase/tests/database/schema_and_seed.test.sql)

@@ -14,7 +14,7 @@ os defeitos decididos antes das rodadas finais.
 
 ## Próximos passos
 
-1. Corrigir QA-085 e QA-091 conforme as decisões já tomadas, com o teste primeiro.
+1. Corrigir QA-091 conforme a decisão já tomada, com o teste primeiro.
 2. Decidir o que fazer com o QA-095.
 3. Rodar as três rodadas seguidas, a última com `JOURNEY_REAL_RESET=true`, além de
    `pnpm check:ci` e `pnpm test:db`.
@@ -27,15 +27,14 @@ Nenhuma.
 
 ## Defeitos abertos
 
-| ID     | Sev | Situação                                                                           |
-| ------ | --- | ---------------------------------------------------------------------------------- |
-| QA-095 | S3  | Novo: tela não atualiza depois de ação muito rápida, só em produção                |
-| QA-085 | S4  | [Decidido](decisions/0013-gerente-do-aurora-cadastra-temporadas.md), a implementar |
-| QA-091 | S4  | [Decidido](decisions/0014-fechamento-lista-lancamentos-tardios.md), a implementar  |
-| QA-092 | S4  | [Limite aceito](decisions/0015-datas-em-utc-limite-aceito.md)                      |
-| QA-093 | S4  | Observar nas três rodadas: falha única de `db reset`, sem causa confirmada         |
-| QA-008 | S4  | Observar: tempos limite do E2E com a máquina sob carga                             |
-| QA-028 | S4  | Observar: erro único de JSON no servidor Next                                      |
+| ID     | Sev | Situação                                                                          |
+| ------ | --- | --------------------------------------------------------------------------------- |
+| QA-095 | S3  | Novo: tela não atualiza depois de ação muito rápida, só em produção               |
+| QA-091 | S4  | [Decidido](decisions/0014-fechamento-lista-lancamentos-tardios.md), a implementar |
+| QA-092 | S4  | [Limite aceito](decisions/0015-datas-em-utc-limite-aceito.md)                     |
+| QA-093 | S4  | Observar nas três rodadas: falha única de `db reset`, sem causa confirmada        |
+| QA-008 | S4  | Observar: tempos limite do E2E com a máquina sob carga                            |
+| QA-028 | S4  | Observar: erro único de JSON no servidor Next                                     |
 
 Detalhes no [registro de bugs](qa/bug-ledger.md).
 

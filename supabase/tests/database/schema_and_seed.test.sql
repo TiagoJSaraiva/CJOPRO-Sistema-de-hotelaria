@@ -1,6 +1,6 @@
 begin;
 
-select plan(265);
+select plan(266);
 
 select ok(to_regclass('public.room_blocks') is not null, 'room_blocks exists');
 
@@ -220,8 +220,17 @@ select is(
 
 select is(
   (select count(*)::integer from public.role_permissions where role_id = '70000000-0000-4000-8000-000000000002'),
-  73,
+  79,
   'Aurora manager has an explicit approval and management permission matrix'
+);
+
+-- QA-085: o gerente do Aurora cadastra temporadas e tarifas de temporada, como o do Horizonte.
+select is(
+  (select string_agg(p.name, ',' order by p.name) from public.role_permissions rp
+   join public.permissions p on p.id = rp.permission_id
+   where rp.role_id = '70000000-0000-4000-8000-000000000002' and p.name like '%season%'),
+  'create_season,create_season_room_rate,delete_season,delete_season_room_rate,read_season,read_season_room_rate,update_season,update_season_room_rate',
+  'Aurora manager maintains seasons and season room rates'
 );
 
 select is(

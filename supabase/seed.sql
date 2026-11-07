@@ -139,6 +139,9 @@ from (
     'confirm_maintenance_service','read_governance','inspect_governance','assign_governance',
     'manage_governance_templates','override_room_readiness','relocate_reservation',
     'read_season','read_season_room_rate','manage_rate_plans',
+    -- QA-085: o gerente cadastra temporadas e tarifas de temporada, como o do Horizonte.
+    'create_season','update_season','delete_season',
+    'create_season_room_rate','update_season_room_rate','delete_season_room_rate',
     'manage_reservation_amendments','override_reservation_pricing',
     'manage_reservation_guarantees','waive_reservation_guarantee','manage_room_assignments',
     'read_guest_relationship','manage_prearrival','manage_booking_configuration',
