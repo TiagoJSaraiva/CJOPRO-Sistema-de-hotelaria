@@ -768,11 +768,13 @@ function buildPanel(stayId, options = {}) {
       operational_now: "2026-05-13T17:00:00.000Z",
       can_checkin: !isSecondStay && stayStatus === "confirmed",
       checkin_block_reason: isSecondStay ? "Estadia ja em check-in." : null,
+      checkin_window_notice: null,
       can_checkout: isSecondStay && stayStatus === "checked_in",
       checkout_block_reason:
         isSecondStay && stayStatus === "checked_in"
           ? null
           : "A estadia precisa estar em checked_in para checkout.",
+      checkout_window_notice: null,
       can_no_show: !isSecondStay && stayStatus === "confirmed",
       no_show_block_reason: null,
       can_cancel: stayStatus === "confirmed",

@@ -32,7 +32,7 @@ teste. `pnpm docs:check` confere tudo isso.
 | 0009 | [Tarifas só em consulta por enquanto](0009-tarifas-so-consulta.md)                       | tarifas                | aceita        |
 | 0010 | [Lançamento tardio não entra em dia fechado](0010-lancamento-tardio.md)                  | financeiro, caixa      | aceita        |
 | 0011 | [Cobrança de manutenção sai com ciência](0011-saida-com-ciencia.md)                      | saída, manutenção      | aceita        |
-| 0012 | [Janelas de entrada e saída viram aviso](0012-janelas-de-entrada-e-saida-viram-aviso.md) | recepção, reservas     | a implementar |
+| 0012 | [Janelas de entrada e saída viram aviso](0012-janelas-de-entrada-e-saida-viram-aviso.md) | recepção, reservas     | aceita        |
 | 0013 | [Gerente do Aurora cadastra temporadas](0013-gerente-do-aurora-cadastra-temporadas.md)   | permissões, tarifas    | a implementar |
 | 0014 | [Fechamento lista lançamentos tardios](0014-fechamento-lista-lancamentos-tardios.md)     | caixa                  | a implementar |
 | 0015 | [Datas em UTC: limite aceito](0015-datas-em-utc-limite-aceito.md)                        | relógio                | aceita        |

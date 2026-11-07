@@ -3970,7 +3970,15 @@
                 "nullable": true,
                 "type": "string"
               },
+              "checkin_window_notice": {
+                "nullable": true,
+                "type": "string"
+              },
               "checkout_block_reason": {
+                "nullable": true,
+                "type": "string"
+              },
+              "checkout_window_notice": {
                 "nullable": true,
                 "type": "string"
               },
@@ -3986,8 +3994,10 @@
             "required": [
               "can_checkin",
               "checkin_block_reason",
+              "checkin_window_notice",
               "can_checkout",
               "checkout_block_reason",
+              "checkout_window_notice",
               "can_no_show",
               "no_show_block_reason",
               "can_cancel",
@@ -183938,7 +183948,15 @@
                               "nullable": true,
                               "type": "string"
                             },
+                            "checkin_window_notice": {
+                              "nullable": true,
+                              "type": "string"
+                            },
                             "checkout_block_reason": {
+                              "nullable": true,
+                              "type": "string"
+                            },
+                            "checkout_window_notice": {
                               "nullable": true,
                               "type": "string"
                             },
@@ -183954,8 +183972,10 @@
                           "required": [
                             "can_checkin",
                             "checkin_block_reason",
+                            "checkin_window_notice",
                             "can_checkout",
                             "checkout_block_reason",
+                            "checkout_window_notice",
                             "can_no_show",
                             "no_show_block_reason",
                             "can_cancel",
@@ -185251,6 +185271,10 @@
                     "maxLength": 1000,
                     "minLength": 1,
                     "type": "string"
+                  },
+                  "window_reason": {
+                    "maxLength": 1000,
+                    "type": "string"
                   }
                 },
                 "type": "object"
@@ -185312,7 +185336,15 @@
                               "nullable": true,
                               "type": "string"
                             },
+                            "checkin_window_notice": {
+                              "nullable": true,
+                              "type": "string"
+                            },
                             "checkout_block_reason": {
+                              "nullable": true,
+                              "type": "string"
+                            },
+                            "checkout_window_notice": {
                               "nullable": true,
                               "type": "string"
                             },
@@ -185328,8 +185360,10 @@
                           "required": [
                             "can_checkin",
                             "checkin_block_reason",
+                            "checkin_window_notice",
                             "can_checkout",
                             "checkout_block_reason",
+                            "checkout_window_notice",
                             "can_no_show",
                             "no_show_block_reason",
                             "can_cancel",
@@ -186703,6 +186737,10 @@
                     },
                     "maxItems": 10,
                     "type": "array"
+                  },
+                  "window_reason": {
+                    "maxLength": 1000,
+                    "type": "string"
                   }
                 },
                 "type": "object"
@@ -189681,7 +189719,15 @@
                               "nullable": true,
                               "type": "string"
                             },
+                            "checkin_window_notice": {
+                              "nullable": true,
+                              "type": "string"
+                            },
                             "checkout_block_reason": {
+                              "nullable": true,
+                              "type": "string"
+                            },
+                            "checkout_window_notice": {
                               "nullable": true,
                               "type": "string"
                             },
@@ -189697,8 +189743,10 @@
                           "required": [
                             "can_checkin",
                             "checkin_block_reason",
+                            "checkin_window_notice",
                             "can_checkout",
                             "checkout_block_reason",
+                            "checkout_window_notice",
                             "can_no_show",
                             "no_show_block_reason",
                             "can_cancel",
@@ -191033,7 +191081,15 @@
                               "nullable": true,
                               "type": "string"
                             },
+                            "checkin_window_notice": {
+                              "nullable": true,
+                              "type": "string"
+                            },
                             "checkout_block_reason": {
+                              "nullable": true,
+                              "type": "string"
+                            },
+                            "checkout_window_notice": {
                               "nullable": true,
                               "type": "string"
                             },
@@ -191049,8 +191105,10 @@
                           "required": [
                             "can_checkin",
                             "checkin_block_reason",
+                            "checkin_window_notice",
                             "can_checkout",
                             "checkout_block_reason",
+                            "checkout_window_notice",
                             "can_no_show",
                             "no_show_block_reason",
                             "can_cancel",
@@ -196124,7 +196182,15 @@
                               "nullable": true,
                               "type": "string"
                             },
+                            "checkin_window_notice": {
+                              "nullable": true,
+                              "type": "string"
+                            },
                             "checkout_block_reason": {
+                              "nullable": true,
+                              "type": "string"
+                            },
+                            "checkout_window_notice": {
                               "nullable": true,
                               "type": "string"
                             },
@@ -196140,8 +196206,10 @@
                           "required": [
                             "can_checkin",
                             "checkin_block_reason",
+                            "checkin_window_notice",
                             "can_checkout",
                             "checkout_block_reason",
+                            "checkout_window_notice",
                             "can_no_show",
                             "no_show_block_reason",
                             "can_cancel",
@@ -200160,7 +200228,15 @@
                               "nullable": true,
                               "type": "string"
                             },
+                            "checkin_window_notice": {
+                              "nullable": true,
+                              "type": "string"
+                            },
                             "checkout_block_reason": {
+                              "nullable": true,
+                              "type": "string"
+                            },
+                            "checkout_window_notice": {
                               "nullable": true,
                               "type": "string"
                             },
@@ -200176,8 +200252,10 @@
                           "required": [
                             "can_checkin",
                             "checkin_block_reason",
+                            "checkin_window_notice",
                             "can_checkout",
                             "checkout_block_reason",
+                            "checkout_window_notice",
                             "can_no_show",
                             "no_show_block_reason",
                             "can_cancel",

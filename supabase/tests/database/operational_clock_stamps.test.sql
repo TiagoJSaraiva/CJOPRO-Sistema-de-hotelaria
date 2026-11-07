@@ -91,14 +91,15 @@ select is(
   'ok','o saldo da conta é quitado antes da saída'
 );
 
--- Saída: a data válida é a do hotel. No dia real, com o hotel três dias à frente, a saída não vale.
+-- Saída: a data prevista é comparada à do hotel. No dia real, com o hotel três dias à frente, a saída
+-- fica fora da data e exige motivo (QA-087); com o relógio real, ela passaria sem motivo.
 update public.stays set checkin_date_expected=now()-interval '1 day',checkout_date_expected=now()
   where id=(select stay from ctx);
 select is(
   (select public.checkout_stay_account_stage4(hotel,stay,manager,
     (select account_version from public.stays where id=stay),'[]'::jsonb,'a9600000-0000-4000-8000-000000000005',
     array[]::uuid[],array[]::uuid[],null)->>'result' from ctx),
-  'checkout_date_invalid','a saída prevista para o dia real, com o hotel em outro dia, é recusada'
+  'checkout_reason_required','a saída prevista para o dia real, com o hotel em outro dia, exige motivo'
 );
 -- A data vem do hotel: convertida na sessão em UTC, a hora das 21h em diante cairia no dia seguinte.
 update public.stays set checkin_date_expected=(select public.hotel_operational_date(hotel)-1 from ctx),checkout_date_expected=(select public.hotel_operational_date(hotel) from ctx)

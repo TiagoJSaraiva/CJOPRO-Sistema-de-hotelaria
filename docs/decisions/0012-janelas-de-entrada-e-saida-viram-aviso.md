@@ -1,6 +1,6 @@
 # 0012: Janelas de entrada e saída viram aviso
 
-- **Status:** a implementar
+- **Status:** aceita
 - **Data:** 2026-11-07
 - **Origem:** decisão do usuário
 - **Áreas:** recepção, reservas
@@ -21,8 +21,12 @@ Hóspede que sai antes da data prevista ou depois da janela não tinha caminho n
 
 ## Consequências
 
-Não há recálculo de diárias na saída antecipada.
+Não há recálculo de diárias na saída antecipada: a hospedagem entra inteira na conta quando a estadia é
+criada. O motivo fica em `stays.checkin_window_reason` e `stays.checkout_window_reason`. Na saída
+antecipada, o quarto continua reservado no calendário até a data prevista.
 
 ## Prova
 
-Pendente: QA-087.
+- [Regra no banco](../../supabase/tests/database/reservations_arrival.test.sql)
+- [Painel e rotas](../../apps/backend-service/__tests__/unit/stayOperationsRoutes.test.ts)
+- [Jornada de saída](../../apps/pms/__tests__/journeys/flow-checkout-refund.spec.ts)

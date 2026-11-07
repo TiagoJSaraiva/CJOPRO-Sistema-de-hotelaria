@@ -240,7 +240,7 @@ export const maintenanceCheckoutGuide: UsageGuideDefinition = {
       target: "maintenance-checkout-actions",
       title: "Finalize com segurança",
       description:
-        "Revise pagamentos e condições de saída. Depois da ciência exigida, pendências de dano continuam registradas, mas não impedem o checkout.",
+        "Revise pagamentos e condições de saída. Fora da data ou do horário previstos, informe o motivo: ele fica na estadia, e o valor das diárias não muda. Depois da ciência exigida, pendências de dano continuam registradas, mas não impedem o checkout.",
     },
     {
       id: "statement",

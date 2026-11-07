@@ -42,7 +42,7 @@ export function reservationsOperationsGuide(access: {
         target: "arrival-checkin",
         title: "Confira o horário da chegada",
         description:
-          "O relógio operacional e a janela do hotel explicam quando o check-in pode ocorrer. Exceção gerencial não ignora horário nem interdição.",
+          "O check-in acontece no dia previsto. Fora do horário da janela, ele segue com o motivo registrado na estadia. A exceção gerencial libera só a governança: não substitui esse motivo nem ignora interdição. A saída vale a qualquer momento depois do check-in; fora da data ou do horário, também pede motivo, e o valor das diárias não muda.",
       },
       {
         id: "closure",

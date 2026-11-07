@@ -20,7 +20,9 @@ function stayBalance(): string {
   `);
 }
 
-test("saída só no dia previsto e com a conta quitada", async ({ page }) => {
+test("saída fora da data pede motivo, e com saldo continua bloqueada", async ({
+  page,
+}) => {
   test.setTimeout(420_000);
   await prepareScenario("consumption-account");
   await signIn(page, "recepcao.aurora@hotelaria.local");
@@ -33,10 +35,14 @@ test("saída só no dia previsto e com a conta quitada", async ({ page }) => {
   };
   const confirm = page.getByRole("button", { name: "Confirmar checkout" });
 
-  await test.step("Antes do dia previsto a saída fica indisponível e explicada", async () => {
+  const reason = page.getByLabel("Motivo da saída fora da janela");
+
+  await test.step("Antes do dia previsto a saída pede motivo (QA-087)", async () => {
     await openRoom();
+    await expect(workflow).toContainText(/antes da data prevista/i);
+    await expect(workflow).toContainText("o valor das diárias não muda");
+    await expect(reason).toBeVisible();
     await expect(confirm).toBeDisabled();
-    await expect(workflow).toContainText(/data esperada/i);
   });
 
   await test.step("No dia previsto, com saldo, a saída continua bloqueada", async () => {
@@ -55,6 +61,10 @@ test("saída só no dia previsto e com a conta quitada", async ({ page }) => {
     );
     advanceClock(hours, "hours");
     await openRoom();
+    await expect(
+      reason,
+      "na data e no horário previstos não há motivo",
+    ).toHaveCount(0);
     expect(Number(stayBalance())).toBeGreaterThan(0);
     await expect(confirm).toBeDisabled();
     expect(
@@ -96,6 +106,43 @@ test("saída só no dia previsto e com a conta quitada", async ({ page }) => {
     await expect(confirm, "não dá para sair duas vezes").toBeDisabled();
   });
 
+  expect(findInvariantViolations()).toEqual([]);
+});
+
+test("saída antecipada acontece com motivo e mantém as diárias", async ({
+  page,
+}) => {
+  test.setTimeout(420_000);
+  await prepareScenario("consumption-account");
+  await signIn(page, "recepcao.aurora@hotelaria.local");
+  const workflow = page.getByTestId("checkout-by-room-workflow");
+  await page.goto("/dashboard/reservations/checkout");
+  await page.getByLabel("Número do quarto").fill("102");
+  await page.getByRole("button", { name: "Buscar" }).click();
+  await expect(workflow).toContainText(/antes da data prevista/i);
+  const confirm = page.getByRole("button", { name: "Confirmar checkout" });
+
+  await page.getByRole("button", { name: "Registrar pagamento" }).click();
+  await expect(workflow).toContainText("Pagamento registrado.");
+  await expect(confirm, "a conta quitada ainda pede o motivo").toBeDisabled();
+
+  await page
+    .getByLabel("Motivo da saída fora da janela")
+    .fill("Hóspede antecipou o voo");
+  await expect(confirm).toBeEnabled();
+  await confirm.click();
+  await expect(workflow).toContainText(
+    "Checkout confirmado para o quarto 102.",
+  );
+
+  expect(
+    queryLocal(`
+      select s.stay_status || '|' || s.checkout_window_reason || '|' || (c.lodging_total = s.total_price_estimated)
+      from public.stays s
+      join public.stay_checkout_records c on c.stay_id = s.id
+      where s.id = '${STAY_ID}';
+    `),
+  ).toBe("checked_out|Hóspede antecipou o voo|true");
   expect(findInvariantViolations()).toEqual([]);
 });
 

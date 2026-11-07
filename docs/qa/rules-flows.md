@@ -48,19 +48,19 @@ jornada no sistema real.
 
 ## Saída e reembolso
 
-Roteiro: abrir **Reservas > Checkout**, buscar o quarto, quitar a conta e confirmar. O estorno
-fica na conta da estadia.
+Roteiro: abrir **Reservas > Checkout**, buscar o quarto, quitar a conta e confirmar. Fora da data
+ou do horário previstos, informar o motivo. O estorno fica na conta da estadia.
 
-| ID     | Regra                                                                            | Prova                               | Situação |
-| ------ | -------------------------------------------------------------------------------- | ----------------------------------- | -------- |
-| SAI-01 | Antes da data prevista a saída fica indisponível, com o motivo                   | jornada                             | provada  |
-| SAI-02 | Com saldo em aberto a saída continua bloqueada                                   | jornada; `operational_clock_stamps` | provada  |
-| SAI-03 | O pagamento entra no dia de negócio do hotel                                     | jornada; `operational_clock_stamps` | provada  |
-| SAI-04 | A saída encerra a estadia na data do hotel e abre o ciclo de governança          | jornada                             | provada  |
-| SAI-05 | O estorno parcial sobe o saldo no mesmo valor                                    | jornada                             | provada  |
-| SAI-06 | Estornar mais que o pago é recusado e não altera o saldo                         | jornada                             | provada  |
-| SAI-07 | Saída antecipada, ou depois da janela do dia previsto, tem caminho na operação   | nenhuma: não existe esse caminho    | decisão  |
-| SAI-08 | Cobrança de manutenção em aberto não trava a saída, mas exige ciência registrada | jornada; `finance_rules`            | provada  |
+| ID     | Regra                                                                                                                                                                             | Prova                               | Situação |
+| ------ | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ----------------------------------- | -------- |
+| SAI-01 | Fora da data ou do horário previstos, a saída acontece com motivo registrado e as diárias não mudam ([decisão 0012](../decisions/0012-janelas-de-entrada-e-saida-viram-aviso.md)) | `reservations_arrival`; jornada     | provada  |
+| SAI-02 | Com saldo em aberto a saída continua bloqueada                                                                                                                                    | jornada; `operational_clock_stamps` | provada  |
+| SAI-03 | O pagamento entra no dia de negócio do hotel                                                                                                                                      | jornada; `operational_clock_stamps` | provada  |
+| SAI-04 | A saída encerra a estadia na data do hotel e abre o ciclo de governança                                                                                                           | jornada                             | provada  |
+| SAI-05 | O estorno parcial sobe o saldo no mesmo valor                                                                                                                                     | jornada                             | provada  |
+| SAI-06 | Estornar mais que o pago é recusado e não altera o saldo                                                                                                                          | jornada                             | provada  |
+| SAI-07 | O check-in só acontece no dia previsto; fora do horário, com motivo registrado, que a exceção de governança não substitui                                                         | `reservations_arrival`; rotas       | provada  |
+| SAI-08 | Cobrança de manutenção em aberto não trava a saída, mas exige ciência registrada                                                                                                  | jornada; `finance_rules`            | provada  |
 
 ## Tarifas e temporadas
 

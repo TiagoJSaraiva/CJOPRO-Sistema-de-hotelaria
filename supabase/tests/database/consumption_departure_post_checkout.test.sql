@@ -10,7 +10,7 @@ select ok((select relrowsecurity from pg_class where oid='public.post_checkout_c
 select ok((select relrowsecurity from pg_class where oid='public.post_checkout_consumption_payments'::regclass),'payments use RLS');
 select ok(not has_table_privilege('authenticated','public.post_checkout_consumption_cases','SELECT'),'browser cannot read cases directly');
 select ok(has_function_privilege('service_role','public.get_stay_departure_review(uuid,uuid)','EXECUTE'),'departure review is service-only');
-select ok(has_function_privilege('service_role','public.checkout_stay_account_stage4(uuid,uuid,uuid,bigint,jsonb,uuid,uuid[],uuid[],text)','EXECUTE'),'stage four checkout is callable by backend');
+select ok(has_function_privilege('service_role','public.checkout_stay_account_stage4(uuid,uuid,uuid,bigint,jsonb,uuid,uuid[],uuid[],text,text)','EXECUTE'),'stage four checkout is callable by backend');
 select ok(exists(select 1 from public.permissions where name='review_post_checkout_consumption'),'review permission exists');
 select ok(exists(select 1 from public.permissions where name='waive_post_checkout_consumption'),'waiver permission exists');
 

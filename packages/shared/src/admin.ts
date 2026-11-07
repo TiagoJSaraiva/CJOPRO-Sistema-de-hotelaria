@@ -1853,6 +1853,8 @@ export type AdminStayCheckoutInput = {
   maintenance_acknowledged_occurrence_ids?: string[];
   maintenance_acknowledged_folio_entry_ids?: string[];
   maintenance_acknowledgement_note?: string | null;
+  /** Obrigatório quando a saída está fora da data ou do horário previstos. */
+  window_reason?: string | null;
 };
 
 export type AdminStayOperationalPanelResponse = {
@@ -1894,8 +1896,12 @@ export type AdminStayOperationalPanelResponse = {
     operational_now?: string;
     can_checkin: boolean;
     checkin_block_reason: string | null;
+    /** Preenchido quando o check-in está fora do horário e exige motivo. */
+    checkin_window_notice: string | null;
     can_checkout: boolean;
     checkout_block_reason: string | null;
+    /** Preenchido quando a saída está fora da data ou do horário e exige motivo. */
+    checkout_window_notice: string | null;
     can_no_show: boolean;
     no_show_block_reason: string | null;
     can_cancel: boolean;

@@ -118,6 +118,15 @@ function getNowInTimezone(
   };
 }
 
+function formatDate(isoDate: string): string {
+  const [year, month, day] = isoDate.split("-");
+  return `${day}/${month}/${year}`;
+}
+
+function formatWindow(start: string | null, limit: string | null): string {
+  return `${String(start).slice(0, 5)}–${String(limit).slice(0, 5)}`;
+}
+
 function isWithinWindow(
   minutesNow: number,
   start: number,
@@ -198,45 +207,54 @@ async function loadStayPanel(
   const expectedCheckoutDate = toIsoDate(stay.checkout_date_expected, timezone);
   const stayStatus = (stay.stay_status || "confirmed") as ReservationStatus;
 
+  // QA-087: fora da janela, entrada e saída valem com motivo (decisão 0012). O check-in continua só na
+  // data prevista; a saída vale a qualquer momento depois do check-in, sem mudar o valor das diárias.
   let canCheckin = false;
   let checkinBlockReason: string | null = null;
+  let checkinWindowNotice: string | null = null;
   if (stayStatus !== "confirmed") {
     checkinBlockReason = "A estadia não esta em status confirmado.";
   } else if (checkinStartMinutes === null || checkinLimitMinutes === null) {
     checkinBlockReason = "Janela de check-in não configurada no hotel.";
   } else if (nowInHotelTz.date !== expectedCheckinDate) {
     checkinBlockReason = "Check-in permitido apenas na data esperada.";
-  } else if (
-    !isWithinWindow(
-      nowInHotelTz.minutes,
-      checkinStartMinutes,
-      checkinLimitMinutes,
-    )
-  ) {
-    checkinBlockReason = "Horário fora da janela de check-in do hotel.";
   } else {
     canCheckin = true;
+    if (
+      !isWithinWindow(
+        nowInHotelTz.minutes,
+        checkinStartMinutes,
+        checkinLimitMinutes,
+      )
+    ) {
+      checkinWindowNotice = `Check-in fora do horário do hotel (${formatWindow(checkinStart, checkinLimit)}). Informe o motivo para registrar a entrada.`;
+    }
   }
 
   let canCheckout = false;
   let checkoutBlockReason: string | null = null;
+  let checkoutWindowNotice: string | null = null;
   if (stayStatus !== "checked_in") {
     checkoutBlockReason =
       "A estadia precisa estar em checked_in para checkout.";
   } else if (checkoutStartMinutes === null || checkoutLimitMinutes === null) {
     checkoutBlockReason = "Janela de checkout não configurada no hotel.";
-  } else if (nowInHotelTz.date !== expectedCheckoutDate) {
-    checkoutBlockReason = "Checkout permitido apenas na data esperada.";
-  } else if (
-    !isWithinWindow(
-      nowInHotelTz.minutes,
-      checkoutStartMinutes,
-      checkoutLimitMinutes,
-    )
-  ) {
-    checkoutBlockReason = "Horário fora da janela de checkout do hotel.";
   } else {
     canCheckout = true;
+    const unchangedRate = "Informe o motivo; o valor das diárias não muda.";
+    if (nowInHotelTz.date < expectedCheckoutDate) {
+      checkoutWindowNotice = `Saída antes da data prevista (${formatDate(expectedCheckoutDate)}). ${unchangedRate}`;
+    } else if (nowInHotelTz.date > expectedCheckoutDate) {
+      checkoutWindowNotice = `Saída depois da data prevista (${formatDate(expectedCheckoutDate)}). ${unchangedRate}`;
+    } else if (
+      !isWithinWindow(
+        nowInHotelTz.minutes,
+        checkoutStartMinutes,
+        checkoutLimitMinutes,
+      )
+    ) {
+      checkoutWindowNotice = `Saída fora do horário do hotel (${formatWindow(checkoutStart, checkoutLimit)}). ${unchangedRate}`;
+    }
   }
 
   let canNoShow = false;
@@ -454,8 +472,11 @@ async function loadStayPanel(
       operational_now: String(operationalNowResult.data),
       can_checkin: canCheckin,
       checkin_block_reason: checkinBlockReason,
+      // Continua valendo quando só a governança barra: a liberação manual também precisa do motivo.
+      checkin_window_notice: checkinWindowNotice,
       can_checkout: canCheckout,
       checkout_block_reason: checkoutBlockReason,
+      checkout_window_notice: checkoutWindowNotice,
       can_no_show: canNoShow,
       no_show_block_reason: noShowBlockReason,
       can_cancel: canCancel,
@@ -977,6 +998,19 @@ export function registerStayOperationsRoutes(app: FastifyInstance): void {
             ),
           );
       }
+      const checkinWindowReason = normalizeOptionalText(
+        request.body?.window_reason,
+      );
+      if (panel.eligibility.checkin_window_notice && !checkinWindowReason) {
+        return reply
+          .status(400)
+          .send(
+            adminError(
+              ADMIN_ERROR_CODE.VALIDATION,
+              "Informe o motivo do check-in fora do horário do hotel.",
+            ),
+          );
+      }
 
       const { data: checkinData, error } = await createServerClient().rpc(
         "checkin_stay_with_readiness",
@@ -987,6 +1021,7 @@ export function registerStayOperationsRoutes(app: FastifyInstance): void {
           p_expected_version: request.body?.expected_readiness_version,
           p_override_reason: request.body?.override_reason,
           p_allow_override: canOverride,
+          p_window_reason: checkinWindowReason || undefined,
         },
       );
       const checkinResult =
@@ -996,6 +1031,17 @@ export function registerStayOperationsRoutes(app: FastifyInstance): void {
         typeof checkinData.result === "string"
           ? checkinData.result
           : "failed";
+      if (checkinResult === "checkin_reason_required") {
+        return reply
+          .status(400)
+          .send(
+            adminError(
+              ADMIN_ERROR_CODE.VALIDATION,
+              "Informe o motivo do check-in fora do horário do hotel.",
+              checkinResult,
+            ),
+          );
+      }
       if (error || checkinResult !== "ok") {
         if (error) request.log.error(error);
         return reply
@@ -1087,6 +1133,19 @@ export function registerStayOperationsRoutes(app: FastifyInstance): void {
             ),
           );
       }
+      const checkoutWindowReason = normalizeOptionalText(
+        request.body?.window_reason,
+      );
+      if (panel.eligibility.checkout_window_notice && !checkoutWindowReason) {
+        return reply
+          .status(400)
+          .send(
+            adminError(
+              ADMIN_ERROR_CODE.VALIDATION,
+              "Informe o motivo da saída fora da data ou do horário previstos.",
+            ),
+          );
+      }
 
       const acknowledgedIds = Array.from(
         new Set(request.body?.maintenance_acknowledged_occurrence_ids || []),
@@ -1166,11 +1225,22 @@ export function registerStayOperationsRoutes(app: FastifyInstance): void {
             normalizeOptionalText(
               request.body?.maintenance_acknowledgement_note,
             ) || null,
+          window_reason: checkoutWindowReason || null,
         },
         auth.session.permissions.includes(
           PERMISSIONS.COMMERCIAL_AGREEMENTS_MANAGE,
         ),
       );
+      if (!("item" in result) && result.result === "checkout_reason_required")
+        return reply
+          .status(400)
+          .send(
+            adminError(
+              ADMIN_ERROR_CODE.VALIDATION,
+              "Informe o motivo da saída fora da data ou do horário previstos.",
+              result.result,
+            ),
+          );
       if (!("item" in result))
         return reply
           .status(409)

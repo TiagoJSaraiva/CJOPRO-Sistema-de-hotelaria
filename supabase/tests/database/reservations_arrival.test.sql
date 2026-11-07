@@ -72,16 +72,20 @@ select throws_ok($$update public.financial_transactions set amount=1 where reser
 select throws_ok($$delete from public.financial_transactions where reservation_id='90000000-0000-4000-8000-000000000001' and category='RESERVATION_GUARANTEE'$$,'23514','generated financial transactions require compensating operations','generated signal cannot be deleted');
 savepoint arrival_clock;
 update public.hotel_training_environments set frozen_at=frozen_at-interval '1 minute' where hotel_id='10000000-0000-4000-8000-000000000001';
-select is((public.checkin_stay_with_readiness('10000000-0000-4000-8000-000000000001','91000000-0000-4000-8000-000000000001','80000000-0000-4000-8000-000000000004',null,'Exceção',true)->>'result'),'outside_checkin_window','override cannot ignore check-in window');
+select is((public.checkin_stay_with_readiness('10000000-0000-4000-8000-000000000001','91000000-0000-4000-8000-000000000001','80000000-0000-4000-8000-000000000004',null,'Exceção',true)->>'result'),'checkin_reason_required','override de prontidão não substitui o motivo da janela');
 rollback to arrival_clock;
 update public.hotel_training_environments set frozen_at=frozen_at+interval '8 hours 59 seconds' where hotel_id='10000000-0000-4000-8000-000000000001';
 select is((public.checkin_stay_with_readiness('10000000-0000-4000-8000-000000000001','91000000-0000-4000-8000-000000000001','80000000-0000-4000-8000-000000000004')->>'result'),'ok','last allowed minute follows backend eligibility');
 rollback to arrival_clock;
 update public.hotel_training_environments set frozen_at=frozen_at+interval '8 hours 1 minute' where hotel_id='10000000-0000-4000-8000-000000000001';
-select is((public.checkin_stay_with_readiness('10000000-0000-4000-8000-000000000001','91000000-0000-4000-8000-000000000001','80000000-0000-4000-8000-000000000004')->>'result'),'outside_checkin_window','after end of window blocked');
+select is((public.checkin_stay_with_readiness('10000000-0000-4000-8000-000000000001','91000000-0000-4000-8000-000000000001','80000000-0000-4000-8000-000000000004')->>'result'),'checkin_reason_required','depois da janela, o check-in exige motivo');
+select is((public.checkin_stay_with_readiness('10000000-0000-4000-8000-000000000001','91000000-0000-4000-8000-000000000001','80000000-0000-4000-8000-000000000004',null,null,false,'   ')->>'result'),'checkin_reason_required','motivo em branco não conta');
+select is((public.checkin_stay_with_readiness('10000000-0000-4000-8000-000000000001','91000000-0000-4000-8000-000000000001','80000000-0000-4000-8000-000000000004',null,null,false,' Voo atrasado ')->>'result'),'ok','com motivo, o check-in fora da janela acontece');
+select is((select checkin_window_reason from public.stays where id='91000000-0000-4000-8000-000000000001'),'Voo atrasado','o motivo fica registrado na estadia');
 rollback to arrival_clock;
 update public.hotel_training_environments set frozen_at=frozen_at+interval '1 day' where hotel_id='10000000-0000-4000-8000-000000000001';
 select is((public.checkin_stay_with_readiness('10000000-0000-4000-8000-000000000001','91000000-0000-4000-8000-000000000001','80000000-0000-4000-8000-000000000004')->>'result'),'outside_checkin_date','wrong operational date blocked');
+select is((public.checkin_stay_with_readiness('10000000-0000-4000-8000-000000000001','91000000-0000-4000-8000-000000000001','80000000-0000-4000-8000-000000000004',null,null,false,'Chegou um dia depois')->>'result'),'outside_checkin_date','o check-in continua só na data prevista, mesmo com motivo');
 rollback to arrival_clock;
 insert into public.room_blocks(hotel_id,room_id,status,label,start_date,end_date)
 values('10000000-0000-4000-8000-000000000001','20000000-0000-4000-8000-000000000101','blocked','Interdição de teste',public.hotel_operational_date('10000000-0000-4000-8000-000000000001'),public.hotel_operational_date('10000000-0000-4000-8000-000000000001')+1);
@@ -97,5 +101,19 @@ select is((select applied_daily_rate from public.stays where id='91000000-0000-4
 select is((select count(*)::int from public.financial_transactions where reservation_id='90000000-0000-4000-8000-000000000001' and type='INCOME'),1,'transfer does not create another receipt');
 select is((public.checkin_stay_with_readiness('10000000-0000-4000-8000-000000000001','91000000-0000-4000-8000-000000000001','80000000-0000-4000-8000-000000000004')->>'result'),'invalid_state','second check-in rejected');
 select is((select count(*)::int from public.stay_folio_entries where stay_id='91000000-0000-4000-8000-000000000001' and source_key like 'reservation-guarantee:%'),1,'credit transferred once');
+select is((select checkin_window_reason from public.stays where id='91000000-0000-4000-8000-000000000001'),null,'check-in dentro da janela não registra motivo');
+
+-- QA-087: a saída antes da data prevista exige motivo e mantém as diárias contratadas.
+select is((public.create_stay_payment_batch('10000000-0000-4000-8000-000000000001','91000000-0000-4000-8000-000000000001','80000000-0000-4000-8000-000000000004',
+  jsonb_build_array(jsonb_build_object('payment_method','pix','amount',(select total_price_estimated-total_paid from public.stays where id='91000000-0000-4000-8000-000000000001'))),
+  'a3150000-0000-4000-8000-000000000010',(select account_version from public.stays where id='91000000-0000-4000-8000-000000000001'),'regular','Saldo antes da saída')->>'result'),
+  'ok','o saldo é quitado antes da saída antecipada');
+select is((public.checkout_stay_account_stage4('10000000-0000-4000-8000-000000000001','91000000-0000-4000-8000-000000000001','80000000-0000-4000-8000-000000000004',(select account_version from public.stays where id='91000000-0000-4000-8000-000000000001'),'[]'::jsonb,
+  'a3150000-0000-4000-8000-000000000011')->>'result'),'checkout_reason_required','a saída antes da data prevista exige motivo');
+select is((select stay_status::text from public.stays where id='91000000-0000-4000-8000-000000000001'),'checked_in','sem motivo, a estadia continua aberta');
+select is((public.checkout_stay_account_stage4('10000000-0000-4000-8000-000000000001','91000000-0000-4000-8000-000000000001','80000000-0000-4000-8000-000000000004',(select account_version from public.stays where id='91000000-0000-4000-8000-000000000001'),'[]'::jsonb,
+  'a3150000-0000-4000-8000-000000000012',array[]::uuid[],array[]::uuid[],null,'Hóspede antecipou o voo')->>'result'),'ok','com motivo, a saída antecipada acontece');
+select is((select stay_status::text||'|'||checkout_window_reason from public.stays where id='91000000-0000-4000-8000-000000000001'),'checked_out|Hóspede antecipou o voo','a estadia sai e guarda o motivo');
+select is((select lodging_total from public.stay_checkout_records where stay_id='91000000-0000-4000-8000-000000000001'),500::numeric,'as diárias contratadas continuam cobradas');
 select * from finish();
 rollback;

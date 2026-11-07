@@ -151,4 +151,9 @@ sem envio público.
 
 Bloqueios sem ocorrência também aparecem com motivo e período no calendário.
 A chegada informa o relógio operacional, a janela do hotel e o impedimento
-visível. Exceção de governança não ignora horário ou interdição.
+visível. O check-in acontece só no dia previsto; fora do horário, com motivo
+registrado na estadia. A saída vale a qualquer momento depois do check-in e, fora
+da data ou do horário, também pede motivo, sem mudar o valor das diárias, que
+entram inteiras na conta quando a estadia é criada. Exceção de governança não
+substitui o motivo nem ignora interdição. Na saída antecipada o quarto continua
+reservado no calendário até a data prevista.

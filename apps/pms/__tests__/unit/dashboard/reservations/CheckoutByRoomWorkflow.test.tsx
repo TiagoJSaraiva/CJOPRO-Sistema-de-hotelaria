@@ -62,8 +62,10 @@ function createPanel(
     eligibility: {
       can_checkin: false,
       checkin_block_reason: "A estadia não esta em status confirmado.",
+      checkin_window_notice: null,
       can_checkout: true,
       checkout_block_reason: null,
+      checkout_window_notice: null,
       can_no_show: false,
       no_show_block_reason:
         "No-show só pode ser aplicado em estadia confirmada.",
@@ -386,6 +388,65 @@ describe("CheckoutByRoomWorkflow", () => {
       await screen.findByText("Checkout confirmado para o quarto 102."),
     ).toBeTruthy();
     expect(screen.getByText("Checked-out")).toBeTruthy();
+  });
+
+  // QA-087: fora da data ou do horário previstos, a saída acontece com motivo.
+  it("pede o motivo da saída fora da janela e o envia", async () => {
+    const notice =
+      "Saída antes da data prevista (20/05/2026). Informe o motivo; o valor das diárias não muda.";
+    const earlyPanel = createPanel({
+      eligibility: { checkout_window_notice: notice },
+    });
+    const fetchMock = vi
+      .fn()
+      .mockResolvedValueOnce(jsonResponse(earlyPanel))
+      .mockResolvedValueOnce(
+        jsonResponse(
+          createPanel({
+            stay: { stay_status: "checked_out" },
+            eligibility: { can_checkout: false },
+          }),
+        ),
+      );
+    vi.stubGlobal("fetch", fetchMock);
+    const user = userEvent.setup();
+
+    render(<CheckoutByRoomWorkflow />);
+    await searchRoom(user);
+
+    expect(await screen.findByText(notice)).toBeTruthy();
+    const confirm = screen.getByRole("button", {
+      name: "Confirmar checkout",
+    }) as HTMLButtonElement;
+    expect(confirm.disabled).toBe(true);
+
+    await user.type(
+      screen.getByLabelText("Motivo da saída fora da janela"),
+      "Hóspede antecipou o voo",
+    );
+    expect(confirm.disabled).toBe(false);
+    await user.click(confirm);
+
+    expect(fetchMock.mock.lastCall?.[0]).toBe("/api/stays/stay-2/checkout");
+    expect(
+      JSON.parse(String(fetchMock.mock.lastCall?.[1]?.body)),
+    ).toMatchObject({ window_reason: "Hóspede antecipou o voo" });
+  });
+
+  it("dentro da janela não pede motivo", async () => {
+    vi.stubGlobal(
+      "fetch",
+      vi.fn().mockResolvedValueOnce(jsonResponse(createPanel())),
+    );
+    const user = userEvent.setup();
+
+    render(<CheckoutByRoomWorkflow />);
+    await searchRoom(user);
+
+    await screen.findByRole("button", { name: "Confirmar checkout" });
+    expect(
+      screen.queryByLabelText("Motivo da saída fora da janela"),
+    ).toBeNull();
   });
 
   it("exige ciência explícita e envia os ids das ocorrências abertas", async () => {

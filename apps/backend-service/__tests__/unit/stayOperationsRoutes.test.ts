@@ -36,6 +36,8 @@ type SupabaseMockOptions = {
   payments?: Array<Record<string, unknown>>;
   closure?: Record<string, unknown>;
   closeResult?: Record<string, unknown>;
+  roomState?: Record<string, unknown>;
+  checkinResult?: Record<string, unknown>;
 };
 
 function createToken(
@@ -230,7 +232,10 @@ function createSupabaseMock(options: SupabaseMockOptions = {}) {
   });
 
   const rpc = vi.fn(async (name: string) => {
-    if (name === "governance_room_state") return { data: null, error: null };
+    if (name === "governance_room_state")
+      return { data: options.roomState ?? null, error: null };
+    if (name === "checkin_stay_with_readiness")
+      return { data: options.checkinResult ?? null, error: null };
     if (name === "hotel_operational_now")
       return { data: "2026-05-18T13:00:00.000Z", error: null };
     if (name === "stay_closure_preview")
@@ -615,5 +620,158 @@ describe("routes/stays encerramento antes da chegada", () => {
       no_show_penalty: 40,
       balance: 50,
     });
+  });
+});
+
+// QA-087: a janela vira aviso. O relógio do mock está em 18/05, 10h em São Paulo; a saída vai das 8h às
+// 12h e o check-in das 14h às 22h.
+describe("routes/stays janelas de entrada e saída", () => {
+  const readyRoom = { readiness: "ready", blockers: [] };
+
+  async function call(
+    method: "GET" | "POST",
+    url: string,
+    options: SupabaseMockOptions,
+    payload?: Record<string, unknown>,
+  ) {
+    const supabase = createSupabaseMock(options);
+    vi.mocked(createServerClient).mockReturnValue(supabase as any);
+    const app = await createTestApp();
+    const response = await app.inject({
+      method,
+      url,
+      headers: {
+        authorization: `Bearer ${createToken()}`,
+        [ACTIVE_HOTEL_HEADER_NAME]: "hotel-1",
+      },
+      ...(payload ? { payload } : {}),
+    });
+    return { response, supabase };
+  }
+  const rpcCalls = (
+    supabase: { rpc: ReturnType<typeof vi.fn> },
+    name: string,
+  ) => supabase.rpc.mock.calls.filter(([called]) => called === name);
+
+  it("a saída antes da data prevista fica disponível com aviso", async () => {
+    const { response } = await call("GET", "/admin/stays/stay-2/panel", {
+      panelStay: createPanelStay({
+        checkout_date_expected: "2026-05-20T14:00:00.000Z",
+      }),
+    });
+    const eligibility = response.json().item.eligibility;
+    expect(eligibility.can_checkout).toBe(true);
+    expect(eligibility.checkout_block_reason).toBeNull();
+    expect(eligibility.checkout_window_notice).toContain(
+      "antes da data prevista",
+    );
+    expect(eligibility.checkout_window_notice).toContain("20/05/2026");
+  });
+
+  it("a saída depois da data prevista também pede motivo", async () => {
+    const { response } = await call("GET", "/admin/stays/stay-2/panel", {
+      panelStay: createPanelStay({
+        checkout_date_expected: "2026-05-16T14:00:00.000Z",
+      }),
+    });
+    expect(response.json().item.eligibility.checkout_window_notice).toContain(
+      "depois da data prevista",
+    );
+  });
+
+  it("na data e no horário previstos, a saída não pede motivo", async () => {
+    const { response } = await call("GET", "/admin/stays/stay-2/panel", {});
+    expect(response.json().item.eligibility).toMatchObject({
+      can_checkout: true,
+      checkout_window_notice: null,
+    });
+  });
+
+  it("no dia previsto, o check-in fora do horário fica disponível com aviso", async () => {
+    const { response } = await call("GET", "/admin/stays/stay-2/panel", {
+      roomState: readyRoom,
+      panelStay: createPanelStay({
+        stay_status: "confirmed",
+        checkin_date_actual: null,
+        checkin_date_expected: "2026-05-18T17:00:00.000Z",
+      }),
+    });
+    const eligibility = response.json().item.eligibility;
+    expect(eligibility.can_checkin).toBe(true);
+    expect(eligibility.checkin_window_notice).toContain("14:00");
+    expect(eligibility.checkin_window_notice).toContain("22:00");
+  });
+
+  it("o check-in continua só na data prevista", async () => {
+    const { response } = await call("GET", "/admin/stays/stay-2/panel", {
+      roomState: readyRoom,
+      panelStay: createPanelStay({
+        stay_status: "confirmed",
+        checkin_date_actual: null,
+        checkin_date_expected: "2026-05-19T17:00:00.000Z",
+      }),
+    });
+    expect(response.json().item.eligibility).toMatchObject({
+      can_checkin: false,
+      checkin_window_notice: null,
+      checkin_block_reason: "Check-in permitido apenas na data esperada.",
+    });
+  });
+
+  it("check-in fora do horário sem motivo é recusado antes do banco", async () => {
+    const { response, supabase } = await call(
+      "POST",
+      "/admin/stays/stay-2/checkin",
+      {
+        roomState: readyRoom,
+        panelStay: createPanelStay({
+          stay_status: "confirmed",
+          checkin_date_actual: null,
+          checkin_date_expected: "2026-05-18T17:00:00.000Z",
+        }),
+      },
+      { window_reason: "   " },
+    );
+    expect(response.statusCode).toBe(400);
+    expect(response.json().message).toContain("motivo");
+    expect(rpcCalls(supabase, "checkin_stay_with_readiness")).toHaveLength(0);
+  });
+
+  it("check-in fora do horário leva o motivo ao banco", async () => {
+    const { supabase } = await call(
+      "POST",
+      "/admin/stays/stay-2/checkin",
+      {
+        roomState: readyRoom,
+        checkinResult: { result: "ok" },
+        panelStay: createPanelStay({
+          stay_status: "confirmed",
+          checkin_date_actual: null,
+          checkin_date_expected: "2026-05-18T17:00:00.000Z",
+        }),
+      },
+      { window_reason: " Voo antecipado " },
+    );
+    expect(
+      rpcCalls(supabase, "checkin_stay_with_readiness")[0]?.[1],
+    ).toMatchObject({
+      p_window_reason: "Voo antecipado",
+    });
+  });
+
+  it("saída fora da data sem motivo é recusada antes do banco", async () => {
+    const { response, supabase } = await call(
+      "POST",
+      "/admin/stays/stay-2/checkout",
+      {
+        panelStay: createPanelStay({
+          checkout_date_expected: "2026-05-20T14:00:00.000Z",
+        }),
+      },
+      {},
+    );
+    expect(response.statusCode).toBe(400);
+    expect(response.json().message).toContain("motivo");
+    expect(rpcCalls(supabase, "checkout_stay_account_stage4")).toHaveLength(0);
   });
 });

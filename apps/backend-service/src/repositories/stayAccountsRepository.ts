@@ -637,6 +637,7 @@ class SupabaseStayAccountsRepository implements StayAccountsRepository {
         p_maintenance_folio_entry_ids:
           input.maintenance_acknowledged_folio_entry_ids || [],
         p_note: input.maintenance_acknowledgement_note || undefined,
+        p_window_reason: input.window_reason || undefined,
       },
     );
     if (error) throw error;

@@ -36,6 +36,7 @@ import {
   statusLabel,
 } from "./OperationalPanelPrimitives";
 import { StayClosurePanel } from "./StayClosurePanel";
+import { withWindowReason } from "./stayWindowReason";
 
 type ReservationsCalendarBoardProps = {
   data: AdminReservationCalendarResponse;
@@ -203,6 +204,7 @@ export function ReservationsCalendarBoard({
   const [paymentMethod, setPaymentMethod] = useState<string>("pix");
   const [paymentNote, setPaymentNote] = useState<string>("");
   const [overrideReason, setOverrideReason] = useState("");
+  const [windowReason, setWindowReason] = useState("");
   const [relocation, setRelocation] = useState<{
     items: StayRelocationCandidate[];
     version: number;
@@ -475,6 +477,8 @@ export function ReservationsCalendarBoard({
 
   useEffect(() => {
     let cancelled = false;
+    // O motivo é da estadia aberta; trocar de estadia não pode levá-lo junto.
+    setWindowReason("");
     async function loadPanel() {
       if (!selectedStayId) {
         setPanelData(null);
@@ -561,12 +565,19 @@ export function ReservationsCalendarBoard({
             panelData?.maintenance_pending_folio_entry_ids || [],
         };
       }
+      payload = withWindowReason(
+        payload,
+        action,
+        panelData?.eligibility,
+        windowReason,
+      );
       const panel = await postJson<AdminStayOperationalPanelResponse>(
         `/api/stays/${selectedStayId}/${action}`,
         payload,
       );
       setPanelData(panel);
       setOverrideReason("");
+      setWindowReason("");
       router.refresh();
     } catch (requestError) {
       setError(
@@ -1249,6 +1260,28 @@ export function ReservationsCalendarBoard({
                       </p>
                     ) : null}
                   </div>
+                  {panelData.eligibility.checkin_window_notice ||
+                  panelData.eligibility.checkout_window_notice ? (
+                    <label
+                      className="pms-field"
+                      data-usage-guide="stay-window-reason"
+                    >
+                      <span>Motivo fora da janela</span>
+                      <textarea
+                        className="pms-field-input"
+                        rows={2}
+                        maxLength={1000}
+                        value={windowReason}
+                        onChange={(event) =>
+                          setWindowReason(event.target.value)
+                        }
+                      />
+                      <small>
+                        {panelData.eligibility.checkin_window_notice ||
+                          panelData.eligibility.checkout_window_notice}
+                      </small>
+                    </label>
+                  ) : null}
                   {(panelData.maintenance_occurrences || []).length ? (
                     <PanelSection title="Ocorrências e danos">
                       <ul className="m-0 grid gap-2 pl-5">

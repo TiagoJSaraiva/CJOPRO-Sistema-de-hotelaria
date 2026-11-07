@@ -149,6 +149,7 @@ export function CheckoutByRoomWorkflow({
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState<string | null>(null);
   const [maintenanceAcknowledged, setMaintenanceAcknowledged] = useState(false);
+  const [windowReason, setWindowReason] = useState("");
   const [accountData, setAccountData] = useState<AdminStayAccount | null>(null);
   const [departureReview, setDepartureReview] =
     useState<DepartureReview | null>(null);
@@ -270,6 +271,7 @@ export function CheckoutByRoomWorkflow({
       return;
     }
 
+    setWindowReason("");
     try {
       setIsSearching(true);
       setError(null);
@@ -394,6 +396,9 @@ export function CheckoutByRoomWorkflow({
               maintenance_acknowledged_folio_entry_ids:
                 panelData.maintenance_pending_folio_entry_ids || [],
             }
+          : {}),
+        ...(panelData.eligibility.checkout_window_notice
+          ? { window_reason: windowReason.trim() }
           : {}),
       };
       const checkoutResult = await postJson<
@@ -1051,6 +1056,24 @@ export function CheckoutByRoomWorkflow({
                     "Checkout não permitido para esta estadia."}
                 </p>
               )}
+              {panelData.eligibility.can_checkout &&
+              panelData.eligibility.checkout_window_notice ? (
+                <div className="grid gap-2 rounded-lg border border-[#f5d08a] bg-[#fff9eb] p-3 text-[0.86rem] text-[#8a5a00]">
+                  <p className="m-0">
+                    {panelData.eligibility.checkout_window_notice}
+                  </p>
+                  <label className="grid gap-1">
+                    Motivo da saída fora da janela
+                    <textarea
+                      value={windowReason}
+                      onChange={(event) => setWindowReason(event.target.value)}
+                      maxLength={1000}
+                      rows={2}
+                      required
+                    />
+                  </label>
+                </div>
+              ) : null}
               {hasPendingAccountAction ? (
                 <p
                   className="m-0 rounded-lg border border-[#f5d08a] bg-[#fff9eb] p-3 text-[0.86rem] text-[#8a5a00]"
@@ -1078,7 +1101,11 @@ export function CheckoutByRoomWorkflow({
                     Number(accountData?.folio.refundable_credit || 0) > 0,
                   ) ||
                   hasPendingAccountAction ||
-                  departureReview?.ready === false
+                  departureReview?.ready === false ||
+                  Boolean(
+                    panelData.eligibility.checkout_window_notice &&
+                    !windowReason.trim(),
+                  )
                 }
                 className={primaryButtonClassName}
               >

@@ -14939,8 +14939,10 @@ export type Database = {
           applied_daily_rate: number
           checkin_date_actual: string | null
           checkin_date_expected: string
+          checkin_window_reason: string | null
           checkout_date_actual: string | null
           checkout_date_expected: string
+          checkout_window_reason: string | null
           created_at: string
           id: string
           operational_version: number
@@ -14956,8 +14958,10 @@ export type Database = {
           applied_daily_rate: number
           checkin_date_actual?: string | null
           checkin_date_expected: string
+          checkin_window_reason?: string | null
           checkout_date_actual?: string | null
           checkout_date_expected: string
+          checkout_window_reason?: string | null
           created_at?: string
           id?: string
           operational_version?: number
@@ -14973,8 +14977,10 @@ export type Database = {
           applied_daily_rate?: number
           checkin_date_actual?: string | null
           checkin_date_expected?: string
+          checkin_window_reason?: string | null
           checkout_date_actual?: string | null
           checkout_date_expected?: string
+          checkout_window_reason?: string | null
           created_at?: string
           id?: string
           operational_version?: number
@@ -15590,6 +15596,7 @@ export type Database = {
           p_hotel_id: string
           p_override_reason?: string
           p_stay_id: string
+          p_window_reason?: string
         }
         Returns: Json
       }
@@ -15604,6 +15611,7 @@ export type Database = {
           p_occurrence_ids?: string[]
           p_stay_id: string
           p_tenders: Json
+          p_window_reason?: string
         }
         Returns: Json
       }
@@ -15618,6 +15626,7 @@ export type Database = {
           p_occurrence_ids?: string[]
           p_stay_id: string
           p_tenders: Json
+          p_window_reason?: string
         }
         Returns: Json
       }

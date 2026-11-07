@@ -3377,6 +3377,7 @@ export const StayCheckoutBodySchema = Type.Object(
     maintenance_acknowledgement_note: Type.Optional(
       Type.String({ maxLength: 2000 }),
     ),
+    window_reason: Type.Optional(Type.String({ maxLength: 1000 })),
   },
   strict,
 );
@@ -3888,8 +3889,10 @@ export const StayPanelSchema = Type.Object(
         operational_now: Type.Optional(dateTime()),
         can_checkin: Type.Boolean(),
         checkin_block_reason: nullable(Type.String()),
+        checkin_window_notice: nullable(Type.String()),
         can_checkout: Type.Boolean(),
         checkout_block_reason: nullable(Type.String()),
+        checkout_window_notice: nullable(Type.String()),
         can_no_show: Type.Boolean(),
         no_show_block_reason: nullable(Type.String()),
         can_cancel: Type.Boolean(),

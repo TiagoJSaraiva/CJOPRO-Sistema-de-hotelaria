@@ -310,6 +310,7 @@ export const StayCheckinSchema = Type.Object(
     override_reason: Type.Optional(
       Type.String({ minLength: 1, maxLength: 1000 }),
     ),
+    window_reason: Type.Optional(Type.String({ maxLength: 1000 })),
   },
   { additionalProperties: false, $id: "StayCheckinInput" },
 );
