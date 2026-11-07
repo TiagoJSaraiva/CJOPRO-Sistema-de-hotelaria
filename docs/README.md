@@ -4,6 +4,9 @@ Use este índice para localizar a fonte de verdade adequada à tarefa.
 
 | Preciso...                                   | Documento                                                  |
 | -------------------------------------------- | ---------------------------------------------------------- |
+| saber onde o trabalho está e o próximo passo | [Status do projeto](status.md)                             |
+| saber o que já foi decidido e por quê        | [Decisões](decisions/README.md)                            |
+| consultar o plano de depuração em andamento  | [Plano de depuração](plans/2026-11-debug-real-stack.md)    |
 | preparar o ambiente ou executar um serviço   | [Ambiente e desenvolvimento](development-guide.md)         |
 | escolher ou diagnosticar um comando          | [Catálogo de comandos](commands.md)                        |
 | contribuir e preparar uma revisão            | [Guia de contribuição](../CONTRIBUTING.md)                 |

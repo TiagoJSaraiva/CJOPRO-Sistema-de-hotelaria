@@ -51,6 +51,19 @@ declarados. Três varreduras completam as lições:
 sucesso. Compilar o schema não basta, porque alguns erros só surgem ao responder. Os
 defeitos encontrados ficam no [registro de bugs](qa/bug-ledger.md).
 
+### Quando rodar cada suíte
+
+O aceite completo leva horas e não precisa acompanhar cada lote.
+
+| Momento               | O que rodar                                                                                  |
+| --------------------- | -------------------------------------------------------------------------------------------- |
+| Durante a correção    | testes da área e a jornada afetada, com `pnpm test:journeys <arquivo>`                       |
+| Fim do lote           | `pnpm check`, `pnpm test:db` e as jornadas afetadas                                          |
+| Marco ou fim de etapa | tudo: `pnpm check:full`, `pnpm test:db`, `pnpm test:journeys` e o visual da outra plataforma |
+
+Mudança de banco, dependência, CI ou tela compartilhada pede mais suítes já no fim do lote,
+conforme o [catálogo de comandos](commands.md).
+
 ## Política para novas features e correções
 
 Testes fazem parte da implementação. Nenhuma `feat` ou `fix` está concluída se a

@@ -2,8 +2,8 @@
 
 Estas regras valem para todo o repositório. Arquivos `AGENTS.md` mais próximos
 da área alterada acrescentam regras locais; eles não substituem este arquivo.
-Leia também o [índice técnico](docs/README.md) e o
-[guia de contribuição](CONTRIBUTING.md).
+Leia também o [índice técnico](docs/README.md), o
+[guia de contribuição](CONTRIBUTING.md) e o [status do projeto](docs/status.md).
 
 ## Antes de agir
 
@@ -15,12 +15,27 @@ Leia também o [índice técnico](docs/README.md) e o
 Não apague arquivos, descarte mudanças ou reescreva histórico para
 resolver conflitos de escopo.
 
+## Memória do projeto
+
+O repositório é a memória entre sessões e entre agentes. Memória própria e resumo de
+conversa não são fonte de verdade: se discordarem do repositório, vale o repositório.
+
+- Antes de planejar, leia [docs/status.md](docs/status.md) e as
+  [decisões](docs/decisions/README.md) da área.
+- Toda decisão do usuário vira um registro em `docs/decisions`, no mesmo diff da mudança.
+- Se um pedido ou uma correção contrariar uma decisão aceita, pare e pergunte. Para mudar,
+  crie uma decisão nova que substitua a anterior.
+- Toda regra de negócio decidida aponta para o teste que a protege.
+- Ao fim de cada etapa, atualize `docs/status.md`.
+
 ## Commits durante implementações
 
-- Faça commits descritivos sobre o que foi implementado até aquele ponto,
-  preferencialmente seguindo Conventional Commits.
-- Não é necessário criar commits para cada pequena alteração. Crie um ponto de
-  commit quando um módulo de uma etapa estiver concluído e validado.
+- Faça commits pequenos e descritivos, um por assunto, preferencialmente seguindo
+  Conventional Commits. Nunca junte vários módulos no mesmo commit.
+- Crie um ponto de commit quando um assunto estiver concluído e validado, sem criar
+  commits para cada pequena alteração.
+- Trabalhe na `main`, sem criar branch.
+- Não adicione `Co-Authored-By` nem outra declaração de coautoria.
 - Uma anotação `.txt` incidental pode acompanhar o commit sem exigir separação,
   desde que não contenha segredo, dado pessoal ou conteúdo destrutivo.
 - A permissão para criar um commit não autoriza `push`, merge, rebase, deploy,
