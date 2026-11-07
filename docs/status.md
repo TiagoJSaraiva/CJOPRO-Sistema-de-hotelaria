@@ -27,6 +27,7 @@ Nenhuma.
 | ID     | Sev | Situação                                                                            |
 | ------ | --- | ----------------------------------------------------------------------------------- |
 | QA-087 | S2  | [Decidido](decisions/0012-janelas-de-entrada-e-saida-viram-aviso.md), a implementar |
+| QA-095 | S3  | Novo: tela não atualiza depois de ação muito rápida, só em produção                 |
 | QA-085 | S4  | [Decidido](decisions/0013-gerente-do-aurora-cadastra-temporadas.md), a implementar  |
 | QA-091 | S4  | [Decidido](decisions/0014-fechamento-lista-lancamentos-tardios.md), a implementar   |
 | QA-092 | S4  | [Limite aceito](decisions/0015-datas-em-utc-limite-aceito.md)                       |

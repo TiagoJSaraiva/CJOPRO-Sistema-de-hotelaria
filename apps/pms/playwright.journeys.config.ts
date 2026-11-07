@@ -28,9 +28,16 @@ process.env.JOURNEY_BACKEND_LOG = resolve(
   "../../node_modules/.cache/pms-journeys-backend.jsonl",
 );
 
+// A varredura roda sobre o build de produção, e as demais jornadas em dev: scripts/journeys.mjs
+// executa uma fase de cada vez. Pastas próprias, porque cada execução limpa as da anterior.
+const sweepPhase = process.env.JOURNEY_PMS_MODE === "production";
+const outputName = sweepPhase ? "pms-journeys-sweep" : "pms-journeys";
+
 export default defineConfig({
   testDir: "./__tests__/journeys",
-  testMatch: "*.spec.ts",
+  ...(sweepPhase
+    ? { testMatch: "sweep-pages.spec.ts" }
+    : { testMatch: "*.spec.ts", testIgnore: "sweep-pages.spec.ts" }),
   timeout: 600_000,
   updateSnapshots: "none",
   expect: { timeout: 20_000 },
@@ -43,12 +50,12 @@ export default defineConfig({
     [
       "html",
       {
-        outputFolder: "../../node_modules/.cache/pms-journeys-report",
+        outputFolder: `../../node_modules/.cache/${outputName}-report`,
         open: "never",
       },
     ],
   ],
-  outputDir: "../../node_modules/.cache/pms-journeys-results",
+  outputDir: `../../node_modules/.cache/${outputName}-results`,
   use: {
     ...devices["Desktop Chrome"],
     viewport: { width: 1440, height: 960 },
@@ -79,7 +86,7 @@ export default defineConfig({
       env: { PORT: String(bookingPort), ALLOWED_ORIGINS: allowedOrigins },
     },
     {
-      command: `pnpm exec next dev --port ${pmsPort}`,
+      command: `pnpm exec next ${sweepPhase ? "start" : "dev"} --port ${pmsPort}`,
       url: `${pmsUrl}/login`,
       reuseExistingServer: false,
       timeout: 180_000,

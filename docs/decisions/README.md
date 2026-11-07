@@ -36,5 +36,5 @@ teste. `pnpm docs:check` confere tudo isso.
 | 0013 | [Gerente do Aurora cadastra temporadas](0013-gerente-do-aurora-cadastra-temporadas.md)   | permissões, tarifas    | a implementar |
 | 0014 | [Fechamento lista lançamentos tardios](0014-fechamento-lista-lancamentos-tardios.md)     | caixa                  | a implementar |
 | 0015 | [Datas em UTC: limite aceito](0015-datas-em-utc-limite-aceito.md)                        | relógio                | aceita        |
-| 0016 | [Jornadas sobre o build de produção do PMS](0016-jornadas-em-build-de-producao.md)       | testes                 | a implementar |
+| 0016 | [Varredura sobre o build de produção do PMS](0016-jornadas-em-build-de-producao.md)      | testes                 | aceita        |
 | 0017 | [Analytics do Supabase local desligado](0017-analytics-local-desligado.md)               | ambiente               | a implementar |

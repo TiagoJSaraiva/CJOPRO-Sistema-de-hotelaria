@@ -1,6 +1,7 @@
 import { describe, expect, it } from "vitest";
 import {
   buildJourneyEnvironment,
+  journeyPhases,
   parseJourneyArguments,
 } from "../../../../scripts/journeys.mjs";
 
@@ -55,5 +56,52 @@ describe("executor das jornadas no sistema real", () => {
       "lição 1",
     ]);
     expect(parseJourneyArguments([])).toEqual([]);
+  });
+
+  describe("fases da execução", () => {
+    it("roda jornadas em dev e a varredura em produção sem filtro", () => {
+      expect(journeyPhases([])).toEqual(["development", "production"]);
+    });
+
+    it("não compila o PMS para uma jornada pedida pelo caminho", () => {
+      expect(
+        journeyPhases(["__tests__/journeys/lesson-01-orientation.spec.ts"]),
+      ).toEqual(["development"]);
+    });
+
+    it("roda só produção quando o caminho é o da varredura", () => {
+      expect(
+        journeyPhases(["__tests__\\journeys\\sweep-pages.spec.ts"]),
+      ).toEqual(["production"]);
+    });
+
+    it("roda as duas fases quando os caminhos misturam os dois tipos", () => {
+      expect(
+        journeyPhases([
+          "__tests__/journeys/lesson-01-orientation.spec.ts",
+          "__tests__/journeys/sweep-pages.spec.ts",
+        ]),
+      ).toEqual(["development", "production"]);
+    });
+
+    it("só compila o PMS se o filtro de nome puder chegar à varredura", () => {
+      expect(journeyPhases(["--grep", "lição 1"])).toEqual(["development"]);
+      expect(journeyPhases(["-g", "lição 1"])).toEqual(["development"]);
+      expect(journeyPhases(["--grep=lição 1"])).toEqual(["development"]);
+      expect(journeyPhases(["--grep", "varredura"])).toEqual([
+        "development",
+        "production",
+      ]);
+      expect(journeyPhases(["-g", "varredura: admin"])).toEqual([
+        "development",
+        "production",
+      ]);
+    });
+
+    it("ignora o separador do pnpm ao escolher as fases", () => {
+      expect(journeyPhases(["--", "--grep", "lição 1"])).toEqual([
+        "development",
+      ]);
+    });
   });
 });

@@ -40,7 +40,8 @@ declarados. Três varreduras completam as lições:
   nos dez cenários do curso;
 - `sweep-pages.spec.ts` abre todas as páginas com as dez contas, grava o relatório em
   `node_modules/.cache/pms-journeys-sweep.json` e reprova a rodada com qualquer achado.
-  Leva cerca de 1h40. O `next dev` reinicia por memória durante a execução, então uma
+  Ela roda sobre o build de produção do PMS e leva cerca de 4 min; as demais jornadas
+  seguem em `next dev`, e `pnpm test:journeys` executa as duas fases em sequência. Uma
   navegação que estoura o tempo é tentada de novo e fica em `retriedNavigations`: só a
   segunda falha é achado, e a mesma página repetida entre rodadas merece investigação.
   Selecione com `pnpm test:journeys --grep varredura`;
