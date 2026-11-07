@@ -37,4 +37,4 @@ teste. `pnpm docs:check` confere tudo isso.
 | 0014 | [Fechamento lista lançamentos tardios](0014-fechamento-lista-lancamentos-tardios.md)     | caixa                  | a implementar |
 | 0015 | [Datas em UTC: limite aceito](0015-datas-em-utc-limite-aceito.md)                        | relógio                | aceita        |
 | 0016 | [Varredura sobre o build de produção do PMS](0016-jornadas-em-build-de-producao.md)      | testes                 | aceita        |
-| 0017 | [Analytics do Supabase local desligado](0017-analytics-local-desligado.md)               | ambiente               | a implementar |
+| 0017 | [Analytics do Supabase local desligado](0017-analytics-local-desligado.md)               | ambiente               | aceita        |

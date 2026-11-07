@@ -1,6 +1,6 @@
 # 0017: Analytics do Supabase local desligado
 
-- **Status:** a implementar
+- **Status:** aceita
 - **Data:** 2026-11-07
 - **Origem:** decisão do usuário
 - **Áreas:** ambiente
@@ -24,4 +24,4 @@ A aba de logs do Studio local deixa de funcionar. Os logs dos containers continu
 
 ## Prova
 
-Pendente: `pnpm test:db` com o analytics desligado.
+- [Configuração local](../../supabase/config.toml); `pnpm test:db` passou com o analytics desligado.
