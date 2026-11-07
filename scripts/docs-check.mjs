@@ -18,6 +18,8 @@ const REQUIRED_FILES = [
   "docs/testing-strategy.md",
   "docs/ui-quality.md",
   "docs/usage-guides.md",
+  "docs/status.md",
+  "docs/decisions/README.md",
   "AGENTS.md",
   ".github/AGENTS.md",
   "apps/backend-service/AGENTS.md",
@@ -38,6 +40,17 @@ const BUILTIN_PNPM_COMMANDS = new Set([
   "remove",
   "run",
 ]);
+
+const DECISION_FILE_NAME = /^(\d{4})-[a-z0-9-]+\.md$/;
+const DECISION_FIELDS = ["Status", "Data", "Origem", "Áreas"];
+const DECISION_SECTIONS = [
+  "Decisão",
+  "Motivo",
+  "Alternativas recusadas",
+  "Consequências",
+  "Prova",
+];
+const DECISION_STATUSES = ["aceita", "a implementar"];
 
 const checks = [];
 const errors = [];
@@ -269,6 +282,154 @@ function validateCommandCatalog(packageJson) {
   );
 }
 
+function markdownSection(contents, title) {
+  const heading = `## ${title}\n`;
+  const start = contents.indexOf(heading);
+  if (start === -1) {
+    return null;
+  }
+  const body = contents.slice(start + heading.length);
+  const end = body.indexOf("\n## ");
+  return end === -1 ? body : body.slice(0, end);
+}
+
+function readNormalized(path) {
+  return readFileSync(path, "utf8").replace(/\r\n/g, "\n");
+}
+
+function validateDecision(name, directory, seenNumbers, index) {
+  const file = `docs/decisions/${name}`;
+  const report = (message, hint) =>
+    addError("decisions", { file, message, hint });
+
+  const number = DECISION_FILE_NAME.exec(name)?.[1];
+  if (!number) {
+    report(
+      "nome de arquivo fora do padrão",
+      "Use NNNN-titulo-curto.md, com letras minúsculas e sem acentos.",
+    );
+    return;
+  }
+  if (seenNumbers.has(number)) {
+    report(
+      `número ${number} repetido em ${seenNumbers.get(number)}`,
+      "Use o próximo número livre.",
+    );
+  }
+  seenNumbers.set(number, name);
+
+  const contents = readNormalized(resolve(directory, name));
+  if (!contents.startsWith(`# ${number}: `)) {
+    report(
+      `o título precisa começar com "# ${number}: "`,
+      "Alinhe o título ao número do arquivo.",
+    );
+  }
+
+  const fields = new Map();
+  for (const field of DECISION_FIELDS) {
+    const value = new RegExp(`^- \\*\\*${field}:\\*\\* (.+)$`, "m").exec(
+      contents,
+    )?.[1];
+    if (value) {
+      fields.set(field, value.trim());
+    } else {
+      report(
+        `campo obrigatório ausente: ${field}`,
+        `Adicione "- **${field}:** ..." abaixo do título.`,
+      );
+    }
+  }
+  for (const section of DECISION_SECTIONS) {
+    if (markdownSection(contents, section) === null) {
+      report(
+        `seção obrigatória ausente: ${section}`,
+        `Adicione "## ${section}" à decisão.`,
+      );
+    }
+  }
+
+  const status = fields.get("Status");
+  const replacement = status
+    ? /^substituída por \[[^\]]*\]\(([^)\s]+)\)$/.exec(status)?.[1]
+    : undefined;
+  if (replacement) {
+    if (!existsSync(resolve(directory, replacement))) {
+      report(
+        `decisão substituta inexistente: ${replacement}`,
+        "Aponte para a decisão que substitui esta.",
+      );
+    }
+  } else if (status && !DECISION_STATUSES.includes(status)) {
+    report(
+      `status desconhecido: ${status}`,
+      `Use ${DECISION_STATUSES.join(", ")} ou "substituída por [NNNN](arquivo.md)".`,
+    );
+  }
+
+  const proof = markdownSection(contents, "Prova");
+  if (status === "aceita" && proof !== null && !/\]\([^)\s]+\)/.test(proof)) {
+    report(
+      "decisão aceita sem link de prova",
+      "Aponte para o teste que a protege; sem prova ainda, use o status a implementar.",
+    );
+  }
+
+  if (!index.includes(`(${name})`)) {
+    report(
+      "decisão fora do índice",
+      "Adicione a decisão a docs/decisions/README.md.",
+    );
+  }
+}
+
+function validateDecisions() {
+  const directory = resolve(ROOT_DIRECTORY, "docs/decisions");
+  const indexPath = resolve(directory, "README.md");
+  const names = existsSync(directory)
+    ? readdirSync(directory).filter(
+        (name) => name.endsWith(".md") && name !== "README.md",
+      )
+    : [];
+  const index = existsSync(indexPath) ? readNormalized(indexPath) : "";
+  const seenNumbers = new Map();
+  for (const name of names) {
+    validateDecision(name, directory, seenNumbers, index);
+  }
+  addCheck("decisions", "Decisões", `${names.length} decisões registradas`);
+}
+
+// O status é sobrescrito a cada etapa; um defeito fechado ali indica que ele ficou para trás.
+function validateProjectStatus() {
+  const statusPath = resolve(ROOT_DIRECTORY, "docs/status.md");
+  const ledgerPath = resolve(ROOT_DIRECTORY, "docs/qa/bug-ledger.md");
+  if (!existsSync(statusPath) || !existsSync(ledgerPath)) {
+    addCheck(
+      "project-status",
+      "Status do projeto",
+      "status ou registro ausente",
+    );
+    return;
+  }
+
+  const open = markdownSection(readNormalized(ledgerPath), "Abertos") ?? "";
+  const cited = new Set(readNormalized(statusPath).match(/QA-\d+/g) ?? []);
+  for (const id of cited) {
+    if (!open.includes(`| ${id} `)) {
+      addError("project-status", {
+        file: "docs/status.md",
+        message: `${id} não está entre os abertos do registro de bugs`,
+        hint: "Atualize o status ou o registro para que digam a mesma coisa.",
+      });
+    }
+  }
+  addCheck(
+    "project-status",
+    "Status do projeto",
+    `${cited.size} defeitos abertos citados`,
+  );
+}
+
 for (const requiredFile of REQUIRED_FILES) {
   if (!existsSync(resolve(ROOT_DIRECTORY, requiredFile))) {
     addError("required-files", {
@@ -301,6 +462,8 @@ const packageJson = JSON.parse(
 validateLinks(markdownFiles);
 validateCommands(markdownFiles, packageJson);
 validateCommandCatalog(packageJson);
+validateDecisions();
+validateProjectStatus();
 
 const result = {
   ok: errors.length === 0,
