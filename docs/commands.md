@@ -90,6 +90,8 @@ deliberadamente manifests ou overrides.
 
 Nenhum comando do projeto usa `--linked`. Publicação ou consulta ao Supabase
 hospedado exige autorização explícita e segue o [workflow do banco](database-workflow.md).
-O reset de treinamento exige confirmação textual; use `--yes` apenas em automações
+Com `--fast`, o reset de treinamento restaura em segundos os dados do último reset real, desde
+que migrations e seed não tenham mudado; senão, faz o reset real e guarda a base. O reset de
+treinamento exige confirmação textual; use `--yes` apenas em automações
 locais revisadas. O script recusa qualquer API diferente de `localhost:54321` ou
 `127.0.0.1:54321`.

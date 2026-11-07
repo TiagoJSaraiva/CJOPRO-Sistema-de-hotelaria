@@ -23,7 +23,7 @@ cobre perfis com todas as permissões operacionais, troca de conta, persistênci
 navegador e logout. Os dados operacionais das demais telas continuam mockados.
 
 As jornadas reais ficam em `apps/pms/__tests__/journeys` e rodam com
-`pnpm test:journeys`. Cada uma recria o Supabase local com o cenário da lição e
+`pnpm test:journeys`. Cada uma prepara o Supabase local com o cenário da lição e
 percorre navegador, PMS, site público, backend, booking engine e banco. A jornada
 falha ao encontrar resposta 5xx, erro não tratado ou `console.error`, mesmo com a
 tela aparentemente correta. Os mocks continuam servindo para testes visuais e de
@@ -51,6 +51,10 @@ declarados. Três varreduras completam as lições:
 `apiContractSerializers.test.ts` serializa um exemplo completo de cada resposta de
 sucesso. Compilar o schema não basta, porque alguns erros só surgem ao responder. Os
 defeitos encontrados ficam no [registro de bugs](qa/bug-ledger.md).
+
+A preparação usa `pnpm training reset --fast`: o primeiro reset da rodada é real e os
+seguintes restauram os dados em segundos. A suíte completa leva cerca de 30 min. Para uma
+rodada só com reset real, como a última do aceite, use `JOURNEY_REAL_RESET=true`.
 
 ### Quando rodar cada suíte
 

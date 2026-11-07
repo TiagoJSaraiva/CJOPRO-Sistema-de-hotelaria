@@ -157,7 +157,14 @@ async function waitForSupabase(): Promise<void> {
 
 /** Destrutivo somente para o Supabase local; training.mjs valida o destino. */
 export async function prepareScenario(scenario: string): Promise<void> {
-  training(["reset", "--scenario", scenario, "--yes"]);
+  // Restaura os dados em segundos; a última rodada do aceite usa JOURNEY_REAL_RESET=true.
+  training([
+    "reset",
+    "--scenario",
+    scenario,
+    "--yes",
+    ...(process.env.JOURNEY_REAL_RESET === "true" ? [] : ["--fast"]),
+  ]);
   await waitForSupabase();
   training(["verify", "--scenario", scenario]);
 }

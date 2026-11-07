@@ -35,5 +35,6 @@ Mudar uma regra aprovada é decisão explícita do usuário, nunca efeito colate
 
 ## Ajuste de 2026-11-07
 
-Na restauração rápida do banco, se adotada, a última das três rodadas usa sempre o reset real,
-para manter o critério "a partir do reset".
+As jornadas passaram a usar a [restauração rápida do banco](../decisions/0018-restauracao-rapida-do-banco.md).
+A última das três rodadas usa sempre o reset real, com `JOURNEY_REAL_RESET=true`, para manter o
+critério "a partir do reset".

@@ -1,14 +1,77 @@
 import { describe, expect, it } from "vitest";
-import { existsSync, readFileSync } from "node:fs";
-import { dirname, resolve } from "node:path";
+import {
+  existsSync,
+  mkdirSync,
+  mkdtempSync,
+  readFileSync,
+  rmSync,
+  writeFileSync,
+} from "node:fs";
+import { tmpdir } from "node:os";
+import { dirname, join, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
 import {
   assertTrainingLocalApiUrl,
+  baselineFingerprint,
   parseTrainingArguments,
   TRAINING_SCENARIOS,
 } from "../../../../scripts/training.mjs";
 
 describe("orquestrador local de treinamento", () => {
+  describe("reset rápido", () => {
+    it("só usa a restauração quando pedida", () => {
+      expect(
+        parseTrainingArguments(["reset", "--scenario", "orientation", "--yes"]),
+      ).toMatchObject({ kind: "reset", fast: false });
+      expect(
+        parseTrainingArguments([
+          "reset",
+          "--scenario",
+          "orientation",
+          "--yes",
+          "--fast",
+        ]),
+      ).toMatchObject({ kind: "reset", scenario: "orientation", fast: true });
+    });
+
+    it("muda a impressão digital quando migration ou seed mudam", () => {
+      const root = mkdtempSync(join(tmpdir(), "training-baseline-"));
+      try {
+        mkdirSync(join(root, "supabase/migrations"), { recursive: true });
+        writeFileSync(join(root, "supabase/seed.sql"), "select 1;");
+        writeFileSync(join(root, "supabase/migrations/1_a.sql"), "select 2;");
+        const original = baselineFingerprint(root);
+        expect(baselineFingerprint(root)).toBe(original);
+
+        writeFileSync(join(root, "supabase/migrations/1_a.sql"), "select 3;");
+        const changedMigration = baselineFingerprint(root);
+        expect(changedMigration).not.toBe(original);
+
+        writeFileSync(join(root, "supabase/migrations/2_b.sql"), "select 4;");
+        const addedMigration = baselineFingerprint(root);
+        expect(addedMigration).not.toBe(changedMigration);
+
+        writeFileSync(join(root, "supabase/seed.sql"), "select 5;");
+        expect(baselineFingerprint(root)).not.toBe(addedMigration);
+      } finally {
+        rmSync(root, { recursive: true, force: true });
+      }
+    });
+
+    it("ignora a diferença de fim de linha entre plataformas", () => {
+      const root = mkdtempSync(join(tmpdir(), "training-baseline-"));
+      try {
+        mkdirSync(join(root, "supabase/migrations"), { recursive: true });
+        writeFileSync(join(root, "supabase/seed.sql"), "a\nb\n");
+        const unix = baselineFingerprint(root);
+        writeFileSync(join(root, "supabase/seed.sql"), "a\r\nb\r\n");
+        expect(baselineFingerprint(root)).toBe(unix);
+      } finally {
+        rmSync(root, { recursive: true, force: true });
+      }
+    });
+  });
+
   it("aceita somente a API local do Supabase", () => {
     expect(assertTrainingLocalApiUrl("http://127.0.0.1:54321")).toBe(
       "http://127.0.0.1:54321",
@@ -24,7 +87,12 @@ describe("orquestrador local de treinamento", () => {
   it("interpreta reset e ações de relógio sem aceitar um cenário arbitrário", () => {
     expect(
       parseTrainingArguments(["reset", "--scenario", "cash-close", "--yes"]),
-    ).toEqual({ kind: "reset", scenario: "cash-close", yes: true });
+    ).toEqual({
+      kind: "reset",
+      scenario: "cash-close",
+      yes: true,
+      fast: false,
+    });
     expect(parseTrainingArguments(["clock", "advance", "2", "days"])).toEqual({
       kind: "clock",
       action: "advance",

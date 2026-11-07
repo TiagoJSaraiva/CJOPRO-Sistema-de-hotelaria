@@ -8,15 +8,18 @@ Git. Leia também o [plano em andamento](plans/2026-11-debug-real-stack.md) e as
 
 ## Etapa atual
 
-Fase 4 da depuração no sistema real, com novas features congeladas. Em andamento:
-acelerar a suíte de jornadas e criar esta memória do projeto, antes das rodadas finais.
+Fase 4 da depuração no sistema real, com novas features congeladas. A suíte de jornadas
+foi acelerada de 2h para cerca de 30 min, e esta memória do projeto foi criada. Falta corrigir
+os defeitos decididos antes das rodadas finais.
 
 ## Próximos passos
 
 1. Corrigir QA-087, QA-085 e QA-091 conforme as decisões já tomadas, com o teste primeiro.
-2. Rodar as três rodadas seguidas a partir do reset, `pnpm check:ci` e `pnpm test:db`.
-3. Passada manual do usuário, procurando o que está confuso, não o que está quebrado.
-4. Primeira feature depois da depuração: editor de versões de tarifa ([decisão](decisions/0009-tarifas-so-consulta.md)).
+2. Decidir o que fazer com o QA-095.
+3. Rodar as três rodadas seguidas, a última com `JOURNEY_REAL_RESET=true`, além de
+   `pnpm check:ci` e `pnpm test:db`.
+4. Passada manual do usuário, procurando o que está confuso, não o que está quebrado.
+5. Primeira feature depois da depuração: editor de versões de tarifa ([decisão](decisions/0009-tarifas-so-consulta.md)).
 
 ## Decisões pendentes
 

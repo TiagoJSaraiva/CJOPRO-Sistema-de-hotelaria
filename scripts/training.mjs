@@ -1,7 +1,8 @@
 #!/usr/bin/env node
 
 import { spawnSync } from "node:child_process";
-import { existsSync, readFileSync } from "node:fs";
+import { createHash } from "node:crypto";
+import { existsSync, readdirSync, readFileSync } from "node:fs";
 import { dirname, resolve } from "node:path";
 import { fileURLToPath, pathToFileURL } from "node:url";
 import { createInterface } from "node:readline/promises";
@@ -20,6 +21,9 @@ const DATABASE_CONTAINER = `supabase_db_${PROJECT_ID}`;
 const AURORA_ID = "10000000-0000-4000-8000-000000000001";
 const MANAGER_ID = "80000000-0000-4000-8000-000000000002";
 const LOCAL_API_PORT = "54321";
+// Dados que as migrations e o seed criam e que as lições alteram.
+const BASELINE_SCHEMAS = ["public", "auth", "storage"];
+const BASELINE_SETTING = "app.training_baseline";
 
 export const TRAINING_SCENARIOS = Object.freeze([
   ["orientation", "Orientação, papéis, permissões e pendências"],
@@ -225,7 +229,152 @@ async function confirmReset() {
   }
 }
 
-async function resetScenario(key, yes) {
+function runAdminSql(sql, { capture = false } = {}) {
+  // Truncar e recarregar auth e storage exige superusuário, que no container só entra por 127.0.0.1.
+  const result = run(
+    "docker",
+    [
+      "exec",
+      "-i",
+      DATABASE_CONTAINER,
+      "psql",
+      "-X",
+      "-h",
+      "127.0.0.1",
+      "-U",
+      "supabase_admin",
+      "-d",
+      "postgres",
+      "-v",
+      "ON_ERROR_STOP=1",
+      "-q",
+      "-t",
+      "-A",
+    ],
+    { capture: true, input: sql, shell: false },
+  );
+  if (result.status !== 0) {
+    fail(
+      `A operação na base do treinamento falhou: ${result.stderr}`,
+      "Execute pnpm training reset sem --fast.",
+    );
+  }
+  return capture ? result.stdout.trim() : "";
+}
+
+export function baselineFingerprint(root = ROOT_DIRECTORY) {
+  const migrations = resolve(root, "supabase/migrations");
+  const hash = createHash("sha256");
+  const add = (name, path) =>
+    hash.update(name).update(readFileSync(path, "utf8").replace(/\r\n/g, "\n"));
+  for (const name of readdirSync(migrations).sort()) {
+    add(name, resolve(migrations, name));
+  }
+  add("seed.sql", resolve(root, "supabase/seed.sql"));
+  return hash.digest("hex").slice(0, 32);
+}
+
+function baselinePath(fingerprint) {
+  return `/tmp/training-baseline-${fingerprint}.sql`;
+}
+
+export function hasUsableBaseline() {
+  const fingerprint = baselineFingerprint();
+  const marker = runAdminSql(
+    `select 1 from pg_db_role_setting s join pg_database d on d.oid = s.setdatabase
+     where d.datname = current_database() and s.setrole = 0
+       and '${BASELINE_SETTING}=${fingerprint}' = any(s.setconfig);`,
+    { capture: true },
+  );
+  if (marker !== "1") return false;
+  return (
+    run(
+      "docker",
+      ["exec", DATABASE_CONTAINER, "test", "-s", baselinePath(fingerprint)],
+      { capture: true, shell: false },
+    ).status === 0
+  );
+}
+
+/** Guarda no container os dados logo depois de um reset real. */
+export function createBaseline() {
+  const fingerprint = baselineFingerprint();
+  const dump = run(
+    "docker",
+    [
+      "exec",
+      DATABASE_CONTAINER,
+      "pg_dump",
+      "-h",
+      "127.0.0.1",
+      "-U",
+      "supabase_admin",
+      "-d",
+      "postgres",
+      "--data-only",
+      ...BASELINE_SCHEMAS.map((schema) => `--schema=${schema}`),
+      "--file",
+      baselinePath(fingerprint),
+    ],
+    { capture: true, shell: false },
+  );
+  if (dump.status !== 0) {
+    fail(`Não foi possível gravar a base do treinamento: ${dump.stderr}`);
+  }
+  runAdminSql(
+    `alter database postgres set ${BASELINE_SETTING} = '${fingerprint}';`,
+  );
+}
+
+/** Volta os dados ao estado guardado, sem gatilhos: o dump já traz o resultado deles. */
+export function restoreBaseline() {
+  const schemas = BASELINE_SCHEMAS.map((schema) => `'${schema}'`).join(",");
+  runAdminSql(`begin;
+set local session_replication_role = replica;
+do $$ begin
+  execute (
+    select 'truncate table ' || string_agg(format('%I.%I', schemaname, tablename), ',') || ' restart identity cascade'
+    from pg_tables where schemaname in (${schemas})
+  );
+end $$;
+\\i ${baselinePath(baselineFingerprint())}
+commit;
+`);
+}
+
+/** Checksum de cada tabela e valor de cada sequência, para comparar dois estados do banco. */
+export function baselineChecksums() {
+  const schemas = BASELINE_SCHEMAS.map((schema) => `'${schema}'`).join(",");
+  const output = runAdminSql(
+    `create function pg_temp.checksums() returns setof text language plpgsql as $$
+declare item record; checksum text;
+begin
+  for item in select schemaname, tablename from pg_tables where schemaname in (${schemas}) loop
+    execute format(
+      'select coalesce(md5(string_agg(row_data::text, ''|'' order by row_data::text)), ''vazia'') from %I.%I row_data',
+      item.schemaname, item.tablename
+    ) into checksum;
+    return next item.schemaname || '.' || item.tablename || '=' || checksum;
+  end loop;
+  for item in select schemaname, sequencename, last_value from pg_sequences where schemaname in (${schemas}) loop
+    return next 'sequencia:' || item.schemaname || '.' || item.sequencename || '=' || coalesce(item.last_value::text, 'sem uso');
+  end loop;
+end $$;
+select * from pg_temp.checksums();`,
+    { capture: true },
+  );
+  return Object.fromEntries(
+    output
+      .split(/\r?\n/)
+      .filter(Boolean)
+      .map((line) => {
+        const separator = line.indexOf("=");
+        return [line.slice(0, separator), line.slice(separator + 1)];
+      }),
+  );
+}
+
+export async function resetScenario(key, yes, { fast = false } = {}) {
   const fixture = scenarioFile(SCENARIO_DIRECTORY, key);
   validateLocalEnvironment();
   if (!yes && !(await confirmReset())) {
@@ -233,9 +382,14 @@ async function resetScenario(key, yes) {
     return;
   }
   process.stdout.write(`Recriando o Supabase local para o cenário ${key}...\n`);
-  const reset = runPnpm(["db:reset"]);
-  if (reset.status !== 0) fail("O reset do Supabase local falhou.");
-  validateLocalEnvironment();
+  if (fast && hasUsableBaseline()) {
+    restoreBaseline();
+  } else {
+    const reset = runPnpm(["db:reset"]);
+    if (reset.status !== 0) fail("O reset do Supabase local falhou.");
+    validateLocalEnvironment();
+    if (fast) createBaseline();
+  }
   for (const dependency of SCENARIO_DEPENDENCIES[key] || []) {
     runSql(readFileSync(scenarioFile(SCENARIO_DIRECTORY, dependency), "utf8"));
   }
@@ -284,6 +438,7 @@ export function parseTrainingArguments(argv) {
       kind: "reset",
       scenario: scenarioIndex >= 0 ? argv[scenarioIndex + 1] : undefined,
       yes: argv.includes("--yes"),
+      fast: argv.includes("--fast"),
     };
   }
   if (command === "verify") {
@@ -319,7 +474,7 @@ async function main(argv) {
     return;
   }
   if (parsed.kind === "reset")
-    return resetScenario(parsed.scenario, parsed.yes);
+    return resetScenario(parsed.scenario, parsed.yes, { fast: parsed.fast });
   if (parsed.kind === "verify") {
     if (parsed.all && parsed.scenario)
       fail("Use --all ou --scenario, nunca os dois ao mesmo tempo.");
@@ -355,7 +510,7 @@ async function main(argv) {
     return clockAction(parsed.action);
   }
   process.stdout.write(
-    "Uso:\n  pnpm training reset --scenario <cenário> [--yes]\n  pnpm training verify --scenario <cenário>\n  pnpm training verify --all\n  pnpm training clock show|freeze|resume\n  pnpm training clock set <data-hora ISO>\n  pnpm training clock advance <quantidade> <hours|days>\n  pnpm training scenarios\n",
+    "Uso:\n  pnpm training reset --scenario <cenário> [--yes] [--fast]\n  pnpm training verify --scenario <cenário>\n  pnpm training verify --all\n  pnpm training clock show|freeze|resume\n  pnpm training clock set <data-hora ISO>\n  pnpm training clock advance <quantidade> <hours|days>\n  pnpm training scenarios\n",
   );
   process.exitCode = 1;
 }
