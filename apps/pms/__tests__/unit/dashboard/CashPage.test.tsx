@@ -142,6 +142,44 @@ describe("caixa em português", () => {
   });
 });
 
+// QA-091: quem aprova o fechamento vê o que entrou de um dia já fechado.
+describe("lançamentos tardios no fechamento", () => {
+  it("lista o lançamento com a data e o fechamento originais", async () => {
+    backend(
+      null,
+      daily({
+        late_postings: [
+          {
+            id: "late-1",
+            type: "INCOME",
+            category: "STAY_PAYMENT",
+            description: "Pagamento recebido depois",
+            amount: 70,
+            payment_method: "pix",
+            original_business_date: "2026-05-11",
+            origin_close_business_date: "2026-05-11",
+          },
+        ],
+      }),
+    );
+    await renderPage();
+    const list = screen.getByRole("list", { name: "Lançamentos tardios" });
+    expect(list.textContent).toContain("Pagamento recebido depois");
+    expect(list.textContent).toContain("Pix");
+    expect(list.textContent).toMatch(/R\$\s70,00/);
+    expect(list.textContent).toContain("data original 11/05/2026");
+    expect(list.textContent).toContain("fechamento de 11/05/2026");
+  });
+
+  it("sem lançamento tardio, não mostra a lista", async () => {
+    backend(null);
+    await renderPage();
+    expect(
+      screen.queryByRole("list", { name: "Lançamentos tardios" }),
+    ).toBeNull();
+  });
+});
+
 describe("resultado da operação", () => {
   it("sucesso aparece como status", async () => {
     backend(null);

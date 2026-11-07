@@ -1,6 +1,6 @@
 # 0014: Fechamento lista lançamentos tardios
 
-- **Status:** a implementar
+- **Status:** aceita
 - **Data:** 2026-11-07
 - **Origem:** decisão do usuário
 - **Áreas:** caixa
@@ -19,8 +19,10 @@ Quem aprova o fechamento precisa ver o que entrou de um dia já fechado, e hoje 
 
 ## Consequências
 
-A [decisão 0010](0010-lancamento-tardio.md) passa a ser visível na tela.
+A [decisão 0010](0010-lancamento-tardio.md) passa a ser visível na tela. A lista fica fora da projeção que
+gera o snapshot do fechamento, então aprovações antigas continuam batendo.
 
 ## Prova
 
-Pendente: QA-091.
+- [Conferência do dia](../../supabase/tests/database/finance_rules.test.sql)
+- [Tela de caixa](../../apps/pms/__tests__/unit/dashboard/CashPage.test.tsx)

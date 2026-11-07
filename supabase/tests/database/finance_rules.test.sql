@@ -1,5 +1,5 @@
 begin;
-select plan(61);
+select plan(63);
 
 -- Regras de docs/qa/rules-finance.md que ainda não tinham prova: FIN-03, 07, 16, 19, 24, 25, 28 e 31.
 -- Toda alteração é revertida ao final.
@@ -202,6 +202,18 @@ select is(
   (select origin_daily_close_id from public.financial_transactions where id='a7000000-0000-4000-8000-000000000033'),
   (select c.id from public.daily_closes c join ctx on c.hotel_id=ctx.hotel and c.business_date=ctx.today-1),
   'pendente concluído aponta para o fechamento original'
+);
+-- QA-091: a conferência do dia mostra os lançamentos tardios, com a data e o fechamento originais.
+select is(
+  (select string_agg((item->>'id')||'|'||(item->>'original_business_date')||'|'||(item->>'origin_close_business_date'),',' order by item->>'id')
+   from ctx, jsonb_array_elements(public.get_daily_close_for_actor(hotel,today,manager,true)->'late_postings') item),
+  (select 'a7000000-0000-4000-8000-000000000030|'||(today-2)||'|'||(today-2)
+     ||',a7000000-0000-4000-8000-000000000033|'||(today-1)||'|'||(today-1) from ctx),
+  'a conferência do dia lista os lançamentos tardios com a origem'
+);
+select is(
+  (select jsonb_array_length(public.get_daily_close_for_actor(hotel,today-1,manager,true)->'late_postings') from ctx),
+  0,'o dia fechado não lista o que entrou em outra data'
 );
 select throws_ok(
   $$update public.financial_transactions set amount=60 where id='a7000000-0000-4000-8000-000000000031'$$,

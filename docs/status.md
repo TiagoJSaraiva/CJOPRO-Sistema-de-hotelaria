@@ -8,33 +8,30 @@ Git. Leia também o [plano em andamento](plans/2026-11-debug-real-stack.md) e as
 
 ## Etapa atual
 
-Fase 4 da depuração no sistema real, com novas features congeladas. A suíte de jornadas
-foi acelerada de 2h para cerca de 30 min, e esta memória do projeto foi criada. Falta corrigir
-os defeitos decididos antes das rodadas finais.
+Fase 4 da depuração no sistema real, com novas features congeladas. Os defeitos com decisão
+tomada foram corrigidos. Falta decidir o QA-095 antes das rodadas finais.
 
 ## Próximos passos
 
-1. Corrigir QA-091 conforme a decisão já tomada, com o teste primeiro.
-2. Decidir o que fazer com o QA-095.
-3. Rodar as três rodadas seguidas, a última com `JOURNEY_REAL_RESET=true`, além de
+1. Decidir o que fazer com o QA-095 e, se for corrigido agora, corrigi-lo com o teste primeiro.
+2. Rodar as três rodadas seguidas, a última com `JOURNEY_REAL_RESET=true`, além de
    `pnpm check:ci` e `pnpm test:db`.
-4. Passada manual do usuário, procurando o que está confuso, não o que está quebrado.
-5. Primeira feature depois da depuração: editor de versões de tarifa ([decisão](decisions/0009-tarifas-so-consulta.md)).
+3. Passada manual do usuário, procurando o que está confuso, não o que está quebrado.
+4. Primeira feature depois da depuração: editor de versões de tarifa ([decisão](decisions/0009-tarifas-so-consulta.md)).
 
 ## Decisões pendentes
 
-Nenhuma.
+- QA-095: investigar e corrigir agora, ou aceitar e tratar depois da depuração.
 
 ## Defeitos abertos
 
-| ID     | Sev | Situação                                                                          |
-| ------ | --- | --------------------------------------------------------------------------------- |
-| QA-095 | S3  | Novo: tela não atualiza depois de ação muito rápida, só em produção               |
-| QA-091 | S4  | [Decidido](decisions/0014-fechamento-lista-lancamentos-tardios.md), a implementar |
-| QA-092 | S4  | [Limite aceito](decisions/0015-datas-em-utc-limite-aceito.md)                     |
-| QA-093 | S4  | Observar nas três rodadas: falha única de `db reset`, sem causa confirmada        |
-| QA-008 | S4  | Observar: tempos limite do E2E com a máquina sob carga                            |
-| QA-028 | S4  | Observar: erro único de JSON no servidor Next                                     |
+| ID     | Sev | Situação                                                                   |
+| ------ | --- | -------------------------------------------------------------------------- |
+| QA-095 | S3  | Novo: tela não atualiza depois de ação muito rápida, só em produção        |
+| QA-092 | S4  | [Limite aceito](decisions/0015-datas-em-utc-limite-aceito.md)              |
+| QA-093 | S4  | Observar nas três rodadas: falha única de `db reset`, sem causa confirmada |
+| QA-008 | S4  | Observar: tempos limite do E2E com a máquina sob carga                     |
+| QA-028 | S4  | Observar: erro único de JSON no servidor Next                              |
 
 Detalhes no [registro de bugs](qa/bug-ledger.md).
 

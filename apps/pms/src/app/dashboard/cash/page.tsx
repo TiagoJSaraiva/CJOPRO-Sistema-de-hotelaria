@@ -51,10 +51,16 @@ const guide: UsageGuideDefinition = {
       target: "daily-close",
       title: "Feche o dia",
       description:
-        "Revise esperado, contado e diferença por sessão, prepare a conferência e peça a aprovação de outra pessoa.",
+        "Revise esperado, contado e diferença por sessão, prepare a conferência e peça a aprovação de outra pessoa. Lançamentos tardios aparecem com a data e o fechamento originais: entraram nesta data porque o dia de origem já estava fechado.",
     },
   ],
 };
+const formatIsoDate = (value: string) => value.split("-").reverse().join("/");
+const LATE_POSTING_TYPE = {
+  INCOME: "Entrada",
+  EXPENSE: "Saída",
+  REFUND: "Reembolso",
+} as const;
 const formatMoney = (value: number | null | undefined, currency: string) =>
   value == null
     ? "protegido"
@@ -266,6 +272,31 @@ export default async function CashPage({
           ) : (
             <p>Nenhuma transação concluída nesta data.</p>
           )}
+          {daily.late_postings?.length ? (
+            <>
+              <h3>Lançamentos tardios</h3>
+              <p>
+                Entraram nesta data porque o dia de origem já estava fechado. O
+                fechamento original não muda.
+              </p>
+              <ul aria-label="Lançamentos tardios">
+                {daily.late_postings.map((posting) => (
+                  <li key={posting.id}>
+                    {posting.description || "Lançamento sem descrição"} ·{" "}
+                    {LATE_POSTING_TYPE[posting.type] || posting.type} ·{" "}
+                    {paymentMethodLabel(String(posting.payment_method))}:{" "}
+                    {Number(posting.amount).toLocaleString("pt-BR", {
+                      style: "currency",
+                      currency: data.currency,
+                    })}{" "}
+                    · data original{" "}
+                    {formatIsoDate(posting.original_business_date)} · fechamento
+                    de {formatIsoDate(posting.origin_close_business_date)}
+                  </li>
+                ))}
+              </ul>
+            </>
+          ) : null}
           <p>
             {daily.projection.cash_sessions.length} sessão(ões) ·{" "}
             {daily.projection.blockers.length} impedimento(s).

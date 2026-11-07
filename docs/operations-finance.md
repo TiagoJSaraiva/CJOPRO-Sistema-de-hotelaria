@@ -105,7 +105,8 @@ exigem nova preparação. Outra pessoa aprova. Sessões abertas, dinheiro sem se
 e eventos financeiros incompletos bloqueiam o fechamento. Um lançamento tardio
 fica na próxima data aberta, a partir da atual, e referencia a data e o fechamento
 originais. O que já está em um dia fechado não muda nem é apagado: a correção é um
-novo lançamento.
+novo lançamento. A tela do fechamento lista os lançamentos tardios da data, com a data e o
+fechamento originais.
 
 ## Parceiros e pendências
 

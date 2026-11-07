@@ -465,6 +465,19 @@ export type DailyCloseView = {
     approved_by_name?: string | null;
   } | null;
   projection: DailyCloseProjection;
+  /** Lançamentos desta data vindos de um dia já fechado (QA-091). */
+  late_postings?: DailyCloseLatePosting[];
+};
+
+export type DailyCloseLatePosting = {
+  id: string;
+  type: "INCOME" | "EXPENSE" | "REFUND";
+  category: string;
+  description: string | null;
+  amount: number;
+  payment_method: string | null;
+  original_business_date: string;
+  origin_close_business_date: string;
 };
 
 export const DailyClosePrepareSchema = Type.Object(
