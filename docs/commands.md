@@ -27,6 +27,20 @@ O comando `pnpm dev:pms-backend` compila `@hotel/shared` apenas na inicializaç�
 reinicie-o após mudanças nesse pacote ou use `pnpm dev` para recompilação contínua.
 Ele não gerencia o Supabase e não possui comando separado de parada.
 
+## Espaço em disco
+
+O Turborepo não apaga entradas antigas de `.turbo/cache`, que crescem a cada mudança.
+Guardar `.next/cache` fazia cada build do PMS ocupar até 431 MB; sem essa pasta, ocupa
+cerca de 1 MB. As pastas abaixo são regeneráveis e seguras de apagar, desde que nenhum
+comando esteja em execução:
+
+```bash
+rm -rf .turbo/cache node_modules/.cache
+```
+
+O próximo build fica mais lento uma vez. Relatórios de Playwright e de jornadas ficam em
+`node_modules/.cache`, então copie antes o que ainda precisar analisar.
+
 ## Dependências e segurança
 
 | Comando                   | Finalidade                                  | Requisito adicional | Versionados |
