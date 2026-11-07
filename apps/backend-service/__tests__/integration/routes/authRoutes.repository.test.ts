@@ -80,7 +80,7 @@ describe("routes/auth with injected repository", () => {
     expect(verifyToken(body.token)).not.toBeNull();
   });
 
-  it("nao falha login quando atualizacao de ultimo acesso retorna erro", async () => {
+  it("não falha login quando atualizacao de ultimo acesso retorna erro", async () => {
     const passwordHash = await hashTemporaryPassword("Secret#123");
     const repository: AuthRepository = {
       findUserByEmail: vi.fn(async () => ({
@@ -115,7 +115,7 @@ describe("routes/auth with injected repository", () => {
     expect(repository.markSuccessfulLogin).toHaveBeenCalledWith("user-1");
   });
 
-  it("bloqueia login com 429 quando usuario atinge limite de tentativas", async () => {
+  it("bloqueia login com 429 quando usuário atinge limite de tentativas", async () => {
     const passwordHash = await hashTemporaryPassword("Secret#123");
     const repository: AuthRepository = {
       findUserByEmail: vi.fn(async () => ({

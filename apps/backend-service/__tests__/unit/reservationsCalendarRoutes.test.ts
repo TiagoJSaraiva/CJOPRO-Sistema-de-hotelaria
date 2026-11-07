@@ -68,7 +68,7 @@ afterEach(async () => {
 });
 
 describe("routes/reservations/calendar", () => {
-  it("retorna 403 sem permissao", async () => {
+  it("retorna 403 sem permissão", async () => {
     const repository = createRepositoryMock();
     const app = await createTestApp(repository);
     const response = await app.inject({
@@ -83,7 +83,7 @@ describe("routes/reservations/calendar", () => {
     expect(response.statusCode).toBe(403);
   });
 
-  it("retorna 400 para start_date invalido", async () => {
+  it("retorna 400 para start_date inválido", async () => {
     const repository = createRepositoryMock();
     const app = await createTestApp(repository);
     const response = await app.inject({
@@ -98,7 +98,7 @@ describe("routes/reservations/calendar", () => {
     expect(response.statusCode).toBe(400);
     expect(response.json()).toEqual({
       code: "ADMIN_VALIDATION_ERROR",
-      message: "start_date invalido. Use o formato YYYY-MM-DD.",
+      message: "start_date inválido. Use o formato YYYY-MM-DD.",
     });
   });
 

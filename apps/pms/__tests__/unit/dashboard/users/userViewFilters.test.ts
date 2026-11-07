@@ -95,7 +95,7 @@ describe("userViewFilters", () => {
     }),
   ];
 
-  it("retorna todos os usuarios quando nao ha filtros", () => {
+  it("retorna todos os usuarios quando não ha filtros", () => {
     const result = applyUserViewFilters(users, DEFAULT_USER_VIEW_FILTERS);
 
     expect(result.map((item) => item.id)).toEqual(["u-1", "u-2", "u-3"]);
@@ -121,7 +121,7 @@ describe("userViewFilters", () => {
     expect(result.map((item) => item.id)).toEqual(["u-3"]);
   });
 
-  it("nao mistura hotel e role de atribuicoes diferentes", () => {
+  it("não mistura hotel e role de atribuicoes diferentes", () => {
     const result = applyUserViewFilters(users, {
       ...DEFAULT_USER_VIEW_FILTERS,
       hotelId: "hotel-centro",
@@ -131,7 +131,7 @@ describe("userViewFilters", () => {
     expect(result.map((item) => item.id)).toEqual(["u-1"]);
   });
 
-  it("aplica filtro de periodo de criacao de forma inclusiva", () => {
+  it("aplica filtro de período de criacao de forma inclusiva", () => {
     const result = applyUserViewFilters(users, {
       ...DEFAULT_USER_VIEW_FILTERS,
       createdFrom: "2026-02-20",
@@ -141,7 +141,7 @@ describe("userViewFilters", () => {
     expect(result.map((item) => item.id)).toEqual(["u-2"]);
   });
 
-  it("exclui usuario sem data de criacao quando filtro de data esta ativo", () => {
+  it("exclui usuário sem data de criacao quando filtro de data esta ativo", () => {
     const result = applyUserViewFilters(users, {
       ...DEFAULT_USER_VIEW_FILTERS,
       createdFrom: "2026-01-01",

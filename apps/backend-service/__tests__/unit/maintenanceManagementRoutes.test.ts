@@ -123,6 +123,56 @@ afterEach(async () => {
 });
 
 describe("maintenance management routes", () => {
+  it.each([
+    ["POST", "/admin/maintenance/sla-policies", "createSlaPolicy"],
+    ["PUT", `/admin/maintenance/sla-policies/${OTHER_ID}`, "updateSlaPolicy"],
+  ] as const)(
+    "%s de SLA explica cada recusa",
+    async (method, url, operation) => {
+      const repo = management();
+      const app = await appWith(repo);
+      const send = () =>
+        app.inject({
+          method,
+          url,
+          headers: headers([PERMISSIONS.MAINTENANCE_SLA_MANAGE]),
+          payload: { response_hours: 10, resolution_hours: 2 },
+        });
+
+      vi.mocked(repo[operation]).mockResolvedValueOnce({
+        result: "invalid-hours",
+      });
+      const inverted = await send();
+      expect(inverted.statusCode).toBe(400);
+      expect(inverted.json().message).toBe(
+        "O prazo de resolução não pode ser menor que o de resposta.",
+      );
+
+      vi.mocked(repo[operation]).mockResolvedValueOnce({ result: "duplicate" });
+      const duplicate = await send();
+      expect(duplicate.statusCode).toBe(409);
+      expect(duplicate.json().message).toBe(
+        "Já existe uma política ativa para esta prioridade e categoria.",
+      );
+
+      vi.mocked(repo[operation]).mockResolvedValueOnce({ result: "conflict" });
+      expect((await send()).statusCode).toBe(409);
+    },
+  );
+
+  it("não deixa quem não gere o SLA criar política", async () => {
+    const repo = management();
+    const app = await appWith(repo);
+    const response = await app.inject({
+      method: "POST",
+      url: "/admin/maintenance/sla-policies",
+      headers: headers([PERMISSIONS.ROOM_READ]),
+      payload: { response_hours: 2, resolution_hours: 10 },
+    });
+    expect(response.statusCode).toBe(403);
+    expect(repo.createSlaPolicy).not.toHaveBeenCalled();
+  });
+
   it("exige uma permissão do módulo para a caixa de notificações", async () => {
     const app = await appWith(management());
     const response = await app.inject({

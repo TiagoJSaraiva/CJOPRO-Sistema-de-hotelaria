@@ -60,7 +60,7 @@ describe("routes/roles", () => {
     });
   });
 
-  it("retorna 403 para POST /admin/roles sem permissao de criacao", async () => {
+  it("retorna 403 para POST /admin/roles sem permissão de criacao", async () => {
     const token = createToken([PERMISSIONS.ROLE_READ]);
 
     const response = await app.inject({
@@ -84,7 +84,7 @@ describe("routes/roles", () => {
     });
   });
 
-  it("retorna 400 quando nome obrigatorio nao e informado no cadastro de role", async () => {
+  it("retorna 400 quando nome obrigatório não e informado no cadastro de role", async () => {
     const token = createToken([PERMISSIONS.ROLE_CREATE]);
 
     const response = await app.inject({
@@ -104,11 +104,11 @@ describe("routes/roles", () => {
     expect(response.statusCode).toBe(400);
     expect(response.json()).toEqual({
       code: "ADMIN_VALIDATION_ERROR",
-      message: "Nome da role e obrigatorio.",
+      message: "Nome da role e obrigatório.",
     });
   });
 
-  it("retorna 403 quando usuario sem escopo global tenta acessar endpoint global", async () => {
+  it("retorna 403 quando usuário sem escopo global tenta acessar endpoint global", async () => {
     const nowInSeconds = Math.floor(Date.now() / 1000);
     const token = signToken({
       id: "user-hotel",
@@ -141,7 +141,7 @@ describe("routes/roles", () => {
     expect(response.statusCode).toBe(403);
     expect(response.json()).toEqual({
       code: "ADMIN_SCOPE_NOT_ALLOWED",
-      message: "Acesso global de sistema obrigatorio para esta operacao.",
+      message: "Acesso global de sistema obrigatório para esta operacao.",
     });
   });
 });

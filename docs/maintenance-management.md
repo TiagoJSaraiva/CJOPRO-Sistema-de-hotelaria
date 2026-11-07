@@ -52,7 +52,8 @@ permissão operacional correspondente.
 
 ## SLA e alertas
 
-A precedência é: categoria e prioridade, prioridade, padrão do hotel. A política
+Toda política tem prioridade. A mais específica vence: categoria e prioridade, depois
+só prioridade. Sem política ativa, a ocorrência fica sem prazo. A política
 efetiva é copiada para a ocorrência e não muda retroativamente. Resposta termina
 na triagem; resolução operacional termina quando todas as ordens não canceladas
 foram concluídas e, quando exigido, aprovadas.

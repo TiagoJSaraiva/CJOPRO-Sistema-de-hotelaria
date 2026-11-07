@@ -19,7 +19,7 @@ describe("resultado da operação", () => {
     expect(container.textContent).toBe("");
   });
 
-  it.each(["updated", "order-created", "rate-plan-created"])(
+  it.each(["updated", "order-created", "reservation-room-assigned"])(
     "%s é um sucesso",
     (code) => {
       expect(operationOutcome(code)?.tone).toBe("success");

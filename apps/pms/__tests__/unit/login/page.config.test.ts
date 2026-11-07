@@ -2,7 +2,7 @@ import { describe, expect, it } from "vitest";
 import { LOGIN_SUBMIT_BUTTON_PROPS } from "../../../src/app/login/submitButtonConfig";
 
 describe("login/page config", () => {
-  it("mantem lockUntilUnmount desativado para evitar botao preso apos erro", () => {
+  it("mantem lockUntilUnmount desativado para evitar botao preso após erro", () => {
     expect(LOGIN_SUBMIT_BUTTON_PROPS.lockUntilUnmount).toBe(false);
   });
 

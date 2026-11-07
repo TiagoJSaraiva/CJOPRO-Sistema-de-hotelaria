@@ -15642,6 +15642,28 @@ export type Database = {
         }
         Returns: boolean
       }
+      close_reservation_stay_part: {
+        Args: {
+          p_action: string
+          p_actor_id: string
+          p_at: string
+          p_hotel_id: string
+          p_reason: string
+          p_reservation_id: string
+          p_stay_id: string
+        }
+        Returns: number
+      }
+      close_stay_before_arrival: {
+        Args: {
+          p_action: string
+          p_actor_id: string
+          p_hotel_id: string
+          p_reason: string
+          p_stay_id: string
+        }
+        Returns: Json
+      }
       complete_inventory_count: {
         Args: { p_actor_id: string; p_count_id: string; p_hotel_id: string }
         Returns: Json
@@ -16096,6 +16118,18 @@ export type Database = {
         }
         Returns: string
       }
+      finish_reservation_closure: {
+        Args: {
+          p_action: string
+          p_actor_id: string
+          p_hotel_id: string
+          p_penalty: number
+          p_reason: string
+          p_reservation_id: string
+          p_units: number
+        }
+        Returns: Json
+      }
       follow_up_maintenance_waiting: {
         Args: {
           p_actor_id: string
@@ -16280,6 +16314,16 @@ export type Database = {
         Args: { p_actor_id: string; p_hotel_id: string }
         Returns: undefined
       }
+      link_reservation_customer: {
+        Args: {
+          p_actor_id: string
+          p_customer_id: string
+          p_expected_version: number
+          p_hotel_id: string
+          p_reservation_id: string
+        }
+        Returns: Json
+      }
       list_booking_channel_inbox: {
         Args: { p_hotel_id: string }
         Returns: Json
@@ -16353,6 +16397,10 @@ export type Database = {
         Args: { p_hotel_id: string; p_stay_id: string }
         Returns: Json
       }
+      list_unassigned_reservations: {
+        Args: { p_hotel_id: string }
+        Returns: Json
+      }
       maintenance_schedule_conflicts: {
         Args: {
           p_access: Database["public"]["Enums"]["maintenance_access_kind"]
@@ -16383,6 +16431,7 @@ export type Database = {
         }
         Returns: string
       }
+      next_open_business_date: { Args: { p_hotel_id: string }; Returns: string }
       normalize_business_tax_id: { Args: { p_value: string }; Returns: string }
       notify_maintenance_managers: {
         Args: {
@@ -16777,6 +16826,14 @@ export type Database = {
         Args: { p_hotel_id: string; p_reservation_id: string }
         Returns: Json
       }
+      reservation_closure_balance: {
+        Args: { p_reservation_id: string }
+        Returns: number
+      }
+      reservation_closure_penalty: {
+        Args: { p_accommodation_id: string; p_action: string; p_at: string }
+        Returns: number
+      }
       resolve_booking_channel: { Args: { p_id: string }; Returns: Json }
       resolve_consumption_offer_snapshot: {
         Args: { p_hotel_id: string; p_occurred_at: string; p_offer_id: string }
@@ -16916,6 +16973,15 @@ export type Database = {
         }
         Returns: boolean
       }
+      settle_closed_reservation: {
+        Args: {
+          p_actor_id: string
+          p_hotel_id: string
+          p_input: Json
+          p_reservation_id: string
+        }
+        Returns: Json
+      }
       settle_maintenance_cost_item: {
         Args: {
           p_actor_id: string
@@ -16952,6 +17018,10 @@ export type Database = {
         Returns: Json
       }
       simulate_stay_relocation: {
+        Args: { p_hotel_id: string; p_stay_id: string }
+        Returns: Json
+      }
+      stay_closure_preview: {
         Args: { p_hotel_id: string; p_stay_id: string }
         Returns: Json
       }

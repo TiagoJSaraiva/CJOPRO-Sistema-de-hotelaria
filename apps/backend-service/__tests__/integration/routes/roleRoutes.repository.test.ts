@@ -84,7 +84,7 @@ afterEach(async () => {
 });
 
 describe("routes/roles with injected repository", () => {
-  it("bloqueia atualizacao de role vinculada ao proprio usuario", async () => {
+  it("bloqueia atualizacao de role vinculada ao proprio usuário", async () => {
     const repository = createRolesRepositoryMock();
     const app = await createRolesTestApp(repository);
 
@@ -124,12 +124,12 @@ describe("routes/roles with injected repository", () => {
     expect(response.json()).toEqual({
       code: "ADMIN_SELF_ACTION_FORBIDDEN",
       message:
-        "Nao e permitido atualizar uma role vinculada ao proprio usuario.",
+        "Não e permitido atualizar uma role vinculada ao proprio usuário.",
     });
     expect(repository.updateRoleWithPermissions).not.toHaveBeenCalled();
   });
 
-  it("bloqueia exclusao de role vinculada ao proprio usuario", async () => {
+  it("bloqueia exclusao de role vinculada ao proprio usuário", async () => {
     const repository = createRolesRepositoryMock();
     const app = await createRolesTestApp(repository);
 
@@ -165,7 +165,7 @@ describe("routes/roles with injected repository", () => {
     expect(response.statusCode).toBe(403);
     expect(response.json()).toEqual({
       code: "ADMIN_SELF_ACTION_FORBIDDEN",
-      message: "Nao e permitido excluir uma role vinculada ao proprio usuario.",
+      message: "Não e permitido excluir uma role vinculada ao proprio usuário.",
     });
     expect(repository.deleteRole).not.toHaveBeenCalled();
   });
@@ -205,7 +205,7 @@ describe("routes/roles with injected repository", () => {
     );
   });
 
-  it("retorna 400 quando role de sistema recebe permissao de hotel", async () => {
+  it("retorna 400 quando role de sistema recebe permissão de hotel", async () => {
     const repository = createRolesRepositoryMock({
       findPermissionsByIds: vi.fn(async () => [
         { id: "perm-1", type: "HOTEL_PERMISSION" },
@@ -282,7 +282,7 @@ describe("routes/roles with injected repository", () => {
     expect(response.statusCode).toBe(409);
     expect(response.json()).toEqual({
       code: "ADMIN_CONFLICT",
-      message: "Role nao pode ser excluida: possui dependencias ativas.",
+      message: "Role não pode ser excluida: possui dependencias ativas.",
     });
   });
 
@@ -305,7 +305,7 @@ describe("routes/roles with injected repository", () => {
     expect(response.json()).toEqual({ ok: true });
   });
 
-  it("retorna 404 quando role nao existe no delete", async () => {
+  it("retorna 404 quando role não existe no delete", async () => {
     const repository = createRolesRepositoryMock({
       deleteRole: vi.fn(async () => "not-found"),
     });
@@ -323,7 +323,7 @@ describe("routes/roles with injected repository", () => {
     expect(response.statusCode).toBe(404);
     expect(response.json()).toEqual({
       code: "ADMIN_NOT_FOUND",
-      message: "Role nao encontrada.",
+      message: "Role não encontrada.",
     });
   });
 });

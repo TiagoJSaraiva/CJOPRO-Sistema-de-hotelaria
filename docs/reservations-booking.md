@@ -35,7 +35,10 @@ stateDiagram-v2
 
 A garantia e a política de cancelamento são copiadas da versão tarifária. A
 garantia define o adiantamento exigido pela tarifa; a regra de cancelamento é
-independente e define eventual penalidade. A recepção registra meios de
+independente e define eventual penalidade. No cancelamento, a multa só vale depois
+do prazo limite; no no-show, vale sempre. Encerrar tira a hospedagem da conta e
+libera o quarto, e o que passar da multa vira crédito a devolver. As regras estão em
+[regras dos fluxos](qa/rules-flows.md). A recepção registra meios de
 pagamento já recebidos (Pix, dinheiro, cartão ou transferência); o PMS não gera
 uma cobrança Pix nem processa cartões. Dinheiro exige sessão de caixa aberta
 pelo próprio operador. O adiantamento reduz o saldo da reserva antes da chegada

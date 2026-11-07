@@ -7,10 +7,13 @@ type Params = {
   }>;
 };
 
-export async function POST(_request: Request, { params }: Params) {
+export async function POST(request: Request, { params }: Params) {
   try {
     const { id } = await params;
-    const item = await executeStayNoShow(id);
+    const payload = (await request.json().catch(() => ({}))) as {
+      reason?: string;
+    };
+    const item = await executeStayNoShow(id, { reason: payload.reason || "" });
     return NextResponse.json(item);
   } catch (error) {
     const parsedError = error as Error & {

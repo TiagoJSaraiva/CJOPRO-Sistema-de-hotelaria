@@ -1039,21 +1039,23 @@ export function confirmPartnerCorrectionRefund(
 
 export function executeStayNoShow(
   stayId: string,
+  payload: { reason: string },
 ): Promise<AdminStayOperationalPanelResponse | null> {
   return requestAdmin<AdminStayOperationalPanelResponse>(
     `/admin/stays/${stayId}/no-show`,
     "POST",
-    {},
+    payload,
   );
 }
 
 export function executeStayCancel(
   stayId: string,
+  payload: { reason: string },
 ): Promise<AdminStayOperationalPanelResponse | null> {
   return requestAdmin<AdminStayOperationalPanelResponse>(
     `/admin/stays/${stayId}/cancel`,
     "POST",
-    {},
+    payload,
   );
 }
 

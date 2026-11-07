@@ -236,7 +236,7 @@ describe.sequential("Supabase local com Fastify real", () => {
     await app?.close();
   });
 
-  it("recusa qualquer endpoint Supabase que nao seja o ambiente local fixado", () => {
+  it("recusa qualquer endpoint Supabase que não seja o ambiente local fixado", () => {
     expect(() => assertLocalApiUrl("https://example.supabase.co")).toThrow(
       /Recusado ambiente Supabase nao local/,
     );
@@ -429,7 +429,7 @@ describe.sequential("Supabase local com Fastify real", () => {
       method: "PUT",
       url: "/admin/rooms/20000000-0000-4000-8000-000000000201",
       headers,
-      payload: { notes: "Nao deve persistir" },
+      payload: { notes: "Não deve persistir" },
     });
     expect(crossHotelUpdate.statusCode).toBe(404);
 
@@ -448,8 +448,8 @@ describe.sequential("Supabase local com Fastify real", () => {
     expect(foreignRoom?.notes).toBe("Quarto sintetico");
   });
 
-  it("mantem as RPCs de roles e usuarios atomicas diante de referencias invalidas", async () => {
-    const roleName = "Role que nao deve existir";
+  it("mantem as RPCs de roles e usuarios atomicas diante de referencias inválidas", async () => {
+    const roleName = "Role que não deve existir";
     const { data: systemPermission } = await supabase
       .from("permissions")
       .select("id")
@@ -475,7 +475,7 @@ describe.sequential("Supabase local com Fastify real", () => {
       "update_role_with_permissions",
       {
         p_id: "70000000-0000-4000-8000-000000000002",
-        p_payload: { name: "Nome de role que nao deve persistir" },
+        p_payload: { name: "Nome de role que não deve persistir" },
         p_permission_ids: [systemPermission!.id],
         p_should_replace_permissions: true,
       },
@@ -491,7 +491,7 @@ describe.sequential("Supabase local com Fastify real", () => {
 
     const userEmail = "nao-persistir@hotelaria.local";
     const userResult = await supabase.rpc("create_user_with_roles", {
-      p_name: "Usuario invalido",
+      p_name: "Usuário inválido",
       p_email: userEmail,
       p_password_hash: "hash-invalido-para-teste",
       p_is_active: true,
@@ -509,7 +509,7 @@ describe.sequential("Supabase local com Fastify real", () => {
 
     const userUpdateResult = await supabase.rpc("update_user_with_roles", {
       p_id: "80000000-0000-4000-8000-000000000002",
-      p_payload: { name: "Nome de usuario que nao deve persistir" },
+      p_payload: { name: "Nome de usuário que não deve persistir" },
       p_role_assignments: [
         { role_id: "ffffffff-ffff-4fff-8fff-ffffffffffff", hotel_id: HOTEL_A },
       ],

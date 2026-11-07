@@ -35,6 +35,7 @@ import {
   paymentStatusLabel,
   statusLabel,
 } from "./OperationalPanelPrimitives";
+import { StayClosurePanel } from "./StayClosurePanel";
 
 type ReservationsCalendarBoardProps = {
   data: AdminReservationCalendarResponse;
@@ -47,6 +48,7 @@ type ReservationsCalendarBoardProps = {
   canReadArrival?: boolean;
   canManageGuarantees?: boolean;
   canManagePrearrival?: boolean;
+  initialStayId?: string | null;
   publicSiteUrl?: string;
   cashSession?: { id: string; registerName: string } | null;
 };
@@ -178,11 +180,14 @@ export function ReservationsCalendarBoard({
   canReadArrival = false,
   canManageGuarantees = false,
   canManagePrearrival = false,
+  initialStayId = null,
   publicSiteUrl = "http://localhost:3000",
   cashSession = null,
 }: ReservationsCalendarBoardProps) {
   const router = useRouter();
-  const [selectedStayId, setSelectedStayId] = useState<string | null>(null);
+  const [selectedStayId, setSelectedStayId] = useState<string | null>(
+    initialStayId,
+  );
   const [candidateStayIds, setCandidateStayIds] = useState<string[]>([]);
   const [selectedCells, setSelectedCells] = useState<
     Map<string, SelectionSide>
@@ -506,12 +511,14 @@ export function ReservationsCalendarBoard({
 
   async function handleStayAction(
     action: "checkin" | "checkout" | "no-show" | "cancel",
+    reason?: string,
   ) {
     if (!selectedStayId) return;
     try {
       setError(null);
       setIsPending(true);
-      let payload: Record<string, unknown> = {};
+      let payload: Record<string, unknown> =
+        action === "no-show" || action === "cancel" ? { reason } : {};
       if (action === "checkin" && panelData?.room_operational_state) {
         const readiness = panelData.room_operational_state;
         if (readiness.readiness === "blocked") {
@@ -1456,28 +1463,42 @@ export function ReservationsCalendarBoard({
                       >
                         Check-out
                       </button>
-                      <button
-                        type="button"
-                        onClick={() => handleStayAction("no-show")}
-                        disabled={
-                          isPending || !panelData.eligibility.can_no_show
+                    </div>
+                    <div className="mt-2">
+                      <StayClosurePanel
+                        key={`closure:${panelData.stay.id}:${panelData.stay.stay_status}`}
+                        stayStatus={panelData.stay.stay_status}
+                        reservationId={panelData.stay.reservation_id}
+                        canCancel={panelData.eligibility.can_cancel}
+                        cancelBlockReason={
+                          panelData.eligibility.cancel_block_reason
                         }
-                        className={panelActionButtonClassName}
-                        title={panelData.eligibility.no_show_block_reason || ""}
-                      >
-                        No-show
-                      </button>
-                      <button
-                        type="button"
-                        onClick={() => handleStayAction("cancel")}
-                        disabled={
-                          isPending || !panelData.eligibility.can_cancel
+                        canNoShow={panelData.eligibility.can_no_show}
+                        noShowBlockReason={
+                          panelData.eligibility.no_show_block_reason
                         }
-                        className={panelActionButtonClassName}
-                        title={panelData.eligibility.cancel_block_reason || ""}
-                      >
-                        Cancelar
-                      </button>
+                        canSettle={canManageGuarantees}
+                        cashSession={cashSession}
+                        disabled={isPending}
+                        closure={panelData.closure}
+                        onClose={(action, reason) =>
+                          void handleStayAction(
+                            action === "no_show" ? "no-show" : "cancel",
+                            reason,
+                          )
+                        }
+                        onSettled={() => {
+                          if (!selectedStayId) return;
+                          void getJson<AdminStayOperationalPanelResponse>(
+                            `/api/stays/${selectedStayId}/panel`,
+                          )
+                            .then(setPanelData)
+                            .catch((requestError: Error) =>
+                              setError(requestError.message),
+                            );
+                          router.refresh();
+                        }}
+                      />
                     </div>
                   </PanelSection>
 

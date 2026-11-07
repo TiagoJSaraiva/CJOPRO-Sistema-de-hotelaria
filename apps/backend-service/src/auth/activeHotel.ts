@@ -91,7 +91,7 @@ export function resolveActiveHotelContext(
       return {
         ok: false,
         statusCode: 403,
-        message: "Contexto global nao permitido para este usuario.",
+        message: "Contexto global não permitido para este usuário.",
       };
     }
 
@@ -102,7 +102,7 @@ export function resolveActiveHotelContext(
     return {
       ok: false,
       statusCode: 403,
-      message: "Hotel ativo nao permitido para este usuario.",
+      message: "Hotel ativo não permitido para este usuário.",
     };
   }
 

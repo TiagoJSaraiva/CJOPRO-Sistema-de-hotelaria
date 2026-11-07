@@ -188,7 +188,7 @@ export function registerProductRoutes(
         reply,
         400,
         ADMIN_ERROR_CODE.VALIDATION,
-        "Dados do produto invalidos.",
+        "Dados do produto inválidos.",
       );
     try {
       const result = await repository.createProduct(
@@ -233,7 +233,7 @@ export function registerProductRoutes(
           reply,
           400,
           ADMIN_ERROR_CODE.VALIDATION,
-          "Dados do produto invalidos.",
+          "Dados do produto inválidos.",
         );
       try {
         const result = await repository.updateProduct(
@@ -247,7 +247,7 @@ export function registerProductRoutes(
             reply,
             404,
             ADMIN_ERROR_CODE.NOT_FOUND,
-            "Produto nao encontrado neste hotel.",
+            "Produto não encontrado neste hotel.",
           );
         if (result.result === "conflict")
           return error(
@@ -297,7 +297,7 @@ export function registerProductRoutes(
               reply,
               404,
               ADMIN_ERROR_CODE.NOT_FOUND,
-              "Produto nao encontrado neste hotel.",
+              "Produto não encontrado neste hotel.",
             );
           return reply.send({ item: result.item });
         } catch (cause) {
@@ -381,7 +381,7 @@ export function registerProductRoutes(
           reply,
           400,
           ADMIN_ERROR_CODE.VALIDATION,
-          "Categoria invalida.",
+          "Categoria inválida.",
         );
       try {
         const result = await repository.createCategory(
@@ -429,7 +429,7 @@ export function registerProductRoutes(
           reply,
           400,
           ADMIN_ERROR_CODE.VALIDATION,
-          "Categoria invalida.",
+          "Categoria inválida.",
         );
       try {
         const result = await repository.updateCategory(
@@ -443,7 +443,7 @@ export function registerProductRoutes(
             reply,
             404,
             ADMIN_ERROR_CODE.NOT_FOUND,
-            "Categoria nao encontrada neste hotel.",
+            "Categoria não encontrada neste hotel.",
           );
         if (result.result === "conflict")
           return error(
@@ -492,7 +492,7 @@ export function registerProductRoutes(
               reply,
               404,
               ADMIN_ERROR_CODE.NOT_FOUND,
-              "Categoria nao encontrada neste hotel.",
+              "Categoria não encontrada neste hotel.",
             );
           return reply.send({ item: result.item });
         } catch (cause) {

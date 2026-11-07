@@ -26,6 +26,9 @@ const ACCOUNTS = [
   "gerente.horizonte@hotelaria.local",
 ];
 
+const SETTLE_TIMEOUT_MS = 30_000;
+const LOADING_TEXT = /^\s*Carregando/;
+
 const REPORT_PATH = resolve(
   process.cwd(),
   "../../node_modules/.cache/pms-journeys-sweep.json",
@@ -96,11 +99,26 @@ async function internalLinks(page: Page, retries = 2): Promise<string[]> {
   }
 }
 
+// O redirecionamento e o estado de carregamento trocam o conteúdo depois do evento load.
+// Ler antes disso acusaria tela vazia falsa e deixaria a página real sem inspeção.
+async function settledText(page: Page): Promise<string> {
+  const main = page.locator("main").first();
+  const deadline = Date.now() + SETTLE_TIMEOUT_MS;
+  let text = "";
+  do {
+    text = await main.innerText({ timeout: 2_000 }).catch(() => "");
+    if (text.trim() && !LOADING_TEXT.test(text)) return text;
+    await page.waitForTimeout(250);
+  } while (Date.now() < deadline);
+  return text;
+}
+
 async function inspect(
   page: Page,
   account: string,
   target: string,
   findings: Finding[],
+  retriedNavigations: Finding[],
 ): Promise<string[]> {
   const add = (kind: string, detail: string) =>
     findings.push({ account, url: target, kind, detail });
@@ -108,9 +126,21 @@ async function inspect(
   let response;
   try {
     response = await page.goto(target, { waitUntil: "load" });
-  } catch (error) {
-    add("timeout", String(error).slice(0, 160));
-    return [];
+  } catch (firstError) {
+    // O next dev reinicia ao se aproximar do limite de memória e derruba a navegação em curso. Uma segunda
+    // tentativa separa isso de uma página lenta de verdade, e o relatório guarda a repetição para comparar rodadas.
+    retriedNavigations.push({
+      account,
+      url: target,
+      kind: "timeout",
+      detail: String(firstError).slice(0, 160),
+    });
+    try {
+      response = await page.goto(target, { waitUntil: "load" });
+    } catch (error) {
+      add("timeout", String(error).slice(0, 160));
+      return [];
+    }
   }
   const status = response?.status() ?? 0;
   if (status >= 400)
@@ -120,9 +150,9 @@ async function inspect(
   const finalUrl = new URL(page.url());
   if (finalUrl.pathname.startsWith("/login")) add("sessao", finalUrl.search);
 
-  const main = page.locator("main").first();
-  const text = (await main.innerText().catch(() => "")) || "";
+  const text = await settledText(page);
   if (!text.trim()) add("tela-vazia", "conteúdo principal vazio");
+  if (LOADING_TEXT.test(text)) add("carregamento-preso", text.slice(0, 80));
 
   const raw = text.match(RAW_VALUE);
   if (raw) add("valor-cru", raw[0]);
@@ -144,6 +174,7 @@ async function inspect(
 
 test.describe("varredura de páginas por conta", () => {
   const findings: Finding[] = [];
+  const retriedNavigations: Finding[] = [];
   const visited: Record<string, number> = {};
 
   test.beforeAll(async () => {
@@ -159,6 +190,7 @@ test.describe("varredura de páginas por conta", () => {
         {
           visited,
           findings,
+          retriedNavigations,
           backend: readBackendEvents().filter(
             (event) => event.kind === "contract" || event.status >= 400,
           ),
@@ -174,7 +206,7 @@ test.describe("varredura de páginas por conta", () => {
     test(`varredura: ${account}`, async ({ page, diagnostics }) => {
       test.setTimeout(1_800_000);
       // Esta varredura consolida tudo em um relatório; falhar página a página esconderia
-      // o restante. O relatório é analisado e cada defeito vira um item do registro.
+      // o restante. O teste final reprova a rodada com todos os achados das dez contas.
       diagnostics.allow(/./);
 
       await signIn(page, account);
@@ -190,7 +222,13 @@ test.describe("varredura de páginas por conta", () => {
         seenPatterns.add(pattern);
         crawled.push(target);
 
-        const links = await inspect(page, account, target, findings);
+        const links = await inspect(
+          page,
+          account,
+          target,
+          findings,
+          retriedNavigations,
+        );
         const landed = new URL(page.url()).pathname;
         // /dashboard/hotels redirecionar para /dashboard/hotels/view é navegação normal.
         if (menu.includes(target) && !landed.startsWith(target)) {
@@ -210,4 +248,13 @@ test.describe("varredura de páginas por conta", () => {
       expect(crawled.length).toBeGreaterThan(0);
     });
   }
+
+  // Reprovar conta a conta reiniciaria o processo do Playwright, que zera estes acumuladores, reaplica o
+  // cenário e grava um relatório só com a última parte.
+  test("varredura: relatório sem achados", () => {
+    expect(Object.keys(visited).sort(), "contas varridas nesta rodada").toEqual(
+      [...ACCOUNTS].sort(),
+    );
+    expect(findings, "achados da varredura").toEqual([]);
+  });
 });

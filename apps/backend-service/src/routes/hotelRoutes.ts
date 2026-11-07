@@ -99,7 +99,7 @@ export function registerHotelRoutes(
           .send(
             adminError(
               ADMIN_ERROR_CODE.VALIDATION,
-              "Campos obrigatorios ausentes no cadastro inicial do hotel.",
+              "Campos obrigatórios ausentes no cadastro inicial do hotel.",
             ),
           );
       }
@@ -110,7 +110,7 @@ export function registerHotelRoutes(
           .send(
             adminError(
               ADMIN_ERROR_CODE.VALIDATION,
-              "Country invalido. Use codigo ISO de 2 letras (ex.: BR, US, PT).",
+              "Country inválido. Use código ISO de 2 letras (ex.: BR, US, PT).",
             ),
           );
       }
@@ -118,7 +118,7 @@ export function registerHotelRoutes(
       if (!isValidEmail(email)) {
         return reply
           .status(400)
-          .send(adminError(ADMIN_ERROR_CODE.VALIDATION, "Email invalido."));
+          .send(adminError(ADMIN_ERROR_CODE.VALIDATION, "Email inválido."));
       }
 
       if (!isValidPhone(phone)) {
@@ -127,7 +127,7 @@ export function registerHotelRoutes(
           .send(
             adminError(
               ADMIN_ERROR_CODE.VALIDATION,
-              "Telefone invalido. Informe entre 8 e 15 digitos.",
+              "Telefone inválido. Informe entre 8 e 15 digitos.",
             ),
           );
       }
@@ -138,7 +138,7 @@ export function registerHotelRoutes(
           .send(
             adminError(
               ADMIN_ERROR_CODE.VALIDATION,
-              "Slug invalido. Use apenas letras minusculas, numeros e hifen.",
+              "Slug inválido. Use apenas letras minusculas, numeros e hifen.",
             ),
           );
       }
@@ -149,7 +149,7 @@ export function registerHotelRoutes(
           .send(
             adminError(
               ADMIN_ERROR_CODE.VALIDATION,
-              "CEP/Zip code invalido para o pais informado.",
+              "CEP/Zip code inválido para o pais informado.",
             ),
           );
       }
@@ -167,7 +167,7 @@ export function registerHotelRoutes(
           .send(
             adminError(
               ADMIN_ERROR_CODE.VALIDATION,
-              "Timezone e currency sao obrigatorios (podem ser inferidos automaticamente pelo country).",
+              "Timezone e currency sao obrigatórios (podem ser inferidos automaticamente pelo country).",
             ),
           );
       }
@@ -175,13 +175,13 @@ export function registerHotelRoutes(
       if (!isValidTimezone(timezone)) {
         return reply
           .status(400)
-          .send(adminError(ADMIN_ERROR_CODE.VALIDATION, "Timezone invalido."));
+          .send(adminError(ADMIN_ERROR_CODE.VALIDATION, "Timezone inválido."));
       }
 
       if (!isValidCurrency(currency)) {
         return reply
           .status(400)
-          .send(adminError(ADMIN_ERROR_CODE.VALIDATION, "Moeda invalida."));
+          .send(adminError(ADMIN_ERROR_CODE.VALIDATION, "Moeda inválida."));
       }
 
       const taxIdValidation = validateTaxIdByCountry(country, taxId);
@@ -193,7 +193,7 @@ export function registerHotelRoutes(
             adminError(
               ADMIN_ERROR_CODE.VALIDATION,
               taxIdValidation.message ||
-                "Tax ID invalido para o pais informado.",
+                "Tax ID inválido para o pais informado.",
             ),
           );
       }
@@ -245,7 +245,7 @@ export function registerHotelRoutes(
             .send(
               adminError(
                 ADMIN_ERROR_CODE.VALIDATION,
-                `${field} invalido. Use o formato HH:mm.`,
+                `${field} inválido. Use o formato HH:mm.`,
               ),
             );
         }
@@ -300,7 +300,7 @@ export function registerHotelRoutes(
           .send(
             adminError(
               ADMIN_ERROR_CODE.VALIDATION,
-              "Id do hotel e obrigatorio para atualizacao.",
+              "Id do hotel e obrigatório para atualizacao.",
             ),
           );
       }
@@ -316,7 +316,7 @@ export function registerHotelRoutes(
             .send(
               adminError(
                 ADMIN_ERROR_CODE.VALIDATION,
-                "Nome do hotel nao pode ficar vazio.",
+                "Nome do hotel não pode ficar vazio.",
               ),
             );
         }
@@ -333,7 +333,7 @@ export function registerHotelRoutes(
             .send(
               adminError(
                 ADMIN_ERROR_CODE.VALIDATION,
-                "Razao social nao pode ficar vazia.",
+                "Razao social não pode ficar vazia.",
               ),
             );
         }
@@ -350,7 +350,7 @@ export function registerHotelRoutes(
             .send(
               adminError(
                 ADMIN_ERROR_CODE.VALIDATION,
-                "Slug nao pode ficar vazio.",
+                "Slug não pode ficar vazio.",
               ),
             );
         }
@@ -361,7 +361,7 @@ export function registerHotelRoutes(
             .send(
               adminError(
                 ADMIN_ERROR_CODE.VALIDATION,
-                "Slug invalido. Use apenas letras minusculas, numeros e hifen.",
+                "Slug inválido. Use apenas letras minusculas, numeros e hifen.",
               ),
             );
         }
@@ -380,7 +380,7 @@ export function registerHotelRoutes(
             .send(
               adminError(
                 ADMIN_ERROR_CODE.VALIDATION,
-                "Email nao pode ficar vazio.",
+                "Email não pode ficar vazio.",
               ),
             );
         }
@@ -388,7 +388,7 @@ export function registerHotelRoutes(
         if (!isValidEmail(parsedEmail)) {
           return reply
             .status(400)
-            .send(adminError(ADMIN_ERROR_CODE.VALIDATION, "Email invalido."));
+            .send(adminError(ADMIN_ERROR_CODE.VALIDATION, "Email inválido."));
         }
 
         payload.email = parsedEmail;
@@ -405,7 +405,7 @@ export function registerHotelRoutes(
             .send(
               adminError(
                 ADMIN_ERROR_CODE.VALIDATION,
-                "Telefone nao pode ficar vazio.",
+                "Telefone não pode ficar vazio.",
               ),
             );
         }
@@ -416,7 +416,7 @@ export function registerHotelRoutes(
             .send(
               adminError(
                 ADMIN_ERROR_CODE.VALIDATION,
-                "Telefone invalido. Informe entre 8 e 15 digitos.",
+                "Telefone inválido. Informe entre 8 e 15 digitos.",
               ),
             );
         }
@@ -461,7 +461,7 @@ export function registerHotelRoutes(
             .send(
               adminError(
                 ADMIN_ERROR_CODE.VALIDATION,
-                "Country nao pode ficar vazio.",
+                "Country não pode ficar vazio.",
               ),
             );
         }
@@ -474,7 +474,7 @@ export function registerHotelRoutes(
             .send(
               adminError(
                 ADMIN_ERROR_CODE.VALIDATION,
-                "Country invalido. Use codigo ISO de 2 letras.",
+                "Country inválido. Use código ISO de 2 letras.",
               ),
             );
         }
@@ -495,7 +495,7 @@ export function registerHotelRoutes(
             .send(
               adminError(
                 ADMIN_ERROR_CODE.VALIDATION,
-                "CEP/Zip code nao pode ficar vazio.",
+                "CEP/Zip code não pode ficar vazio.",
               ),
             );
         }
@@ -509,7 +509,7 @@ export function registerHotelRoutes(
             .send(
               adminError(
                 ADMIN_ERROR_CODE.VALIDATION,
-                "CEP/Zip code invalido para o pais informado.",
+                "CEP/Zip code inválido para o pais informado.",
               ),
             );
         }
@@ -526,7 +526,7 @@ export function registerHotelRoutes(
             .send(
               adminError(
                 ADMIN_ERROR_CODE.VALIDATION,
-                "Timezone nao pode ficar vazio.",
+                "Timezone não pode ficar vazio.",
               ),
             );
         }
@@ -535,7 +535,7 @@ export function registerHotelRoutes(
           return reply
             .status(400)
             .send(
-              adminError(ADMIN_ERROR_CODE.VALIDATION, "Timezone invalido."),
+              adminError(ADMIN_ERROR_CODE.VALIDATION, "Timezone inválido."),
             );
         }
 
@@ -551,7 +551,7 @@ export function registerHotelRoutes(
             .send(
               adminError(
                 ADMIN_ERROR_CODE.VALIDATION,
-                "Moeda nao pode ficar vazia.",
+                "Moeda não pode ficar vazia.",
               ),
             );
         }
@@ -561,7 +561,7 @@ export function registerHotelRoutes(
         if (!isValidCurrency(normalizedCurrency)) {
           return reply
             .status(400)
-            .send(adminError(ADMIN_ERROR_CODE.VALIDATION, "Moeda invalida."));
+            .send(adminError(ADMIN_ERROR_CODE.VALIDATION, "Moeda inválida."));
         }
 
         payload.currency = normalizedCurrency;
@@ -575,7 +575,7 @@ export function registerHotelRoutes(
             .send(
               adminError(
                 ADMIN_ERROR_CODE.VALIDATION,
-                "checkin_time_start invalido. Use o formato HH:mm.",
+                "checkin_time_start inválido. Use o formato HH:mm.",
               ),
             );
         }
@@ -590,7 +590,7 @@ export function registerHotelRoutes(
             .send(
               adminError(
                 ADMIN_ERROR_CODE.VALIDATION,
-                "checkin_time_limit invalido. Use o formato HH:mm.",
+                "checkin_time_limit inválido. Use o formato HH:mm.",
               ),
             );
         }
@@ -605,7 +605,7 @@ export function registerHotelRoutes(
             .send(
               adminError(
                 ADMIN_ERROR_CODE.VALIDATION,
-                "checkout_time_start invalido. Use o formato HH:mm.",
+                "checkout_time_start inválido. Use o formato HH:mm.",
               ),
             );
         }
@@ -620,7 +620,7 @@ export function registerHotelRoutes(
             .send(
               adminError(
                 ADMIN_ERROR_CODE.VALIDATION,
-                "checkout_time_limit invalido. Use o formato HH:mm.",
+                "checkout_time_limit inválido. Use o formato HH:mm.",
               ),
             );
         }
@@ -643,7 +643,7 @@ export function registerHotelRoutes(
             .send(
               adminError(
                 ADMIN_ERROR_CODE.VALIDATION,
-                "Tax ID nao pode ficar vazio.",
+                "Tax ID não pode ficar vazio.",
               ),
             );
         }
@@ -671,7 +671,7 @@ export function registerHotelRoutes(
               adminError(
                 ADMIN_ERROR_CODE.VALIDATION,
                 taxIdValidation.message ||
-                  "Tax ID invalido para o pais informado.",
+                  "Tax ID inválido para o pais informado.",
               ),
             );
         }
@@ -709,7 +709,7 @@ export function registerHotelRoutes(
         return reply
           .status(404)
           .send(
-            adminError(ADMIN_ERROR_CODE.NOT_FOUND, "Hotel nao encontrado."),
+            adminError(ADMIN_ERROR_CODE.NOT_FOUND, "Hotel não encontrado."),
           );
       }
 
@@ -751,7 +751,7 @@ export function registerHotelRoutes(
           .send(
             adminError(
               ADMIN_ERROR_CODE.VALIDATION,
-              "Id do hotel e obrigatorio para exclusao.",
+              "Id do hotel e obrigatório para exclusao.",
             ),
           );
       }
@@ -773,7 +773,7 @@ export function registerHotelRoutes(
         return reply
           .status(404)
           .send(
-            adminError(ADMIN_ERROR_CODE.NOT_FOUND, "Hotel nao encontrado."),
+            adminError(ADMIN_ERROR_CODE.NOT_FOUND, "Hotel não encontrado."),
           );
       }
 
@@ -783,7 +783,7 @@ export function registerHotelRoutes(
           .send(
             adminError(
               ADMIN_ERROR_CODE.CONFLICT,
-              "Hotel nao pode ser excluido: possui dependencias ativas.",
+              "Hotel não pode ser excluido: possui dependencias ativas.",
             ),
           );
       }

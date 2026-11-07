@@ -35,6 +35,22 @@ type Quote = {
 };
 const api = process.env.NEXT_PUBLIC_BOOKING_API_URL || "http://localhost:3333";
 
+const POLICY_LABELS: Record<string, string> = {
+  none: "sem garantia",
+  fixed: "valor fixo",
+  percentage: "percentual do total",
+  first_night: "primeira diária",
+  full_stay: "valor total",
+};
+function cancellationLabel(cancellation?: {
+  type: string;
+  cutoff_hours: number;
+}): string {
+  if (!cancellation || cancellation.type === "none") return "sem multa";
+  const penalty = POLICY_LABELS[cancellation.type] || "multa do plano";
+  return `grátis até ${cancellation.cutoff_hours} horas antes da chegada; depois, ${penalty}`;
+}
+
 export function BookingJourney({ slug }: { slug: string }) {
   const [config, setConfig] = useState<Config>();
   const [quote, setQuote] = useState<Quote>();
@@ -218,9 +234,9 @@ export function BookingJourney({ slug }: { slug: string }) {
                       <strong>{item.room_type}</strong>
                       <span>{item.plan_name || item.plan_kind}</span>
                       <span>
-                        Garantia: {item.guarantee?.type || "sem garantia"} ·
-                        Cancelamento:{" "}
-                        {item.cancellation?.type || "sem penalidade"}
+                        Garantia:{" "}
+                        {POLICY_LABELS[item.guarantee?.type || "none"]} ·
+                        Cancelamento: {cancellationLabel(item.cancellation)}
                       </span>
                       {item.benefit_plan_version_id ? (
                         <span>Inclui benefícios de hospedagem</span>

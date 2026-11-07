@@ -465,7 +465,7 @@ function LocationCard({
         {location.parent_name ? ` · ${location.parent_name}` : ""}
         {location.asset_tag ? ` · patrimônio ${location.asset_tag}` : ""}
         {location.warranty_ends_on
-          ? ` · garantia até ${location.warranty_ends_on}`
+          ? ` · garantia até ${location.warranty_ends_on.split("-").reverse().join("/")}`
           : ""}
         {location.is_active ? "" : " · inativo"}
       </p>

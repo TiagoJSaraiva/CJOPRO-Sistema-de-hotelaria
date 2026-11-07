@@ -8,6 +8,7 @@ describe("databaseRuleError", () => {
     "cash_session_required",
     "cash_session_not_open",
     "cash_transaction_immutable",
+    "closed_day_immutable",
     "insufficient_fefo_stock",
     "insufficient_explicit_lot_stock",
     "expiry_required",

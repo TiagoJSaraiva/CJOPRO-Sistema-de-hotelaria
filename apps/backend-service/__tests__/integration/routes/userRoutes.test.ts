@@ -52,7 +52,7 @@ describe("routes/users", () => {
     });
   });
 
-  it("retorna 403 para POST /admin/users sem permissao de criacao", async () => {
+  it("retorna 403 para POST /admin/users sem permissão de criacao", async () => {
     const token = createToken([PERMISSIONS.USER_READ]);
 
     const response = await app.inject({
@@ -76,7 +76,7 @@ describe("routes/users", () => {
     });
   });
 
-  it("retorna 400 quando faltam campos obrigatorios no cadastro de usuario", async () => {
+  it("retorna 400 quando faltam campos obrigatórios no cadastro de usuário", async () => {
     const token = createToken([PERMISSIONS.USER_CREATE]);
 
     const response = await app.inject({

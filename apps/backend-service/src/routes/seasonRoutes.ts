@@ -75,7 +75,7 @@ export function registerSeasonRoutes(
           .send(
             adminError(
               ADMIN_ERROR_CODE.VALIDATION,
-              "Nome, data de inicio e data de fim sao obrigatorios.",
+              "Nome, data de inicio e data de fim sao obrigatórios.",
             ),
           );
       }
@@ -107,7 +107,7 @@ export function registerSeasonRoutes(
           .send(
             adminError(
               ADMIN_ERROR_CODE.CONFLICT,
-              "Conflito ao criar temporada (sobreposicao ou duplicidade).",
+              "Conflito ao criar temporada (sobreposição ou duplicidade).",
             ),
           );
       if (!createResult.item)
@@ -141,7 +141,7 @@ export function registerSeasonRoutes(
           .send(
             adminError(
               ADMIN_ERROR_CODE.VALIDATION,
-              "Id da temporada e obrigatorio para atualizacao.",
+              "Id da temporada e obrigatório para atualizacao.",
             ),
           );
 
@@ -188,7 +188,7 @@ export function registerSeasonRoutes(
           .send(
             adminError(
               ADMIN_ERROR_CODE.NOT_FOUND,
-              "Temporada nao encontrada neste hotel.",
+              "Temporada não encontrada neste hotel.",
             ),
           );
       if (updateResult.result === "conflict")
@@ -225,7 +225,7 @@ export function registerSeasonRoutes(
           .send(
             adminError(
               ADMIN_ERROR_CODE.VALIDATION,
-              "Id da temporada e obrigatorio para exclusao.",
+              "Id da temporada e obrigatório para exclusao.",
             ),
           );
 
@@ -251,7 +251,7 @@ export function registerSeasonRoutes(
           .send(
             adminError(
               ADMIN_ERROR_CODE.NOT_FOUND,
-              "Temporada nao encontrada neste hotel.",
+              "Temporada não encontrada neste hotel.",
             ),
           );
       if (result === "conflict")
@@ -260,7 +260,7 @@ export function registerSeasonRoutes(
           .send(
             adminError(
               ADMIN_ERROR_CODE.CONFLICT,
-              "Temporada nao pode ser excluida: possui dependencias ativas.",
+              "Temporada não pode ser excluida: possui dependencias ativas.",
             ),
           );
 

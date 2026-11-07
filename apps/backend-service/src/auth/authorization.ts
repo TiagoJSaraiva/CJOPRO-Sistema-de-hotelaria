@@ -171,7 +171,7 @@ export function ensureAuthorizedSystem(
       .send(
         adminError(
           ADMIN_ERROR_CODE.SCOPE_NOT_ALLOWED,
-          "Acesso global de sistema obrigatorio para esta operacao.",
+          "Acesso global de sistema obrigatório para esta operacao.",
         ),
       );
     return null;
@@ -209,7 +209,7 @@ export function ensureAuthorizedAnySystem(
       .send(
         adminError(
           ADMIN_ERROR_CODE.SCOPE_NOT_ALLOWED,
-          "Acesso global de sistema obrigatorio para esta operacao.",
+          "Acesso global de sistema obrigatório para esta operacao.",
         ),
       );
     return null;

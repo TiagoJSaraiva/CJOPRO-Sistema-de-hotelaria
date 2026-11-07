@@ -99,6 +99,9 @@ import {
   RatePlanVersionInputSchema,
   ReservationAmendmentInputSchema,
   ReservationGuaranteeInputSchema,
+  ReservationSettlementInputSchema,
+  ReservationCustomerLinkInputSchema,
+  RoomAssignmentSimulationInputSchema,
   ReservationArrivalSummarySchema,
   RoomAssignmentInputSchema,
   VersionedBookingActionSchema,
@@ -3894,6 +3897,16 @@ export const StayPanelSchema = Type.Object(
       },
       strict,
     ),
+    closure: Type.Optional(
+      Type.Object(
+        {
+          cancel_penalty: Type.Number(),
+          no_show_penalty: Type.Number(),
+          balance: Type.Number(),
+        },
+        strict,
+      ),
+    ),
     payments: Type.Array(StayPaymentSchema),
     folio: Type.Optional(Type.Ref("StayFolio")),
     maintenance_occurrences: Type.Optional(
@@ -4167,6 +4180,9 @@ export const API_COMPONENT_SCHEMAS = [
   VersionedBookingActionSchema,
   ReservationAmendmentInputSchema,
   ReservationGuaranteeInputSchema,
+  ReservationSettlementInputSchema,
+  ReservationCustomerLinkInputSchema,
+  RoomAssignmentSimulationInputSchema,
   RoomAssignmentInputSchema,
   GuestPreferenceInputSchema,
   PrearrivalLinkInputSchema,
@@ -4216,6 +4232,33 @@ const DailyClosePrepareResultSchema = Type.Object(
     result: Type.Optional(Type.String()),
     id: Type.Optional(Type.String()),
     fingerprint: Type.Optional(Type.String()),
+  },
+  strict,
+);
+const StayClosureInputSchema = Type.Object(
+  { reason: Type.String({ minLength: 3, maxLength: 500 }) },
+  strict,
+);
+const ReservationClosureResultSchema = Type.Object(
+  {
+    ok: Type.Boolean(),
+    result: Type.Optional(Type.String()),
+    id: Type.Optional(uuid()),
+    penalty: Type.Optional(Type.Number()),
+    refundable_credit: Type.Optional(Type.Number()),
+    balance: Type.Optional(Type.Number()),
+  },
+  strict,
+);
+const ReservationSettlementResultSchema = Type.Object(
+  {
+    ok: Type.Boolean(),
+    result: Type.Optional(Type.String()),
+    id: Type.Optional(uuid()),
+    kind: Type.Optional(
+      Type.Union([Type.Literal("refund"), Type.Literal("penalty_payment")]),
+    ),
+    balance: Type.Optional(Type.Number()),
   },
   strict,
 );
@@ -6589,16 +6632,16 @@ export const API_ROUTE_CONTRACTS: Readonly<Record<string, ApiRouteContract>> = {
   "POST /admin/stays/:id/no-show": admin(
     "markStayNoShow",
     "Stays",
-    "Marca a estadia como no-show.",
+    "Encerra a estadia como no-show, com a multa do plano.",
     itemSchema(StayPanelSchema),
-    { params: IdParamsSchema },
+    { params: IdParamsSchema, body: StayClosureInputSchema },
   ),
   "POST /admin/stays/:id/cancel": admin(
     "cancelStay",
     "Stays",
-    "Cancela a estadia.",
+    "Cancela a estadia, com a multa do plano depois do prazo limite.",
     itemSchema(StayPanelSchema),
-    { params: IdParamsSchema },
+    { params: IdParamsSchema, body: StayClosureInputSchema },
   ),
   "GET /admin/consumption-management/settings": admin(
     "getConsumptionManagementSettings",
@@ -7205,11 +7248,31 @@ export const API_ROUTE_CONTRACTS: Readonly<Record<string, ApiRouteContract>> = {
     ReservationGuaranteeResultSchema,
     { params: IdParamsSchema, body: ReservationGuaranteeInputSchema },
   ),
+  "GET /admin/reservations/unassigned": admin(
+    "listUnassignedReservations",
+    "Reservations",
+    "Lista reservas sem quarto e encerradas sem estadia com saldo a acertar.",
+    Type.Record(Type.String(), Type.Any()),
+  ),
+  "POST /admin/reservations/:id/booking-customer": admin(
+    "linkReservationCustomer",
+    "Reservations",
+    "Identifica o hóspede de uma reserva sem cliente.",
+    OkSchema,
+    { params: IdParamsSchema, body: ReservationCustomerLinkInputSchema },
+  ),
+  "POST /admin/reservations/:id/settlement": admin(
+    "settleClosedReservation",
+    "Reservations",
+    "Devolve o crédito ou recebe a multa de uma reserva encerrada.",
+    ReservationSettlementResultSchema,
+    { params: IdParamsSchema, body: ReservationSettlementInputSchema },
+  ),
   "POST /admin/reservations/:id/actions": admin(
     "actReservation",
     "Reservations",
     "Cancela a reserva ou registra no-show aplicando a política congelada.",
-    OkSchema,
+    ReservationClosureResultSchema,
     { params: IdParamsSchema, body: VersionedBookingActionSchema },
   ),
   "POST /admin/reservations/:id/room-assignments/simulate": admin(
@@ -7217,7 +7280,7 @@ export const API_ROUTE_CONTRACTS: Readonly<Record<string, ApiRouteContract>> = {
     "Reservations",
     "Sugere quartos compatíveis e disponíveis.",
     Type.Record(Type.String(), Type.Any()),
-    { params: IdParamsSchema, body: RoomAssignmentInputSchema },
+    { params: IdParamsSchema, body: RoomAssignmentSimulationInputSchema },
   ),
   "POST /admin/reservations/:id/room-assignments": admin(
     "assignReservationRoom",

@@ -41,7 +41,7 @@ describe("permissionViewFilters", () => {
     ).toBe(2);
   });
 
-  it("filtra por tipo de permissao", () => {
+  it("filtra por tipo de permissão", () => {
     const result = applyPermissionViewFilters(permissions, {
       search: "",
       type: "HOTEL_PERMISSION",

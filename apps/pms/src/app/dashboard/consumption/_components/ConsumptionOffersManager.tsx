@@ -18,6 +18,8 @@ import {
 import { BillingModeFields, billingModeLabel } from "./BillingModeFields";
 
 const reasonLabels: Record<string, string> = {
+  inventory_source_missing: "Produto controlado sem origem de estoque",
+  inventory_position_inactive: "Posição de estoque indisponível",
   point_inactive: "Ponto inativo",
   point_archived: "Ponto arquivado",
   offer_inactive: "Oferta inativa",

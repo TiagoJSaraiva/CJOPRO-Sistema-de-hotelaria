@@ -18,40 +18,20 @@ type Props = {
   canManage: boolean;
 };
 
-function futureDates(start: string, unit: string, interval: number) {
-  const dates: string[] = [];
-  const anchor = new Date(`${start}T12:00:00`);
-  const day = anchor.getDate();
-  for (let index = 0; index < 5; index += 1) {
-    const current = new Date(anchor);
-    if (unit === "daily") current.setDate(anchor.getDate() + index * interval);
-    if (unit === "weekly")
-      current.setDate(anchor.getDate() + index * interval * 7);
-    if (unit === "monthly" && index) {
-      current.setDate(1);
-      current.setMonth(anchor.getMonth() + index * interval);
-      current.setDate(
-        Math.min(
-          day,
-          new Date(current.getFullYear(), current.getMonth() + 1, 0).getDate(),
-        ),
-      );
-    }
-    if (unit === "yearly" && index) {
-      current.setDate(1);
-      current.setFullYear(anchor.getFullYear() + index * interval);
-      current.setMonth(anchor.getMonth());
-      current.setDate(
-        Math.min(
-          day,
-          new Date(current.getFullYear(), current.getMonth() + 1, 0).getDate(),
-        ),
-      );
-    }
-    dates.push(current.toISOString().slice(0, 10));
-  }
-  return dates;
-}
+import { futureDates } from "./preventiveDates";
+
+const PLAN_STATUS_LABELS: Record<string, string> = {
+  active: "Ativo",
+  paused: "Pausado",
+  inactive: "Inativo",
+};
+const PRIORITY_LABELS: Record<string, string> = {
+  low: "Baixa",
+  normal: "Normal",
+  high: "Alta",
+  critical: "Crítica",
+};
+const displayDate = (value: string) => value.split("-").reverse().join("/");
 
 export function MaintenancePreventiveManager({
   plans,
@@ -205,12 +185,16 @@ export function MaintenancePreventiveManager({
               <div className="flex flex-wrap justify-between gap-3">
                 <div>
                   <span className="text-xs font-semibold uppercase text-slate-500">
-                    {plan.status} · {plan.priority}
+                    {PLAN_STATUS_LABELS[plan.status] ||
+                      "Situação não informada"}{" "}
+                    ·{" "}
+                    {PRIORITY_LABELS[plan.priority || ""] ||
+                      "Prioridade não informada"}
                   </span>
                   <h3 className="my-1 font-semibold">{plan.name}</h3>
                   <p className="m-0 text-sm text-slate-600">
-                    {plan.target_name} · próxima em {plan.next_due_date} ·{" "}
-                    {plan.assignee_name}
+                    {plan.target_name} · próxima em{" "}
+                    {displayDate(plan.next_due_date)} · {plan.assignee_name}
                   </p>
                 </div>
                 {canManage ? (
@@ -286,8 +270,8 @@ export function MaintenancePreventiveManager({
                     "Plano preventivo"}
                 </p>
                 <p className="my-2 text-sm text-slate-700">
-                  Prevista para {run.scheduled_local_date}. A execução anterior
-                  ainda estava aberta.
+                  Prevista para {displayDate(run.scheduled_local_date)}. A
+                  execução anterior ainda estava aberta.
                 </p>
                 {canManage ? (
                   <div className="flex flex-wrap gap-2">

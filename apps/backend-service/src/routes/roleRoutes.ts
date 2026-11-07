@@ -112,7 +112,7 @@ export function registerRoleRoutes(
         .send(
           adminError(
             ADMIN_ERROR_CODE.VALIDATION,
-            "Nome da role e obrigatorio.",
+            "Nome da role e obrigatório.",
           ),
         );
     }
@@ -123,7 +123,7 @@ export function registerRoleRoutes(
         .send(
           adminError(
             ADMIN_ERROR_CODE.VALIDATION,
-            "Tipo da role e obrigatorio.",
+            "Tipo da role e obrigatório.",
           ),
         );
     }
@@ -134,7 +134,7 @@ export function registerRoleRoutes(
         .send(
           adminError(
             ADMIN_ERROR_CODE.VALIDATION,
-            "Roles de sistema nao podem ter hotel associado.",
+            "Roles de sistema não podem ter hotel associado.",
           ),
         );
     }
@@ -162,7 +162,7 @@ export function registerRoleRoutes(
           .send(
             adminError(
               ADMIN_ERROR_CODE.VALIDATION,
-              "Hotel selecionado nao existe.",
+              "Hotel selecionado não existe.",
             ),
           );
       }
@@ -193,7 +193,7 @@ export function registerRoleRoutes(
           .send(
             adminError(
               ADMIN_ERROR_CODE.VALIDATION,
-              "Uma ou mais permissoes selecionadas nao existem.",
+              "Uma ou mais permissoes selecionadas não existem.",
             ),
           );
       }
@@ -289,7 +289,7 @@ export function registerRoleRoutes(
           .send(
             adminError(
               ADMIN_ERROR_CODE.VALIDATION,
-              "Id da role e obrigatorio para atualizacao.",
+              "Id da role e obrigatório para atualizacao.",
             ),
           );
       }
@@ -304,7 +304,7 @@ export function registerRoleRoutes(
           .send(
             adminError(
               ADMIN_ERROR_CODE.SELF_ACTION_FORBIDDEN,
-              "Nao e permitido atualizar uma role vinculada ao proprio usuario.",
+              "Não e permitido atualizar uma role vinculada ao proprio usuário.",
             ),
           );
       }
@@ -320,7 +320,7 @@ export function registerRoleRoutes(
             .send(
               adminError(
                 ADMIN_ERROR_CODE.VALIDATION,
-                "Nome da role nao pode ficar vazio.",
+                "Nome da role não pode ficar vazio.",
               ),
             );
         }
@@ -337,7 +337,7 @@ export function registerRoleRoutes(
             .send(
               adminError(
                 ADMIN_ERROR_CODE.VALIDATION,
-                "Tipo da role invalido para atualizacao.",
+                "Tipo da role inválido para atualizacao.",
               ),
             );
         }
@@ -375,7 +375,7 @@ export function registerRoleRoutes(
       if (!currentRole) {
         return reply
           .status(404)
-          .send(adminError(ADMIN_ERROR_CODE.NOT_FOUND, "Role nao encontrada."));
+          .send(adminError(ADMIN_ERROR_CODE.NOT_FOUND, "Role não encontrada."));
       }
 
       const effectiveRoleType =
@@ -393,7 +393,7 @@ export function registerRoleRoutes(
           .send(
             adminError(
               ADMIN_ERROR_CODE.VALIDATION,
-              "Roles de sistema nao podem ter hotel associado.",
+              "Roles de sistema não podem ter hotel associado.",
             ),
           );
       }
@@ -423,7 +423,7 @@ export function registerRoleRoutes(
             .send(
               adminError(
                 ADMIN_ERROR_CODE.VALIDATION,
-                "Hotel selecionado nao existe.",
+                "Hotel selecionado não existe.",
               ),
             );
         }
@@ -454,7 +454,7 @@ export function registerRoleRoutes(
             .send(
               adminError(
                 ADMIN_ERROR_CODE.VALIDATION,
-                "Uma ou mais permissoes selecionadas nao existem.",
+                "Uma ou mais permissoes selecionadas não existem.",
               ),
             );
         }
@@ -509,7 +509,7 @@ export function registerRoleRoutes(
       if (updateResult === "not-found") {
         return reply
           .status(404)
-          .send(adminError(ADMIN_ERROR_CODE.NOT_FOUND, "Role nao encontrada."));
+          .send(adminError(ADMIN_ERROR_CODE.NOT_FOUND, "Role não encontrada."));
       }
 
       const updatedRole = await repository
@@ -556,7 +556,7 @@ export function registerRoleRoutes(
           .send(
             adminError(
               ADMIN_ERROR_CODE.VALIDATION,
-              "Id da role e obrigatorio para exclusao.",
+              "Id da role e obrigatório para exclusao.",
             ),
           );
       }
@@ -571,7 +571,7 @@ export function registerRoleRoutes(
           .send(
             adminError(
               ADMIN_ERROR_CODE.SELF_ACTION_FORBIDDEN,
-              "Nao e permitido excluir uma role vinculada ao proprio usuario.",
+              "Não e permitido excluir uma role vinculada ao proprio usuário.",
             ),
           );
       }
@@ -594,7 +594,7 @@ export function registerRoleRoutes(
         request.log.warn({ roleId: id }, "roles.delete.not-found");
         return reply
           .status(404)
-          .send(adminError(ADMIN_ERROR_CODE.NOT_FOUND, "Role nao encontrada."));
+          .send(adminError(ADMIN_ERROR_CODE.NOT_FOUND, "Role não encontrada."));
       }
 
       if (deleteResult === "conflict") {
@@ -604,7 +604,7 @@ export function registerRoleRoutes(
           .send(
             adminError(
               ADMIN_ERROR_CODE.CONFLICT,
-              "Role nao pode ser excluida: possui dependencias ativas.",
+              "Role não pode ser excluida: possui dependencias ativas.",
             ),
           );
       }

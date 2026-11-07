@@ -17,6 +17,12 @@ export function reservationOperationsTabs(user: AuthUser | null) {
       isVisible: has(PERMISSIONS.PREARRIVAL_MANAGE),
     },
     {
+      key: "unassigned",
+      label: "Sem quarto",
+      href: "/dashboard/reservations/unassigned",
+      isVisible: has(PERMISSIONS.ROOM_ASSIGNMENTS_MANAGE),
+    },
+    {
       key: "rates",
       label: "Planos tarifários",
       href: "/dashboard/reservations/rates",

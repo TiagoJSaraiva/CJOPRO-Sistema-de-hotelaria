@@ -3927,6 +3927,26 @@
       "def-117": {
         "additionalProperties": false,
         "properties": {
+          "closure": {
+            "additionalProperties": false,
+            "properties": {
+              "balance": {
+                "type": "number"
+              },
+              "cancel_penalty": {
+                "type": "number"
+              },
+              "no_show_penalty": {
+                "type": "number"
+              }
+            },
+            "required": [
+              "cancel_penalty",
+              "no_show_penalty",
+              "balance"
+            ],
+            "type": "object"
+          },
           "eligibility": {
             "additionalProperties": false,
             "properties": {
@@ -13033,6 +13053,140 @@
       "def-154": {
         "additionalProperties": false,
         "properties": {
+          "amount": {
+            "exclusiveMinimum": true,
+            "minimum": 0,
+            "type": "number"
+          },
+          "cash_session_id": {
+            "format": "uuid",
+            "type": "string"
+          },
+          "idempotency_key": {
+            "format": "uuid",
+            "type": "string"
+          },
+          "method": {
+            "anyOf": [
+              {
+                "enum": [
+                  "pix"
+                ],
+                "type": "string"
+              },
+              {
+                "enum": [
+                  "cash"
+                ],
+                "type": "string"
+              },
+              {
+                "enum": [
+                  "credit_card"
+                ],
+                "type": "string"
+              },
+              {
+                "enum": [
+                  "debit_card"
+                ],
+                "type": "string"
+              },
+              {
+                "enum": [
+                  "bank_transfer"
+                ],
+                "type": "string"
+              }
+            ]
+          },
+          "reference": {
+            "maxLength": 120,
+            "type": "string"
+          }
+        },
+        "required": [
+          "amount",
+          "method",
+          "idempotency_key"
+        ],
+        "title": "ReservationSettlementInput",
+        "type": "object"
+      },
+      "def-155": {
+        "additionalProperties": false,
+        "properties": {
+          "customer_id": {
+            "format": "uuid",
+            "type": "string"
+          },
+          "expected_version": {
+            "minimum": 0,
+            "type": "integer"
+          },
+          "new_customer": {
+            "additionalProperties": false,
+            "properties": {
+              "birth_date": {
+                "format": "date",
+                "type": "string"
+              },
+              "document_number": {
+                "maxLength": 40,
+                "minLength": 3,
+                "type": "string"
+              },
+              "document_type": {
+                "maxLength": 40,
+                "minLength": 2,
+                "type": "string"
+              },
+              "email": {
+                "maxLength": 200,
+                "type": "string"
+              },
+              "full_name": {
+                "maxLength": 200,
+                "minLength": 2,
+                "type": "string"
+              },
+              "mobile_phone": {
+                "maxLength": 40,
+                "type": "string"
+              }
+            },
+            "required": [
+              "full_name",
+              "document_type",
+              "document_number",
+              "birth_date"
+            ],
+            "type": "object"
+          }
+        },
+        "required": [
+          "expected_version"
+        ],
+        "title": "ReservationCustomerLinkInput",
+        "type": "object"
+      },
+      "def-156": {
+        "additionalProperties": false,
+        "properties": {
+          "accommodation_id": {
+            "format": "uuid",
+            "type": "string"
+          }
+        },
+        "required": [
+          "accommodation_id"
+        ],
+        "title": "RoomAssignmentSimulationInput",
+        "type": "object"
+      },
+      "def-157": {
+        "additionalProperties": false,
+        "properties": {
           "accommodation_id": {
             "format": "uuid",
             "type": "string"
@@ -13065,7 +13219,7 @@
         "title": "RoomAssignmentInput",
         "type": "object"
       },
-      "def-155": {
+      "def-158": {
         "additionalProperties": false,
         "properties": {
           "category": {
@@ -13149,7 +13303,7 @@
         "title": "GuestPreferenceInput",
         "type": "object"
       },
-      "def-156": {
+      "def-159": {
         "additionalProperties": false,
         "properties": {
           "expires_in_hours": {
@@ -13164,7 +13318,29 @@
         "title": "PrearrivalLinkInput",
         "type": "object"
       },
-      "def-157": {
+      "def-16": {
+        "additionalProperties": false,
+        "properties": {
+          "display_order": {
+            "minimum": 0,
+            "type": "integer"
+          },
+          "is_active": {
+            "type": "boolean"
+          },
+          "name": {
+            "maxLength": 120,
+            "minLength": 1,
+            "type": "string"
+          }
+        },
+        "required": [
+          "name"
+        ],
+        "title": "ProductCategoryInput",
+        "type": "object"
+      },
+      "def-160": {
         "additionalProperties": false,
         "properties": {
           "action": {
@@ -13234,7 +13410,7 @@
         "title": "PrearrivalRequestAction",
         "type": "object"
       },
-      "def-158": {
+      "def-161": {
         "additionalProperties": false,
         "properties": {
           "consent_version": {
@@ -13274,7 +13450,7 @@
         "title": "BookingConfigurationInput",
         "type": "object"
       },
-      "def-159": {
+      "def-162": {
         "additionalProperties": false,
         "properties": {
           "active": {
@@ -13298,29 +13474,7 @@
         "title": "BookingChannelInput",
         "type": "object"
       },
-      "def-16": {
-        "additionalProperties": false,
-        "properties": {
-          "display_order": {
-            "minimum": 0,
-            "type": "integer"
-          },
-          "is_active": {
-            "type": "boolean"
-          },
-          "name": {
-            "maxLength": 120,
-            "minLength": 1,
-            "type": "string"
-          }
-        },
-        "required": [
-          "name"
-        ],
-        "title": "ProductCategoryInput",
-        "type": "object"
-      },
-      "def-160": {
+      "def-163": {
         "additionalProperties": false,
         "properties": {
           "external_rate_code": {
@@ -13352,7 +13506,7 @@
         "title": "BookingChannelMappingInput",
         "type": "object"
       },
-      "def-161": {
+      "def-164": {
         "additionalProperties": false,
         "properties": {
           "action": {
@@ -13395,7 +13549,7 @@
         "title": "BookingChannelEventAction",
         "type": "object"
       },
-      "def-162": {
+      "def-165": {
         "additionalProperties": false,
         "properties": {
           "channel_id": {
@@ -13532,7 +13686,7 @@
         "title": "BookingChannelImportInput",
         "type": "object"
       },
-      "def-163": {
+      "def-166": {
         "additionalProperties": false,
         "properties": {
           "event_id": {
@@ -13649,7 +13803,7 @@
         "title": "BookingChannelEventInput",
         "type": "object"
       },
-      "def-164": {
+      "def-167": {
         "additionalProperties": false,
         "properties": {
           "rate_plans": {
@@ -13720,7 +13874,7 @@
         "title": "BookingChannelReferenceData",
         "type": "object"
       },
-      "def-165": {
+      "def-168": {
         "additionalProperties": false,
         "properties": {
           "action": {
@@ -13798,7 +13952,7 @@
         "title": "TrainingClockAction",
         "type": "object"
       },
-      "def-166": {
+      "def-169": {
         "additionalProperties": false,
         "properties": {
           "clock_mode": {
@@ -13877,7 +14031,25 @@
         "title": "TrainingEnvironment",
         "type": "object"
       },
-      "def-167": {
+      "def-17": {
+        "properties": {
+          "display_order": {
+            "minimum": 0,
+            "type": "integer"
+          },
+          "is_active": {
+            "type": "boolean"
+          },
+          "name": {
+            "maxLength": 120,
+            "minLength": 1,
+            "type": "string"
+          }
+        },
+        "title": "ProductCategoryUpdateInput",
+        "type": "object"
+      },
+      "def-170": {
         "additionalProperties": false,
         "properties": {
           "operational_date": {
@@ -13901,7 +14073,7 @@
         "title": "HotelClock",
         "type": "object"
       },
-      "def-168": {
+      "def-171": {
         "additionalProperties": false,
         "properties": {
           "expected_location_version": {
@@ -13972,7 +14144,7 @@
         "title": "MaintenanceWarrantyDecisionInput",
         "type": "object"
       },
-      "def-169": {
+      "def-172": {
         "additionalProperties": false,
         "properties": {
           "created_at": {
@@ -14077,24 +14249,6 @@
           "created_at"
         ],
         "title": "MaintenanceWarrantyDecision",
-        "type": "object"
-      },
-      "def-17": {
-        "properties": {
-          "display_order": {
-            "minimum": 0,
-            "type": "integer"
-          },
-          "is_active": {
-            "type": "boolean"
-          },
-          "name": {
-            "maxLength": 120,
-            "minLength": 1,
-            "type": "string"
-          }
-        },
-        "title": "ProductCategoryUpdateInput",
         "type": "object"
       },
       "def-18": {
@@ -171840,11 +171994,21 @@
                 "schema": {
                   "additionalProperties": false,
                   "properties": {
+                    "balance": {
+                      "type": "number"
+                    },
                     "id": {
+                      "format": "uuid",
                       "type": "string"
                     },
                     "ok": {
                       "type": "boolean"
+                    },
+                    "penalty": {
+                      "type": "number"
+                    },
+                    "refundable_credit": {
+                      "type": "number"
                     },
                     "result": {
                       "type": "string"
@@ -172453,6 +172617,309 @@
               "application/json": {
                 "schema": {
                   "additionalProperties": {},
+                  "type": "object"
+                }
+              }
+            },
+            "description": "Default Response"
+          },
+          "400": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "additionalProperties": false,
+                  "properties": {
+                    "code": {
+                      "type": "string"
+                    },
+                    "context": {},
+                    "details": {
+                      "type": "string"
+                    },
+                    "message": {
+                      "type": "string"
+                    },
+                    "retryAfterSeconds": {
+                      "minimum": 1,
+                      "type": "integer"
+                    }
+                  },
+                  "required": [
+                    "message"
+                  ],
+                  "type": "object"
+                }
+              }
+            },
+            "description": "Default Response"
+          },
+          "401": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "additionalProperties": false,
+                  "properties": {
+                    "code": {
+                      "type": "string"
+                    },
+                    "context": {},
+                    "details": {
+                      "type": "string"
+                    },
+                    "message": {
+                      "type": "string"
+                    },
+                    "retryAfterSeconds": {
+                      "minimum": 1,
+                      "type": "integer"
+                    }
+                  },
+                  "required": [
+                    "message"
+                  ],
+                  "type": "object"
+                }
+              }
+            },
+            "description": "Default Response"
+          },
+          "403": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "additionalProperties": false,
+                  "properties": {
+                    "code": {
+                      "type": "string"
+                    },
+                    "context": {},
+                    "details": {
+                      "type": "string"
+                    },
+                    "message": {
+                      "type": "string"
+                    },
+                    "retryAfterSeconds": {
+                      "minimum": 1,
+                      "type": "integer"
+                    }
+                  },
+                  "required": [
+                    "message"
+                  ],
+                  "type": "object"
+                }
+              }
+            },
+            "description": "Default Response"
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "additionalProperties": false,
+                  "properties": {
+                    "code": {
+                      "type": "string"
+                    },
+                    "context": {},
+                    "details": {
+                      "type": "string"
+                    },
+                    "message": {
+                      "type": "string"
+                    },
+                    "retryAfterSeconds": {
+                      "minimum": 1,
+                      "type": "integer"
+                    }
+                  },
+                  "required": [
+                    "message"
+                  ],
+                  "type": "object"
+                }
+              }
+            },
+            "description": "Default Response"
+          },
+          "409": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "additionalProperties": false,
+                  "properties": {
+                    "code": {
+                      "type": "string"
+                    },
+                    "context": {},
+                    "details": {
+                      "type": "string"
+                    },
+                    "message": {
+                      "type": "string"
+                    },
+                    "retryAfterSeconds": {
+                      "minimum": 1,
+                      "type": "integer"
+                    }
+                  },
+                  "required": [
+                    "message"
+                  ],
+                  "type": "object"
+                }
+              }
+            },
+            "description": "Default Response"
+          },
+          "500": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "additionalProperties": false,
+                  "properties": {
+                    "code": {
+                      "type": "string"
+                    },
+                    "context": {},
+                    "details": {
+                      "type": "string"
+                    },
+                    "message": {
+                      "type": "string"
+                    },
+                    "retryAfterSeconds": {
+                      "minimum": 1,
+                      "type": "integer"
+                    }
+                  },
+                  "required": [
+                    "message"
+                  ],
+                  "type": "object"
+                }
+              }
+            },
+            "description": "Default Response"
+          }
+        },
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "tags": [
+          "Reservations"
+        ]
+      }
+    },
+    "/admin/reservations/{id}/booking-customer": {
+      "post": {
+        "description": "Identifica o hóspede de uma reserva sem cliente.",
+        "operationId": "linkReservationCustomer",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "type": "string"
+            }
+          },
+          {
+            "in": "header",
+            "name": "x-active-hotel-id",
+            "required": false,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "additionalProperties": false,
+                "properties": {
+                  "customer_id": {
+                    "format": "uuid",
+                    "type": "string"
+                  },
+                  "expected_version": {
+                    "minimum": 0,
+                    "type": "integer"
+                  },
+                  "new_customer": {
+                    "additionalProperties": false,
+                    "properties": {
+                      "birth_date": {
+                        "format": "date",
+                        "type": "string"
+                      },
+                      "document_number": {
+                        "maxLength": 40,
+                        "minLength": 3,
+                        "type": "string"
+                      },
+                      "document_type": {
+                        "maxLength": 40,
+                        "minLength": 2,
+                        "type": "string"
+                      },
+                      "email": {
+                        "maxLength": 200,
+                        "type": "string"
+                      },
+                      "full_name": {
+                        "maxLength": 200,
+                        "minLength": 2,
+                        "type": "string"
+                      },
+                      "mobile_phone": {
+                        "maxLength": 40,
+                        "type": "string"
+                      }
+                    },
+                    "required": [
+                      "full_name",
+                      "document_type",
+                      "document_number",
+                      "birth_date"
+                    ],
+                    "type": "object"
+                  }
+                },
+                "required": [
+                  "expected_version"
+                ],
+                "type": "object"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "additionalProperties": false,
+                  "properties": {
+                    "id": {
+                      "type": "string"
+                    },
+                    "ok": {
+                      "type": "boolean"
+                    },
+                    "result": {
+                      "type": "string"
+                    }
+                  },
+                  "required": [
+                    "ok"
+                  ],
                   "type": "object"
                 }
               }
@@ -173523,31 +173990,10 @@
                   "accommodation_id": {
                     "format": "uuid",
                     "type": "string"
-                  },
-                  "expected_version": {
-                    "minimum": 1,
-                    "type": "integer"
-                  },
-                  "idempotency_key": {
-                    "format": "uuid",
-                    "type": "string"
-                  },
-                  "reason": {
-                    "maxLength": 500,
-                    "minLength": 3,
-                    "type": "string"
-                  },
-                  "room_id": {
-                    "format": "uuid",
-                    "type": "string"
                   }
                 },
                 "required": [
-                  "accommodation_id",
-                  "room_id",
-                  "expected_version",
-                  "idempotency_key",
-                  "reason"
+                  "accommodation_id"
                 ],
                 "type": "object"
               }
@@ -173561,6 +174007,335 @@
               "application/json": {
                 "schema": {
                   "additionalProperties": {},
+                  "type": "object"
+                }
+              }
+            },
+            "description": "Default Response"
+          },
+          "400": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "additionalProperties": false,
+                  "properties": {
+                    "code": {
+                      "type": "string"
+                    },
+                    "context": {},
+                    "details": {
+                      "type": "string"
+                    },
+                    "message": {
+                      "type": "string"
+                    },
+                    "retryAfterSeconds": {
+                      "minimum": 1,
+                      "type": "integer"
+                    }
+                  },
+                  "required": [
+                    "message"
+                  ],
+                  "type": "object"
+                }
+              }
+            },
+            "description": "Default Response"
+          },
+          "401": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "additionalProperties": false,
+                  "properties": {
+                    "code": {
+                      "type": "string"
+                    },
+                    "context": {},
+                    "details": {
+                      "type": "string"
+                    },
+                    "message": {
+                      "type": "string"
+                    },
+                    "retryAfterSeconds": {
+                      "minimum": 1,
+                      "type": "integer"
+                    }
+                  },
+                  "required": [
+                    "message"
+                  ],
+                  "type": "object"
+                }
+              }
+            },
+            "description": "Default Response"
+          },
+          "403": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "additionalProperties": false,
+                  "properties": {
+                    "code": {
+                      "type": "string"
+                    },
+                    "context": {},
+                    "details": {
+                      "type": "string"
+                    },
+                    "message": {
+                      "type": "string"
+                    },
+                    "retryAfterSeconds": {
+                      "minimum": 1,
+                      "type": "integer"
+                    }
+                  },
+                  "required": [
+                    "message"
+                  ],
+                  "type": "object"
+                }
+              }
+            },
+            "description": "Default Response"
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "additionalProperties": false,
+                  "properties": {
+                    "code": {
+                      "type": "string"
+                    },
+                    "context": {},
+                    "details": {
+                      "type": "string"
+                    },
+                    "message": {
+                      "type": "string"
+                    },
+                    "retryAfterSeconds": {
+                      "minimum": 1,
+                      "type": "integer"
+                    }
+                  },
+                  "required": [
+                    "message"
+                  ],
+                  "type": "object"
+                }
+              }
+            },
+            "description": "Default Response"
+          },
+          "409": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "additionalProperties": false,
+                  "properties": {
+                    "code": {
+                      "type": "string"
+                    },
+                    "context": {},
+                    "details": {
+                      "type": "string"
+                    },
+                    "message": {
+                      "type": "string"
+                    },
+                    "retryAfterSeconds": {
+                      "minimum": 1,
+                      "type": "integer"
+                    }
+                  },
+                  "required": [
+                    "message"
+                  ],
+                  "type": "object"
+                }
+              }
+            },
+            "description": "Default Response"
+          },
+          "500": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "additionalProperties": false,
+                  "properties": {
+                    "code": {
+                      "type": "string"
+                    },
+                    "context": {},
+                    "details": {
+                      "type": "string"
+                    },
+                    "message": {
+                      "type": "string"
+                    },
+                    "retryAfterSeconds": {
+                      "minimum": 1,
+                      "type": "integer"
+                    }
+                  },
+                  "required": [
+                    "message"
+                  ],
+                  "type": "object"
+                }
+              }
+            },
+            "description": "Default Response"
+          }
+        },
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "tags": [
+          "Reservations"
+        ]
+      }
+    },
+    "/admin/reservations/{id}/settlement": {
+      "post": {
+        "description": "Devolve o crédito ou recebe a multa de uma reserva encerrada.",
+        "operationId": "settleClosedReservation",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "type": "string"
+            }
+          },
+          {
+            "in": "header",
+            "name": "x-active-hotel-id",
+            "required": false,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "additionalProperties": false,
+                "properties": {
+                  "amount": {
+                    "exclusiveMinimum": true,
+                    "minimum": 0,
+                    "type": "number"
+                  },
+                  "cash_session_id": {
+                    "format": "uuid",
+                    "type": "string"
+                  },
+                  "idempotency_key": {
+                    "format": "uuid",
+                    "type": "string"
+                  },
+                  "method": {
+                    "anyOf": [
+                      {
+                        "enum": [
+                          "pix"
+                        ],
+                        "type": "string"
+                      },
+                      {
+                        "enum": [
+                          "cash"
+                        ],
+                        "type": "string"
+                      },
+                      {
+                        "enum": [
+                          "credit_card"
+                        ],
+                        "type": "string"
+                      },
+                      {
+                        "enum": [
+                          "debit_card"
+                        ],
+                        "type": "string"
+                      },
+                      {
+                        "enum": [
+                          "bank_transfer"
+                        ],
+                        "type": "string"
+                      }
+                    ]
+                  },
+                  "reference": {
+                    "maxLength": 120,
+                    "type": "string"
+                  }
+                },
+                "required": [
+                  "amount",
+                  "method",
+                  "idempotency_key"
+                ],
+                "type": "object"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "additionalProperties": false,
+                  "properties": {
+                    "balance": {
+                      "type": "number"
+                    },
+                    "id": {
+                      "format": "uuid",
+                      "type": "string"
+                    },
+                    "kind": {
+                      "anyOf": [
+                        {
+                          "enum": [
+                            "refund"
+                          ],
+                          "type": "string"
+                        },
+                        {
+                          "enum": [
+                            "penalty_payment"
+                          ],
+                          "type": "string"
+                        }
+                      ]
+                    },
+                    "ok": {
+                      "type": "boolean"
+                    },
+                    "result": {
+                      "type": "string"
+                    }
+                  },
+                  "required": [
+                    "ok"
+                  ],
                   "type": "object"
                 }
               }
@@ -175212,6 +175987,223 @@
                   "required": [
                     "item"
                   ],
+                  "type": "object"
+                }
+              }
+            },
+            "description": "Default Response"
+          },
+          "400": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "additionalProperties": false,
+                  "properties": {
+                    "code": {
+                      "type": "string"
+                    },
+                    "context": {},
+                    "details": {
+                      "type": "string"
+                    },
+                    "message": {
+                      "type": "string"
+                    },
+                    "retryAfterSeconds": {
+                      "minimum": 1,
+                      "type": "integer"
+                    }
+                  },
+                  "required": [
+                    "message"
+                  ],
+                  "type": "object"
+                }
+              }
+            },
+            "description": "Default Response"
+          },
+          "401": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "additionalProperties": false,
+                  "properties": {
+                    "code": {
+                      "type": "string"
+                    },
+                    "context": {},
+                    "details": {
+                      "type": "string"
+                    },
+                    "message": {
+                      "type": "string"
+                    },
+                    "retryAfterSeconds": {
+                      "minimum": 1,
+                      "type": "integer"
+                    }
+                  },
+                  "required": [
+                    "message"
+                  ],
+                  "type": "object"
+                }
+              }
+            },
+            "description": "Default Response"
+          },
+          "403": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "additionalProperties": false,
+                  "properties": {
+                    "code": {
+                      "type": "string"
+                    },
+                    "context": {},
+                    "details": {
+                      "type": "string"
+                    },
+                    "message": {
+                      "type": "string"
+                    },
+                    "retryAfterSeconds": {
+                      "minimum": 1,
+                      "type": "integer"
+                    }
+                  },
+                  "required": [
+                    "message"
+                  ],
+                  "type": "object"
+                }
+              }
+            },
+            "description": "Default Response"
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "additionalProperties": false,
+                  "properties": {
+                    "code": {
+                      "type": "string"
+                    },
+                    "context": {},
+                    "details": {
+                      "type": "string"
+                    },
+                    "message": {
+                      "type": "string"
+                    },
+                    "retryAfterSeconds": {
+                      "minimum": 1,
+                      "type": "integer"
+                    }
+                  },
+                  "required": [
+                    "message"
+                  ],
+                  "type": "object"
+                }
+              }
+            },
+            "description": "Default Response"
+          },
+          "409": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "additionalProperties": false,
+                  "properties": {
+                    "code": {
+                      "type": "string"
+                    },
+                    "context": {},
+                    "details": {
+                      "type": "string"
+                    },
+                    "message": {
+                      "type": "string"
+                    },
+                    "retryAfterSeconds": {
+                      "minimum": 1,
+                      "type": "integer"
+                    }
+                  },
+                  "required": [
+                    "message"
+                  ],
+                  "type": "object"
+                }
+              }
+            },
+            "description": "Default Response"
+          },
+          "500": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "additionalProperties": false,
+                  "properties": {
+                    "code": {
+                      "type": "string"
+                    },
+                    "context": {},
+                    "details": {
+                      "type": "string"
+                    },
+                    "message": {
+                      "type": "string"
+                    },
+                    "retryAfterSeconds": {
+                      "minimum": 1,
+                      "type": "integer"
+                    }
+                  },
+                  "required": [
+                    "message"
+                  ],
+                  "type": "object"
+                }
+              }
+            },
+            "description": "Default Response"
+          }
+        },
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "tags": [
+          "Reservations"
+        ]
+      }
+    },
+    "/admin/reservations/unassigned": {
+      "get": {
+        "description": "Lista reservas sem quarto e encerradas sem estadia com saldo a acertar.",
+        "operationId": "listUnassignedReservations",
+        "parameters": [
+          {
+            "in": "header",
+            "name": "x-active-hotel-id",
+            "required": false,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "additionalProperties": {},
                   "type": "object"
                 }
               }
@@ -182851,7 +183843,7 @@
     },
     "/admin/stays/{id}/cancel": {
       "post": {
-        "description": "Cancela a estadia.",
+        "description": "Cancela a estadia, com a multa do plano depois do prazo limite.",
         "operationId": "cancelStay",
         "parameters": [
           {
@@ -182872,6 +183864,27 @@
             }
           }
         ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "additionalProperties": false,
+                "properties": {
+                  "reason": {
+                    "maxLength": 500,
+                    "minLength": 3,
+                    "type": "string"
+                  }
+                },
+                "required": [
+                  "reason"
+                ],
+                "type": "object"
+              }
+            }
+          },
+          "required": true
+        },
         "responses": {
           "200": {
             "content": {
@@ -182882,6 +183895,26 @@
                     "item": {
                       "additionalProperties": false,
                       "properties": {
+                        "closure": {
+                          "additionalProperties": false,
+                          "properties": {
+                            "balance": {
+                              "type": "number"
+                            },
+                            "cancel_penalty": {
+                              "type": "number"
+                            },
+                            "no_show_penalty": {
+                              "type": "number"
+                            }
+                          },
+                          "required": [
+                            "cancel_penalty",
+                            "no_show_penalty",
+                            "balance"
+                          ],
+                          "type": "object"
+                        },
                         "eligibility": {
                           "additionalProperties": false,
                           "properties": {
@@ -184236,6 +185269,26 @@
                     "item": {
                       "additionalProperties": false,
                       "properties": {
+                        "closure": {
+                          "additionalProperties": false,
+                          "properties": {
+                            "balance": {
+                              "type": "number"
+                            },
+                            "cancel_penalty": {
+                              "type": "number"
+                            },
+                            "no_show_penalty": {
+                              "type": "number"
+                            }
+                          },
+                          "required": [
+                            "cancel_penalty",
+                            "no_show_penalty",
+                            "balance"
+                          ],
+                          "type": "object"
+                        },
                         "eligibility": {
                           "additionalProperties": false,
                           "properties": {
@@ -188533,7 +189586,7 @@
     },
     "/admin/stays/{id}/no-show": {
       "post": {
-        "description": "Marca a estadia como no-show.",
+        "description": "Encerra a estadia como no-show, com a multa do plano.",
         "operationId": "markStayNoShow",
         "parameters": [
           {
@@ -188554,6 +189607,27 @@
             }
           }
         ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "additionalProperties": false,
+                "properties": {
+                  "reason": {
+                    "maxLength": 500,
+                    "minLength": 3,
+                    "type": "string"
+                  }
+                },
+                "required": [
+                  "reason"
+                ],
+                "type": "object"
+              }
+            }
+          },
+          "required": true
+        },
         "responses": {
           "200": {
             "content": {
@@ -188564,6 +189638,26 @@
                     "item": {
                       "additionalProperties": false,
                       "properties": {
+                        "closure": {
+                          "additionalProperties": false,
+                          "properties": {
+                            "balance": {
+                              "type": "number"
+                            },
+                            "cancel_penalty": {
+                              "type": "number"
+                            },
+                            "no_show_penalty": {
+                              "type": "number"
+                            }
+                          },
+                          "required": [
+                            "cancel_penalty",
+                            "no_show_penalty",
+                            "balance"
+                          ],
+                          "type": "object"
+                        },
                         "eligibility": {
                           "additionalProperties": false,
                           "properties": {
@@ -189896,6 +190990,26 @@
                     "item": {
                       "additionalProperties": false,
                       "properties": {
+                        "closure": {
+                          "additionalProperties": false,
+                          "properties": {
+                            "balance": {
+                              "type": "number"
+                            },
+                            "cancel_penalty": {
+                              "type": "number"
+                            },
+                            "no_show_penalty": {
+                              "type": "number"
+                            }
+                          },
+                          "required": [
+                            "cancel_penalty",
+                            "no_show_penalty",
+                            "balance"
+                          ],
+                          "type": "object"
+                        },
                         "eligibility": {
                           "additionalProperties": false,
                           "properties": {
@@ -194967,6 +196081,26 @@
                     "item": {
                       "additionalProperties": false,
                       "properties": {
+                        "closure": {
+                          "additionalProperties": false,
+                          "properties": {
+                            "balance": {
+                              "type": "number"
+                            },
+                            "cancel_penalty": {
+                              "type": "number"
+                            },
+                            "no_show_penalty": {
+                              "type": "number"
+                            }
+                          },
+                          "required": [
+                            "cancel_penalty",
+                            "no_show_penalty",
+                            "balance"
+                          ],
+                          "type": "object"
+                        },
                         "eligibility": {
                           "additionalProperties": false,
                           "properties": {
@@ -198983,6 +200117,26 @@
                     "item": {
                       "additionalProperties": false,
                       "properties": {
+                        "closure": {
+                          "additionalProperties": false,
+                          "properties": {
+                            "balance": {
+                              "type": "number"
+                            },
+                            "cancel_penalty": {
+                              "type": "number"
+                            },
+                            "no_show_penalty": {
+                              "type": "number"
+                            }
+                          },
+                          "required": [
+                            "cancel_penalty",
+                            "no_show_penalty",
+                            "balance"
+                          ],
+                          "type": "object"
+                        },
                         "eligibility": {
                           "additionalProperties": false,
                           "properties": {

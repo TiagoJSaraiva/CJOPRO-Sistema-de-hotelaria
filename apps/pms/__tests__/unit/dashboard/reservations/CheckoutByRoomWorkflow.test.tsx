@@ -61,12 +61,12 @@ function createPanel(
     },
     eligibility: {
       can_checkin: false,
-      checkin_block_reason: "A estadia nao esta em status confirmado.",
+      checkin_block_reason: "A estadia não esta em status confirmado.",
       can_checkout: true,
       checkout_block_reason: null,
       can_no_show: false,
       no_show_block_reason:
-        "No-show so pode ser aplicado em estadia confirmada.",
+        "No-show só pode ser aplicado em estadia confirmada.",
       can_cancel: false,
       cancel_block_reason:
         "Cancelamento permitido apenas para estadia confirmada.",

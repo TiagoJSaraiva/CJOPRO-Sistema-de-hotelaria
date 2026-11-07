@@ -1901,6 +1901,11 @@ export type AdminStayOperationalPanelResponse = {
     can_cancel: boolean;
     cancel_block_reason: string | null;
   };
+  closure?: {
+    cancel_penalty: number;
+    no_show_penalty: number;
+    balance: number;
+  };
   payments: AdminStayPayment[];
   folio?: AdminStayFolioResponse;
   maintenance_occurrences?: AdminMaintenanceOccurrenceSummary[];

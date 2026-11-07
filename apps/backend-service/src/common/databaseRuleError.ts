@@ -11,6 +11,8 @@ const RULE_MESSAGES: Record<string, string> = {
   expiry_required: "Este produto exige um lote com validade.",
   cash_transaction_immutable:
     "Um movimento em dinheiro não muda depois de entrar no caixa. Use uma operação compensatória.",
+  closed_day_immutable:
+    "Este lançamento pertence a um dia já fechado e não muda. Registre um novo lançamento para corrigir.",
 };
 
 function ruleCode(error: unknown): string | null {

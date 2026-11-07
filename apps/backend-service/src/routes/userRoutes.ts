@@ -59,7 +59,7 @@ async function validateAndNormalizeRoleAssignments(
     return {
       ok: false,
       status: 500,
-      message: "Falha ao validar papeis para o usuario.",
+      message: "Falha ao validar papeis para o usuário.",
     };
   }
 
@@ -69,7 +69,7 @@ async function validateAndNormalizeRoleAssignments(
     return {
       ok: false,
       status: 400,
-      message: "Uma ou mais roles selecionadas nao existem.",
+      message: "Uma ou mais roles selecionadas não existem.",
     };
   }
 
@@ -90,7 +90,7 @@ async function validateAndNormalizeRoleAssignments(
       return {
         ok: false,
         status: 500,
-        message: "Falha ao validar hoteis para o usuario.",
+        message: "Falha ao validar hoteis para o usuário.",
       };
     }
   }
@@ -107,7 +107,7 @@ async function validateAndNormalizeRoleAssignments(
       return {
         ok: false,
         status: 400,
-        message: "Role selecionada nao existe.",
+        message: "Role selecionada não existe.",
       };
     }
 
@@ -132,7 +132,7 @@ async function validateAndNormalizeRoleAssignments(
         return {
           ok: false,
           status: 400,
-          message: "A role selecionada nao pertence ao hotel escolhido.",
+          message: "A role selecionada não pertence ao hotel escolhido.",
         };
       }
 
@@ -155,7 +155,7 @@ async function validateAndNormalizeRoleAssignments(
       return {
         ok: false,
         status: 400,
-        message: "Hotel selecionado nao existe.",
+        message: "Hotel selecionado não existe.",
       };
     }
 
@@ -257,7 +257,7 @@ export function registerUserRoutes(
         .send(
           adminError(
             ADMIN_ERROR_CODE.VALIDATION,
-            "Nome, email e senha temporaria sao obrigatorios.",
+            "Nome, email e senha temporaria sao obrigatórios.",
           ),
         );
     }
@@ -265,7 +265,7 @@ export function registerUserRoutes(
     if (!isValidEmail(email)) {
       return reply
         .status(400)
-        .send(adminError(ADMIN_ERROR_CODE.VALIDATION, "Email invalido."));
+        .send(adminError(ADMIN_ERROR_CODE.VALIDATION, "Email inválido."));
     }
 
     const roleAssignmentsValidation = await validateAndNormalizeRoleAssignments(
@@ -294,7 +294,7 @@ export function registerUserRoutes(
     if (!passwordHash) {
       return reply
         .status(500)
-        .send(adminError(ADMIN_ERROR_CODE.INTERNAL, "Falha ao criar usuario."));
+        .send(adminError(ADMIN_ERROR_CODE.INTERNAL, "Falha ao criar usuário."));
     }
 
     const createResult = await repository
@@ -315,7 +315,7 @@ export function registerUserRoutes(
     if (!createResult) {
       return reply
         .status(500)
-        .send(adminError(ADMIN_ERROR_CODE.INTERNAL, "Falha ao criar usuario."));
+        .send(adminError(ADMIN_ERROR_CODE.INTERNAL, "Falha ao criar usuário."));
     }
 
     if (createResult.result === "conflict") {
@@ -324,7 +324,7 @@ export function registerUserRoutes(
         .send(
           adminError(
             ADMIN_ERROR_CODE.CONFLICT,
-            "Email ja utilizado por outro usuario.",
+            "Email ja utilizado por outro usuário.",
           ),
         );
     }
@@ -332,7 +332,7 @@ export function registerUserRoutes(
     if (!createResult.id) {
       return reply
         .status(500)
-        .send(adminError(ADMIN_ERROR_CODE.INTERNAL, "Falha ao criar usuario."));
+        .send(adminError(ADMIN_ERROR_CODE.INTERNAL, "Falha ao criar usuário."));
     }
 
     const userWithRelations = await repository
@@ -348,7 +348,7 @@ export function registerUserRoutes(
         .send(
           adminError(
             ADMIN_ERROR_CODE.INTERNAL,
-            "Falha ao consultar usuario criado.",
+            "Falha ao consultar usuário criado.",
           ),
         );
     }
@@ -376,7 +376,7 @@ export function registerUserRoutes(
           .send(
             adminError(
               ADMIN_ERROR_CODE.VALIDATION,
-              "Id do usuario e obrigatorio para atualizacao.",
+              "Id do usuário e obrigatório para atualizacao.",
             ),
           );
       }
@@ -387,7 +387,7 @@ export function registerUserRoutes(
           .send(
             adminError(
               ADMIN_ERROR_CODE.SELF_ACTION_FORBIDDEN,
-              "Nao e permitido atualizar o proprio usuario por esta rota.",
+              "Não e permitido atualizar o proprio usuário por esta rota.",
             ),
           );
       }
@@ -405,7 +405,7 @@ export function registerUserRoutes(
           .send(
             adminError(
               ADMIN_ERROR_CODE.NOT_FOUND,
-              "Usuario nao encontrado ou nao tem acesso neste contexto.",
+              "Usuário não encontrado ou não tem acesso neste contexto.",
             ),
           );
       }
@@ -421,7 +421,7 @@ export function registerUserRoutes(
             .send(
               adminError(
                 ADMIN_ERROR_CODE.VALIDATION,
-                "Nome nao pode ficar vazio.",
+                "Nome não pode ficar vazio.",
               ),
             );
         }
@@ -440,7 +440,7 @@ export function registerUserRoutes(
             .send(
               adminError(
                 ADMIN_ERROR_CODE.VALIDATION,
-                "Email nao pode ficar vazio.",
+                "Email não pode ficar vazio.",
               ),
             );
         }
@@ -448,7 +448,7 @@ export function registerUserRoutes(
         if (!isValidEmail(parsedEmail)) {
           return reply
             .status(400)
-            .send(adminError(ADMIN_ERROR_CODE.VALIDATION, "Email invalido."));
+            .send(adminError(ADMIN_ERROR_CODE.VALIDATION, "Email inválido."));
         }
 
         payload.email = parsedEmail;
@@ -465,7 +465,7 @@ export function registerUserRoutes(
             .send(
               adminError(
                 ADMIN_ERROR_CODE.VALIDATION,
-                "Senha temporaria nao pode ficar vazia.",
+                "Senha temporaria não pode ficar vazia.",
               ),
             );
         }
@@ -483,7 +483,7 @@ export function registerUserRoutes(
             .send(
               adminError(
                 ADMIN_ERROR_CODE.INTERNAL,
-                "Falha ao atualizar usuario.",
+                "Falha ao atualizar usuário.",
               ),
             );
         }
@@ -552,7 +552,7 @@ export function registerUserRoutes(
           .send(
             adminError(
               ADMIN_ERROR_CODE.INTERNAL,
-              "Falha ao atualizar usuario.",
+              "Falha ao atualizar usuário.",
             ),
           );
       }
@@ -563,7 +563,7 @@ export function registerUserRoutes(
           .send(
             adminError(
               ADMIN_ERROR_CODE.CONFLICT,
-              "Email ja utilizado por outro usuario.",
+              "Email ja utilizado por outro usuário.",
             ),
           );
       }
@@ -572,7 +572,7 @@ export function registerUserRoutes(
         return reply
           .status(404)
           .send(
-            adminError(ADMIN_ERROR_CODE.NOT_FOUND, "Usuario nao encontrado."),
+            adminError(ADMIN_ERROR_CODE.NOT_FOUND, "Usuário não encontrado."),
           );
       }
 
@@ -589,7 +589,7 @@ export function registerUserRoutes(
           .send(
             adminError(
               ADMIN_ERROR_CODE.INTERNAL,
-              "Falha ao consultar usuario atualizado.",
+              "Falha ao consultar usuário atualizado.",
             ),
           );
       }
@@ -618,7 +618,7 @@ export function registerUserRoutes(
           .send(
             adminError(
               ADMIN_ERROR_CODE.VALIDATION,
-              "Id do usuario e obrigatorio para exclusao.",
+              "Id do usuário e obrigatório para exclusao.",
             ),
           );
       }
@@ -629,7 +629,7 @@ export function registerUserRoutes(
           .send(
             adminError(
               ADMIN_ERROR_CODE.SELF_ACTION_FORBIDDEN,
-              "Nao e permitido excluir o proprio usuario por esta rota.",
+              "Não e permitido excluir o proprio usuário por esta rota.",
             ),
           );
       }
@@ -647,7 +647,7 @@ export function registerUserRoutes(
           .send(
             adminError(
               ADMIN_ERROR_CODE.NOT_FOUND,
-              "Usuario nao encontrado ou nao tem acesso neste contexto.",
+              "Usuário não encontrado ou não tem acesso neste contexto.",
             ),
           );
       }
@@ -661,7 +661,7 @@ export function registerUserRoutes(
         return reply
           .status(500)
           .send(
-            adminError(ADMIN_ERROR_CODE.INTERNAL, "Falha ao excluir usuario."),
+            adminError(ADMIN_ERROR_CODE.INTERNAL, "Falha ao excluir usuário."),
           );
       }
 
@@ -669,7 +669,7 @@ export function registerUserRoutes(
         return reply
           .status(404)
           .send(
-            adminError(ADMIN_ERROR_CODE.NOT_FOUND, "Usuario nao encontrado."),
+            adminError(ADMIN_ERROR_CODE.NOT_FOUND, "Usuário não encontrado."),
           );
       }
 
@@ -679,7 +679,7 @@ export function registerUserRoutes(
           .send(
             adminError(
               ADMIN_ERROR_CODE.CONFLICT,
-              "Usuario nao pode ser excluido: possui dependencias ativas.",
+              "Usuário não pode ser excluido: possui dependencias ativas.",
             ),
           );
       }

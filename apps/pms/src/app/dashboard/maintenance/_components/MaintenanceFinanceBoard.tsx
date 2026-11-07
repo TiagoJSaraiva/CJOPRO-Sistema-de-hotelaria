@@ -16,6 +16,21 @@ type Props = {
   canSettle: boolean;
 };
 
+const APPROVAL_LABELS: Record<string, string> = {
+  draft: "Rascunho",
+  submitted: "Enviado para aprovação",
+  approved: "Aprovado",
+  rejected: "Rejeitado",
+  canceled: "Cancelado",
+};
+const SETTLEMENT_LABELS: Record<string, string> = {
+  not_posted: "Não lançado",
+  open: "Em aberto",
+  partially_settled: "Parcialmente liquidado",
+  settled: "Liquidado",
+  reversed: "Estornado",
+};
+
 function isCost(
   item: AdminMaintenanceCostItem | AdminMaintenanceRecovery,
 ): item is AdminMaintenanceCostItem {
@@ -124,7 +139,11 @@ export function MaintenanceFinanceBoard({
                   {formatMoney(principal, item.currency)}
                 </p>
                 <p className="text-xs text-slate-500">
-                  {item.approval_status} · {item.settlement_status}
+                  {APPROVAL_LABELS[item.approval_status] ||
+                    "Situação não informada"}{" "}
+                  ·{" "}
+                  {SETTLEMENT_LABELS[item.settlement_status] ||
+                    "Situação não informada"}
                   <ContextHelp label="Aprovação e liquidação">
                     Propor, aprovar e liquidar são etapas separadas. O autor não
                     pode aprovar o próprio item; pagar ou receber exige a

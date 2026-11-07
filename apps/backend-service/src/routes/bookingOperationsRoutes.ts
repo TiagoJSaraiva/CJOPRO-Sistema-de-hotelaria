@@ -15,11 +15,18 @@ import {
   type ReservationAmendmentInput,
   type ReservationGuaranteeInput,
   type RoomAssignmentInput,
+  type ReservationCustomerLinkInput,
+  type ReservationSettlementInput,
+  type RoomAssignmentSimulationInput,
   type VersionedBookingAction,
 } from "@hotel/shared";
 import { ensureAuthorizedWithScope } from "../auth/authorization";
 import { adminError } from "../common/adminError";
 import { requireActiveHotelId } from "../common/requireActiveHotelScope";
+import {
+  createCustomersRepository,
+  type CustomersRepository,
+} from "../repositories/customersRepository";
 import {
   createBookingOperationsRepository,
   type BookingOperationsRepository,
@@ -73,6 +80,10 @@ function send(
 export function registerBookingOperationsRoutes(
   app: FastifyInstance,
   repository: BookingOperationsRepository = createBookingOperationsRepository(),
+  customers: Pick<
+    CustomersRepository,
+    "createCustomer"
+  > = createCustomersRepository(),
 ) {
   app.get("/admin/booking-configuration", async (request, reply) => {
     const c = context(request, reply, PERMISSIONS.BOOKING_CONFIGURATION_MANAGE);
@@ -243,6 +254,86 @@ export function registerBookingOperationsRoutes(
       );
     },
   );
+  app.get("/admin/reservations/unassigned", async (request, reply) => {
+    const c = context(request, reply, PERMISSIONS.ROOM_ASSIGNMENTS_MANAGE);
+    if (!c) return;
+    return reply.send(
+      await repository.query("list_unassigned_reservations", {
+        p_hotel_id: c.hotelId,
+      }),
+    );
+  });
+  app.post<{ Params: Params; Body: ReservationCustomerLinkInput }>(
+    "/admin/reservations/:id/booking-customer",
+    async (request, reply) => {
+      const c = context(request, reply, PERMISSIONS.ROOM_ASSIGNMENTS_MANAGE);
+      if (!c) return;
+      const { customer_id: existing, new_customer: created } = request.body;
+      if (Boolean(existing) === Boolean(created))
+        return reply
+          .status(400)
+          .send(
+            adminError(
+              ADMIN_ERROR_CODE.VALIDATION,
+              "Escolha um cliente ou informe os dados de um novo.",
+            ),
+          );
+      let customerId = existing;
+      if (created) {
+        if (!c.permissions.includes(PERMISSIONS.CUSTOMER_CREATE))
+          return reply
+            .status(403)
+            .send(
+              adminError(
+                ADMIN_ERROR_CODE.FORBIDDEN,
+                "Sem permissão para cadastrar clientes.",
+              ),
+            );
+        const result = await customers.createCustomer(c.hotelId, created);
+        if (result.result !== "ok" || !result.item)
+          return reply
+            .status(409)
+            .send(
+              adminError(
+                ADMIN_ERROR_CODE.CONFLICT,
+                "Já existe cliente com esse documento neste hotel.",
+                "customer_document_exists",
+              ),
+            );
+        customerId = result.item.id;
+      }
+      return send(
+        reply,
+        await repository.mutate("link_reservation_customer", {
+          p_hotel_id: c.hotelId,
+          p_reservation_id: request.params.id,
+          p_actor_id: c.actorId,
+          p_customer_id: customerId,
+          p_expected_version: request.body.expected_version,
+        }),
+      );
+    },
+  );
+  app.post<{ Params: Params; Body: ReservationSettlementInput }>(
+    "/admin/reservations/:id/settlement",
+    async (request, reply) => {
+      const c = context(
+        request,
+        reply,
+        PERMISSIONS.RESERVATION_GUARANTEES_MANAGE,
+      );
+      if (!c) return;
+      return send(
+        reply,
+        await repository.mutate("settle_closed_reservation", {
+          p_hotel_id: c.hotelId,
+          p_reservation_id: request.params.id,
+          p_actor_id: c.actorId,
+          p_input: request.body,
+        }),
+      );
+    },
+  );
   app.post<{ Params: Params; Body: VersionedBookingAction }>(
     "/admin/reservations/:id/actions",
     async (request, reply) => {
@@ -263,7 +354,7 @@ export function registerBookingOperationsRoutes(
       );
     },
   );
-  app.post<{ Params: Params; Body: RoomAssignmentInput }>(
+  app.post<{ Params: Params; Body: RoomAssignmentSimulationInput }>(
     "/admin/reservations/:id/room-assignments/simulate",
     async (request, reply) => {
       const c = context(request, reply, PERMISSIONS.ROOM_ASSIGNMENTS_MANAGE);

@@ -18,11 +18,11 @@ lições [6](../training/lesson-06-consumption-account.md),
 | ------ | ---------------------------------------------------------------------------------------------------------------------------------------------- | ---------------------------------- | -------- |
 | FIN-01 | Toda mutação financeira incrementa a versão da conta; escrita com versão antiga é recusada                                                     | rotas da conta; jornada da lição 6 | parcial  |
 | FIN-02 | O pagamento em lote é atômico, alocado pelo servidor, e nunca excede o saldo                                                                   | rotas da conta; HTTP real          | parcial  |
-| FIN-03 | Subcontas distribuem integralmente os débitos entre hóspede, acompanhantes e empresa                                                           | a definir                          | a provar |
+| FIN-03 | Subcontas distribuem integralmente os débitos entre hóspede, acompanhantes e empresa                                                           | `finance_rules`                    | provada  |
 | FIN-04 | Correção reduz valor e nunca altera a comanda; exige aprovação de outra pessoa                                                                 | rotas da conta                     | parcial  |
 | FIN-05 | Correção já paga só termina depois do reembolso do hotel ou da confirmação externa do parceiro                                                 | fila de decisão nas rotas          | parcial  |
 | FIN-06 | O checkout exige hóspede e acompanhantes quitados, nenhum crédito ou correção pendente; só o saldo empresarial autorizado pode virar recebível | HTTP real; pgTAP de saída          | parcial  |
-| FIN-07 | Dano aceito como exceção exige ciência explícita no checkout                                                                                   | a definir                          | a provar |
+| FIN-07 | Dano aceito como exceção exige ciência explícita no checkout                                                                                   | `finance_rules`; jornada de saída  | provada  |
 | FIN-08 | O fechamento original é imutável: correções e contas complementares vêm depois, sem reabrir a estadia                                          | pgTAP de saída                     | parcial  |
 | FIN-09 | Financeiro consulta a conta do hotel ativo, sem os termos comerciais, e não a opera                                                            | rotas da conta; jornada da lição 6 | provada  |
 
@@ -36,7 +36,7 @@ lições [6](../training/lesson-06-consumption-account.md),
 | FIN-13 | Na contagem cega, o esperado não vem na resposta nem na tela até o dinheiro ser informado                                   | jornada da lição 9                             | provada  |
 | FIN-14 | Diferença dentro da tolerância configurada em cada caixa fecha direto; acima dela fica pendente                             | jornada da lição 9, com tolerância de R$ 5,00  | provada  |
 | FIN-15 | Diferença pendente exige decisão de outra pessoa, que aprova ou pede recontagem                                             | jornada da lição 9                             | parcial  |
-| FIN-16 | Aprovar uma diferença não gera ajuste financeiro; ajuste é operação separada e justificada                                  | jornada da lição 9                             | a provar |
+| FIN-16 | Aprovar uma diferença não gera ajuste financeiro; ajuste é operação separada e justificada                                  | `finance_rules`                                | provada  |
 | FIN-17 | A sessão seguinte de um caixa parte do valor contado na anterior; outro valor exige justificativa, registrada na abertura   | pgTAP de continuidade do caixa                 | provada  |
 | FIN-38 | Dinheiro recebido ou devolvido entra na sessão aberta de quem opera; sem ela, é recusado em todos os caminhos               | pgTAP de dinheiro e sessão; jornada da lição 6 | provada  |
 | FIN-39 | Dinheiro antigo sem sessão é assumido por quem está com ele, na própria sessão, com justificativa; a data original não muda | pgTAP de dinheiro e sessão                     | provada  |
@@ -47,16 +47,16 @@ lições [6](../training/lesson-06-consumption-account.md),
 
 ## Fechamento diário
 
-| ID     | Regra                                                                                    | Prova                                                   | Situação |
-| ------ | ---------------------------------------------------------------------------------------- | ------------------------------------------------------- | -------- |
-| FIN-19 | A data do fechamento é a data civil no fuso do hotel                                     | jornada da lição 9; falta sessão que cruza a meia-noite | parcial  |
-| FIN-20 | Preparar grava projeção e impressão digital; mudança posterior obriga a preparar de novo | jornada da lição 9                                      | provada  |
-| FIN-21 | Quem prepara não aprova; aprovar uma projeção que mudou é recusado                       | jornada da lição 9                                      | provada  |
-| FIN-22 | Sessão aberta, dinheiro sem sessão e evento financeiro incompleto bloqueiam o fechamento | jornada da lição 9                                      | parcial  |
-| FIN-23 | Dia sem movimento também se fecha, como "Dia sem movimentação", com a mesma segregação   | jornada da lição 9                                      | provada  |
-| FIN-24 | A obrigação começa no primeiro caixa ativo e inclui todas as datas faltantes             | jornada da lição 9                                      | a provar |
-| FIN-36 | Um dia fechado não volta a ser preparado; o fechamento e o aprovador ficam intactos      | pgTAP de fechamento                                     | provada  |
-| FIN-25 | Lançamento tardio fica na data atual e referencia a data e o fechamento originais        | a definir                                               | a provar |
+| ID     | Regra                                                                                                                                                                    | Prova                                      | Situação |
+| ------ | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------ | ------------------------------------------ | -------- |
+| FIN-19 | A data do fechamento é a data civil no fuso do hotel                                                                                                                     | `finance_rules`; jornada da lição 9        | provada  |
+| FIN-20 | Preparar grava projeção e impressão digital; mudança posterior obriga a preparar de novo                                                                                 | jornada da lição 9                         | provada  |
+| FIN-21 | Quem prepara não aprova; aprovar uma projeção que mudou é recusado                                                                                                       | jornada da lição 9                         | provada  |
+| FIN-22 | Sessão aberta, dinheiro sem sessão e evento financeiro incompleto bloqueiam o fechamento                                                                                 | jornada da lição 9                         | parcial  |
+| FIN-23 | Dia sem movimento também se fecha, como "Dia sem movimentação", com a mesma segregação                                                                                   | jornada da lição 9                         | provada  |
+| FIN-24 | A obrigação começa no primeiro caixa ativo e inclui todas as datas faltantes                                                                                             | `finance_rules`; `hotel_school_foundation` | provada  |
+| FIN-36 | Um dia fechado não volta a ser preparado; o fechamento e o aprovador ficam intactos                                                                                      | pgTAP de fechamento                        | provada  |
+| FIN-25 | Lançamento tardio fica na próxima data aberta, a partir da atual, e referencia a data e o fechamento originais; o que já está no dia fechado só muda por novo lançamento | `finance_rules`                            | provada  |
 
 ## Apurações de parceiros
 
@@ -64,10 +64,10 @@ lições [6](../training/lesson-06-consumption-account.md),
 | ------ | ------------------------------------------------------------------------------------------------------------------------- | ------------------- | -------- |
 | FIN-26 | Só se apura mês encerrado; mês sem venda aparece se houver aluguel ou mínimo garantido vigente                            | jornada da lição 10 | parcial  |
 | FIN-27 | Comissão incide na venda líquida; no híbrido, vale o maior entre aluguel mais comissão e mínimo garantido                 | jornada da lição 10 | parcial  |
-| FIN-28 | Aluguel trimestral divide por três, anual por doze; vigência parcial conta os dias civis do mês                           | a definir           | a provar |
+| FIN-28 | Aluguel trimestral divide por três, anual por doze; vigência parcial conta os dias civis do mês                           | `finance_rules`     | provada  |
 | FIN-29 | Recalcular só substitui rascunho ou item em revisão, e incrementa a versão                                                | jornada da lição 10 | provada  |
 | FIN-30 | Quem prepara não aprova; fonte, acordo ou correção alterados obrigam nova confirmação                                     | jornada da lição 10 | parcial  |
-| FIN-31 | Correção ou reembolso pendente impede a aprovação                                                                         | jornada da lição 10 | a provar |
+| FIN-31 | Correção ou reembolso pendente impede a aprovação                                                                         | `finance_rules`     | provada  |
 | FIN-32 | Contestação atinge um componente e retém só esse valor; o restante pode ser liquidado em parte                            | jornada da lição 10 | provada  |
 | FIN-33 | Contestação aceita mantém o valor fora do saldo liquidável; ajuste posterior referencia a apuração original               | jornada da lição 10 | provada  |
 | FIN-37 | Quem abre a contestação não a decide                                                                                      | jornada da lição 10 | provada  |

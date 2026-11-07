@@ -59,6 +59,24 @@ const tabs = [
   { key: "lots", label: "Lotes e validade", href: "/dashboard/inventory/lots" },
   { key: "minibar", label: "Frigobares", href: "/dashboard/inventory/minibar" },
 ];
+const AUDIT_ACTION_LABELS: Record<string, string> = {
+  system_created: "Criado pelo sistema",
+  created: "Criado",
+  updated: "Atualizado",
+  archived: "Arquivado",
+  restored: "Restaurado",
+  completed: "Concluído",
+  canceled: "Cancelado",
+};
+const AUDIT_ENTITY_LABELS: Record<string, string> = {
+  location: "Local de estoque",
+  position: "Posição",
+  lot: "Lote",
+  count: "Contagem",
+  document: "Documento",
+  movement: "Movimento",
+  settings: "Configuração",
+};
 const MOVEMENT_LABELS: Record<string, string> = {
   opening: "Saldo inicial",
   receipt: "Entrada",
@@ -572,7 +590,10 @@ async function InventoryMovements({
         <h2 className="m-0 text-xl font-semibold">Auditoria do estoque</h2>
         {audit.items.map((item) => (
           <article className="pms-surface-card" key={item.id}>
-            <strong>{item.action}</strong> · {item.entity_type}
+            <strong>
+              {AUDIT_ACTION_LABELS[item.action] || "Alteração registrada"}
+            </strong>{" "}
+            · {AUDIT_ENTITY_LABELS[item.entity_type] || "Registro de estoque"}
             <p className="m-0 text-sm">
               {item.actor_name || "Sistema"} ·{" "}
               <HotelInstant value={item.created_at} />

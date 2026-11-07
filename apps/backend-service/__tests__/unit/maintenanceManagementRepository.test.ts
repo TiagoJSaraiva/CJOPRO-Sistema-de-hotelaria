@@ -228,6 +228,44 @@ beforeEach(() => {
 });
 
 describe("maintenance management repository", () => {
+  it.each([
+    [
+      "23514",
+      'new row violates check constraint "maintenance_sla_policies_resolution_after_response"',
+      "invalid-hours",
+    ],
+    [
+      "23505",
+      'duplicate key value violates unique constraint "maintenance_sla_policy_priority_key"',
+      "duplicate",
+    ],
+    [
+      "23514",
+      'new row violates check constraint "maintenance_sla_policies_hours_check"',
+      "conflict",
+    ],
+    ["23503", "violates foreign key constraint", "conflict"],
+  ])("traduz o erro %s da política de SLA", async (code, message, result) => {
+    const failure = () =>
+      new FakeQuery({
+        data: null,
+        error: Object.assign(new Error(message), { code }),
+      });
+    mocks.from.mockImplementation(failure);
+    const repository = createMaintenanceManagementRepository();
+    await expect(
+      repository.createSlaPolicy("hotel", "actor", {
+        priority: "low",
+        name: "SLA",
+        response_hours: 10,
+        resolution_hours: 2,
+      }),
+    ).resolves.toEqual({ result });
+    await expect(
+      repository.updateSlaPolicy("hotel", "id", { resolution_hours: 2 }),
+    ).resolves.toEqual({ result });
+  });
+
   it("mapeia planos, competências, SLA e operações atômicas", async () => {
     mocks.rpc.mockImplementation(async (name: string) => ({
       data:

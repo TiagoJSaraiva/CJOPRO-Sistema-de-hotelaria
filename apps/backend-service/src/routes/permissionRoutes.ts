@@ -74,7 +74,7 @@ export function registerPermissionRoutes(
           .send(
             adminError(
               ADMIN_ERROR_CODE.VALIDATION,
-              "Nome da permissao e obrigatorio.",
+              "Nome da permissão e obrigatório.",
             ),
           );
       }
@@ -85,7 +85,7 @@ export function registerPermissionRoutes(
           .send(
             adminError(
               ADMIN_ERROR_CODE.VALIDATION,
-              "Tipo da permissao e obrigatorio.",
+              "Tipo da permissão e obrigatório.",
             ),
           );
       }
@@ -101,7 +101,7 @@ export function registerPermissionRoutes(
         return reply
           .status(500)
           .send(
-            adminError(ADMIN_ERROR_CODE.INTERNAL, "Falha ao criar permissao."),
+            adminError(ADMIN_ERROR_CODE.INTERNAL, "Falha ao criar permissão."),
           );
       }
 
@@ -111,7 +111,7 @@ export function registerPermissionRoutes(
           .send(
             adminError(
               ADMIN_ERROR_CODE.CONFLICT,
-              "Nome de permissao ja existente.",
+              "Nome de permissão ja existente.",
             ),
           );
       }
@@ -120,7 +120,7 @@ export function registerPermissionRoutes(
         return reply
           .status(500)
           .send(
-            adminError(ADMIN_ERROR_CODE.INTERNAL, "Falha ao criar permissao."),
+            adminError(ADMIN_ERROR_CODE.INTERNAL, "Falha ao criar permissão."),
           );
       }
 
@@ -156,7 +156,7 @@ export function registerPermissionRoutes(
           .send(
             adminError(
               ADMIN_ERROR_CODE.VALIDATION,
-              "Id da permissao e obrigatorio para atualizacao.",
+              "Id da permissão e obrigatório para atualizacao.",
             ),
           );
       }
@@ -174,7 +174,7 @@ export function registerPermissionRoutes(
           .send(
             adminError(
               ADMIN_ERROR_CODE.INTERNAL,
-              "Falha ao consultar permissao para atualizacao.",
+              "Falha ao consultar permissão para atualizacao.",
             ),
           );
       }
@@ -183,7 +183,7 @@ export function registerPermissionRoutes(
         return reply
           .status(404)
           .send(
-            adminError(ADMIN_ERROR_CODE.NOT_FOUND, "Permissao nao encontrada."),
+            adminError(ADMIN_ERROR_CODE.NOT_FOUND, "Permissao não encontrada."),
           );
       }
 
@@ -202,7 +202,7 @@ export function registerPermissionRoutes(
           .send(
             adminError(
               ADMIN_ERROR_CODE.SELF_ACTION_FORBIDDEN,
-              "Nao e permitido atualizar uma permissao vinculada ao proprio usuario.",
+              "Não e permitido atualizar uma permissão vinculada ao proprio usuário.",
             ),
           );
       }
@@ -213,7 +213,7 @@ export function registerPermissionRoutes(
           .send(
             adminError(
               ADMIN_ERROR_CODE.VALIDATION,
-              "Nome da permissao e obrigatorio para atualizacao.",
+              "Nome da permissão e obrigatório para atualizacao.",
             ),
           );
       }
@@ -224,7 +224,7 @@ export function registerPermissionRoutes(
           .send(
             adminError(
               ADMIN_ERROR_CODE.VALIDATION,
-              "Tipo da permissao invalido para atualizacao.",
+              "Tipo da permissão inválido para atualizacao.",
             ),
           );
       }
@@ -263,7 +263,7 @@ export function registerPermissionRoutes(
           .send(
             adminError(
               ADMIN_ERROR_CODE.INTERNAL,
-              "Falha ao atualizar permissao.",
+              "Falha ao atualizar permissão.",
             ),
           );
       }
@@ -272,7 +272,7 @@ export function registerPermissionRoutes(
         return reply
           .status(404)
           .send(
-            adminError(ADMIN_ERROR_CODE.NOT_FOUND, "Permissao nao encontrada."),
+            adminError(ADMIN_ERROR_CODE.NOT_FOUND, "Permissao não encontrada."),
           );
       }
 
@@ -282,7 +282,7 @@ export function registerPermissionRoutes(
           .send(
             adminError(
               ADMIN_ERROR_CODE.CONFLICT,
-              "Nome de permissao ja existente.",
+              "Nome de permissão ja existente.",
             ),
           );
       }
@@ -293,7 +293,7 @@ export function registerPermissionRoutes(
           .send(
             adminError(
               ADMIN_ERROR_CODE.INTERNAL,
-              "Falha ao atualizar permissao.",
+              "Falha ao atualizar permissão.",
             ),
           );
       }
@@ -322,7 +322,7 @@ export function registerPermissionRoutes(
           .send(
             adminError(
               ADMIN_ERROR_CODE.VALIDATION,
-              "Id da permissao e obrigatorio para exclusao.",
+              "Id da permissão e obrigatório para exclusao.",
             ),
           );
       }
@@ -340,7 +340,7 @@ export function registerPermissionRoutes(
           .send(
             adminError(
               ADMIN_ERROR_CODE.INTERNAL,
-              "Falha ao consultar permissao para exclusao.",
+              "Falha ao consultar permissão para exclusao.",
             ),
           );
       }
@@ -349,7 +349,7 @@ export function registerPermissionRoutes(
         return reply
           .status(404)
           .send(
-            adminError(ADMIN_ERROR_CODE.NOT_FOUND, "Permissao nao encontrada."),
+            adminError(ADMIN_ERROR_CODE.NOT_FOUND, "Permissao não encontrada."),
           );
       }
 
@@ -368,7 +368,7 @@ export function registerPermissionRoutes(
           .send(
             adminError(
               ADMIN_ERROR_CODE.SELF_ACTION_FORBIDDEN,
-              "Nao e permitido excluir uma permissao vinculada ao proprio usuario.",
+              "Não e permitido excluir uma permissão vinculada ao proprio usuário.",
             ),
           );
       }
@@ -386,7 +386,7 @@ export function registerPermissionRoutes(
           .send(
             adminError(
               ADMIN_ERROR_CODE.INTERNAL,
-              "Falha ao excluir permissao.",
+              "Falha ao excluir permissão.",
             ),
           );
       }
@@ -395,7 +395,7 @@ export function registerPermissionRoutes(
         return reply
           .status(404)
           .send(
-            adminError(ADMIN_ERROR_CODE.NOT_FOUND, "Permissao nao encontrada."),
+            adminError(ADMIN_ERROR_CODE.NOT_FOUND, "Permissao não encontrada."),
           );
       }
 
@@ -405,7 +405,7 @@ export function registerPermissionRoutes(
           .send(
             adminError(
               ADMIN_ERROR_CODE.CONFLICT,
-              "Permissao nao pode ser excluida: possui dependencias ativas.",
+              "Permissao não pode ser excluida: possui dependencias ativas.",
             ),
           );
       }

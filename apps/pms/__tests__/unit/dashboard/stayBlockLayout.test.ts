@@ -4,7 +4,7 @@ import { computeStayBlockLayout } from "../../../src/app/dashboard/reservations/
 describe("stay block layout", () => {
   const cellWidth = 44;
 
-  it("calcula bloco inteiro sem meia-celula", () => {
+  it("calcula bloco inteiro sem meia-célula", () => {
     const layout = computeStayBlockLayout({
       startIndex: 2,
       endIndex: 4,
@@ -16,7 +16,7 @@ describe("stay block layout", () => {
     expect(layout.width).toBe(132);
   });
 
-  it("calcula bloco com meia-celula no inicio", () => {
+  it("calcula bloco com meia-célula no inicio", () => {
     const layout = computeStayBlockLayout({
       startIndex: 2,
       endIndex: 4,
@@ -28,7 +28,7 @@ describe("stay block layout", () => {
     expect(layout.width).toBe(110);
   });
 
-  it("calcula bloco com meia-celula no fim", () => {
+  it("calcula bloco com meia-célula no fim", () => {
     const layout = computeStayBlockLayout({
       startIndex: 2,
       endIndex: 4,
@@ -40,7 +40,7 @@ describe("stay block layout", () => {
     expect(layout.width).toBe(110);
   });
 
-  it("calcula bloco com meia-celula em ambos lados", () => {
+  it("calcula bloco com meia-célula em ambos lados", () => {
     const layout = computeStayBlockLayout({
       startIndex: 2,
       endIndex: 4,

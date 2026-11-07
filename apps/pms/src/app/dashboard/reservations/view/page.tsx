@@ -20,6 +20,7 @@ import { reservationOperationsTabs } from "../stage6Tabs";
 
 type ReservationsCalendarViewPageProps = {
   searchParams?: Promise<{
+    stay_id?: string;
     start_date?: string;
   }>;
 };
@@ -117,6 +118,7 @@ export default async function ReservationsCalendarViewPage({
         canManagePrearrival={
           user?.permissions.includes(PERMISSIONS.PREARRIVAL_MANAGE) || false
         }
+        initialStayId={resolvedSearchParams?.stay_id || null}
         canPostConsumption={
           user?.permissions.includes(PERMISSIONS.CONSUMPTION_POST) || false
         }

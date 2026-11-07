@@ -78,7 +78,7 @@ export function registerRoomRoutes(
         .send(
           adminError(
             ADMIN_ERROR_CODE.VALIDATION,
-            "Dados invalidos para criar quarto.",
+            "Dados inválidos para criar quarto.",
           ),
         );
     }
@@ -144,7 +144,7 @@ export function registerRoomRoutes(
           .send(
             adminError(
               ADMIN_ERROR_CODE.VALIDATION,
-              "Id do quarto e obrigatorio para atualizacao.",
+              "Id do quarto e obrigatório para atualizacao.",
             ),
           );
       }
@@ -169,7 +169,7 @@ export function registerRoomRoutes(
             .send(
               adminError(
                 ADMIN_ERROR_CODE.VALIDATION,
-                "Max occupancy invalido.",
+                "Max occupancy inválido.",
               ),
             );
         }
@@ -184,7 +184,7 @@ export function registerRoomRoutes(
             .send(
               adminError(
                 ADMIN_ERROR_CODE.VALIDATION,
-                "Valor de diaria invalido.",
+                "Valor de diaria inválido.",
               ),
             );
         }
@@ -223,7 +223,7 @@ export function registerRoomRoutes(
           .send(
             adminError(
               ADMIN_ERROR_CODE.NOT_FOUND,
-              "Quarto nao encontrado neste hotel.",
+              "Quarto não encontrado neste hotel.",
             ),
           );
       }
@@ -264,7 +264,7 @@ export function registerRoomRoutes(
           .send(
             adminError(
               ADMIN_ERROR_CODE.VALIDATION,
-              "Id do quarto e obrigatorio para exclusao.",
+              "Id do quarto e obrigatório para exclusao.",
             ),
           );
       }
@@ -290,7 +290,7 @@ export function registerRoomRoutes(
           .send(
             adminError(
               ADMIN_ERROR_CODE.NOT_FOUND,
-              "Quarto nao encontrado neste hotel.",
+              "Quarto não encontrado neste hotel.",
             ),
           );
       }
@@ -301,7 +301,7 @@ export function registerRoomRoutes(
           .send(
             adminError(
               ADMIN_ERROR_CODE.CONFLICT,
-              "Quarto nao pode ser excluido: possui dependencias ativas.",
+              "Quarto não pode ser excluido: possui dependencias ativas.",
             ),
           );
       }

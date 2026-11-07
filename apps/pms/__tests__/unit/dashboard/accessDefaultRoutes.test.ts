@@ -102,7 +102,7 @@ describe("dashboard access default routes", () => {
     ).toBe("/dashboard/reservations/view");
   });
 
-  it("retorna null quando usuario nao tem read e nem create", () => {
+  it("retorna null quando usuário não tem read e nem create", () => {
     const access = makeAccessState({
       canCreate: false,
       canRead: false,

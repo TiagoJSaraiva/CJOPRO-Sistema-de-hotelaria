@@ -202,7 +202,7 @@ async function computeBooking(
     return {
       ok: false,
       statusCode: 400,
-      message: "Selecione ao menos uma celula livre.",
+      message: "Selecione ao menos uma célula livre.",
     };
   }
 
@@ -224,7 +224,7 @@ async function computeBooking(
           cell.side !== "checkout"),
     )
   ) {
-    return { ok: false, statusCode: 400, message: "selected_cells invalido." };
+    return { ok: false, statusCode: 400, message: "selected_cells inválido." };
   }
 
   const roomIds = Array.from(
@@ -255,7 +255,7 @@ async function computeBooking(
     return {
       ok: false,
       statusCode: 400,
-      message: "Um ou mais quartos selecionados nao pertencem ao hotel ativo.",
+      message: "Um ou mais quartos selecionados não pertencem ao hotel ativo.",
     };
   }
   const roomsById = new Map(rooms.map((room) => [room.id, room]));
@@ -379,6 +379,7 @@ async function computeBooking(
     .from("seasons")
     .select("id,start_date,end_date")
     .eq("hotel_id", activeHotelId)
+    .eq("is_active", true)
     .lte("start_date", maxDate)
     .gte("end_date", minDate);
 
@@ -500,7 +501,7 @@ export function registerReservationsCalendarRoutes(
           .send(
             adminError(
               ADMIN_ERROR_CODE.VALIDATION,
-              "start_date invalido. Use o formato YYYY-MM-DD.",
+              "start_date inválido. Use o formato YYYY-MM-DD.",
             ),
           );
       }
@@ -516,7 +517,7 @@ export function registerReservationsCalendarRoutes(
           .send(
             adminError(
               ADMIN_ERROR_CODE.VALIDATION,
-              `days invalido. Informe um valor entre 1 e ${MAX_DAYS}.`,
+              `days inválido. Informe um valor entre 1 e ${MAX_DAYS}.`,
             ),
           );
       }
@@ -600,7 +601,7 @@ export function registerReservationsCalendarRoutes(
           .send(
             adminError(
               ADMIN_ERROR_CODE.VALIDATION,
-              "booking_customer obrigatorio.",
+              "booking_customer obrigatório.",
             ),
           );
       }
@@ -613,7 +614,7 @@ export function registerReservationsCalendarRoutes(
             .send(
               adminError(
                 ADMIN_ERROR_CODE.VALIDATION,
-                "customer_id obrigatorio para cliente existente.",
+                "customer_id obrigatório para cliente existente.",
               ),
             );
         }
@@ -655,7 +656,7 @@ export function registerReservationsCalendarRoutes(
           .send(
             adminError(
               ADMIN_ERROR_CODE.VALIDATION,
-              "Modo de booking_customer invalido.",
+              "Modo de booking_customer inválido.",
             ),
           );
       }
@@ -678,7 +679,7 @@ export function registerReservationsCalendarRoutes(
           .send(
             adminError(
               ADMIN_ERROR_CODE.INTERNAL,
-              "Falha ao gerar codigo de reserva.",
+              "Falha ao gerar código de reserva.",
             ),
           );
       }

@@ -103,7 +103,9 @@ O fechamento diário usa a data civil no fuso do hotel. A preparação registra 
 snapshot e uma impressão digital de caixas e transações. Mudanças posteriores
 exigem nova preparação. Outra pessoa aprova. Sessões abertas, dinheiro sem sessão
 e eventos financeiros incompletos bloqueiam o fechamento. Um lançamento tardio
-fica na data atual e referencia a data e o fechamento originais.
+fica na próxima data aberta, a partir da atual, e referencia a data e o fechamento
+originais. O que já está em um dia fechado não muda nem é apagado: a correção é um
+novo lançamento.
 
 ## Parceiros e pendências
 

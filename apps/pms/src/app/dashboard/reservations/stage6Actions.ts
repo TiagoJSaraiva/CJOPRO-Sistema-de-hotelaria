@@ -25,20 +25,6 @@ async function run(
   revalidatePath(path);
   redirect(`${path}?status=${status}`);
 }
-export async function createRatePlanAction(form: FormData) {
-  await run(
-    "rate-plans",
-    "POST",
-    {
-      name: text(form, "name"),
-      code: text(form, "code"),
-      kind: text(form, "kind"),
-      description: text(form, "description") || undefined,
-    },
-    "/dashboard/reservations/rates",
-    "rate-plan-created",
-  );
-}
 export async function saveBookingConfigurationAction(form: FormData) {
   await run(
     "booking-configuration",

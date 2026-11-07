@@ -21,7 +21,24 @@ const OUTCOMES: Record<string, OperationOutcome> = {
   "invoice-created": success("Nota registrada."),
   "invoice-updated": success("Nota atualizada."),
   "payment-created": success("Pagamento registrado."),
-  "rate-plan-created": success("Plano tarifário criado em rascunho."),
+  "reservation-customer-linked": success("Hóspede identificado na reserva."),
+  "reservation-room-assigned": success(
+    "Quarto alocado. A reserva já aparece no calendário.",
+  ),
+  "reservation-canceled": success("Reserva cancelada."),
+  "customer-required": failure(
+    "Identifique o hóspede antes de alocar o quarto.",
+  ),
+  "hold-not-confirmed": failure(
+    "Registre o adiantamento para confirmar a pré-reserva antes de alocar o quarto.",
+  ),
+  "customer-document-exists": failure(
+    "Já existe cliente com esse documento neste hotel. Escolha-o na lista.",
+  ),
+  "customer-invalid": failure("Esse cliente não pertence a este hotel."),
+  "stay-account-open": failure(
+    "A conta da estadia tem pagamento ou consumo. Acerte a conta antes de encerrar.",
+  ),
   "booking-configuration-saved": success(
     "Configuração de venda direta atualizada.",
   ),
@@ -104,6 +121,11 @@ const DETAILS: Record<string, string> = {
   mapping_missing: "channel-mapping-missing",
   inventory_conflict: "channel-no-availability",
   past_dates: "channel-past-dates",
+  customer_required: "customer-required",
+  hold_not_confirmed: "hold-not-confirmed",
+  customer_document_exists: "customer-document-exists",
+  invalid_customer: "customer-invalid",
+  open_account: "stay-account-open",
 };
 const STATUS_CODES: Record<number, string> = {
   400: "invalid",

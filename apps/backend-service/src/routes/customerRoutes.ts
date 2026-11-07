@@ -101,7 +101,7 @@ export function registerCustomerRoutes(
           .send(
             adminError(
               ADMIN_ERROR_CODE.VALIDATION,
-              "Nome, documento, tipo de documento e data de nascimento sao obrigatorios.",
+              "Nome, documento, tipo de documento e data de nascimento sao obrigatórios.",
             ),
           );
       }
@@ -197,7 +197,7 @@ export function registerCustomerRoutes(
           .send(
             adminError(
               ADMIN_ERROR_CODE.VALIDATION,
-              "Id do cliente e obrigatorio para atualizacao.",
+              "Id do cliente e obrigatório para atualizacao.",
             ),
           );
 
@@ -256,7 +256,7 @@ export function registerCustomerRoutes(
           .send(
             adminError(
               ADMIN_ERROR_CODE.NOT_FOUND,
-              "Cliente nao encontrado neste hotel.",
+              "Cliente não encontrado neste hotel.",
             ),
           );
       if (updateResult.result === "conflict")
@@ -293,7 +293,7 @@ export function registerCustomerRoutes(
           .send(
             adminError(
               ADMIN_ERROR_CODE.VALIDATION,
-              "Id do cliente e obrigatorio para exclusao.",
+              "Id do cliente e obrigatório para exclusao.",
             ),
           );
 
@@ -316,7 +316,7 @@ export function registerCustomerRoutes(
           .send(
             adminError(
               ADMIN_ERROR_CODE.NOT_FOUND,
-              "Cliente nao encontrado neste hotel.",
+              "Cliente não encontrado neste hotel.",
             ),
           );
       if (result === "conflict")
@@ -325,7 +325,7 @@ export function registerCustomerRoutes(
           .send(
             adminError(
               ADMIN_ERROR_CODE.CONFLICT,
-              "Cliente nao pode ser excluido: possui dependencias ativas.",
+              "Cliente não pode ser excluido: possui dependencias ativas.",
             ),
           );
 

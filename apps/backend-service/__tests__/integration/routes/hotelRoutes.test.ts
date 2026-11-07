@@ -60,7 +60,7 @@ describe("routes/hotels", () => {
     });
   });
 
-  it("retorna 403 para POST /admin/hotels sem permissao de criacao", async () => {
+  it("retorna 403 para POST /admin/hotels sem permissão de criacao", async () => {
     const token = createToken([PERMISSIONS.HOTEL_READ]);
 
     const response = await app.inject({
@@ -96,7 +96,7 @@ describe("routes/hotels", () => {
     });
   });
 
-  it("retorna 400 quando faltam campos obrigatorios no cadastro de hotel", async () => {
+  it("retorna 400 quando faltam campos obrigatórios no cadastro de hotel", async () => {
     const token = createToken([PERMISSIONS.HOTEL_CREATE]);
 
     const response = await app.inject({
@@ -117,7 +117,7 @@ describe("routes/hotels", () => {
     });
   });
 
-  it("retorna 403 quando usuario sem escopo global tenta acessar endpoint global", async () => {
+  it("retorna 403 quando usuário sem escopo global tenta acessar endpoint global", async () => {
     const nowInSeconds = Math.floor(Date.now() / 1000);
     const token = signToken({
       id: "user-hotel",
@@ -150,11 +150,11 @@ describe("routes/hotels", () => {
     expect(response.statusCode).toBe(403);
     expect(response.json()).toEqual({
       code: "ADMIN_SCOPE_NOT_ALLOWED",
-      message: "Acesso global de sistema obrigatorio para esta operacao.",
+      message: "Acesso global de sistema obrigatório para esta operacao.",
     });
   });
 
-  it("retorna 400 quando CNPJ invalido e enviado para pais BR", async () => {
+  it("retorna 400 quando CNPJ inválido e enviado para pais BR", async () => {
     const token = createToken([PERMISSIONS.HOTEL_CREATE]);
 
     const response = await app.inject({

@@ -15,7 +15,9 @@ async function proxy(
     path.length > 2 ||
     (method === "GET"
       ? Boolean(action)
-      : !["guarantees", "prearrival-links"].includes(action || ""))
+      : !["guarantees", "prearrival-links", "settlement"].includes(
+          action || "",
+        ))
   ) {
     return NextResponse.json(
       { message: "Operação inválida." },

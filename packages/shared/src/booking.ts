@@ -104,6 +104,26 @@ export const RatePlanVersionInputSchema = Type.Object(
 );
 export type RatePlanVersionInput = Static<typeof RatePlanVersionInputSchema>;
 
+export const ReservationSettlementInputSchema = Type.Object(
+  {
+    amount: Type.Number({ exclusiveMinimum: 0 }),
+    method: Type.Union([
+      Type.Literal("pix"),
+      Type.Literal("cash"),
+      Type.Literal("credit_card"),
+      Type.Literal("debit_card"),
+      Type.Literal("bank_transfer"),
+    ]),
+    idempotency_key: uuid(),
+    cash_session_id: Type.Optional(uuid()),
+    reference: Type.Optional(Type.String({ maxLength: 120 })),
+  },
+  { ...strict, $id: "ReservationSettlementInput" },
+);
+export type ReservationSettlementInput = Static<
+  typeof ReservationSettlementInputSchema
+>;
+
 export const VersionedBookingActionSchema = Type.Object(
   {
     action: Type.String({ minLength: 2, maxLength: 40 }),
@@ -170,6 +190,38 @@ export const RoomAssignmentInputSchema = Type.Object(
   { ...strict, $id: "RoomAssignmentInput" },
 );
 export type RoomAssignmentInput = Static<typeof RoomAssignmentInputSchema>;
+
+export const RoomAssignmentSimulationInputSchema = Type.Object(
+  { accommodation_id: uuid() },
+  { ...strict, $id: "RoomAssignmentSimulationInput" },
+);
+export type RoomAssignmentSimulationInput = Static<
+  typeof RoomAssignmentSimulationInputSchema
+>;
+
+export const ReservationCustomerLinkInputSchema = Type.Object(
+  {
+    expected_version: Type.Integer({ minimum: 0 }),
+    customer_id: Type.Optional(uuid()),
+    new_customer: Type.Optional(
+      Type.Object(
+        {
+          full_name: Type.String({ minLength: 2, maxLength: 200 }),
+          document_type: Type.String({ minLength: 2, maxLength: 40 }),
+          document_number: Type.String({ minLength: 3, maxLength: 40 }),
+          birth_date: Type.String({ format: "date" }),
+          email: Type.Optional(Type.String({ maxLength: 200 })),
+          mobile_phone: Type.Optional(Type.String({ maxLength: 40 })),
+        },
+        strict,
+      ),
+    ),
+  },
+  { ...strict, $id: "ReservationCustomerLinkInput" },
+);
+export type ReservationCustomerLinkInput = Static<
+  typeof ReservationCustomerLinkInputSchema
+>;
 
 export const GuestPreferenceInputSchema = Type.Object(
   {

@@ -37,6 +37,14 @@ const LIFECYCLE_OPTION_LABELS: Record<string, string> = {
   warranty: "Acionar garantia",
 };
 
+const SUPPLIER_WORK_LABELS: Record<string, string> = {
+  not_sent: "não enviada",
+  sent: "enviada",
+  accepted: "aceita",
+  in_service: "em execução",
+  completed: "concluída",
+  canceled: "cancelada",
+};
 const PRIORITY_LABELS: Record<string, string> = {
   low: "Baixa",
   normal: "Normal",
@@ -360,7 +368,9 @@ export function MaintenanceOccurrenceWorkspace({
               {order.supplier_id ? (
                 <p className="text-sm text-[#52606d]">
                   Fornecedor: {order.supplier_name || "Vinculado"} · situação
-                  externa: {order.supplier_status}
+                  externa:{" "}
+                  {SUPPLIER_WORK_LABELS[order.supplier_status || ""] ||
+                    "não informada"}
                   {order.contract_number
                     ? ` · contrato ${order.contract_number}`
                     : ""}

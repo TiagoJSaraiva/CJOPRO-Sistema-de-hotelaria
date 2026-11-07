@@ -23,7 +23,7 @@ function createSession(
 }
 
 describe("auth/activeHotel", () => {
-  it("retorna null quando usuario tem escopo global e nao envia header", () => {
+  it("retorna null quando usuário tem escopo global e não envia header", () => {
     const session = createSession([
       {
         roleId: "r0",
@@ -39,7 +39,7 @@ describe("auth/activeHotel", () => {
     expect(result).toEqual({ ok: true, activeHotelId: null });
   });
 
-  it("retorna primeiro hotel acessivel quando usuario nao tem escopo global e nao envia header", () => {
+  it("retorna primeiro hotel acessivel quando usuário não tem escopo global e não envia header", () => {
     const session = createSession([
       {
         roleId: "r1",
@@ -62,7 +62,7 @@ describe("auth/activeHotel", () => {
     expect(result).toEqual({ ok: true, activeHotelId: "hotel-a" });
   });
 
-  it("aceita header global apenas quando usuario possui escopo global", () => {
+  it("aceita header global apenas quando usuário possui escopo global", () => {
     const session = createSession([
       {
         roleId: "r1",
@@ -80,7 +80,7 @@ describe("auth/activeHotel", () => {
     expect(result).toEqual({
       ok: false,
       statusCode: 403,
-      message: "Contexto global nao permitido para este usuario.",
+      message: "Contexto global não permitido para este usuário.",
     });
   });
 
@@ -102,7 +102,7 @@ describe("auth/activeHotel", () => {
     expect(result).toEqual({
       ok: false,
       statusCode: 403,
-      message: "Hotel ativo nao permitido para este usuario.",
+      message: "Hotel ativo não permitido para este usuário.",
     });
   });
 

@@ -6,7 +6,7 @@ import {
 } from "../../../../src/app/dashboard/_components/formLayout";
 
 describe("dashboard form layout", () => {
-  it("usa grid padrao quando formClassName nao e informado", () => {
+  it("usa grid padrao quando formClassName não e informado", () => {
     expect(getDashboardCreateFormClassName()).toBe(
       DASHBOARD_CREATE_FORM_GRID_CLASS,
     );

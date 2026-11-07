@@ -165,7 +165,7 @@ beforeEach(() => {
         hotel_id: "hotel-1",
         entity_type: "position",
         entity_id: "position-1",
-        action: "inventory.position.created",
+        action: "system_created",
         actor_id: "user-1",
         actor_name: "Gerente",
         changes: { initial_quantity: 2 },
@@ -279,7 +279,8 @@ describe("InventoryWorkspace", () => {
     expect(screen.getByRole("button", { name: "Transferir" })).toBeTruthy();
     expect(screen.getByText(/saldo 0 → 2/)).toBeTruthy();
     expect(screen.queryByText(/opening:|receipt:/)).toBeNull();
-    expect(screen.getByText("inventory.position.created")).toBeTruthy();
+    expect(screen.getByText("Criado pelo sistema")).toBeTruthy();
+    expect(screen.queryByText("system_created")).toBeNull();
   });
 
   it("explains an empty position and disables movement and transfer", async () => {

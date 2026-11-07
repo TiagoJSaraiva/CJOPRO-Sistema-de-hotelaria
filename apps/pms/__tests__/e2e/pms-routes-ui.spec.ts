@@ -124,7 +124,7 @@ test.describe("PMS UI quality", () => {
 
     await page.goto("/dashboard/reservations/rates");
     await expect(
-      page.getByRole("heading", { name: "Novo plano em rascunho" }),
+      page.getByRole("heading", { name: "Planos cadastrados" }),
     ).toBeVisible();
     await auditAccessibility("reservas-tarifas");
 

@@ -53,8 +53,13 @@ export async function createSeasonAction(formData: FormData): Promise<void> {
       end_date: endDate,
       is_active: formData.get("is_active") === "on",
     });
-  } catch {
-    redirectWithStatus("create_error", "create");
+  } catch (error) {
+    redirectWithStatus(
+      (error as { statusCode?: number })?.statusCode === 409
+        ? "create_conflict"
+        : "create_error",
+      "create",
+    );
   }
 
   revalidateSeasonPage();
@@ -86,8 +91,13 @@ export async function updateSeasonAction(formData: FormData): Promise<void> {
       end_date: endDate,
       is_active: formData.get("is_active") === "on",
     });
-  } catch {
-    redirectWithStatus("update_error", "view");
+  } catch (error) {
+    redirectWithStatus(
+      (error as { statusCode?: number })?.statusCode === 409
+        ? "update_conflict"
+        : "update_error",
+      "view",
+    );
   }
 
   revalidateSeasonPage();

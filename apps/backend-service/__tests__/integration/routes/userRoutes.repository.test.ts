@@ -84,7 +84,7 @@ afterEach(async () => {
 });
 
 describe("routes/users with injected repository", () => {
-  it("bloqueia atualizacao do proprio usuario", async () => {
+  it("bloqueia atualizacao do proprio usuário", async () => {
     const repository = createUsersRepositoryMock();
     const app = await createUsersTestApp(repository);
 
@@ -103,12 +103,12 @@ describe("routes/users with injected repository", () => {
     expect(response.statusCode).toBe(403);
     expect(response.json()).toEqual({
       code: "ADMIN_SELF_ACTION_FORBIDDEN",
-      message: "Nao e permitido atualizar o proprio usuario por esta rota.",
+      message: "Não e permitido atualizar o proprio usuário por esta rota.",
     });
     expect(repository.updateUserWithRoles).not.toHaveBeenCalled();
   });
 
-  it("bloqueia exclusao do proprio usuario", async () => {
+  it("bloqueia exclusao do proprio usuário", async () => {
     const repository = createUsersRepositoryMock();
     const app = await createUsersTestApp(repository);
 
@@ -123,12 +123,12 @@ describe("routes/users with injected repository", () => {
     expect(response.statusCode).toBe(403);
     expect(response.json()).toEqual({
       code: "ADMIN_SELF_ACTION_FORBIDDEN",
-      message: "Nao e permitido excluir o proprio usuario por esta rota.",
+      message: "Não e permitido excluir o proprio usuário por esta rota.",
     });
     expect(repository.deleteUser).not.toHaveBeenCalled();
   });
 
-  it("cria usuario com operacao atomica de papeis", async () => {
+  it("cria usuário com operacao atomica de papeis", async () => {
     const repository = createUsersRepositoryMock({
       findRolesByIds: vi.fn(async () => [
         {
@@ -228,11 +228,11 @@ describe("routes/users with injected repository", () => {
     expect(response.statusCode).toBe(409);
     expect(response.json()).toEqual({
       code: "ADMIN_CONFLICT",
-      message: "Email ja utilizado por outro usuario.",
+      message: "Email ja utilizado por outro usuário.",
     });
   });
 
-  it("retorna 409 quando delete de usuario sinaliza conflito", async () => {
+  it("retorna 409 quando delete de usuário sinaliza conflito", async () => {
     const repository = createUsersRepositoryMock({
       deleteUser: vi.fn(async () => "conflict"),
     });
@@ -250,7 +250,7 @@ describe("routes/users with injected repository", () => {
     expect(response.statusCode).toBe(409);
     expect(response.json()).toEqual({
       code: "ADMIN_CONFLICT",
-      message: "Usuario nao pode ser excluido: possui dependencias ativas.",
+      message: "Usuário não pode ser excluido: possui dependencias ativas.",
     });
   });
 });

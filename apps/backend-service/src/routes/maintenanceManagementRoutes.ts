@@ -83,6 +83,32 @@ function write<T>(
   return reply.status(created ? 201 : 200).send({ item: result.item });
 }
 
+function writeSlaPolicy<T>(
+  reply: FastifyReply,
+  result: { result: string; item?: T },
+  created = false,
+) {
+  if (result.result === "invalid-hours")
+    return reply
+      .status(400)
+      .send(
+        adminError(
+          ADMIN_ERROR_CODE.VALIDATION,
+          "O prazo de resolução não pode ser menor que o de resposta.",
+        ),
+      );
+  if (result.result === "duplicate")
+    return reply
+      .status(409)
+      .send(
+        adminError(
+          ADMIN_ERROR_CODE.CONFLICT,
+          "Já existe uma política ativa para esta prioridade e categoria.",
+        ),
+      );
+  return write(reply, result, created);
+}
+
 function csv(rows: Array<Record<string, unknown>>) {
   if (!rows.length) return "";
   const columns = Array.from(new Set(rows.flatMap((row) => Object.keys(row))));
@@ -368,7 +394,7 @@ export function registerMaintenanceManagementRoutes(
     async (request, reply) => {
       const context = scope(request, reply, PERMISSIONS.MAINTENANCE_SLA_MANAGE);
       if (!context) return;
-      return write(
+      return writeSlaPolicy(
         reply,
         await repository.createSlaPolicy(
           context.hotelId,
@@ -384,7 +410,7 @@ export function registerMaintenanceManagementRoutes(
     async (request, reply) => {
       const context = scope(request, reply, PERMISSIONS.MAINTENANCE_SLA_MANAGE);
       if (!context) return;
-      return write(
+      return writeSlaPolicy(
         reply,
         await repository.updateSlaPolicy(
           context.hotelId,

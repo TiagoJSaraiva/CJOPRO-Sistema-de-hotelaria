@@ -20,6 +20,21 @@ import { createServerClient } from "../common/supabaseServer";
 type WriteResult<T> =
   { result: "ok"; item: T } | { result: "not-found" | "conflict" };
 
+type SlaPolicyWriteResult<T> =
+  WriteResult<T> | { result: "invalid-hours" | "duplicate" };
+
+function slaPolicyRefusal(error: { code?: string; message?: string }) {
+  if (error.code === "23505") return { result: "duplicate" } as const;
+  if (
+    error.code === "23514" &&
+    error.message?.includes(
+      "maintenance_sla_policies_resolution_after_response",
+    )
+  )
+    return { result: "invalid-hours" } as const;
+  return { result: "conflict" } as const;
+}
+
 type PlanRow = Tables<"maintenance_preventive_plans"> & {
   category?: { name: string } | null;
   room?: { room_number: string } | null;
@@ -165,12 +180,12 @@ export interface MaintenanceManagementRepository {
     hotelId: string,
     actorId: string,
     input: Record<string, unknown>,
-  ): Promise<WriteResult<AdminMaintenanceSlaPolicy>>;
+  ): Promise<SlaPolicyWriteResult<AdminMaintenanceSlaPolicy>>;
   updateSlaPolicy(
     hotelId: string,
     id: string,
     input: Record<string, unknown>,
-  ): Promise<WriteResult<AdminMaintenanceSlaPolicy>>;
+  ): Promise<SlaPolicyWriteResult<AdminMaintenanceSlaPolicy>>;
   listSuppliers(
     hotelId: string,
     includeCommercial: boolean,
@@ -554,7 +569,7 @@ class SupabaseMaintenanceManagementRepository implements MaintenanceManagementRe
       .insert(payload)
       .select("*")
       .maybeSingle();
-    if (result.error) return { result: "conflict" } as const;
+    if (result.error) return slaPolicyRefusal(result.error);
     return result.data
       ? ({ result: "ok", item: this.mapSlaPolicy(result.data) } as const)
       : ({ result: "not-found" } as const);
@@ -585,7 +600,7 @@ class SupabaseMaintenanceManagementRepository implements MaintenanceManagementRe
       .eq("id", id)
       .select("*")
       .maybeSingle();
-    if (result.error) return { result: "conflict" } as const;
+    if (result.error) return slaPolicyRefusal(result.error);
     return result.data
       ? ({ result: "ok", item: this.mapSlaPolicy(result.data) } as const)
       : ({ result: "not-found" } as const);

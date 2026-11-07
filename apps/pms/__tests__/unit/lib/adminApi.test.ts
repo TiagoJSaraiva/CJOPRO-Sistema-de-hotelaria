@@ -98,7 +98,7 @@ describe("lib/adminApi", () => {
     });
   });
 
-  it("listHotels retorna lista vazia quando sessao nao existe", async () => {
+  it("listHotels retorna lista vazia quando sessao não existe", async () => {
     mockSessionToken(null);
     const fetchMock = vi.fn();
     vi.stubGlobal("fetch", fetchMock);
@@ -129,7 +129,7 @@ describe("lib/adminApi", () => {
     expect(fetchMock).toHaveBeenCalledTimes(1);
   });
 
-  it("createHotel falha quando token nao existe", async () => {
+  it("createHotel falha quando token não existe", async () => {
     mockSessionToken(null);
 
     await expect(

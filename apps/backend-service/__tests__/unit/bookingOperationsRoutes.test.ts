@@ -44,6 +44,12 @@ function headers(permissions: string[]) {
   };
 }
 async function setup() {
+  const customers = {
+    createCustomer: vi.fn().mockResolvedValue({
+      result: "ok",
+      item: { id: "c1000000-0000-4000-8000-000000000009" },
+    }),
+  };
   const repository: BookingOperationsRepository = {
     query: vi.fn(async (name) =>
       name === "hotel_operational_now"
@@ -65,10 +71,10 @@ async function setup() {
     payloads.push(payload);
     return payload;
   });
-  registerBookingOperationsRoutes(app, repository);
+  registerBookingOperationsRoutes(app, repository, customers as never);
   await app.ready();
   apps.push(app);
-  return { app, repository, payloads };
+  return { app, repository, payloads, customers };
 }
 afterEach(async () => {
   while (apps.length) await apps.pop()!.close();
@@ -293,3 +299,224 @@ it("encaminha configuração, canais e indicadores com permissões próprias", a
     }),
   );
 });
+
+it("acerta a reserva encerrada só com a permissão de adiantamentos", async () => {
+  const { app, repository } = await setup();
+  const payload = {
+    amount: 50,
+    method: "pix",
+    idempotency_key: "b6000000-0000-4000-8000-000000000003",
+  };
+  const denied = await app.inject({
+    method: "POST",
+    url: `/admin/reservations/${id}/settlement`,
+    headers: headers([PERMISSIONS.RESERVATION_READ]),
+    payload,
+  });
+  expect(denied.statusCode).toBe(403);
+  const invalid = await app.inject({
+    method: "POST",
+    url: `/admin/reservations/${id}/settlement`,
+    headers: headers([PERMISSIONS.RESERVATION_GUARANTEES_MANAGE]),
+    payload: { ...payload, amount: 0 },
+  });
+  expect(invalid.statusCode).toBe(400);
+  expect(repository.mutate).not.toHaveBeenCalled();
+
+  vi.mocked(repository.mutate).mockResolvedValueOnce({
+    result: "ok",
+    id,
+    kind: "refund",
+    balance: 0,
+  });
+  const done = await app.inject({
+    method: "POST",
+    url: `/admin/reservations/${id}/settlement`,
+    headers: headers([PERMISSIONS.RESERVATION_GUARANTEES_MANAGE]),
+    payload,
+  });
+  expect(done.statusCode).toBe(200);
+  expect(done.json()).toMatchObject({ kind: "refund", balance: 0 });
+  expect(repository.mutate).toHaveBeenCalledWith("settle_closed_reservation", {
+    p_hotel_id: hotel,
+    p_reservation_id: id,
+    p_actor_id: user,
+    p_input: payload,
+  });
+});
+
+it("recusa valor acima do saldo da reserva encerrada", async () => {
+  const { app, repository } = await setup();
+  vi.mocked(repository.mutate).mockResolvedValueOnce({
+    result: "amount_exceeds_balance",
+  });
+  const response = await app.inject({
+    method: "POST",
+    url: `/admin/reservations/${id}/settlement`,
+    headers: headers([PERMISSIONS.RESERVATION_GUARANTEES_MANAGE]),
+    payload: {
+      amount: 60,
+      method: "pix",
+      idempotency_key: "b6000000-0000-4000-8000-000000000003",
+    },
+  });
+  expect(response.statusCode).toBe(409);
+});
+
+it("a fila de reservas sem quarto exige a permissão de alocação", async () => {
+  const { app, repository } = await setup();
+  const denied = await app.inject({
+    method: "GET",
+    url: "/admin/reservations/unassigned",
+    headers: headers([PERMISSIONS.RESERVATION_READ]),
+  });
+  expect(denied.statusCode).toBe(403);
+  const allowed = await app.inject({
+    method: "GET",
+    url: "/admin/reservations/unassigned",
+    headers: headers([PERMISSIONS.ROOM_ASSIGNMENTS_MANAGE]),
+  });
+  expect(allowed.statusCode).toBe(200);
+  expect(repository.query).toHaveBeenCalledWith(
+    "list_unassigned_reservations",
+    { p_hotel_id: hotel },
+  );
+});
+
+const customerUrl = `/admin/reservations/${id}/booking-customer`;
+const newCustomer = {
+  full_name: "Hóspede do Canal",
+  document_type: "cpf",
+  document_number: "00000000191",
+  birth_date: "1990-01-01",
+};
+
+it("vincula cliente existente à reserva", async () => {
+  const { app, repository, customers } = await setup();
+  const customer = "c1000000-0000-4000-8000-000000000001";
+  const response = await app.inject({
+    method: "POST",
+    url: customerUrl,
+    headers: headers([PERMISSIONS.ROOM_ASSIGNMENTS_MANAGE]),
+    payload: { customer_id: customer, expected_version: 1 },
+  });
+  expect(response.statusCode).toBe(200);
+  expect(customers.createCustomer).not.toHaveBeenCalled();
+  expect(repository.mutate).toHaveBeenCalledWith("link_reservation_customer", {
+    p_hotel_id: hotel,
+    p_reservation_id: id,
+    p_actor_id: user,
+    p_customer_id: customer,
+    p_expected_version: 1,
+  });
+});
+
+it("cadastrar o hóspede exige a permissão de criar cliente", async () => {
+  const { app, repository, customers } = await setup();
+  const denied = await app.inject({
+    method: "POST",
+    url: customerUrl,
+    headers: headers([PERMISSIONS.ROOM_ASSIGNMENTS_MANAGE]),
+    payload: { new_customer: newCustomer, expected_version: 1 },
+  });
+  expect(denied.statusCode).toBe(403);
+  expect(customers.createCustomer).not.toHaveBeenCalled();
+  expect(repository.mutate).not.toHaveBeenCalled();
+
+  const created = await app.inject({
+    method: "POST",
+    url: customerUrl,
+    headers: headers([
+      PERMISSIONS.ROOM_ASSIGNMENTS_MANAGE,
+      PERMISSIONS.CUSTOMER_CREATE,
+    ]),
+    payload: { new_customer: newCustomer, expected_version: 1 },
+  });
+  expect(created.statusCode).toBe(200);
+  expect(customers.createCustomer).toHaveBeenCalledWith(hotel, newCustomer);
+  expect(repository.mutate).toHaveBeenCalledWith(
+    "link_reservation_customer",
+    expect.objectContaining({
+      p_customer_id: "c1000000-0000-4000-8000-000000000009",
+    }),
+  );
+});
+
+it("documento já cadastrado não vincula nada", async () => {
+  const { app, repository, customers } = await setup();
+  customers.createCustomer.mockResolvedValueOnce({ result: "conflict" });
+  const response = await app.inject({
+    method: "POST",
+    url: customerUrl,
+    headers: headers([
+      PERMISSIONS.ROOM_ASSIGNMENTS_MANAGE,
+      PERMISSIONS.CUSTOMER_CREATE,
+    ]),
+    payload: { new_customer: newCustomer, expected_version: 1 },
+  });
+  expect(response.statusCode).toBe(409);
+  expect(response.json().details).toBe("customer_document_exists");
+  expect(repository.mutate).not.toHaveBeenCalled();
+});
+
+it.each([
+  [{ expected_version: 1 }],
+  [
+    {
+      customer_id: "c1000000-0000-4000-8000-000000000001",
+      new_customer: newCustomer,
+      expected_version: 1,
+    },
+  ],
+])("pede exatamente uma forma de identificar: %j", async (payload) => {
+  const { app, repository } = await setup();
+  const response = await app.inject({
+    method: "POST",
+    url: customerUrl,
+    headers: headers([
+      PERMISSIONS.ROOM_ASSIGNMENTS_MANAGE,
+      PERMISSIONS.CUSTOMER_CREATE,
+    ]),
+    payload,
+  });
+  expect(response.statusCode).toBe(400);
+  expect(repository.mutate).not.toHaveBeenCalled();
+});
+
+it("a simulação de quarto só precisa da acomodação", async () => {
+  const { app, repository } = await setup();
+  const response = await app.inject({
+    method: "POST",
+    url: `/admin/reservations/${id}/room-assignments/simulate`,
+    headers: headers([PERMISSIONS.ROOM_ASSIGNMENTS_MANAGE]),
+    payload: { accommodation_id: "c2000000-0000-4000-8000-000000000001" },
+  });
+  expect(response.statusCode).toBe(200);
+  expect(repository.query).toHaveBeenCalledWith(
+    "simulate_room_assignment",
+    expect.objectContaining({ p_reservation_id: id }),
+  );
+});
+
+it.each([
+  ["customer_required", 409],
+  ["hold_not_confirmed", 409],
+  ["invalid_customer", 400],
+])(
+  "recusa da alocação ou do vínculo %s mantém o código",
+  async (result, status) => {
+    const { app, repository } = await setup();
+    vi.mocked(repository.mutate).mockResolvedValueOnce({ result });
+    const response = await app.inject({
+      method: "POST",
+      url: customerUrl,
+      headers: headers([PERMISSIONS.ROOM_ASSIGNMENTS_MANAGE]),
+      payload: {
+        customer_id: "c1000000-0000-4000-8000-000000000001",
+        expected_version: 1,
+      },
+    });
+    expect(response.statusCode).toBe(status);
+    expect(response.json().details).toBe(result);
+  },
+);

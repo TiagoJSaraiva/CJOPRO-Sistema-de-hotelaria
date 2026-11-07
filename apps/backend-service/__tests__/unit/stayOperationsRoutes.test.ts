@@ -34,6 +34,8 @@ type SupabaseMockOptions = {
     reversed_entry_id: string | null;
   }>;
   payments?: Array<Record<string, unknown>>;
+  closure?: Record<string, unknown>;
+  closeResult?: Record<string, unknown>;
 };
 
 function createToken(
@@ -231,6 +233,10 @@ function createSupabaseMock(options: SupabaseMockOptions = {}) {
     if (name === "governance_room_state") return { data: null, error: null };
     if (name === "hotel_operational_now")
       return { data: "2026-05-18T13:00:00.000Z", error: null };
+    if (name === "stay_closure_preview")
+      return { data: options.closure ?? null, error: null };
+    if (name === "close_stay_before_arrival")
+      return { data: options.closeResult ?? { result: "ok" }, error: null };
     return { data: null, error: null };
   });
   return { from, rpc };
@@ -252,7 +258,7 @@ afterEach(async () => {
 });
 
 describe("routes/stays checkout candidate", () => {
-  it("retorna 403 sem permissao de calendario", async () => {
+  it("retorna 403 sem permissão de calendario", async () => {
     const app = await createTestApp();
 
     const response = await app.inject({
@@ -267,7 +273,7 @@ describe("routes/stays checkout candidate", () => {
     expect(response.statusCode).toBe(403);
   });
 
-  it("retorna 400 quando room_number nao e informado", async () => {
+  it("retorna 400 quando room_number não e informado", async () => {
     const app = await createTestApp();
 
     const response = await app.inject({
@@ -282,12 +288,12 @@ describe("routes/stays checkout candidate", () => {
     expect(response.statusCode).toBe(400);
     expect(response.json()).toEqual({
       code: ADMIN_ERROR_CODE.VALIDATION,
-      message: "Numero do quarto obrigatorio.",
+      message: "Numero do quarto obrigatório.",
     });
     expect(createServerClient).not.toHaveBeenCalled();
   });
 
-  it("retorna 404 quando quarto nao existe no hotel ativo", async () => {
+  it("retorna 404 quando quarto não existe no hotel ativo", async () => {
     vi.mocked(createServerClient).mockReturnValue(
       createSupabaseMock({ rooms: [] }) as any,
     );
@@ -305,11 +311,11 @@ describe("routes/stays checkout candidate", () => {
     expect(response.statusCode).toBe(404);
     expect(response.json()).toEqual({
       code: ADMIN_ERROR_CODE.NOT_FOUND,
-      message: "Quarto nao encontrado para o hotel ativo.",
+      message: "Quarto não encontrado para o hotel ativo.",
     });
   });
 
-  it("retorna 404 quando quarto nao possui estadia em check-in", async () => {
+  it("retorna 404 quando quarto não possui estadia em check-in", async () => {
     vi.mocked(createServerClient).mockReturnValue(
       createSupabaseMock({
         rooms: [{ id: "room-102", hotel_id: "hotel-1", room_number: "102" }],
@@ -486,6 +492,128 @@ describe("routes/stays panel reservation balance", () => {
       total_paid: 250,
       guarantee_unapplied: 0,
       payment_status: "partial",
+    });
+  });
+});
+
+describe("routes/stays encerramento antes da chegada", () => {
+  const confirmedStay = () =>
+    createPanelStay({
+      stay_status: "confirmed",
+      checkin_date_actual: null,
+      // O relógio do mock está em 18/05; a chegada prevista já passou do limite.
+      checkin_date_expected: "2026-05-15T17:00:00.000Z",
+    });
+
+  async function close(
+    action: "cancel" | "no-show",
+    payload: Record<string, unknown>,
+    options: SupabaseMockOptions = {},
+  ) {
+    const supabase = createSupabaseMock({
+      panelStay: confirmedStay(),
+      ...options,
+    });
+    vi.mocked(createServerClient).mockReturnValue(supabase as any);
+    const app = await createTestApp();
+    const response = await app.inject({
+      method: "POST",
+      url: `/admin/stays/stay-2/${action}`,
+      headers: {
+        authorization: `Bearer ${createToken()}`,
+        [ACTIVE_HOTEL_HEADER_NAME]: "hotel-1",
+      },
+      payload,
+    });
+    return { response, supabase };
+  }
+  const closeCalls = (supabase: { rpc: ReturnType<typeof vi.fn> }) =>
+    supabase.rpc.mock.calls.filter(
+      ([name]) => name === "close_stay_before_arrival",
+    );
+
+  it.each([
+    ["cancel", "cancel"],
+    ["no-show", "no_show"],
+  ] as const)("%s encerra pela regra única do banco", async (path, action) => {
+    const { response, supabase } = await close(path, {
+      reason: "Pedido do hóspede",
+    });
+    expect(response.statusCode).toBe(200);
+    expect(closeCalls(supabase)[0]?.[1]).toEqual({
+      p_hotel_id: "hotel-1",
+      p_stay_id: "stay-2",
+      p_actor_id: "user-1",
+      p_action: action,
+      p_reason: "Pedido do hóspede",
+    });
+  });
+
+  it.each(["cancel", "no-show"] as const)(
+    "%s sem motivo é recusado antes de encerrar",
+    async (path) => {
+      const { response, supabase } = await close(path, { reason: "  " });
+      expect(response.statusCode).toBe(400);
+      expect(closeCalls(supabase)).toHaveLength(0);
+    },
+  );
+
+  it("explica que a conta com pagamento precisa ser acertada antes", async () => {
+    const { response } = await close(
+      "cancel",
+      { reason: "Pedido do hóspede" },
+      { closeResult: { result: "open_account" } },
+    );
+    expect(response.statusCode).toBe(409);
+    expect(response.json().message).toContain("conta da estadia");
+  });
+
+  it("não encerra estadia que já teve check-in", async () => {
+    const { response, supabase } = await close(
+      "cancel",
+      { reason: "Pedido do hóspede" },
+      { panelStay: createPanelStay() },
+    );
+    expect(response.statusCode).toBe(409);
+    expect(closeCalls(supabase)).toHaveLength(0);
+  });
+
+  it("não aplica no-show antes do limite de check-in", async () => {
+    const { response, supabase } = await close(
+      "no-show",
+      { reason: "Não compareceu" },
+      {
+        panelStay: createPanelStay({
+          stay_status: "confirmed",
+          checkin_date_actual: null,
+          checkin_date_expected: "2026-05-30T17:00:00.000Z",
+        }),
+      },
+    );
+    expect(response.statusCode).toBe(409);
+    expect(closeCalls(supabase)).toHaveLength(0);
+  });
+
+  it("o painel traz a multa e o saldo do encerramento", async () => {
+    vi.mocked(createServerClient).mockReturnValue(
+      createSupabaseMock({
+        panelStay: confirmedStay(),
+        closure: { cancel_penalty: 40, no_show_penalty: 40, balance: 50 },
+      }) as any,
+    );
+    const app = await createTestApp();
+    const response = await app.inject({
+      method: "GET",
+      url: "/admin/stays/stay-2/panel",
+      headers: {
+        authorization: `Bearer ${createToken()}`,
+        [ACTIVE_HOTEL_HEADER_NAME]: "hotel-1",
+      },
+    });
+    expect(response.json().item.closure).toEqual({
+      cancel_penalty: 40,
+      no_show_penalty: 40,
+      balance: 50,
     });
   });
 });

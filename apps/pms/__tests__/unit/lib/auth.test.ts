@@ -97,7 +97,7 @@ describe("lib/auth - loginWithCredentials", () => {
     vi.unstubAllGlobals();
   });
 
-  it("retorna token e usuario quando backend autentica", async () => {
+  it("retorna token e usuário quando backend autentica", async () => {
     const fetchMock = vi.fn().mockResolvedValue(
       new Response(
         JSON.stringify({
@@ -209,7 +209,7 @@ describe("lib/auth - getUserFromSession", () => {
     });
   });
 
-  it("nao envia header de hotel quando cookie de contexto nao existe", async () => {
+  it("não envia header de hotel quando cookie de contexto não existe", async () => {
     const getMock = vi.fn((name: string) => {
       if (name === "pms_session_token") {
         return { value: "token-abc" };

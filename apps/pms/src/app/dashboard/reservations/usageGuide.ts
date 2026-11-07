@@ -45,6 +45,13 @@ export function reservationsOperationsGuide(access: {
           "O relógio operacional e a janela do hotel explicam quando o check-in pode ocorrer. Exceção gerencial não ignora horário nem interdição.",
       },
       {
+        id: "closure",
+        target: "stay-closure",
+        title: "Cancele ou registre o no-show",
+        description:
+          "Antes de confirmar, a tela mostra a multa do plano e o que sobra do adiantamento. No cancelamento, a multa só vale depois do prazo limite; no no-show, sempre. Se ficar saldo, registre aqui a devolução ou o recebimento.",
+      },
+      {
         id: "readiness",
         target: "room-readiness",
         title: "Leia os três estados do quarto",

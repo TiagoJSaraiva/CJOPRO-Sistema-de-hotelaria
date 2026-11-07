@@ -87,7 +87,7 @@ export function registerSeasonRoomRateRoutes(
           .send(
             adminError(
               ADMIN_ERROR_CODE.VALIDATION,
-              "Season, room type e daily rate valido sao obrigatorios.",
+              "Season, room type e daily rate valido sao obrigatórios.",
             ),
           );
       }
@@ -119,7 +119,7 @@ export function registerSeasonRoomRateRoutes(
           .send(
             adminError(
               ADMIN_ERROR_CODE.NOT_FOUND,
-              "Temporada nao encontrada neste hotel.",
+              "Temporada não encontrada neste hotel.",
             ),
           );
       }
@@ -187,7 +187,7 @@ export function registerSeasonRoomRateRoutes(
           .send(
             adminError(
               ADMIN_ERROR_CODE.VALIDATION,
-              "Id da tarifa por temporada e obrigatorio para atualizacao.",
+              "Id da tarifa por temporada e obrigatório para atualizacao.",
             ),
           );
 
@@ -216,7 +216,7 @@ export function registerSeasonRoomRateRoutes(
             .send(
               adminError(
                 ADMIN_ERROR_CODE.VALIDATION,
-                "Season valido e obrigatorio para atualizacao.",
+                "Season valido e obrigatório para atualizacao.",
               ),
             );
         }
@@ -248,7 +248,7 @@ export function registerSeasonRoomRateRoutes(
             .send(
               adminError(
                 ADMIN_ERROR_CODE.NOT_FOUND,
-                "Temporada nao encontrada neste hotel.",
+                "Temporada não encontrada neste hotel.",
               ),
             );
         }
@@ -276,7 +276,7 @@ export function registerSeasonRoomRateRoutes(
           .send(
             adminError(
               ADMIN_ERROR_CODE.NOT_FOUND,
-              "Tarifa por temporada nao encontrada neste hotel.",
+              "Tarifa por temporada não encontrada neste hotel.",
             ),
           );
       if (updateResult.result === "conflict")
@@ -313,7 +313,7 @@ export function registerSeasonRoomRateRoutes(
           .send(
             adminError(
               ADMIN_ERROR_CODE.VALIDATION,
-              "Id da tarifa por temporada e obrigatorio para exclusao.",
+              "Id da tarifa por temporada e obrigatório para exclusao.",
             ),
           );
 
@@ -339,7 +339,7 @@ export function registerSeasonRoomRateRoutes(
           .send(
             adminError(
               ADMIN_ERROR_CODE.NOT_FOUND,
-              "Tarifa por temporada nao encontrada neste hotel.",
+              "Tarifa por temporada não encontrada neste hotel.",
             ),
           );
       if (result === "conflict")
@@ -348,7 +348,7 @@ export function registerSeasonRoomRateRoutes(
           .send(
             adminError(
               ADMIN_ERROR_CODE.CONFLICT,
-              "Tarifa por temporada nao pode ser excluida: possui dependencias ativas.",
+              "Tarifa por temporada não pode ser excluida: possui dependencias ativas.",
             ),
           );
 

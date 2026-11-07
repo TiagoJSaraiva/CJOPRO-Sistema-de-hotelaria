@@ -176,7 +176,7 @@ export function registerFinancialTransactionRoutes(
           .send(
             adminError(
               ADMIN_ERROR_CODE.VALIDATION,
-              "Dados invalidos para criar transacao.",
+              "Dados inválidos para criar transacao.",
             ),
           );
       }
@@ -187,7 +187,7 @@ export function registerFinancialTransactionRoutes(
           .send(
             adminError(
               ADMIN_ERROR_CODE.VALIDATION,
-              "Status de transacao invalido.",
+              "Status de transacao inválido.",
             ),
           );
       }
@@ -203,7 +203,7 @@ export function registerFinancialTransactionRoutes(
           .send(
             adminError(
               ADMIN_ERROR_CODE.VALIDATION,
-              "Datas ou vinculos da transacao invalidos.",
+              "Datas ou vinculos da transacao inválidos.",
             ),
           );
       }
@@ -281,7 +281,7 @@ export function registerFinancialTransactionRoutes(
           .send(
             adminError(
               ADMIN_ERROR_CODE.VALIDATION,
-              "Id da transacao e obrigatorio para atualizacao.",
+              "Id da transacao e obrigatório para atualizacao.",
             ),
           );
 
@@ -297,7 +297,7 @@ export function registerFinancialTransactionRoutes(
             .send(
               adminError(
                 ADMIN_ERROR_CODE.VALIDATION,
-                "Tipo de transacao invalido.",
+                "Tipo de transacao inválido.",
               ),
             );
         }
@@ -312,7 +312,7 @@ export function registerFinancialTransactionRoutes(
             .send(
               adminError(
                 ADMIN_ERROR_CODE.VALIDATION,
-                "Categoria da transacao e obrigatoria.",
+                "Categoria da transacao e obrigatória.",
               ),
             );
         }
@@ -327,7 +327,7 @@ export function registerFinancialTransactionRoutes(
             .send(
               adminError(
                 ADMIN_ERROR_CODE.VALIDATION,
-                "Valor da transacao invalido.",
+                "Valor da transacao inválido.",
               ),
             );
         }
@@ -342,7 +342,7 @@ export function registerFinancialTransactionRoutes(
             .send(
               adminError(
                 ADMIN_ERROR_CODE.VALIDATION,
-                "Moeda da transacao e obrigatoria.",
+                "Moeda da transacao e obrigatória.",
               ),
             );
         }
@@ -363,7 +363,7 @@ export function registerFinancialTransactionRoutes(
             .send(
               adminError(
                 ADMIN_ERROR_CODE.VALIDATION,
-                "Status de transacao invalido.",
+                "Status de transacao inválido.",
               ),
             );
         }
@@ -384,7 +384,7 @@ export function registerFinancialTransactionRoutes(
             .send(
               adminError(
                 ADMIN_ERROR_CODE.VALIDATION,
-                "Data de pagamento invalida.",
+                "Data de pagamento inválida.",
               ),
             );
         }
@@ -399,7 +399,7 @@ export function registerFinancialTransactionRoutes(
             .send(
               adminError(
                 ADMIN_ERROR_CODE.VALIDATION,
-                "Data de vencimento invalida.",
+                "Data de vencimento inválida.",
               ),
             );
         }
@@ -428,7 +428,7 @@ export function registerFinancialTransactionRoutes(
             .send(
               adminError(
                 ADMIN_ERROR_CODE.VALIDATION,
-                "Id da estadia invalido.",
+                "Id da estadia inválido.",
               ),
             );
         }
@@ -445,7 +445,7 @@ export function registerFinancialTransactionRoutes(
             .send(
               adminError(
                 ADMIN_ERROR_CODE.VALIDATION,
-                "Id da reserva invalido.",
+                "Id da reserva inválido.",
               ),
             );
         }
@@ -494,7 +494,7 @@ export function registerFinancialTransactionRoutes(
           .send(
             adminError(
               ADMIN_ERROR_CODE.NOT_FOUND,
-              "Transacao nao encontrada neste hotel.",
+              "Transacao não encontrada neste hotel.",
             ),
           );
       if (updateResult.result === "conflict")
@@ -531,7 +531,7 @@ export function registerFinancialTransactionRoutes(
           .send(
             adminError(
               ADMIN_ERROR_CODE.VALIDATION,
-              "Id da transacao e obrigatorio para exclusao.",
+              "Id da transacao e obrigatório para exclusao.",
             ),
           );
 
@@ -558,7 +558,7 @@ export function registerFinancialTransactionRoutes(
           .send(
             adminError(
               ADMIN_ERROR_CODE.NOT_FOUND,
-              "Transacao nao encontrada neste hotel.",
+              "Transacao não encontrada neste hotel.",
             ),
           );
       if (result === "conflict")
@@ -567,7 +567,7 @@ export function registerFinancialTransactionRoutes(
           .send(
             adminError(
               ADMIN_ERROR_CODE.CONFLICT,
-              "Transacao nao pode ser excluida: possui dependencias ativas.",
+              "Transacao não pode ser excluida: possui dependencias ativas.",
             ),
           );
 

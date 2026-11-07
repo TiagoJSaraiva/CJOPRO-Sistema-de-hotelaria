@@ -81,7 +81,10 @@ it("renders the stage 6 reservation workspaces with authorized source data", asy
   expect(screen.getByText(/1 chegada/)).toBeTruthy();
   cleanup();
   render(await RatesPage({ searchParams: Promise.resolve({}) }));
-  expect(screen.getByText(/Novo plano/)).toBeTruthy();
+  expect(
+    screen.getByRole("heading", { name: "Planos cadastrados" }),
+  ).toBeTruthy();
+  expect(screen.queryByRole("button", { name: "Criar plano" })).toBeNull();
   cleanup();
   render(await ChannelsPage({ searchParams: Promise.resolve({}) }));
   expect(screen.getByText("Venda direta")).toBeTruthy();
@@ -234,4 +237,48 @@ it("protects customer relationship and renders declared preferences", async () =
   expect(
     screen.getByRole("button", { name: "Registrar preferência" }),
   ).toBeTruthy();
+});
+
+it("mostra os planos em português, com a política da versão ativa", async () => {
+  mocks.user.mockResolvedValue({
+    permissions: [PERMISSIONS.RATE_PLANS_MANAGE],
+  });
+  mocks.request.mockResolvedValue({
+    items: [
+      {
+        id: "plan-1",
+        code: "FLEX",
+        name: "Flexível",
+        kind: "flexible",
+        status: "active",
+        active_version_id: "version-1",
+        versions: [
+          {
+            id: "version-1",
+            version_number: 2,
+            cancellation_type: "percentage",
+            cancellation_value: 20,
+            cancellation_cutoff_hours: 48,
+          },
+        ],
+      },
+      {
+        id: "plan-2",
+        code: "NR",
+        name: "Sem devolução",
+        kind: "non_refundable",
+        status: "draft",
+        active_version_id: null,
+        versions: [],
+      },
+    ],
+  });
+  render(await RatesPage({ searchParams: Promise.resolve({}) }));
+  const text = document.body.textContent || "";
+  expect(text).toContain("Tarifa flexível · Ativo · versão 2");
+  expect(text).toContain(
+    "20% do total, até 48 horas antes da chegada é grátis",
+  );
+  expect(text).toContain("Não reembolsável · Rascunho · sem versão ativa");
+  expect(text).not.toMatch(/non_refundable|flexible|percentage/);
 });

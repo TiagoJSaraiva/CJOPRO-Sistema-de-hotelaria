@@ -86,7 +86,7 @@ describe("routes/auth", () => {
     vi.clearAllMocks();
   });
 
-  it("retorna 400 quando campos obrigatorios nao sao enviados no login", async () => {
+  it("retorna 400 quando campos obrigatórios não sao enviados no login", async () => {
     const response = await app.inject({
       method: "POST",
       url: "/auth/login",
@@ -100,7 +100,7 @@ describe("routes/auth", () => {
     });
   });
 
-  it("retorna 401 quando usuario nao e encontrado", async () => {
+  it("retorna 401 quando usuário não e encontrado", async () => {
     const supabase = createLoginSupabaseMock({
       userRow: null,
       userError: { code: "PGRST116" },
@@ -124,7 +124,7 @@ describe("routes/auth", () => {
     });
   });
 
-  it("retorna token e usuario quando credenciais sao validas", async () => {
+  it("retorna token e usuário quando credenciais sao validas", async () => {
     const passwordHash = await hashTemporaryPassword("Secret#123");
 
     const supabase = createLoginSupabaseMock({
@@ -252,7 +252,7 @@ describe("routes/auth", () => {
     ]);
   });
 
-  it("retorna 429 quando usuario esta temporariamente bloqueado", async () => {
+  it("retorna 429 quando usuário esta temporariamente bloqueado", async () => {
     const passwordHash = await hashTemporaryPassword("Secret#123");
     const lockedUntil = new Date(Date.now() + 120_000).toISOString();
     const supabase = createLoginSupabaseMock({
@@ -300,7 +300,7 @@ describe("routes/auth", () => {
     });
   });
 
-  it("retorna usuario no /auth/me quando token e valido", async () => {
+  it("retorna usuário no /auth/me quando token e valido", async () => {
     const token = signToken(mePayload);
 
     const response = await app.inject({

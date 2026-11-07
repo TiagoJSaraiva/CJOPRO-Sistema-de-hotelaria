@@ -231,7 +231,7 @@ describe("routes/hotels with injected repository", () => {
     expect(response.statusCode).toBe(409);
     expect(response.json()).toEqual({
       code: "ADMIN_CONFLICT",
-      message: "Hotel nao pode ser excluido: possui dependencias ativas.",
+      message: "Hotel não pode ser excluido: possui dependencias ativas.",
     });
   });
 });

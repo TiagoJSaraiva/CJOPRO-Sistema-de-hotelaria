@@ -100,7 +100,8 @@ select is(
     array[]::uuid[],array[]::uuid[],null)->>'result' from ctx),
   'checkout_date_invalid','a saída prevista para o dia real, com o hotel em outro dia, é recusada'
 );
-update public.stays set checkin_date_expected=(select op from ctx)-interval '1 day',checkout_date_expected=(select op from ctx)
+-- A data vem do hotel: convertida na sessão em UTC, a hora das 21h em diante cairia no dia seguinte.
+update public.stays set checkin_date_expected=(select public.hotel_operational_date(hotel)-1 from ctx),checkout_date_expected=(select public.hotel_operational_date(hotel) from ctx)
   where id=(select stay from ctx);
 select is(
   (select public.checkout_stay_account_stage4(hotel,stay,manager,
@@ -176,6 +177,9 @@ select is(
         'act_operational_pending','mark_all_maintenance_notifications_read','set_maintenance_notification_status',
         -- Versão do feed de canais é técnica; a janela padrão da agenda é sobrescrita pelo backend.
         'get_booking_channel_inventory','list_maintenance_planning_board',
+        -- A chave de execução do ciclo evita rodar duas vezes no mesmo intervalo real. Com o relógio
+        -- do hotel, um hotel-escola congelado só rodaria o ciclo uma vez.
+        'process_maintenance_management_cycle_stage2',
         -- Criação do hotel, antes de existir relógio operacional para ele.
         'initialize_consumption_management_settings','initialize_default_rate_plan_for_hotel',
         -- Carimbos técnicos de atualização.

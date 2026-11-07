@@ -86,7 +86,7 @@ describe("roleViewFilters", () => {
     expect(result.map((item) => item.id)).toEqual(["role-1"]);
   });
 
-  it("filtra por permissao vinculada", () => {
+  it("filtra por permissão vinculada", () => {
     const result = applyRoleViewFilters(roles, {
       ...DEFAULT_ROLE_VIEW_FILTERS,
       roleType: "",

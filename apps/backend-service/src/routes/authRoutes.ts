@@ -125,7 +125,7 @@ export function registerAuthRoutes(
     if (userRow === undefined) {
       return reply
         .status(500)
-        .send({ message: "Falha ao autenticar usuario." });
+        .send({ message: "Falha ao autenticar usuário." });
     }
 
     if (!userRow) {
@@ -161,7 +161,7 @@ export function registerAuthRoutes(
       if (clearLockResult === false) {
         return reply
           .status(500)
-          .send({ message: "Falha ao autenticar usuario." });
+          .send({ message: "Falha ao autenticar usuário." });
       }
 
       userRow.failed_attempts = 0;
@@ -194,7 +194,7 @@ export function registerAuthRoutes(
       if (markFailedResult === false) {
         return reply
           .status(500)
-          .send({ message: "Falha ao autenticar usuario." });
+          .send({ message: "Falha ao autenticar usuário." });
       }
 
       if (shouldLock && lockUntil) {

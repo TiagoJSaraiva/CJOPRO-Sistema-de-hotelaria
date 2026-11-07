@@ -17,7 +17,7 @@ test("reserva direta e pré-chegada funcionam por categoria", async ({
   await page.getByLabel("Saída").fill(isoDateFromNow(32));
   await page.getByRole("button", { name: "Consultar categorias" }).click();
   await page.getByRole("radio").check();
-  await expect(page.getByText(/Garantia: first_night/)).toBeVisible();
+  await expect(page.getByText(/Garantia: primeira diária/)).toBeVisible();
   await page.getByLabel("Nome completo").fill("Maria Silva");
   await page.getByLabel("E-mail").fill("maria@example.com");
   await page.getByRole("checkbox").check();

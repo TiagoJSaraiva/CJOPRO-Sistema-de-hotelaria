@@ -10,6 +10,10 @@ const statusMessages: Record<string, string> = {
     "Preencha id, nome, início e fim para atualizar temporada.",
   delete_missing_id: "Não foi possível identificar a temporada para exclusão.",
   create_error: "Falha ao criar temporada.",
+  create_conflict:
+    "Já existe temporada ativa nesse período. Ajuste as datas ou desative a outra.",
+  update_conflict:
+    "Já existe temporada ativa nesse período. Ajuste as datas ou desative a outra.",
   update_error: "Falha ao atualizar temporada.",
   delete_error: "Falha ao excluir temporada.",
 };

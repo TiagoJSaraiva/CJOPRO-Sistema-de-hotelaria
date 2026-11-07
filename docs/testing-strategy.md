@@ -38,10 +38,12 @@ declarados. Três varreduras completam as lições:
 
 - `sweep-invariants.spec.ts` confere as regras de `supabase/training/invariants.sql`
   nos dez cenários do curso;
-- `sweep-pages.spec.ts` abre todas as páginas com as dez contas e grava o relatório em
-  `node_modules/.cache/pms-journeys-sweep.json`. Leva cerca de 1h40, e o `next dev`
-  reinicia por memória durante a execução, então um tempo limite isolado que não se
-  repete entre rodadas não é defeito. Selecione com `pnpm test:journeys --grep varredura`;
+- `sweep-pages.spec.ts` abre todas as páginas com as dez contas, grava o relatório em
+  `node_modules/.cache/pms-journeys-sweep.json` e reprova a rodada com qualquer achado.
+  Leva cerca de 1h40. O `next dev` reinicia por memória durante a execução, então uma
+  navegação que estoura o tempo é tentada de novo e fica em `retriedNavigations`: só a
+  segunda falha é achado, e a mesma página repetida entre rodadas merece investigação.
+  Selecione com `pnpm test:journeys --grep varredura`;
 - `rpc_runtime_regressions.test.sql` passa `plpgsql_check` em todas as funções, que
   de outra forma só falhariam ao executar.
 

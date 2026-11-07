@@ -87,7 +87,7 @@ afterEach(async () => {
 });
 
 describe("routes/season-room-rates with injected repositories", () => {
-  it("retorna 404 quando a temporada selecionada nao pertence ao hotel ativo", async () => {
+  it("retorna 404 quando a temporada selecionada não pertence ao hotel ativo", async () => {
     const roomRatesRepository = createSeasonRoomRatesRepositoryMock();
     const seasonsRepository = createSeasonsRepositoryMock({
       findSeasonById: vi.fn(async () => null),
@@ -111,7 +111,7 @@ describe("routes/season-room-rates with injected repositories", () => {
     expect(response.statusCode).toBe(404);
     expect(response.json()).toEqual({
       code: "ADMIN_NOT_FOUND",
-      message: "Temporada nao encontrada neste hotel.",
+      message: "Temporada não encontrada neste hotel.",
     });
     expect(seasonsRepository.findSeasonById).toHaveBeenCalledWith(
       "hotel-1",

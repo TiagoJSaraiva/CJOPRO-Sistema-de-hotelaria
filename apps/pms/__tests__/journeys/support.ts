@@ -195,6 +195,28 @@ export function queryLocal(sql: string): string {
   ).trim();
 }
 
+/** Prepara no banco local um dado que a jornada não consegue criar pela tela. */
+export function seedLocal(sql: string): void {
+  execFileSync(
+    "docker",
+    [
+      "exec",
+      "-i",
+      DATABASE_CONTAINER,
+      "psql",
+      "-X",
+      "-U",
+      "postgres",
+      "-d",
+      "postgres",
+      "-v",
+      "ON_ERROR_STOP=1",
+      "-q",
+    ],
+    { encoding: "utf8", windowsHide: true, input: sql },
+  );
+}
+
 /** Regras de supabase/training/invariants.sql; cada item devolvido é uma violação. */
 export function findInvariantViolations(): string[] {
   const output = execFileSync(

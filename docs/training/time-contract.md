@@ -99,6 +99,9 @@ hotel-escola, com o relógio em outro instante.
 `operational_clock_stamps.test.sql` guarda essa classificação e reprova `now()` novo
 fora da lista justificada, assim como coluna operacional com `DEFAULT now()`.
 
+O ciclo automático da manutenção, sem hora informada, usa o relógio de cada hotel para
+preventivas, alertas de SLA e pendências.
+
 ## Colunas operacionais sem valor informado
 
 O padrão de uma coluna não enxerga o hotel da linha. Por isso, colunas que registram um

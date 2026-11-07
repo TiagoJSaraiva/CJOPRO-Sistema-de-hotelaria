@@ -53,7 +53,7 @@ describe("lib/activeHotel", () => {
     ]);
   });
 
-  it("inclui opcao global quando usuario tem role global", () => {
+  it("inclui opcao global quando usuário tem role global", () => {
     const user = createUser([
       {
         roleId: "r0",
@@ -98,7 +98,7 @@ describe("lib/activeHotel", () => {
     expect(resolveActiveHotelForUser(user, "hotel-2")).toBe("hotel-2");
   });
 
-  it("resolve hotel ativo para o primeiro hotel quando usuario nao tem global", () => {
+  it("resolve hotel ativo para o primeiro hotel quando usuário não tem global", () => {
     const user = createUser([
       {
         roleId: "r2",
@@ -120,7 +120,7 @@ describe("lib/activeHotel", () => {
     expect(resolveActiveHotelForUser(user, null)).toBe("hotel-a");
   });
 
-  it("resolve hotel ativo para global quando usuario possui acesso global e cookie e invalido", () => {
+  it("resolve hotel ativo para global quando usuário possui acesso global e cookie e inválido", () => {
     const user = createUser([
       {
         roleId: "r0",

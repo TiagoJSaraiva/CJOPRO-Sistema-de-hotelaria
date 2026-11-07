@@ -112,7 +112,9 @@ test("lição 5: área, equipamento e decisão de garantia", async ({
     await expect
       .soft(page.getByRole("heading", { name: "Equipamentos" }))
       .toBeVisible();
-    await expect.soft(card).toContainText(`garantia até ${expiry}`);
+    await expect
+      .soft(card)
+      .toContainText(`garantia até ${expiry.split("-").reverse().join("/")}`);
     await expect
       .soft(card.getByRole("button", { name: "Tratar garantia" }))
       .toBeVisible();

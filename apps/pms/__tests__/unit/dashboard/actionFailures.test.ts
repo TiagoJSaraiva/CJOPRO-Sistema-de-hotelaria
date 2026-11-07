@@ -43,7 +43,6 @@ import {
   actBookingChannelEventAction,
   actPrearrivalRequestAction,
   createBookingChannelWithSecretAction,
-  createRatePlanAction,
   importBookingChannelCsvAction,
   reconcileAnalyticsAction,
   saveBookingChannelMappingAction,
@@ -71,12 +70,6 @@ describe("tarifas, canais, pré-chegada e indicadores", () => {
   const cases: Array<
     [string, (data: FormData) => Promise<unknown>, string, string]
   > = [
-    [
-      "plano tarifário",
-      createRatePlanAction,
-      "/dashboard/reservations/rates",
-      "rate-plan-created",
-    ],
     [
       "venda direta",
       saveBookingConfigurationAction,

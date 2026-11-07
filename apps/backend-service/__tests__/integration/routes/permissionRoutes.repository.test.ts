@@ -71,7 +71,7 @@ afterEach(async () => {
 });
 
 describe("routes/permissions with injected repository", () => {
-  it("bloqueia atualizacao de permissao vinculada ao proprio usuario", async () => {
+  it("bloqueia atualizacao de permissão vinculada ao proprio usuário", async () => {
     const repository = createPermissionsRepositoryMock({
       getPermissionById: vi.fn(async () => ({
         id: "perm-1",
@@ -118,12 +118,12 @@ describe("routes/permissions with injected repository", () => {
     expect(response.json()).toEqual({
       code: "ADMIN_SELF_ACTION_FORBIDDEN",
       message:
-        "Nao e permitido atualizar uma permissao vinculada ao proprio usuario.",
+        "Não e permitido atualizar uma permissão vinculada ao proprio usuário.",
     });
     expect(repository.updatePermission).not.toHaveBeenCalled();
   });
 
-  it("bloqueia exclusao de permissao vinculada ao proprio usuario", async () => {
+  it("bloqueia exclusao de permissão vinculada ao proprio usuário", async () => {
     const repository = createPermissionsRepositoryMock({
       getPermissionById: vi.fn(async () => ({
         id: "perm-1",
@@ -167,12 +167,12 @@ describe("routes/permissions with injected repository", () => {
     expect(response.json()).toEqual({
       code: "ADMIN_SELF_ACTION_FORBIDDEN",
       message:
-        "Nao e permitido excluir uma permissao vinculada ao proprio usuario.",
+        "Não e permitido excluir uma permissão vinculada ao proprio usuário.",
     });
     expect(repository.deletePermission).not.toHaveBeenCalled();
   });
 
-  it("retorna 409 quando delete de permissao sinaliza conflito", async () => {
+  it("retorna 409 quando delete de permissão sinaliza conflito", async () => {
     const repository = createPermissionsRepositoryMock({
       deletePermission: vi.fn(async () => "conflict"),
     });
@@ -190,7 +190,7 @@ describe("routes/permissions with injected repository", () => {
     expect(response.statusCode).toBe(409);
     expect(response.json()).toEqual({
       code: "ADMIN_CONFLICT",
-      message: "Permissao nao pode ser excluida: possui dependencias ativas.",
+      message: "Permissao não pode ser excluida: possui dependencias ativas.",
     });
   });
 });

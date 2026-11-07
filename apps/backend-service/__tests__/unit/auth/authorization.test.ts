@@ -36,15 +36,15 @@ function createReplyMock() {
 }
 
 describe("auth/authorization", () => {
-  it("hasPermission retorna true quando usuario possui permissao", () => {
+  it("hasPermission retorna true quando usuário possui permissão", () => {
     expect(hasPermission(baseSession, PERMISSIONS.HOTEL_READ)).toBe(true);
   });
 
-  it("hasPermission retorna false quando usuario nao possui permissao", () => {
+  it("hasPermission retorna false quando usuário não possui permissão", () => {
     expect(hasPermission(baseSession, PERMISSIONS.HOTEL_DELETE)).toBe(false);
   });
 
-  it("ensureAuthorized retorna 401 quando token nao e informado", () => {
+  it("ensureAuthorized retorna 401 quando token não e informado", () => {
     const { reply, status, send } = createReplyMock();
 
     const result = ensureAuthorized(
@@ -62,7 +62,7 @@ describe("auth/authorization", () => {
     );
   });
 
-  it("ensureAuthorized retorna 403 quando usuario nao tem permissao", () => {
+  it("ensureAuthorized retorna 403 quando usuário não tem permissão", () => {
     const { reply, status, send } = createReplyMock();
     const token = signToken(baseSession);
 
@@ -81,7 +81,7 @@ describe("auth/authorization", () => {
     );
   });
 
-  it("ensureAuthorized retorna sessao quando usuario possui permissao", () => {
+  it("ensureAuthorized retorna sessao quando usuário possui permissão", () => {
     const { reply } = createReplyMock();
     const token = signToken(baseSession);
 
@@ -94,7 +94,7 @@ describe("auth/authorization", () => {
     expect(result).toEqual(baseSession);
   });
 
-  it("ensureAuthorizedAny retorna sessao quando possui ao menos uma permissao", () => {
+  it("ensureAuthorizedAny retorna sessao quando possui ao menos uma permissão", () => {
     const { reply } = createReplyMock();
     const token = signToken(baseSession);
 
@@ -107,7 +107,7 @@ describe("auth/authorization", () => {
     expect(result).toEqual(baseSession);
   });
 
-  it("ensureAuthorizedAny retorna 403 quando nao possui nenhuma permissao", () => {
+  it("ensureAuthorizedAny retorna 403 quando não possui nenhuma permissão", () => {
     const { reply, status, send } = createReplyMock();
     const token = signToken(baseSession);
 
@@ -126,7 +126,7 @@ describe("auth/authorization", () => {
     );
   });
 
-  it("ensureAuthorized retorna 403 quando hotel ativo informado nao pertence ao usuario", () => {
+  it("ensureAuthorized retorna 403 quando hotel ativo informado não pertence ao usuário", () => {
     const { reply, status, send } = createReplyMock();
     const token = signToken({
       ...baseSession,
@@ -156,7 +156,7 @@ describe("auth/authorization", () => {
     expect(status).toHaveBeenCalledWith(403);
     expect(send).toHaveBeenCalledWith(
       expect.objectContaining({
-        message: "Hotel ativo nao permitido para este usuario.",
+        message: "Hotel ativo não permitido para este usuário.",
       }),
     );
   });
