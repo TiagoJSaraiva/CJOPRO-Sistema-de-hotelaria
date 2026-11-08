@@ -82,6 +82,33 @@ describe("orquestrador local de treinamento", () => {
       }
     });
 
+    // QA-100: o seed calcula datas com current_date; uma base de ontem traria as datas atrasadas um dia.
+    it("muda a impressão digital quando o dia muda", () => {
+      const root = mkdtempSync(join(tmpdir(), "training-baseline-"));
+      try {
+        mkdirSync(join(root, "supabase/migrations"), { recursive: true });
+        writeFileSync(join(root, "supabase/seed.sql"), "select current_date;");
+        const today = baselineFingerprint(root, "2026-11-07");
+        expect(baselineFingerprint(root, "2026-11-07")).toBe(today);
+        expect(baselineFingerprint(root, "2026-11-08")).not.toBe(today);
+      } finally {
+        rmSync(root, { recursive: true, force: true });
+      }
+    });
+
+    it("usa o dia em UTC, o mesmo de current_date no banco local", () => {
+      const root = mkdtempSync(join(tmpdir(), "training-baseline-"));
+      try {
+        mkdirSync(join(root, "supabase/migrations"), { recursive: true });
+        writeFileSync(join(root, "supabase/seed.sql"), "select 1;");
+        expect(baselineFingerprint(root)).toBe(
+          baselineFingerprint(root, new Date().toISOString().slice(0, 10)),
+        );
+      } finally {
+        rmSync(root, { recursive: true, force: true });
+      }
+    });
+
     it("ignora a diferença de fim de linha entre plataformas", () => {
       const root = mkdtempSync(join(tmpdir(), "training-baseline-"));
       try {

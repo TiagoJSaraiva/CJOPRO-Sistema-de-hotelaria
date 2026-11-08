@@ -272,9 +272,16 @@ function runAdminSql(sql, { capture = false } = {}) {
   return capture ? result.stdout.trim() : "";
 }
 
-export function baselineFingerprint(root = ROOT_DIRECTORY) {
+/**
+ * Identifica a base: migrations, seed e o dia. O seed calcula datas com current_date, que no banco local
+ * segue o dia em UTC; uma base de outro dia traria todas as datas deslocadas (QA-100).
+ */
+export function baselineFingerprint(
+  root = ROOT_DIRECTORY,
+  day = new Date().toISOString().slice(0, 10),
+) {
   const migrations = resolve(root, "supabase/migrations");
-  const hash = createHash("sha256");
+  const hash = createHash("sha256").update(`dia:${day}`);
   const add = (name, path) =>
     hash.update(name).update(readFileSync(path, "utf8").replace(/\r\n/g, "\n"));
   for (const name of readdirSync(migrations).sort()) {

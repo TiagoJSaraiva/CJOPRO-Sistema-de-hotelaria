@@ -9,7 +9,8 @@
 
 As jornadas preparam o cenário com `pnpm training reset --fast`. O primeiro reset da rodada é real e
 guarda os dados de `public`, `auth` e `storage` no container; os seguintes restauram esses dados. A base
-deixa de valer quando migrations ou seed mudam, ou depois de qualquer reset real. A última das três
+deixa de valer quando migrations ou seed mudam, quando o dia muda (o seed usa `current_date`, QA-100) ou
+depois de qualquer reset real. A última das três
 rodadas do aceite roda com `JOURNEY_REAL_RESET=true`, que usa só o reset real.
 
 ## Motivo
