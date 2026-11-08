@@ -112,6 +112,8 @@ export function ConsumptionServiceWorkspace({
                 name="stay_id"
                 value={selectedStayId}
                 onChange={(event) => {
+                  // Recarga completa de propósito: o servidor monta o contexto da estadia escolhida.
+                  // eslint-disable-next-line @next/next/no-location-assign-relative-destination
                   window.location.href = `?stay_id=${event.target.value}`;
                 }}
               >

@@ -8,7 +8,8 @@
 ## Decisão
 
 A varredura de páginas sobe o PMS com `next build` e `next start`. As demais jornadas continuam em
-`next dev`. `pnpm test:journeys` executa as duas fases em sequência.
+`next dev`, e as lições 7 a 9 rodam nas duas fases, porque reproduziam o QA-095 só em produção.
+`pnpm test:journeys` executa as duas fases em sequência; a lista fica em `PRODUCTION_JOURNEYS`.
 
 ## Motivo
 
@@ -26,8 +27,7 @@ controle negativo: um `undefined` inserido numa página reprovou a rodada.
 ## Consequências
 
 As jornadas seguem vendo avisos de hidratação. A varredura já ignorava avisos de console, então não perde
-nada com a troca. Só a varredura exercita o build de produção, e ela não executa ações, por isso defeitos
-como o QA-095 não aparecem em nenhuma suíte.
+nada com a troca. As lições 7 a 9 exercitam ações no build de produção e protegem contra a volta do QA-095.
 
 ## Prova
 

@@ -86,6 +86,9 @@ triggers, políticas ou dados, leia integralmente o
 
 - Use TypeScript estrito e preserve APIs públicas, isolamento por hotel e
   envelopes de erro existentes.
+- O PMS e o site usam o Next.js 16, que mudou APIs e convenções. Antes de escrever
+  código Next, consulte a documentação da versão instalada em
+  `apps/pms/node_modules/next/dist/docs/`.
 - Prefira dependências já instaladas; adicionar ou atualizar pacote exige escopo
   explícito e auditoria do lockfile.
 - Testes devem ser determinísticos e independentes de serviços externos, exceto

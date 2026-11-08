@@ -28,15 +28,24 @@ process.env.JOURNEY_BACKEND_LOG = resolve(
   "../../node_modules/.cache/pms-journeys-backend.jsonl",
 );
 
-// A varredura roda sobre o build de produção, e as demais jornadas em dev: scripts/journeys.mjs
-// executa uma fase de cada vez. Pastas próprias, porque cada execução limpa as da anterior.
-const sweepPhase = process.env.JOURNEY_PMS_MODE === "production";
-const outputName = sweepPhase ? "pms-journeys-sweep" : "pms-journeys";
+// A varredura e as lições de PRODUCTION_JOURNEYS rodam sobre o build de produção, e as jornadas em dev:
+// scripts/journeys.mjs executa uma fase de cada vez. Pastas próprias, porque cada execução limpa as da anterior.
+const productionPhase = process.env.JOURNEY_PMS_MODE === "production";
+// A lista vem de PRODUCTION_JOURNEYS em scripts/journeys.mjs: o Playwright não importa aquele módulo ESM.
+const productionJourneys = (process.env.JOURNEY_PRODUCTION_JOURNEYS || "")
+  .split(",")
+  .filter(Boolean);
+if (productionPhase && !productionJourneys.length) {
+  throw new Error(
+    "A fase de produção das jornadas não recebeu a lista de arquivos. Execute pnpm test:journeys.",
+  );
+}
+const outputName = productionPhase ? "pms-journeys-production" : "pms-journeys";
 
 export default defineConfig({
   testDir: "./__tests__/journeys",
-  ...(sweepPhase
-    ? { testMatch: "sweep-pages.spec.ts" }
+  ...(productionPhase
+    ? { testMatch: productionJourneys.map((name) => `${name}.spec.ts`) }
     : { testMatch: "*.spec.ts", testIgnore: "sweep-pages.spec.ts" }),
   timeout: 600_000,
   updateSnapshots: "none",
@@ -86,7 +95,7 @@ export default defineConfig({
       env: { PORT: String(bookingPort), ALLOWED_ORIGINS: allowedOrigins },
     },
     {
-      command: `pnpm exec next ${sweepPhase ? "start" : "dev"} --port ${pmsPort}`,
+      command: `pnpm exec next ${productionPhase ? "start" : "dev"} --port ${pmsPort}`,
       url: `${pmsUrl}/login`,
       reuseExistingServer: false,
       timeout: 180_000,

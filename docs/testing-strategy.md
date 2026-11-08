@@ -41,7 +41,8 @@ declarados. Três varreduras completam as lições:
 - `sweep-pages.spec.ts` abre todas as páginas com as dez contas, grava o relatório em
   `node_modules/.cache/pms-journeys-sweep.json` e reprova a rodada com qualquer achado.
   Ela roda sobre o build de produção do PMS e leva cerca de 4 min; as demais jornadas
-  seguem em `next dev`, e `pnpm test:journeys` executa as duas fases em sequência. Uma
+  seguem em `next dev`, e `pnpm test:journeys` executa as duas fases em sequência. As
+  lições 7 a 9 rodam nas duas, porque o QA-095 só aparecia em produção. Uma
   navegação que estoura o tempo é tentada de novo e fica em `retriedNavigations`: só a
   segunda falha é achado, e a mesma página repetida entre rodadas merece investigação.
   Selecione com `pnpm test:journeys --grep varredura`;

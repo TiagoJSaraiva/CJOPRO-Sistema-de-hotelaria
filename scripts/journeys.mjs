@@ -12,6 +12,33 @@ import {
 const JOURNEY_SESSION_SECRET = "journeys-local-session-secret-synthetic-only";
 const SWEEP_FILE = "sweep-pages";
 
+/**
+ * Arquivos que também rodam sobre o build de produção do PMS. A varredura roda só lá. As lições 7 a 9 rodam
+ * nas duas fases: em produção, elas reproduziam o QA-095, a tela parada depois de ações, que `next dev` não mostra.
+ */
+export const PRODUCTION_JOURNEYS = [
+  SWEEP_FILE,
+  "lesson-07-inventory",
+  "lesson-08-procurement",
+  "lesson-09-cash-close",
+];
+const PRODUCTION_LESSON_TITLES = [
+  "lição 7: posições, lotes, contagem e reposição do frigobar",
+  "lição 8: da reposição à conta do fornecedor",
+  "lição 9: sessão, contagem cega e fechamento diário",
+];
+
+function filterReachesProduction(filter) {
+  if (/varredura/i.test(filter)) return true;
+  try {
+    const pattern = new RegExp(filter, "i");
+    return PRODUCTION_LESSON_TITLES.some((title) => pattern.test(title));
+  } catch {
+    // Na dúvida, roda: a fase sem teste correspondente termina vazia.
+    return true;
+  }
+}
+
 export function buildJourneyEnvironment(
   { apiUrl, serviceRoleKey },
   baseEnvironment = process.env,
@@ -41,7 +68,7 @@ export function parseJourneyArguments(argv) {
 /**
  * A varredura roda sobre o build de produção do PMS: em `next dev`, ela compila cada rota na primeira visita e
  * reinicia por memória, o que custava mais de uma hora. As jornadas seguem em dev, onde os avisos de hidratação
- * aparecem; o custo delas é o reset do banco.
+ * aparecem; o custo delas é o reset do banco. As de PRODUCTION_JOURNEYS rodam também em produção.
  */
 export function journeyPhases(argv) {
   const args = parseJourneyArguments(argv);
@@ -60,17 +87,18 @@ export function journeyPhases(argv) {
   });
 
   const isSweepPath = (path) => path.includes(SWEEP_FILE);
-  const sweepSelected =
+  const isProductionPath = (path) =>
+    PRODUCTION_JOURNEYS.some((name) => path.includes(name));
+  const productionSelected =
     paths.length > 0
-      ? paths.some(isSweepPath)
-      : nameFilters.length === 0 ||
-        nameFilters.some((filter) => /varredura/i.test(filter));
-  const othersSelected =
+      ? paths.some(isProductionPath)
+      : nameFilters.length === 0 || nameFilters.some(filterReachesProduction);
+  const developmentSelected =
     paths.length === 0 || paths.some((path) => !isSweepPath(path));
 
   return [
-    ...(othersSelected ? ["development"] : []),
-    ...(sweepSelected ? ["production"] : []),
+    ...(developmentSelected ? ["development"] : []),
+    ...(productionSelected ? ["production"] : []),
   ];
 }
 
@@ -108,7 +136,13 @@ function main(argv) {
         "--pass-with-no-tests",
         ...parseJourneyArguments(argv),
       ],
-      { env: { ...environment, JOURNEY_PMS_MODE: phase } },
+      {
+        env: {
+          ...environment,
+          JOURNEY_PMS_MODE: phase,
+          JOURNEY_PRODUCTION_JOURNEYS: PRODUCTION_JOURNEYS.join(","),
+        },
+      },
     );
     exitCode ||= playwright.status ?? 1;
   }

@@ -9,11 +9,12 @@ Git. Leia também o [plano em andamento](plans/2026-11-debug-real-stack.md) e as
 ## Etapa atual
 
 Fase 4 da depuração no sistema real, com novas features congeladas. Os defeitos com decisão
-tomada foram corrigidos. Falta decidir o QA-095 antes das rodadas finais.
+tomada foram corrigidos, e o Next foi atualizado para a 16.4.5. Falta decidir a atualização das
+dependências apontadas pela auditoria de segurança antes das rodadas finais.
 
 ## Próximos passos
 
-1. Decidir o que fazer com o QA-095 e, se for corrigido agora, corrigi-lo com o teste primeiro.
+1. Decidir e corrigir o QA-099, para `pnpm check:ci` passar.
 2. Rodar as três rodadas seguidas, a última com `JOURNEY_REAL_RESET=true`, além de
    `pnpm check:ci` e `pnpm test:db`.
 3. Passada manual do usuário, procurando o que está confuso, não o que está quebrado.
@@ -21,18 +22,19 @@ tomada foram corrigidos. Falta decidir o QA-095 antes das rodadas finais.
 
 ## Decisões pendentes
 
-- QA-095: atualizar para o Next 16.4, com a correção oficial, ou contornar no código, sem `loading.tsx` e `Suspense` nas telas com ações ou com recarga forçada.
+- QA-099: quais dependências atualizar para a auditoria de segurança passar.
 
 ## Defeitos abertos
 
-| ID     | Sev | Situação                                                                                         |
-| ------ | --- | ------------------------------------------------------------------------------------------------ |
-| QA-095 | S2  | Tela não atualiza depois de ações em produção; provável regressão do Next. A 15.5.29 não resolve |
-| QA-092 | S4  | [Limite aceito](decisions/0015-datas-em-utc-limite-aceito.md)                                    |
-| QA-093 | S4  | Observar nas três rodadas: falha única de `db reset`, sem causa confirmada                       |
-| QA-097 | S4  | Observar nas três rodadas: login da primeira jornada falhou uma vez                              |
-| QA-008 | S4  | Observar: tempos limite do E2E com a máquina sob carga                                           |
-| QA-028 | S4  | Observar: erro único de JSON no servidor Next                                                    |
+| ID     | Sev | Situação                                                                               |
+| ------ | --- | -------------------------------------------------------------------------------------- |
+| QA-099 | S2  | Auditoria de segurança falha por dependências antigas; decidir o escopo da atualização |
+| QA-098 | S4  | Regras do React Compiler desligadas no lint; avaliar depois da depuração               |
+| QA-092 | S4  | [Limite aceito](decisions/0015-datas-em-utc-limite-aceito.md)                          |
+| QA-093 | S4  | Observar nas três rodadas: falha única de `db reset`, sem causa confirmada             |
+| QA-097 | S4  | Observar nas três rodadas: login da primeira jornada falhou uma vez                    |
+| QA-008 | S4  | Observar: tempos limite do E2E com a máquina sob carga                                 |
+| QA-028 | S4  | Observar: erro único de JSON no servidor Next                                          |
 
 Detalhes no [registro de bugs](qa/bug-ledger.md).
 

@@ -2,6 +2,7 @@ import { describe, expect, it } from "vitest";
 import {
   buildJourneyEnvironment,
   journeyPhases,
+  PRODUCTION_JOURNEYS,
   parseJourneyArguments,
 } from "../../../../scripts/journeys.mjs";
 
@@ -99,6 +100,31 @@ describe("executor das jornadas no sistema real", () => {
         "production",
       ]);
       expect(journeyPhases(["-g", "varredura: admin"])).toEqual([
+        "development",
+        "production",
+      ]);
+    });
+
+    // QA-095: só o build de produção mostrava a tela parada depois de ações; estas lições o reproduziam.
+    it("roda as lições 7 a 9 também em produção", () => {
+      expect(PRODUCTION_JOURNEYS).toEqual([
+        "sweep-pages",
+        "lesson-07-inventory",
+        "lesson-08-procurement",
+        "lesson-09-cash-close",
+      ]);
+      expect(
+        journeyPhases(["__tests__/journeys/lesson-09-cash-close.spec.ts"]),
+      ).toEqual(["development", "production"]);
+      expect(journeyPhases(["--grep", "lição 8"])).toEqual([
+        "development",
+        "production",
+      ]);
+      expect(journeyPhases(["-g", "lição (1|2)"])).toEqual(["development"]);
+    });
+
+    it("um filtro de nome inválido não impede a fase de produção", () => {
+      expect(journeyPhases(["--grep", "lição ("])).toEqual([
         "development",
         "production",
       ]);
