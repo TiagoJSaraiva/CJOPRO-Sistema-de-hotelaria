@@ -5,6 +5,8 @@ node_modules/
 dist/
 build/
 .next/
+# Gerado pelo Next 16, que alterna entre .next/types (build) e .next/dev/types (dev).
+next-env.d.ts
 .turbo/
 coverage/
 
