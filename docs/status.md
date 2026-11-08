@@ -21,18 +21,18 @@ tomada foram corrigidos. Falta decidir o QA-095 antes das rodadas finais.
 
 ## Decisões pendentes
 
-- QA-095: investigar e corrigir agora, ou aceitar e tratar depois da depuração.
+- QA-095: atualizar para o Next 16.4, com a correção oficial, ou contornar no código, sem `loading.tsx` e `Suspense` nas telas com ações ou com recarga forçada.
 
 ## Defeitos abertos
 
-| ID     | Sev | Situação                                                                   |
-| ------ | --- | -------------------------------------------------------------------------- |
-| QA-095 | S3  | Novo: tela não atualiza depois de ação muito rápida, só em produção        |
-| QA-092 | S4  | [Limite aceito](decisions/0015-datas-em-utc-limite-aceito.md)              |
-| QA-093 | S4  | Observar nas três rodadas: falha única de `db reset`, sem causa confirmada |
-| QA-097 | S4  | Observar nas três rodadas: login da primeira jornada falhou uma vez        |
-| QA-008 | S4  | Observar: tempos limite do E2E com a máquina sob carga                     |
-| QA-028 | S4  | Observar: erro único de JSON no servidor Next                              |
+| ID     | Sev | Situação                                                                                         |
+| ------ | --- | ------------------------------------------------------------------------------------------------ |
+| QA-095 | S2  | Tela não atualiza depois de ações em produção; provável regressão do Next. A 15.5.29 não resolve |
+| QA-092 | S4  | [Limite aceito](decisions/0015-datas-em-utc-limite-aceito.md)                                    |
+| QA-093 | S4  | Observar nas três rodadas: falha única de `db reset`, sem causa confirmada                       |
+| QA-097 | S4  | Observar nas três rodadas: login da primeira jornada falhou uma vez                              |
+| QA-008 | S4  | Observar: tempos limite do E2E com a máquina sob carga                                           |
+| QA-028 | S4  | Observar: erro único de JSON no servidor Next                                                    |
 
 Detalhes no [registro de bugs](qa/bug-ledger.md).
 
