@@ -24,6 +24,8 @@ export function buildJourneyEnvironment(
   return {
     ...baseEnvironment,
     SUPABASE_URL: assertLocalApiUrl(apiUrl),
+    // Validado aqui uma vez; o treinamento reaproveita sem chamar a CLI de novo (QA-096).
+    SUPABASE_LOCAL_VALIDATED_URL: assertLocalApiUrl(apiUrl),
     SUPABASE_SECRET_KEY: serviceRoleKey,
     SUPABASE_SERVICE_ROLE_KEY: serviceRoleKey,
     AUTH_SESSION_SECRET: JOURNEY_SESSION_SECRET,

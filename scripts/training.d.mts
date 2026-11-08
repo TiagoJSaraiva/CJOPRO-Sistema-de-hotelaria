@@ -11,3 +11,6 @@ export function resetScenario(
   yes: boolean,
   options?: { fast?: boolean },
 ): Promise<void>;
+export function reusableLocalValidation(
+  environment?: Record<string, string | undefined>,
+): string | null;

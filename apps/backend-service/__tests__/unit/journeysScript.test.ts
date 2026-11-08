@@ -24,6 +24,12 @@ describe("executor das jornadas no sistema real", () => {
     expect(environment.AUTH_SESSION_SECRET.length).toBeGreaterThanOrEqual(32);
   });
 
+  it("repassa a URL já validada para os subprocessos não consultarem a CLI de novo", () => {
+    expect(
+      buildJourneyEnvironment(credentials, {}).SUPABASE_LOCAL_VALIDATED_URL,
+    ).toBe("http://127.0.0.1:54321");
+  });
+
   it("sobrescreve um destino herdado do ambiente", () => {
     const environment = buildJourneyEnvironment(credentials, {
       SUPABASE_URL: "https://example.supabase.co",

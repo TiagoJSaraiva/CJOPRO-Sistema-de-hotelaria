@@ -13,11 +13,35 @@ import { fileURLToPath } from "node:url";
 import {
   assertTrainingLocalApiUrl,
   baselineFingerprint,
+  reusableLocalValidation,
   parseTrainingArguments,
   TRAINING_SCENARIOS,
 } from "../../../../scripts/training.mjs";
 
 describe("orquestrador local de treinamento", () => {
+  // QA-096: cada `supabase status` deixava um módulo nativo no Temp; o pai já validou o destino.
+  describe("validação reaproveitada", () => {
+    it("usa a URL validada pelo processo pai", () => {
+      expect(
+        reusableLocalValidation({
+          SUPABASE_LOCAL_VALIDATED_URL: "http://127.0.0.1:54321",
+        }),
+      ).toBe("http://127.0.0.1:54321");
+    });
+
+    it("consulta a CLI quando ninguém validou antes", () => {
+      expect(reusableLocalValidation({})).toBeNull();
+    });
+
+    it("recusa uma URL herdada que não seja a local", () => {
+      expect(() =>
+        reusableLocalValidation({
+          SUPABASE_LOCAL_VALIDATED_URL: "https://example.supabase.co",
+        }),
+      ).toThrow(/não ser o Supabase local/);
+    });
+  });
+
   describe("reset rápido", () => {
     it("só usa a restauração quando pedida", () => {
       expect(

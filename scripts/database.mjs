@@ -1,7 +1,14 @@
 #!/usr/bin/env node
 
 import { spawnSync } from "node:child_process";
-import { existsSync, readFileSync, writeFileSync } from "node:fs";
+import {
+  existsSync,
+  mkdirSync,
+  readdirSync,
+  readFileSync,
+  rmSync,
+  writeFileSync,
+} from "node:fs";
 import { dirname, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
 
@@ -51,8 +58,52 @@ export function runPnpm(args, options = {}) {
   return run(process.platform === "win32" ? "pnpm.cmd" : "pnpm", args, options);
 }
 
-function runSupabase(args, options = {}) {
-  return runPnpm(["exec", "supabase", ...args], options);
+// A CLI do Supabase é compilada com Bun e extrai um módulo nativo para a pasta temporária a cada
+// execução, sem apagá-lo depois (QA-096). Uma pasta própria, limpa depois de cada chamada, evita que
+// isso se acumule no Temp do sistema. Arquivos ainda em uso ficam travados e saem na próxima limpeza.
+const SUPABASE_CLI_TEMP = resolve(
+  ROOT_DIRECTORY,
+  "node_modules/.cache/supabase-cli-tmp",
+);
+const EXTRACTED_MODULE = /^\..+\.node$/;
+
+export function supabaseCliEnvironment(
+  baseEnvironment = process.env,
+  directory = SUPABASE_CLI_TEMP,
+) {
+  return {
+    ...baseEnvironment,
+    TEMP: directory,
+    TMP: directory,
+    TMPDIR: directory,
+  };
+}
+
+export function cleanSupabaseCliTemp(directory = SUPABASE_CLI_TEMP) {
+  if (!existsSync(directory)) return 0;
+  let removed = 0;
+  for (const name of readdirSync(directory)) {
+    if (!EXTRACTED_MODULE.test(name)) continue;
+    try {
+      rmSync(resolve(directory, name), { force: true });
+      removed += 1;
+    } catch {
+      // Em uso por outra execução da CLI; a próxima limpeza remove.
+    }
+  }
+  return removed;
+}
+
+export function runSupabase(args, options = {}) {
+  mkdirSync(SUPABASE_CLI_TEMP, { recursive: true });
+  try {
+    return runPnpm(["exec", "supabase", ...args], {
+      ...options,
+      env: supabaseCliEnvironment(options.env || process.env),
+    });
+  } finally {
+    cleanSupabaseCliTemp();
+  }
 }
 
 function fail(message, correction) {

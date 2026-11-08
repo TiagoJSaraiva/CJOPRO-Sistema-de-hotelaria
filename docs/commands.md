@@ -41,6 +41,12 @@ rm -rf .turbo/cache node_modules/.cache
 O próximo build fica mais lento uma vez. Relatórios de Playwright e de jornadas ficam em
 `node_modules/.cache`, então copie antes o que ainda precisar analisar.
 
+A CLI do Supabase é compilada com Bun e, a cada execução, extrai um módulo nativo de 1,8 MB para a
+pasta temporária sem apagá-lo. Os scripts do projeto rodam a CLI com a pasta temporária em
+`node_modules/.cache/supabase-cli-tmp` e a esvaziam depois de cada chamada. Uma chamada direta,
+como `pnpm exec supabase status`, ainda deixa um arquivo `.*.node` no Temp do sistema; esses
+arquivos podem ser apagados quando nenhuma CLI estiver em execução.
+
 ## Dependências e segurança
 
 | Comando                   | Finalidade                                  | Requisito adicional | Versionados |

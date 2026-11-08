@@ -6,6 +6,7 @@ import { existsSync, readdirSync, readFileSync } from "node:fs";
 import { dirname, resolve } from "node:path";
 import { fileURLToPath, pathToFileURL } from "node:url";
 import { createInterface } from "node:readline/promises";
+import { runSupabase } from "./database.mjs";
 
 const ROOT_DIRECTORY = resolve(dirname(fileURLToPath(import.meta.url)), "..");
 const SCENARIO_DIRECTORY = resolve(
@@ -106,6 +107,16 @@ export function assertTrainingLocalApiUrl(value) {
   return url.origin;
 }
 
+/**
+ * O executor das jornadas valida o Supabase local uma vez e repassa a URL aos subprocessos. Assim o
+ * treinamento não chama `supabase status` em cada reset, verificação e relógio (QA-096). A URL herdada
+ * ainda passa pela mesma trava de destino local.
+ */
+export function reusableLocalValidation(environment = process.env) {
+  const validated = environment.SUPABASE_LOCAL_VALIDATED_URL;
+  return validated ? assertTrainingLocalApiUrl(validated) : null;
+}
+
 function validateLocalEnvironment() {
   const docker = run("docker", ["info", "--format", "{{.ServerVersion}}"], {
     capture: true,
@@ -116,9 +127,8 @@ function validateLocalEnvironment() {
       "Abra o Docker Desktop e aguarde a inicialização.",
     );
   }
-  const status = runPnpm(["exec", "supabase", "status", "-o", "json"], {
-    capture: true,
-  });
+  if (reusableLocalValidation()) return;
+  const status = runSupabase(["status", "-o", "json"], { capture: true });
   if (status.status !== 0) {
     fail("Supabase local não está em execução.", "Execute pnpm db:start.");
   }

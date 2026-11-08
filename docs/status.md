@@ -30,6 +30,7 @@ tomada foram corrigidos. Falta decidir o QA-095 antes das rodadas finais.
 | QA-095 | S3  | Novo: tela não atualiza depois de ação muito rápida, só em produção        |
 | QA-092 | S4  | [Limite aceito](decisions/0015-datas-em-utc-limite-aceito.md)              |
 | QA-093 | S4  | Observar nas três rodadas: falha única de `db reset`, sem causa confirmada |
+| QA-097 | S4  | Observar nas três rodadas: login da primeira jornada falhou uma vez        |
 | QA-008 | S4  | Observar: tempos limite do E2E com a máquina sob carga                     |
 | QA-028 | S4  | Observar: erro único de JSON no servidor Next                              |
 
